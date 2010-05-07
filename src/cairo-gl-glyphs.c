@@ -326,7 +326,7 @@ _cairo_gl_glyphs_set_shader (cairo_gl_context_t *ctx,
 					&setup->composite->shader);
 	if (!_cairo_status_is_error (status)) {
 	    setup->in = in;
-	    _cairo_gl_use_program (setup->composite->shader);
+	    _cairo_gl_use_program (ctx, setup->composite->shader);
 	    _cairo_gl_set_src_operand (ctx, setup->composite);
 	    return;
 	}
@@ -638,7 +638,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     glDisableClientState (GL_TEXTURE_COORD_ARRAY);
     glActiveTexture (GL_TEXTURE1);
     glDisable (ctx->tex_target);
-    _cairo_gl_use_program (NULL);
+    _cairo_gl_use_program (ctx, NULL);
 
     glBindBufferARB (GL_ARRAY_BUFFER_ARB, 0);
 

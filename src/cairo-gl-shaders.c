@@ -35,7 +35,7 @@
 #include "cairo-gl-private.h"
 #include "cairo-error-private.h"
 
-typedef struct _shader_impl {
+typedef struct cairo_gl_shader_impl {
     cairo_status_t
     (*compile_shader) (GLuint *shader, GLenum type, const char *text);
 
@@ -393,7 +393,7 @@ use_program_core_2_0 (cairo_gl_shader_program_t *program)
 	glUseProgram (0);
 }
 
-static const shader_impl_t shader_impl_core_2_0 = {
+static const cairo_gl_shader_impl_t shader_impl_core_2_0 = {
     compile_shader_core_2_0,
     link_shader_core_2_0,
     destroy_shader_program_core_2_0,
@@ -406,7 +406,7 @@ static const shader_impl_t shader_impl_core_2_0 = {
     use_program_core_2_0,
 };
 
-static const shader_impl_t shader_impl_arb = {
+static const cairo_gl_shader_impl_t shader_impl_arb = {
     compile_shader_arb,
     link_shader_arb,
     destroy_shader_program_arb,
@@ -419,19 +419,19 @@ static const shader_impl_t shader_impl_arb = {
     use_program_arb,
 };
 
-static const shader_impl_t*
-get_impl (void)
+void
+_cairo_gl_context_init_shaders (cairo_gl_context_t *ctx)
 {
     /* XXX multiple device support? */
     if (GLEW_VERSION_2_0) {
-        return &shader_impl_core_2_0;
+        ctx->shader_impl = &shader_impl_core_2_0;
     } else if (GLEW_ARB_shader_objects &&
                GLEW_ARB_fragment_shader &&
                GLEW_ARB_vertex_program) {
-        return &shader_impl_arb;
+        ctx->shader_impl = &shader_impl_arb;
+    } else {
+        ctx->shader_impl = NULL;
     }
-
-    return NULL;
 }
 
 void
@@ -444,18 +444,19 @@ init_shader_program (cairo_gl_shader_program_t *program)
 }
 
 void
-destroy_shader_program (cairo_gl_shader_program_t *program)
+destroy_shader_program (cairo_gl_context_t *ctx,
+                        cairo_gl_shader_program_t *program)
 {
-    return get_impl()->destroy_shader_program(program);
+    return ctx->shader_impl->destroy_shader_program (program);
 }
 
 cairo_status_t
-create_shader_program (cairo_gl_shader_program_t *program,
+create_shader_program (cairo_gl_context_t *ctx,
+                       cairo_gl_shader_program_t *program,
                        const char *vertex_text,
                        const char *fragment_text)
 {
     cairo_status_t status;
-    const shader_impl_t *impl;
 
     if (program->program != 0)
         return CAIRO_STATUS_SUCCESS;
@@ -463,32 +464,31 @@ create_shader_program (cairo_gl_shader_program_t *program,
     if (program->build_failure)
         return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    impl = get_impl ();
-    if (impl == NULL)
+    if (ctx->shader_impl == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = impl->compile_shader (&program->vertex_shader,
-				   GL_VERTEX_SHADER,
-				   vertex_text);
+    status = ctx->shader_impl->compile_shader (&program->vertex_shader,
+                                               GL_VERTEX_SHADER,
+                                               vertex_text);
     if (unlikely (status))
         goto FAILURE;
 
-    status = impl->compile_shader (&program->fragment_shader,
-				   GL_FRAGMENT_SHADER,
-				   fragment_text);
+    status = ctx->shader_impl->compile_shader (&program->fragment_shader,
+                                               GL_FRAGMENT_SHADER,
+                                               fragment_text);
     if (unlikely (status))
         goto FAILURE;
 
-    status = impl->link_shader (&program->program,
-				program->vertex_shader,
-				program->fragment_shader);
+    status = ctx->shader_impl->link_shader (&program->program,
+                                            program->vertex_shader,
+                                            program->fragment_shader);
     if (unlikely (status))
         goto FAILURE;
 
     return CAIRO_STATUS_SUCCESS;
 
  FAILURE:
-    destroy_shader_program (program);
+    destroy_shader_program (ctx, program);
     program->vertex_shader = 0;
     program->fragment_shader = 0;
     program->program = 0;
@@ -498,57 +498,61 @@ create_shader_program (cairo_gl_shader_program_t *program,
 }
 
 cairo_status_t
-bind_float_to_shader (GLuint program, const char *name,
+bind_float_to_shader (cairo_gl_context_t *ctx,
+                      GLuint program, const char *name,
                       float value)
 {
-    return get_impl()->bind_float_to_shader(program, name, value);
+    return ctx->shader_impl->bind_float_to_shader(program, name, value);
 }
 
 cairo_status_t
-bind_vec2_to_shader (GLuint program, const char *name,
+bind_vec2_to_shader (cairo_gl_context_t *ctx,
+                     GLuint program, const char *name,
                      float value0, float value1)
 {
-    return get_impl()->bind_vec2_to_shader(program, name, value0, value1);
+    return ctx->shader_impl->bind_vec2_to_shader(program, name, value0, value1);
 }
 
 cairo_status_t
-bind_vec3_to_shader (GLuint program, const char *name,
+bind_vec3_to_shader (cairo_gl_context_t *ctx,
+                     GLuint program, const char *name,
                      float value0, float value1,
                      float value2)
 {
-    return get_impl()->bind_vec3_to_shader(program, name, value0, value1, value2);
+    return ctx->shader_impl->bind_vec3_to_shader(program, name, value0, value1, value2);
 }
 
 cairo_status_t
-bind_vec4_to_shader (GLuint program, const char *name,
+bind_vec4_to_shader (cairo_gl_context_t *ctx,
+                     GLuint program, const char *name,
                      float value0, float value1,
                      float value2, float value3)
 {
-    return get_impl()->bind_vec4_to_shader(program, name, value0, value1, value2, value3);
+    return ctx->shader_impl->bind_vec4_to_shader(program, name, value0, value1, value2, value3);
 }
 
 cairo_status_t
-bind_matrix_to_shader (GLuint program, const char *name, cairo_matrix_t* m)
+bind_matrix_to_shader (cairo_gl_context_t *ctx,
+                       GLuint program, const char *name, cairo_matrix_t* m)
 {
-    return get_impl()->bind_matrix_to_shader(program, name, m);
+    return ctx->shader_impl->bind_matrix_to_shader(program, name, m);
 }
 
 cairo_status_t
-bind_texture_to_shader (GLuint program, const char *name, GLuint tex_unit)
+bind_texture_to_shader (cairo_gl_context_t *ctx,
+                        GLuint program, const char *name, GLuint tex_unit)
 {
-    return get_impl()->bind_texture_to_shader(program, name, tex_unit);
+    return ctx->shader_impl->bind_texture_to_shader(program, name, tex_unit);
 }
 
 void
-_cairo_gl_use_program (cairo_gl_shader_program_t *program)
+_cairo_gl_use_program (cairo_gl_context_t *ctx,
+                       cairo_gl_shader_program_t *program)
 {
-    const shader_impl_t *impl;
+    if (!ctx->shader_impl)
+        return;
 
-    impl = get_impl ();
-    if (impl == NULL)
-	return;
-
-    impl->use_program (program);
+    ctx->shader_impl->use_program (program);
 }
 
 static const char *vs_no_coords =
@@ -833,7 +837,7 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
     if (program->build_failure)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (get_impl () == NULL)
+    if (ctx->shader_impl == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     source_source = source_sources[source];
@@ -887,7 +891,8 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
     sprintf(fs_source, "%s%s%s", source_source, mask_source, in_source);
 
     init_shader_program (program);
-    status = create_shader_program (program,
+    status = create_shader_program (ctx,
+                                    program,
 				    vs_source,
 				    fs_source);
     free (fs_source);
@@ -895,19 +900,19 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
     if (_cairo_status_is_error (status))
 	return status;
 
-    _cairo_gl_use_program (program);
+    _cairo_gl_use_program (ctx, program);
     if (source != CAIRO_GL_SHADER_SOURCE_CONSTANT) {
-	status = bind_texture_to_shader (program->program, "source_sampler", 0);
+	status = bind_texture_to_shader (ctx, program->program, "source_sampler", 0);
 	assert (!_cairo_status_is_error (status));
     }
     if (mask != CAIRO_GL_SHADER_MASK_CONSTANT &&
 	mask != CAIRO_GL_SHADER_MASK_SPANS &&
 	mask != CAIRO_GL_SHADER_MASK_NONE) {
-	status = bind_texture_to_shader (program->program, "mask_sampler", 1);
+	status = bind_texture_to_shader (ctx, program->program, "mask_sampler", 1);
 	assert (!_cairo_status_is_error (status));
     }
 
-    _cairo_gl_use_program (NULL);
+    _cairo_gl_use_program (ctx, NULL);
 
     *out_program = program;
     return CAIRO_STATUS_SUCCESS;

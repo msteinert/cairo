@@ -80,6 +80,8 @@ typedef struct cairo_gl_glyph_cache {
     unsigned int width, height;
 } cairo_gl_glyph_cache_t;
 
+typedef struct cairo_gl_shader_impl cairo_gl_shader_impl_t;
+
 typedef struct cairo_gl_shader_program {
     GLuint vertex_shader;
     GLuint fragment_shader;
@@ -123,8 +125,9 @@ typedef struct _cairo_gl_context {
     GLint max_framebuffer_size;
     GLint max_texture_size;
     GLenum tex_target;
-    cairo_bool_t using_glsl;
     cairo_bool_t has_span_renderer;
+
+    const cairo_gl_shader_impl_t *shader_impl;
 
     cairo_gl_shader_program_t fill_rectangles_shader;
     cairo_gl_shader_program_t shaders[CAIRO_GL_SHADER_SOURCE_COUNT]
@@ -234,7 +237,7 @@ _cairo_gl_operand_init (cairo_gl_context_t *ctx,
 static cairo_always_inline cairo_bool_t
 _cairo_gl_device_has_glsl (cairo_device_t *device)
 {
-    return ((cairo_gl_context_t *) device)->using_glsl;
+    return ((cairo_gl_context_t *) device)->shader_impl != NULL;
 }
 
 static cairo_always_inline cairo_bool_t
@@ -325,42 +328,54 @@ _cairo_gl_y_flip (cairo_gl_surface_t *surface, int y)
 }
 
 cairo_private void
+_cairo_gl_context_init_shaders (cairo_gl_context_t *ctx);
+
+cairo_private void
 init_shader_program (cairo_gl_shader_program_t *program);
 
 cairo_private void
-destroy_shader_program (cairo_gl_shader_program_t *program);
+destroy_shader_program (cairo_gl_context_t *ctx,
+                        cairo_gl_shader_program_t *program);
 
 cairo_private cairo_status_t
-create_shader_program (cairo_gl_shader_program_t *program,
+create_shader_program (cairo_gl_context_t *ctx,
+                       cairo_gl_shader_program_t *program,
                        const char *vertex_text,
                        const char *fragment_text);
 
 cairo_private cairo_status_t
-bind_float_to_shader (GLuint program, const char *name,
+bind_float_to_shader (cairo_gl_context_t *ctx,
+                      GLuint program, const char *name,
                       float value);
 
 cairo_private cairo_status_t
-bind_vec2_to_shader (GLuint program, const char *name,
+bind_vec2_to_shader (cairo_gl_context_t *ctx,
+                     GLuint program, const char *name,
                      float value0, float value1);
 
 cairo_private cairo_status_t
-bind_vec3_to_shader (GLuint program, const char *name,
+bind_vec3_to_shader (cairo_gl_context_t *ctx,
+                     GLuint program, const char *name,
                      float value0, float value1,
                      float value2);
 
 cairo_private cairo_status_t
-bind_vec4_to_shader (GLuint program, const char *name,
+bind_vec4_to_shader (cairo_gl_context_t *ctx,
+                     GLuint program, const char *name,
                      float value0, float value1,
                      float value2, float value3);
 
 cairo_private cairo_status_t
-bind_matrix_to_shader (GLuint program, const char *name, cairo_matrix_t* m);
+bind_matrix_to_shader (cairo_gl_context_t *ctx,
+                       GLuint program, const char *name, cairo_matrix_t* m);
 
 cairo_private cairo_status_t
-bind_texture_to_shader (GLuint program, const char *name, GLuint tex_unit);
+bind_texture_to_shader (cairo_gl_context_t *ctx,
+                        GLuint program, const char *name, GLuint tex_unit);
 
 cairo_private void
-_cairo_gl_use_program (cairo_gl_shader_program_t *shader);
+_cairo_gl_use_program (cairo_gl_context_t *ctx,
+                       cairo_gl_shader_program_t *shader);
 
 cairo_private cairo_status_t
 _cairo_gl_get_program (cairo_gl_context_t *ctx,

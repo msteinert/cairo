@@ -649,7 +649,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 		goto fail;
 	    }
 
-	    _cairo_gl_use_program (program);
+	    _cairo_gl_use_program (ctx, program);
 	} else {
 	    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	}
@@ -712,7 +712,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
 
 	if (_cairo_gl_device_has_glsl (&ctx->base))
-	    _cairo_gl_use_program (NULL);
+	    _cairo_gl_use_program (ctx, NULL);
 	glDeleteTextures (1, &tex);
 	glDisable (ctx->tex_target);
     }
@@ -1421,12 +1421,13 @@ _cairo_gl_set_tex_combine_constant_color (cairo_gl_context_t *ctx,
 	else
 	    uniform_name = "constant_mask";
 
-	status = bind_vec4_to_shader(setup->shader->program,
-                                     uniform_name,
-                                     color[0],
-                                     color[1],
-                                     color[2],
-                                     color[3]);
+	status = bind_vec4_to_shader (ctx,
+                                      setup->shader->program,
+                                      uniform_name,
+                                      color[0],
+                                      color[1],
+                                      color[2],
+                                      color[3]);
         assert (! _cairo_status_is_error (status));
 
 	return;
@@ -1509,12 +1510,12 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 	glBindTexture (GL_TEXTURE_1D, setup->src.operand.linear.tex);
 	glEnable (GL_TEXTURE_1D);
 
-	status = bind_matrix_to_shader (setup->shader->program,
+	status = bind_matrix_to_shader (ctx, setup->shader->program,
 					"source_matrix",
 					&setup->src.operand.linear.m);
 	assert (!_cairo_status_is_error (status));
 
-	status = bind_vec2_to_shader (setup->shader->program,
+	status = bind_vec2_to_shader (ctx, setup->shader->program,
 				      "source_segment",
 				      setup->src.operand.linear.segment_x,
 				      setup->src.operand.linear.segment_y);
@@ -1526,23 +1527,23 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 	glBindTexture (GL_TEXTURE_1D, setup->src.operand.linear.tex);
 	glEnable (GL_TEXTURE_1D);
 
-        status = bind_matrix_to_shader (setup->shader->program,
+        status = bind_matrix_to_shader (ctx, setup->shader->program,
 					"source_matrix",
 					&setup->src.operand.radial.m);
 	assert (!_cairo_status_is_error (status));
 
-        status = bind_vec2_to_shader (setup->shader->program,
+        status = bind_vec2_to_shader (ctx, setup->shader->program,
 				      "source_circle_1",
 				      setup->src.operand.radial.circle_1_x,
 				      setup->src.operand.radial.circle_1_y);
 	assert (!_cairo_status_is_error (status));
 
-        status = bind_float_to_shader (setup->shader->program,
+        status = bind_float_to_shader (ctx, setup->shader->program,
 				       "source_radius_0",
 				       setup->src.operand.radial.radius_0);
 	assert (!_cairo_status_is_error (status));
 
-        status = bind_float_to_shader (setup->shader->program,
+        status = bind_float_to_shader (ctx, setup->shader->program,
 				       "source_radius_1",
 				       setup->src.operand.radial.radius_1);
 	assert (!_cairo_status_is_error (status));
@@ -1594,7 +1595,8 @@ _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
 }
 
 static void
-_cairo_gl_set_linear_gradient_mask_operand (cairo_gl_composite_setup_t *setup)
+_cairo_gl_set_linear_gradient_mask_operand (cairo_gl_context_t *ctx,
+                                            cairo_gl_composite_setup_t *setup)
 {
     cairo_status_t status;
 
@@ -1604,11 +1606,11 @@ _cairo_gl_set_linear_gradient_mask_operand (cairo_gl_composite_setup_t *setup)
     glBindTexture (GL_TEXTURE_1D, setup->mask.operand.linear.tex);
     glEnable (GL_TEXTURE_1D);
 
-    status = bind_matrix_to_shader (setup->shader->program,
+    status = bind_matrix_to_shader (ctx, setup->shader->program,
 			   "mask_matrix", &setup->mask.operand.linear.m);
     assert (!_cairo_status_is_error (status));
 
-    status = bind_vec2_to_shader (setup->shader->program,
+    status = bind_vec2_to_shader (ctx, setup->shader->program,
 			 "mask_segment",
 			 setup->mask.operand.linear.segment_x,
 			 setup->mask.operand.linear.segment_y);
@@ -1616,7 +1618,8 @@ _cairo_gl_set_linear_gradient_mask_operand (cairo_gl_composite_setup_t *setup)
 }
 
 static void
-_cairo_gl_set_radial_gradient_mask_operand (cairo_gl_composite_setup_t *setup)
+_cairo_gl_set_radial_gradient_mask_operand (cairo_gl_context_t *ctx,
+                                            cairo_gl_composite_setup_t *setup)
 {
     cairo_status_t status;
 
@@ -1626,23 +1629,23 @@ _cairo_gl_set_radial_gradient_mask_operand (cairo_gl_composite_setup_t *setup)
     glBindTexture (GL_TEXTURE_1D, setup->mask.operand.radial.tex);
     glEnable (GL_TEXTURE_1D);
 
-    status = bind_matrix_to_shader (setup->shader->program,
+    status = bind_matrix_to_shader (ctx, setup->shader->program,
 				    "mask_matrix",
 				    &setup->mask.operand.radial.m);
     assert (!_cairo_status_is_error (status));
 
-    status = bind_vec2_to_shader (setup->shader->program,
+    status = bind_vec2_to_shader (ctx, setup->shader->program,
 				  "mask_circle_1",
 				  setup->mask.operand.radial.circle_1_x,
 				  setup->mask.operand.radial.circle_1_y);
     assert (!_cairo_status_is_error (status));
 
-    status = bind_float_to_shader (setup->shader->program,
+    status = bind_float_to_shader (ctx, setup->shader->program,
 				   "mask_radius_0",
 				   setup->mask.operand.radial.radius_0);
     assert (!_cairo_status_is_error (status));
 
-    status = bind_float_to_shader (setup->shader->program,
+    status = bind_float_to_shader (ctx, setup->shader->program,
 				   "mask_radius_1",
 				   setup->mask.operand.radial.radius_1);
     assert (!_cairo_status_is_error (status));
@@ -1676,12 +1679,12 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 	/* Have to have a dummy texture bound in order to use the combiner unit. */
 	if (setup->shader) {
             cairo_status_t status;
-	    status = bind_vec4_to_shader(setup->shader->program,
-                                         "constant_mask",
-                                         setup->src.operand.constant.color[0],
-                                         setup->src.operand.constant.color[1],
-                                         setup->src.operand.constant.color[2],
-                                         setup->src.operand.constant.color[3]);
+	    status = bind_vec4_to_shader (ctx, setup->shader->program,
+                                          "constant_mask",
+                                          setup->src.operand.constant.color[0],
+                                          setup->src.operand.constant.color[1],
+                                          setup->src.operand.constant.color[2],
+                                          setup->src.operand.constant.color[3]);
             assert (! _cairo_status_is_error (status));
 	} else {
 	    glBindTexture (ctx->tex_target, ctx->dummy_tex);
@@ -1720,11 +1723,11 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 	break;
 
     case OPERAND_LINEAR_GRADIENT:
-	_cairo_gl_set_linear_gradient_mask_operand (setup);
+	_cairo_gl_set_linear_gradient_mask_operand (ctx, setup);
 	break;
 
     case OPERAND_RADIAL_GRADIENT:
-	_cairo_gl_set_radial_gradient_mask_operand (setup);
+	_cairo_gl_set_radial_gradient_mask_operand (ctx, setup);
 	break;
     }
 }
@@ -1944,7 +1947,7 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
 
     if (op == CAIRO_OPERATOR_OVER) {
 	setup.shader = ca_source_alpha_program;
-	_cairo_gl_use_program (setup.shader);
+	_cairo_gl_use_program (ctx, setup.shader);
 	_cairo_gl_set_operator (dst, CAIRO_OPERATOR_DEST_OUT, TRUE);
 	_cairo_gl_set_src_alpha_operand (ctx, &setup);
 	_cairo_gl_set_component_alpha_mask_operand (ctx, &setup);
@@ -1952,14 +1955,14 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
     }
 
     setup.shader = ca_source_program;
-    _cairo_gl_use_program (setup.shader);
+    _cairo_gl_use_program (ctx, setup.shader);
     _cairo_gl_set_operator (dst, CAIRO_OPERATOR_ADD, TRUE);
     _cairo_gl_set_src_operand (ctx, &setup);
     _cairo_gl_set_component_alpha_mask_operand (ctx, &setup);
     glDrawArrays (GL_QUADS, 0, num_vertices);
 
     glDisable (GL_BLEND);
-    _cairo_gl_use_program (NULL);
+    _cairo_gl_use_program (ctx, NULL);
 
     glDisableClientState (GL_VERTEX_ARRAY);
 
@@ -2082,7 +2085,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     _cairo_gl_set_destination (ctx, dst);
     _cairo_gl_set_operator (dst, op, FALSE);
 
-    _cairo_gl_use_program (setup.shader);
+    _cairo_gl_use_program (ctx, setup.shader);
     _cairo_gl_set_src_operand (ctx, &setup);
 
     if (mask != NULL) {
@@ -2114,10 +2117,10 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 	    }
 	    break;
 	case OPERAND_LINEAR_GRADIENT:
-	    _cairo_gl_set_linear_gradient_mask_operand (&setup);
+	    _cairo_gl_set_linear_gradient_mask_operand (ctx, &setup);
 	    break;
 	case OPERAND_RADIAL_GRADIENT:
-	    _cairo_gl_set_radial_gradient_mask_operand (&setup);
+	    _cairo_gl_set_radial_gradient_mask_operand (ctx, &setup);
 	    break;
 	}
     }
@@ -2205,7 +2208,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 
     glDrawArrays (GL_QUADS, 0, num_vertices);
 
-    _cairo_gl_use_program (NULL);
+    _cairo_gl_use_program (ctx, NULL);
     glDisable (GL_BLEND);
 
     glDisableClientState (GL_VERTEX_ARRAY);
@@ -2411,7 +2414,8 @@ _cairo_gl_surface_fill_rectangles_glsl (void                  *abstract_surface,
     if (unlikely (status))
 	return status;
 
-    status = create_shader_program (&ctx->fill_rectangles_shader,
+    status = create_shader_program (ctx,
+                                    &ctx->fill_rectangles_shader,
 				    fill_vs_source,
 				    fill_fs_source);
     if (unlikely (status)) {
@@ -2430,12 +2434,13 @@ _cairo_gl_surface_fill_rectangles_glsl (void                  *abstract_surface,
 	vertices = vertices_stack;
     }
 
-    _cairo_gl_use_program (&ctx->fill_rectangles_shader);
+    _cairo_gl_use_program (ctx, &ctx->fill_rectangles_shader);
 
     _cairo_gl_set_destination (ctx, surface);
     _cairo_gl_set_operator (surface, op, FALSE);
 
-    status = bind_vec4_to_shader (ctx->fill_rectangles_shader.program,
+    status = bind_vec4_to_shader (ctx,
+                                  ctx->fill_rectangles_shader.program,
                                   "color",
                                   color->red * color->alpha,
                                   color->green * color->alpha,
@@ -2743,7 +2748,7 @@ _cairo_gl_surface_span_renderer_finish (void *abstract_renderer)
     }
 
     glDisable (GL_BLEND);
-    _cairo_gl_use_program (NULL);
+    _cairo_gl_use_program (renderer->ctx, NULL);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -2835,7 +2840,7 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 
     src_attributes = &renderer->setup.src.operand.texture.attributes;
 
-    _cairo_gl_use_program (renderer->setup.shader);
+    _cairo_gl_use_program (renderer->ctx, renderer->setup.shader);
     _cairo_gl_set_operator (dst, op, FALSE);
     _cairo_gl_set_src_operand (renderer->ctx, &renderer->setup);
 

@@ -141,13 +141,7 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 
     ctx->has_span_renderer = GLEW_ARB_vertex_buffer_object;
 
-    if (GLEW_VERSION_2_0 ||
-	(GLEW_ARB_fragment_shader &&
-	 GLEW_ARB_vertex_shader &&
-	 GLEW_ARB_shader_objects))
-    {
-	ctx->using_glsl = TRUE;
-    }
+    _cairo_gl_context_init_shaders (ctx);
 
     init_shader_program (&ctx->fill_rectangles_shader);
 
