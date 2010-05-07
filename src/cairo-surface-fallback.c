@@ -298,7 +298,7 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
 				       extents->width, extents->height,
 				       NULL);
     if (unlikely (status))
-	goto CLEANUP_SURFACE;
+	goto CLEANUP_CLIP;
 
     /* Punch the clip out of the destination */
     status = _cairo_surface_composite (CAIRO_OPERATOR_DEST_OUT,
@@ -310,7 +310,7 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
 				       extents->width, extents->height,
 				       NULL);
     if (unlikely (status))
-	goto CLEANUP_SURFACE;
+	goto CLEANUP_CLIP;
 
     /* Now add the two results together */
     _cairo_pattern_init_for_surface (&pattern, intermediate);
@@ -323,8 +323,9 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
 				       NULL);
     _cairo_pattern_fini (&pattern.base);
 
- CLEANUP_SURFACE:
+ CLEANUP_CLIP:
     _cairo_pattern_fini (&clip_pattern.base);
+ CLEANUP_SURFACE:
     cairo_surface_destroy (intermediate);
 
     return status;
