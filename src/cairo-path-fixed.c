@@ -249,28 +249,22 @@ _cairo_path_fixed_equal (const cairo_path_fixed_t *a,
     }
 
     num_ops_a = num_points_a = 0;
-    if (a != NULL) {
-	cairo_path_foreach_buf_start (buf_a, a) {
-	    num_ops_a    += buf_a->num_ops;
-	    num_points_a += buf_a->num_points;
-	} cairo_path_foreach_buf_end (buf_a, a);
-    }
+    cairo_path_foreach_buf_start (buf_a, a) {
+	num_ops_a    += buf_a->num_ops;
+	num_points_a += buf_a->num_points;
+    } cairo_path_foreach_buf_end (buf_a, a);
 
     num_ops_b = num_points_b = 0;
-    if (b != NULL) {
-	cairo_path_foreach_buf_start (buf_b, b) {
-	    num_ops_b    += buf_b->num_ops;
-	    num_points_b += buf_b->num_points;
-	} cairo_path_foreach_buf_end (buf_b, b);
-    }
+    cairo_path_foreach_buf_start (buf_b, b) {
+	num_ops_b    += buf_b->num_ops;
+	num_points_b += buf_b->num_points;
+    } cairo_path_foreach_buf_end (buf_b, b);
 
     if (num_ops_a == 0 && num_ops_b == 0)
 	return TRUE;
 
     if (num_ops_a != num_ops_b || num_points_a != num_points_b)
 	return FALSE;
-
-    assert (a != NULL && b != NULL);
 
     buf_a = cairo_path_head (a);
     num_points_a = buf_a->num_points;
