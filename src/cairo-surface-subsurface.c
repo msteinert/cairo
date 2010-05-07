@@ -491,7 +491,8 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
 {
     cairo_surface_subsurface_t *surface;
     cairo_rectangle_int_t target_extents;
-    cairo_bool_t is_empty;
+    cairo_bool_t ret;
+    int tx, ty;
 
     if (unlikely (target->status))
 	return _cairo_surface_create_in_error (target->status);
@@ -513,7 +514,7 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
     surface->extents.height = floor (y + height) - surface->extents.y;
 
     if (_cairo_surface_get_extents (target, &target_extents))
-        is_empty = _cairo_rectangle_intersect (&surface->extents, &target_extents);
+        ret = _cairo_rectangle_intersect (&surface->extents, &target_extents);
 
     if (target->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE) {
 	/* Maintain subsurfaces as 1-depth */
@@ -522,6 +523,11 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
 	surface->extents.y += sub->extents.y;
 	target = sub->target;
     }
+
+    ret = _cairo_matrix_is_integer_translation (&target->device_transform, &tx, &ty);
+    assert (ret);
+    surface->extents.x += tx;
+    surface->extents.y += ty;
 
     surface->target = cairo_surface_reference (target);
     surface->owns_target = FALSE;
