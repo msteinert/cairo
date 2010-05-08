@@ -139,6 +139,7 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     else
 	ctx->tex_target = GL_TEXTURE_2D;
 
+    ctx->has_span_renderer = GLEW_ARB_vertex_buffer_object;
 
     if (GLEW_VERSION_2_0 ||
 	(GLEW_ARB_fragment_shader &&
