@@ -1131,13 +1131,12 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 			    const cairo_surface_pattern_t *pattern,
 			    const cairo_rectangle_int_t *extents)
 {
-    cairo_surface_t *source;
+    cairo_surface_t *const source = pattern->surface;
     cairo_xcb_picture_t *picture;
     cairo_filter_t filter;
     cairo_extend_t extend;
     cairo_status_t status;
 
-    source = pattern->surface;
     if (source->is_clear) {
         if (source->content & CAIRO_CONTENT_ALPHA)
 	    return _cairo_xcb_transparent_picture (target);
@@ -1152,6 +1151,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	    picture = (cairo_xcb_picture_t *) cairo_surface_reference (&picture->base);
 	    goto setup_picture;
 	}
+	picture = NULL;
     }
 
     if (source->type == CAIRO_SURFACE_TYPE_XCB)
