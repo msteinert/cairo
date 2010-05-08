@@ -85,6 +85,8 @@ struct _cairo_xcb_surface {
     cairo_bool_t owns_pixmap;
     int use_pixmap;
 
+    cairo_bool_t deferred_clear;
+
     int width;
     int height;
     int depth;
@@ -434,6 +436,9 @@ _cairo_xcb_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font);
 cairo_private void
 _cairo_xcb_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 				      cairo_scaled_font_t  *scaled_font);
+
+cairo_private void
+_cairo_xcb_surface_clear (cairo_xcb_surface_t *dst);
 
 cairo_private cairo_status_t
 _cairo_xcb_surface_core_copy_boxes (cairo_xcb_surface_t		*dst,

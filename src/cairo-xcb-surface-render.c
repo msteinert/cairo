@@ -1131,7 +1131,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 			    const cairo_surface_pattern_t *pattern,
 			    const cairo_rectangle_int_t *extents)
 {
-    cairo_surface_t *const source = pattern->surface;
+    cairo_surface_t *source = pattern->surface;
     cairo_xcb_picture_t *picture;
     cairo_filter_t filter;
     cairo_extend_t extend;
@@ -1142,6 +1142,17 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	    return _cairo_xcb_transparent_picture (target);
         else
             return _cairo_xcb_black_picture (target);
+    }
+
+    {
+	cairo_xcb_surface_t *snapshot;
+
+	snapshot = (cairo_xcb_surface_t *)
+	    _cairo_surface_has_snapshot (source, &_cairo_xcb_surface_backend);
+	if (snapshot != NULL) {
+	    if (snapshot->screen == target->screen)
+		source = &snapshot->base;
+	}
     }
 
     picture = (cairo_xcb_picture_t *)
@@ -1440,7 +1451,7 @@ COMPILE_TIME_ASSERT (sizeof (xcb_rectangle_t) <= sizeof (cairo_box_t));
 static cairo_status_t
 _render_fill_boxes (void			*abstract_dst,
 		    cairo_operator_t		 op,
-		    const cairo_color_t	*color,
+		    const cairo_color_t		*color,
 		    cairo_boxes_t		*boxes)
 {
     cairo_xcb_surface_t *dst = abstract_dst;
@@ -2324,6 +2335,27 @@ _cairo_xcb_surface_fixup_unbounded_boxes (cairo_xcb_surface_t *dst,
     return status;
 }
 
+void
+_cairo_xcb_surface_clear (cairo_xcb_surface_t *dst)
+{
+    xcb_gcontext_t gc;
+    xcb_rectangle_t rect;
+
+    gc = _cairo_xcb_screen_get_gc (dst->screen, dst->drawable, dst->depth);
+
+    rect.x = rect.y = 0;
+    rect.width  = dst->width;
+    rect.height = dst->height;
+
+    _cairo_xcb_connection_poly_fill_rectangle (dst->connection,
+					       dst->drawable, gc,
+					       1, &rect);
+
+    _cairo_xcb_screen_put_gc (dst->screen, dst->depth, gc);
+
+    dst->deferred_clear = FALSE;
+}
+
 static cairo_status_t
 _clip_and_composite (cairo_xcb_surface_t	*dst,
 		     cairo_operator_t		 op,
@@ -2372,6 +2404,9 @@ _clip_and_composite (cairo_xcb_surface_t	*dst,
 	_cairo_xcb_connection_release (dst->connection);
 	return status;
     }
+
+    if (dst->deferred_clear)
+	_cairo_xcb_surface_clear (dst);
 
     _cairo_xcb_surface_ensure_picture (dst);
 
@@ -2526,7 +2561,7 @@ _composite_boxes (cairo_xcb_surface_t *dst,
 	else
 	    color = &((cairo_solid_pattern_t *) src)->color;
 
-	if (! (op == CAIRO_OPERATOR_IN && color->alpha >= 0xff00))
+	if (! (op == CAIRO_OPERATOR_IN && color->alpha_short >= 0xff00))
 	    status = _render_fill_boxes (dst, op, color, boxes);
     }
     else
@@ -2573,6 +2608,112 @@ _composite_boxes (cairo_xcb_surface_t *dst,
 }
 
 static cairo_status_t
+_upload_image_inplace (cairo_xcb_surface_t *surface,
+		       const cairo_pattern_t *source,
+		       const cairo_rectangle_int_t *extents)
+{
+    const cairo_surface_pattern_t *pattern;
+    cairo_image_surface_t *image;
+    xcb_gcontext_t gc;
+    cairo_status_t status;
+    int len, tx, ty;
+
+    if (source->type != CAIRO_PATTERN_TYPE_SURFACE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    pattern = (const cairo_surface_pattern_t *) source;
+    if (pattern->surface->type != CAIRO_SURFACE_TYPE_IMAGE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    {
+	cairo_xcb_surface_t *snapshot;
+
+	snapshot = (cairo_xcb_surface_t *)
+	    _cairo_surface_has_snapshot (pattern->surface, &_cairo_xcb_surface_backend);
+	if (snapshot != NULL) {
+	    if (snapshot->screen == surface->screen)
+		return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+    }
+
+    {
+	cairo_xcb_picture_t *snapshot;
+
+	snapshot = (cairo_xcb_picture_t *)
+	    _cairo_surface_has_snapshot (pattern->surface, &_cairo_xcb_picture_backend);
+	if (snapshot != NULL) {
+	    if (snapshot->screen == surface->screen)
+		return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+    }
+
+    image = (cairo_image_surface_t *) pattern->surface;
+    if (image->format == CAIRO_FORMAT_INVALID)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (image->depth != surface->depth)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (! _cairo_matrix_is_integer_translation (&source->matrix, &tx, &ty))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    image = (cairo_image_surface_t *) pattern->surface;
+    if (source->extend != CAIRO_EXTEND_NONE &&
+	(extents->x + tx < 0 ||
+	 extents->y + ty < 0 ||
+	 extents->x + tx + extents->width > image->width ||
+	 extents->y + ty + extents->height > image->height))
+    {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    status = _cairo_xcb_connection_acquire (surface->connection);
+    if (unlikely (status))
+	return status;
+
+    status = _cairo_xcb_connection_take_socket (surface->connection);
+    if (unlikely (status)) {
+	_cairo_xcb_connection_release (surface->connection);
+	return status;
+    }
+    gc = _cairo_xcb_screen_get_gc (surface->screen, surface->drawable, image->depth);
+
+    /* Do we need to trim the image? */
+    len = CAIRO_STRIDE_FOR_WIDTH_BPP (image->width, PIXMAN_FORMAT_BPP (image->pixman_format));
+    if (len == image->stride) {
+	_cairo_xcb_connection_put_image (surface->connection,
+					 surface->drawable, gc,
+					 image->width, image->height,
+					 extents->x, extents->y,
+					 image->depth,
+					 image->stride,
+					 image->data);
+    } else {
+	_cairo_xcb_connection_put_subimage (surface->connection,
+					    surface->drawable, gc,
+					    extents->x + tx, extents->y + ty,
+					    image->width, image->height,
+					    PIXMAN_FORMAT_BPP (image->pixman_format) / 8,
+					    image->stride,
+					    extents->x, extents->y,
+					    image->depth,
+					    image->data);
+
+    }
+
+    _cairo_xcb_screen_put_gc (surface->screen, image->depth, gc);
+    _cairo_xcb_connection_release (surface->connection);
+
+    if (surface->width == image->width && surface->height == image->height &&
+	extents->width == image->width && extents->height == image->height)
+    {
+	_cairo_surface_attach_snapshot (&image->base, &surface->base, NULL);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
 _clip_and_composite_boxes (cairo_xcb_surface_t *dst,
 			   cairo_operator_t op,
 			   const cairo_pattern_t *src,
@@ -2587,8 +2728,25 @@ _clip_and_composite_boxes (cairo_xcb_surface_t *dst,
     if (boxes->num_boxes == 0 && extents->is_bounded)
 	return CAIRO_STATUS_SUCCESS;
 
+    if (clip == NULL &&
+	(op == CAIRO_OPERATOR_SOURCE || (op == CAIRO_OPERATOR_OVER && dst->base.is_clear)) &&
+	boxes->num_boxes == 1 &&
+	extents->bounded.width  == dst->width &&
+	extents->bounded.height == dst->height)
+    {
+	op = CAIRO_OPERATOR_SOURCE;
+	dst->deferred_clear = FALSE;
+
+	status = _upload_image_inplace (dst, src, &extents->bounded);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+
     if ((dst->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE) == 0)
 	return _core_boxes (dst, op, src, boxes, antialias, clip, extents);
+
+    if (dst->deferred_clear)
+	_cairo_xcb_surface_clear (dst);
 
     /* Use a fast path if the boxes are pixel aligned */
     status = _composite_boxes (dst, op, src, boxes, antialias, clip, extents);
@@ -2904,6 +3062,11 @@ _cairo_xcb_surface_render_paint (cairo_xcb_surface_t	*surface,
 			   CAIRO_XCB_RENDER_HAS_COMPOSITE)) == 0)
     {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    if (op == CAIRO_OPERATOR_CLEAR && clip == NULL) {
+	surface->deferred_clear = TRUE;
+	return CAIRO_STATUS_SUCCESS;
     }
 
     status = _cairo_composite_rectangles_init_for_paint (&extents,

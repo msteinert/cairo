@@ -398,6 +398,17 @@ _get_image (cairo_xcb_surface_t		 *surface,
     xcb_get_image_reply_t *reply;
     cairo_status_t status;
 
+    if (surface->base.is_clear || surface->deferred_clear) {
+	image = (cairo_image_surface_t *)
+	    _cairo_image_surface_create_with_pixman_format (NULL,
+							    surface->pixman_format,
+							    surface->width,
+							    surface->height,
+							    0);
+	*image_out = image;
+	return image->base.status;
+    }
+
     connection = surface->connection;
 
     status = _cairo_xcb_connection_acquire (connection);
@@ -412,18 +423,6 @@ _get_image (cairo_xcb_surface_t		 *surface,
 	status = _get_shm_image (surface, image_out);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    goto FAIL;
-    }
-
-    if (surface->base.is_clear) {
-	image = (cairo_image_surface_t *)
-	    _cairo_image_surface_create_with_pixman_format (NULL,
-							    surface->pixman_format,
-							    surface->width,
-							    surface->height,
-							    0);
-	status = image->base.status;
-	*image_out = image;
-	goto FAIL;
     }
 
     if (surface->use_pixmap == 0) {
@@ -687,8 +686,12 @@ _cairo_xcb_surface_flush (void *abstract_surface)
     if (surface->drm != NULL && ! surface->marked_dirty)
 	return surface->drm->backend->flush (surface->drm);
 
-    if (likely (surface->fallback == NULL))
+    if (likely (surface->fallback == NULL)) {
+	if (! surface->base.finished && surface->deferred_clear)
+	    _cairo_xcb_surface_clear (surface);
+
 	return CAIRO_STATUS_SUCCESS;
+    }
 
     status = surface->base.status;
     if (status == CAIRO_STATUS_SUCCESS && ! surface->base.finished) {
@@ -1076,6 +1079,8 @@ _cairo_xcb_surface_create_internal (cairo_xcb_screen_t		*screen,
     surface->drawable = drawable;
     surface->owns_pixmap = owns_pixmap;
     surface->use_pixmap = 0;
+
+    surface->deferred_clear = FALSE;
 
     surface->width  = width;
     surface->height = height;
