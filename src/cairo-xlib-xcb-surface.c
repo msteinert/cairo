@@ -342,6 +342,21 @@ cairo_xlib_surface_create_for_bitmap (Display  *dpy,
 }
 
 #if CAIRO_HAS_XLIB_XRENDER_SURFACE
+static xcb_screen_t *
+_cairo_xcb_screen_from_root (xcb_connection_t *connection,
+			     xcb_window_t id)
+{
+    xcb_depth_iterator_t d;
+    xcb_screen_iterator_t s;
+
+    s = xcb_setup_roots_iterator (xcb_get_setup (connection));
+    for (; s.rem; xcb_screen_next (&s)) {
+	if (s.data->root == id)
+	    return s.data;
+    }
+
+    return NULL;
+}
 cairo_surface_t *
 cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
 					       Drawable		    drawable,
@@ -351,6 +366,8 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
 					       int		    height)
 {
     xcb_render_pictforminfo_t xcb_format;
+    xcb_connection_t *connection;
+    xcb_screen_t *screen;
 
     xcb_format.id = format->id;
     xcb_format.type = format->type;
@@ -365,9 +382,11 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
     xcb_format.direct.alpha_mask = format->direct.alphaMask;
     xcb_format.colormap = format->colormap;
 
+    connection = XGetXCBConnection (dpy);
+    screen = _cairo_xcb_screen_from_root (connection, (xcb_window_t) scr->root);
+
     return _cairo_xlib_xcb_surface_create (dpy, scr, NULL, format,
-					   cairo_xcb_surface_create_with_xrender_format (XGetXCBConnection (dpy),
-											 (xcb_screen_t *) scr,
+					   cairo_xcb_surface_create_with_xrender_format (connection, screen,
 											 drawable,
 											 &xcb_format,
 											 width, height));
