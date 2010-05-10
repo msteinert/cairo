@@ -132,7 +132,7 @@ _cairo_win32_tmpfile (void);
 })
 #else
 #define cairo_container_of(ptr, type, member) \
-    (type *)((char *) (ptr) - (char *) &((type *)0)->member)
+    ((type *)((char *) (ptr) - (char *) &((type *)0)->member))
 #endif
 
 
