@@ -733,25 +733,42 @@ _cairo_xcb_connection_render_fill_rectangles (cairo_xcb_connection_t      *conne
 	uint32_t dst;
 	xcb_render_color_t     color;
     } req;
-    struct iovec vec[2];
-    uint32_t len = (sizeof (req) + num_rects * sizeof (xcb_rectangle_t)) >> 2;
+    struct iovec vec[3];
+    uint32_t prefix[2];
+    uint32_t len;
 
     COMPILE_TIME_ASSERT (sizeof (req) == 20);
-    assert(len < connection->root->maximum_request_length);
 
     req.major = connection->render->major_opcode;
     req.minor = 26;
-    req.length = (sizeof (req) + num_rects * sizeof (xcb_rectangle_t)) >> 2;
     req.op = op;
     req.dst = dst;
     req.color = color;
 
-    vec[0].iov_base = &req;
-    vec[0].iov_len = sizeof (req);
-    vec[1].iov_base = rects;
-    vec[1].iov_len = num_rects * sizeof (xcb_rectangle_t);
+    len = (sizeof (req) + num_rects * sizeof (xcb_rectangle_t)) >> 2;
+    if (len < connection->root->maximum_request_length) {
+	req.length = len;
 
-    _cairo_xcb_connection_write (connection, vec, 2);
+	vec[0].iov_base = &req;
+	vec[0].iov_len = sizeof (req);
+
+	len = 1;
+    } else {
+	prefix[0] = *(uint32_t *) &req;
+	prefix[1] = len + 1;
+	vec[0].iov_base = prefix;
+	vec[0].iov_len = sizeof (prefix);
+	vec[1].iov_base = (uint32_t *) &req + 1;
+	vec[1].iov_len = sizeof (req) - 4;
+
+	len = 2;
+    }
+
+    vec[len].iov_base = rects;
+    vec[len].iov_len = num_rects * sizeof (xcb_rectangle_t);
+    len++;
+
+    _cairo_xcb_connection_write (connection, vec, len);
 }
 
 void

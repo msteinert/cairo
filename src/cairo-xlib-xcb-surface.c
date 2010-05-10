@@ -346,7 +346,6 @@ static xcb_screen_t *
 _cairo_xcb_screen_from_root (xcb_connection_t *connection,
 			     xcb_window_t id)
 {
-    xcb_depth_iterator_t d;
     xcb_screen_iterator_t s;
 
     s = xcb_setup_roots_iterator (xcb_get_setup (connection));

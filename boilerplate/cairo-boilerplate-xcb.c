@@ -128,8 +128,10 @@ _cairo_boilerplate_xcb_create_surface (const char		 *name,
 	height = 1;
 
     xtc->c = c = xcb_connect(NULL,NULL);
-    if (xcb_connection_has_error(c))
+    if (c == NULL || xcb_connection_has_error(c)) {
+	free (xtc);
 	return NULL;
+    }
 
     root = xcb_setup_roots_iterator(xcb_get_setup(c)).data;
 
@@ -233,8 +235,10 @@ _cairo_boilerplate_xcb_create_window (const char		 *name,
 	height = 1;
 
     xtc->c = c = xcb_connect(NULL,NULL);
-    if (xcb_connection_has_error(c))
+    if (xcb_connection_has_error(c)) {
+	free (xtc);
 	return NULL;
+    }
 
     xtc->surface = NULL;
 
@@ -302,8 +306,10 @@ _cairo_boilerplate_xcb_create_window_db (const char		 *name,
 	height = 1;
 
     xtc->c = c = xcb_connect(NULL,NULL);
-    if (xcb_connection_has_error(c))
+    if (xcb_connection_has_error(c)) {
+	free (xtc);
 	return NULL;
+    }
 
     xtc->surface = NULL;
 
@@ -374,8 +380,10 @@ _cairo_boilerplate_xcb_create_render_0_0 (const char		 *name,
 	height = 1;
 
     xtc->c = c = xcb_connect(NULL,NULL);
-    if (xcb_connection_has_error(c))
+    if (xcb_connection_has_error(c)) {
+	free (xtc);
 	return NULL;
+    }
 
     root = xcb_setup_roots_iterator(xcb_get_setup(c)).data;
 
@@ -422,6 +430,12 @@ _cairo_boilerplate_xcb_create_render_0_0 (const char		 *name,
 							xtc->drawable,
 							render_format,
 							width, height);
+    if (cairo_surface_status (tmp)) {
+	free (formats);
+	xcb_disconnect (c);
+	free (xtc);
+	return tmp;
+    }
 
     cairo_xcb_device_debug_cap_xrender_version (cairo_surface_get_device (tmp),
                                                 0, 0);

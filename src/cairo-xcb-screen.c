@@ -247,6 +247,11 @@ _cairo_xcb_screen_get (xcb_connection_t *xcb_connection,
     screen->connection = connection;
     screen->xcb_screen = xcb_screen;
 
+    _cairo_freelist_init (&screen->pattern_cache_entry_freelist,
+			  sizeof (struct pattern_cache_entry));
+    cairo_list_init (&screen->link);
+    cairo_list_init (&screen->surfaces);
+
     if (connection->flags & CAIRO_XCB_HAS_DRI2)
 	screen->device = _xcb_drm_device (xcb_connection, xcb_screen);
     else
@@ -283,25 +288,21 @@ _cairo_xcb_screen_get (xcb_connection_t *xcb_connection,
     if (unlikely (status))
 	goto error_linear;
 
-    _cairo_freelist_init (&screen->pattern_cache_entry_freelist,
-			  sizeof (struct pattern_cache_entry));
-
     cairo_list_add (&screen->link, &connection->screens);
-    cairo_list_init (&screen->surfaces);
 
 unlock:
     CAIRO_MUTEX_UNLOCK (connection->screens_mutex);
 
     return screen;
 
-error_surface:
-    _cairo_cache_fini (&screen->surface_pattern_cache);
 error_linear:
     _cairo_cache_fini (&screen->linear_pattern_cache);
+error_surface:
+    _cairo_cache_fini (&screen->surface_pattern_cache);
 error_screen:
+    CAIRO_MUTEX_UNLOCK (connection->screens_mutex);
     cairo_device_destroy (screen->device);
     free (screen);
-    CAIRO_MUTEX_UNLOCK (connection->screens_mutex);
 
     return NULL;
 }

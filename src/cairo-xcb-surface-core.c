@@ -363,7 +363,6 @@ _cairo_xcb_surface_pixmap (cairo_xcb_surface_t *target,
 {
     cairo_surface_t *source;
     cairo_xcb_pixmap_t *pixmap;
-    cairo_status_t status;
 
     source =  pattern->surface;
     pixmap = (cairo_xcb_pixmap_t *)

@@ -687,10 +687,11 @@ _cairo_xcb_surface_flush (void *abstract_surface)
 	return surface->drm->backend->flush (surface->drm);
 
     if (likely (surface->fallback == NULL)) {
+	status = CAIRO_STATUS_SUCCESS;
 	if (! surface->base.finished && surface->deferred_clear)
-	    _cairo_xcb_surface_clear (surface);
+	    status = _cairo_xcb_surface_clear (surface);
 
-	return CAIRO_STATUS_SUCCESS;
+	return status;
     }
 
     status = surface->base.status;

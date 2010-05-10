@@ -437,7 +437,7 @@ cairo_private void
 _cairo_xcb_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 				      cairo_scaled_font_t  *scaled_font);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_xcb_surface_clear (cairo_xcb_surface_t *dst);
 
 cairo_private cairo_status_t

@@ -2335,11 +2335,22 @@ _cairo_xcb_surface_fixup_unbounded_boxes (cairo_xcb_surface_t *dst,
     return status;
 }
 
-void
+cairo_status_t
 _cairo_xcb_surface_clear (cairo_xcb_surface_t *dst)
 {
     xcb_gcontext_t gc;
     xcb_rectangle_t rect;
+    cairo_status_t status;
+
+    status = _cairo_xcb_connection_acquire (dst->connection);
+    if (unlikely (status))
+	return status;
+
+    status = _cairo_xcb_connection_take_socket (dst->connection);
+    if (unlikely (status)) {
+	_cairo_xcb_connection_release (dst->connection);
+	return status;
+    }
 
     gc = _cairo_xcb_screen_get_gc (dst->screen, dst->drawable, dst->depth);
 
@@ -2353,7 +2364,10 @@ _cairo_xcb_surface_clear (cairo_xcb_surface_t *dst)
 
     _cairo_xcb_screen_put_gc (dst->screen, dst->depth, gc);
 
+    _cairo_xcb_connection_release (dst->connection);
+
     dst->deferred_clear = FALSE;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -2405,8 +2419,13 @@ _clip_and_composite (cairo_xcb_surface_t	*dst,
 	return status;
     }
 
-    if (dst->deferred_clear)
-	_cairo_xcb_surface_clear (dst);
+    if (dst->deferred_clear) {
+	status = _cairo_xcb_surface_clear (dst);
+	if (unlikely (status)) {
+	    _cairo_xcb_connection_release (dst->connection);
+	    return status;
+	}
+    }
 
     _cairo_xcb_surface_ensure_picture (dst);
 
@@ -2745,8 +2764,11 @@ _clip_and_composite_boxes (cairo_xcb_surface_t *dst,
     if ((dst->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE) == 0)
 	return _core_boxes (dst, op, src, boxes, antialias, clip, extents);
 
-    if (dst->deferred_clear)
-	_cairo_xcb_surface_clear (dst);
+    if (dst->deferred_clear) {
+	status = _cairo_xcb_surface_clear (dst);
+	if (unlikely (status))
+	    return status;
+    }
 
     /* Use a fast path if the boxes are pixel aligned */
     status = _composite_boxes (dst, op, src, boxes, antialias, clip, extents);

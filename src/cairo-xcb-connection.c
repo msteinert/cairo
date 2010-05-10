@@ -594,6 +594,8 @@ _cairo_xcb_connection_get (xcb_connection_t *xcb_connection)
     const xcb_query_extension_reply_t *ext;
     cairo_status_t status;
 
+    CAIRO_MUTEX_INITIALIZE ();
+
     CAIRO_MUTEX_LOCK (_cairo_xcb_connections_mutex);
     if (connections.next == NULL) {
 	/* XXX _cairo_init () */
@@ -619,11 +621,47 @@ _cairo_xcb_connection_get (xcb_connection_t *xcb_connection)
 	goto unlock;
 
     _cairo_device_init (&connection->device, &_cairo_xcb_device_backend);
-    CAIRO_MUTEX_INIT (connection->shm_mutex);
-    CAIRO_MUTEX_INIT (connection->screens_mutex);
 
     connection->xcb_connection = xcb_connection;
     connection->has_socket = FALSE;
+
+    cairo_list_init (&connection->fonts);
+    cairo_list_init (&connection->screens);
+    cairo_list_init (&connection->link);
+    connection->xrender_formats = _cairo_hash_table_create (_xrender_formats_equal);
+    if (connection->xrender_formats == NULL) {
+	CAIRO_MUTEX_FINI (connection->device.mutex);
+	free (connection);
+	connection = NULL;
+	goto unlock;
+    }
+
+    connection->visual_to_xrender_format = _cairo_hash_table_create (_xrender_formats_equal);
+    if (connection->visual_to_xrender_format == NULL) {
+	_cairo_hash_table_destroy (connection->xrender_formats);
+	CAIRO_MUTEX_FINI (connection->device.mutex);
+	free (connection);
+	connection = NULL;
+	goto unlock;
+    }
+
+    cairo_list_init (&connection->free_xids);
+    _cairo_freepool_init (&connection->xid_pool,
+			  sizeof (cairo_xcb_xid_t));
+
+    cairo_list_init (&connection->shm_pools);
+    _cairo_freepool_init (&connection->shm_info_freelist,
+			  sizeof (cairo_xcb_shm_info_t));
+
+    connection->maximum_request_length =
+	xcb_get_maximum_request_length (xcb_connection);
+
+    CAIRO_MUTEX_INIT (connection->shm_mutex);
+    CAIRO_MUTEX_INIT (connection->screens_mutex);
+
+    CAIRO_MUTEX_LOCK (connection->device.mutex);
+
+    connection->flags = 0;
 
     xcb_prefetch_extension_data (xcb_connection, &xcb_big_requests_id);
     xcb_prefetch_extension_data (xcb_connection, &xcb_render_id);
@@ -639,31 +677,13 @@ _cairo_xcb_connection_get (xcb_connection_t *xcb_connection)
 
     xcb_prefetch_maximum_request_length (xcb_connection);
 
-    cairo_list_init (&connection->fonts);
-    cairo_list_init (&connection->screens);
-    cairo_list_add (&connection->link, &connections);
-    connection->xrender_formats = _cairo_hash_table_create (_xrender_formats_equal);
-    connection->visual_to_xrender_format = _cairo_hash_table_create (_xrender_formats_equal);
-
-    cairo_list_init (&connection->free_xids);
-    _cairo_freepool_init (&connection->xid_pool,
-			  sizeof (cairo_xcb_xid_t));
-
-    cairo_list_init (&connection->shm_pools);
-    _cairo_freepool_init (&connection->shm_info_freelist,
-			  sizeof (cairo_xcb_shm_info_t));
-
-    connection->maximum_request_length =
-	xcb_get_maximum_request_length (xcb_connection);
-
-    connection->flags = 0;
-
     connection->root = xcb_get_setup (xcb_connection);
     connection->render = NULL;
     ext = xcb_get_extension_data (xcb_connection, &xcb_render_id);
     if (ext != NULL && ext->present) {
 	status = _cairo_xcb_connection_query_render (connection);
 	if (unlikely (status)) {
+	    CAIRO_MUTEX_UNLOCK (connection->device.mutex);
 	    _cairo_xcb_connection_destroy (connection);
 	    connection = NULL;
 	    goto unlock;
@@ -696,6 +716,9 @@ _cairo_xcb_connection_get (xcb_connection_t *xcb_connection)
     }
 #endif
 
+    CAIRO_MUTEX_UNLOCK (connection->device.mutex);
+
+    cairo_list_add (&connection->link, &connections);
 unlock:
     CAIRO_MUTEX_UNLOCK (_cairo_xcb_connections_mutex);
 
