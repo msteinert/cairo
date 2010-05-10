@@ -220,11 +220,8 @@ _cairo_path_fixed_fill_rectilinear_tessellate_to_region (const cairo_path_fixed_
   CLEANUP_TRAPS:
     _cairo_traps_fini (&traps);
 
-    if (unlikely (status)) { /* XXX _cairo_region_create_in_error() */
-	region = cairo_region_create ();
-	if (likely (region->status) == CAIRO_STATUS_SUCCESS)
-	    region->status = status;
-    }
+    if (unlikely (status))
+	region = _cairo_region_create_in_error (status);
 
     return region;
 }

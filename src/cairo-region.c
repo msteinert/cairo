@@ -49,6 +49,57 @@ static const cairo_region_t _cairo_region_nil = {
     CAIRO_STATUS_NO_MEMORY,		/* status */
 };
 
+cairo_region_t *
+_cairo_region_create_in_error (cairo_status_t status)
+{
+    switch (status) {
+    case CAIRO_STATUS_NO_MEMORY:
+	return (cairo_region_t *) &_cairo_region_nil;
+
+    case CAIRO_STATUS_SUCCESS:
+    case CAIRO_STATUS_LAST_STATUS:
+	ASSERT_NOT_REACHED;
+	/* fall-through */
+    case CAIRO_STATUS_SURFACE_TYPE_MISMATCH:
+    case CAIRO_STATUS_INVALID_STATUS:
+    case CAIRO_STATUS_INVALID_CONTENT:
+    case CAIRO_STATUS_INVALID_FORMAT:
+    case CAIRO_STATUS_INVALID_VISUAL:
+    case CAIRO_STATUS_READ_ERROR:
+    case CAIRO_STATUS_WRITE_ERROR:
+    case CAIRO_STATUS_FILE_NOT_FOUND:
+    case CAIRO_STATUS_TEMP_FILE_ERROR:
+    case CAIRO_STATUS_INVALID_STRIDE:
+    case CAIRO_STATUS_INVALID_SIZE:
+    case CAIRO_STATUS_DEVICE_TYPE_MISMATCH:
+    case CAIRO_STATUS_DEVICE_ERROR:
+    case CAIRO_STATUS_INVALID_RESTORE:
+    case CAIRO_STATUS_INVALID_POP_GROUP:
+    case CAIRO_STATUS_NO_CURRENT_POINT:
+    case CAIRO_STATUS_INVALID_MATRIX:
+    case CAIRO_STATUS_NULL_POINTER:
+    case CAIRO_STATUS_INVALID_STRING:
+    case CAIRO_STATUS_INVALID_PATH_DATA:
+    case CAIRO_STATUS_SURFACE_FINISHED:
+    case CAIRO_STATUS_PATTERN_TYPE_MISMATCH:
+    case CAIRO_STATUS_INVALID_DASH:
+    case CAIRO_STATUS_INVALID_DSC_COMMENT:
+    case CAIRO_STATUS_INVALID_INDEX:
+    case CAIRO_STATUS_CLIP_NOT_REPRESENTABLE:
+    case CAIRO_STATUS_FONT_TYPE_MISMATCH:
+    case CAIRO_STATUS_USER_FONT_IMMUTABLE:
+    case CAIRO_STATUS_USER_FONT_ERROR:
+    case CAIRO_STATUS_NEGATIVE_COUNT:
+    case CAIRO_STATUS_INVALID_CLUSTERS:
+    case CAIRO_STATUS_INVALID_SLANT:
+    case CAIRO_STATUS_INVALID_WEIGHT:
+    case CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED:
+    default:
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_region_t *) &_cairo_region_nil;
+    }
+}
+
 /**
  * _cairo_region_set_error:
  * @region: a region
@@ -155,17 +206,14 @@ cairo_region_create_rectangles (const cairo_rectangle_int_t *rects,
     int i;
 
     region = _cairo_malloc (sizeof (cairo_region_t));
-    if (unlikely (region == NULL)) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_region_t *) &_cairo_region_nil;
-    }
+    if (unlikely (region == NULL))
+	return _cairo_region_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     if (count > ARRAY_LENGTH (stack_pboxes)) {
 	pboxes = _cairo_malloc_ab (count, sizeof (pixman_box32_t));
 	if (unlikely (pboxes == NULL)) {
 	    free (region);
-	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	    return (cairo_region_t *) &_cairo_region_nil;
+	    return _cairo_region_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 	}
     }
 
@@ -183,8 +231,7 @@ cairo_region_create_rectangles (const cairo_rectangle_int_t *rects,
 
     if (unlikely (i == 0)) {
 	free (region);
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_region_t *) &_cairo_region_nil;
+	return _cairo_region_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
     CAIRO_REFERENCE_COUNT_INIT (&region->ref_count, 1);
