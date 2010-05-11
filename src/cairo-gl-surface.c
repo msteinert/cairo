@@ -2367,11 +2367,6 @@ _cairo_gl_surface_fill_rectangles_glsl (void                  *abstract_surface,
     cairo_gl_context_t *ctx;
     int i;
     GLfloat *vertices;
-    static const char *fill_vs_source =
-	"void main()\n"
-	"{\n"
-	"	gl_Position = ftransform();\n"
-	"}\n";
     static const char *fill_fs_source =
 	"uniform vec4 color;\n"
 	"void main()\n"
@@ -2389,7 +2384,7 @@ _cairo_gl_surface_fill_rectangles_glsl (void                  *abstract_surface,
 
     status = create_shader_program (ctx,
                                     &ctx->fill_rectangles_shader,
-				    fill_vs_source,
+                                    CAIRO_GL_VERTEX_SHADER_EMPTY,
 				    fill_fs_source);
     if (unlikely (status)) {
 	_cairo_gl_context_release (ctx);

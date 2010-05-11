@@ -83,7 +83,6 @@ typedef struct cairo_gl_glyph_cache {
 typedef struct cairo_gl_shader_impl cairo_gl_shader_impl_t;
 
 typedef struct cairo_gl_shader_program {
-    GLuint vertex_shader;
     GLuint fragment_shader;
     GLuint program;
     cairo_bool_t build_failure;
@@ -95,7 +94,8 @@ typedef enum cairo_gl_shader_source {
     CAIRO_GL_SHADER_SOURCE_TEXTURE_ALPHA,
     CAIRO_GL_SHADER_SOURCE_LINEAR_GRADIENT,
     CAIRO_GL_SHADER_SOURCE_RADIAL_GRADIENT,
-    CAIRO_GL_SHADER_SOURCE_COUNT,
+
+    CAIRO_GL_SHADER_SOURCE_COUNT
 } cairo_gl_shader_source_t;
 
 typedef enum cairo_gl_shader_mask {
@@ -106,15 +106,28 @@ typedef enum cairo_gl_shader_mask {
     CAIRO_GL_SHADER_MASK_RADIAL_GRADIENT,
     CAIRO_GL_SHADER_MASK_NONE,
     CAIRO_GL_SHADER_MASK_SPANS,
-    CAIRO_GL_SHADER_MASK_COUNT,
+
+    CAIRO_GL_SHADER_MASK_COUNT
 } cairo_gl_shader_mask_t;
 
 typedef enum cairo_gl_shader_in {
     CAIRO_GL_SHADER_IN_NORMAL,
     CAIRO_GL_SHADER_IN_CA_SOURCE,
     CAIRO_GL_SHADER_IN_CA_SOURCE_ALPHA,
-    CAIRO_GL_SHADER_IN_COUNT,
+
+    CAIRO_GL_SHADER_IN_COUNT
 } cairo_gl_shader_in_t;
+
+typedef enum cairo_gl_vertex_shader {
+  CAIRO_GL_VERTEX_SHADER_EMPTY,
+  CAIRO_GL_VERTEX_SHADER_SOURCE,
+  CAIRO_GL_VERTEX_SHADER_MASK,
+  CAIRO_GL_VERTEX_SHADER_SOURCE_MASK,
+  CAIRO_GL_VERTEX_SHADER_SPANS,
+  CAIRO_GL_VERTEX_SHADER_SOURCE_SPANS,
+
+  CAIRO_GL_VERTEX_SHADER_COUNT
+} cairo_gl_vertex_shader_t;
 
 typedef struct _cairo_gl_context {
     cairo_device_t base;
@@ -129,6 +142,7 @@ typedef struct _cairo_gl_context {
 
     const cairo_gl_shader_impl_t *shader_impl;
 
+    GLuint vertex_shaders[CAIRO_GL_VERTEX_SHADER_COUNT];
     cairo_gl_shader_program_t fill_rectangles_shader;
     cairo_gl_shader_program_t shaders[CAIRO_GL_SHADER_SOURCE_COUNT]
 					[CAIRO_GL_SHADER_MASK_COUNT]
@@ -330,6 +344,9 @@ cairo_private void
 _cairo_gl_context_init_shaders (cairo_gl_context_t *ctx);
 
 cairo_private void
+destroy_shader (cairo_gl_context_t *ctx, GLuint shader);
+
+cairo_private void
 init_shader_program (cairo_gl_shader_program_t *program);
 
 cairo_private void
@@ -339,7 +356,7 @@ destroy_shader_program (cairo_gl_context_t *ctx,
 cairo_private cairo_status_t
 create_shader_program (cairo_gl_context_t *ctx,
                        cairo_gl_shader_program_t *program,
-                       const char *vertex_text,
+                       cairo_gl_vertex_shader_t vertex_shader,
                        const char *fragment_text);
 
 cairo_private cairo_status_t

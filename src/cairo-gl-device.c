@@ -58,6 +58,21 @@ _gl_unlock (void *device)
 }
 
 static void
+_gl_finish (void *device)
+{
+    cairo_gl_context_t *ctx;
+    int i;
+
+    if (_cairo_gl_context_acquire (device, &ctx) == CAIRO_STATUS_SUCCESS) {
+        for (i = 0; i < CAIRO_GL_VERTEX_SHADER_COUNT; i++) {
+            destroy_shader (ctx, ctx->vertex_shaders[i]);
+        }
+
+        _cairo_gl_context_release (ctx);
+    }
+}
+
+static void
 _gl_destroy (void *device)
 {
     cairo_gl_context_t *ctx = device;
@@ -90,7 +105,7 @@ static const cairo_device_backend_t _cairo_gl_device_backend = {
     _gl_unlock,
 
     NULL, /* flush */
-    NULL, /* finish */
+    _gl_finish,
     _gl_destroy,
 };
 
