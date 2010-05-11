@@ -4162,7 +4162,7 @@ FT_Open_Face (FT_Library library, const FT_Open_Args *args, FT_Long index, FT_Fa
 	    if (args->flags & FT_OPEN_MEMORY) {
 		data->size = args->memory_size;
 		data->data = malloc (args->memory_size);
-		memcpy (data->data, mem, size);
+		memcpy (data->data, args->memory_base, args->memory_size);
 	    } else if (args->flags & FT_OPEN_STREAM) {
 		fprintf (stderr, "FT_Open_Face (stream, %ld) = %p\n",
 			 index, *face);
@@ -4170,7 +4170,7 @@ FT_Open_Face (FT_Library library, const FT_Open_Args *args, FT_Long index, FT_Fa
 	    } else if (args->flags & FT_OPEN_PATHNAME) {
 		data->size = 0;
 		data->data = NULL;
-		_ft_read_file (data, pathname);
+		_ft_read_file (data, args->pathname);
 	    }
 
 	    obj = _type_object_create (NONE, *face);
