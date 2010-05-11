@@ -4144,7 +4144,6 @@ FT_New_Memory_Face (FT_Library library, const FT_Byte *mem, FT_Long size, FT_Lon
  * FT_Open_Face(). So far this has not caused any issues, but it will one
  * day...
  */
-#if 0
 FT_Error
 FT_Open_Face (FT_Library library, const FT_Open_Args *args, FT_Long index, FT_Face *face)
 {
@@ -4153,21 +4152,36 @@ FT_Open_Face (FT_Library library, const FT_Open_Args *args, FT_Long index, FT_Fa
     _enter_trace ();
 
     ret = DLCALL (FT_Open_Face, library, args, index, face);
-    if (args->flags & FT_OPEN_MEMORY)
-	fprintf (stderr, "FT_Open_Face (mem=%p, %ld, %ld) = %p\n",
-		args->memory_base, args->memory_size,
-		index, *face);
-    else if (args->flags & FT_OPEN_STREAM)
-	fprintf (stderr, "FT_Open_Face (stream, %ld) = %p\n",
-		index, *face);
-    else if (args->flags & FT_OPEN_PATHNAME)
-	fprintf (stderr, "FT_Open_Face (path=%s, %ld) = %p\n",
-		args->pathname, index, *face);
+    if (ret == 0) {
+	Object *obj = _get_object (NONE, *face);
+	if (obj == NULL) {
+	    FtFaceData *data;
+
+	    data = malloc (sizeof (FtFaceData));
+	    data->index = index;
+	    if (args->flags & FT_OPEN_MEMORY) {
+		data->size = args->memory_size;
+		data->data = malloc (args->memory_size);
+		memcpy (data->data, mem, size);
+	    } else if (args->flags & FT_OPEN_STREAM) {
+		fprintf (stderr, "FT_Open_Face (stream, %ld) = %p\n",
+			 index, *face);
+		abort ();
+	    } else if (args->flags & FT_OPEN_PATHNAME) {
+		data->size = 0;
+		data->data = NULL;
+		_ft_read_file (data, pathname);
+	    }
+
+	    obj = _type_object_create (NONE, *face);
+	    obj->data = data;
+	    obj->destroy = _ft_face_data_destroy;
+	}
+    }
 
     _exit_trace ();
     return ret;
 }
-#endif
 
 FT_Error
 FT_Done_Face (FT_Face face)
