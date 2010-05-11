@@ -396,7 +396,7 @@ _cairo_gl_surface_clear (cairo_gl_surface_t *surface)
     if (unlikely (status))
 	return status;
 
-    _cairo_gl_set_destination (ctx, surface);
+    _cairo_gl_context_set_destination (ctx, surface);
     if (surface->base.content == CAIRO_CONTENT_COLOR)
 	glClearColor (0.0, 0.0, 0.0, 1.0);
     else
@@ -660,7 +660,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 
 	status = CAIRO_STATUS_SUCCESS;
 
-	_cairo_gl_set_destination (ctx, dst);
+	_cairo_gl_context_set_destination (ctx, dst);
 
 	glGenTextures (1, &tex);
 	glActiveTexture (GL_TEXTURE0);
@@ -779,7 +779,7 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
     status = _cairo_gl_context_acquire (surface->base.device, &ctx);
     if (unlikely (status))
         return status;
-    _cairo_gl_set_destination (ctx, surface);
+    _cairo_gl_context_set_destination (ctx, surface);
 
     glPixelStorei (GL_PACK_ALIGNMENT, 1);
     glPixelStorei (GL_PACK_ROW_LENGTH, image->stride / cpp);
@@ -1837,7 +1837,7 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
 
     status = CAIRO_STATUS_SUCCESS;
 
-    _cairo_gl_set_destination (ctx, dst);
+    _cairo_gl_context_set_destination (ctx, dst);
 
     if (clip_region != NULL) {
 	int num_rectangles;
@@ -2055,7 +2055,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 
     status = CAIRO_STATUS_SUCCESS;
 
-    _cairo_gl_set_destination (ctx, dst);
+    _cairo_gl_context_set_destination (ctx, dst);
     _cairo_gl_set_operator (dst, op, FALSE);
 
     _cairo_gl_use_program (ctx, setup.shader);
@@ -2291,7 +2291,7 @@ _cairo_gl_surface_fill_rectangles_fixed (void			 *abstract_surface,
     if (unlikely (status))
 	return status;
 
-    _cairo_gl_set_destination (ctx, surface);
+    _cairo_gl_context_set_destination (ctx, surface);
     _cairo_gl_set_operator (surface, op, FALSE);
 
     if (num_rects > N_STACK_RECTS) {
@@ -2404,7 +2404,7 @@ _cairo_gl_surface_fill_rectangles_glsl (void                  *abstract_surface,
 
     _cairo_gl_use_program (ctx, &ctx->fill_rectangles_shader);
 
-    _cairo_gl_set_destination (ctx, surface);
+    _cairo_gl_context_set_destination (ctx, surface);
     _cairo_gl_set_operator (surface, op, FALSE);
 
     status = bind_vec4_to_shader (ctx,
@@ -2792,7 +2792,7 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 	return _cairo_span_renderer_create_in_error (status);
     }
 
-    _cairo_gl_set_destination (renderer->ctx, dst);
+    _cairo_gl_context_set_destination (renderer->ctx, dst);
 
     status = _cairo_gl_get_program (renderer->ctx,
 				    renderer->setup.src.source,

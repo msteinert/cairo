@@ -182,7 +182,7 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 }
 
 void
-_cairo_gl_set_destination (cairo_gl_context_t *ctx,
+_cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
                            cairo_gl_surface_t *surface)
 {
     if (ctx->current_target != surface) {

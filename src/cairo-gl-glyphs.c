@@ -494,7 +494,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 	return status;
     }
 
-    _cairo_gl_set_destination (ctx, dst);
+    _cairo_gl_context_set_destination (ctx, dst);
 
     _cairo_scaled_font_freeze_cache (scaled_font);
     if (! _cairo_gl_surface_owns_font (dst, scaled_font)) {
