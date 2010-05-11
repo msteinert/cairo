@@ -80,6 +80,18 @@ typedef struct cairo_gl_glyph_cache {
     unsigned int width, height;
 } cairo_gl_glyph_cache_t;
 
+typedef enum cairo_gl_operand_type {
+    CAIRO_GL_OPERAND_NONE,
+    CAIRO_GL_OPERAND_CONSTANT,
+    CAIRO_GL_OPERAND_TEXTURE,
+    CAIRO_GL_OPERAND_TEXTURE_ALPHA,
+    CAIRO_GL_OPERAND_LINEAR_GRADIENT,
+    CAIRO_GL_OPERAND_RADIAL_GRADIENT,
+    CAIRO_GL_OPERAND_SPANS,
+
+    CAIRO_GL_OPERAND_COUNT
+} cairo_gl_operand_type_t;
+
 typedef struct cairo_gl_shader_impl cairo_gl_shader_impl_t;
 
 typedef struct cairo_gl_shader_program {
@@ -87,28 +99,6 @@ typedef struct cairo_gl_shader_program {
     GLuint program;
     cairo_bool_t build_failure;
 } cairo_gl_shader_program_t;
-
-typedef enum cairo_gl_shader_source {
-    CAIRO_GL_SHADER_SOURCE_CONSTANT,
-    CAIRO_GL_SHADER_SOURCE_TEXTURE,
-    CAIRO_GL_SHADER_SOURCE_TEXTURE_ALPHA,
-    CAIRO_GL_SHADER_SOURCE_LINEAR_GRADIENT,
-    CAIRO_GL_SHADER_SOURCE_RADIAL_GRADIENT,
-
-    CAIRO_GL_SHADER_SOURCE_COUNT
-} cairo_gl_shader_source_t;
-
-typedef enum cairo_gl_shader_mask {
-    CAIRO_GL_SHADER_MASK_CONSTANT,
-    CAIRO_GL_SHADER_MASK_TEXTURE,
-    CAIRO_GL_SHADER_MASK_TEXTURE_ALPHA,
-    CAIRO_GL_SHADER_MASK_LINEAR_GRADIENT,
-    CAIRO_GL_SHADER_MASK_RADIAL_GRADIENT,
-    CAIRO_GL_SHADER_MASK_NONE,
-    CAIRO_GL_SHADER_MASK_SPANS,
-
-    CAIRO_GL_SHADER_MASK_COUNT
-} cairo_gl_shader_mask_t;
 
 typedef enum cairo_gl_shader_in {
     CAIRO_GL_SHADER_IN_NORMAL,
@@ -144,9 +134,9 @@ typedef struct _cairo_gl_context {
 
     GLuint vertex_shaders[CAIRO_GL_VERTEX_SHADER_COUNT];
     cairo_gl_shader_program_t fill_rectangles_shader;
-    cairo_gl_shader_program_t shaders[CAIRO_GL_SHADER_SOURCE_COUNT]
-					[CAIRO_GL_SHADER_MASK_COUNT]
-					[CAIRO_GL_SHADER_IN_COUNT];
+    cairo_gl_shader_program_t shaders[CAIRO_GL_OPERAND_COUNT]
+				     [CAIRO_GL_OPERAND_COUNT]
+				     [CAIRO_GL_SHADER_IN_COUNT];
 
     cairo_gl_surface_t *current_target;
     cairo_gl_glyph_cache_t glyph_cache[2];
@@ -160,20 +150,11 @@ typedef struct _cairo_gl_context {
     void (*destroy) (void *ctx);
 } cairo_gl_context_t;
 
-enum cairo_gl_composite_operand_type {
-    OPERAND_CONSTANT,
-    OPERAND_TEXTURE,
-    OPERAND_LINEAR_GRADIENT,
-    OPERAND_RADIAL_GRADIENT,
-};
-
 /* This union structure describes a potential source or mask operand to the
  * compositing equation.
  */
-typedef struct cairo_gl_composite_operand {
-    enum cairo_gl_composite_operand_type type;
-    cairo_gl_shader_source_t source;
-    cairo_gl_shader_mask_t mask;
+typedef struct cairo_gl_operand {
+    cairo_gl_operand_type_t type;
     union {
 	struct {
 	    GLuint tex;
@@ -200,11 +181,11 @@ typedef struct cairo_gl_composite_operand {
     } operand;
 
     const cairo_pattern_t *pattern;
-} cairo_gl_composite_operand_t;
+} cairo_gl_operand_t;
 
 typedef struct _cairo_gl_composite_setup {
-    cairo_gl_composite_operand_t src;
-    cairo_gl_composite_operand_t mask;
+    cairo_gl_operand_t src;
+    cairo_gl_operand_t mask;
     cairo_gl_shader_program_t *shader;
 } cairo_gl_composite_setup_t;
 
@@ -240,7 +221,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 
 cairo_private cairo_int_status_t
 _cairo_gl_operand_init (cairo_gl_context_t *ctx,
-                        cairo_gl_composite_operand_t *operand,
+                        cairo_gl_operand_t *operand,
 			const cairo_pattern_t *pattern,
 			cairo_gl_surface_t *dst,
 			int src_x, int src_y,
@@ -300,7 +281,7 @@ _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
 				 cairo_gl_composite_setup_t *setup);
 
 cairo_private void
-_cairo_gl_operand_destroy (cairo_gl_composite_operand_t *operand);
+_cairo_gl_operand_destroy (cairo_gl_operand_t *operand);
 
 cairo_private cairo_bool_t
 _cairo_gl_get_image_format_and_type (pixman_format_code_t pixman_format,
@@ -395,8 +376,8 @@ _cairo_gl_use_program (cairo_gl_context_t *ctx,
 
 cairo_private cairo_status_t
 _cairo_gl_get_program (cairo_gl_context_t *ctx,
-		       cairo_gl_shader_source_t source,
-		       cairo_gl_shader_mask_t mask,
+		       cairo_gl_operand_type_t source,
+		       cairo_gl_operand_type_t mask,
 		       cairo_gl_shader_in_t in,
 		       cairo_gl_shader_program_t **out_program);
 

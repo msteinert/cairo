@@ -803,19 +803,19 @@ static const char *fs_in_component_alpha_alpha =
  */
 static cairo_gl_shader_program_t *
 _cairo_gl_select_program (cairo_gl_context_t *ctx,
-			  cairo_gl_shader_source_t source,
-			  cairo_gl_shader_mask_t mask,
+			  cairo_gl_operand_type_t source,
+			  cairo_gl_operand_type_t mask,
 			  cairo_gl_shader_in_t in)
 {
     if (in == CAIRO_GL_SHADER_IN_NORMAL &&
-	mask == CAIRO_GL_SHADER_MASK_TEXTURE_ALPHA)
+	mask == CAIRO_GL_OPERAND_TEXTURE_ALPHA)
     {
-	mask = CAIRO_GL_SHADER_MASK_TEXTURE;
+	mask = CAIRO_GL_OPERAND_TEXTURE;
     }
     if (in == CAIRO_GL_SHADER_IN_CA_SOURCE_ALPHA &&
-	source == CAIRO_GL_SHADER_SOURCE_TEXTURE_ALPHA)
+	source == CAIRO_GL_OPERAND_TEXTURE_ALPHA)
     {
-	source = CAIRO_GL_SHADER_SOURCE_TEXTURE;
+	source = CAIRO_GL_OPERAND_TEXTURE;
     }
 
     return &ctx->shaders[source][mask][in];
@@ -823,26 +823,28 @@ _cairo_gl_select_program (cairo_gl_context_t *ctx,
 
 cairo_status_t
 _cairo_gl_get_program (cairo_gl_context_t *ctx,
-		       cairo_gl_shader_source_t source,
-		       cairo_gl_shader_mask_t mask,
+		       cairo_gl_operand_type_t source,
+		       cairo_gl_operand_type_t mask,
 		       cairo_gl_shader_in_t in,
 		       cairo_gl_shader_program_t **out_program)
 {
-    const char *source_sources[CAIRO_GL_SHADER_SOURCE_COUNT] = {
+    const char *source_sources[CAIRO_GL_OPERAND_COUNT] = {
+        NULL,
 	fs_source_constant,
 	fs_source_texture,
 	fs_source_texture_alpha,
 	fs_source_linear_gradient,
 	fs_source_radial_gradient,
+        NULL
     };
-    const char *mask_sources[CAIRO_GL_SHADER_MASK_COUNT] = {
+    const char *mask_sources[CAIRO_GL_OPERAND_COUNT] = {
+	fs_mask_none,
 	fs_mask_constant,
 	fs_mask_texture,
 	fs_mask_texture_alpha,
 	fs_mask_linear_gradient,
 	fs_mask_radial_gradient,
-	fs_mask_none,
-	fs_mask_spans,
+	fs_mask_spans
     };
     const char *in_sources[CAIRO_GL_SHADER_IN_COUNT] = {
 	fs_in_normal,
@@ -854,6 +856,10 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
     cairo_gl_vertex_shader_t vs;
     char *fs_source;
     cairo_status_t status;
+
+    assert (source < ARRAY_LENGTH (source_sources));
+    assert (source_sources[source] != NULL);
+    assert (mask < ARRAY_LENGTH (mask_sources));
 
     program = _cairo_gl_select_program(ctx, source, mask, in);
     if (program->program) {
@@ -893,23 +899,23 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
     if (unlikely (fs_source == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    if (source == CAIRO_GL_SHADER_SOURCE_CONSTANT ||
-	source == CAIRO_GL_SHADER_SOURCE_LINEAR_GRADIENT ||
-	source == CAIRO_GL_SHADER_SOURCE_RADIAL_GRADIENT) {
-	if (mask == CAIRO_GL_SHADER_MASK_SPANS)
+    if (source == CAIRO_GL_OPERAND_CONSTANT ||
+	source == CAIRO_GL_OPERAND_LINEAR_GRADIENT ||
+	source == CAIRO_GL_OPERAND_RADIAL_GRADIENT) {
+	if (mask == CAIRO_GL_OPERAND_SPANS)
 	    vs = CAIRO_GL_VERTEX_SHADER_SPANS;
-	else if (mask == CAIRO_GL_SHADER_MASK_CONSTANT ||
-		 mask == CAIRO_GL_SHADER_MASK_LINEAR_GRADIENT ||
-		 mask == CAIRO_GL_SHADER_MASK_RADIAL_GRADIENT)
+	else if (mask == CAIRO_GL_OPERAND_CONSTANT ||
+		 mask == CAIRO_GL_OPERAND_LINEAR_GRADIENT ||
+		 mask == CAIRO_GL_OPERAND_RADIAL_GRADIENT)
 	    vs = CAIRO_GL_VERTEX_SHADER_EMPTY;
 	else
 	    vs = CAIRO_GL_VERTEX_SHADER_MASK;
     } else {
-	if (mask == CAIRO_GL_SHADER_MASK_SPANS)
+	if (mask == CAIRO_GL_OPERAND_SPANS)
 	    vs = CAIRO_GL_VERTEX_SHADER_SOURCE_SPANS;
-	else if (mask == CAIRO_GL_SHADER_MASK_CONSTANT ||
-		 mask == CAIRO_GL_SHADER_MASK_LINEAR_GRADIENT ||
-		 mask == CAIRO_GL_SHADER_MASK_RADIAL_GRADIENT)
+	else if (mask == CAIRO_GL_OPERAND_CONSTANT ||
+		 mask == CAIRO_GL_OPERAND_LINEAR_GRADIENT ||
+		 mask == CAIRO_GL_OPERAND_RADIAL_GRADIENT)
 	    vs = CAIRO_GL_VERTEX_SHADER_SOURCE;
 	else
 	    vs = CAIRO_GL_VERTEX_SHADER_SOURCE_MASK;
@@ -928,13 +934,13 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
 	return status;
 
     _cairo_gl_use_program (ctx, program);
-    if (source != CAIRO_GL_SHADER_SOURCE_CONSTANT) {
+    if (source != CAIRO_GL_OPERAND_CONSTANT) {
 	status = bind_texture_to_shader (ctx, program->program, "source_sampler", 0);
 	assert (!_cairo_status_is_error (status));
     }
-    if (mask != CAIRO_GL_SHADER_MASK_CONSTANT &&
-	mask != CAIRO_GL_SHADER_MASK_SPANS &&
-	mask != CAIRO_GL_SHADER_MASK_NONE) {
+    if (mask != CAIRO_GL_OPERAND_CONSTANT &&
+	mask != CAIRO_GL_OPERAND_SPANS &&
+	mask != CAIRO_GL_OPERAND_NONE) {
 	status = bind_texture_to_shader (ctx, program->program, "mask_sampler", 1);
 	assert (!_cairo_status_is_error (status));
     }
