@@ -64,7 +64,7 @@ _gl_finish (void *device)
     int i;
 
     if (_cairo_gl_context_acquire (device, &ctx) == CAIRO_STATUS_SUCCESS) {
-        for (i = 0; i < CAIRO_GL_VERTEX_SHADER_COUNT; i++) {
+        for (i = 0; i <= CAIRO_GL_VAR_TYPE_MAX; i++) {
             destroy_shader (ctx, ctx->vertex_shaders[i]);
         }
 

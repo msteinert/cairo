@@ -108,16 +108,14 @@ typedef enum cairo_gl_shader_in {
     CAIRO_GL_SHADER_IN_COUNT
 } cairo_gl_shader_in_t;
 
-typedef enum cairo_gl_vertex_shader {
-  CAIRO_GL_VERTEX_SHADER_EMPTY,
-  CAIRO_GL_VERTEX_SHADER_SOURCE,
-  CAIRO_GL_VERTEX_SHADER_MASK,
-  CAIRO_GL_VERTEX_SHADER_SOURCE_MASK,
-  CAIRO_GL_VERTEX_SHADER_SPANS,
-  CAIRO_GL_VERTEX_SHADER_SOURCE_SPANS,
+typedef enum cairo_gl_var_type {
+  CAIRO_GL_VAR_NONE,
+  CAIRO_GL_VAR_TEXCOORDS,
+  CAIRO_GL_VAR_COVERAGE
+} cairo_gl_var_type_t;
 
-  CAIRO_GL_VERTEX_SHADER_COUNT
-} cairo_gl_vertex_shader_t;
+#define cairo_gl_var_type_hash(src,mask,dest) ((mask) << 2 | (src << 1) | (dest))
+#define CAIRO_GL_VAR_TYPE_MAX ((CAIRO_GL_VAR_COVERAGE << 2) | (CAIRO_GL_VAR_TEXCOORDS << 1) | CAIRO_GL_VAR_TEXCOORDS)
 
 typedef struct _cairo_gl_context {
     cairo_device_t base;
@@ -132,7 +130,7 @@ typedef struct _cairo_gl_context {
 
     const cairo_gl_shader_impl_t *shader_impl;
 
-    GLuint vertex_shaders[CAIRO_GL_VERTEX_SHADER_COUNT];
+    GLuint vertex_shaders[CAIRO_GL_VAR_TYPE_MAX + 1];
     cairo_gl_shader_program_t fill_rectangles_shader;
     cairo_gl_shader_program_t shaders[CAIRO_GL_OPERAND_COUNT]
 				     [CAIRO_GL_OPERAND_COUNT]
@@ -337,7 +335,8 @@ destroy_shader_program (cairo_gl_context_t *ctx,
 cairo_private cairo_status_t
 create_shader_program (cairo_gl_context_t *ctx,
                        cairo_gl_shader_program_t *program,
-                       cairo_gl_vertex_shader_t vertex_shader,
+                       cairo_gl_var_type_t src,
+                       cairo_gl_var_type_t mask,
                        const char *fragment_text);
 
 cairo_private cairo_status_t

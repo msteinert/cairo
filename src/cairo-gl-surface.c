@@ -2412,7 +2412,8 @@ _cairo_gl_surface_fill_rectangles_glsl (void                  *abstract_surface,
 
     status = create_shader_program (ctx,
                                     &ctx->fill_rectangles_shader,
-                                    CAIRO_GL_VERTEX_SHADER_EMPTY,
+                                    CAIRO_GL_VAR_NONE,
+                                    CAIRO_GL_VAR_NONE,
 				    fill_fs_source);
     if (unlikely (status)) {
 	_cairo_gl_context_release (ctx);
