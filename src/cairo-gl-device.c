@@ -60,18 +60,18 @@ _gl_unlock (void *device)
 static void
 _gl_finish (void *device)
 {
-    cairo_gl_context_t *ctx;
+    cairo_gl_context_t *ctx = device;
     int i;
 
-    if (_cairo_gl_context_acquire (device, &ctx) == CAIRO_STATUS_SUCCESS) {
-        for (i = 0; i <= CAIRO_GL_VAR_TYPE_MAX; i++) {
-            destroy_shader (ctx, ctx->vertex_shaders[i]);
-        }
+    _gl_lock (device);
 
-        _cairo_cache_fini (&ctx->shaders);
-
-        _cairo_gl_context_release (ctx);
+    for (i = 0; i <= CAIRO_GL_VAR_TYPE_MAX; i++) {
+        destroy_shader (ctx, ctx->vertex_shaders[i]);
     }
+
+    _cairo_cache_fini (&ctx->shaders);
+
+    _gl_unlock (device);
 }
 
 static void
