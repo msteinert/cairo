@@ -451,9 +451,9 @@ _cairo_truetype_subset_fini (cairo_truetype_subset_t *truetype_subset);
 
 typedef struct _cairo_type1_subset {
     char *base_font;
-    int *widths;
-    long x_min, y_min, x_max, y_max;
-    long ascent, descent;
+    double *widths;
+    double x_min, y_min, x_max, y_max;
+    double ascent, descent;
     char *data;
     unsigned long header_length;
     unsigned long data_length;

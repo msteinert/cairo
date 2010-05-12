@@ -83,7 +83,7 @@ typedef struct _cairo_type1_font_subset {
 
     struct {
 	int subset_index;
-	int width;
+	double width;
 	char *name;
     } *glyphs;
 
@@ -566,7 +566,7 @@ cairo_type1_font_subset_get_glyph_names_and_widths (cairo_type1_font_subset_t *f
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
 
-	font->glyphs[i].width = font->face->glyph->metrics.horiAdvance;
+	font->glyphs[i].width = font->face->glyph->linearHoriAdvance / 65536.0; /* 16.16 format */
 
 	error = FT_Get_Glyph_Name(font->face, i, buffer, sizeof buffer);
 	if (error != FT_Err_Ok) {
@@ -1346,7 +1346,7 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
     if (unlikely (type1_subset->base_font == NULL))
 	goto fail1;
 
-    type1_subset->widths = calloc (sizeof (int), font.num_glyphs);
+    type1_subset->widths = calloc (sizeof (double), font.num_glyphs);
     if (unlikely (type1_subset->widths == NULL))
 	goto fail2;
     for (i = 0; i < font.base.num_glyphs; i++) {

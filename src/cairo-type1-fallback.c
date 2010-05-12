@@ -727,20 +727,20 @@ _cairo_type1_fallback_init_internal (cairo_type1_subset_t	*type1_subset,
         goto fail1;
     }
 
-    type1_subset->widths = calloc (sizeof (int), font->scaled_font_subset->num_glyphs);
+    type1_subset->widths = calloc (sizeof (double), font->scaled_font_subset->num_glyphs);
     if (unlikely (type1_subset->widths == NULL)) {
         status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
         goto fail2;
     }
     for (i = 0; i < font->scaled_font_subset->num_glyphs; i++)
-	type1_subset->widths[i] = font->widths[i];
+	type1_subset->widths[i] = (double)font->widths[i]/1000;
 
-    type1_subset->x_min   = (int) font->x_min;
-    type1_subset->y_min   = (int) font->y_min;
-    type1_subset->x_max   = (int) font->x_max;
-    type1_subset->y_max   = (int) font->y_max;
-    type1_subset->ascent  = (int) font->y_max;
-    type1_subset->descent = (int) font->y_min;
+    type1_subset->x_min   = (double)font->x_min/1000;
+    type1_subset->y_min   = (double)font->y_min/1000;
+    type1_subset->x_max   = (double)font->x_max/1000;
+    type1_subset->y_max   = (double)font->y_max/1000;
+    type1_subset->ascent  = (double)font->y_max/1000;
+    type1_subset->descent = (double)font->y_min/1000;
 
     length = font->header_size + font->data_size +
 	font->trailer_size;
