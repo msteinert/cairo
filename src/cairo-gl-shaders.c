@@ -430,9 +430,50 @@ static const cairo_gl_shader_impl_t shader_impl_arb = {
     use_program_arb,
 };
 
+typedef struct _cairo_shader_cache_entry {
+    cairo_cache_entry_t base;
+
+    cairo_gl_operand_type_t src;
+    cairo_gl_operand_type_t mask;
+    cairo_gl_operand_type_t dest;
+    cairo_gl_shader_in_t in;
+
+    cairo_gl_context_t *ctx; /* XXX: needed to destroy the program */
+    cairo_gl_shader_program_t program;
+} cairo_shader_cache_entry_t;
+
+static cairo_bool_t
+_cairo_gl_shader_cache_equal (const void *key_a, const void *key_b)
+{
+    const cairo_shader_cache_entry_t *a = key_a;
+    const cairo_shader_cache_entry_t *b = key_b;
+
+    return a->src  == b->src  &&
+           a->mask == b->mask &&
+           a->dest == b->dest &&
+           a->in   == b->in;
+}
+
+static unsigned long
+_cairo_gl_shader_cache_hash (const cairo_shader_cache_entry_t *entry)
+{
+    return (entry->src << 24) | (entry->mask << 16) | (entry->dest << 8) | (entry->in);
+}
+
+static void
+_cairo_gl_shader_cache_destroy (void *data)
+{
+    cairo_shader_cache_entry_t *entry = data;
+
+    destroy_shader_program (entry->ctx, &entry->program);
+    free (entry);
+}
+
 void
 _cairo_gl_context_init_shaders (cairo_gl_context_t *ctx)
 {
+    cairo_status_t status;
+
     /* XXX multiple device support? */
     if (GLEW_VERSION_2_0) {
         ctx->shader_impl = &shader_impl_core_2_0;
@@ -445,6 +486,12 @@ _cairo_gl_context_init_shaders (cairo_gl_context_t *ctx)
     }
 
     memset (ctx->vertex_shaders, 0, sizeof (ctx->vertex_shaders));
+
+    status = _cairo_cache_init (&ctx->shaders,
+                                _cairo_gl_shader_cache_equal,
+                                NULL,
+                                _cairo_gl_shader_cache_destroy,
+                                CAIRO_GL_MAX_SHADERS_PER_CONTEXT);
 }
 
 void
@@ -848,6 +895,7 @@ _cairo_gl_use_program (cairo_gl_context_t *ctx,
     ctx->shader_impl->use_program (program);
 }
 
+#if 0
 /**
  * This function reduces the GLSL program combinations we compile when
  * there are non-functional differences.
@@ -871,6 +919,7 @@ _cairo_gl_select_program (cairo_gl_context_t *ctx,
 
     return &ctx->shaders[source][mask][in];
 }
+#endif
 
 cairo_status_t
 _cairo_gl_get_program (cairo_gl_context_t *ctx,
@@ -879,21 +928,29 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
 		       cairo_gl_shader_in_t in,
 		       cairo_gl_shader_program_t **out_program)
 {
-    cairo_gl_shader_program_t *program;
+    cairo_shader_cache_entry_t lookup, *entry;
     char *fs_source;
     cairo_status_t status;
 
-    program = _cairo_gl_select_program(ctx, source, mask, in);
-    if (program->program) {
-	*out_program = program;
-	return CAIRO_STATUS_SUCCESS;
-    }
-
-    if (program->build_failure)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
     if (ctx->shader_impl == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    lookup.src = source;
+    lookup.mask = mask;
+    lookup.dest = CAIRO_GL_OPERAND_NONE;
+    lookup.in = in;
+    lookup.base.hash = _cairo_gl_shader_cache_hash (&lookup);
+    lookup.base.size = 1;
+
+    entry = _cairo_cache_lookup (&ctx->shaders, &lookup.base);
+    if (entry) {
+        if (entry->program.build_failure)
+            return CAIRO_INT_STATUS_UNSUPPORTED;
+
+        assert (entry->program.program);
+	*out_program = &entry->program;
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     fs_source = cairo_gl_shader_get_fragment_source (ctx->tex_target,
                                                      in,
@@ -903,31 +960,49 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
     if (unlikely (fs_source == NULL))
 	return CAIRO_STATUS_NO_MEMORY;
 
-    init_shader_program (program);
+    entry = malloc (sizeof (cairo_shader_cache_entry_t));
+    if (unlikely (entry == NULL)) {
+        free (fs_source);
+        return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
+    memcpy (entry, &lookup, sizeof (cairo_shader_cache_entry_t));
+
+    entry->ctx = ctx;
+    init_shader_program (&entry->program);
     status = create_shader_program (ctx,
-                                    program,
+                                    &entry->program,
 				    cairo_gl_operand_get_var_type (source),
 				    cairo_gl_operand_get_var_type (mask),
 				    fs_source);
     free (fs_source);
 
-    if (_cairo_status_is_error (status))
-	return status;
+    if (unlikely (status)) {
+        /* still add to cache, so we know we got a build failure */
+        if (_cairo_status_is_error (status) ||
+            _cairo_cache_insert (&ctx->shaders, &entry->base)) {
+            free (entry);
+        }
 
-    _cairo_gl_use_program (ctx, program);
+	return status;
+    }
+
+    _cairo_gl_use_program (ctx, &entry->program);
     if (source != CAIRO_GL_OPERAND_CONSTANT) {
-	status = bind_texture_to_shader (ctx, program->program, "source_sampler", 0);
+	status = bind_texture_to_shader (ctx, entry->program.program, "source_sampler", 0);
 	assert (!_cairo_status_is_error (status));
     }
     if (mask != CAIRO_GL_OPERAND_CONSTANT &&
 	mask != CAIRO_GL_OPERAND_SPANS &&
 	mask != CAIRO_GL_OPERAND_NONE) {
-	status = bind_texture_to_shader (ctx, program->program, "mask_sampler", 1);
+	status = bind_texture_to_shader (ctx, entry->program.program, "mask_sampler", 1);
 	assert (!_cairo_status_is_error (status));
     }
 
+    status = _cairo_cache_insert (&ctx->shaders, &entry->base);
+
     _cairo_gl_use_program (ctx, NULL);
 
-    *out_program = program;
-    return CAIRO_STATUS_SUCCESS;
+    *out_program = &entry->program;
+    return status;
 }

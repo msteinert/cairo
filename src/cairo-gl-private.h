@@ -65,6 +65,10 @@
 #define UNSUPPORTED(reason) CAIRO_INT_STATUS_UNSUPPORTED
 #endif
 
+/* maximal number of shaders we keep in the cache.
+ * Random number that is hopefully big enough to not cause many cache evictions. */
+#define CAIRO_GL_MAX_SHADERS_PER_CONTEXT 64
+
 typedef struct _cairo_gl_surface {
     cairo_surface_t base;
 
@@ -132,9 +136,7 @@ typedef struct _cairo_gl_context {
 
     GLuint vertex_shaders[CAIRO_GL_VAR_TYPE_MAX + 1];
     cairo_gl_shader_program_t fill_rectangles_shader;
-    cairo_gl_shader_program_t shaders[CAIRO_GL_OPERAND_COUNT]
-				     [CAIRO_GL_OPERAND_COUNT]
-				     [CAIRO_GL_SHADER_IN_COUNT];
+    cairo_cache_t shaders;
 
     cairo_gl_surface_t *current_target;
     cairo_gl_glyph_cache_t glyph_cache[2];

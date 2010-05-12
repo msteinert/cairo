@@ -68,6 +68,8 @@ _gl_finish (void *device)
             destroy_shader (ctx, ctx->vertex_shaders[i]);
         }
 
+        _cairo_cache_fini (&ctx->shaders);
+
         _cairo_gl_context_release (ctx);
     }
 }
