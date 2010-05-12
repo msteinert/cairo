@@ -144,8 +144,6 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_source_rgb (cr, 0.5, 0.5, 0.5);
     cairo_paint (cr);
 
-    pthread_yield ();
-
     for (i = 0; i < N_THREADS; i++) {
 	void *surface;
 

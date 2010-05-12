@@ -77,8 +77,6 @@ draw (cairo_t *cr, int width, int height)
         }
     }
 
-    pthread_yield ();
-
     for (i = 0; i < N_THREADS; i++) {
 	void *surface;
 
