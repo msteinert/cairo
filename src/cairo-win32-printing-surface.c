@@ -497,7 +497,7 @@ _cairo_win32_printing_surface_paint_recording_pattern (cairo_win32_surface_t   *
 	    SelectClipPath (surface->dc, RGN_AND);
 
 	    SaveDC (surface->dc); /* Allow clip path to be reset during replay */
-	    status = _cairo_recording_surface_replay_region (&recording_surface->base,
+	    status = _cairo_recording_surface_replay_region (&recording_surface->base, NULL,
 							     &surface->base,
 							     CAIRO_RECORDING_REGION_NATIVE);
 	    assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
