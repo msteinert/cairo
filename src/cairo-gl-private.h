@@ -135,7 +135,6 @@ typedef struct _cairo_gl_context {
 					[CAIRO_GL_SHADER_IN_COUNT];
 
     cairo_gl_surface_t *current_target;
-    cairo_gl_surface_t *glyphs_temporary_mask;
     cairo_gl_glyph_cache_t glyph_cache[2];
     cairo_list_t fonts;
 
