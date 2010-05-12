@@ -1722,6 +1722,31 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
     }
 }
 
+void
+_cairo_gl_composite_setup_fini (cairo_gl_context_t *ctx,
+                                cairo_gl_composite_setup_t *setup)
+{
+    _cairo_gl_operand_destroy (&setup->src);
+    _cairo_gl_operand_destroy (&setup->mask);
+}
+
+cairo_status_t
+cairo_gl_composite_setup_init (cairo_gl_context_t *ctx,
+                               cairo_gl_composite_setup_t *setup,
+                               cairo_operator_t op,
+                               cairo_gl_surface_t *dst,
+                               const cairo_pattern_t *src,
+                               const cairo_pattern_t *mask,
+                               const cairo_rectangle_int_t *rect)
+{
+    memset (setup, 0, sizeof (cairo_gl_composite_setup_t));
+
+    if (! _cairo_gl_operator_is_supported (op))
+	return UNSUPPORTED ("unsupported operator");
+    
+    return CAIRO_STATUS_SUCCESS;
+}
+
 /**
  * implements component-alpha %CAIRO_OPERATOR_SOURCE using two passes of
  * the simpler operations %CAIRO_OPERATOR_DEST_OUT and %CAIRO_OPERATOR_ADD.
@@ -1801,35 +1826,35 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
     cairo_gl_composite_setup_t setup;
     cairo_gl_shader_program_t *ca_source_program = NULL;
     cairo_gl_shader_program_t *ca_source_alpha_program = NULL;
+    cairo_rectangle_int_t rect = { dst_x, dst_y, width, height };
 
     if (op != CAIRO_OPERATOR_OVER && op != CAIRO_OPERATOR_ADD)
 	return UNSUPPORTED ("unsupported component alpha operator");
-
-    memset (&setup, 0, sizeof (setup));
 
     status = _cairo_gl_context_acquire (dst->base.device, &ctx);
     if (unlikely (status))
 	return status;
 
+    status = _cairo_gl_composite_setup_init (ctx, &setup, op, dst, src, mask, &rect);
+    if (unlikely (status))
+        goto CLEANUP;
+
     status = _cairo_gl_operand_init (ctx, &setup.src, src, dst,
 				     src_x, src_y,
 				     dst_x, dst_y,
 				     width, height);
-    if (unlikely (status)) {
-        _cairo_gl_context_release (ctx);
-	return status;
-    }
+    if (unlikely (status))
+        goto CLEANUP;
+
     src_attributes = &setup.src.operand.texture.attributes;
 
     status = _cairo_gl_operand_init (ctx, &setup.mask, mask, dst,
 				     mask_x, mask_y,
 				     dst_x, dst_y,
 				     width, height);
-    if (unlikely (status)) {
-        _cairo_gl_context_release (ctx);
-	_cairo_gl_operand_destroy (&setup.src);
-	return status;
-    }
+    if (unlikely (status))
+        goto CLEANUP;
+
     mask_attributes = &setup.mask.operand.texture.attributes;
 
     /* We'll fall back to fixed function instead. */
@@ -1971,10 +1996,7 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
     glDisable (ctx->tex_target);
 
   CLEANUP:
-    _cairo_gl_operand_destroy (&setup.src);
-    if (mask != NULL)
-	_cairo_gl_operand_destroy (&setup.mask);
-
+    _cairo_gl_composite_setup_fini (ctx, &setup);
     _cairo_gl_context_release (ctx);
 
     if (vertices != vertices_stack)
@@ -2010,6 +2032,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     cairo_status_t status;
     int num_vertices, i;
     cairo_gl_composite_setup_t setup;
+    cairo_rectangle_int_t rect = { dst_x, dst_y, width, height };
 
     if (mask && mask->has_component_alpha) {
 	/* Try two-pass component alpha support, or bail. */
@@ -2028,23 +2051,21 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 							   clip_region);
     }
 
-    if (! _cairo_gl_operator_is_supported (op))
-	return UNSUPPORTED ("unsupported operator");
-
-    memset (&setup, 0, sizeof (setup));
-
     status = _cairo_gl_context_acquire (dst->base.device, &ctx);
     if (unlikely (status))
 	return status;
+
+    status = _cairo_gl_composite_setup_init (ctx, &setup, op, dst, src, mask, &rect);
+    if (unlikely (status))
+        goto CLEANUP;
 
     status = _cairo_gl_operand_init (ctx, &setup.src, src, dst,
 				     src_x, src_y,
 				     dst_x, dst_y,
 				     width, height);
-    if (unlikely (status)) {
-        _cairo_gl_context_release (ctx);
-	return status;
-    }
+    if (unlikely (status))
+        goto CLEANUP;
+
     src_attributes = &setup.src.operand.texture.attributes;
 
     if (mask != NULL) {
@@ -2052,14 +2073,10 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 					 mask_x, mask_y,
 					 dst_x, dst_y,
 					 width, height);
-	if (unlikely (status)) {
-	    _cairo_gl_operand_destroy (&setup.src);
-            _cairo_gl_context_release (ctx);
-	    return status;
-	}
+	if (unlikely (status))
+            goto CLEANUP;
+
 	mask_attributes = &setup.mask.operand.texture.attributes;
-    } else {
-        setup.mask.type = CAIRO_GL_OPERAND_NONE;
     }
 
     /* We'll fall back to fixed function instead. */
@@ -2070,7 +2087,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 				    CAIRO_GL_SHADER_IN_NORMAL,
 				    &setup.shader);
     if (_cairo_status_is_error (status))
-	goto CLEANUP_SHADER;
+	goto CLEANUP;
 
     status = CAIRO_STATUS_SUCCESS;
 
@@ -2133,7 +2150,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 					 4*3*sizeof (vertices[0]));
 	    if (unlikely (vertices == NULL)) {
 		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-		goto CLEANUP_SHADER;
+		goto CLEANUP;
 	    }
 
 	    texcoord_src = vertices + num_rectangles * 4;
@@ -2229,14 +2246,10 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     if (vertices != vertices_stack)
 	free (vertices);
 
-  CLEANUP_SHADER:
-    _cairo_gl_operand_destroy (&setup.src);
-    if (mask != NULL)
-	_cairo_gl_operand_destroy (&setup.mask);
-
+  CLEANUP:
+    _cairo_gl_composite_setup_fini (ctx, &setup);
     _cairo_gl_context_release (ctx);
 
-    assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
     return status;
 }
 

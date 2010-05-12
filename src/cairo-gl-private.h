@@ -270,6 +270,19 @@ cairo_private void
 _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op,
 			cairo_bool_t component_alpha);
 
+cairo_private cairo_status_t
+_cairo_gl_composite_setup_init (cairo_gl_context_t *ctx,
+                                cairo_gl_composite_setup_t *setup,
+                                cairo_operator_t op,
+                                cairo_gl_surface_t *dst,
+                                const cairo_pattern_t *src,
+                                const cairo_pattern_t *mask,
+                                const cairo_rectangle_int_t *rect);
+
+cairo_private void
+_cairo_gl_composite_setup_fini (cairo_gl_context_t *ctx,
+                                  cairo_gl_composite_setup_t *setup);
+
 cairo_private void
 _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 			   cairo_gl_composite_setup_t *setup);
