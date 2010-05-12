@@ -1387,9 +1387,9 @@ _cairo_gl_set_tex_combine_constant_color (cairo_gl_context_t *ctx,
         cairo_status_t status;
 
 	if (tex_unit == 0)
-	    uniform_name = "constant_source";
+	    uniform_name = "source_constant";
 	else
-	    uniform_name = "constant_mask";
+	    uniform_name = "mask_constant";
 
 	status = bind_vec4_to_shader (ctx,
                                       setup->shader->program,
@@ -1663,7 +1663,7 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 	if (setup->shader) {
             cairo_status_t status;
 	    status = bind_vec4_to_shader (ctx, setup->shader->program,
-                                          "constant_mask",
+                                          "mask_constant",
                                           setup->src.operand.constant.color[0],
                                           setup->src.operand.constant.color[1],
                                           setup->src.operand.constant.color[2],
