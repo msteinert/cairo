@@ -2011,9 +2011,6 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     int num_vertices, i;
     cairo_gl_composite_setup_t setup;
 
-    if (! _cairo_gl_operator_is_supported (op))
-	return UNSUPPORTED ("unsupported operator");
-
     if (mask && mask->has_component_alpha) {
 	/* Try two-pass component alpha support, or bail. */
 	return _cairo_gl_surface_composite_component_alpha(op,
@@ -2030,6 +2027,9 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 							   height,
 							   clip_region);
     }
+
+    if (! _cairo_gl_operator_is_supported (op))
+	return UNSUPPORTED ("unsupported operator");
 
     memset (&setup, 0, sizeof (setup));
 
