@@ -66,10 +66,9 @@ _cairo_composite_rectangles_init (cairo_composite_rectangles_t *extents,
     extents->is_bounded = _cairo_operator_bounded_by_either (op);
 
     _cairo_pattern_get_extents (source, &extents->source);
-    if (! _cairo_rectangle_intersect (&extents->bounded, &extents->source) &&
-	extents->is_bounded & CAIRO_OPERATOR_BOUND_BY_SOURCE)
-    {
-	return FALSE;
+    if (extents->is_bounded & CAIRO_OPERATOR_BOUND_BY_SOURCE) {
+	if (! _cairo_rectangle_intersect (&extents->bounded, &extents->source))
+	    return FALSE;
     }
 
     return TRUE;
