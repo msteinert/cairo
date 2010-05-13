@@ -1238,37 +1238,6 @@ _cairo_gl_gradient_operand_init(cairo_gl_context_t *ctx,
 {
     cairo_gradient_pattern_t *gradient = (cairo_gradient_pattern_t *)operand->pattern;
 
-    /* Fast path for gradients with less than 2 color stops.
-     * Required to prevent _cairo_pattern_acquire_surface() returning
-     * a solid color which is cached beyond the life of the context.
-     */
-    if (gradient->n_stops < 2) {
-	if (gradient->n_stops) {
-	    return _cairo_gl_solid_operand_init (operand,
-						 &gradient->stops->color);
-	} else {
-	    return _cairo_gl_solid_operand_init (operand,
-						 CAIRO_COLOR_TRANSPARENT);
-	}
-    } else {
-	unsigned int i;
-
-	/* Is the gradient a uniform colour?
-	 * Happens more often than you would believe.
-	 */
-	for (i = 1; i < gradient->n_stops; i++) {
-	    if (! _cairo_color_stop_equal (&gradient->stops[0].color,
-					   &gradient->stops[i].color))
-		{
-		    break;
-		}
-	}
-	if (i == gradient->n_stops) {
-	    return _cairo_gl_solid_operand_init (operand,
-						 &gradient->stops->color);
-	}
-    }
-
     if (! _cairo_gl_device_has_glsl (&ctx->base))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
