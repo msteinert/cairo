@@ -269,7 +269,8 @@ test_sources = \
 	user-font-rescale.c				\
 	xcomposite-projection.c				\
 	xlib-expose-event.c 				\
-	zero-alpha.c
+	zero-alpha.c					\
+	zero-mask.c
 
 pthread_test_sources =					\
 	pthread-same-source.c				\
