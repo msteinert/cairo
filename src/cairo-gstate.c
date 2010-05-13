@@ -860,7 +860,22 @@ _cairo_gstate_copy_pattern (cairo_pattern_t *pattern,
      */
     switch (original->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
+	break;
+
     case CAIRO_PATTERN_TYPE_SURFACE:
+        {
+            cairo_surface_pattern_t *surface = (cairo_surface_pattern_t *) original;
+            cairo_rectangle_int_t extents;
+
+            if (_cairo_surface_get_extents (surface->surface, &extents) &&
+                (extents.width == 0 || extents.height == 0)) {
+                _cairo_pattern_init_solid ((cairo_solid_pattern_t *) pattern,
+                                           CAIRO_COLOR_TRANSPARENT,
+                                           surface->surface->content);
+
+                return;
+            }
+        }
 	break;
 
     case CAIRO_PATTERN_TYPE_LINEAR:
