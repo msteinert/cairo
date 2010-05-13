@@ -1662,7 +1662,7 @@ _cairo_image_surface_fixup_unbounded (cairo_image_surface_t *dst,
                                       width, height);
 	} else {
             pixman_color_t color = { 0, };
-            pixman_box32_t box = { x, y, width, height };
+            pixman_box32_t box = { x, y, x + width, y + height };
 
             if (! pixman_image_fill_boxes (PIXMAN_OP_CLEAR,
 					   dst->pixman_image,
