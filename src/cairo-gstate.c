@@ -1113,7 +1113,8 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
     _cairo_gstate_copy_transformed_mask (gstate, &mask_pattern.base, mask);
 
     if (source->type == CAIRO_PATTERN_TYPE_SOLID &&
-	mask_pattern.type == CAIRO_PATTERN_TYPE_SOLID)
+	mask_pattern.type == CAIRO_PATTERN_TYPE_SOLID &&
+	_cairo_operator_bounded_by_source (op))
     {
 	const cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) source;
 	cairo_color_t combined;
