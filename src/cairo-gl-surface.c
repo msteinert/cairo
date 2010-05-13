@@ -535,6 +535,10 @@ _cairo_gl_surface_create_similar (void		 *abstract_surface,
     cairo_gl_context_t *ctx;
     cairo_status_t status;
 
+    if (width < 1 || height < 1)
+        return cairo_image_surface_create (_cairo_format_from_content (content),
+                                           width, height);
+
     status = _cairo_gl_context_acquire (surface->device, &ctx);
     if (unlikely (status))
 	return _cairo_surface_create_in_error (status);
