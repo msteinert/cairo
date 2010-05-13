@@ -2139,7 +2139,8 @@ cairo_paint_with_alpha (cairo_t *cr,
 	return;
     }
 
-    if (CAIRO_ALPHA_IS_ZERO (alpha)) {
+    if (CAIRO_ALPHA_IS_ZERO (alpha) &&
+        _cairo_operator_bounded_by_mask (cr->gstate->op)) {
 	return;
     }
 
