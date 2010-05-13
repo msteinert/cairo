@@ -55,6 +55,8 @@ static CGRect (*CGFontGetFontBBoxPtr) (CGFontRef) = NULL;
 
 /* Not public, but present */
 static void (*CGFontGetGlyphsForUnicharsPtr) (CGFontRef, const UniChar[], const CGGlyph[], size_t) = NULL;
+static void (*CGContextSetAllowsFontSmoothingPtr) (CGContextRef, bool) = NULL;
+static bool (*CGContextGetAllowsFontSmoothingPtr) (CGContextRef) = NULL;
 
 /* Not public in the least bit */
 static CGPathRef (*CGFontGetGlyphPathPtr) (CGFontRef fontRef, CGAffineTransform *textTransform, int unknown, CGGlyph glyph) = NULL;
@@ -103,6 +105,9 @@ quartz_font_ensure_symbols(void)
     CGFontGetAscentPtr = dlsym(RTLD_DEFAULT, "CGFontGetAscent");
     CGFontGetDescentPtr = dlsym(RTLD_DEFAULT, "CGFontGetDescent");
     CGFontGetLeadingPtr = dlsym(RTLD_DEFAULT, "CGFontGetLeading");
+
+    CGContextGetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextGetAllowsFontSmoothing");
+    CGContextSetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextSetAllowsFontSmoothing");
 
     if ((CGFontCreateWithFontNamePtr || CGFontCreateWithNamePtr) &&
 	CGFontGetGlyphBBoxesPtr &&
@@ -597,7 +602,6 @@ _cairo_quartz_init_glyph_surface (cairo_quartz_scaled_font_t *font,
     double xscale, yscale;
     double emscale = CGFontGetUnitsPerEmPtr (font_face->cgFont);
 
-    CGColorSpaceRef gray;
     CGContextRef cgContext = NULL;
     CGAffineTransform textMatrix;
     CGRect glyphRect, glyphRectInt;
@@ -669,26 +673,40 @@ _cairo_quartz_init_glyph_surface (cairo_quartz_scaled_font_t *font,
     if (surface->base.status)
 	return surface->base.status;
 
-    gray = CGColorSpaceCreateDeviceGray ();
     cgContext = CGBitmapContextCreate (surface->data,
 				       surface->width,
 				       surface->height,
 				       8,
 				       surface->stride,
-				       gray,
-				       kCGImageAlphaNone);
-    CGColorSpaceRelease (gray);
+				       NULL,
+				       kCGImageAlphaOnly);
 
     CGContextSetFont (cgContext, font_face->cgFont);
     CGContextSetFontSize (cgContext, 1.0);
     CGContextSetTextMatrix (cgContext, textMatrix);
 
-    CGContextClearRect (cgContext, CGRectMake (0.0f, 0.0f, width, height));
+    switch (font->base.options.antialias) {
+    case CAIRO_ANTIALIAS_SUBPIXEL:
+	CGContextSetShouldAntialias (cgContext, TRUE);
+	CGContextSetShouldSmoothFonts (cgContext, TRUE);
+	if (CGContextSetAllowsFontSmoothingPtr &&
+	    !CGContextGetAllowsFontSmoothingPtr (cgContext))
+	    CGContextSetAllowsFontSmoothingPtr (cgContext, TRUE);
+	break;
+    case CAIRO_ANTIALIAS_NONE:
+	CGContextSetShouldAntialias (cgContext, FALSE);
+	break;
+    case CAIRO_ANTIALIAS_GRAY:
+	CGContextSetShouldAntialias (cgContext, TRUE);
+	CGContextSetShouldSmoothFonts (cgContext, FALSE);
+	break;
+    case CAIRO_ANTIALIAS_DEFAULT:
+    default:
+	/* Don't do anything */
+	break;
+    }
 
-    if (font->base.options.antialias == CAIRO_ANTIALIAS_NONE)
-	CGContextSetShouldAntialias (cgContext, false);
-
-    CGContextSetRGBFillColor (cgContext, 1.0, 1.0, 1.0, 1.0);
+    CGContextSetAlpha (cgContext, 1.0);
     CGContextShowGlyphsAtPoint (cgContext, - glyphOrigin.x, - glyphOrigin.y, &glyph, 1);
 
     CGContextRelease (cgContext);
