@@ -138,7 +138,7 @@ mask_with_extend_none (cairo_t *cr)
 
 typedef void (* mask_func_t) (cairo_t *);
 
-mask_func_t mask_funcs[] = {
+static mask_func_t mask_funcs[] = {
   paint_with_alpha,
   mask_with_solid,
   mask_with_empty_gradient,
@@ -150,7 +150,7 @@ mask_func_t mask_funcs[] = {
   mask_with_extend_none
 };
 
-cairo_operator_t operators[] = {
+static cairo_operator_t operators[] = {
   CAIRO_OPERATOR_CLEAR,
   CAIRO_OPERATOR_SOURCE,
   CAIRO_OPERATOR_OVER,
