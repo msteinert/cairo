@@ -887,8 +887,8 @@ _cairo_gstate_copy_pattern (cairo_pattern_t *pattern,
 		 * Happens more often than you would believe.
 		 */
 		for (i = 1; i < src->n_stops; i++) {
-		    if (! _cairo_color_equal (&src->stops[0].color,
-					      &src->stops[i].color))
+		    if (! _cairo_color_stop_equal (&src->stops[0].color,
+						   &src->stops[i].color))
 		    {
 			break;
 		    }

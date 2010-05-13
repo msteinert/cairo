@@ -1421,7 +1421,7 @@ _gradient_color_stops_equal (const cairo_gradient_pattern_t *a,
 	    return FALSE;
 	}
 
-	if (! _cairo_color_equal (&a->stops[n].color, &b->stops[n].color))
+	if (! _cairo_color_stop_equal (&a->stops[n].color, &b->stops[n].color))
 	    return FALSE;
     }
 

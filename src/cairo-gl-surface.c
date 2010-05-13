@@ -1253,8 +1253,8 @@ _cairo_gl_gradient_operand_init(cairo_gl_context_t *ctx,
 	 * Happens more often than you would believe.
 	 */
 	for (i = 1; i < gradient->n_stops; i++) {
-	    if (! _cairo_color_equal (&gradient->stops[0].color,
-				      &gradient->stops[i].color))
+	    if (! _cairo_color_stop_equal (&gradient->stops[0].color,
+					   &gradient->stops[i].color))
 		{
 		    break;
 		}

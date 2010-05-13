@@ -2294,8 +2294,8 @@ _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 	     * Happens more often than you would believe.
 	     */
 	    for (i = 1; i < src->n_stops; i++) {
-		if (! _cairo_color_equal (&src->stops[0].color,
-					  &src->stops[i].color))
+		if (! _cairo_color_stop_equal (&src->stops[0].color,
+					       &src->stops[i].color))
 		{
 		    break;
 		}
@@ -2767,7 +2767,7 @@ _cairo_gradient_color_stops_equal (const cairo_gradient_pattern_t *a,
     for (n = 0; n < a->n_stops; n++) {
 	if (a->stops[n].offset != b->stops[n].offset)
 	    return FALSE;
-	if (! _cairo_color_equal (&a->stops[n].color, &b->stops[n].color))
+	if (! _cairo_color_stop_equal (&a->stops[n].color, &b->stops[n].color))
 	    return FALSE;
     }
 
