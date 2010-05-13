@@ -163,14 +163,3 @@ dnl
 
 AC_CHECK_FUNCS(fork waitpid raise)
 
-dnl ===========================================================================
-
-have_real_pthread=no
-real_pthread_REQUIRES="pthread"
-PKG_CHECK_MODULES(real_pthread, $real_pthread_REQUIRES,
-		  [have_real_pthread=yes],
-		  [AC_CHECK_HEADERS([pthread.h],
-				    [CAIRO_CC_TRY_FLAG("-pthread",, real_pthread_CFLAGS="-pthread", real_pthread_CFLAGS="")
-				     real_pthread_LIBS="-lpthread"],
-				     [have_real_pthread="no (requires $real_pthread_REQUIRES)"])])
-AM_CONDITIONAL(HAVE_REAL_PTHREAD, test "x$have_real_pthread" = "xyes")

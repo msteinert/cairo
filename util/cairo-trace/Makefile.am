@@ -13,7 +13,7 @@ libcairo_trace_la_CPPFLAGS = -DCAIRO_TRACE_OUTDIR="\"$(cairooutdir)\"" \
 libcairo_trace_la_CFLAGS = $(CAIRO_CFLAGS)
 libcairo_trace_la_LDFLAGS = -no-undefined
 
-libcairo_trace_la_LIBADD = -lz $(pthread_LIBS)
+libcairo_trace_la_LIBADD = -lz $(PTHREAD_LIBS)
 if CAIRO_HAS_DL
 libcairo_trace_la_LIBADD += -ldl
 endif
