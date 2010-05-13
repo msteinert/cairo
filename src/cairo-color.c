@@ -176,8 +176,8 @@ _cairo_color_equal (const cairo_color_t *color_a,
 }
 
 cairo_bool_t
-_cairo_color_stop_equal (const cairo_color_t *color_a,
-			 const cairo_color_t *color_b)
+_cairo_color_stop_equal (const cairo_color_stop_t *color_a,
+			 const cairo_color_stop_t *color_b)
 {
     uint16_t a, b;
 

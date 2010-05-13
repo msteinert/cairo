@@ -52,6 +52,7 @@ typedef struct _cairo_composite_rectangles cairo_composite_rectangles_t;
 typedef struct _cairo_clip cairo_clip_t;
 typedef struct _cairo_clip_path cairo_clip_path_t;
 typedef struct _cairo_color cairo_color_t;
+typedef struct _cairo_color_stop cairo_color_stop_t;
 typedef struct _cairo_device_backend cairo_device_backend_t;
 typedef struct _cairo_font_face_backend     cairo_font_face_backend_t;
 typedef struct _cairo_gstate cairo_gstate_t;
@@ -145,6 +146,20 @@ struct _cairo_color {
     unsigned short green_short;
     unsigned short blue_short;
     unsigned short alpha_short;
+};
+
+struct _cairo_color_stop {
+    /* unpremultiplied */
+    double red;
+    double green;
+    double blue;
+    double alpha;
+
+    /* unpremultipled, for convenience */
+    uint16_t red_short;
+    uint16_t green_short;
+    uint16_t blue_short;
+    uint16_t alpha_short;
 };
 
 typedef enum _cairo_paginated_mode {
@@ -352,7 +367,7 @@ typedef struct _cairo_surface_pattern {
 
 typedef struct _cairo_gradient_stop {
     double offset;
-    cairo_color_t color;
+    cairo_color_stop_t color;
 } cairo_gradient_stop_t;
 
 typedef struct _cairo_gradient_pattern {

@@ -3176,21 +3176,7 @@ _cairo_ps_surface_emit_linear_pattern (cairo_ps_surface_t     *surface,
     double first_stop, last_stop;
     int repeat_begin = 0, repeat_end = 1;
 
-    if (pattern->base.n_stops == 0)
-        return CAIRO_INT_STATUS_NOTHING_TO_DO;
-
-    if (pattern->base.n_stops == 1) {
-	cairo_solid_pattern_t solid;
-
-	_cairo_pattern_init_solid (&solid,
-				   &pattern->base.stops[0].color,
-				   CAIRO_CONTENT_COLOR_ALPHA);
-	_cairo_ps_surface_emit_solid_pattern (surface,
-					      &solid);
-	_cairo_pattern_fini (&solid.base);
-
-	return CAIRO_STATUS_SUCCESS;
-    }
+    assert (pattern->base.n_stops >= 2);
 
     extend = cairo_pattern_get_extend (&pattern->base.base);
 
@@ -3316,21 +3302,7 @@ _cairo_ps_surface_emit_radial_pattern (cairo_ps_surface_t     *surface,
     cairo_extend_t extend;
     cairo_status_t status;
 
-    if (pattern->base.n_stops == 0)
-        return CAIRO_INT_STATUS_NOTHING_TO_DO;
-
-    if (pattern->base.n_stops == 1) {
-	cairo_solid_pattern_t solid;
-
-	_cairo_pattern_init_solid (&solid,
-				   &pattern->base.stops[0].color,
-				   CAIRO_CONTENT_COLOR_ALPHA);
-	_cairo_ps_surface_emit_solid_pattern (surface,
-					      &solid);
-	_cairo_pattern_fini (&solid.base);
-
-	return CAIRO_STATUS_SUCCESS;
-    }
+    assert (pattern->base.n_stops >= 2);
 
     extend = cairo_pattern_get_extend (&pattern->base.base);
 

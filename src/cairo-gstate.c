@@ -837,7 +837,7 @@ _cairo_gstate_path_extents (cairo_gstate_t     *gstate,
 
 static void
 _init_solid_for_color_stop (cairo_solid_pattern_t *solid,
-			    const cairo_color_t *color)
+			    const cairo_color_stop_t *color)
 {
     cairo_color_t premult;
 

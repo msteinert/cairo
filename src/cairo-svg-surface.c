@@ -1643,14 +1643,14 @@ _cairo_svg_surface_emit_pattern_stops (cairo_output_stream_t          *output,
     else {
 	cairo_bool_t found = FALSE;
 	unsigned int offset_index;
-	cairo_color_t offset_color_start, offset_color_stop;
+	cairo_color_stop_t offset_color_start, offset_color_stop;
 
 	for (i = 0; i < n_stops; i++) {
 	    if (stops[i].offset >= -start_offset) {
 		if (i > 0) {
 		    if (stops[i].offset != stops[i-1].offset) {
 			double x0, x1;
-			cairo_color_t *color0, *color1;
+			cairo_color_stop_t *color0, *color1;
 
 			x0 = stops[i-1].offset;
 			x1 = stops[i].offset;

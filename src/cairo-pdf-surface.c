@@ -3419,15 +3419,6 @@ _cairo_pdf_surface_select_pattern (cairo_pdf_surface_t *surface,
 	solid_color = &solid->color;
     }
 
-    if (pattern->type == CAIRO_PATTERN_TYPE_LINEAR ||
-	pattern->type == CAIRO_PATTERN_TYPE_RADIAL)
-    {
-	cairo_gradient_pattern_t *gradient = (cairo_gradient_pattern_t *) pattern;
-
-	if (gradient->n_stops == 1)
-	    solid_color = &gradient->stops[0].color;
-    }
-
     if (solid_color != NULL) {
 	if (surface->current_pattern_is_solid_color == FALSE ||
 	    surface->current_color_red != solid_color->red ||

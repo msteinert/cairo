@@ -2201,7 +2201,7 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 
 static void
 _init_solid_for_color_stop (cairo_solid_pattern_t *solid,
-			    const cairo_color_t *color)
+			    const cairo_color_stop_t *color)
 {
     cairo_color_t premult;
 
