@@ -673,43 +673,50 @@ _cairo_quartz_init_glyph_surface (cairo_quartz_scaled_font_t *font,
     if (surface->base.status)
 	return surface->base.status;
 
-    cgContext = CGBitmapContextCreate (surface->data,
-				       surface->width,
-				       surface->height,
-				       8,
-				       surface->stride,
-				       NULL,
-				       kCGImageAlphaOnly);
+    if (surface->width != 0 && surface->height != 0) {
+	cgContext = CGBitmapContextCreate (surface->data,
+					   surface->width,
+					   surface->height,
+					   8,
+					   surface->stride,
+					   NULL,
+					   kCGImageAlphaOnly);
 
-    CGContextSetFont (cgContext, font_face->cgFont);
-    CGContextSetFontSize (cgContext, 1.0);
-    CGContextSetTextMatrix (cgContext, textMatrix);
+	if (cgContext == NULL) {
+	    cairo_surface_destroy (surface);
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	}
 
-    switch (font->base.options.antialias) {
-    case CAIRO_ANTIALIAS_SUBPIXEL:
-	CGContextSetShouldAntialias (cgContext, TRUE);
-	CGContextSetShouldSmoothFonts (cgContext, TRUE);
-	if (CGContextSetAllowsFontSmoothingPtr &&
-	    !CGContextGetAllowsFontSmoothingPtr (cgContext))
-	    CGContextSetAllowsFontSmoothingPtr (cgContext, TRUE);
-	break;
-    case CAIRO_ANTIALIAS_NONE:
-	CGContextSetShouldAntialias (cgContext, FALSE);
-	break;
-    case CAIRO_ANTIALIAS_GRAY:
-	CGContextSetShouldAntialias (cgContext, TRUE);
-	CGContextSetShouldSmoothFonts (cgContext, FALSE);
-	break;
-    case CAIRO_ANTIALIAS_DEFAULT:
-    default:
-	/* Don't do anything */
-	break;
+	CGContextSetFont (cgContext, font_face->cgFont);
+	CGContextSetFontSize (cgContext, 1.0);
+	CGContextSetTextMatrix (cgContext, textMatrix);
+
+	switch (font->base.options.antialias) {
+	case CAIRO_ANTIALIAS_SUBPIXEL:
+	    CGContextSetShouldAntialias (cgContext, TRUE);
+	    CGContextSetShouldSmoothFonts (cgContext, TRUE);
+	    if (CGContextSetAllowsFontSmoothingPtr &&
+		!CGContextGetAllowsFontSmoothingPtr (cgContext))
+		CGContextSetAllowsFontSmoothingPtr (cgContext, TRUE);
+	    break;
+	case CAIRO_ANTIALIAS_NONE:
+	    CGContextSetShouldAntialias (cgContext, FALSE);
+	    break;
+	case CAIRO_ANTIALIAS_GRAY:
+	    CGContextSetShouldAntialias (cgContext, TRUE);
+	    CGContextSetShouldSmoothFonts (cgContext, FALSE);
+	    break;
+	case CAIRO_ANTIALIAS_DEFAULT:
+	default:
+	    /* Don't do anything */
+	    break;
+	}
+
+	CGContextSetAlpha (cgContext, 1.0);
+	CGContextShowGlyphsAtPoint (cgContext, - glyphOrigin.x, - glyphOrigin.y, &glyph, 1);
+
+	CGContextRelease (cgContext);
     }
-
-    CGContextSetAlpha (cgContext, 1.0);
-    CGContextShowGlyphsAtPoint (cgContext, - glyphOrigin.x, - glyphOrigin.y, &glyph, 1);
-
-    CGContextRelease (cgContext);
 
     cairo_surface_set_device_offset (&surface->base,
 				     - glyphOrigin.x,
