@@ -208,9 +208,11 @@ _cairo_quartz_create_cgimage (cairo_format_t format,
 	    break;
 
 	case CAIRO_FORMAT_A1:
+#ifdef WORDS_BIGENDIAN
 	    bitsPerComponent = 1;
 	    bitsPerPixel = 1;
 	    break;
+#endif
 
 	default:
 	    return NULL;
