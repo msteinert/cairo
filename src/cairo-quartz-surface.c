@@ -214,6 +214,8 @@ _cairo_quartz_create_cgimage (cairo_format_t format,
 	    break;
 #endif
 
+        case CAIRO_FORMAT_RGB16_565:
+        case CAIRO_FORMAT_INVALID:
 	default:
 	    return NULL;
     }
