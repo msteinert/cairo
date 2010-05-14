@@ -137,6 +137,7 @@ test_sources = \
 	line-width-scale.c				\
 	line-width-zero.c				\
 	linear-gradient.c				\
+	linear-gradient-extend.c			\
 	linear-gradient-reflect.c			\
 	linear-gradient-subset.c			\
 	linear-step-function.c				\
@@ -180,6 +181,7 @@ test_sources = \
 	push-group.c					\
 	push-group-color.c				\
 	radial-gradient.c				\
+	radial-gradient-extend.c			\
 	radial-gradient-source.c			\
 	radial-gradient-mask.c				\
 	radial-gradient-mask-source.c			\
