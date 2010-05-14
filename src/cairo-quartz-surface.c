@@ -996,7 +996,7 @@ CreateRepeatingRadialGradientFunction (cairo_quartz_surface_t *surface,
                                        cairo_rectangle_int_t *extents)
 {
     cairo_pattern_t *pat;
-    float input_value_range[2];
+    cairo_quartz_float_t input_value_range[2];
     CGPoint *inner;
     double *inner_radius;
     CGPoint *outer;
