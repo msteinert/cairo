@@ -967,7 +967,7 @@ _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_f
 	extents.height = scaled_font->base.ctm.yy * (font_extents.ascent + font_extents.descent) / scaled_font->y_scale;
 	extents.x_advance = extents.width;
 	extents.y_advance = 0;
-    } else if (scaled_font->preserve_axes && scaled_font->base.options.hint_style != CAIRO_HINT_METRICS_OFF) {
+    } else if (scaled_font->preserve_axes && scaled_font->base.options.hint_metrics != CAIRO_HINT_METRICS_OFF) {
 	/* If we aren't rotating / skewing the axes, then we get the metrics
 	 * from the GDI in device space and convert to font space.
 	 */
