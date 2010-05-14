@@ -891,7 +891,7 @@ _cairo_gl_surface_clone_similar (void		     *abstract_surface,
 {
     cairo_gl_surface_t *surface = abstract_surface;
 
-    if (src->backend == surface->base.backend) {
+    if (src->device == surface->base.device) {
 	*clone_offset_x = 0;
 	*clone_offset_y = 0;
 	*clone_out = cairo_surface_reference (src);
