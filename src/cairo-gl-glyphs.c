@@ -416,8 +416,7 @@ _cairo_gl_glyphs_emit_vertex (cairo_gl_glyphs_setup_t *setup,
     vb[i++] = glyph_x;
     vb[i++] = glyph_y;
 
-    if (setup->composite->src.type == CAIRO_GL_OPERAND_TEXTURE ||
-        setup->composite->src.type == CAIRO_GL_OPERAND_TEXTURE_ALPHA) {
+    if (setup->composite->src.type == CAIRO_GL_OPERAND_TEXTURE) {
 	double s = x;
 	double t = y;
 	cairo_matrix_transform_point (&src_attributes->matrix, &s, &t);
@@ -517,8 +516,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     setup.clip = clip_region;
     setup.dst = dst;
     setup.vertex_size = 4;
-    if (composite_setup.src.type == CAIRO_GL_OPERAND_TEXTURE ||
-        composite_setup.src.type == CAIRO_GL_OPERAND_TEXTURE_ALPHA)
+    if (composite_setup.src.type == CAIRO_GL_OPERAND_TEXTURE)
 	setup.vertex_size += 2;
     setup.vbo_size = num_glyphs * 4 * setup.vertex_size;
     if (setup.vbo_size > 4096)
@@ -531,8 +529,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     glVertexPointer (2, GL_FLOAT, setup.vertex_size * sizeof (GLfloat),
 		     (void *)(uintptr_t)(0));
     glEnableClientState (GL_VERTEX_ARRAY);
-    if (composite_setup.src.type == CAIRO_GL_OPERAND_TEXTURE ||
-        composite_setup.src.type == CAIRO_GL_OPERAND_TEXTURE_ALPHA) {
+    if (composite_setup.src.type == CAIRO_GL_OPERAND_TEXTURE) {
 	/* Note that we're packing texcoord 0 after texcoord 1, for
 	 * convenience.
 	 */

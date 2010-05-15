@@ -540,7 +540,6 @@ cairo_gl_operand_get_var_type (cairo_gl_operand_type_t type)
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
         return CAIRO_GL_VAR_NONE;
     case CAIRO_GL_OPERAND_TEXTURE:
-    case CAIRO_GL_OPERAND_TEXTURE_ALPHA:
         return CAIRO_GL_VAR_TEXCOORDS;
     case CAIRO_GL_OPERAND_SPANS:
         return CAIRO_GL_VAR_COVERAGE;
@@ -662,16 +661,6 @@ cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
             "vec4 get_%s()\n"
             "{\n"
             "    return texture2D%s(%s_sampler, %s_texcoords);\n"
-            "}\n",
-            rectstr, namestr, namestr, namestr, rectstr, namestr, namestr);
-        break;
-    case CAIRO_GL_OPERAND_TEXTURE_ALPHA:
-        _cairo_output_stream_printf (stream, 
-            "uniform sampler2D%s %s_sampler;\n"
-            "varying vec2 %s_texcoords;\n"
-            "vec4 get_%s()\n"
-            "{\n"
-            "    return vec4 (0, 0, 0, texture2D%s(%s_sampler, %s_texcoords).a);\n"
             "}\n",
             rectstr, namestr, namestr, namestr, rectstr, namestr, namestr);
         break;
@@ -894,32 +883,6 @@ _cairo_gl_use_program (cairo_gl_context_t *ctx,
 
     ctx->shader_impl->use_program (program);
 }
-
-#if 0
-/**
- * This function reduces the GLSL program combinations we compile when
- * there are non-functional differences.
- */
-static cairo_gl_shader_program_t *
-_cairo_gl_select_program (cairo_gl_context_t *ctx,
-			  cairo_gl_operand_type_t source,
-			  cairo_gl_operand_type_t mask,
-			  cairo_gl_shader_in_t in)
-{
-    if (in == CAIRO_GL_SHADER_IN_NORMAL &&
-	mask == CAIRO_GL_OPERAND_TEXTURE_ALPHA)
-    {
-	mask = CAIRO_GL_OPERAND_TEXTURE;
-    }
-    if (in == CAIRO_GL_SHADER_IN_CA_SOURCE_ALPHA &&
-	source == CAIRO_GL_OPERAND_TEXTURE_ALPHA)
-    {
-	source = CAIRO_GL_OPERAND_TEXTURE;
-    }
-
-    return &ctx->shaders[source][mask][in];
-}
-#endif
 
 cairo_status_t
 _cairo_gl_get_program (cairo_gl_context_t *ctx,

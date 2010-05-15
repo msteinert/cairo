@@ -244,7 +244,11 @@ _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op,
     }
 
     glEnable (GL_BLEND);
-    glBlendFunc (src_factor, dst_factor);
+    if (dst->base.content == CAIRO_CONTENT_ALPHA) {
+        glBlendFuncSeparate (GL_ZERO, GL_ZERO, src_factor, dst_factor);
+    } else {
+        glBlendFunc (src_factor, dst_factor);
+    }
 }
 
 static void
@@ -1176,10 +1180,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_context_t *ctx,
 
     assert (surface->base.backend == &_cairo_gl_surface_backend);
 
-    if (surface->base.content == CAIRO_CONTENT_ALPHA)
-        operand->type = CAIRO_GL_OPERAND_TEXTURE_ALPHA;
-    else
-        operand->type = CAIRO_GL_OPERAND_TEXTURE;
+    operand->type = CAIRO_GL_OPERAND_TEXTURE;
     operand->operand.texture.surface = surface;
     operand->operand.texture.tex = surface->tex;
     /* Translate the matrix from
@@ -1358,7 +1359,6 @@ _cairo_gl_operand_destroy (cairo_gl_operand_t *operand)
 	glDeleteTextures (1, &operand->operand.radial.tex);
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
-    case CAIRO_GL_OPERAND_TEXTURE_ALPHA:
 	if (operand->operand.texture.surface != NULL) {
 	    cairo_gl_surface_t *surface = operand->operand.texture.surface;
 
@@ -1450,7 +1450,6 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 						  setup->src.operand.constant.color);
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
-    case CAIRO_GL_OPERAND_TEXTURE_ALPHA:
 	_cairo_gl_set_texture_surface (0, setup->src.operand.texture.tex,
 				       src_attributes, ctx->tex_target);
 	if (!setup->shader) {
@@ -1551,7 +1550,6 @@ _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
 						  constant_color);
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
-    case CAIRO_GL_OPERAND_TEXTURE_ALPHA:
 	_cairo_gl_set_texture_surface (0, setup->src.operand.texture.tex,
 				       src_attributes, ctx->tex_target);
 	if (!setup->shader) {
@@ -1684,7 +1682,6 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 	}
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
-    case CAIRO_GL_OPERAND_TEXTURE_ALPHA:
 	_cairo_gl_set_texture_surface (1, setup->mask.operand.texture.tex,
 				       mask_attributes, ctx->tex_target);
 	if (!setup->shader) {
@@ -1928,8 +1925,7 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
     glVertexPointer (2, GL_FLOAT, sizeof (GLfloat) * 2, vertices);
     glEnableClientState (GL_VERTEX_ARRAY);
 
-    if (setup.src.type == CAIRO_GL_OPERAND_TEXTURE ||
-        setup.src.type == CAIRO_GL_OPERAND_TEXTURE_ALPHA) {
+    if (setup.src.type == CAIRO_GL_OPERAND_TEXTURE) {
 	for (i = 0; i < num_vertices; i++) {
 	    double s, t;
 
@@ -1945,8 +1941,7 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
     }
 
-    if (setup.mask.type == CAIRO_GL_OPERAND_TEXTURE ||
-        setup.mask.type == CAIRO_GL_OPERAND_TEXTURE_ALPHA) {
+    if (setup.mask.type == CAIRO_GL_OPERAND_TEXTURE) {
 	for (i = 0; i < num_vertices; i++) {
 	    double s, t;
 
@@ -2105,7 +2100,6 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 	    break;
 
 	case CAIRO_GL_OPERAND_TEXTURE:
-	case CAIRO_GL_OPERAND_TEXTURE_ALPHA:
 	    _cairo_gl_set_texture_surface (1, setup.mask.operand.texture.tex,
 					   mask_attributes, ctx->tex_target);
 
@@ -2188,8 +2182,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     glVertexPointer (2, GL_FLOAT, sizeof (GLfloat) * 2, vertices);
     glEnableClientState (GL_VERTEX_ARRAY);
 
-    if (setup.src.type == CAIRO_GL_OPERAND_TEXTURE ||
-        setup.src.type == CAIRO_GL_OPERAND_TEXTURE_ALPHA) {
+    if (setup.src.type == CAIRO_GL_OPERAND_TEXTURE) {
 	for (i = 0; i < num_vertices; i++) {
 	    double s, t;
 
@@ -2206,8 +2199,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     }
 
     if (mask != NULL) {
-        if (setup.mask.type == CAIRO_GL_OPERAND_TEXTURE ||
-	    setup.mask.type == CAIRO_GL_OPERAND_TEXTURE_ALPHA) {
+        if (setup.mask.type == CAIRO_GL_OPERAND_TEXTURE) {
 	    for (i = 0; i < num_vertices; i++) {
 		double s, t;
 
@@ -2572,8 +2564,7 @@ _cairo_gl_span_renderer_get_vbo (cairo_gl_surface_span_renderer_t *renderer,
 	renderer->vbo_size = 16384;
 	glBindBufferARB (GL_ARRAY_BUFFER_ARB, renderer->ctx->vbo);
 
-	if (renderer->setup.src.type == CAIRO_GL_OPERAND_TEXTURE ||
-	    renderer->setup.src.type == CAIRO_GL_OPERAND_TEXTURE_ALPHA)
+	if (renderer->setup.src.type == CAIRO_GL_OPERAND_TEXTURE)
 	    renderer->vertex_size = 4 * sizeof (float) + sizeof (uint32_t);
 	else
 	    renderer->vertex_size = 2 * sizeof (float) + sizeof (uint32_t);
@@ -2585,8 +2576,7 @@ _cairo_gl_span_renderer_get_vbo (cairo_gl_surface_span_renderer_t *renderer,
 			(void *) (uintptr_t) (2 * sizeof (float)));
 	glEnableClientState (GL_COLOR_ARRAY);
 
-	if (renderer->setup.src.type == CAIRO_GL_OPERAND_TEXTURE ||
-	    renderer->setup.src.type == CAIRO_GL_OPERAND_TEXTURE_ALPHA) {
+	if (renderer->setup.src.type == CAIRO_GL_OPERAND_TEXTURE) {
 	    glClientActiveTexture (GL_TEXTURE0);
 	    glTexCoordPointer (2, GL_FLOAT, renderer->vertex_size,
 			       (void *) (uintptr_t) (2 * sizeof (float) +
@@ -2627,8 +2617,7 @@ _cairo_gl_emit_span_vertex (cairo_gl_surface_span_renderer_t *renderer,
     vertices[v++] = dst_x + BIAS;
     vertices[v++] = dst_y + BIAS;
     vertices[v++] = int_as_float (alpha << 24);
-    if (renderer->setup.src.type == CAIRO_GL_OPERAND_TEXTURE ||
-        renderer->setup.src.type == CAIRO_GL_OPERAND_TEXTURE_ALPHA) {
+    if (renderer->setup.src.type == CAIRO_GL_OPERAND_TEXTURE) {
 	double s, t;
 
 	s = dst_x + BIAS;
