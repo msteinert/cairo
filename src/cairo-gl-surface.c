@@ -1266,27 +1266,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 	mask_attributes = &setup.mask.operand.texture.attributes;
     }
 
-    /* We'll fall back to fixed function instead. */
-    setup.shader = NULL;
-    status = _cairo_gl_get_program (ctx,
-                                    setup.src.type,
-                                    setup.mask.type,
-				    CAIRO_GL_SHADER_IN_NORMAL,
-				    &setup.shader);
-    if (_cairo_status_is_error (status))
-	goto CLEANUP;
-
-    status = CAIRO_STATUS_SUCCESS;
-
-    _cairo_gl_context_set_destination (ctx, dst);
-    _cairo_gl_set_operator (dst, op, FALSE);
-
-    _cairo_gl_use_program (ctx, setup.shader);
-    _cairo_gl_set_src_operand (ctx, &setup);
-
-    if (mask != NULL) {
-        _cairo_gl_set_mask_operand (ctx, &setup);
-    }
+    status = _cairo_gl_composite_begin (ctx, &setup);
 
     if (clip_region != NULL) {
 	int num_rectangles;

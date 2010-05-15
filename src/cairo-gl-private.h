@@ -183,6 +183,8 @@ typedef struct cairo_gl_operand {
 } cairo_gl_operand_t;
 
 typedef struct _cairo_gl_composite {
+    cairo_gl_surface_t *dst;
+    cairo_operator_t op;
     cairo_gl_operand_t src;
     cairo_gl_operand_t mask;
     cairo_gl_shader_program_t *shader;
@@ -283,6 +285,10 @@ _cairo_gl_composite_init (cairo_gl_context_t *ctx,
 cairo_private void
 _cairo_gl_composite_fini (cairo_gl_context_t *ctx,
                           cairo_gl_composite_t *setup);
+
+cairo_private cairo_status_t
+_cairo_gl_composite_begin (cairo_gl_context_t *ctx,
+                           cairo_gl_composite_t *setup);
 
 cairo_private void
 _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,

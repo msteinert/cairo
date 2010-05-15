@@ -871,6 +871,33 @@ _cairo_gl_set_mask_operand (cairo_gl_context_t *ctx,
     }
 }
 
+cairo_status_t
+_cairo_gl_composite_begin (cairo_gl_context_t *ctx,
+                           cairo_gl_composite_t *setup)
+{
+    cairo_status_t status;
+
+    status = _cairo_gl_get_program (ctx,
+                                    setup->src.type,
+                                    setup->mask.type,
+				    CAIRO_GL_SHADER_IN_NORMAL,
+				    &setup->shader);
+    if (_cairo_status_is_error (status))
+	return status;
+
+    status = CAIRO_STATUS_SUCCESS;
+
+    _cairo_gl_context_set_destination (ctx, setup->dst);
+    _cairo_gl_set_operator (setup->dst, setup->op, FALSE);
+
+    _cairo_gl_use_program (ctx, setup->shader);
+
+    _cairo_gl_set_src_operand (ctx, setup);
+    _cairo_gl_set_mask_operand (ctx, setup);
+
+    return status;
+}
+
 void
 _cairo_gl_composite_fini (cairo_gl_context_t *ctx,
                           cairo_gl_composite_t *setup)
@@ -893,6 +920,9 @@ _cairo_gl_composite_init (cairo_gl_context_t *ctx,
     if (! _cairo_gl_operator_is_supported (op))
 	return UNSUPPORTED ("unsupported operator");
     
+    setup->dst = dst;
+    setup->op = op;
+
     return CAIRO_STATUS_SUCCESS;
 }
 
