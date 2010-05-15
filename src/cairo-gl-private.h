@@ -182,11 +182,11 @@ typedef struct cairo_gl_operand {
     const cairo_pattern_t *pattern;
 } cairo_gl_operand_t;
 
-typedef struct _cairo_gl_composite_setup {
+typedef struct _cairo_gl_composite {
     cairo_gl_operand_t src;
     cairo_gl_operand_t mask;
     cairo_gl_shader_program_t *shader;
-} cairo_gl_composite_setup_t;
+} cairo_gl_composite_t;
 
 cairo_private extern const cairo_surface_backend_t _cairo_gl_surface_backend;
 
@@ -272,25 +272,25 @@ _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op,
 			cairo_bool_t component_alpha);
 
 cairo_private cairo_status_t
-_cairo_gl_composite_setup_init (cairo_gl_context_t *ctx,
-                                cairo_gl_composite_setup_t *setup,
-                                cairo_operator_t op,
-                                cairo_gl_surface_t *dst,
-                                const cairo_pattern_t *src,
-                                const cairo_pattern_t *mask,
-                                const cairo_rectangle_int_t *rect);
+_cairo_gl_composite_init (cairo_gl_context_t *ctx,
+                          cairo_gl_composite_t *setup,
+                          cairo_operator_t op,
+                          cairo_gl_surface_t *dst,
+                          const cairo_pattern_t *src,
+                          const cairo_pattern_t *mask,
+                          const cairo_rectangle_int_t *rect);
 
 cairo_private void
-_cairo_gl_composite_setup_fini (cairo_gl_context_t *ctx,
-                                  cairo_gl_composite_setup_t *setup);
+_cairo_gl_composite_fini (cairo_gl_context_t *ctx,
+                          cairo_gl_composite_t *setup);
 
 cairo_private void
 _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
-			   cairo_gl_composite_setup_t *setup);
+			   cairo_gl_composite_t *setup);
 
 cairo_private void
 _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
-				 cairo_gl_composite_setup_t *setup);
+				 cairo_gl_composite_t *setup);
 
 cairo_private void
 _cairo_gl_operand_destroy (cairo_gl_operand_t *operand);

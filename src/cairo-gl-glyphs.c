@@ -257,7 +257,7 @@ typedef struct _cairo_gl_glyphs_setup
     unsigned int vertex_size; /* units of floats */
     unsigned int num_prims;
     float *vb;
-    cairo_gl_composite_setup_t *composite;
+    cairo_gl_composite_t *composite;
     cairo_region_t *clip;
     cairo_gl_surface_t *dst;
     cairo_operator_t op;
@@ -472,7 +472,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     cairo_gl_glyph_cache_t *cache = NULL;
     cairo_gl_context_t *ctx;
     cairo_gl_glyphs_setup_t setup;
-    cairo_gl_composite_setup_t composite_setup;
+    cairo_gl_composite_t composite_setup;
     cairo_status_t status;
     int i = 0;
 

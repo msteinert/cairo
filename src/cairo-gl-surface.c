@@ -1378,7 +1378,7 @@ _cairo_gl_operand_destroy (cairo_gl_operand_t *operand)
 
 static void
 _cairo_gl_set_tex_combine_constant_color (cairo_gl_context_t *ctx,
-					  cairo_gl_composite_setup_t *setup,
+					  cairo_gl_composite_t *setup,
 					  int tex_unit,
 					  GLfloat *color)
 {
@@ -1436,7 +1436,7 @@ _cairo_gl_set_tex_combine_constant_color (cairo_gl_context_t *ctx,
 
 void
 _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
-			   cairo_gl_composite_setup_t *setup)
+			   cairo_gl_composite_t *setup)
 {
     cairo_surface_attributes_t *src_attributes;
     GLfloat constant_color[4] = {0.0, 0.0, 0.0, 0.0};
@@ -1533,7 +1533,7 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
  */
 void
 _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
-				 cairo_gl_composite_setup_t *setup)
+				 cairo_gl_composite_t *setup)
 {
     GLfloat constant_color[4] = {0.0, 0.0, 0.0, 0.0};
     cairo_surface_attributes_t *src_attributes;
@@ -1577,7 +1577,7 @@ _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
 
 static void
 _cairo_gl_set_linear_gradient_mask_operand (cairo_gl_context_t *ctx,
-                                            cairo_gl_composite_setup_t *setup)
+                                            cairo_gl_composite_t *setup)
 {
     cairo_status_t status;
 
@@ -1600,7 +1600,7 @@ _cairo_gl_set_linear_gradient_mask_operand (cairo_gl_context_t *ctx,
 
 static void
 _cairo_gl_set_radial_gradient_mask_operand (cairo_gl_context_t *ctx,
-                                            cairo_gl_composite_setup_t *setup)
+                                            cairo_gl_composite_t *setup)
 {
     cairo_status_t status;
 
@@ -1637,7 +1637,7 @@ _cairo_gl_set_radial_gradient_mask_operand (cairo_gl_context_t *ctx,
  */
 static void
 _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
-					    cairo_gl_composite_setup_t *setup)
+					    cairo_gl_composite_t *setup)
 {
     cairo_surface_attributes_t *mask_attributes;
     GLfloat constant_color[4] = {0.0, 0.0, 0.0, 0.0};
@@ -1720,23 +1720,23 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 }
 
 void
-_cairo_gl_composite_setup_fini (cairo_gl_context_t *ctx,
-                                cairo_gl_composite_setup_t *setup)
+_cairo_gl_composite_fini (cairo_gl_context_t *ctx,
+                          cairo_gl_composite_t *setup)
 {
     _cairo_gl_operand_destroy (&setup->src);
     _cairo_gl_operand_destroy (&setup->mask);
 }
 
 cairo_status_t
-cairo_gl_composite_setup_init (cairo_gl_context_t *ctx,
-                               cairo_gl_composite_setup_t *setup,
-                               cairo_operator_t op,
-                               cairo_gl_surface_t *dst,
-                               const cairo_pattern_t *src,
-                               const cairo_pattern_t *mask,
-                               const cairo_rectangle_int_t *rect)
+_cairo_gl_composite_init (cairo_gl_context_t *ctx,
+                          cairo_gl_composite_t *setup,
+                          cairo_operator_t op,
+                          cairo_gl_surface_t *dst,
+                          const cairo_pattern_t *src,
+                          const cairo_pattern_t *mask,
+                          const cairo_rectangle_int_t *rect)
 {
-    memset (setup, 0, sizeof (cairo_gl_composite_setup_t));
+    memset (setup, 0, sizeof (cairo_gl_composite_t));
 
     if (! _cairo_gl_operator_is_supported (op))
 	return UNSUPPORTED ("unsupported operator");
@@ -1820,7 +1820,7 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
     struct gl_point *texcoord_mask = texcoord_mask_stack;
     cairo_status_t status;
     int num_vertices, i;
-    cairo_gl_composite_setup_t setup;
+    cairo_gl_composite_t setup;
     cairo_gl_shader_program_t *ca_source_program = NULL;
     cairo_gl_shader_program_t *ca_source_alpha_program = NULL;
     cairo_rectangle_int_t rect = { dst_x, dst_y, width, height };
@@ -1832,7 +1832,7 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
     if (unlikely (status))
 	return status;
 
-    status = _cairo_gl_composite_setup_init (ctx, &setup, op, dst, src, mask, &rect);
+    status = _cairo_gl_composite_init (ctx, &setup, op, dst, src, mask, &rect);
     if (unlikely (status))
         goto CLEANUP;
 
@@ -1991,7 +1991,7 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
     glDisable (ctx->tex_target);
 
   CLEANUP:
-    _cairo_gl_composite_setup_fini (ctx, &setup);
+    _cairo_gl_composite_fini (ctx, &setup);
     _cairo_gl_context_release (ctx);
 
     if (vertices != vertices_stack)
@@ -2026,7 +2026,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     struct gl_point *texcoord_mask = texcoord_mask_stack;
     cairo_status_t status;
     int num_vertices, i;
-    cairo_gl_composite_setup_t setup;
+    cairo_gl_composite_t setup;
     cairo_rectangle_int_t rect = { dst_x, dst_y, width, height };
 
     if (mask && mask->has_component_alpha) {
@@ -2050,7 +2050,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     if (unlikely (status))
 	return status;
 
-    status = _cairo_gl_composite_setup_init (ctx, &setup, op, dst, src, mask, &rect);
+    status = _cairo_gl_composite_init (ctx, &setup, op, dst, src, mask, &rect);
     if (unlikely (status))
         goto CLEANUP;
 
@@ -2239,7 +2239,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 	free (vertices);
 
   CLEANUP:
-    _cairo_gl_composite_setup_fini (ctx, &setup);
+    _cairo_gl_composite_fini (ctx, &setup);
     _cairo_gl_context_release (ctx);
 
     return status;
@@ -2506,7 +2506,7 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
 typedef struct _cairo_gl_surface_span_renderer {
     cairo_span_renderer_t base;
 
-    cairo_gl_composite_setup_t setup;
+    cairo_gl_composite_t setup;
 
     int xmin, xmax;
 
