@@ -1210,14 +1210,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     cairo_gl_surface_t	*dst = abstract_dst;
     cairo_surface_attributes_t *src_attributes, *mask_attributes = NULL;
     cairo_gl_context_t *ctx;
-    struct gl_point {
-	GLfloat x, y;
-    } vertices_stack[8], texcoord_src_stack[8], texcoord_mask_stack[8];
-    struct gl_point *vertices = vertices_stack;
-    struct gl_point *texcoord_src = texcoord_src_stack;
-    struct gl_point *texcoord_mask = texcoord_mask_stack;
     cairo_status_t status;
-    int num_vertices, i;
     cairo_gl_composite_t setup;
     cairo_rectangle_int_t rect = { dst_x, dst_y, width, height };
 
@@ -1269,107 +1262,25 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     status = _cairo_gl_composite_begin (ctx, &setup);
 
     if (clip_region != NULL) {
-	int num_rectangles;
+        int i, num_rectangles;
 
-	num_rectangles = cairo_region_num_rectangles (clip_region);
-	if (num_rectangles * 4 > ARRAY_LENGTH (vertices_stack)) {
-	    vertices = _cairo_malloc_ab (num_rectangles,
-					 4*3*sizeof (vertices[0]));
-	    if (unlikely (vertices == NULL)) {
-		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-		goto CLEANUP;
-	    }
-
-	    texcoord_src = vertices + num_rectangles * 4;
-	    texcoord_mask = texcoord_src + num_rectangles * 4;
-	}
+        num_rectangles = cairo_region_num_rectangles (clip_region);
 
 	for (i = 0; i < num_rectangles; i++) {
 	    cairo_rectangle_int_t rect;
 
 	    cairo_region_get_rectangle (clip_region, i, &rect);
-	    vertices[4*i + 0].x = rect.x;
-	    vertices[4*i + 0].y = rect.y;
-	    vertices[4*i + 1].x = rect.x + rect.width;
-	    vertices[4*i + 1].y = rect.y;
-	    vertices[4*i + 2].x = rect.x + rect.width;
-	    vertices[4*i + 2].y = rect.y + rect.height;
-	    vertices[4*i + 3].x = rect.x;
-	    vertices[4*i + 3].y = rect.y + rect.height;
+            _cairo_gl_composite_emit_rect (ctx, &setup,
+                                           rect.x, rect.y,
+                                           rect.width, rect.height);
 	}
-
-	num_vertices = 4 * num_rectangles;
     } else {
-	vertices[0].x = dst_x;
-	vertices[0].y = dst_y;
-	vertices[1].x = dst_x + width;
-	vertices[1].y = dst_y;
-	vertices[2].x = dst_x + width;
-	vertices[2].y = dst_y + height;
-	vertices[3].x = dst_x;
-	vertices[3].y = dst_y + height;
-
-	num_vertices = 4;
+        _cairo_gl_composite_emit_rect (ctx, &setup,
+                                       dst_x, dst_y,
+                                       width, height);
     }
 
-    glVertexPointer (2, GL_FLOAT, sizeof (GLfloat) * 2, vertices);
-    glEnableClientState (GL_VERTEX_ARRAY);
-
-    if (setup.src.type == CAIRO_GL_OPERAND_TEXTURE) {
-	for (i = 0; i < num_vertices; i++) {
-	    double s, t;
-
-	    s = vertices[i].x;
-	    t = vertices[i].y;
-	    cairo_matrix_transform_point (&src_attributes->matrix, &s, &t);
-	    texcoord_src[i].x = s;
-	    texcoord_src[i].y = t;
-	}
-
-	glClientActiveTexture (GL_TEXTURE0);
-	glTexCoordPointer (2, GL_FLOAT, sizeof (GLfloat)*2, texcoord_src);
-	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-    }
-
-    if (mask != NULL) {
-        if (setup.mask.type == CAIRO_GL_OPERAND_TEXTURE) {
-	    for (i = 0; i < num_vertices; i++) {
-		double s, t;
-
-		s = vertices[i].x;
-		t = vertices[i].y;
-		cairo_matrix_transform_point (&mask_attributes->matrix, &s, &t);
-		texcoord_mask[i].x = s;
-		texcoord_mask[i].y = t;
-	    }
-
-	    glClientActiveTexture (GL_TEXTURE1);
-	    glTexCoordPointer (2, GL_FLOAT, sizeof (GLfloat)*2, texcoord_mask);
-	    glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-	}
-    }
-
-    glDrawArrays (GL_QUADS, 0, num_vertices);
-
-    _cairo_gl_use_program (ctx, NULL);
-    glDisable (GL_BLEND);
-
-    glDisableClientState (GL_VERTEX_ARRAY);
-
-    glClientActiveTexture (GL_TEXTURE0);
-    glDisableClientState (GL_TEXTURE_COORD_ARRAY);
-    glActiveTexture (GL_TEXTURE0);
-    glDisable (GL_TEXTURE_1D);
-    glDisable (ctx->tex_target);
-
-    glClientActiveTexture (GL_TEXTURE1);
-    glDisableClientState (GL_TEXTURE_COORD_ARRAY);
-    glActiveTexture (GL_TEXTURE1);
-    glDisable (GL_TEXTURE_1D);
-    glDisable (ctx->tex_target);
-
-    if (vertices != vertices_stack)
-	free (vertices);
+    _cairo_gl_composite_end (ctx, &setup);
 
   CLEANUP:
     _cairo_gl_composite_fini (ctx, &setup);

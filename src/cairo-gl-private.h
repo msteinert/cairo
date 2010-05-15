@@ -69,6 +69,9 @@
  * Random number that is hopefully big enough to not cause many cache evictions. */
 #define CAIRO_GL_MAX_SHADERS_PER_CONTEXT 64
 
+/* VBO size that we allocate, smaller size means we gotta flush more often */
+#define CAIRO_GL_VBO_SIZE 16384
+
 typedef struct _cairo_gl_surface {
     cairo_surface_t base;
 
@@ -188,6 +191,10 @@ typedef struct _cairo_gl_composite {
     cairo_gl_operand_t src;
     cairo_gl_operand_t mask;
     cairo_gl_shader_program_t *shader;
+
+    char *vb;
+    unsigned int vb_offset;
+    unsigned int vertex_size;
 } cairo_gl_composite_t;
 
 cairo_private extern const cairo_surface_backend_t _cairo_gl_surface_backend;
@@ -289,6 +296,18 @@ _cairo_gl_composite_fini (cairo_gl_context_t *ctx,
 cairo_private cairo_status_t
 _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
                            cairo_gl_composite_t *setup);
+
+cairo_private void
+_cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
+                               cairo_gl_composite_t *setup,
+                               GLfloat x,
+                               GLfloat y,
+                               GLfloat width,
+                               GLfloat height);
+
+cairo_private void
+_cairo_gl_composite_end (cairo_gl_context_t *ctx,
+                         cairo_gl_composite_t *setup);
 
 cairo_private void
 _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,

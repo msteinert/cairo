@@ -871,10 +871,31 @@ _cairo_gl_set_mask_operand (cairo_gl_context_t *ctx,
     }
 }
 
+static unsigned int
+_cairo_gl_operand_get_vertex_size (cairo_gl_operand_type_t type)
+{
+    switch (type) {
+    default:
+    case CAIRO_GL_OPERAND_COUNT:
+        ASSERT_NOT_REACHED;
+    case CAIRO_GL_OPERAND_NONE:
+    case CAIRO_GL_OPERAND_CONSTANT:
+    case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
+        return 0;
+    case CAIRO_GL_OPERAND_SPANS:
+        return 4 * sizeof (GLbyte);
+    case CAIRO_GL_OPERAND_TEXTURE:
+        return 2 * sizeof (GLfloat);
+    }
+}
+
+
 cairo_status_t
 _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
                            cairo_gl_composite_t *setup)
 {
+    unsigned int dst_size, src_size, mask_size;
     cairo_status_t status;
 
     status = _cairo_gl_get_program (ctx,
@@ -887,15 +908,158 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
 
     status = CAIRO_STATUS_SUCCESS;
 
+    dst_size  = 2 * sizeof (GLfloat);
+    src_size  = _cairo_gl_operand_get_vertex_size (setup->src.type);
+    mask_size = _cairo_gl_operand_get_vertex_size (setup->mask.type);
+
+    setup->vertex_size = dst_size + src_size + mask_size;
+
     _cairo_gl_context_set_destination (ctx, setup->dst);
     _cairo_gl_set_operator (setup->dst, setup->op, FALSE);
 
     _cairo_gl_use_program (ctx, setup->shader);
 
+    glBindBufferARB (GL_ARRAY_BUFFER_ARB, ctx->vbo);
+
+    glVertexPointer (2, GL_FLOAT, setup->vertex_size, NULL);
+    glEnableClientState (GL_VERTEX_ARRAY);
+
     _cairo_gl_set_src_operand (ctx, setup);
+    if (setup->src.type == CAIRO_GL_OPERAND_TEXTURE) {
+	glClientActiveTexture (GL_TEXTURE0);
+	glTexCoordPointer (2, GL_FLOAT, setup->vertex_size,
+                           (void *) (uintptr_t) dst_size);
+	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+    }
     _cairo_gl_set_mask_operand (ctx, setup);
+    if (setup->mask.type == CAIRO_GL_OPERAND_TEXTURE) {
+	glClientActiveTexture (GL_TEXTURE1);
+	glTexCoordPointer (2, GL_FLOAT, setup->vertex_size,
+                           (void *) (uintptr_t) (dst_size + src_size));
+	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+    }
 
     return status;
+}
+
+static inline void
+_cairo_gl_composite_flush (cairo_gl_context_t *ctx,
+                           cairo_gl_composite_t *setup)
+{
+    if (setup->vb_offset == 0)
+        return;
+
+    glDrawArrays (GL_QUADS, 0, setup->vb_offset / setup->vertex_size);
+
+    glUnmapBufferARB (GL_ARRAY_BUFFER_ARB);
+    setup->vb = NULL;
+}
+
+static void
+_cairo_gl_composite_prepare_buffer (cairo_gl_context_t *ctx,
+                                    cairo_gl_composite_t *setup,
+                                    unsigned int n_vertices)
+{
+    if (setup->vb_offset + n_vertices * setup->vertex_size > CAIRO_GL_VBO_SIZE)
+	_cairo_gl_composite_flush (ctx, setup);
+
+    if (setup->vb == NULL) {
+	glBufferDataARB (GL_ARRAY_BUFFER_ARB, CAIRO_GL_VBO_SIZE,
+			 NULL, GL_STREAM_DRAW_ARB);
+	setup->vb = glMapBufferARB (GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
+	setup->vb_offset = 0;
+    }
+}
+
+static inline void
+_cairo_gl_operand_emit (cairo_gl_operand_t *operand,
+                        GLfloat ** vb,
+                        GLfloat x,
+                        GLfloat y)
+{
+    switch (operand->type) {
+    default:
+    case CAIRO_GL_OPERAND_COUNT:
+        ASSERT_NOT_REACHED;
+    case CAIRO_GL_OPERAND_NONE:
+    case CAIRO_GL_OPERAND_CONSTANT:
+    case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
+        break;
+    case CAIRO_GL_OPERAND_SPANS:
+        ASSERT_NOT_REACHED;
+        break;
+    case CAIRO_GL_OPERAND_TEXTURE:
+        {
+            cairo_surface_attributes_t *src_attributes = &operand->operand.texture.attributes;
+            double s = x;
+            double t = y;
+
+            cairo_matrix_transform_point (&src_attributes->matrix, &s, &t);
+            *(*vb)++ = s;
+            *(*vb)++ = t;
+        }
+        break;
+    }
+}
+
+static inline void
+_cairo_gl_composite_emit_vertex (cairo_gl_context_t *ctx,
+                                 cairo_gl_composite_t *setup,
+                                 GLfloat x,
+                                 GLfloat y)
+{
+    GLfloat *vb = (GLfloat *) (void *) &setup->vb[setup->vb_offset];
+
+    *vb++ = x;
+    *vb++ = y;
+
+    _cairo_gl_operand_emit (&setup->src, &vb, x, y);
+    _cairo_gl_operand_emit (&setup->mask, &vb, x, y);
+
+    setup->vb_offset += setup->vertex_size;
+}
+
+void
+_cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
+                               cairo_gl_composite_t *setup,
+                               GLfloat x,
+                               GLfloat y,
+                               GLfloat width,
+                               GLfloat height)
+{
+    _cairo_gl_composite_prepare_buffer (ctx, setup, 4);
+
+    _cairo_gl_composite_emit_vertex (ctx, setup, x,         y);
+    _cairo_gl_composite_emit_vertex (ctx, setup, x + width, y);
+    _cairo_gl_composite_emit_vertex (ctx, setup, x + width, y + height);
+    _cairo_gl_composite_emit_vertex (ctx, setup, x,         y + height);
+}
+
+void
+_cairo_gl_composite_end (cairo_gl_context_t *ctx,
+                         cairo_gl_composite_t *setup)
+{
+    _cairo_gl_composite_flush (ctx, setup);
+
+    glBindBufferARB (GL_ARRAY_BUFFER_ARB, 0);
+
+    _cairo_gl_use_program (ctx, NULL);
+    glDisable (GL_BLEND);
+
+    glDisableClientState (GL_VERTEX_ARRAY);
+
+    glClientActiveTexture (GL_TEXTURE0);
+    glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+    glActiveTexture (GL_TEXTURE0);
+    glDisable (GL_TEXTURE_1D);
+    glDisable (ctx->tex_target);
+
+    glClientActiveTexture (GL_TEXTURE1);
+    glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+    glActiveTexture (GL_TEXTURE1);
+    glDisable (GL_TEXTURE_1D);
+    glDisable (ctx->tex_target);
 }
 
 void
