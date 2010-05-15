@@ -450,7 +450,7 @@ _cairo_gl_operand_init (cairo_gl_context_t *ctx,
     }
 }
 
-void
+static void
 _cairo_gl_operand_destroy (cairo_gl_operand_t *operand)
 {
     switch (operand->type) {
