@@ -478,21 +478,24 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 
     *has_component_alpha = FALSE;
 
-    memset (&composite_setup, 0, sizeof(composite_setup));
-
     status = _cairo_gl_context_acquire (dst->base.device, &ctx);
     if (unlikely (status))
 	return status;
+
+    status = _cairo_gl_composite_init (ctx, &composite_setup,
+                                       op, dst, source, NULL,
+                                       glyph_extents);
+
+    if (unlikely (status))
+	goto CLEANUP_FONT;
 
     status = _cairo_gl_operand_init (ctx, &composite_setup.src, source, dst,
 				     glyph_extents->x, glyph_extents->y,
 				     dst_x, dst_y,
 				     glyph_extents->width,
 				     glyph_extents->height);
-    if (unlikely (status)) {
-        _cairo_gl_context_release (ctx);
-	return status;
-    }
+    if (unlikely (status))
+	goto CLEANUP_FONT;
 
     _cairo_gl_context_set_destination (ctx, dst);
 
@@ -642,7 +645,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 
     glBindBufferARB (GL_ARRAY_BUFFER_ARB, 0);
 
-    _cairo_gl_operand_destroy (&composite_setup.src);
+    _cairo_gl_composite_fini (ctx, &composite_setup);
 
     _cairo_gl_context_release (ctx);
 
