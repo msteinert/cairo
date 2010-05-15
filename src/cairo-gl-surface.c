@@ -1874,7 +1874,8 @@ _cairo_gl_surface_span_renderer_destroy (void *abstract_renderer)
     if (!renderer)
 	return;
 
-    _cairo_gl_operand_destroy (&renderer->setup.src);
+    _cairo_gl_composite_fini (renderer->ctx, &renderer->setup);
+
     _cairo_gl_context_release (renderer->ctx);
 
     free (renderer);
@@ -1968,16 +1969,20 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 	return _cairo_span_renderer_create_in_error (status);
     }
 
+    status = _cairo_gl_composite_init (renderer->ctx,
+                                       &renderer->setup,
+                                       op, dst, src, NULL,
+                                       extents);
+    if (unlikely (status))
+        goto FAIL;
+
     status = _cairo_gl_operand_init (renderer->ctx,
                                      &renderer->setup.src, src, dst,
 				     rects->source.x, rects->source.y,
 				     extents->x, extents->y,
 				     extents->width, extents->height);
-    if (unlikely (status)) {
-        _cairo_gl_context_release (renderer->ctx);
-	free (renderer);
-	return _cairo_span_renderer_create_in_error (status);
-    }
+    if (unlikely (status))
+        goto FAIL;
 
     _cairo_gl_context_set_destination (renderer->ctx, dst);
 
@@ -1986,12 +1991,8 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 				    CAIRO_GL_OPERAND_SPANS,
 				    CAIRO_GL_SHADER_IN_NORMAL,
 				    &renderer->setup.shader);
-    if (_cairo_status_is_error (status)) {
-	_cairo_gl_operand_destroy (&renderer->setup.src);
-	_cairo_gl_context_release (renderer->ctx);
-	free (renderer);
-	return _cairo_span_renderer_create_in_error (status);
-    }
+    if (_cairo_status_is_error (status))
+        goto FAIL;
 
     src_attributes = &renderer->setup.src.operand.texture.attributes;
 
@@ -2021,6 +2022,13 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     }
 
     return &renderer->base;
+
+
+FAIL:
+    _cairo_gl_composite_fini (renderer->ctx, &renderer->setup);
+    _cairo_gl_context_release (renderer->ctx);
+    free (renderer);
+    return _cairo_span_renderer_create_in_error (status);
 }
 
 static cairo_bool_t
