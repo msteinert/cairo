@@ -313,7 +313,8 @@ cairo_beos_headers = cairo-beos.h
 
 cairo_gl_headers = cairo-gl.h
 cairo_gl_private = cairo-gl-private.h
-cairo_gl_sources = cairo-gl-device.c \
+cairo_gl_sources = cairo-gl-composite.c \
+		   cairo-gl-device.c \
 		   cairo-gl-glyphs.c \
 		   cairo-gl-shaders.c \
 		   cairo-gl-surface.c

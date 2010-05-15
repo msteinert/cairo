@@ -293,6 +293,14 @@ _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
 				 cairo_gl_composite_t *setup);
 
 cairo_private void
+_cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
+				            cairo_gl_composite_t *setup);
+
+cairo_private void
+_cairo_gl_set_mask_operand (cairo_gl_context_t *ctx,
+			    cairo_gl_composite_t *setup);
+
+cairo_private void
 _cairo_gl_operand_destroy (cairo_gl_operand_t *operand);
 
 cairo_private cairo_bool_t
