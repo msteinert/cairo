@@ -230,15 +230,6 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 			      int width, int height,
 			      int dst_x, int dst_y);
 
-cairo_private cairo_int_status_t
-_cairo_gl_operand_init (cairo_gl_context_t *ctx,
-                        cairo_gl_operand_t *operand,
-			const cairo_pattern_t *pattern,
-			cairo_gl_surface_t *dst,
-			int src_x, int src_y,
-			int dst_x, int dst_y,
-			int width, int height);
-
 static cairo_always_inline cairo_bool_t
 _cairo_gl_device_has_glsl (cairo_device_t *device)
 {
@@ -295,6 +286,22 @@ cairo_private void
 _cairo_gl_composite_set_clip_region (cairo_gl_context_t *ctx,
                                      cairo_gl_composite_t *setup,
                                      cairo_region_t *clip_region);
+
+cairo_private cairo_int_status_t
+_cairo_gl_composite_set_source (cairo_gl_context_t *ctx,
+                                cairo_gl_composite_t *setup,
+			        const cairo_pattern_t *pattern,
+                                int src_x, int src_y,
+                                int dst_x, int dst_y,
+                                int width, int height);
+
+cairo_private cairo_int_status_t
+_cairo_gl_composite_set_mask (cairo_gl_context_t *ctx,
+                              cairo_gl_composite_t *setup,
+			      const cairo_pattern_t *pattern,
+                              int src_x, int src_y,
+                              int dst_x, int dst_y,
+                              int width, int height);
 
 cairo_private void
 _cairo_gl_composite_set_mask_spans (cairo_gl_context_t *ctx,

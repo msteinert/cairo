@@ -447,7 +447,7 @@ _cairo_gl_operand_destroy (cairo_gl_operand_t *operand)
     operand->type = CAIRO_GL_OPERAND_NONE;
 }
 
-cairo_int_status_t
+static cairo_int_status_t
 _cairo_gl_operand_init (cairo_gl_context_t *ctx,
                         cairo_gl_operand_t *operand,
 		        const cairo_pattern_t *pattern,
@@ -480,6 +480,38 @@ _cairo_gl_operand_init (cairo_gl_context_t *ctx,
 						dst_x, dst_y,
 						width, height);
     }
+}
+
+cairo_int_status_t
+_cairo_gl_composite_set_source (cairo_gl_context_t *ctx,
+                                cairo_gl_composite_t *setup,
+			        const cairo_pattern_t *pattern,
+                                int src_x, int src_y,
+                                int dst_x, int dst_y,
+                                int width, int height)
+{
+    _cairo_gl_operand_destroy (&setup->src);
+    return _cairo_gl_operand_init (ctx, &setup->src, pattern,
+                                   setup->dst,
+                                   src_x, src_y,
+                                   dst_x, dst_y,
+                                   width, height);
+}
+
+cairo_int_status_t
+_cairo_gl_composite_set_mask (cairo_gl_context_t *ctx,
+                              cairo_gl_composite_t *setup,
+			      const cairo_pattern_t *pattern,
+                              int src_x, int src_y,
+                              int dst_x, int dst_y,
+                              int width, int height)
+{
+    _cairo_gl_operand_destroy (&setup->mask);
+    return _cairo_gl_operand_init (ctx, &setup->mask, pattern,
+                                   setup->dst,
+                                   src_x, src_y,
+                                   dst_x, dst_y,
+                                   width, height);
 }
 
 void

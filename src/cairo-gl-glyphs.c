@@ -293,11 +293,11 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 	goto FINISH;
     }
 
-    status = _cairo_gl_operand_init (ctx, &setup.src, source, dst,
-				     glyph_extents->x, glyph_extents->y,
-				     dst_x, dst_y,
-				     glyph_extents->width,
-				     glyph_extents->height);
+    status = _cairo_gl_composite_set_source (ctx, &setup, source,
+                                             glyph_extents->x, glyph_extents->y,
+                                             dst_x, dst_y,
+                                             glyph_extents->width,
+                                             glyph_extents->height);
     if (unlikely (status))
 	goto FINISH;
 

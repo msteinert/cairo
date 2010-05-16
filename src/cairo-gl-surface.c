@@ -956,18 +956,18 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     if (unlikely (status))
         goto CLEANUP;
 
-    status = _cairo_gl_operand_init (ctx, &setup.src, src, dst,
-				     src_x, src_y,
-				     dst_x, dst_y,
-				     width, height);
+    status = _cairo_gl_composite_set_source (ctx, &setup, src,
+                                             src_x, src_y,
+                                             dst_x, dst_y,
+                                             width, height);
     if (unlikely (status))
         goto CLEANUP;
 
     if (mask != NULL) {
-	status = _cairo_gl_operand_init (ctx, &setup.mask, mask, dst,
-					 mask_x, mask_y,
-					 dst_x, dst_y,
-					 width, height);
+	status = _cairo_gl_composite_set_mask (ctx, &setup, mask,
+                                               mask_x, mask_y,
+                                               dst_x, dst_y,
+                                               width, height);
 	if (unlikely (status))
             goto CLEANUP;
     }
@@ -1426,11 +1426,11 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     if (unlikely (status))
         goto FAIL;
 
-    status = _cairo_gl_operand_init (renderer->ctx,
-                                     &renderer->setup.src, src, dst,
-				     rects->source.x, rects->source.y,
-				     extents->x, extents->y,
-				     extents->width, extents->height);
+    status = _cairo_gl_composite_set_source (renderer->ctx,
+                                             &renderer->setup, src,
+                                             rects->source.x, rects->source.y,
+                                             extents->x, extents->y,
+                                             extents->width, extents->height);
     if (unlikely (status))
         goto FAIL;
 
