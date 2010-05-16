@@ -507,6 +507,7 @@ _cairo_gl_composite_set_mask (cairo_gl_context_t *ctx,
                               int width, int height)
 {
     _cairo_gl_operand_destroy (&setup->mask);
+    setup->has_component_alpha = pattern && pattern->has_component_alpha;
     return _cairo_gl_operand_init (ctx, &setup->mask, pattern,
                                    setup->dst,
                                    src_x, src_y,
@@ -520,6 +521,7 @@ _cairo_gl_composite_set_mask_spans (cairo_gl_context_t *ctx,
 {
     _cairo_gl_operand_destroy (&setup->mask);
     setup->mask.type = CAIRO_GL_OPERAND_SPANS;
+    setup->has_component_alpha = FALSE;
 }
 
 void
@@ -1379,12 +1381,12 @@ _cairo_gl_composite_init (cairo_gl_context_t *ctx,
                           cairo_gl_surface_t *dst,
                           const cairo_pattern_t *src,
                           const cairo_pattern_t *mask,
-                          cairo_bool_t has_component_alpha,
+                          cairo_bool_t assume_component_alpha,
                           const cairo_rectangle_int_t *rect)
 {
     memset (setup, 0, sizeof (cairo_gl_composite_t));
 
-    if (has_component_alpha) {
+    if (assume_component_alpha) {
         if (op != CAIRO_OPERATOR_CLEAR &&
             op != CAIRO_OPERATOR_OVER &&
             op != CAIRO_OPERATOR_ADD)
@@ -1395,7 +1397,6 @@ _cairo_gl_composite_init (cairo_gl_context_t *ctx,
     }
 
     setup->dst = dst;
-    setup->has_component_alpha = has_component_alpha;
     setup->op = op;
 
     return CAIRO_STATUS_SUCCESS;
