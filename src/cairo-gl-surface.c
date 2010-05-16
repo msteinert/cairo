@@ -1284,10 +1284,6 @@ typedef struct _cairo_gl_surface_span_renderer {
 
     int xmin, xmax;
 
-    cairo_operator_t op;
-    cairo_antialias_t antialias;
-
-    cairo_gl_surface_t *dst;
     cairo_gl_context_t *ctx;
     cairo_region_t *clip;
 
@@ -1579,9 +1575,6 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     }
     renderer->xmin = extents->x;
     renderer->xmax = extents->x + extents->width;
-    renderer->op = op;
-    renderer->antialias = antialias;
-    renderer->dst = dst;
     renderer->clip = clip_region;
 
     status = _cairo_gl_context_acquire (dst->base.device, &renderer->ctx);
