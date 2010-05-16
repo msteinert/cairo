@@ -939,8 +939,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 			     unsigned int		  height,
 			     cairo_region_t		 *clip_region)
 {
-    cairo_gl_surface_t	*dst = abstract_dst;
-    cairo_surface_attributes_t *src_attributes, *mask_attributes = NULL;
+    cairo_gl_surface_t *dst = abstract_dst;
     cairo_gl_context_t *ctx;
     cairo_status_t status;
     cairo_gl_composite_t setup;
@@ -964,8 +963,6 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     if (unlikely (status))
         goto CLEANUP;
 
-    src_attributes = &setup.src.operand.texture.attributes;
-
     if (mask != NULL) {
 	status = _cairo_gl_operand_init (ctx, &setup.mask, mask, dst,
 					 mask_x, mask_y,
@@ -973,8 +970,6 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 					 width, height);
 	if (unlikely (status))
             goto CLEANUP;
-
-	mask_attributes = &setup.mask.operand.texture.attributes;
     }
 
     status = _cairo_gl_composite_begin (ctx, &setup);
