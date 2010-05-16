@@ -54,6 +54,7 @@ if test "x$have_pthread" = xno -a "x$use_pthread" = xyes; then
   AC_MSG_ERROR([pthread requested but not found])
 fi
 CAIRO_CFLAGS="$CAIRO_CFLAGS $PTHREAD_CFLAGS"
+CAIRO_LDFLAGS="$PTHREAD_CFLAGS $CAIRO_LDFLAGS"
 CAIRO_LIBS="$CAIRO_LIBS $PTHREAD_LIBS"
 
 dnl ===========================================================================
