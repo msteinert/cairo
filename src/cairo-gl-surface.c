@@ -1001,13 +1001,15 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 
 	    cairo_region_get_rectangle (clip_region, i, &rect);
             _cairo_gl_composite_emit_rect (ctx, &setup,
-                                           rect.x, rect.y,
-                                           rect.width, rect.height);
+                                           rect.x,              rect.y,
+                                           rect.x + rect.width, rect.y + rect.height,
+                                           0);
 	}
     } else {
         _cairo_gl_composite_emit_rect (ctx, &setup,
-                                       dst_x, dst_y,
-                                       width, height);
+                                       dst_x,         dst_y,
+                                       dst_x + width, dst_y + height,
+                                       0);
     }
 
     _cairo_gl_composite_end (ctx, &setup);

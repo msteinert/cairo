@@ -304,10 +304,11 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
 cairo_private void
 _cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
                                cairo_gl_composite_t *setup,
-                               GLfloat x,
-                               GLfloat y,
-                               GLfloat width,
-                               GLfloat height);
+                               GLfloat x1,
+                               GLfloat y1,
+                               GLfloat x2,
+                               GLfloat y2,
+                               uint32_t color);
 
 cairo_private void
 _cairo_gl_composite_end (cairo_gl_context_t *ctx,

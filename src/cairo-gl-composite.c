@@ -1111,7 +1111,8 @@ static inline void
 _cairo_gl_operand_emit (cairo_gl_operand_t *operand,
                         GLfloat ** vb,
                         GLfloat x,
-                        GLfloat y)
+                        GLfloat y,
+                        uint32_t color)
 {
     switch (operand->type) {
     default:
@@ -1143,15 +1144,16 @@ static inline void
 _cairo_gl_composite_emit_vertex (cairo_gl_context_t *ctx,
                                  cairo_gl_composite_t *setup,
                                  GLfloat x,
-                                 GLfloat y)
+                                 GLfloat y,
+                                 uint32_t color)
 {
     GLfloat *vb = (GLfloat *) (void *) &setup->vb[setup->vb_offset];
 
     *vb++ = x;
     *vb++ = y;
 
-    _cairo_gl_operand_emit (&setup->src, &vb, x, y);
-    _cairo_gl_operand_emit (&setup->mask, &vb, x, y);
+    _cairo_gl_operand_emit (&setup->src, &vb, x, y, color);
+    _cairo_gl_operand_emit (&setup->mask, &vb, x, y, color);
 
     setup->vb_offset += setup->vertex_size;
 }
@@ -1159,17 +1161,18 @@ _cairo_gl_composite_emit_vertex (cairo_gl_context_t *ctx,
 void
 _cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
                                cairo_gl_composite_t *setup,
-                               GLfloat x,
-                               GLfloat y,
-                               GLfloat width,
-                               GLfloat height)
+                               GLfloat x1,
+                               GLfloat y1,
+                               GLfloat x2,
+                               GLfloat y2,
+                               uint32_t color)
 {
     _cairo_gl_composite_prepare_buffer (ctx, setup, 4);
 
-    _cairo_gl_composite_emit_vertex (ctx, setup, x,         y);
-    _cairo_gl_composite_emit_vertex (ctx, setup, x + width, y);
-    _cairo_gl_composite_emit_vertex (ctx, setup, x + width, y + height);
-    _cairo_gl_composite_emit_vertex (ctx, setup, x,         y + height);
+    _cairo_gl_composite_emit_vertex (ctx, setup, x1, y1, color);
+    _cairo_gl_composite_emit_vertex (ctx, setup, x2, y1, color);
+    _cairo_gl_composite_emit_vertex (ctx, setup, x2, y2, color);
+    _cairo_gl_composite_emit_vertex (ctx, setup, x1, y2, color);
 }
 
 void
