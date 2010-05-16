@@ -1067,6 +1067,8 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
         ret = _pixman_format_from_masks (&image_masks, &intermediate_format);
         assert (ret);
 
+	own_data = FALSE;
+
         pixman_image = pixman_image_create_bits (intermediate_format,
                                                  image->width,
                                                  image->height,
@@ -1089,7 +1091,6 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 	ximage.bits_per_pixel = image_masks.bpp;
 	ximage.data = (char *) pixman_image_get_data (pixman_image);
 	ximage.bytes_per_line = pixman_image_get_stride (pixman_image);
-	own_data = FALSE;
 
 	ret = XInitImage (&ximage);
 	assert (ret != 0);
@@ -1135,6 +1136,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 	ximage.bytes_per_line = stride;
 	ximage.data = _cairo_malloc_ab (stride, ximage.height);
 	if (unlikely (ximage.data == NULL)) {
+            own_data = FALSE;
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
             goto BAIL;
         }
