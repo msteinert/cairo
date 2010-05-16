@@ -300,6 +300,12 @@ cairo_private void
 _cairo_gl_composite_set_mask_spans (cairo_gl_context_t *ctx,
                                     cairo_gl_composite_t *setup);
 
+cairo_private void
+_cairo_gl_composite_set_mask_texture (cairo_gl_context_t *ctx,
+                                      cairo_gl_composite_t *setup,
+                                      GLuint tex,
+                                      cairo_bool_t has_component_alpha);
+
 cairo_private cairo_status_t
 _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
                            cairo_gl_composite_t *setup);
@@ -312,6 +318,22 @@ _cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
                                GLfloat x2,
                                GLfloat y2,
                                uint32_t color);
+
+cairo_private void
+_cairo_gl_composite_emit_glyph (cairo_gl_context_t *ctx,
+                                cairo_gl_composite_t *setup,
+                                GLfloat x1,
+                                GLfloat y1,
+                                GLfloat x2,
+                                GLfloat y2,
+                                GLfloat glyph_x1,
+                                GLfloat glyph_y1,
+                                GLfloat glyph_x2,
+                                GLfloat glyph_y2);
+
+cairo_private void
+_cairo_gl_composite_flush (cairo_gl_context_t *ctx,
+                           cairo_gl_composite_t *setup);
 
 cairo_private void
 _cairo_gl_composite_end (cairo_gl_context_t *ctx,
