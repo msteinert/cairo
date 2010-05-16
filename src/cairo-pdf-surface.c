@@ -3915,18 +3915,19 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
 				 "   /ItalicAngle 0\n"
 				 "   /Ascent %ld\n"
 				 "   /Descent %ld\n"
-				 "   /CapHeight 500\n"
+				 "   /CapHeight %ld\n"
 				 "   /StemV 80\n"
 				 "   /StemH 80\n"
 				 "   /FontFile3 %u 0 R\n"
 				 ">>\n"
 				 "endobj\n",
-				 subset->x_min,
-				 subset->y_min,
-				 subset->x_max,
-				 subset->y_max,
-				 subset->ascent,
-				 subset->descent,
+				 (long)(subset->x_min*PDF_UNITS_PER_EM),
+				 (long)(subset->y_min*PDF_UNITS_PER_EM),
+				 (long)(subset->x_max*PDF_UNITS_PER_EM),
+				 (long)(subset->y_max*PDF_UNITS_PER_EM),
+				 (long)(subset->ascent*PDF_UNITS_PER_EM),
+				 (long)(subset->descent*PDF_UNITS_PER_EM),
+				 (long)(subset->y_max*PDF_UNITS_PER_EM),
 				 stream.id);
 
     cidfont_dict = _cairo_pdf_surface_new_object (surface);
@@ -3952,8 +3953,8 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
 
     for (i = 0; i < font_subset->num_glyphs; i++)
 	_cairo_output_stream_printf (surface->output,
-				     " %d",
-				     subset->widths[i]);
+				     " %ld",
+                                     (long)(subset->widths[i]*PDF_UNITS_PER_EM));
 
     _cairo_output_stream_printf (surface->output,
                                  " ]]\n"

@@ -334,9 +334,9 @@ _cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset
 typedef struct _cairo_cff_subset {
     char *font_name;
     char *ps_name;
-    int *widths;
-    long x_min, y_min, x_max, y_max;
-    long ascent, descent;
+    double *widths;
+    double x_min, y_min, x_max, y_max;
+    double ascent, descent;
     char *data;
     unsigned long data_length;
 } cairo_cff_subset_t;
