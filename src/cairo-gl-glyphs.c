@@ -740,9 +740,6 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     cairo_status_t status;
     int i;
 
-    if (! GLEW_ARB_vertex_buffer_object)
-	return UNSUPPORTED ("requires ARB_vertex_buffer_object");
-
     if (! _cairo_gl_operator_is_supported (op))
 	return UNSUPPORTED ("unsupported operator");
 

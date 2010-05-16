@@ -134,6 +134,9 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 	    fprintf (stderr, "    GL_EXT_framebuffer_object\n");
 	if (! GLEW_ARB_texture_env_combine)
 	    fprintf (stderr, "    GL_ARB_texture_env_combine\n");
+        if (! GLEW_ARB_vertex_buffer_object)
+	    fprintf (stderr, "    GL_ARB_vertex_buffer_object\n");
+
 	/* EXT_bgra is used in two places:
 	 * - draw_image to upload common pixman formats without hand-swizzling.
 	 * - get_image to download common pixman formats without hand-swizzling.
@@ -155,8 +158,6 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 	ctx->tex_target = GL_TEXTURE_RECTANGLE_EXT;
     else
 	ctx->tex_target = GL_TEXTURE_2D;
-
-    ctx->has_span_renderer = GLEW_ARB_vertex_buffer_object;
 
     _cairo_gl_context_init_shaders (ctx);
 

@@ -1292,7 +1292,6 @@ _cairo_gl_composite_init (cairo_gl_context_t *ctx,
 {
     memset (setup, 0, sizeof (cairo_gl_composite_t));
 
-    
     if (has_component_alpha) {
         if (op != CAIRO_OPERATOR_CLEAR &&
             op != CAIRO_OPERATOR_OVER &&

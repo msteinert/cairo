@@ -132,7 +132,6 @@ typedef struct _cairo_gl_context {
     GLint max_framebuffer_size;
     GLint max_texture_size;
     GLenum tex_target;
-    cairo_bool_t has_span_renderer;
 
     const cairo_gl_shader_impl_t *shader_impl;
 
@@ -244,12 +243,6 @@ static cairo_always_inline cairo_bool_t
 _cairo_gl_device_has_glsl (cairo_device_t *device)
 {
     return ((cairo_gl_context_t *) device)->shader_impl != NULL;
-}
-
-static cairo_always_inline cairo_bool_t
-cairo_gl_device_check_span_renderer (cairo_device_t *device)
-{
-  return ((cairo_gl_context_t *) device)->has_span_renderer;
 }
 
 static cairo_always_inline cairo_status_t cairo_warn

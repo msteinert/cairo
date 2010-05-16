@@ -1369,22 +1369,18 @@ _cairo_gl_surface_span_renderer_finish (void *abstract_renderer)
 }
 
 static cairo_bool_t
-_cairo_gl_surface_check_span_renderer (cairo_operator_t	  op,
+_cairo_gl_surface_check_span_renderer (cairo_operator_t	       op,
 				       const cairo_pattern_t  *pattern,
-				       void			 *abstract_dst,
-				       cairo_antialias_t	  antialias)
+				       void		      *abstract_dst,
+				       cairo_antialias_t       antialias)
 {
-    cairo_surface_t *surface = abstract_dst;
-
     if (! _cairo_gl_operator_is_supported (op))
-	return FALSE;
-
-    if (! cairo_gl_device_check_span_renderer (surface->device))
 	return FALSE;
 
     return TRUE;
 
     (void) pattern;
+    (void) abstract_dst;
     (void) antialias;
 }
 
