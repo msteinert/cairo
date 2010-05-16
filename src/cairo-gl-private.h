@@ -420,33 +420,33 @@ create_shader_program (cairo_gl_context_t *ctx,
                        cairo_gl_var_type_t mask,
                        const char *fragment_text);
 
-cairo_private cairo_status_t
+cairo_private void
 bind_float_to_shader (cairo_gl_context_t *ctx,
                       GLuint program, const char *name,
                       float value);
 
-cairo_private cairo_status_t
+cairo_private void
 bind_vec2_to_shader (cairo_gl_context_t *ctx,
                      GLuint program, const char *name,
                      float value0, float value1);
 
-cairo_private cairo_status_t
+cairo_private void
 bind_vec3_to_shader (cairo_gl_context_t *ctx,
                      GLuint program, const char *name,
                      float value0, float value1,
                      float value2);
 
-cairo_private cairo_status_t
+cairo_private void
 bind_vec4_to_shader (cairo_gl_context_t *ctx,
                      GLuint program, const char *name,
                      float value0, float value1,
                      float value2, float value3);
 
-cairo_private cairo_status_t
+cairo_private void
 bind_matrix_to_shader (cairo_gl_context_t *ctx,
                        GLuint program, const char *name, cairo_matrix_t* m);
 
-cairo_private cairo_status_t
+cairo_private void
 bind_texture_to_shader (cairo_gl_context_t *ctx,
                         GLuint program, const char *name, GLuint tex_unit);
 

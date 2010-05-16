@@ -1200,14 +1200,13 @@ _cairo_gl_surface_fill_rectangles_glsl (void                  *abstract_surface,
     _cairo_gl_context_set_destination (ctx, surface);
     _cairo_gl_set_operator (surface, op, FALSE);
 
-    status = bind_vec4_to_shader (ctx,
-                                  ctx->fill_rectangles_shader.program,
-                                  "color",
-                                  color->red * color->alpha,
-                                  color->green * color->alpha,
-                                  color->blue * color->alpha,
-                                  color->alpha);
-    assert (! _cairo_status_is_error (status));
+    bind_vec4_to_shader (ctx,
+                         ctx->fill_rectangles_shader.program,
+                         "color",
+                         color->red * color->alpha,
+                         color->green * color->alpha,
+                         color->blue * color->alpha,
+                         color->alpha);
 
     for (i = 0; i < num_rects; i++) {
 	vertices[i * 8 + 0] = rects[i].x;
