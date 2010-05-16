@@ -2,7 +2,7 @@
  *
  * Copyright © 2009 Eric Anholt
  * Copyright © 2009 Chris Wilson
- * Copyright © 2005 Red Hat, Inc
+ * Copyright © 2005,2010 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -32,9 +32,11 @@
  * The Initial Developer of the Original Code is Red Hat, Inc.
  *
  * Contributor(s):
+ *	Benjamin Otte <otte@gnome.org>
  *	Carl Worth <cworth@cworth.org>
  *	Chris Wilson <chris@chris-wilson.co.uk>
- *      T. Zachary Laine <whatwasthataddress@gmail.com>
+ *	Eric Anholt <eric@anholt.net>
+ *	T. Zachary Laine <whatwasthataddress@gmail.com>
  */
 
 #ifndef CAIRO_GL_PRIVATE_H

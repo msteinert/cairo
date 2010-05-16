@@ -1,7 +1,8 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2010 Eric Anholt
  * Copyright © 2009 T. Zachary Laine
+ * Copyright © 2010 Eric Anholt
+ * Copyright © 2010 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -29,6 +30,11 @@
  * The Original Code is the cairo graphics library.
  *
  * The Initial Developer of the Original Code is T. Zachary Laine.
+ *
+ * Contributor(s):
+ *	Benjamin Otte <otte@gnome.org>
+ *	Eric Anholt <eric@anholt.net>
+ *	T. Zachary Laine <whatwasthataddress@gmail.com>
  */
 
 #include "cairoint.h"

@@ -2,6 +2,7 @@
  *
  * Copyright © 2009 Chris Wilson
  * Copyright © 2010 Intel Corporation
+ * Copyright © 2010 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -29,6 +30,10 @@
  * The Original Code is the cairo graphics library.
  *
  * The Initial Developer of the Original Code is Chris Wilson.
+ *
+ * Contributors:
+ *      Benjamin Otte <otte@gnome.org>
+ *	Chris Wilson <chris@chris-wilson.co.uk>
  */
 
 #include "cairoint.h"
