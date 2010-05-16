@@ -1158,19 +1158,19 @@ _cairo_gl_composite_draw (cairo_gl_context_t *ctx,
     unsigned int count = setup->vb_offset / setup->vertex_size;
 
     if (! setup->pre_shader) {
-        glDrawArrays (GL_QUADS, 0, count);
+        glDrawArrays (GL_TRIANGLES, 0, count);
     } else {
         _cairo_gl_use_program (ctx, setup->pre_shader);
         _cairo_gl_set_operator (setup->dst, CAIRO_OPERATOR_DEST_OUT, TRUE);
         _cairo_gl_set_src_alpha_operand (ctx, setup);
         _cairo_gl_set_component_alpha_mask_operand (ctx, setup);
-        glDrawArrays (GL_QUADS, 0, count);
+        glDrawArrays (GL_TRIANGLES, 0, count);
 
         _cairo_gl_use_program (ctx, setup->shader);
         _cairo_gl_set_operator (setup->dst, setup->op, TRUE);
         _cairo_gl_set_src_operand (ctx, setup);
         _cairo_gl_set_component_alpha_mask_operand (ctx, setup);
-        glDrawArrays (GL_QUADS, 0, count);
+        glDrawArrays (GL_TRIANGLES, 0, count);
     }
 }
 
@@ -1284,9 +1284,12 @@ _cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
                                GLfloat y2,
                                uint32_t color)
 {
-    _cairo_gl_composite_prepare_buffer (ctx, setup, 4);
+    _cairo_gl_composite_prepare_buffer (ctx, setup, 6);
 
     _cairo_gl_composite_emit_vertex (ctx, setup, x1, y1, color);
+    _cairo_gl_composite_emit_vertex (ctx, setup, x2, y1, color);
+    _cairo_gl_composite_emit_vertex (ctx, setup, x1, y2, color);
+
     _cairo_gl_composite_emit_vertex (ctx, setup, x2, y1, color);
     _cairo_gl_composite_emit_vertex (ctx, setup, x2, y2, color);
     _cairo_gl_composite_emit_vertex (ctx, setup, x1, y2, color);
@@ -1325,9 +1328,12 @@ _cairo_gl_composite_emit_glyph (cairo_gl_context_t *ctx,
                                 GLfloat glyph_x2,
                                 GLfloat glyph_y2)
 {
-    _cairo_gl_composite_prepare_buffer (ctx, setup, 4);
+    _cairo_gl_composite_prepare_buffer (ctx, setup, 6);
 
     _cairo_gl_composite_emit_glyph_vertex (ctx, setup, x1, y1, glyph_x1, glyph_y1);
+    _cairo_gl_composite_emit_glyph_vertex (ctx, setup, x2, y1, glyph_x2, glyph_y1);
+    _cairo_gl_composite_emit_glyph_vertex (ctx, setup, x1, y2, glyph_x1, glyph_y2);
+
     _cairo_gl_composite_emit_glyph_vertex (ctx, setup, x2, y1, glyph_x2, glyph_y1);
     _cairo_gl_composite_emit_glyph_vertex (ctx, setup, x2, y2, glyph_x2, glyph_y2);
     _cairo_gl_composite_emit_glyph_vertex (ctx, setup, x1, y2, glyph_x1, glyph_y2);
