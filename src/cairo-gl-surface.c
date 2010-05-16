@@ -50,18 +50,6 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
 
 #define BIAS .375
 
-static inline float
-int_as_float (uint32_t val)
-{
-    union fi {
-	float f;
-	uint32_t u;
-    } fi;
-
-    fi.u = val;
-    return fi.f;
-}
-
 static cairo_bool_t _cairo_surface_is_gl (cairo_surface_t *surface)
 {
     return surface->backend == &_cairo_gl_surface_backend;
@@ -1287,137 +1275,7 @@ typedef struct _cairo_gl_surface_span_renderer {
     int xmin, xmax;
 
     cairo_gl_context_t *ctx;
-    cairo_region_t *clip;
-
-    void *vbo_base;
-    unsigned int vbo_size;
-    unsigned int vbo_offset;
-    unsigned int vertex_size;
 } cairo_gl_surface_span_renderer_t;
-
-static void
-_cairo_gl_span_renderer_flush (cairo_gl_surface_span_renderer_t *renderer)
-{
-    int count;
-
-    if (renderer->vbo_offset == 0)
-	return;
-
-    glUnmapBufferARB (GL_ARRAY_BUFFER_ARB);
-
-    count = renderer->vbo_offset / renderer->vertex_size;
-    renderer->vbo_offset = 0;
-
-    if (renderer->clip) {
-	int i, num_rectangles = cairo_region_num_rectangles (renderer->clip);
-
-	glEnable (GL_SCISSOR_TEST);
-	for (i = 0; i < num_rectangles; i++) {
-	    cairo_rectangle_int_t rect;
-
-	    cairo_region_get_rectangle (renderer->clip, i, &rect);
-
-	    glScissor (rect.x, rect.y, rect.width, rect.height);
-	    glDrawArrays (GL_QUADS, 0, count);
-	}
-	glDisable (GL_SCISSOR_TEST);
-    } else {
-	glDrawArrays (GL_QUADS, 0, count);
-    }
-}
-
-static void *
-_cairo_gl_span_renderer_get_vbo (cairo_gl_surface_span_renderer_t *renderer,
-				 unsigned int num_vertices)
-{
-    unsigned int offset;
-
-    if (renderer->vbo_size == 0) {
-	renderer->vbo_size = 16384;
-	glBindBufferARB (GL_ARRAY_BUFFER_ARB, renderer->ctx->vbo);
-
-	if (renderer->setup.src.type == CAIRO_GL_OPERAND_TEXTURE)
-	    renderer->vertex_size = 4 * sizeof (float) + sizeof (uint32_t);
-	else
-	    renderer->vertex_size = 2 * sizeof (float) + sizeof (uint32_t);
-
-	glVertexPointer (2, GL_FLOAT, renderer->vertex_size, 0);
-	glEnableClientState (GL_VERTEX_ARRAY);
-
-	glColorPointer (4, GL_UNSIGNED_BYTE, renderer->vertex_size,
-			(void *) (uintptr_t) (2 * sizeof (float)));
-	glEnableClientState (GL_COLOR_ARRAY);
-
-	if (renderer->setup.src.type == CAIRO_GL_OPERAND_TEXTURE) {
-	    glClientActiveTexture (GL_TEXTURE0);
-	    glTexCoordPointer (2, GL_FLOAT, renderer->vertex_size,
-			       (void *) (uintptr_t) (2 * sizeof (float) +
-						     sizeof (uint32_t)));
-	    glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-	}
-    }
-
-    if (renderer->vbo_offset + num_vertices * renderer->vertex_size >
-	renderer->vbo_size) {
-	_cairo_gl_span_renderer_flush (renderer);
-    }
-
-    if (renderer->vbo_offset == 0) {
-	/* We'll only be using these vertices once. */
-	glBufferDataARB (GL_ARRAY_BUFFER_ARB, renderer->vbo_size, NULL,
-		      GL_STREAM_DRAW_ARB);
-	renderer->vbo_base = glMapBufferARB (GL_ARRAY_BUFFER_ARB,
-					     GL_WRITE_ONLY_ARB);
-    }
-
-    offset = renderer->vbo_offset;
-    renderer->vbo_offset += num_vertices * renderer->vertex_size;
-
-    return (char *) renderer->vbo_base + offset;
-}
-
-static void
-_cairo_gl_emit_span_vertex (cairo_gl_surface_span_renderer_t *renderer,
-			    int dst_x, int dst_y, uint8_t alpha,
-			    float *vertices)
-{
-    cairo_surface_attributes_t *src_attributes;
-    int v = 0;
-
-    src_attributes = &renderer->setup.src.operand.texture.attributes;
-
-    vertices[v++] = dst_x + BIAS;
-    vertices[v++] = dst_y + BIAS;
-    vertices[v++] = int_as_float (alpha << 24);
-    if (renderer->setup.src.type == CAIRO_GL_OPERAND_TEXTURE) {
-	double s, t;
-
-	s = dst_x + BIAS;
-	t = dst_y + BIAS;
-	cairo_matrix_transform_point (&src_attributes->matrix, &s, &t);
-	vertices[v++] = s;
-	vertices[v++] = t;
-    }
-}
-
-static void
-_cairo_gl_emit_rectangle (cairo_gl_surface_span_renderer_t *renderer,
-			  int x1, int y1,
-			  int x2, int y2,
-			  int coverage)
-{
-    float *vertices = _cairo_gl_span_renderer_get_vbo (renderer, 4);
-    int vsize = renderer->vertex_size / 4;
-
-    _cairo_gl_emit_span_vertex (renderer, x1, y1, coverage,
-				vertices + vsize * 0);
-    _cairo_gl_emit_span_vertex (renderer, x1, y2, coverage,
-				vertices + vsize * 1);
-    _cairo_gl_emit_span_vertex (renderer, x2, y2, coverage,
-				vertices + vsize * 2);
-    _cairo_gl_emit_span_vertex (renderer, x2, y1, coverage,
-				vertices + vsize * 3);
-}
 
 static cairo_status_t
 _cairo_gl_render_bounded_spans (void *abstract_renderer,
@@ -1432,10 +1290,11 @@ _cairo_gl_render_bounded_spans (void *abstract_renderer,
 
     do {
 	if (spans[0].coverage) {
-	    _cairo_gl_emit_rectangle (renderer,
-				      spans[0].x, y,
-				      spans[1].x, y + height,
-				      spans[0].coverage);
+            _cairo_gl_composite_emit_rect (renderer->ctx,
+                                           &renderer->setup,
+                                           spans[0].x, y,
+                                           spans[1].x, y + height,
+                                           spans[0].coverage << 24);
 	}
 
 	spans++;
@@ -1453,33 +1312,37 @@ _cairo_gl_render_unbounded_spans (void *abstract_renderer,
     cairo_gl_surface_span_renderer_t *renderer = abstract_renderer;
 
     if (num_spans == 0) {
-	_cairo_gl_emit_rectangle (renderer,
-				  renderer->xmin, y,
-				  renderer->xmax, y + height,
-				  0);
+        _cairo_gl_composite_emit_rect (renderer->ctx,
+                                       &renderer->setup,
+                                       renderer->xmin, y,
+                                       renderer->xmax, y + height,
+                                       0);
 	return CAIRO_STATUS_SUCCESS;
     }
 
     if (spans[0].x != renderer->xmin) {
-	_cairo_gl_emit_rectangle (renderer,
-				  renderer->xmin, y,
-				  spans[0].x, y + height,
-				  0);
+        _cairo_gl_composite_emit_rect (renderer->ctx,
+                                       &renderer->setup,
+                                       renderer->xmin, y,
+                                       spans[0].x,     y + height,
+                                       0);
     }
 
     do {
-	_cairo_gl_emit_rectangle (renderer,
-				  spans[0].x, y,
-				  spans[1].x, y + height,
-				  spans[0].coverage);
+        _cairo_gl_composite_emit_rect (renderer->ctx,
+                                       &renderer->setup,
+                                       spans[0].x, y,
+                                       spans[1].x, y + height,
+                                       spans[0].coverage << 24);
 	spans++;
     } while (--num_spans > 1);
 
     if (spans[0].x != renderer->xmax) {
-	_cairo_gl_emit_rectangle (renderer,
-				  spans[0].x, y,
-				  renderer->xmax, y + height,
-				  0);
+        _cairo_gl_composite_emit_rect (renderer->ctx,
+                                       &renderer->setup,
+                                       spans[0].x,     y,
+                                       renderer->xmax, y + height,
+                                       0);
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -1505,25 +1368,7 @@ _cairo_gl_surface_span_renderer_finish (void *abstract_renderer)
 {
     cairo_gl_surface_span_renderer_t *renderer = abstract_renderer;
 
-    _cairo_gl_span_renderer_flush (renderer);
-
-    glBindBufferARB (GL_ARRAY_BUFFER_ARB, 0);
-    glDisableClientState (GL_VERTEX_ARRAY);
-    glDisableClientState (GL_COLOR_ARRAY);
-
-    glClientActiveTexture (GL_TEXTURE0);
-    glDisableClientState (GL_TEXTURE_COORD_ARRAY);
-    glActiveTexture (GL_TEXTURE0);
-    glDisable (GL_TEXTURE_1D);
-    glDisable (renderer->ctx->tex_target);
-
-    if (!renderer->setup.shader) {
-	glActiveTexture (GL_TEXTURE1);
-	glDisable (renderer->ctx->tex_target);
-    }
-
-    glDisable (GL_BLEND);
-    _cairo_gl_use_program (renderer->ctx, NULL);
+    _cairo_gl_composite_end (renderer->ctx, &renderer->setup);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1559,7 +1404,6 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     cairo_gl_surface_t *dst = abstract_dst;
     cairo_gl_surface_span_renderer_t *renderer;
     cairo_status_t status;
-    cairo_surface_attributes_t *src_attributes;
     const cairo_rectangle_int_t *extents;
 
     renderer = calloc (1, sizeof (*renderer));
@@ -1577,7 +1421,6 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     }
     renderer->xmin = extents->x;
     renderer->xmax = extents->x + extents->width;
-    renderer->clip = clip_region;
 
     status = _cairo_gl_context_acquire (dst->base.device, &renderer->ctx);
     if (unlikely (status)) {
@@ -1600,42 +1443,12 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     if (unlikely (status))
         goto FAIL;
 
-    _cairo_gl_context_set_destination (renderer->ctx, dst);
+    _cairo_gl_composite_set_mask_spans (renderer->ctx, &renderer->setup);
+    _cairo_gl_composite_set_clip_region (renderer->ctx, &renderer->setup, clip_region);
 
-    status = _cairo_gl_get_program (renderer->ctx,
-				    renderer->setup.src.type,
-				    CAIRO_GL_OPERAND_SPANS,
-				    CAIRO_GL_SHADER_IN_NORMAL,
-				    &renderer->setup.shader);
-    if (_cairo_status_is_error (status))
+    status = _cairo_gl_composite_begin (renderer->ctx, &renderer->setup);
+    if (unlikely (status))
         goto FAIL;
-
-    src_attributes = &renderer->setup.src.operand.texture.attributes;
-
-    _cairo_gl_use_program (renderer->ctx, renderer->setup.shader);
-    _cairo_gl_set_operator (dst, op, FALSE);
-    _cairo_gl_set_src_operand (renderer->ctx, &renderer->setup);
-
-    if (!renderer->setup.shader) {
-	/* Set up the mask to source from the incoming vertex color. */
-	glActiveTexture (GL_TEXTURE1);
-	/* Have to have a dummy texture bound in order to use the combiner unit. */
-	glBindTexture (renderer->ctx->tex_target, renderer->ctx->dummy_tex);
-	glEnable (renderer->ctx->tex_target);
-	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
-	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
-
-	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PREVIOUS);
-	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PREVIOUS);
-	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
-
-	glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PRIMARY_COLOR);
-	glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_PRIMARY_COLOR);
-	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_ALPHA);
-	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
-    }
 
     return &renderer->base;
 

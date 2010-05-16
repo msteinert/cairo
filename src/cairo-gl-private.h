@@ -189,6 +189,7 @@ typedef struct _cairo_gl_composite {
     cairo_gl_surface_t *dst;
     cairo_operator_t op;
     cairo_bool_t has_component_alpha;
+    cairo_region_t *clip_region;
 
     cairo_gl_operand_t src;
     cairo_gl_operand_t mask;
@@ -296,6 +297,15 @@ _cairo_gl_composite_init (cairo_gl_context_t *ctx,
 cairo_private void
 _cairo_gl_composite_fini (cairo_gl_context_t *ctx,
                           cairo_gl_composite_t *setup);
+
+cairo_private void
+_cairo_gl_composite_set_clip_region (cairo_gl_context_t *ctx,
+                                     cairo_gl_composite_t *setup,
+                                     cairo_region_t *clip_region);
+
+cairo_private void
+_cairo_gl_composite_set_mask_spans (cairo_gl_context_t *ctx,
+                                    cairo_gl_composite_t *setup);
 
 cairo_private cairo_status_t
 _cairo_gl_composite_begin (cairo_gl_context_t *ctx,

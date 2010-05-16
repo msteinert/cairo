@@ -450,6 +450,21 @@ _cairo_gl_operand_init (cairo_gl_context_t *ctx,
     }
 }
 
+void
+_cairo_gl_composite_set_mask_spans (cairo_gl_context_t *ctx,
+                                    cairo_gl_composite_t *setup)
+{
+    setup->mask.type = CAIRO_GL_OPERAND_SPANS;
+}
+
+void
+_cairo_gl_composite_set_clip_region (cairo_gl_context_t *ctx,
+                                     cairo_gl_composite_t *setup,
+                                     cairo_region_t *clip_region)
+{
+    setup->clip_region = clip_region;
+}
+
 static void
 _cairo_gl_operand_destroy (cairo_gl_operand_t *operand)
 {
@@ -864,6 +879,27 @@ _cairo_gl_set_mask_operand (cairo_gl_context_t *ctx,
     case CAIRO_GL_OPERAND_NONE:
         break;
     case CAIRO_GL_OPERAND_SPANS:
+        if (! setup->shader) {
+            /* Set up the mask to source from the incoming vertex color. */
+            glActiveTexture (GL_TEXTURE1);
+            /* Have to have a dummy texture bound in order to use the combiner unit. */
+            glBindTexture (ctx->tex_target, ctx->dummy_tex);
+            glEnable (ctx->tex_target);
+            glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+            glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+            glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
+
+            glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PREVIOUS);
+            glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PREVIOUS);
+            glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+            glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+
+            glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PRIMARY_COLOR);
+            glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_PRIMARY_COLOR);
+            glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_ALPHA);
+            glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
+        }
+        break;
     case CAIRO_GL_OPERAND_COUNT:
     default:
         ASSERT_NOT_REACHED;
@@ -1050,7 +1086,14 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
 	glTexCoordPointer (2, GL_FLOAT, setup->vertex_size,
                            (void *) (uintptr_t) (dst_size + src_size));
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+    } else if (setup->mask.type == CAIRO_GL_OPERAND_SPANS) {
+	glColorPointer (4, GL_UNSIGNED_BYTE, setup->vertex_size,
+                        (void *) (uintptr_t) (dst_size + src_size));
+	glEnableClientState (GL_COLOR_ARRAY);
     }
+
+    if (setup->clip_region)
+	glEnable (GL_SCISSOR_TEST);
 
     return status;
 }
@@ -1085,7 +1128,20 @@ _cairo_gl_composite_flush (cairo_gl_context_t *ctx,
     if (setup->vb_offset == 0)
         return;
 
-    _cairo_gl_composite_draw (ctx, setup);
+    if (setup->clip_region) {
+	int i, num_rectangles = cairo_region_num_rectangles (setup->clip_region);
+
+	for (i = 0; i < num_rectangles; i++) {
+	    cairo_rectangle_int_t rect;
+
+	    cairo_region_get_rectangle (setup->clip_region, i, &rect);
+
+	    glScissor (rect.x, rect.y, rect.width, rect.height);
+            _cairo_gl_composite_draw (ctx, setup);
+	}
+    } else {
+        _cairo_gl_composite_draw (ctx, setup);
+    }
 
     glUnmapBufferARB (GL_ARRAY_BUFFER_ARB);
     setup->vb = NULL;
@@ -1124,7 +1180,15 @@ _cairo_gl_operand_emit (cairo_gl_operand_t *operand,
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
         break;
     case CAIRO_GL_OPERAND_SPANS:
-        ASSERT_NOT_REACHED;
+        {
+            union fi {
+                float f;
+                uint32_t u;
+            } fi;
+
+            fi.u = color;
+            *(*vb)++ = fi.f;
+        }
         break;
     case CAIRO_GL_OPERAND_TEXTURE:
         {
@@ -1181,12 +1245,16 @@ _cairo_gl_composite_end (cairo_gl_context_t *ctx,
 {
     _cairo_gl_composite_flush (ctx, setup);
 
+    if (setup->clip_region)
+	glDisable (GL_SCISSOR_TEST);
+
     glBindBufferARB (GL_ARRAY_BUFFER_ARB, 0);
 
     _cairo_gl_use_program (ctx, NULL);
     glDisable (GL_BLEND);
 
     glDisableClientState (GL_VERTEX_ARRAY);
+    glDisableClientState (GL_COLOR_ARRAY);
 
     glClientActiveTexture (GL_TEXTURE0);
     glDisableClientState (GL_TEXTURE_COORD_ARRAY);
