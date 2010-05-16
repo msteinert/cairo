@@ -116,7 +116,7 @@ _cairo_rtree_pin (cairo_rtree_t *rtree, cairo_rtree_node_t *node)
 {
     if (! node->pinned) {
 	cairo_list_move (&node->link, &rtree->pinned);
-	node->pinned = 0;
+	node->pinned = 1;
     }
 
     return node;
