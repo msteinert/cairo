@@ -2184,7 +2184,7 @@ cairo_private cairo_surface_t *
 _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
 					      pixman_format_code_t	 pixman_format);
 
-pixman_format_code_t
+cairo_private pixman_format_code_t
 _cairo_format_to_pixman_format_code (cairo_format_t format);
 
 cairo_private cairo_bool_t
