@@ -114,9 +114,9 @@ _cairo_rtree_evict_random (cairo_rtree_t	 *rtree,
 static inline void *
 _cairo_rtree_pin (cairo_rtree_t *rtree, cairo_rtree_node_t *node)
 {
-    if (node->pinned == FALSE) {
+    if (! node->pinned) {
 	cairo_list_move (&node->link, &rtree->pinned);
-	node->pinned = TRUE;
+	node->pinned = 0;
     }
 
     return node;
