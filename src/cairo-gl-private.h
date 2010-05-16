@@ -188,9 +188,12 @@ typedef struct cairo_gl_operand {
 typedef struct _cairo_gl_composite {
     cairo_gl_surface_t *dst;
     cairo_operator_t op;
+    cairo_bool_t has_component_alpha;
+
     cairo_gl_operand_t src;
     cairo_gl_operand_t mask;
     cairo_gl_shader_program_t *shader;
+    cairo_gl_shader_program_t *pre_shader; /* for component alpha */
 
     char *vb;
     unsigned int vb_offset;
@@ -287,6 +290,7 @@ _cairo_gl_composite_init (cairo_gl_context_t *ctx,
                           cairo_gl_surface_t *dst,
                           const cairo_pattern_t *src,
                           const cairo_pattern_t *mask,
+                          cairo_bool_t has_component_alpha,
                           const cairo_rectangle_int_t *rect);
 
 cairo_private void

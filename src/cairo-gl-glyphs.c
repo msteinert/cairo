@@ -484,7 +484,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 
     status = _cairo_gl_composite_init (ctx, &composite_setup,
                                        op, dst, source, NULL,
-                                       glyph_extents);
+                                       FALSE, glyph_extents);
 
     if (unlikely (status))
 	goto CLEANUP_FONT;

@@ -890,6 +890,100 @@ _cairo_gl_operand_get_vertex_size (cairo_gl_operand_type_t type)
     }
 }
 
+static cairo_status_t
+_cairo_gl_composite_begin_component_alpha  (cairo_gl_context_t *ctx,
+                                            cairo_gl_composite_t *setup)
+{
+    cairo_status_t status;
+
+    /* For CLEAR, cairo's rendering equation (quoting Owen's description in:
+     * http://lists.cairographics.org/archives/cairo/2005-August/004992.html)
+     * is:
+     *     mask IN clip ? src OP dest : dest
+     * or more simply:
+     *     mask IN CLIP ? 0 : dest
+     *
+     * where the ternary operator A ? B : C is (A * B) + ((1 - A) * C).
+     *
+     * The model we use in _cairo_gl_set_operator() is Render's:
+     *     src IN mask IN clip OP dest
+     * which would boil down to:
+     *     0 (bounded by the extents of the drawing).
+     *
+     * However, we can do a Render operation using an opaque source
+     * and DEST_OUT to produce:
+     *    1 IN mask IN clip DEST_OUT dest
+     * which is
+     *    mask IN clip ? 0 : dest
+     */
+    if (setup->op == CAIRO_OPERATOR_CLEAR) {
+        _cairo_gl_solid_operand_init (&setup->src, CAIRO_COLOR_WHITE);
+	setup->op = CAIRO_OPERATOR_DEST_OUT;
+    }
+
+    /**
+     * implements component-alpha %CAIRO_OPERATOR_OVER using two passes of
+     * the simpler operations %CAIRO_OPERATOR_DEST_OUT and %CAIRO_OPERATOR_ADD.
+     *
+     * From http://anholt.livejournal.com/32058.html:
+     *
+     * The trouble is that component-alpha rendering requires two different sources
+     * for blending: one for the source value to the blender, which is the
+     * per-channel multiplication of source and mask, and one for the source alpha
+     * for multiplying with the destination channels, which is the multiplication
+     * of the source channels by the mask alpha. So the equation for Over is:
+     *
+     * dst.A = src.A * mask.A + (1 - (src.A * mask.A)) * dst.A
+     * dst.R = src.R * mask.R + (1 - (src.A * mask.R)) * dst.R
+     * dst.G = src.G * mask.G + (1 - (src.A * mask.G)) * dst.G
+     * dst.B = src.B * mask.B + (1 - (src.A * mask.B)) * dst.B
+     *
+     * But we can do some simpler operations, right? How about PictOpOutReverse,
+     * which has a source factor of 0 and dest factor of (1 - source alpha). We
+     * can get the source alpha value (srca.X = src.A * mask.X) out of the texture
+     * blenders pretty easily. So we can do a component-alpha OutReverse, which
+     * gets us:
+     *
+     * dst.A = 0 + (1 - (src.A * mask.A)) * dst.A
+     * dst.R = 0 + (1 - (src.A * mask.R)) * dst.R
+     * dst.G = 0 + (1 - (src.A * mask.G)) * dst.G
+     * dst.B = 0 + (1 - (src.A * mask.B)) * dst.B
+     *
+     * OK. And if an op doesn't use the source alpha value for the destination
+     * factor, then we can do the channel multiplication in the texture blenders
+     * to get the source value, and ignore the source alpha that we wouldn't use.
+     * We've supported this in the Radeon driver for a long time. An example would
+     * be PictOpAdd, which does:
+     *
+     * dst.A = src.A * mask.A + dst.A
+     * dst.R = src.R * mask.R + dst.R
+     * dst.G = src.G * mask.G + dst.G
+     * dst.B = src.B * mask.B + dst.B
+     *
+     * Hey, this looks good! If we do a PictOpOutReverse and then a PictOpAdd right
+     * after it, we get:
+     *
+     * dst.A = src.A * mask.A + ((1 - (src.A * mask.A)) * dst.A)
+     * dst.R = src.R * mask.R + ((1 - (src.A * mask.R)) * dst.R)
+     * dst.G = src.G * mask.G + ((1 - (src.A * mask.G)) * dst.G)
+     * dst.B = src.B * mask.B + ((1 - (src.A * mask.B)) * dst.B)
+     *
+     * This two-pass trickery could be avoided using a new GL extension that
+     * lets two values come out of the shader and into the blend unit.
+     */
+    if (setup->op == CAIRO_OPERATOR_OVER) {
+	setup->op = CAIRO_OPERATOR_ADD;
+        status = _cairo_gl_get_program (ctx,
+                                        setup->src.type,
+                                        setup->mask.type,
+                                        CAIRO_GL_SHADER_IN_CA_SOURCE_ALPHA,
+                                        &setup->pre_shader);
+        if (unlikely (_cairo_status_is_error (status)))
+            return status;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
 
 cairo_status_t
 _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
@@ -898,13 +992,23 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
     unsigned int dst_size, src_size, mask_size;
     cairo_status_t status;
 
+    /* Do various magic for component alpha */
+    if (setup->has_component_alpha) {
+        status = _cairo_gl_composite_begin_component_alpha (ctx, setup);
+        if (unlikely (status))
+            return status;
+    }
+
     status = _cairo_gl_get_program (ctx,
                                     setup->src.type,
                                     setup->mask.type,
-				    CAIRO_GL_SHADER_IN_NORMAL,
+				    setup->has_component_alpha ? CAIRO_GL_SHADER_IN_CA_SOURCE
+                                                               : CAIRO_GL_SHADER_IN_NORMAL,
 				    &setup->shader);
-    if (_cairo_status_is_error (status))
+    if (_cairo_status_is_error (status)) {
+        setup->pre_shader = NULL;
 	return status;
+    }
 
     status = CAIRO_STATUS_SUCCESS;
 
@@ -915,7 +1019,9 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
     setup->vertex_size = dst_size + src_size + mask_size;
 
     _cairo_gl_context_set_destination (ctx, setup->dst);
-    _cairo_gl_set_operator (setup->dst, setup->op, FALSE);
+    _cairo_gl_set_operator (setup->dst,
+                            setup->op,
+                            setup->has_component_alpha);
 
     _cairo_gl_use_program (ctx, setup->shader);
 
@@ -924,14 +1030,21 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
     glVertexPointer (2, GL_FLOAT, setup->vertex_size, NULL);
     glEnableClientState (GL_VERTEX_ARRAY);
 
-    _cairo_gl_set_src_operand (ctx, setup);
+    if (! setup->pre_shader)
+        _cairo_gl_set_src_operand (ctx, setup);
     if (setup->src.type == CAIRO_GL_OPERAND_TEXTURE) {
 	glClientActiveTexture (GL_TEXTURE0);
 	glTexCoordPointer (2, GL_FLOAT, setup->vertex_size,
                            (void *) (uintptr_t) dst_size);
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
     }
-    _cairo_gl_set_mask_operand (ctx, setup);
+    if (! setup->pre_shader) {
+        if (setup->has_component_alpha)
+            _cairo_gl_set_component_alpha_mask_operand (ctx, setup);
+        else
+            _cairo_gl_set_mask_operand (ctx, setup);
+    }
+
     if (setup->mask.type == CAIRO_GL_OPERAND_TEXTURE) {
 	glClientActiveTexture (GL_TEXTURE1);
 	glTexCoordPointer (2, GL_FLOAT, setup->vertex_size,
@@ -943,13 +1056,36 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
 }
 
 static inline void
+_cairo_gl_composite_draw (cairo_gl_context_t *ctx,
+                          cairo_gl_composite_t *setup)
+{
+    unsigned int count = setup->vb_offset / setup->vertex_size;
+
+    if (! setup->pre_shader) {
+        glDrawArrays (GL_QUADS, 0, count);
+    } else {
+        _cairo_gl_use_program (ctx, setup->pre_shader);
+        _cairo_gl_set_operator (setup->dst, CAIRO_OPERATOR_DEST_OUT, TRUE);
+        _cairo_gl_set_src_alpha_operand (ctx, setup);
+        _cairo_gl_set_component_alpha_mask_operand (ctx, setup);
+        glDrawArrays (GL_QUADS, 0, count);
+
+        _cairo_gl_use_program (ctx, setup->shader);
+        _cairo_gl_set_operator (setup->dst, setup->op, TRUE);
+        _cairo_gl_set_src_operand (ctx, setup);
+        _cairo_gl_set_component_alpha_mask_operand (ctx, setup);
+        glDrawArrays (GL_QUADS, 0, count);
+    }
+}
+
+static inline void
 _cairo_gl_composite_flush (cairo_gl_context_t *ctx,
                            cairo_gl_composite_t *setup)
 {
     if (setup->vb_offset == 0)
         return;
 
-    glDrawArrays (GL_QUADS, 0, setup->vb_offset / setup->vertex_size);
+    _cairo_gl_composite_draw (ctx, setup);
 
     glUnmapBufferARB (GL_ARRAY_BUFFER_ARB);
     setup->vb = NULL;
@@ -1060,6 +1196,9 @@ _cairo_gl_composite_end (cairo_gl_context_t *ctx,
     glActiveTexture (GL_TEXTURE1);
     glDisable (GL_TEXTURE_1D);
     glDisable (ctx->tex_target);
+
+    setup->shader = NULL;
+    setup->pre_shader = NULL;
 }
 
 void
@@ -1077,14 +1216,24 @@ _cairo_gl_composite_init (cairo_gl_context_t *ctx,
                           cairo_gl_surface_t *dst,
                           const cairo_pattern_t *src,
                           const cairo_pattern_t *mask,
+                          cairo_bool_t has_component_alpha,
                           const cairo_rectangle_int_t *rect)
 {
     memset (setup, 0, sizeof (cairo_gl_composite_t));
 
-    if (! _cairo_gl_operator_is_supported (op))
-	return UNSUPPORTED ("unsupported operator");
     
+    if (has_component_alpha) {
+        if (op != CAIRO_OPERATOR_CLEAR &&
+            op != CAIRO_OPERATOR_OVER &&
+            op != CAIRO_OPERATOR_ADD)
+            return UNSUPPORTED ("unsupported component alpha operator");
+    } else {
+        if (! _cairo_gl_operator_is_supported (op))
+            return UNSUPPORTED ("unsupported operator");
+    }
+
     setup->dst = dst;
+    setup->has_component_alpha = has_component_alpha;
     setup->op = op;
 
     return CAIRO_STATUS_SUCCESS;
