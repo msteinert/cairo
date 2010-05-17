@@ -287,7 +287,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     _cairo_scaled_font_freeze_cache (scaled_font);
 
     status = _cairo_gl_composite_init (ctx, &setup,
-                                       op, dst, source, NULL,
+                                       op, dst,
                                        TRUE, glyph_extents);
 
     if (unlikely (status))

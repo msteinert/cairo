@@ -277,8 +277,6 @@ _cairo_gl_composite_init (cairo_gl_context_t *ctx,
                           cairo_gl_composite_t *setup,
                           cairo_operator_t op,
                           cairo_gl_surface_t *dst,
-                          const cairo_pattern_t *src,
-                          const cairo_pattern_t *mask,
                           cairo_bool_t has_component_alpha,
                           const cairo_rectangle_int_t *rect);
 
