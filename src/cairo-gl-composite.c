@@ -610,7 +610,7 @@ _cairo_gl_set_tex_combine_constant_color (cairo_gl_context_t *ctx,
     }
 }
 
-void
+static void
 _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 			   cairo_gl_composite_t *setup)
 {
@@ -700,7 +700,7 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
  * for creating the "source alpha" value (src.aaaa * mask.argb) required by
  * component alpha rendering.
  */
-void
+static void
 _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
 				 cairo_gl_composite_t *setup)
 {
@@ -794,7 +794,7 @@ _cairo_gl_set_radial_gradient_mask_operand (cairo_gl_context_t *ctx,
 /* This is like _cairo_gl_set_src_alpha_operand, for component alpha setup
  * of the mask part of IN to produce a "source alpha" value.
  */
-void
+static void
 _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 					    cairo_gl_composite_t *setup)
 {
@@ -876,7 +876,7 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
     }
 }
 
-void
+static void
 _cairo_gl_set_mask_operand (cairo_gl_context_t *ctx,
 			    cairo_gl_composite_t *setup)
 {
