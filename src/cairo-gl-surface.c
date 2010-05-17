@@ -1081,188 +1081,66 @@ _cairo_gl_surface_composite_trapezoids (cairo_operator_t op,
 }
 
 static cairo_int_status_t
-_cairo_gl_surface_fill_rectangles_fixed (void			 *abstract_surface,
-					 cairo_operator_t	  op,
-					 const cairo_color_t     *color,
-					 cairo_rectangle_int_t   *rects,
-					 int			  num_rects)
-{
-#define N_STACK_RECTS 4
-    cairo_gl_surface_t *surface = abstract_surface;
-    GLfloat vertices_stack[N_STACK_RECTS*4*2];
-    GLfloat colors_stack[N_STACK_RECTS*4*4];
-    cairo_gl_context_t *ctx;
-    int i;
-    GLfloat *vertices;
-    GLfloat *colors;
-    cairo_status_t status;
-
-    if (! _cairo_gl_operator_is_supported (op))
-	return UNSUPPORTED ("unsupported operator");
-
-    status = _cairo_gl_context_acquire (surface->base.device, &ctx);
-    if (unlikely (status))
-	return status;
-
-    _cairo_gl_context_set_destination (ctx, surface);
-    _cairo_gl_set_operator (surface, op, FALSE);
-
-    if (num_rects > N_STACK_RECTS) {
-	vertices = _cairo_malloc_ab (num_rects, sizeof (GLfloat) * 4 * 2);
-	colors = _cairo_malloc_ab (num_rects, sizeof (GLfloat) * 4 * 4);
-	if (!vertices || !colors) {
-	    _cairo_gl_context_release (ctx);
-	    free (vertices);
-	    free (colors);
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	}
-    } else {
-	vertices = vertices_stack;
-	colors = colors_stack;
-    }
-
-    /* This should be loaded in as either a blend constant and an operator
-     * setup specific to this, or better, a fragment shader constant.
-     */
-    colors[0] = color->red * color->alpha;
-    colors[1] = color->green * color->alpha;
-    colors[2] = color->blue * color->alpha;
-    colors[3] = color->alpha;
-    for (i = 1; i < num_rects * 4; i++) {
-	colors[i*4 + 0] = colors[0];
-	colors[i*4 + 1] = colors[1];
-	colors[i*4 + 2] = colors[2];
-	colors[i*4 + 3] = colors[3];
-    }
-
-    for (i = 0; i < num_rects; i++) {
-	vertices[i * 8 + 0] = rects[i].x;
-	vertices[i * 8 + 1] = rects[i].y;
-	vertices[i * 8 + 2] = rects[i].x + rects[i].width;
-	vertices[i * 8 + 3] = rects[i].y;
-	vertices[i * 8 + 4] = rects[i].x + rects[i].width;
-	vertices[i * 8 + 5] = rects[i].y + rects[i].height;
-	vertices[i * 8 + 6] = rects[i].x;
-	vertices[i * 8 + 7] = rects[i].y + rects[i].height;
-    }
-
-    glVertexPointer (2, GL_FLOAT, sizeof (GLfloat)*2, vertices);
-    glEnableClientState (GL_VERTEX_ARRAY);
-    glColorPointer (4, GL_FLOAT, sizeof (GLfloat)*4, colors);
-    glEnableClientState (GL_COLOR_ARRAY);
-
-    glDrawArrays (GL_QUADS, 0, 4 * num_rects);
-
-    glDisableClientState (GL_COLOR_ARRAY);
-    glDisableClientState (GL_VERTEX_ARRAY);
-    glDisable (GL_BLEND);
-
-    _cairo_gl_context_release (ctx);
-    if (vertices != vertices_stack)
-	free (vertices);
-    if (colors != colors_stack)
-	free (colors);
-
-    return CAIRO_STATUS_SUCCESS;
-#undef N_STACK_RECTS
-}
-
-static cairo_int_status_t
-_cairo_gl_surface_fill_rectangles_glsl (void                  *abstract_surface,
-					cairo_operator_t       op,
-					const cairo_color_t   *color,
-					cairo_rectangle_int_t *rects,
-					int                    num_rects)
-{
-#define N_STACK_RECTS 4
-    cairo_gl_surface_t *surface = abstract_surface;
-    GLfloat vertices_stack[N_STACK_RECTS*4*2];
-    cairo_gl_context_t *ctx;
-    int i;
-    GLfloat *vertices;
-    cairo_status_t status;
-
-    if (! _cairo_gl_operator_is_supported (op))
-	return UNSUPPORTED ("unsupported operator");
-
-    status = _cairo_gl_context_acquire (surface->base.device, &ctx);
-    if (unlikely (status))
-	return status;
-
-    if (num_rects > N_STACK_RECTS) {
-	vertices = _cairo_malloc_ab (num_rects, sizeof (GLfloat) * 4 * 2);
-	if (!vertices) {
-	    _cairo_gl_context_release (ctx);
-	    free (vertices);
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	}
-    } else {
-	vertices = vertices_stack;
-    }
-
-    _cairo_gl_context_set_destination (ctx, surface);
-    _cairo_gl_set_operator (surface, op, FALSE);
-
-    _cairo_gl_set_shader (ctx, &ctx->fill_rectangles_shader);
-    _cairo_gl_shader_bind_vec4 (ctx,
-				&ctx->fill_rectangles_shader,
-				"color",
-				color->red * color->alpha,
-				color->green * color->alpha,
-				color->blue * color->alpha,
-				color->alpha);
-
-    for (i = 0; i < num_rects; i++) {
-	vertices[i * 8 + 0] = rects[i].x;
-	vertices[i * 8 + 1] = rects[i].y;
-	vertices[i * 8 + 2] = rects[i].x + rects[i].width;
-	vertices[i * 8 + 3] = rects[i].y;
-	vertices[i * 8 + 4] = rects[i].x + rects[i].width;
-	vertices[i * 8 + 5] = rects[i].y + rects[i].height;
-	vertices[i * 8 + 6] = rects[i].x;
-	vertices[i * 8 + 7] = rects[i].y + rects[i].height;
-    }
-
-    glVertexPointer (2, GL_FLOAT, sizeof (GLfloat)*2, vertices);
-    glEnableClientState (GL_VERTEX_ARRAY);
-
-    glDrawArrays (GL_QUADS, 0, 4 * num_rects);
-
-    glDisableClientState (GL_VERTEX_ARRAY);
-    glDisable (GL_BLEND);
-    glUseProgramObjectARB (0);
-
-    _cairo_gl_context_release (ctx);
-    if (vertices != vertices_stack)
-	free (vertices);
-
-    return CAIRO_STATUS_SUCCESS;
-#undef N_STACK_RECTS
-}
-
-
-static cairo_int_status_t
-_cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
+_cairo_gl_surface_fill_rectangles (void			   *abstract_dst,
 				   cairo_operator_t	    op,
 				   const cairo_color_t     *color,
 				   cairo_rectangle_int_t   *rects,
 				   int			    num_rects)
 {
-    cairo_gl_surface_t *surface = abstract_surface;
+    cairo_gl_surface_t *dst = abstract_dst;
+    cairo_solid_pattern_t solid;
+    cairo_gl_context_t *ctx;
+    cairo_status_t status;
+    cairo_gl_composite_t setup;
+    int i;
 
-    if (_cairo_gl_device_has_glsl (surface->base.device)) {
-	return _cairo_gl_surface_fill_rectangles_glsl(abstract_surface,
-						      op,
-						      color,
-						      rects,
-						      num_rects);
-    } else {
-	return _cairo_gl_surface_fill_rectangles_fixed(abstract_surface,
-						       op,
-						       color,
-						       rects,
-						       num_rects);
+    status = _cairo_gl_context_acquire (dst->base.device, &ctx);
+    if (unlikely (status))
+	return status;
+
+    _cairo_pattern_init_solid (&solid, color, CAIRO_CONTENT_COLOR_ALPHA);
+
+    status = _cairo_gl_composite_init (ctx, &setup,
+                                       op, dst, &solid.base, NULL,
+                                       FALSE,
+                                       /* XXX */ NULL);
+    if (unlikely (status))
+        goto CLEANUP;
+
+    status = _cairo_gl_composite_set_source (ctx, &setup, &solid.base,
+                                             0, 0,
+                                             0, 0,
+                                             0, 0);
+    if (unlikely (status))
+        goto CLEANUP;
+
+    status = _cairo_gl_composite_set_mask (ctx, &setup, NULL,
+                                           0, 0,
+                                           0, 0,
+                                           0, 0);
+    if (unlikely (status))
+        goto CLEANUP;
+
+    status = _cairo_gl_composite_begin (ctx, &setup);
+    if (unlikely (status))
+        goto CLEANUP;
+
+    for (i = 0; i < num_rects; i++) {
+        _cairo_gl_composite_emit_rect (ctx, &setup,
+                                       rects[i].x,
+                                       rects[i].y,
+                                       rects[i].x + rects[i].width,
+                                       rects[i].y + rects[i].height,
+                                       0);
     }
+
+    _cairo_gl_composite_end (ctx, &setup);
+
+  CLEANUP:
+    _cairo_gl_composite_fini (ctx, &setup);
+    _cairo_gl_context_release (ctx);
+
+    return status;
 }
 
 typedef struct _cairo_gl_surface_span_renderer {
