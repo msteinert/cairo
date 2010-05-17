@@ -7,7 +7,8 @@
 static cairo_surface_t *
 _surface_create (void *closure,
 		 cairo_content_t content,
-		 double width, double height)
+		 double width, double height,
+		 long uid)
 {
     return cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
 }
