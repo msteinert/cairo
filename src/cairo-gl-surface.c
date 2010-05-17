@@ -994,6 +994,8 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     }
 
     status = _cairo_gl_composite_begin (ctx, &setup);
+    if (unlikely (status))
+	goto CLEANUP;
 
     if (clip_region != NULL) {
         int i, num_rectangles;
