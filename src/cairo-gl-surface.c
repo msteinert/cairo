@@ -605,19 +605,19 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	GLfloat vertices[8], texcoords[8];
 
 	if (_cairo_gl_device_has_glsl (&ctx->base)) {
-	    cairo_gl_shader_program_t *program;
+	    cairo_gl_shader_t *shader;
 
-	    status = _cairo_gl_get_program (ctx,
-					    CAIRO_GL_OPERAND_TEXTURE,
-					    CAIRO_GL_OPERAND_NONE,
-					    CAIRO_GL_SHADER_IN_NORMAL,
-					    &program);
-	    if (_cairo_status_is_error (status)) {
+	    status = _cairo_gl_get_shader (ctx,
+					   CAIRO_GL_OPERAND_TEXTURE,
+					   CAIRO_GL_OPERAND_NONE,
+					   CAIRO_GL_SHADER_IN_NORMAL,
+					   &shader);
+	    if (unlikely (status)) {
 		_cairo_gl_context_release (ctx);
 		goto fail;
 	    }
 
-	    _cairo_gl_use_program (ctx, program);
+	    _cairo_gl_set_shader (ctx, shader);
 	} else {
 	    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	}
@@ -679,8 +679,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	glDisableClientState (GL_VERTEX_ARRAY);
 	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
 
-	if (_cairo_gl_device_has_glsl (&ctx->base))
-	    _cairo_gl_use_program (ctx, NULL);
+	_cairo_gl_set_shader (ctx, NULL);
 	glDeleteTextures (1, &tex);
 	glDisable (ctx->tex_target);
     }
@@ -1181,12 +1180,6 @@ _cairo_gl_surface_fill_rectangles_glsl (void                  *abstract_surface,
     cairo_gl_context_t *ctx;
     int i;
     GLfloat *vertices;
-    static const char *fill_fs_source =
-	"uniform vec4 color;\n"
-	"void main()\n"
-	"{\n"
-	"	gl_FragColor = color;\n"
-	"}\n";
     cairo_status_t status;
 
     if (! _cairo_gl_operator_is_supported (op))
@@ -1195,16 +1188,6 @@ _cairo_gl_surface_fill_rectangles_glsl (void                  *abstract_surface,
     status = _cairo_gl_context_acquire (surface->base.device, &ctx);
     if (unlikely (status))
 	return status;
-
-    status = create_shader_program (ctx,
-                                    &ctx->fill_rectangles_shader,
-                                    CAIRO_GL_VAR_NONE,
-                                    CAIRO_GL_VAR_NONE,
-				    fill_fs_source);
-    if (unlikely (status)) {
-	_cairo_gl_context_release (ctx);
-	return status;
-    }
 
     if (num_rects > N_STACK_RECTS) {
 	vertices = _cairo_malloc_ab (num_rects, sizeof (GLfloat) * 4 * 2);
@@ -1217,18 +1200,17 @@ _cairo_gl_surface_fill_rectangles_glsl (void                  *abstract_surface,
 	vertices = vertices_stack;
     }
 
-    _cairo_gl_use_program (ctx, &ctx->fill_rectangles_shader);
-
     _cairo_gl_context_set_destination (ctx, surface);
     _cairo_gl_set_operator (surface, op, FALSE);
 
-    bind_vec4_to_shader (ctx,
-                         ctx->fill_rectangles_shader.program,
-                         "color",
-                         color->red * color->alpha,
-                         color->green * color->alpha,
-                         color->blue * color->alpha,
-                         color->alpha);
+    _cairo_gl_set_shader (ctx, &ctx->fill_rectangles_shader);
+    _cairo_gl_shader_bind_vec4 (ctx,
+				&ctx->fill_rectangles_shader,
+				"color",
+				color->red * color->alpha,
+				color->green * color->alpha,
+				color->blue * color->alpha,
+				color->alpha);
 
     for (i = 0; i < num_rects; i++) {
 	vertices[i * 8 + 0] = rects[i].x;

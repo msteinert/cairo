@@ -102,11 +102,10 @@ typedef enum cairo_gl_operand_type {
 
 typedef struct cairo_gl_shader_impl cairo_gl_shader_impl_t;
 
-typedef struct cairo_gl_shader_program {
+typedef struct cairo_gl_shader {
     GLuint fragment_shader;
     GLuint program;
-    cairo_bool_t build_failure;
-} cairo_gl_shader_program_t;
+} cairo_gl_shader_t;
 
 typedef enum cairo_gl_shader_in {
     CAIRO_GL_SHADER_IN_NORMAL,
@@ -138,7 +137,7 @@ typedef struct _cairo_gl_context {
     const cairo_gl_shader_impl_t *shader_impl;
 
     GLuint vertex_shaders[CAIRO_GL_VAR_TYPE_MAX + 1];
-    cairo_gl_shader_program_t fill_rectangles_shader;
+    cairo_gl_shader_t fill_rectangles_shader;
     cairo_cache_t shaders;
 
     cairo_gl_surface_t *current_target;
@@ -194,8 +193,8 @@ typedef struct _cairo_gl_composite {
 
     cairo_gl_operand_t src;
     cairo_gl_operand_t mask;
-    cairo_gl_shader_program_t *shader;
-    cairo_gl_shader_program_t *pre_shader; /* for component alpha */
+    cairo_gl_shader_t *shader;
+    cairo_gl_shader_t *pre_shader; /* for component alpha */
 
     char *vb;
     unsigned int vb_offset;
@@ -403,66 +402,74 @@ _cairo_gl_y_flip (cairo_gl_surface_t *surface, int y)
 	return (surface->height - 1) - y;
 }
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_gl_context_init_shaders (cairo_gl_context_t *ctx);
 
 cairo_private void
-destroy_shader (cairo_gl_context_t *ctx, GLuint shader);
+_cairo_gl_context_fini_shaders (cairo_gl_context_t *ctx);
 
 cairo_private void
-init_shader_program (cairo_gl_shader_program_t *program);
-
-cairo_private void
-destroy_shader_program (cairo_gl_context_t *ctx,
-                        cairo_gl_shader_program_t *program);
+_cairo_gl_shader_init (cairo_gl_shader_t *shader);
 
 cairo_private cairo_status_t
-create_shader_program (cairo_gl_context_t *ctx,
-                       cairo_gl_shader_program_t *program,
-                       cairo_gl_var_type_t src,
-                       cairo_gl_var_type_t mask,
-                       const char *fragment_text);
-
-cairo_private void
-bind_float_to_shader (cairo_gl_context_t *ctx,
-                      GLuint program, const char *name,
-                      float value);
-
-cairo_private void
-bind_vec2_to_shader (cairo_gl_context_t *ctx,
-                     GLuint program, const char *name,
-                     float value0, float value1);
-
-cairo_private void
-bind_vec3_to_shader (cairo_gl_context_t *ctx,
-                     GLuint program, const char *name,
-                     float value0, float value1,
-                     float value2);
-
-cairo_private void
-bind_vec4_to_shader (cairo_gl_context_t *ctx,
-                     GLuint program, const char *name,
-                     float value0, float value1,
-                     float value2, float value3);
-
-cairo_private void
-bind_matrix_to_shader (cairo_gl_context_t *ctx,
-                       GLuint program, const char *name, cairo_matrix_t* m);
-
-cairo_private void
-bind_texture_to_shader (cairo_gl_context_t *ctx,
-                        GLuint program, const char *name, GLuint tex_unit);
-
-cairo_private void
-_cairo_gl_use_program (cairo_gl_context_t *ctx,
-                       cairo_gl_shader_program_t *shader);
+_cairo_gl_shader_compile (cairo_gl_context_t *ctx,
+			  cairo_gl_shader_t *program,
+			  cairo_gl_var_type_t src,
+			  cairo_gl_var_type_t mask,
+			  const char *fragment_text);
 
 cairo_private cairo_status_t
-_cairo_gl_get_program (cairo_gl_context_t *ctx,
-		       cairo_gl_operand_type_t source,
-		       cairo_gl_operand_type_t mask,
-		       cairo_gl_shader_in_t in,
-		       cairo_gl_shader_program_t **out_program);
+_cairo_gl_get_shader (cairo_gl_context_t *ctx,
+		      cairo_gl_operand_type_t source,
+		      cairo_gl_operand_type_t mask,
+		      cairo_gl_shader_in_t in,
+		      cairo_gl_shader_t **out_program);
+
+cairo_private void
+_cairo_gl_shader_bind_float (cairo_gl_context_t *ctx,
+			     cairo_gl_shader_t *shader,
+			     const char *name,
+			     float value);
+
+cairo_private void
+_cairo_gl_shader_bind_vec2 (cairo_gl_context_t *ctx,
+			    cairo_gl_shader_t *shader,
+			    const char *name,
+			    float value0, float value1);
+
+cairo_private void
+_cairo_gl_shader_bind_vec3 (cairo_gl_context_t *ctx,
+			    cairo_gl_shader_t *shader,
+			    const char *name,
+			    float value0,
+			    float value1,
+			    float value2);
+
+cairo_private void
+_cairo_gl_shader_bind_vec4 (cairo_gl_context_t *ctx,
+			    cairo_gl_shader_t *shader,
+			    const char *name,
+			    float value0, float value1,
+			    float value2, float value3);
+
+cairo_private void
+_cairo_gl_shader_bind_matrix (cairo_gl_context_t *ctx,
+			      cairo_gl_shader_t *shader,
+			      const char *name,
+			      cairo_matrix_t* m);
+
+cairo_private void
+_cairo_gl_shader_bind_texture (cairo_gl_context_t *ctx,
+			       cairo_gl_shader_t *shader,
+			       const char *name,
+			       GLuint tex_unit);
+
+cairo_private void
+_cairo_gl_set_shader (cairo_gl_context_t *ctx,
+		      cairo_gl_shader_t *shader);
+
+cairo_private void
+_cairo_gl_shader_fini (cairo_gl_context_t *ctx, cairo_gl_shader_t *shader);
 
 slim_hidden_proto (cairo_gl_surface_create);
 

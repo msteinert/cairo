@@ -64,15 +64,10 @@ static void
 _gl_finish (void *device)
 {
     cairo_gl_context_t *ctx = device;
-    int i;
 
     _gl_lock (device);
 
-    for (i = 0; i <= CAIRO_GL_VAR_TYPE_MAX; i++) {
-        destroy_shader (ctx, ctx->vertex_shaders[i]);
-    }
-
-    _cairo_cache_fini (&ctx->shaders);
+    _cairo_gl_context_fini_shaders (ctx);
 
     _gl_unlock (device);
 }
@@ -117,6 +112,7 @@ static const cairo_device_backend_t _cairo_gl_device_backend = {
 cairo_status_t
 _cairo_gl_context_init (cairo_gl_context_t *ctx)
 {
+    cairo_status_t status;
     int n;
 
     _cairo_device_init (&ctx->base, &_cairo_gl_device_backend);
@@ -162,9 +158,9 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     else
 	ctx->tex_target = GL_TEXTURE_2D;
 
-    _cairo_gl_context_init_shaders (ctx);
-
-    init_shader_program (&ctx->fill_rectangles_shader);
+    status = _cairo_gl_context_init_shaders (ctx);
+    if (unlikely (status))
+	return status;
 
     /* Set up the dummy texture for tex_env_combine with constant color. */
     glGenTextures (1, &ctx->dummy_tex);
