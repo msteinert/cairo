@@ -206,8 +206,10 @@ cairo_private extern const cairo_surface_backend_t _cairo_gl_surface_backend;
 cairo_private const char *_cairo_gl_error_to_string (GLenum err);
 #define _cairo_gl_check_error() do { \
     GLenum err; \
-    while ((err = glGetError ())) \
+    while ((err = glGetError ())) { \
 	fprintf (stderr, "%s:%d: GL error 0x%04x: %s\n", __FILE__,__LINE__, (int) err, _cairo_gl_error_to_string (err)); \
+	_cairo_error_throw (CAIRO_STATUS_DEVICE_ERROR); \
+    } \
 } while (0)
 
 static inline cairo_device_t *
