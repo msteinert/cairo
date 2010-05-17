@@ -511,6 +511,9 @@ _cairo_gl_composite_set_mask (cairo_gl_context_t *ctx,
 {
     _cairo_gl_operand_destroy (&setup->mask);
     setup->has_component_alpha = pattern && pattern->has_component_alpha;
+    if (pattern == NULL)
+        return CAIRO_STATUS_SUCCESS;
+
     return _cairo_gl_operand_init (ctx, &setup->mask, pattern,
                                    setup->dst,
                                    src_x, src_y,

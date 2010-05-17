@@ -984,14 +984,12 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     if (unlikely (status))
         goto CLEANUP;
 
-    if (mask != NULL) {
-	status = _cairo_gl_composite_set_mask (ctx, &setup, mask,
-                                               mask_x, mask_y,
-                                               dst_x, dst_y,
-                                               width, height);
-	if (unlikely (status))
-            goto CLEANUP;
-    }
+    status = _cairo_gl_composite_set_mask (ctx, &setup, mask,
+                                           mask_x, mask_y,
+                                           dst_x, dst_y,
+                                           width, height);
+    if (unlikely (status))
+        goto CLEANUP;
 
     status = _cairo_gl_composite_begin (ctx, &setup);
     if (unlikely (status))
