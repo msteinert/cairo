@@ -263,7 +263,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_context_t *ctx,
     cairo_matrix_t m;
     cairo_gl_surface_t *surface;
     cairo_surface_attributes_t *attributes;
-    attributes = &operand->operand.texture.attributes;
+    attributes = &operand->texture.attributes;
 
     status = _cairo_pattern_acquire_surface (src, &dst->base,
 					     src_x, src_y,
@@ -288,8 +288,8 @@ _cairo_gl_pattern_texture_setup (cairo_gl_context_t *ctx,
     assert (surface->base.backend == &_cairo_gl_surface_backend);
 
     operand->type = CAIRO_GL_OPERAND_TEXTURE;
-    operand->operand.texture.surface = surface;
-    operand->operand.texture.tex = surface->tex;
+    operand->texture.surface = surface;
+    operand->texture.tex = surface->tex;
     /* Translate the matrix from
      * (unnormalized src -> unnormalized src) to
      * (unnormalized dst -> unnormalized src)
@@ -327,10 +327,10 @@ _cairo_gl_solid_operand_init (cairo_gl_operand_t *operand,
 	                      const cairo_color_t *color)
 {
     operand->type = CAIRO_GL_OPERAND_CONSTANT;
-    operand->operand.constant.color[0] = color->red   * color->alpha;
-    operand->operand.constant.color[1] = color->green * color->alpha;
-    operand->operand.constant.color[2] = color->blue  * color->alpha;
-    operand->operand.constant.color[3] = color->alpha;
+    operand->constant.color[0] = color->red   * color->alpha;
+    operand->constant.color[1] = color->green * color->alpha;
+    operand->constant.color[2] = color->blue  * color->alpha;
+    operand->constant.color[3] = color->alpha;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -360,20 +360,20 @@ _cairo_gl_gradient_operand_init (cairo_gl_context_t *ctx,
         _cairo_gl_create_gradient_texture (ctx,
 					   dst,
 					   gradient,
-					   &operand->operand.linear.tex);
+					   &operand->linear.tex);
 
 	/* Translation matrix from the destination fragment coordinates
 	 * (pixels from lower left = 0,0) to the coordinates in the
 	 */
-	cairo_matrix_init_translate (&operand->operand.linear.m, -x0, -y0);
-	cairo_matrix_multiply (&operand->operand.linear.m,
+	cairo_matrix_init_translate (&operand->linear.m, -x0, -y0);
+	cairo_matrix_multiply (&operand->linear.m,
 			       &operand->pattern->matrix,
-			       &operand->operand.linear.m);
-	cairo_matrix_translate (&operand->operand.linear.m, 0, dst->height);
-	cairo_matrix_scale (&operand->operand.linear.m, 1.0, -1.0);
+			       &operand->linear.m);
+	cairo_matrix_translate (&operand->linear.m, 0, dst->height);
+	cairo_matrix_scale (&operand->linear.m, 1.0, -1.0);
 
-	operand->operand.linear.segment_x = x1 - x0;
-	operand->operand.linear.segment_y = y1 - y0;
+	operand->linear.segment_x = x1 - x0;
+	operand->linear.segment_y = y1 - y0;
 
 	operand->type = CAIRO_GL_OPERAND_LINEAR_GRADIENT;
         return CAIRO_STATUS_SUCCESS;
@@ -394,22 +394,22 @@ _cairo_gl_gradient_operand_init (cairo_gl_context_t *ctx,
         _cairo_gl_create_gradient_texture (ctx,
 					   dst,
 					   gradient,
-					   &operand->operand.radial.tex);
+					   &operand->radial.tex);
 
 	/* Translation matrix from the destination fragment coordinates
 	 * (pixels from lower left = 0,0) to the coordinates in the
 	 */
-	cairo_matrix_init_translate (&operand->operand.radial.m, -x0, -y0);
-	cairo_matrix_multiply (&operand->operand.radial.m,
+	cairo_matrix_init_translate (&operand->radial.m, -x0, -y0);
+	cairo_matrix_multiply (&operand->radial.m,
 			       &operand->pattern->matrix,
-			       &operand->operand.radial.m);
-	cairo_matrix_translate (&operand->operand.radial.m, 0, dst->height);
-	cairo_matrix_scale (&operand->operand.radial.m, 1.0, -1.0);
+			       &operand->radial.m);
+	cairo_matrix_translate (&operand->radial.m, 0, dst->height);
+	cairo_matrix_scale (&operand->radial.m, 1.0, -1.0);
 
-	operand->operand.radial.circle_1_x = x1 - x0;
-	operand->operand.radial.circle_1_y = y1 - y0;
-	operand->operand.radial.radius_0 = r0;
-	operand->operand.radial.radius_1 = r1;
+	operand->radial.circle_1_x = x1 - x0;
+	operand->radial.circle_1_y = y1 - y0;
+	operand->radial.radius_0 = r0;
+	operand->radial.radius_1 = r1;
 
 	operand->type = CAIRO_GL_OPERAND_RADIAL_GRADIENT;
         return CAIRO_STATUS_SUCCESS;
@@ -425,18 +425,18 @@ _cairo_gl_operand_destroy (cairo_gl_operand_t *operand)
     case CAIRO_GL_OPERAND_CONSTANT:
 	break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
-	glDeleteTextures (1, &operand->operand.linear.tex);
+	glDeleteTextures (1, &operand->linear.tex);
 	break;
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
-	glDeleteTextures (1, &operand->operand.radial.tex);
+	glDeleteTextures (1, &operand->radial.tex);
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
-	if (operand->operand.texture.surface != NULL) {
-	    cairo_gl_surface_t *surface = operand->operand.texture.surface;
+	if (operand->texture.surface != NULL) {
+	    cairo_gl_surface_t *surface = operand->texture.surface;
 
 	    _cairo_pattern_release_surface (operand->pattern,
 					    &surface->base,
-					    &operand->operand.texture.attributes);
+					    &operand->texture.attributes);
 	}
 	break;
     default:
@@ -541,9 +541,9 @@ _cairo_gl_composite_set_mask_texture (cairo_gl_context_t *ctx,
     setup->has_component_alpha = has_component_alpha;
 
     setup->mask.type = CAIRO_GL_OPERAND_TEXTURE;
-    setup->mask.operand.texture.tex = tex;
-    setup->mask.operand.texture.surface = NULL;
-    cairo_matrix_init_identity (&setup->mask.operand.texture.attributes.matrix);
+    setup->mask.texture.tex = tex;
+    setup->mask.texture.surface = NULL;
+    cairo_matrix_init_identity (&setup->mask.texture.attributes.matrix);
 }
 
 void
@@ -617,15 +617,15 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
     cairo_surface_attributes_t *src_attributes;
     GLfloat constant_color[4] = {0.0, 0.0, 0.0, 0.0};
 
-    src_attributes = &setup->src.operand.texture.attributes;
+    src_attributes = &setup->src.texture.attributes;
 
     switch (setup->src.type) {
     case CAIRO_GL_OPERAND_CONSTANT:
 	_cairo_gl_set_tex_combine_constant_color (ctx, setup, 0,
-						  setup->src.operand.constant.color);
+						  setup->src.constant.color);
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
-	_cairo_gl_set_texture_surface (0, setup->src.operand.texture.tex,
+	_cairo_gl_set_texture_surface (0, setup->src.texture.tex,
 				       src_attributes, ctx->tex_target);
 	if (!setup->shader) {
 	    /* Set up the constant color we use to set color to 0 if needed. */
@@ -639,7 +639,7 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 	     * alpha-only.  We may have a teximage with color bits if
 	     * the implementation doesn't support GL_ALPHA FBOs.
 	     */
-	    if (setup->src.operand.texture.surface->base.content !=
+	    if (setup->src.texture.surface->base.content !=
 		CAIRO_CONTENT_ALPHA)
 		glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0);
 	    else
@@ -652,40 +652,40 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
 	glActiveTexture (GL_TEXTURE0);
-	glBindTexture (GL_TEXTURE_1D, setup->src.operand.linear.tex);
+	glBindTexture (GL_TEXTURE_1D, setup->src.linear.tex);
 	glEnable (GL_TEXTURE_1D);
 
 	_cairo_gl_shader_bind_matrix (ctx, setup->shader,
 				      "source_matrix",
-				      &setup->src.operand.linear.m);
+				      &setup->src.linear.m);
 
 	_cairo_gl_shader_bind_vec2 (ctx, setup->shader,
 				    "source_segment",
-				    setup->src.operand.linear.segment_x,
-				    setup->src.operand.linear.segment_y);
+				    setup->src.linear.segment_x,
+				    setup->src.linear.segment_y);
 	break;
 
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
 	glActiveTexture (GL_TEXTURE0);
-	glBindTexture (GL_TEXTURE_1D, setup->src.operand.linear.tex);
+	glBindTexture (GL_TEXTURE_1D, setup->src.linear.tex);
 	glEnable (GL_TEXTURE_1D);
 
         _cairo_gl_shader_bind_matrix (ctx, setup->shader,
 				      "source_matrix",
-				      &setup->src.operand.radial.m);
+				      &setup->src.radial.m);
 
 	_cairo_gl_shader_bind_vec2 (ctx, setup->shader,
 				    "source_circle_1",
-				    setup->src.operand.radial.circle_1_x,
-				    setup->src.operand.radial.circle_1_y);
+				    setup->src.radial.circle_1_x,
+				    setup->src.radial.circle_1_y);
 
         _cairo_gl_shader_bind_float (ctx, setup->shader,
 				     "source_radius_0",
-				     setup->src.operand.radial.radius_0);
+				     setup->src.radial.radius_0);
 
         _cairo_gl_shader_bind_float (ctx, setup->shader,
 				     "source_radius_1",
-				     setup->src.operand.radial.radius_1);
+				     setup->src.radial.radius_1);
 	break;
     default:
     case CAIRO_GL_OPERAND_COUNT:
@@ -707,19 +707,19 @@ _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
     GLfloat constant_color[4] = {0.0, 0.0, 0.0, 0.0};
     cairo_surface_attributes_t *src_attributes;
 
-    src_attributes = &setup->src.operand.texture.attributes;
+    src_attributes = &setup->src.texture.attributes;
 
     switch (setup->src.type) {
     case CAIRO_GL_OPERAND_CONSTANT:
-	constant_color[0] = setup->src.operand.constant.color[3];
-	constant_color[1] = setup->src.operand.constant.color[3];
-	constant_color[2] = setup->src.operand.constant.color[3];
-	constant_color[3] = setup->src.operand.constant.color[3];
+	constant_color[0] = setup->src.constant.color[3];
+	constant_color[1] = setup->src.constant.color[3];
+	constant_color[2] = setup->src.constant.color[3];
+	constant_color[3] = setup->src.constant.color[3];
 	_cairo_gl_set_tex_combine_constant_color (ctx, setup, 0,
 						  constant_color);
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
-	_cairo_gl_set_texture_surface (0, setup->src.operand.texture.tex,
+	_cairo_gl_set_texture_surface (0, setup->src.texture.tex,
 				       src_attributes, ctx->tex_target);
 	if (!setup->shader) {
 	    /* Set up the combiner to just set color to the sampled texture. */
@@ -751,16 +751,16 @@ _cairo_gl_set_linear_gradient_mask_operand (cairo_gl_context_t *ctx,
     assert(setup->shader);
 
     glActiveTexture (GL_TEXTURE1);
-    glBindTexture (GL_TEXTURE_1D, setup->mask.operand.linear.tex);
+    glBindTexture (GL_TEXTURE_1D, setup->mask.linear.tex);
     glEnable (GL_TEXTURE_1D);
 
     _cairo_gl_shader_bind_matrix (ctx, setup->shader,
-				  "mask_matrix", &setup->mask.operand.linear.m);
+				  "mask_matrix", &setup->mask.linear.m);
 
     _cairo_gl_shader_bind_vec2 (ctx, setup->shader,
 				"mask_segment",
-				setup->mask.operand.linear.segment_x,
-				setup->mask.operand.linear.segment_y);
+				setup->mask.linear.segment_x,
+				setup->mask.linear.segment_y);
 }
 
 static void
@@ -770,25 +770,25 @@ _cairo_gl_set_radial_gradient_mask_operand (cairo_gl_context_t *ctx,
     assert(setup->shader);
 
     glActiveTexture (GL_TEXTURE1);
-    glBindTexture (GL_TEXTURE_1D, setup->mask.operand.radial.tex);
+    glBindTexture (GL_TEXTURE_1D, setup->mask.radial.tex);
     glEnable (GL_TEXTURE_1D);
 
     _cairo_gl_shader_bind_matrix (ctx, setup->shader,
 				  "mask_matrix",
-				  &setup->mask.operand.radial.m);
+				  &setup->mask.radial.m);
 
     _cairo_gl_shader_bind_vec2 (ctx, setup->shader,
 				"mask_circle_1",
-				setup->mask.operand.radial.circle_1_x,
-				setup->mask.operand.radial.circle_1_y);
+				setup->mask.radial.circle_1_x,
+				setup->mask.radial.circle_1_y);
 
     _cairo_gl_shader_bind_float (ctx, setup->shader,
 				 "mask_radius_0",
-				 setup->mask.operand.radial.radius_0);
+				 setup->mask.radial.radius_0);
 
     _cairo_gl_shader_bind_float (ctx, setup->shader,
 				 "mask_radius_1",
-				 setup->mask.operand.radial.radius_1);
+				 setup->mask.radial.radius_1);
 }
 
 /* This is like _cairo_gl_set_src_alpha_operand, for component alpha setup
@@ -801,7 +801,7 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
     cairo_surface_attributes_t *mask_attributes;
     GLfloat constant_color[4] = {0.0, 0.0, 0.0, 0.0};
 
-    mask_attributes = &setup->mask.operand.texture.attributes;
+    mask_attributes = &setup->mask.texture.attributes;
 
     if (!setup->shader) {
 	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
@@ -820,17 +820,17 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 	if (setup->shader) {
 	    _cairo_gl_shader_bind_vec4 (ctx, setup->shader,
 					"mask_constant",
-					setup->src.operand.constant.color[0],
-					setup->src.operand.constant.color[1],
-					setup->src.operand.constant.color[2],
-					setup->src.operand.constant.color[3]);
+					setup->src.constant.color[0],
+					setup->src.constant.color[1],
+					setup->src.constant.color[2],
+					setup->src.constant.color[3]);
 	} else {
 	    glBindTexture (ctx->tex_target, ctx->dummy_tex);
 	    glActiveTexture (GL_TEXTURE1);
 	    glEnable (ctx->tex_target);
 
 	    glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR,
-			setup->mask.operand.constant.color);
+			setup->mask.constant.color);
 
 	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
 	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
@@ -839,7 +839,7 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 	}
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
-	_cairo_gl_set_texture_surface (1, setup->mask.operand.texture.tex,
+	_cairo_gl_set_texture_surface (1, setup->mask.texture.tex,
 				       mask_attributes, ctx->tex_target);
 	if (!setup->shader) {
 	    /* Set up the constant color we use to set color to 0 if needed. */
@@ -849,8 +849,8 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 	     * alpha-only.  We may have a teximage with color bits if
 	     * the implementation doesn't support GL_ALPHA FBOs.
 	     */
-	    if (setup->mask.operand.texture.surface == NULL ||
-                setup->mask.operand.texture.surface->base.content != CAIRO_CONTENT_ALPHA)
+	    if (setup->mask.texture.surface == NULL ||
+                setup->mask.texture.surface->base.content != CAIRO_CONTENT_ALPHA)
 		glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE1);
 	    else
 		glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
@@ -883,12 +883,12 @@ _cairo_gl_set_mask_operand (cairo_gl_context_t *ctx,
     switch (setup->mask.type) {
     case CAIRO_GL_OPERAND_CONSTANT:
         _cairo_gl_set_tex_combine_constant_color (ctx, setup, 1,
-                                                  setup->mask.operand.constant.color);
+                                                  setup->mask.constant.color);
         break;
 
     case CAIRO_GL_OPERAND_TEXTURE:
-        _cairo_gl_set_texture_surface (1, setup->mask.operand.texture.tex,
-                                       &setup->mask.operand.texture.attributes,
+        _cairo_gl_set_texture_surface (1, setup->mask.texture.tex,
+                                       &setup->mask.texture.attributes,
                                        ctx->tex_target);
 
         if (! setup->shader) {
@@ -1230,7 +1230,7 @@ _cairo_gl_operand_emit (cairo_gl_operand_t *operand,
         break;
     case CAIRO_GL_OPERAND_TEXTURE:
         {
-            cairo_surface_attributes_t *src_attributes = &operand->operand.texture.attributes;
+            cairo_surface_attributes_t *src_attributes = &operand->texture.attributes;
             double s = x;
             double t = y;
 

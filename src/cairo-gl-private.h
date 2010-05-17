@@ -180,7 +180,7 @@ typedef struct cairo_gl_operand {
 	    float radius_0;
 	    float radius_1;
 	} radial;
-    } operand;
+    };
 
     const cairo_pattern_t *pattern;
 } cairo_gl_operand_t;
