@@ -849,8 +849,8 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 	     * alpha-only.  We may have a teximage with color bits if
 	     * the implementation doesn't support GL_ALPHA FBOs.
 	     */
-	    if (setup->mask.operand.texture.surface->base.content !=
-		CAIRO_CONTENT_ALPHA)
+	    if (setup->mask.operand.texture.surface == NULL ||
+                setup->mask.operand.texture.surface->base.content != CAIRO_CONTENT_ALPHA)
 		glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE1);
 	    else
 		glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
