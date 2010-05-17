@@ -58,6 +58,25 @@ static cairo_bool_t _cairo_surface_is_gl (cairo_surface_t *surface)
     return surface->backend == &_cairo_gl_surface_backend;
 }
 
+const char *_cairo_gl_error_to_string (GLenum err)
+{
+    switch ((int) err) {
+    case GL_NO_ERROR:
+	ASSERT_NOT_REACHED;
+	return "success";
+
+    case GL_INVALID_ENUM:      return "invalid enum";
+    case GL_INVALID_VALUE:     return "invalid value";
+    case GL_INVALID_OPERATION: return "invalid operation";
+    case GL_STACK_OVERFLOW:    return "stack overflow";
+    case GL_STACK_UNDERFLOW:   return "stack underflow";
+    case GL_OUT_OF_MEMORY:     return "out of memory";
+
+    default:
+	return "unknown error";
+    }
+}
+
 cairo_bool_t
 _cairo_gl_get_image_format_and_type (pixman_format_code_t pixman_format,
 				     GLenum *internal_format, GLenum *format,

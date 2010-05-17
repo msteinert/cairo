@@ -204,10 +204,11 @@ typedef struct _cairo_gl_composite {
 
 cairo_private extern const cairo_surface_backend_t _cairo_gl_surface_backend;
 
+cairo_private const char *_cairo_gl_error_to_string (GLenum err);
 #define _cairo_gl_check_error() do { \
     GLenum err; \
     while ((err = glGetError ())) \
-	fprintf (stderr, "%s:%d: GL error 0x%08x\n", __FILE__,__LINE__, (int) err); \
+	fprintf (stderr, "%s:%d: GL error 0x%04x: %s\n", __FILE__,__LINE__, (int) err, _cairo_gl_error_to_string (err)); \
 } while (0)
 
 static inline cairo_device_t *
