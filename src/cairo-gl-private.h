@@ -264,9 +264,6 @@ _cairo_gl_context_set_destination (cairo_gl_context_t *ctx, cairo_gl_surface_t *
 cairo_private cairo_bool_t
 _cairo_gl_operator_is_supported (cairo_operator_t op);
 
-cairo_private cairo_status_t
-_cairo_gl_surface_clear (cairo_gl_surface_t *surface);
-
 cairo_private void
 _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op,
 			cairo_bool_t component_alpha);

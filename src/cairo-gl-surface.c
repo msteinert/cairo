@@ -350,21 +350,33 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
     return &surface->base;
 }
 
-cairo_status_t
-_cairo_gl_surface_clear (cairo_gl_surface_t *surface)
+static cairo_status_t
+_cairo_gl_surface_clear (cairo_gl_surface_t  *surface,
+                         const cairo_color_t *color)
 {
     cairo_gl_context_t *ctx;
     cairo_status_t status;
+    double r, g, b, a;
 
     status = _cairo_gl_context_acquire (surface->base.device, &ctx);
     if (unlikely (status))
 	return status;
 
     _cairo_gl_context_set_destination (ctx, surface);
-    if (surface->base.content == CAIRO_CONTENT_COLOR)
-	glClearColor (0.0, 0.0, 0.0, 1.0);
-    else
-	glClearColor (0.0, 0.0, 0.0, 0.0);
+    if (surface->base.content & CAIRO_CONTENT_COLOR) {
+        r = color->red   * color->alpha;
+        g = color->green * color->alpha;
+        b = color->blue  * color->alpha;
+    } else {
+        r = g = b = 0;
+    }
+    if (surface->base.content & CAIRO_CONTENT_ALPHA) {
+        a = color->alpha;
+    } else {
+        a = 1.0;
+    }
+
+    glClearColor (r, g, b, a);
     glClear (GL_COLOR_BUFFER_BIT);
     _cairo_gl_context_release (ctx);
 
@@ -406,7 +418,7 @@ cairo_gl_surface_create (cairo_device_t		*abstract_device,
     }
 
     /* Cairo surfaces start out initialized to transparent (black) */
-    status = _cairo_gl_surface_clear (surface);
+    status = _cairo_gl_surface_clear (surface, CAIRO_COLOR_TRANSPARENT);
     if (unlikely (status)) {
 	cairo_surface_destroy (&surface->base);
 	_cairo_gl_context_release (ctx);
@@ -1385,8 +1397,16 @@ _cairo_gl_surface_paint (void *abstract_surface,
 			 cairo_clip_t	    *clip)
 {
     /* simplify the common case of clearing the surface */
-    if (op == CAIRO_OPERATOR_CLEAR && clip == NULL)
-	return _cairo_gl_surface_clear (abstract_surface);
+    if (clip == NULL) {
+        if (op == CAIRO_OPERATOR_CLEAR)
+            return _cairo_gl_surface_clear (abstract_surface, CAIRO_COLOR_TRANSPARENT);
+       else if (source->type == CAIRO_PATTERN_TYPE_SOLID &&
+                (op == CAIRO_OPERATOR_SOURCE ||
+                 (op == CAIRO_OPERATOR_OVER && _cairo_pattern_is_opaque_solid (source)))) {
+            return _cairo_gl_surface_clear (abstract_surface,
+                                            &((cairo_solid_pattern_t *) source)->color);
+        }
+    }
 
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
