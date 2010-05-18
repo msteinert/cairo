@@ -2119,6 +2119,9 @@ _cairo_surface_set_device_scale (cairo_surface_t *surface,
 cairo_private cairo_bool_t
 _cairo_surface_has_device_transform (cairo_surface_t *surface) cairo_pure;
 
+cairo_private void
+_cairo_surface_release_device_reference (cairo_surface_t *surface);
+
 /* cairo-image-surface.c */
 
 /* XXX: In cairo 1.2.0 we added a new %CAIRO_FORMAT_RGB16_565 but

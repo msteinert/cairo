@@ -58,6 +58,7 @@ const cairo_surface_t name = {					\
     FALSE,				/* finished */		\
     TRUE,				/* is_clear */		\
     FALSE,				/* has_font_options */	\
+    FALSE,				/* owns_device */	\
     { 0, 0, 0, NULL, },			/* user_data */		\
     { 0, 0, 0, NULL, },			/* mime_data */         \
     { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 },   /* device_transform */	\
@@ -356,6 +357,7 @@ _cairo_surface_init (cairo_surface_t			*surface,
     surface->unique_id = _cairo_surface_allocate_unique_id ();
     surface->finished = FALSE;
     surface->is_clear = FALSE;
+    surface->owns_device = (device != NULL);
 
     _cairo_user_data_array_init (&surface->user_data);
     _cairo_user_data_array_init (&surface->mime_data);
@@ -595,7 +597,8 @@ cairo_surface_destroy (cairo_surface_t *surface)
     _cairo_user_data_array_fini (&surface->user_data);
     _cairo_user_data_array_fini (&surface->mime_data);
 
-    cairo_device_destroy (surface->device);
+    if (surface->owns_device)
+        cairo_device_destroy (surface->device);
 
     free (surface);
 }
@@ -671,6 +674,27 @@ cairo_surface_finish (cairo_surface_t *surface)
     }
 }
 slim_hidden_def (cairo_surface_finish);
+
+/**
+ * _cairo_surface_release_device_reference:
+ * @surface: a #cairo_surface_t
+ *
+ * This function makes @surface release the reference to its device. The
+ * function is intended to be used for avoiding cycling references for
+ * surfaces that are owned by their device, for example cache surfaces.
+ * Note that the @surface will still assume that the device is available.
+ * So it is the caller's responsibility to ensure the device stays around
+ * until the @surface is destroyed. Just calling cairo_surface_finish() is
+ * not enough.
+ **/
+void
+_cairo_surface_release_device_reference (cairo_surface_t *surface)
+{
+    assert (surface->owns_device);
+
+    cairo_device_destroy (surface->device);
+    surface->owns_device = FALSE;
+}
 
 /**
  * cairo_surface_get_user_data:
