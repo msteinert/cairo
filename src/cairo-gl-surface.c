@@ -965,6 +965,29 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     cairo_status_t status;
     cairo_gl_composite_t setup;
     cairo_rectangle_int_t rect = { dst_x, dst_y, width, height };
+    int dx, dy;
+
+    if (op == CAIRO_OPERATOR_SOURCE &&
+        mask == NULL &&
+        src->type == CAIRO_PATTERN_TYPE_SURFACE &&
+        _cairo_surface_is_image (((cairo_surface_pattern_t *) src)->surface) &&
+        _cairo_matrix_is_integer_translation (&src->matrix, &dx, &dy)) {
+        cairo_image_surface_t *image = (cairo_image_surface_t *)
+            ((cairo_surface_pattern_t *) src)->surface;
+        dx += src_x;
+        dy += src_y;
+        if (dx >= 0 &&
+            dy >= 0 &&
+            dx + width <= (unsigned int) image->width &&
+            dy + height <= (unsigned int) image->height) {
+            status = _cairo_gl_surface_draw_image (dst, image,
+                                                   dx, dy,
+                                                   width, height,
+                                                   dst_x, dst_y);
+            if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+                return status;
+        }
+    }
 
     status = _cairo_gl_context_acquire (dst->base.device, &ctx);
     if (unlikely (status))
