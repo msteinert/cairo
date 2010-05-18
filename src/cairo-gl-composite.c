@@ -531,22 +531,6 @@ _cairo_gl_composite_set_mask_spans (cairo_gl_context_t *ctx,
 }
 
 void
-_cairo_gl_composite_set_mask_texture (cairo_gl_context_t *ctx,
-                                      cairo_gl_composite_t *setup,
-                                      GLuint tex,
-                                      cairo_bool_t has_component_alpha)
-{
-    _cairo_gl_operand_destroy (&setup->mask);
-
-    setup->has_component_alpha = has_component_alpha;
-
-    setup->mask.type = CAIRO_GL_OPERAND_TEXTURE;
-    setup->mask.texture.tex = tex;
-    setup->mask.texture.surface = NULL;
-    cairo_matrix_init_identity (&setup->mask.texture.attributes.matrix);
-}
-
-void
 _cairo_gl_composite_set_clip_region (cairo_gl_context_t *ctx,
                                      cairo_gl_composite_t *setup,
                                      cairo_region_t *clip_region)

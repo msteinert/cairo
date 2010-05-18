@@ -333,13 +333,14 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 
 	    last_format = scaled_glyph->surface->format;
 
-            _cairo_gl_composite_set_mask_texture (ctx,
-                                                  &setup,
-                                                  ((cairo_gl_surface_t *) cache->pattern.surface)->tex, 
-                                                  last_format == CAIRO_FORMAT_ARGB32);
+            status = _cairo_gl_composite_set_mask (ctx,
+                                                   &setup,
+                                                   &cache->pattern.base,
+                                                   0, 0, 0, 0, 0, 0);
+            if (unlikely (status))
+                goto FINISH;
 
-	    if (last_format == CAIRO_FORMAT_ARGB32)
-		*has_component_alpha = TRUE;
+	    *has_component_alpha |= cache->pattern.base.has_component_alpha;
 
             status = _cairo_gl_composite_begin (ctx, &setup);
 	}

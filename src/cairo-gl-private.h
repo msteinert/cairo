@@ -308,12 +308,6 @@ cairo_private void
 _cairo_gl_composite_set_mask_spans (cairo_gl_context_t *ctx,
                                     cairo_gl_composite_t *setup);
 
-cairo_private void
-_cairo_gl_composite_set_mask_texture (cairo_gl_context_t *ctx,
-                                      cairo_gl_composite_t *setup,
-                                      GLuint tex,
-                                      cairo_bool_t has_component_alpha);
-
 cairo_private cairo_status_t
 _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
                            cairo_gl_composite_t *setup);
