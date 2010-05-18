@@ -343,6 +343,8 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 	    *has_component_alpha |= cache->pattern.base.has_component_alpha;
 
             status = _cairo_gl_composite_begin (ctx, &setup);
+            if (unlikely (status))
+                goto FINISH;
 	}
 
 	if (scaled_glyph->surface_private == NULL) {
