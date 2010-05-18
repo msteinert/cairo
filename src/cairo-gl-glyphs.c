@@ -60,6 +60,7 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_context_t *ctx,
 				 cairo_scaled_glyph_t  *scaled_glyph)
 {
     cairo_image_surface_t *glyph_surface = scaled_glyph->surface;
+    cairo_gl_surface_t *cache_surface;
     cairo_gl_glyph_private_t *glyph_private;
     cairo_rtree_node_t *node = NULL;
     cairo_image_surface_t *clone = NULL;
@@ -111,8 +112,10 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_context_t *ctx,
     if (status)
 	return status;
 
+    cache_surface = (cairo_gl_surface_t *) cache->pattern.surface;
+
     glActiveTexture (GL_TEXTURE1);
-    glBindTexture (ctx->tex_target, cache->tex);
+    glBindTexture (ctx->tex_target, cache_surface->tex);
 
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
     glPixelStorei (GL_UNPACK_ROW_LENGTH,
@@ -137,10 +140,10 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_context_t *ctx,
     glyph_private->p2.x = node->x + glyph_surface->width;
     glyph_private->p2.y = node->y + glyph_surface->height;
     if (ctx->tex_target != GL_TEXTURE_RECTANGLE_EXT) {
-	glyph_private->p1.x /= cache->width;
-	glyph_private->p1.y /= cache->height;
-	glyph_private->p2.x /= cache->width;
-	glyph_private->p2.y /= cache->height;
+	glyph_private->p1.x /= cache_surface->width;
+	glyph_private->p1.y /= cache_surface->height;
+	glyph_private->p2.x /= cache_surface->width;
+	glyph_private->p2.y /= cache_surface->height;
     }
 
     cairo_surface_destroy (&clone->base);
@@ -160,53 +163,35 @@ cairo_gl_context_get_glyph_cache (cairo_gl_context_t *ctx,
 				  cairo_format_t format)
 {
     cairo_gl_glyph_cache_t *cache;
+    cairo_content_t content;
 
     switch (format) {
     case CAIRO_FORMAT_RGB16_565:
     case CAIRO_FORMAT_ARGB32:
     case CAIRO_FORMAT_RGB24:
 	cache = &ctx->glyph_cache[0];
-	format = CAIRO_FORMAT_ARGB32;
+        content = CAIRO_CONTENT_COLOR_ALPHA;
 	break;
     case CAIRO_FORMAT_A8:
     case CAIRO_FORMAT_A1:
 	cache = &ctx->glyph_cache[1];
-	format = CAIRO_FORMAT_A8;
+        content = CAIRO_CONTENT_ALPHA;
 	break;
     case CAIRO_FORMAT_INVALID:
 	ASSERT_NOT_REACHED;
 	return NULL;
     }
 
-    if (unlikely (cache->tex == 0)) {
-	GLenum internal_format;
-
-	cache->width = GLYPH_CACHE_WIDTH;
-	cache->height = GLYPH_CACHE_HEIGHT;
-
-	switch (format) {
-	    case CAIRO_FORMAT_A1:
-	    case CAIRO_FORMAT_RGB16_565:
-	    case CAIRO_FORMAT_RGB24:
-		ASSERT_NOT_REACHED;
-	    case CAIRO_FORMAT_ARGB32:
-		internal_format = GL_RGBA;
-		break;
-	    case CAIRO_FORMAT_A8:
-		internal_format = GL_ALPHA;
-		break;
-	    case CAIRO_FORMAT_INVALID:
-		ASSERT_NOT_REACHED;
-		return NULL;
-	}
-
-	glGenTextures (1, &cache->tex);
-	glBindTexture (ctx->tex_target, cache->tex);
-	glTexParameteri (ctx->tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri (ctx->tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D (ctx->tex_target, 0, internal_format,
-		      GLYPH_CACHE_WIDTH, GLYPH_CACHE_HEIGHT, 0,
-		      internal_format, GL_FLOAT, NULL);
+    if (unlikely (cache->pattern.surface == NULL)) {
+        cairo_surface_t *surface;
+        surface = cairo_gl_surface_create (&ctx->base,
+                                           content,
+                                           GLYPH_CACHE_WIDTH,
+                                           GLYPH_CACHE_HEIGHT);
+        _cairo_surface_release_device_reference (surface);
+        _cairo_pattern_init_for_surface (&cache->pattern, surface);
+        cairo_surface_destroy (surface);
+        cache->pattern.base.has_component_alpha = (content == CAIRO_CONTENT_COLOR_ALPHA);
     }
 
     return cache;
@@ -350,7 +335,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 
             _cairo_gl_composite_set_mask_texture (ctx,
                                                   &setup,
-                                                  cache->tex, 
+                                                  ((cairo_gl_surface_t *) cache->pattern.surface)->tex, 
                                                   last_format == CAIRO_FORMAT_ARGB32);
 
 	    if (last_format == CAIRO_FORMAT_ARGB32)
@@ -627,8 +612,6 @@ EMPTY:
 void
 _cairo_gl_glyph_cache_init (cairo_gl_glyph_cache_t *cache)
 {
-    cache->tex = 0;
-
     _cairo_rtree_init (&cache->rtree,
 		       GLYPH_CACHE_WIDTH,
 		       GLYPH_CACHE_HEIGHT,
@@ -642,9 +625,9 @@ _cairo_gl_glyph_cache_fini (cairo_gl_context_t *ctx,
 {
     _cairo_rtree_fini (&cache->rtree);
 
-    if (cache->tex) {
-	/* XXX Is this safe? */
-	glDeleteTextures (1, &cache->tex);
+    if (cache->pattern.surface) {
+        _cairo_pattern_fini (&cache->pattern.base);
+        cache->pattern.surface = NULL;
     }
 }
 
