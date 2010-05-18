@@ -63,33 +63,8 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_context_t *ctx,
     cairo_gl_surface_t *cache_surface;
     cairo_gl_glyph_private_t *glyph_private;
     cairo_rtree_node_t *node = NULL;
-    cairo_image_surface_t *clone = NULL;
     cairo_status_t status;
     int width, height;
-    GLenum internal_format, format, type;
-    cairo_bool_t has_alpha;
-
-    if (! _cairo_gl_get_image_format_and_type (glyph_surface->pixman_format,
-					       &internal_format,
-					       &format,
-					       &type,
-					       &has_alpha))
-    {
-	cairo_bool_t is_supported;
-
-	clone = _cairo_image_surface_coerce (glyph_surface);
-	if (unlikely (clone->base.status))
-	    return clone->base.status;
-
-	is_supported =
-	    _cairo_gl_get_image_format_and_type (clone->pixman_format,
-					         &internal_format,
-						 &format,
-						 &type,
-						 &has_alpha);
-	assert (is_supported);
-	glyph_surface = clone;
-    }
 
     width = glyph_surface->width;
     if (width < GLYPH_CACHE_MIN_SIZE)
@@ -114,19 +89,15 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_context_t *ctx,
 
     cache_surface = (cairo_gl_surface_t *) cache->pattern.surface;
 
+    /* XXX: Make sure we use the mask texture. This should work automagically somehow */
     glActiveTexture (GL_TEXTURE1);
-    glBindTexture (ctx->tex_target, cache_surface->tex);
-
-    glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
-    glPixelStorei (GL_UNPACK_ROW_LENGTH,
-		   glyph_surface->stride /
-		   (PIXMAN_FORMAT_BPP (glyph_surface->pixman_format) / 8));
-    glTexSubImage2D (ctx->tex_target, 0,
-		     node->x, node->y,
-		     glyph_surface->width, glyph_surface->height,
-		     format, type,
-		     glyph_surface->data);
-    glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
+    status = _cairo_gl_surface_draw_image (cache_surface,
+                                           glyph_surface,
+                                           0, 0,
+                                           glyph_surface->width, glyph_surface->height,
+                                           node->x, node->y);
+    if (unlikely (status))
+	return status;
 
     scaled_glyph->surface_private = node;
     node->owner = &scaled_glyph->surface_private;
@@ -145,8 +116,6 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_context_t *ctx,
 	glyph_private->p2.x /= cache_surface->width;
 	glyph_private->p2.y /= cache_surface->height;
     }
-
-    cairo_surface_destroy (&clone->base);
 
     return CAIRO_STATUS_SUCCESS;
 }
