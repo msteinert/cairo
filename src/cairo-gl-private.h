@@ -139,9 +139,11 @@ typedef struct _cairo_gl_context {
     cairo_gl_shader_t fill_rectangles_shader;
     cairo_cache_t shaders;
 
-    cairo_gl_surface_t *current_target;
     cairo_gl_glyph_cache_t glyph_cache[2];
     cairo_list_t fonts;
+
+    cairo_gl_surface_t *current_target;
+    cairo_gl_shader_t *current_shader;
 
     void (*acquire) (void *ctx);
     void (*release) (void *ctx);

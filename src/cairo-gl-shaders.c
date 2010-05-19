@@ -470,6 +470,8 @@ _cairo_gl_shader_cache_destroy (void *data)
     cairo_shader_cache_entry_t *entry = data;
 
     _cairo_gl_shader_fini (entry->ctx, &entry->shader);
+    if (entry->ctx->current_shader == entry)
+        entry->ctx->current_shader = NULL;
     free (entry);
 }
 
@@ -920,7 +922,12 @@ _cairo_gl_set_shader (cairo_gl_context_t *ctx,
     if (ctx->shader_impl == NULL)
 	return;
 
+    if (ctx->current_shader == shader)
+        return;
+
     ctx->shader_impl->use (shader);
+
+    ctx->current_shader = shader;
 }
 
 cairo_status_t
