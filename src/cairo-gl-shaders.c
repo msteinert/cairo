@@ -925,17 +925,15 @@ _cairo_gl_set_shader (cairo_gl_context_t *ctx,
 }
 
 cairo_status_t
-_cairo_gl_get_shader (cairo_gl_context_t *ctx,
-		      cairo_gl_operand_type_t source,
-		      cairo_gl_operand_type_t mask,
-		      cairo_gl_shader_in_t in,
-		      cairo_gl_shader_t **out)
+_cairo_gl_set_shader_by_type (cairo_gl_context_t *ctx,
+                              cairo_gl_operand_type_t source,
+                              cairo_gl_operand_type_t mask,
+                              cairo_gl_shader_in_t in)
 {
     cairo_shader_cache_entry_t lookup, *entry;
     char *fs_source;
     cairo_status_t status;
 
-    *out = NULL;
     if (ctx->shader_impl == NULL)
 	return CAIRO_STATUS_SUCCESS;
 
@@ -949,7 +947,7 @@ _cairo_gl_get_shader (cairo_gl_context_t *ctx,
     entry = _cairo_cache_lookup (&ctx->shaders, &lookup.base);
     if (entry) {
         assert (entry->shader.program);
-	*out = &entry->shader;
+        _cairo_gl_set_shader (ctx, &entry->shader);
 	return CAIRO_STATUS_SUCCESS;
     }
 
@@ -992,6 +990,7 @@ _cairo_gl_get_shader (cairo_gl_context_t *ctx,
     }
 
     _cairo_gl_set_shader (ctx, &entry->shader);
+
     if (source != CAIRO_GL_OPERAND_CONSTANT) {
 	_cairo_gl_shader_bind_texture (ctx, "source_sampler", 0);
     }
@@ -1001,8 +1000,5 @@ _cairo_gl_get_shader (cairo_gl_context_t *ctx,
 	_cairo_gl_shader_bind_texture (ctx, "mask_sampler", 1);
     }
 
-    _cairo_gl_set_shader (ctx, NULL);
-
-    *out = &entry->shader;
     return CAIRO_STATUS_SUCCESS;
 }

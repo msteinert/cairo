@@ -194,7 +194,6 @@ typedef struct _cairo_gl_composite {
 
     cairo_gl_operand_t src;
     cairo_gl_operand_t mask;
-    cairo_gl_shader_t *shader;
     cairo_gl_shader_t *pre_shader; /* for component alpha */
 
     char *vb;
@@ -397,11 +396,10 @@ _cairo_gl_shader_compile (cairo_gl_context_t *ctx,
 			  const char *fragment_text);
 
 cairo_private cairo_status_t
-_cairo_gl_get_shader (cairo_gl_context_t *ctx,
-		      cairo_gl_operand_type_t source,
-		      cairo_gl_operand_type_t mask,
-		      cairo_gl_shader_in_t in,
-		      cairo_gl_shader_t **out_program);
+_cairo_gl_set_shader_by_type (cairo_gl_context_t *ctx,
+                              cairo_gl_operand_type_t source,
+                              cairo_gl_operand_type_t mask,
+                              cairo_gl_shader_in_t in);
 
 cairo_private void
 _cairo_gl_shader_bind_float (cairo_gl_context_t *ctx,
