@@ -145,6 +145,10 @@ typedef struct _cairo_gl_context {
     cairo_gl_surface_t *current_target;
     cairo_gl_shader_t *current_shader;
 
+    char *vb;
+    unsigned int vb_offset;
+    unsigned int vertex_size;
+
     void (*acquire) (void *ctx);
     void (*release) (void *ctx);
 
@@ -195,10 +199,6 @@ typedef struct _cairo_gl_composite {
     cairo_gl_operand_t src;
     cairo_gl_operand_t mask;
     cairo_gl_shader_t *pre_shader; /* for component alpha */
-
-    char *vb;
-    unsigned int vb_offset;
-    unsigned int vertex_size;
 } cairo_gl_composite_t;
 
 cairo_private extern const cairo_surface_backend_t _cairo_gl_surface_backend;

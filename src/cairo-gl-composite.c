@@ -1097,7 +1097,7 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
     src_size  = _cairo_gl_operand_get_vertex_size (setup->src.type);
     mask_size = _cairo_gl_operand_get_vertex_size (setup->mask.type);
 
-    setup->vertex_size = dst_size + src_size + mask_size;
+    ctx->vertex_size = dst_size + src_size + mask_size;
 
     _cairo_gl_context_set_destination (ctx, setup->dst);
     _cairo_gl_set_operator (setup->dst,
@@ -1111,13 +1111,13 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
 
     glBindBufferARB (GL_ARRAY_BUFFER_ARB, ctx->vbo);
 
-    glVertexPointer (2, GL_FLOAT, setup->vertex_size, NULL);
+    glVertexPointer (2, GL_FLOAT, ctx->vertex_size, NULL);
     glEnableClientState (GL_VERTEX_ARRAY);
 
     _cairo_gl_set_src_operand (ctx, setup);
     if (setup->src.type == CAIRO_GL_OPERAND_TEXTURE) {
 	glClientActiveTexture (GL_TEXTURE0);
-	glTexCoordPointer (2, GL_FLOAT, setup->vertex_size,
+	glTexCoordPointer (2, GL_FLOAT, ctx->vertex_size,
                            (void *) (uintptr_t) dst_size);
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
     }
@@ -1128,11 +1128,11 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
 
     if (setup->mask.type == CAIRO_GL_OPERAND_TEXTURE) {
 	glClientActiveTexture (GL_TEXTURE1);
-	glTexCoordPointer (2, GL_FLOAT, setup->vertex_size,
+	glTexCoordPointer (2, GL_FLOAT, ctx->vertex_size,
                            (void *) (uintptr_t) (dst_size + src_size));
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
     } else if (setup->mask.type == CAIRO_GL_OPERAND_SPANS) {
-	glColorPointer (4, GL_UNSIGNED_BYTE, setup->vertex_size,
+	glColorPointer (4, GL_UNSIGNED_BYTE, ctx->vertex_size,
                         (void *) (uintptr_t) (dst_size + src_size));
 	glEnableClientState (GL_COLOR_ARRAY);
     }
@@ -1147,7 +1147,7 @@ static inline void
 _cairo_gl_composite_draw (cairo_gl_context_t *ctx,
                           cairo_gl_composite_t *setup)
 {
-    unsigned int count = setup->vb_offset / setup->vertex_size;
+    unsigned int count = ctx->vb_offset / ctx->vertex_size;
 
     if (! setup->pre_shader) {
         glDrawArrays (GL_TRIANGLES, 0, count);
@@ -1172,7 +1172,7 @@ void
 _cairo_gl_composite_flush (cairo_gl_context_t *ctx,
                            cairo_gl_composite_t *setup)
 {
-    if (setup->vb_offset == 0)
+    if (ctx->vb_offset == 0)
         return;
 
     if (setup->clip_region) {
@@ -1191,7 +1191,8 @@ _cairo_gl_composite_flush (cairo_gl_context_t *ctx,
     }
 
     glUnmapBufferARB (GL_ARRAY_BUFFER_ARB);
-    setup->vb = NULL;
+    ctx->vb = NULL;
+    ctx->vb_offset = 0;
 }
 
 static void
@@ -1199,14 +1200,13 @@ _cairo_gl_composite_prepare_buffer (cairo_gl_context_t *ctx,
                                     cairo_gl_composite_t *setup,
                                     unsigned int n_vertices)
 {
-    if (setup->vb_offset + n_vertices * setup->vertex_size > CAIRO_GL_VBO_SIZE)
+    if (ctx->vb_offset + n_vertices * ctx->vertex_size > CAIRO_GL_VBO_SIZE)
 	_cairo_gl_composite_flush (ctx, setup);
 
-    if (setup->vb == NULL) {
+    if (ctx->vb == NULL) {
 	glBufferDataARB (GL_ARRAY_BUFFER_ARB, CAIRO_GL_VBO_SIZE,
 			 NULL, GL_STREAM_DRAW_ARB);
-	setup->vb = glMapBufferARB (GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
-	setup->vb_offset = 0;
+	ctx->vb = glMapBufferARB (GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
     }
 }
 
@@ -1258,7 +1258,7 @@ _cairo_gl_composite_emit_vertex (cairo_gl_context_t *ctx,
                                  GLfloat y,
                                  uint32_t color)
 {
-    GLfloat *vb = (GLfloat *) (void *) &setup->vb[setup->vb_offset];
+    GLfloat *vb = (GLfloat *) (void *) &ctx->vb[ctx->vb_offset];
 
     *vb++ = x;
     *vb++ = y;
@@ -1266,7 +1266,7 @@ _cairo_gl_composite_emit_vertex (cairo_gl_context_t *ctx,
     _cairo_gl_operand_emit (&setup->src, &vb, x, y, color);
     _cairo_gl_operand_emit (&setup->mask, &vb, x, y, color);
 
-    setup->vb_offset += setup->vertex_size;
+    ctx->vb_offset += ctx->vertex_size;
 }
 
 void
@@ -1297,7 +1297,7 @@ _cairo_gl_composite_emit_glyph_vertex (cairo_gl_context_t *ctx,
                                        GLfloat glyph_x,
                                        GLfloat glyph_y)
 {
-    GLfloat *vb = (GLfloat *) (void *) &setup->vb[setup->vb_offset];
+    GLfloat *vb = (GLfloat *) (void *) &ctx->vb[ctx->vb_offset];
 
     *vb++ = x;
     *vb++ = y;
@@ -1307,7 +1307,7 @@ _cairo_gl_composite_emit_glyph_vertex (cairo_gl_context_t *ctx,
     *vb++ = glyph_x;
     *vb++ = glyph_y;
 
-    setup->vb_offset += setup->vertex_size;
+    ctx->vb_offset += ctx->vertex_size;
 }
 
 void
@@ -1363,6 +1363,8 @@ _cairo_gl_composite_end (cairo_gl_context_t *ctx,
     glDisable (ctx->tex_target);
 
     setup->pre_shader = NULL;
+
+    ctx->vertex_size = 0;
 }
 
 void
