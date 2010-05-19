@@ -1086,7 +1086,9 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
                                                                       : CAIRO_GL_SHADER_IN_NORMAL);
     if (unlikely (status)) {
         setup->pre_shader = NULL;
-	return status;
+        if (_cairo_status_is_error (status))
+	    return status;
+        /* fall back to fixed function here */
     }
 
     status = CAIRO_STATUS_SUCCESS;
