@@ -550,7 +550,7 @@ _cairo_gl_shader_fini (cairo_gl_context_t *ctx,
         ctx->shader_impl->destroy_program (shader->program);
 }
 
-typedef enum cairo_gl_operand_target {
+typedef enum cairo_gl_operand_name {
   CAIRO_GL_OPERAND_SOURCE,
   CAIRO_GL_OPERAND_MASK,
   CAIRO_GL_OPERAND_DEST
