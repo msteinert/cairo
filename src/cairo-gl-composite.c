@@ -43,56 +43,6 @@
 #include "cairo-error-private.h"
 #include "cairo-gl-private.h"
 
-static void
-_cairo_gl_set_texture_surface (int tex_unit, GLuint tex,
-			       cairo_surface_attributes_t *attributes,
-			       GLint tex_target)
-{
-
-    if (tex_target == GL_TEXTURE_RECTANGLE_EXT) {
-	assert (attributes->extend != CAIRO_EXTEND_REPEAT &&
-		attributes->extend != CAIRO_EXTEND_REFLECT);
-    }
-
-    glActiveTexture (GL_TEXTURE0 + tex_unit);
-    glBindTexture (tex_target, tex);
-    switch (attributes->extend) {
-    case CAIRO_EXTEND_NONE:
-	glTexParameteri (tex_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri (tex_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	break;
-    case CAIRO_EXTEND_PAD:
-	glTexParameteri (tex_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri (tex_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	break;
-    case CAIRO_EXTEND_REPEAT:
-	glTexParameteri (tex_target, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri (tex_target, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	break;
-    case CAIRO_EXTEND_REFLECT:
-	glTexParameteri (tex_target, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	glTexParameteri (tex_target, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-	break;
-    }
-    switch (attributes->filter) {
-    case CAIRO_FILTER_FAST:
-    case CAIRO_FILTER_NEAREST:
-	glTexParameteri (tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri (tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	break;
-    case CAIRO_FILTER_GOOD:
-    case CAIRO_FILTER_BEST:
-    case CAIRO_FILTER_BILINEAR:
-	glTexParameteri (tex_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri (tex_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	break;
-    default:
-    case CAIRO_FILTER_GAUSSIAN:
-	ASSERT_NOT_REACHED;
-    }
-    glEnable (tex_target);
-}
-
 static int
 _cairo_gl_gradient_sample_width (const cairo_gradient_pattern_t *gradient)
 {
@@ -611,16 +561,98 @@ _cairo_gl_composite_bind_to_shader (cairo_gl_context_t   *ctx,
 }
 
 static void
+_cairo_gl_texture_set_attributes (cairo_gl_context_t         *ctx,
+                                  cairo_surface_attributes_t *attributes)
+{
+    if (ctx->tex_target == GL_TEXTURE_RECTANGLE_EXT) {
+	assert (attributes->extend != CAIRO_EXTEND_REPEAT &&
+		attributes->extend != CAIRO_EXTEND_REFLECT);
+    }
+
+    switch (attributes->extend) {
+    case CAIRO_EXTEND_NONE:
+	glTexParameteri (ctx->tex_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri (ctx->tex_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	break;
+    case CAIRO_EXTEND_PAD:
+	glTexParameteri (ctx->tex_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri (ctx->tex_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	break;
+    case CAIRO_EXTEND_REPEAT:
+	glTexParameteri (ctx->tex_target, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri (ctx->tex_target, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	break;
+    case CAIRO_EXTEND_REFLECT:
+	glTexParameteri (ctx->tex_target, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri (ctx->tex_target, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	break;
+    }
+
+    switch (attributes->filter) {
+    case CAIRO_FILTER_FAST:
+    case CAIRO_FILTER_NEAREST:
+	glTexParameteri (ctx->tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri (ctx->tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	break;
+    case CAIRO_FILTER_GOOD:
+    case CAIRO_FILTER_BEST:
+    case CAIRO_FILTER_BILINEAR:
+	glTexParameteri (ctx->tex_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri (ctx->tex_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	break;
+    default:
+    case CAIRO_FILTER_GAUSSIAN:
+	ASSERT_NOT_REACHED;
+    }
+}
+
+static void
+_cairo_gl_operand_setup_texture (cairo_gl_context_t *ctx,
+                                 cairo_gl_operand_t *operand,
+                                 GLuint              tex_unit)
+{
+    switch (operand->type) {
+    default:
+    case CAIRO_GL_OPERAND_COUNT:
+        ASSERT_NOT_REACHED;
+    case CAIRO_GL_OPERAND_NONE:
+    case CAIRO_GL_OPERAND_SPANS:
+        break;
+    case CAIRO_GL_OPERAND_CONSTANT:
+        if (ctx->current_shader == NULL) {
+            glActiveTexture (GL_TEXTURE0 + tex_unit);
+            /* Have to have a dummy texture bound in order to use the combiner unit. */
+            glBindTexture (ctx->tex_target, ctx->dummy_tex);
+            glEnable (ctx->tex_target);
+        } else {
+            glDisable (ctx->tex_target);
+        }
+        break;
+    case CAIRO_GL_OPERAND_TEXTURE:
+        glActiveTexture (GL_TEXTURE0 + tex_unit);
+        glBindTexture (ctx->tex_target, operand->texture.tex);
+        glEnable (ctx->tex_target);
+        _cairo_gl_texture_set_attributes (ctx, &operand->texture.attributes);
+        break;
+    case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
+        glActiveTexture (GL_TEXTURE0 + tex_unit);
+        glBindTexture (GL_TEXTURE_1D, operand->linear.tex);
+        glEnable (GL_TEXTURE_1D);
+        break;
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
+        glActiveTexture (GL_TEXTURE0 + tex_unit);
+        glBindTexture (GL_TEXTURE_1D, operand->radial.tex);
+        glEnable (GL_TEXTURE_1D);
+        break;
+    }
+}
+
+static void
 _cairo_gl_set_tex_combine_constant_color (cairo_gl_context_t *ctx,
 					  cairo_gl_composite_t *setup,
 					  int tex_unit,
 					  GLfloat *color)
 {
-    glActiveTexture (GL_TEXTURE0 + tex_unit);
-    /* Have to have a dummy texture bound in order to use the combiner unit. */
-    glBindTexture (ctx->tex_target, ctx->dummy_tex);
-    glEnable (ctx->tex_target);
-
     glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color);
     glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
     if (tex_unit == 0) {
@@ -661,8 +693,6 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 						  setup->src.constant.color);
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
-	_cairo_gl_set_texture_surface (0, setup->src.texture.tex,
-				       src_attributes, ctx->tex_target);
 	if (!setup->shader) {
 	    /* Set up the constant color we use to set color to 0 if needed. */
 	    glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
@@ -686,22 +716,13 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 	}
 	break;
 
-    case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
-	glActiveTexture (GL_TEXTURE0);
-	glBindTexture (GL_TEXTURE_1D, setup->src.linear.tex);
-	glEnable (GL_TEXTURE_1D);
-	break;
-
-    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
-	glActiveTexture (GL_TEXTURE0);
-	glBindTexture (GL_TEXTURE_1D, setup->src.linear.tex);
-	glEnable (GL_TEXTURE_1D);
-	break;
     default:
     case CAIRO_GL_OPERAND_COUNT:
         ASSERT_NOT_REACHED;
     case CAIRO_GL_OPERAND_NONE:
     case CAIRO_GL_OPERAND_SPANS:
+    case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
         break;
     }
 }
@@ -729,8 +750,6 @@ _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
 						  constant_color);
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
-	_cairo_gl_set_texture_surface (0, setup->src.texture.tex,
-				       src_attributes, ctx->tex_target);
 	if (!setup->shader) {
 	    /* Set up the combiner to just set color to the sampled texture. */
 	    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
@@ -752,28 +771,6 @@ _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
         ASSERT_NOT_REACHED;
         break;
     }
-}
-
-static void
-_cairo_gl_set_linear_gradient_mask_operand (cairo_gl_context_t *ctx,
-                                            cairo_gl_composite_t *setup)
-{
-    assert(setup->shader);
-
-    glActiveTexture (GL_TEXTURE1);
-    glBindTexture (GL_TEXTURE_1D, setup->mask.linear.tex);
-    glEnable (GL_TEXTURE_1D);
-}
-
-static void
-_cairo_gl_set_radial_gradient_mask_operand (cairo_gl_context_t *ctx,
-                                            cairo_gl_composite_t *setup)
-{
-    assert(setup->shader);
-
-    glActiveTexture (GL_TEXTURE1);
-    glBindTexture (GL_TEXTURE_1D, setup->mask.radial.tex);
-    glEnable (GL_TEXTURE_1D);
 }
 
 /* This is like _cairo_gl_set_src_alpha_operand, for component alpha setup
@@ -803,10 +800,6 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
     case CAIRO_GL_OPERAND_CONSTANT:
 	/* Have to have a dummy texture bound in order to use the combiner unit. */
 	if (! setup->shader) {
-	    glBindTexture (ctx->tex_target, ctx->dummy_tex);
-	    glActiveTexture (GL_TEXTURE1);
-	    glEnable (ctx->tex_target);
-
 	    glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR,
 			setup->mask.constant.color);
 
@@ -817,8 +810,6 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 	}
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
-	_cairo_gl_set_texture_surface (1, setup->mask.texture.tex,
-				       mask_attributes, ctx->tex_target);
 	if (!setup->shader) {
 	    /* Set up the constant color we use to set color to 0 if needed. */
 	    glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
@@ -839,12 +830,7 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 	break;
 
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
-	_cairo_gl_set_linear_gradient_mask_operand (ctx, setup);
-	break;
-
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
-	_cairo_gl_set_radial_gradient_mask_operand (ctx, setup);
-	break;
     case CAIRO_GL_OPERAND_NONE:
     case CAIRO_GL_OPERAND_SPANS:
     case CAIRO_GL_OPERAND_COUNT:
@@ -865,10 +851,6 @@ _cairo_gl_set_mask_operand (cairo_gl_context_t *ctx,
         break;
 
     case CAIRO_GL_OPERAND_TEXTURE:
-        _cairo_gl_set_texture_surface (1, setup->mask.texture.tex,
-                                       &setup->mask.texture.attributes,
-                                       ctx->tex_target);
-
         if (! setup->shader) {
             glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
             glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
@@ -887,20 +869,11 @@ _cairo_gl_set_mask_operand (cairo_gl_context_t *ctx,
         }
         break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
-        _cairo_gl_set_linear_gradient_mask_operand (ctx, setup);
-        break;
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
-        _cairo_gl_set_radial_gradient_mask_operand (ctx, setup);
-        break;
     case CAIRO_GL_OPERAND_NONE:
         break;
     case CAIRO_GL_OPERAND_SPANS:
         if (! setup->shader) {
-            /* Set up the mask to source from the incoming vertex color. */
-            glActiveTexture (GL_TEXTURE1);
-            /* Have to have a dummy texture bound in order to use the combiner unit. */
-            glBindTexture (ctx->tex_target, ctx->dummy_tex);
-            glEnable (ctx->tex_target);
             glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
             glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
             glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
@@ -1136,6 +1109,9 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
 
     _cairo_gl_set_shader (ctx, setup->shader);
     _cairo_gl_composite_bind_to_shader (ctx, setup);
+
+    _cairo_gl_operand_setup_texture (ctx, &setup->src, 0);
+    _cairo_gl_operand_setup_texture (ctx, &setup->mask, 1);
 
     glBindBufferARB (GL_ARRAY_BUFFER_ARB, ctx->vbo);
 
