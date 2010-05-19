@@ -804,10 +804,10 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 	if (setup->shader) {
 	    _cairo_gl_shader_bind_vec4 (ctx, setup->shader,
 					"mask_constant",
-					setup->src.constant.color[0],
-					setup->src.constant.color[1],
-					setup->src.constant.color[2],
-					setup->src.constant.color[3]);
+					setup->mask.constant.color[0],
+					setup->mask.constant.color[1],
+					setup->mask.constant.color[2],
+					setup->mask.constant.color[3]);
 	} else {
 	    glBindTexture (ctx->tex_target, ctx->dummy_tex);
 	    glActiveTexture (GL_TEXTURE1);
