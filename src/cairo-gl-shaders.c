@@ -861,58 +861,52 @@ _cairo_gl_shader_compile (cairo_gl_context_t *ctx,
 
 void
 _cairo_gl_shader_bind_float (cairo_gl_context_t *ctx,
-			     cairo_gl_shader_t *shader,
 			     const char *name,
 			     float value)
 {
-    ctx->shader_impl->bind_float (shader, name, value);
+    ctx->shader_impl->bind_float (ctx->current_shader, name, value);
 }
 
 void
 _cairo_gl_shader_bind_vec2 (cairo_gl_context_t *ctx,
-			    cairo_gl_shader_t *shader,
 			    const char *name,
 			    float value0,
 			    float value1)
 {
-    ctx->shader_impl->bind_vec2 (shader, name, value0, value1);
+    ctx->shader_impl->bind_vec2 (ctx->current_shader, name, value0, value1);
 }
 
 void
 _cairo_gl_shader_bind_vec3 (cairo_gl_context_t *ctx,
-			    cairo_gl_shader_t *shader,
 			    const char *name,
 			    float value0,
 			    float value1,
 			    float value2)
 {
-    ctx->shader_impl->bind_vec3 (shader, name, value0, value1, value2);
+    ctx->shader_impl->bind_vec3 (ctx->current_shader, name, value0, value1, value2);
 }
 
 void
 _cairo_gl_shader_bind_vec4 (cairo_gl_context_t *ctx,
-			    cairo_gl_shader_t *shader,
 			    const char *name,
 			    float value0, float value1,
 			    float value2, float value3)
 {
-    ctx->shader_impl->bind_vec4 (shader, name, value0, value1, value2, value3);
+    ctx->shader_impl->bind_vec4 (ctx->current_shader, name, value0, value1, value2, value3);
 }
 
 void
 _cairo_gl_shader_bind_matrix (cairo_gl_context_t *ctx,
-			      cairo_gl_shader_t *shader,
 			      const char *name, cairo_matrix_t* m)
 {
-    ctx->shader_impl->bind_matrix (shader, name, m);
+    ctx->shader_impl->bind_matrix (ctx->current_shader, name, m);
 }
 
 void
 _cairo_gl_shader_bind_texture (cairo_gl_context_t *ctx,
-			       cairo_gl_shader_t *shader,
 			       const char *name, GLuint tex_unit)
 {
-    ctx->shader_impl->bind_texture (shader, name, tex_unit);
+    ctx->shader_impl->bind_texture (ctx->current_shader, name, tex_unit);
 }
 
 void
@@ -999,12 +993,12 @@ _cairo_gl_get_shader (cairo_gl_context_t *ctx,
 
     _cairo_gl_set_shader (ctx, &entry->shader);
     if (source != CAIRO_GL_OPERAND_CONSTANT) {
-	_cairo_gl_shader_bind_texture (ctx, &entry->shader, "source_sampler", 0);
+	_cairo_gl_shader_bind_texture (ctx, "source_sampler", 0);
     }
     if (mask != CAIRO_GL_OPERAND_CONSTANT &&
 	mask != CAIRO_GL_OPERAND_SPANS &&
 	mask != CAIRO_GL_OPERAND_NONE) {
-	_cairo_gl_shader_bind_texture (ctx, &entry->shader, "mask_sampler", 1);
+	_cairo_gl_shader_bind_texture (ctx, "mask_sampler", 1);
     }
 
     _cairo_gl_set_shader (ctx, NULL);

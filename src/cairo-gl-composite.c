@@ -540,7 +540,6 @@ _cairo_gl_composite_set_clip_region (cairo_gl_context_t *ctx,
 
 static void
 _cairo_gl_operand_bind_to_shader (cairo_gl_context_t *ctx,
-                                  cairo_gl_shader_t  *shader,
                                   cairo_gl_operand_t *operand,
                                   const char         *name)
 {
@@ -561,7 +560,6 @@ _cairo_gl_operand_bind_to_shader (cairo_gl_context_t *ctx,
     case CAIRO_GL_OPERAND_CONSTANT:
         strcpy (custom_part, "_constant");
 	_cairo_gl_shader_bind_vec4 (ctx,
-				    shader,
                                     uniform_name,
                                     operand->constant.color[0],
                                     operand->constant.color[1],
@@ -570,31 +568,31 @@ _cairo_gl_operand_bind_to_shader (cairo_gl_context_t *ctx,
         break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
         strcpy (custom_part, "_matrix");
-	_cairo_gl_shader_bind_matrix (ctx, shader,
+	_cairo_gl_shader_bind_matrix (ctx,
                                       uniform_name,
 				      &operand->linear.m);
         strcpy (custom_part, "_segment");
-	_cairo_gl_shader_bind_vec2   (ctx, shader,
+	_cairo_gl_shader_bind_vec2   (ctx,
                                       uniform_name,
 				      operand->linear.segment_x,
 				      operand->linear.segment_y);
         break;
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
         strcpy (custom_part, "_matrix");
-        _cairo_gl_shader_bind_matrix (ctx, shader,
+        _cairo_gl_shader_bind_matrix (ctx,
                                       uniform_name,
                                       &operand->radial.m);
         strcpy (custom_part, "_circle_1");
-        _cairo_gl_shader_bind_vec2   (ctx, shader,
+        _cairo_gl_shader_bind_vec2   (ctx,
                                       uniform_name,
                                       operand->radial.circle_1_x,
                                       operand->radial.circle_1_y);
         strcpy (custom_part, "_radius_0");
-        _cairo_gl_shader_bind_float  (ctx, shader,
+        _cairo_gl_shader_bind_float  (ctx,
                                       uniform_name,
                                       operand->radial.radius_0);
         strcpy (custom_part, "_radius_1");
-        _cairo_gl_shader_bind_float  (ctx, shader,
+        _cairo_gl_shader_bind_float  (ctx,
                                       uniform_name,
                                       operand->radial.radius_1);
         break;
@@ -603,14 +601,13 @@ _cairo_gl_operand_bind_to_shader (cairo_gl_context_t *ctx,
 
 static void
 _cairo_gl_composite_bind_to_shader (cairo_gl_context_t   *ctx,
-				    cairo_gl_composite_t *setup,
-                                    cairo_gl_shader_t    *shader)
+				    cairo_gl_composite_t *setup)
 {
-    if (shader == NULL)
+    if (ctx->current_shader == NULL)
         return;
 
-    _cairo_gl_operand_bind_to_shader (ctx, shader, &setup->src, "source");
-    _cairo_gl_operand_bind_to_shader (ctx, shader, &setup->mask, "mask");
+    _cairo_gl_operand_bind_to_shader (ctx, &setup->src, "source");
+    _cairo_gl_operand_bind_to_shader (ctx, &setup->mask, "mask");
 }
 
 static void
@@ -1093,7 +1090,7 @@ _cairo_gl_composite_begin_component_alpha  (cairo_gl_context_t *ctx,
         if (unlikely (status))
             return status;
         _cairo_gl_set_shader (ctx, setup->pre_shader);
-        _cairo_gl_composite_bind_to_shader (ctx, setup, setup->pre_shader);
+        _cairo_gl_composite_bind_to_shader (ctx, setup);
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -1138,7 +1135,7 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
                             setup->has_component_alpha);
 
     _cairo_gl_set_shader (ctx, setup->shader);
-    _cairo_gl_composite_bind_to_shader (ctx, setup, setup->shader);
+    _cairo_gl_composite_bind_to_shader (ctx, setup);
 
     glBindBufferARB (GL_ARRAY_BUFFER_ARB, ctx->vbo);
 

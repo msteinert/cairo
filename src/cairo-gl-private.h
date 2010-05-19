@@ -405,19 +405,16 @@ _cairo_gl_get_shader (cairo_gl_context_t *ctx,
 
 cairo_private void
 _cairo_gl_shader_bind_float (cairo_gl_context_t *ctx,
-			     cairo_gl_shader_t *shader,
 			     const char *name,
 			     float value);
 
 cairo_private void
 _cairo_gl_shader_bind_vec2 (cairo_gl_context_t *ctx,
-			    cairo_gl_shader_t *shader,
 			    const char *name,
 			    float value0, float value1);
 
 cairo_private void
 _cairo_gl_shader_bind_vec3 (cairo_gl_context_t *ctx,
-			    cairo_gl_shader_t *shader,
 			    const char *name,
 			    float value0,
 			    float value1,
@@ -425,20 +422,17 @@ _cairo_gl_shader_bind_vec3 (cairo_gl_context_t *ctx,
 
 cairo_private void
 _cairo_gl_shader_bind_vec4 (cairo_gl_context_t *ctx,
-			    cairo_gl_shader_t *shader,
 			    const char *name,
 			    float value0, float value1,
 			    float value2, float value3);
 
 cairo_private void
 _cairo_gl_shader_bind_matrix (cairo_gl_context_t *ctx,
-			      cairo_gl_shader_t *shader,
 			      const char *name,
 			      cairo_matrix_t* m);
 
 cairo_private void
 _cairo_gl_shader_bind_texture (cairo_gl_context_t *ctx,
-			       cairo_gl_shader_t *shader,
 			       const char *name,
 			       GLuint tex_unit);
 
