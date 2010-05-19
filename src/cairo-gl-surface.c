@@ -400,7 +400,8 @@ cairo_gl_surface_set_size (cairo_surface_t *abstract_surface,
     if (unlikely (abstract_surface->status))
 	return;
 
-    if (! _cairo_surface_is_gl (abstract_surface) || surface->fb) {
+    if (! _cairo_surface_is_gl (abstract_surface) ||
+        ! _cairo_gl_surface_is_texture (surface)) {
 	status = _cairo_surface_set_error (abstract_surface,
 		                           CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return;
@@ -447,7 +448,7 @@ cairo_gl_surface_swapbuffers (cairo_surface_t *abstract_surface)
 	return;
     }
 
-    if (! surface->fb) {
+    if (! _cairo_gl_surface_is_texture (surface)) {
 	cairo_gl_context_t *ctx;
         
         if (_cairo_gl_context_acquire (surface->base.device, &ctx))
@@ -536,7 +537,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
     glPixelStorei (GL_UNPACK_ROW_LENGTH, src->stride / cpp);
-    if (dst->fb) {
+    if (_cairo_gl_surface_is_texture (dst)) {
 	glBindTexture (ctx->tex_target, dst->tex);
 	glTexParameteri (ctx->tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri (ctx->tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -666,12 +667,12 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
 
     glPixelStorei (GL_PACK_ALIGNMENT, 1);
     glPixelStorei (GL_PACK_ROW_LENGTH, image->stride / cpp);
-    if (surface->fb == 0 && GLEW_MESA_pack_invert)
+    if (! _cairo_gl_surface_is_texture (surface) && GLEW_MESA_pack_invert)
 	glPixelStorei (GL_PACK_INVERT_MESA, 1);
     glReadPixels (interest->x, interest->y,
 		  interest->width, interest->height,
 		  format, type, image->data);
-    if (surface->fb == 0 && GLEW_MESA_pack_invert)
+    if (! _cairo_gl_surface_is_texture (surface) && GLEW_MESA_pack_invert)
 	glPixelStorei (GL_PACK_INVERT_MESA, 0);
 
     _cairo_gl_context_release (ctx);

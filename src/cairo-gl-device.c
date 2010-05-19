@@ -190,7 +190,7 @@ _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
     if (ctx->current_target != surface) {
 	ctx->current_target = surface;
 
-	if (surface->fb) {
+	if (_cairo_gl_surface_is_texture (surface)) {
 	    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, surface->fb);
 	    glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
 	    glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
@@ -206,7 +206,7 @@ _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
 
     glMatrixMode (GL_PROJECTION);
     glLoadIdentity ();
-    if (surface->fb)
+    if (_cairo_gl_surface_is_texture (surface))
 	glOrtho (0, surface->width, 0, surface->height, -1.0, 1.0);
     else
 	glOrtho (0, surface->width, surface->height, 0, -1.0, 1.0);
