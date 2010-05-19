@@ -609,14 +609,19 @@ _cairo_gl_texture_set_attributes (cairo_gl_context_t         *ctx,
 static void
 _cairo_gl_operand_setup_texture (cairo_gl_context_t *ctx,
                                  cairo_gl_operand_t *operand,
-                                 GLuint              tex_unit)
+                                 GLuint              tex_unit,
+                                 unsigned int        vertex_offset)
 {
     switch (operand->type) {
     default:
     case CAIRO_GL_OPERAND_COUNT:
         ASSERT_NOT_REACHED;
     case CAIRO_GL_OPERAND_NONE:
+        break;
     case CAIRO_GL_OPERAND_SPANS:
+	glColorPointer (4, GL_UNSIGNED_BYTE, ctx->vertex_size,
+                        (void *) (uintptr_t) vertex_offset);
+	glEnableClientState (GL_COLOR_ARRAY);
         break;
     case CAIRO_GL_OPERAND_CONSTANT:
         if (ctx->current_shader == NULL) {
@@ -633,6 +638,11 @@ _cairo_gl_operand_setup_texture (cairo_gl_context_t *ctx,
         glBindTexture (ctx->tex_target, operand->texture.tex);
         glEnable (ctx->tex_target);
         _cairo_gl_texture_set_attributes (ctx, &operand->texture.attributes);
+
+	glClientActiveTexture (GL_TEXTURE0 + tex_unit);
+	glTexCoordPointer (2, GL_FLOAT, ctx->vertex_size,
+                           (void *) (uintptr_t) vertex_offset);
+	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
         break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
         glActiveTexture (GL_TEXTURE0 + tex_unit);
@@ -1108,36 +1118,19 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
 
     _cairo_gl_composite_bind_to_shader (ctx, setup);
 
-    _cairo_gl_operand_setup_texture (ctx, &setup->src, 0);
-    _cairo_gl_operand_setup_texture (ctx, &setup->mask, 1);
-
     glBindBufferARB (GL_ARRAY_BUFFER_ARB, ctx->vbo);
 
     glVertexPointer (2, GL_FLOAT, ctx->vertex_size, NULL);
     glEnableClientState (GL_VERTEX_ARRAY);
 
+    _cairo_gl_operand_setup_texture (ctx, &setup->src, 0, dst_size);
+    _cairo_gl_operand_setup_texture (ctx, &setup->mask, 1, dst_size + src_size);
+
     _cairo_gl_set_src_operand (ctx, setup);
-    if (setup->src.type == CAIRO_GL_OPERAND_TEXTURE) {
-	glClientActiveTexture (GL_TEXTURE0);
-	glTexCoordPointer (2, GL_FLOAT, ctx->vertex_size,
-                           (void *) (uintptr_t) dst_size);
-	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-    }
     if (setup->has_component_alpha)
         _cairo_gl_set_component_alpha_mask_operand (ctx, setup);
     else
         _cairo_gl_set_mask_operand (ctx, setup);
-
-    if (setup->mask.type == CAIRO_GL_OPERAND_TEXTURE) {
-	glClientActiveTexture (GL_TEXTURE1);
-	glTexCoordPointer (2, GL_FLOAT, ctx->vertex_size,
-                           (void *) (uintptr_t) (dst_size + src_size));
-	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-    } else if (setup->mask.type == CAIRO_GL_OPERAND_SPANS) {
-	glColorPointer (4, GL_UNSIGNED_BYTE, ctx->vertex_size,
-                        (void *) (uintptr_t) (dst_size + src_size));
-	glEnableClientState (GL_COLOR_ARRAY);
-    }
 
     if (setup->clip_region)
 	glEnable (GL_SCISSOR_TEST);
