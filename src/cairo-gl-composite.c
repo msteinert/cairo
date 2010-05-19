@@ -1072,6 +1072,8 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
     unsigned int dst_size, src_size, mask_size;
     cairo_status_t status;
 
+    assert (! _cairo_gl_context_is_in_progress (ctx));
+
     /* Do various magic for component alpha */
     if (setup->has_component_alpha) {
         status = _cairo_gl_composite_begin_component_alpha (ctx, setup);
