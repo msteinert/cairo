@@ -470,7 +470,7 @@ _cairo_gl_shader_cache_destroy (void *data)
     cairo_shader_cache_entry_t *entry = data;
 
     _cairo_gl_shader_fini (entry->ctx, &entry->shader);
-    if (entry->ctx->current_shader == entry)
+    if (entry->ctx->current_shader == &entry->shader)
         entry->ctx->current_shader = NULL;
     free (entry);
 }

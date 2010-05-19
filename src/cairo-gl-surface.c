@@ -45,11 +45,26 @@
 #include "cairo-gl-private.h"
 
 static cairo_int_status_t
-_cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
+_cairo_gl_surface_fill_rectangles (void			   *abstract_dst,
 				   cairo_operator_t	    op,
 				   const cairo_color_t     *color,
 				   cairo_rectangle_int_t   *rects,
 				   int			    num_rects);
+
+static cairo_int_status_t
+_cairo_gl_surface_composite (cairo_operator_t		  op,
+			     const cairo_pattern_t	 *src,
+			     const cairo_pattern_t	 *mask,
+			     void			 *abstract_dst,
+			     int			  src_x,
+			     int			  src_y,
+			     int			  mask_x,
+			     int			  mask_y,
+			     int			  dst_x,
+			     int			  dst_y,
+			     unsigned int		  width,
+			     unsigned int		  height,
+			     cairo_region_t		 *clip_region);
 
 #define BIAS .375
 
@@ -556,90 +571,40 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	}
     } else {
-	GLuint tex;
-	GLfloat vertices[8], texcoords[8];
+        cairo_surface_t *tmp;
+        
+        tmp = _cairo_gl_surface_create_scratch (ctx,
+                                                dst->base.content,
+                                                width, height);
+        if (unlikely (tmp->status)) {
+            cairo_surface_destroy (tmp);
+            goto FAIL;
+        }
+        status = _cairo_gl_surface_draw_image ((cairo_gl_surface_t *) tmp,
+                                               src,
+                                               src_x, src_y,
+                                               0, 0,
+                                               width, height);
+        if (status == CAIRO_STATUS_SUCCESS) {
+            cairo_surface_pattern_t tmp_pattern;
 
-	if (_cairo_gl_device_has_glsl (&ctx->base)) {
-	    cairo_gl_shader_t *shader;
+            _cairo_pattern_init_for_surface (&tmp_pattern, tmp);
+            _cairo_gl_surface_composite (CAIRO_OPERATOR_SOURCE,
+                                         &tmp_pattern.base,
+                                         NULL,
+                                         dst,
+                                         0, 0,
+                                         0, 0,
+                                         dst_x, dst_y,
+                                         width, height,
+                                         NULL);
+            _cairo_pattern_fini (&tmp_pattern.base);
+        }
 
-	    status = _cairo_gl_get_shader (ctx,
-					   CAIRO_GL_OPERAND_TEXTURE,
-					   CAIRO_GL_OPERAND_NONE,
-					   CAIRO_GL_SHADER_IN_NORMAL,
-					   &shader);
-	    if (unlikely (status)) {
-		_cairo_gl_context_release (ctx);
-		goto fail;
-	    }
-
-	    _cairo_gl_set_shader (ctx, shader);
-	} else {
-	    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	}
-
-	status = CAIRO_STATUS_SUCCESS;
-
-	_cairo_gl_context_set_destination (ctx, dst);
-
-	glGenTextures (1, &tex);
-	glActiveTexture (GL_TEXTURE0);
-	glBindTexture (ctx->tex_target, tex);
-	glTexParameteri (ctx->tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri (ctx->tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D (ctx->tex_target, 0, internal_format, width, height, 0,
-		      format, type, src->data + src_y * src->stride + src_x * cpp);
-
-	glEnable (ctx->tex_target);
-	glDisable (GL_BLEND);
-
-	vertices[0] = dst_x;
-	vertices[1] = dst_y;
-	vertices[2] = dst_x + width;
-	vertices[3] = dst_y;
-	vertices[4] = dst_x + width;
-	vertices[5] = dst_y + height;
-	vertices[6] = dst_x;
-	vertices[7] = dst_y + height;
-
-	if (ctx->tex_target != GL_TEXTURE_RECTANGLE_EXT) {
-	    texcoords[0] = 0;
-	    texcoords[1] = 0;
-	    texcoords[2] = 1;
-	    texcoords[3] = 0;
-	    texcoords[4] = 1;
-	    texcoords[5] = 1;
-	    texcoords[6] = 0;
-	    texcoords[7] = 1;
-	} else {
-	    texcoords[0] = 0;
-	    texcoords[1] = 0;
-	    texcoords[2] = width;
-	    texcoords[3] = 0;
-	    texcoords[4] = width;
-	    texcoords[5] = height;
-	    texcoords[6] = 0;
-	    texcoords[7] = height;
-	}
-
-        glVertexPointer (2, GL_FLOAT, sizeof (GLfloat) * 2, vertices);
-	glEnableClientState (GL_VERTEX_ARRAY);
-
-	glClientActiveTexture (GL_TEXTURE0);
-	glTexCoordPointer (2, GL_FLOAT, sizeof (GLfloat) * 2, texcoords);
-	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-
-	glDrawArrays (GL_QUADS, 0, 4);
-
-	glDisableClientState (GL_COLOR_ARRAY);
-	glDisableClientState (GL_VERTEX_ARRAY);
-	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
-
-	_cairo_gl_set_shader (ctx, NULL);
-	glDeleteTextures (1, &tex);
-	glDisable (ctx->tex_target);
+        cairo_surface_destroy (tmp);
     }
 
-fail:
+FAIL:
     glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
 
     _cairo_gl_context_release (ctx);
