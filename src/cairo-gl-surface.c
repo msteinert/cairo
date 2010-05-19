@@ -205,63 +205,6 @@ _cairo_gl_operator_is_supported (cairo_operator_t op)
 }
 
 void
-_cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op,
-			cairo_bool_t component_alpha)
-{
-    struct {
-	GLenum src;
-	GLenum dst;
-    } blend_factors[] = {
-	{ GL_ZERO, GL_ZERO }, /* Clear */
-	{ GL_ONE, GL_ZERO }, /* Source */
-	{ GL_ONE, GL_ONE_MINUS_SRC_ALPHA }, /* Over */
-	{ GL_DST_ALPHA, GL_ZERO }, /* In */
-	{ GL_ONE_MINUS_DST_ALPHA, GL_ZERO }, /* Out */
-	{ GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA }, /* Atop */
-
-	{ GL_ZERO, GL_ONE }, /* Dest */
-	{ GL_ONE_MINUS_DST_ALPHA, GL_ONE }, /* DestOver */
-	{ GL_ZERO, GL_SRC_ALPHA }, /* DestIn */
-	{ GL_ZERO, GL_ONE_MINUS_SRC_ALPHA }, /* DestOut */
-	{ GL_ONE_MINUS_DST_ALPHA, GL_SRC_ALPHA }, /* DestAtop */
-
-	{ GL_ONE_MINUS_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA }, /* Xor */
-	{ GL_ONE, GL_ONE }, /* Add */
-    };
-    GLenum src_factor, dst_factor;
-
-    assert (op < ARRAY_LENGTH (blend_factors));
-
-    src_factor = blend_factors[op].src;
-    dst_factor = blend_factors[op].dst;
-
-    /* Even when the user requests CAIRO_CONTENT_COLOR, we use GL_RGBA
-     * due to texture filtering of GL_CLAMP_TO_BORDER.  So fix those
-     * bits in that case.
-     */
-    if (dst->base.content == CAIRO_CONTENT_COLOR) {
-	if (src_factor == GL_ONE_MINUS_DST_ALPHA)
-	    src_factor = GL_ZERO;
-	if (src_factor == GL_DST_ALPHA)
-	    src_factor = GL_ONE;
-    }
-
-    if (component_alpha) {
-	if (dst_factor == GL_ONE_MINUS_SRC_ALPHA)
-	    dst_factor = GL_ONE_MINUS_SRC_COLOR;
-	if (dst_factor == GL_SRC_ALPHA)
-	    dst_factor = GL_SRC_COLOR;
-    }
-
-    glEnable (GL_BLEND);
-    if (dst->base.content == CAIRO_CONTENT_ALPHA) {
-        glBlendFuncSeparate (GL_ZERO, GL_ZERO, src_factor, dst_factor);
-    } else {
-        glBlendFunc (src_factor, dst_factor);
-    }
-}
-
-void
 _cairo_gl_surface_init (cairo_device_t *device,
 			cairo_gl_surface_t *surface,
 			cairo_content_t content,
