@@ -50,7 +50,7 @@ typedef struct {
     int top;
 } freed_pool_t;
 
-static inline void *
+static cairo_always_inline void *
 _atomic_fetch (void **slot)
 {
     void *ptr;
@@ -62,7 +62,7 @@ _atomic_fetch (void **slot)
     return ptr;
 }
 
-static inline cairo_bool_t
+static cairo_always_inline cairo_bool_t
 _atomic_store (void **slot, void *ptr)
 {
     return _cairo_atomic_ptr_cmpxchg (slot, NULL, ptr);
@@ -100,7 +100,9 @@ _freed_pool_put (freed_pool_t *pool, void *ptr)
     int i;
 
     i = pool->top;
-    if (likely (_atomic_store (&pool->pool[i], ptr))) {
+    if (likely (i < ARRAY_LENGTH (pool->pool) &&
+		_atomic_store (&pool->pool[i], ptr)))
+    {
 	pool->top = i + 1;
 	return;
     }

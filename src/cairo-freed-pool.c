@@ -73,7 +73,7 @@ _freed_pool_put_search (freed_pool_t *pool, void *ptr)
     }
 
     /* full */
-    pool->top = ARRAY_LENGTH (pool->pool);
+    pool->top = i;
     free (ptr);
 }
 
@@ -86,6 +86,8 @@ _freed_pool_reset (freed_pool_t *pool)
 	free (pool->pool[i]);
 	pool->pool[i] = NULL;
     }
+
+    pool->top = 0;
 }
 
 #endif
