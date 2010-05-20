@@ -326,7 +326,7 @@ _cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
                                GLfloat y1,
                                GLfloat x2,
                                GLfloat y2,
-                               uint32_t color);
+                               uint8_t alpha);
 
 cairo_private void
 _cairo_gl_composite_emit_glyph (cairo_gl_context_t *ctx,

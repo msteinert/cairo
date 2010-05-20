@@ -1171,7 +1171,7 @@ _cairo_gl_operand_emit (cairo_gl_operand_t *operand,
                         GLfloat ** vb,
                         GLfloat x,
                         GLfloat y,
-                        uint32_t color)
+                        uint8_t alpha)
 {
     switch (operand->type) {
     default:
@@ -1186,10 +1186,13 @@ _cairo_gl_operand_emit (cairo_gl_operand_t *operand,
         {
             union fi {
                 float f;
-                uint32_t u;
+                GLbyte bytes[4];
             } fi;
 
-            fi.u = color;
+            fi.bytes[0] = 0;
+            fi.bytes[1] = 0;
+            fi.bytes[2] = 0;
+            fi.bytes[3] = alpha;
             *(*vb)++ = fi.f;
         }
         break;
@@ -1212,15 +1215,15 @@ _cairo_gl_composite_emit_vertex (cairo_gl_context_t *ctx,
                                  cairo_gl_composite_t *setup,
                                  GLfloat x,
                                  GLfloat y,
-                                 uint32_t color)
+                                 uint8_t alpha)
 {
     GLfloat *vb = (GLfloat *) (void *) &ctx->vb[ctx->vb_offset];
 
     *vb++ = x;
     *vb++ = y;
 
-    _cairo_gl_operand_emit (&setup->src, &vb, x, y, color);
-    _cairo_gl_operand_emit (&setup->mask, &vb, x, y, color);
+    _cairo_gl_operand_emit (&setup->src, &vb, x, y, alpha);
+    _cairo_gl_operand_emit (&setup->mask, &vb, x, y, alpha);
 
     ctx->vb_offset += ctx->vertex_size;
 }
@@ -1232,17 +1235,17 @@ _cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
                                GLfloat y1,
                                GLfloat x2,
                                GLfloat y2,
-                               uint32_t color)
+                               uint8_t alpha)
 {
     _cairo_gl_composite_prepare_buffer (ctx, setup, 6);
 
-    _cairo_gl_composite_emit_vertex (ctx, setup, x1, y1, color);
-    _cairo_gl_composite_emit_vertex (ctx, setup, x2, y1, color);
-    _cairo_gl_composite_emit_vertex (ctx, setup, x1, y2, color);
+    _cairo_gl_composite_emit_vertex (ctx, setup, x1, y1, alpha);
+    _cairo_gl_composite_emit_vertex (ctx, setup, x2, y1, alpha);
+    _cairo_gl_composite_emit_vertex (ctx, setup, x1, y2, alpha);
 
-    _cairo_gl_composite_emit_vertex (ctx, setup, x2, y1, color);
-    _cairo_gl_composite_emit_vertex (ctx, setup, x2, y2, color);
-    _cairo_gl_composite_emit_vertex (ctx, setup, x1, y2, color);
+    _cairo_gl_composite_emit_vertex (ctx, setup, x2, y1, alpha);
+    _cairo_gl_composite_emit_vertex (ctx, setup, x2, y2, alpha);
+    _cairo_gl_composite_emit_vertex (ctx, setup, x1, y2, alpha);
 }
 
 static inline void

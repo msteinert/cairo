@@ -1113,7 +1113,7 @@ _cairo_gl_render_bounded_spans (void *abstract_renderer,
                                            &renderer->setup,
                                            spans[0].x, y,
                                            spans[1].x, y + height,
-                                           spans[0].coverage << 24);
+                                           spans[0].coverage);
 	}
 
 	spans++;
@@ -1152,7 +1152,7 @@ _cairo_gl_render_unbounded_spans (void *abstract_renderer,
                                        &renderer->setup,
                                        spans[0].x, y,
                                        spans[1].x, y + height,
-                                       spans[0].coverage << 24);
+                                       spans[0].coverage);
 	spans++;
     } while (--num_spans > 1);
 
