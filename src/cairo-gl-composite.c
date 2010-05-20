@@ -692,13 +692,10 @@ static void
 _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 			   cairo_gl_composite_t *setup)
 {
-    cairo_surface_attributes_t *src_attributes;
     GLfloat constant_color[4] = {0.0, 0.0, 0.0, 0.0};
 
     if (ctx->current_shader)
         return;
-
-    src_attributes = &setup->src.texture.attributes;
 
     switch (setup->src.type) {
     case CAIRO_GL_OPERAND_CONSTANT:
@@ -747,12 +744,9 @@ _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
 				 cairo_gl_composite_t *setup)
 {
     GLfloat constant_color[4] = {0.0, 0.0, 0.0, 0.0};
-    cairo_surface_attributes_t *src_attributes;
 
     if (ctx->current_shader)
         return;
-
-    src_attributes = &setup->src.texture.attributes;
 
     switch (setup->src.type) {
     case CAIRO_GL_OPERAND_CONSTANT:
@@ -792,13 +786,10 @@ static void
 _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 					    cairo_gl_composite_t *setup)
 {
-    cairo_surface_attributes_t *mask_attributes;
     GLfloat constant_color[4] = {0.0, 0.0, 0.0, 0.0};
 
     if (ctx->current_shader)
         return;
-
-    mask_attributes = &setup->mask.texture.attributes;
 
     glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
     glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
