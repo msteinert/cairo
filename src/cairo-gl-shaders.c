@@ -991,7 +991,9 @@ _cairo_gl_set_shader_by_type (cairo_gl_context_t *ctx,
 
     _cairo_gl_set_shader (ctx, &entry->shader);
 
-    if (source != CAIRO_GL_OPERAND_CONSTANT) {
+    if (source != CAIRO_GL_OPERAND_CONSTANT &&
+	source != CAIRO_GL_OPERAND_SPANS &&
+	source != CAIRO_GL_OPERAND_NONE) {
 	_cairo_gl_shader_bind_texture (ctx, "source_sampler", 0);
     }
     if (mask != CAIRO_GL_OPERAND_CONSTANT &&
