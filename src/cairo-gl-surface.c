@@ -338,8 +338,6 @@ _cairo_gl_surface_clear (cairo_gl_surface_t  *surface,
     glClear (GL_COLOR_BUFFER_BIT);
     _cairo_gl_context_release (ctx);
 
-    surface->base.is_clear = TRUE;
-
     return CAIRO_STATUS_SUCCESS;
 }
 
