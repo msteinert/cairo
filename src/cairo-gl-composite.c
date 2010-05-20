@@ -622,7 +622,7 @@ _cairo_gl_operand_setup_texture (cairo_gl_context_t *ctx,
 	glColorPointer (4, GL_UNSIGNED_BYTE, ctx->vertex_size,
                         (void *) (uintptr_t) vertex_offset);
 	glEnableClientState (GL_COLOR_ARRAY);
-        break;
+        /* fall through */
     case CAIRO_GL_OPERAND_CONSTANT:
         if (ctx->current_shader == NULL) {
             glActiveTexture (GL_TEXTURE0 + tex_unit);
