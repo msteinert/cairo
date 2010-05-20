@@ -59,8 +59,24 @@ CAIRO_BEGIN_DECLS
 
 typedef int cairo_atomic_int_t;
 
+#ifdef ATOMIC_OP_NEEDS_MEMORY_BARRIER
+static cairo_always_inline cairo_atomic_int_t
+_cairo_atomic_int_get (cairo_atomic_int_t *x)
+{
+    __sync_synchronize ();
+    return *x;
+}
+
+static cairo_always_inline void *
+_cairo_atomic_ptr_get (void **x)
+{
+    __sync_synchronize ();
+    return *x;
+}
+#else
 # define _cairo_atomic_int_get(x) (*x)
 # define _cairo_atomic_ptr_get(x) (*x)
+#endif
 
 # define _cairo_atomic_int_inc(x) ((void) __sync_fetch_and_add(x, 1))
 # define _cairo_atomic_int_dec_and_test(x) (__sync_fetch_and_add(x, -1) == 1)
