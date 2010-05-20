@@ -697,6 +697,8 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
     if (ctx->current_shader)
         return;
 
+    glActiveTexture (GL_TEXTURE0);
+
     switch (setup->src.type) {
     case CAIRO_GL_OPERAND_CONSTANT:
 	_cairo_gl_set_tex_combine_constant_color (ctx, setup, 0,
@@ -748,6 +750,8 @@ _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
     if (ctx->current_shader)
         return;
 
+    glActiveTexture (GL_TEXTURE0);
+
     switch (setup->src.type) {
     case CAIRO_GL_OPERAND_CONSTANT:
 	constant_color[0] = setup->src.constant.color[3];
@@ -790,6 +794,8 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 
     if (ctx->current_shader)
         return;
+
+    glActiveTexture (GL_TEXTURE1);
 
     glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
     glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
@@ -845,6 +851,8 @@ _cairo_gl_set_mask_operand (cairo_gl_context_t *ctx,
 {
     if (ctx->current_shader)
         return;
+
+    glActiveTexture (GL_TEXTURE1);
 
     switch (setup->mask.type) {
     case CAIRO_GL_OPERAND_CONSTANT:
