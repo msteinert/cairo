@@ -536,6 +536,8 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
     if (unlikely (status))
 	return status;
 
+    cairo_surface_flush (&dst->base);
+
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
     glPixelStorei (GL_UNPACK_ROW_LENGTH, src->stride / cpp);
     if (_cairo_gl_surface_is_texture (dst)) {

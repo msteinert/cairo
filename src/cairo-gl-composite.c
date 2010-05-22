@@ -237,6 +237,8 @@ _cairo_gl_pattern_texture_setup (cairo_gl_context_t *ctx,
 
     assert (surface->base.backend == &_cairo_gl_surface_backend);
 
+    cairo_surface_flush (&surface->base);
+
     operand->type = CAIRO_GL_OPERAND_TEXTURE;
     operand->texture.surface = surface;
     operand->texture.tex = surface->tex;

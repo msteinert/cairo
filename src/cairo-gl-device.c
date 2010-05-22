@@ -187,6 +187,8 @@ void
 _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
                            cairo_gl_surface_t *surface)
 {
+    cairo_surface_flush (&surface->base);
+
     if (ctx->current_target != surface) {
 	ctx->current_target = surface;
 
