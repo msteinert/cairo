@@ -123,6 +123,39 @@ typedef enum cairo_gl_var_type {
 #define cairo_gl_var_type_hash(src,mask,dest) ((mask) << 2 | (src << 1) | (dest))
 #define CAIRO_GL_VAR_TYPE_MAX ((CAIRO_GL_VAR_COVERAGE << 2) | (CAIRO_GL_VAR_TEXCOORDS << 1) | CAIRO_GL_VAR_TEXCOORDS)
 
+/* This union structure describes a potential source or mask operand to the
+ * compositing equation.
+ */
+typedef struct cairo_gl_operand {
+    cairo_gl_operand_type_t type;
+    union {
+	struct {
+	    GLuint tex;
+	    cairo_gl_surface_t *surface;
+	    cairo_surface_attributes_t attributes;
+	} texture;
+	struct {
+	    GLfloat color[4];
+	} constant;
+	struct {
+	    GLuint tex;
+	    cairo_matrix_t m;
+	    float segment_x;
+	    float segment_y;
+	} linear;
+	struct {
+	    GLuint tex;
+	    cairo_matrix_t m;
+	    float circle_1_x;
+	    float circle_1_y;
+	    float radius_0;
+	    float radius_1;
+	} radial;
+    };
+
+    const cairo_pattern_t *pattern;
+} cairo_gl_operand_t;
+
 typedef struct _cairo_gl_context {
     cairo_device_t base;
 
@@ -158,39 +191,6 @@ typedef struct _cairo_gl_context {
     void (*swap_buffers)(void *ctx, cairo_gl_surface_t *surface);
     void (*destroy) (void *ctx);
 } cairo_gl_context_t;
-
-/* This union structure describes a potential source or mask operand to the
- * compositing equation.
- */
-typedef struct cairo_gl_operand {
-    cairo_gl_operand_type_t type;
-    union {
-	struct {
-	    GLuint tex;
-	    cairo_gl_surface_t *surface;
-	    cairo_surface_attributes_t attributes;
-	} texture;
-	struct {
-	    GLfloat color[4];
-	} constant;
-	struct {
-	    GLuint tex;
-	    cairo_matrix_t m;
-	    float segment_x;
-	    float segment_y;
-	} linear;
-	struct {
-	    GLuint tex;
-	    cairo_matrix_t m;
-	    float circle_1_x;
-	    float circle_1_y;
-	    float radius_0;
-	    float radius_1;
-	} radial;
-    };
-
-    const cairo_pattern_t *pattern;
-} cairo_gl_operand_t;
 
 typedef struct _cairo_gl_composite {
     cairo_gl_surface_t *dst;
