@@ -719,27 +719,19 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
     _cairo_gl_operand_setup_fixed (&setup->src, 0);
 }
 
-/* This is like _cairo_gl_set_src_operand, but instead swizzles the source
- * for creating the "source alpha" value (src.aaaa * mask.argb) required by
- * component alpha rendering.
+/* Swizzles the source for creating the "source alpha" value
+ * (src.aaaa * mask.argb) required by component alpha rendering.
  */
 static void
-_cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
-				 cairo_gl_composite_t *setup)
+_cairo_gl_set_src_alpha (cairo_gl_context_t *ctx,
+                         cairo_bool_t activate)
 {
     if (ctx->current_shader)
         return;
 
     glActiveTexture (GL_TEXTURE0);
 
-    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
-    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
-
-    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_ALPHA);
-    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
-
-    _cairo_gl_operand_setup_fixed (&setup->src, 0);
+    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, activate ? GL_SRC_ALPHA : GL_SRC_COLOR);
 }
 
 /* This is like _cairo_gl_set_src_alpha_operand, for component alpha setup
@@ -1054,12 +1046,12 @@ _cairo_gl_composite_draw (cairo_gl_context_t *ctx,
 
         _cairo_gl_set_shader (ctx, ctx->pre_shader);
         _cairo_gl_set_operator (setup->dst, CAIRO_OPERATOR_DEST_OUT, TRUE);
-        _cairo_gl_set_src_alpha_operand (ctx, setup);
+        _cairo_gl_set_src_alpha (ctx, TRUE);
         glDrawArrays (GL_TRIANGLES, 0, count);
+        _cairo_gl_set_src_alpha (ctx, FALSE);
 
         _cairo_gl_set_shader (ctx, prev_shader);
         _cairo_gl_set_operator (setup->dst, setup->op, TRUE);
-        _cairo_gl_set_src_operand (ctx, setup);
         glDrawArrays (GL_TRIANGLES, 0, count);
     }
 }
