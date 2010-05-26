@@ -367,25 +367,18 @@ _cairo_gl_surface_show_glyphs_via_mask (cairo_gl_surface_t	*dst,
 					cairo_clip_t		*clip,
 					int			*remaining_glyphs)
 {
-    cairo_gl_context_t *ctx;
     cairo_surface_t *mask;
     cairo_status_t status;
     cairo_bool_t has_component_alpha;
     int i;
-
-    status = _cairo_gl_context_acquire (dst->base.device, &ctx);
-    if (unlikely (status))
-	return status;
 
     /* XXX: For non-CA, this should be CAIRO_CONTENT_ALPHA to save memory */
     mask = cairo_gl_surface_create (dst->base.device,
                                     CAIRO_CONTENT_COLOR_ALPHA,
                                     glyph_extents->width,
                                     glyph_extents->height);
-    if (unlikely (mask->status)) {
-        _cairo_gl_context_release (ctx);
+    if (unlikely (mask->status))
         return mask->status;
-    }
 
     for (i = 0; i < num_glyphs; i++) {
 	glyphs[i].x -= glyph_extents->x;
@@ -418,8 +411,6 @@ _cairo_gl_surface_show_glyphs_via_mask (cairo_gl_surface_t	*dst,
     }
 
     cairo_surface_destroy (mask);
-
-    _cairo_gl_context_release (ctx);
 
     return status;
 }
