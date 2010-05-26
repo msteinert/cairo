@@ -110,7 +110,7 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_context_t *ctx,
     glyph_private->p1.y = node->y;
     glyph_private->p2.x = node->x + glyph_surface->width;
     glyph_private->p2.y = node->y + glyph_surface->height;
-    if (ctx->tex_target != GL_TEXTURE_RECTANGLE_EXT) {
+    if (! _cairo_gl_device_requires_power_of_two_textures (&ctx->base)) {
 	glyph_private->p1.x /= cache_surface->width;
 	glyph_private->p1.y /= cache_surface->height;
 	glyph_private->p2.x /= cache_surface->width;

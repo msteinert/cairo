@@ -253,6 +253,12 @@ _cairo_gl_device_has_glsl (cairo_device_t *device)
     return ((cairo_gl_context_t *) device)->shader_impl != NULL;
 }
 
+static cairo_always_inline cairo_bool_t
+_cairo_gl_device_requires_power_of_two_textures (cairo_device_t *device)
+{
+    return ((cairo_gl_context_t *) device)->tex_target == GL_TEXTURE_RECTANGLE_EXT;
+}
+
 static cairo_always_inline cairo_status_t cairo_warn
 _cairo_gl_context_acquire (cairo_device_t *device,
 			   cairo_gl_context_t **ctx)

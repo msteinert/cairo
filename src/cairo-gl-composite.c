@@ -225,7 +225,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_context_t *ctx,
     if (unlikely (status))
 	return status;
 
-    if (ctx->tex_target == GL_TEXTURE_RECTANGLE_EXT &&
+    if (_cairo_gl_device_requires_power_of_two_textures (&ctx->base) &&
 	(attributes->extend == CAIRO_EXTEND_REPEAT ||
 	 attributes->extend == CAIRO_EXTEND_REFLECT))
     {
@@ -258,7 +258,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_context_t *ctx,
      * (unnormalized dst -> unnormalized src) to
      * (unnormalized dst -> normalized src)
      */
-    if (ctx->tex_target == GL_TEXTURE_RECTANGLE_EXT) {
+    if (_cairo_gl_device_requires_power_of_two_textures (&ctx->base)) {
 	cairo_matrix_init_scale (&m,
 				 1.0,
 				 1.0);
@@ -566,10 +566,9 @@ static void
 _cairo_gl_texture_set_attributes (cairo_gl_context_t         *ctx,
                                   cairo_surface_attributes_t *attributes)
 {
-    if (ctx->tex_target == GL_TEXTURE_RECTANGLE_EXT) {
-	assert (attributes->extend != CAIRO_EXTEND_REPEAT &&
-		attributes->extend != CAIRO_EXTEND_REFLECT);
-    }
+    assert (! _cairo_gl_device_requires_power_of_two_textures (&ctx->base) ||
+              (attributes->extend != CAIRO_EXTEND_REPEAT &&
+	       attributes->extend != CAIRO_EXTEND_REFLECT));
 
     switch (attributes->extend) {
     case CAIRO_EXTEND_NONE:
