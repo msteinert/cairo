@@ -295,8 +295,7 @@ cairo_private void
 _cairo_gl_composite_fini (cairo_gl_composite_t *setup);
 
 cairo_private void
-_cairo_gl_composite_set_clip_region (cairo_gl_context_t *ctx,
-                                     cairo_gl_composite_t *setup,
+_cairo_gl_composite_set_clip_region (cairo_gl_composite_t *setup,
                                      cairo_region_t *clip_region);
 
 cairo_private cairo_int_status_t

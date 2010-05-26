@@ -265,7 +265,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 	cairo_list_add (&scaled_font->link, &ctx->fonts);
     }
 
-    _cairo_gl_composite_set_clip_region (ctx, &setup, clip_region);
+    _cairo_gl_composite_set_clip_region (&setup, clip_region);
 
     for (i = 0; i < num_glyphs; i++) {
 	cairo_scaled_glyph_t *scaled_glyph;

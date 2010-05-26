@@ -1258,7 +1258,7 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
         goto FAIL;
 
     _cairo_gl_composite_set_mask_spans (&renderer->setup);
-    _cairo_gl_composite_set_clip_region (renderer->ctx, &renderer->setup, clip_region);
+    _cairo_gl_composite_set_clip_region (&renderer->setup, clip_region);
 
     status = _cairo_gl_composite_begin (renderer->ctx, &renderer->setup);
     if (unlikely (status))
