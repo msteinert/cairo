@@ -719,8 +719,6 @@ static void
 _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
 				 cairo_gl_composite_t *setup)
 {
-    GLfloat constant_color[4] = {0.0, 0.0, 0.0, 0.0};
-
     if (ctx->current_shader)
         return;
 
@@ -730,24 +728,19 @@ _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
     glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
     glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
 
+    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_ALPHA);
+    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+
     switch (setup->src.type) {
     case CAIRO_GL_OPERAND_CONSTANT:
-	constant_color[0] = setup->src.constant.color[3];
-	constant_color[1] = setup->src.constant.color[3];
-	constant_color[2] = setup->src.constant.color[3];
-	constant_color[3] = setup->src.constant.color[3];
-        glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
+        glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, setup->src.constant.color);
         glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
         glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
-	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
         /* Set up the combiner to just set color to the sampled texture. */
         glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0);
         glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0);
-        glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_ALPHA);
-        glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
 	break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
