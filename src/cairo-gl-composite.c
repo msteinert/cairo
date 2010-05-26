@@ -390,13 +390,9 @@ _cairo_gl_operand_destroy (cairo_gl_operand_t *operand)
 	glDeleteTextures (1, &operand->radial.tex);
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
-	if (operand->texture.surface != NULL) {
-	    cairo_gl_surface_t *surface = operand->texture.surface;
-
-	    _cairo_pattern_release_surface (operand->pattern,
-					    &surface->base,
-					    &operand->texture.attributes);
-	}
+        _cairo_pattern_release_surface (operand->pattern,
+                                        &operand->texture.surface->base,
+                                        &operand->texture.attributes);
 	break;
     default:
     case CAIRO_GL_OPERAND_COUNT:
