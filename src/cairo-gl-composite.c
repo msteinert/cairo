@@ -1024,7 +1024,6 @@ FAIL:
 
 static inline void
 _cairo_gl_composite_draw (cairo_gl_context_t *ctx,
-                          cairo_gl_composite_t *setup,
 			  unsigned int count)
 {
     if (! ctx->pre_shader) {
@@ -1045,8 +1044,7 @@ _cairo_gl_composite_draw (cairo_gl_context_t *ctx,
 }
 
 void
-_cairo_gl_composite_flush (cairo_gl_context_t *ctx,
-                           cairo_gl_composite_t *setup)
+_cairo_gl_composite_flush (cairo_gl_context_t *ctx)
 {
     unsigned int count;
 
@@ -1068,20 +1066,19 @@ _cairo_gl_composite_flush (cairo_gl_context_t *ctx,
 	    cairo_region_get_rectangle (ctx->clip_region, i, &rect);
 
 	    glScissor (rect.x, rect.y, rect.width, rect.height);
-            _cairo_gl_composite_draw (ctx, setup, count);
+            _cairo_gl_composite_draw (ctx, count);
 	}
     } else {
-        _cairo_gl_composite_draw (ctx, setup, count);
+        _cairo_gl_composite_draw (ctx, count);
     }
 }
 
 static void
 _cairo_gl_composite_prepare_buffer (cairo_gl_context_t *ctx,
-                                    cairo_gl_composite_t *setup,
                                     unsigned int n_vertices)
 {
     if (ctx->vb_offset + n_vertices * ctx->vertex_size > CAIRO_GL_VBO_SIZE)
-	_cairo_gl_composite_flush (ctx, setup);
+	_cairo_gl_composite_flush (ctx);
 
     if (ctx->vb == NULL) {
 	glBufferDataARB (GL_ARRAY_BUFFER_ARB, CAIRO_GL_VBO_SIZE,
@@ -1161,7 +1158,7 @@ _cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
                                GLfloat y2,
                                uint8_t alpha)
 {
-    _cairo_gl_composite_prepare_buffer (ctx, setup, 6);
+    _cairo_gl_composite_prepare_buffer (ctx, 6);
 
     _cairo_gl_composite_emit_vertex (ctx, setup, x1, y1, alpha);
     _cairo_gl_composite_emit_vertex (ctx, setup, x2, y1, alpha);
@@ -1205,7 +1202,7 @@ _cairo_gl_composite_emit_glyph (cairo_gl_context_t *ctx,
                                 GLfloat glyph_x2,
                                 GLfloat glyph_y2)
 {
-    _cairo_gl_composite_prepare_buffer (ctx, setup, 6);
+    _cairo_gl_composite_prepare_buffer (ctx, 6);
 
     _cairo_gl_composite_emit_glyph_vertex (ctx, setup, x1, y1, glyph_x1, glyph_y1);
     _cairo_gl_composite_emit_glyph_vertex (ctx, setup, x2, y1, glyph_x2, glyph_y1);
@@ -1220,7 +1217,7 @@ void
 _cairo_gl_composite_end (cairo_gl_context_t *ctx,
                          cairo_gl_composite_t *setup)
 {
-    _cairo_gl_composite_flush (ctx, setup);
+    _cairo_gl_composite_flush (ctx);
 
     if (ctx->clip_region) {
 	glDisable (GL_SCISSOR_TEST);

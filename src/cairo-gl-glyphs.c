@@ -324,7 +324,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 
 	    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 		/* Cache is full, so flush existing prims and try again. */
-                _cairo_gl_composite_flush (ctx, &setup);
+                _cairo_gl_composite_flush (ctx);
 		_cairo_gl_glyph_cache_unlock (cache);
 		status = _cairo_gl_glyph_cache_add_glyph (ctx, cache, scaled_glyph);
 	    }

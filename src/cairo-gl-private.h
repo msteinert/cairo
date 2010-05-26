@@ -342,8 +342,7 @@ _cairo_gl_composite_emit_glyph (cairo_gl_context_t *ctx,
                                 GLfloat glyph_y2);
 
 cairo_private void
-_cairo_gl_composite_flush (cairo_gl_context_t *ctx,
-                           cairo_gl_composite_t *setup);
+_cairo_gl_composite_flush (cairo_gl_context_t *ctx);
 
 cairo_private void
 _cairo_gl_composite_end (cairo_gl_context_t *ctx,
