@@ -300,24 +300,21 @@ _cairo_gl_composite_set_clip_region (cairo_gl_context_t *ctx,
                                      cairo_region_t *clip_region);
 
 cairo_private cairo_int_status_t
-_cairo_gl_composite_set_source (cairo_gl_context_t *ctx,
-                                cairo_gl_composite_t *setup,
+_cairo_gl_composite_set_source (cairo_gl_composite_t *setup,
 			        const cairo_pattern_t *pattern,
                                 int src_x, int src_y,
                                 int dst_x, int dst_y,
                                 int width, int height);
 
 cairo_private cairo_int_status_t
-_cairo_gl_composite_set_mask (cairo_gl_context_t *ctx,
-                              cairo_gl_composite_t *setup,
+_cairo_gl_composite_set_mask (cairo_gl_composite_t *setup,
 			      const cairo_pattern_t *pattern,
                               int src_x, int src_y,
                               int dst_x, int dst_y,
                               int width, int height);
 
 cairo_private void
-_cairo_gl_composite_set_mask_spans (cairo_gl_context_t *ctx,
-                                    cairo_gl_composite_t *setup);
+_cairo_gl_composite_set_mask_spans (cairo_gl_composite_t *setup);
 
 cairo_private cairo_status_t
 _cairo_gl_composite_begin (cairo_gl_context_t *ctx,

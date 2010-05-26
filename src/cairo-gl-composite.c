@@ -149,16 +149,26 @@ _render_gradient (const cairo_gl_context_t *ctx,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
-_cairo_gl_create_gradient_texture (const cairo_gl_context_t *ctx,
-				   cairo_gl_surface_t *surface,
+static cairo_int_status_t
+_cairo_gl_create_gradient_texture (cairo_gl_surface_t *dst,
 				   cairo_gradient_pattern_t *pattern,
 				   GLuint *tex)
 {
+    cairo_gl_context_t *ctx;
+    cairo_status_t status;
     int tex_width;
     GLubyte *data;
 
     assert (pattern->n_stops != 0);
+
+    status = _cairo_gl_context_acquire (dst->base.device, &ctx);
+    if (unlikely (status))
+	return status;
+
+    if ((unsigned int) ctx->max_texture_size / 2 <= pattern->n_stops) {
+        _cairo_gl_context_release (ctx);
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     tex_width = _cairo_gl_gradient_sample_width (pattern);
 
@@ -194,6 +204,9 @@ _cairo_gl_create_gradient_texture (const cairo_gl_context_t *ctx,
 	glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 	break;
     }
+    
+    _cairo_gl_context_release (ctx);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /**
@@ -201,8 +214,7 @@ _cairo_gl_create_gradient_texture (const cairo_gl_context_t *ctx,
  * from dest to src coords.
  */
 static cairo_status_t
-_cairo_gl_pattern_texture_setup (cairo_gl_context_t *ctx,
-                                 cairo_gl_operand_t *operand,
+_cairo_gl_pattern_texture_setup (cairo_gl_operand_t *operand,
 				 const cairo_pattern_t *src,
 				 cairo_gl_surface_t *dst,
 				 int src_x, int src_y,
@@ -225,7 +237,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_context_t *ctx,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_gl_device_requires_power_of_two_textures (&ctx->base) &&
+    if (_cairo_gl_device_requires_power_of_two_textures (dst->base.device) &&
 	(attributes->extend == CAIRO_EXTEND_REPEAT ||
 	 attributes->extend == CAIRO_EXTEND_REFLECT))
     {
@@ -258,7 +270,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_context_t *ctx,
      * (unnormalized dst -> unnormalized src) to
      * (unnormalized dst -> normalized src)
      */
-    if (_cairo_gl_device_requires_power_of_two_textures (&ctx->base)) {
+    if (_cairo_gl_device_requires_power_of_two_textures (dst->base.device)) {
 	cairo_matrix_init_scale (&m,
 				 1.0,
 				 1.0);
@@ -287,13 +299,13 @@ _cairo_gl_solid_operand_init (cairo_gl_operand_t *operand,
 }
 
 static cairo_status_t
-_cairo_gl_gradient_operand_init (cairo_gl_context_t *ctx,
-                                 cairo_gl_operand_t *operand,
+_cairo_gl_gradient_operand_init (cairo_gl_operand_t *operand,
 				 cairo_gl_surface_t *dst)
 {
     cairo_gradient_pattern_t *gradient = (cairo_gradient_pattern_t *)operand->pattern;
+    cairo_status_t status;
 
-    if (! _cairo_gl_device_has_glsl (&ctx->base))
+    if (! _cairo_gl_device_has_glsl (dst->base.device))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR) {
@@ -305,14 +317,11 @@ _cairo_gl_gradient_operand_init (cairo_gl_context_t *ctx,
 	y0 = _cairo_fixed_to_double (linear->p1.y);
 	y1 = _cairo_fixed_to_double (linear->p2.y);
 
-        if ((unsigned int)ctx->max_texture_size / 2 <= gradient->n_stops) {
-            return CAIRO_INT_STATUS_UNSUPPORTED;
-        }
-
-        _cairo_gl_create_gradient_texture (ctx,
-					   dst,
-					   gradient,
-					   &operand->linear.tex);
+        status = _cairo_gl_create_gradient_texture (dst,
+                                                    gradient,
+                                                    &operand->linear.tex);
+        if (unlikely (status))
+            return status;
 
 	/* Translation matrix from the destination fragment coordinates
 	 * (pixels from lower left = 0,0) to the coordinates in the
@@ -340,13 +349,11 @@ _cairo_gl_gradient_operand_init (cairo_gl_context_t *ctx,
 	r0 = _cairo_fixed_to_double (radial->r1);
 	r1 = _cairo_fixed_to_double (radial->r2);
 
-        if ((unsigned int)ctx->max_texture_size / 2 <= gradient->n_stops)
-            return CAIRO_INT_STATUS_UNSUPPORTED;
-
-        _cairo_gl_create_gradient_texture (ctx,
-					   dst,
-					   gradient,
-					   &operand->radial.tex);
+        status = _cairo_gl_create_gradient_texture (dst,
+                                                    gradient,
+                                                    &operand->radial.tex);
+        if (unlikely (status))
+            return status;
 
 	/* Translation matrix from the destination fragment coordinates
 	 * (pixels from lower left = 0,0) to the coordinates in the
@@ -403,8 +410,7 @@ _cairo_gl_operand_destroy (cairo_gl_operand_t *operand)
 }
 
 static cairo_int_status_t
-_cairo_gl_operand_init (cairo_gl_context_t *ctx,
-                        cairo_gl_operand_t *operand,
+_cairo_gl_operand_init (cairo_gl_operand_t *operand,
 		        const cairo_pattern_t *pattern,
 		        cairo_gl_surface_t *dst,
 		        int src_x, int src_y,
@@ -421,7 +427,7 @@ _cairo_gl_operand_init (cairo_gl_context_t *ctx,
 		                             &((cairo_solid_pattern_t *) pattern)->color);
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
-	status = _cairo_gl_gradient_operand_init (ctx, operand, dst);
+	status = _cairo_gl_gradient_operand_init (operand, dst);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    return status;
 
@@ -429,7 +435,7 @@ _cairo_gl_operand_init (cairo_gl_context_t *ctx,
 
     default:
     case CAIRO_PATTERN_TYPE_SURFACE:
-	return _cairo_gl_pattern_texture_setup (ctx, operand,
+	return _cairo_gl_pattern_texture_setup (operand,
 						pattern, dst,
 						src_x, src_y,
 						dst_x, dst_y,
@@ -438,15 +444,14 @@ _cairo_gl_operand_init (cairo_gl_context_t *ctx,
 }
 
 cairo_int_status_t
-_cairo_gl_composite_set_source (cairo_gl_context_t *ctx,
-                                cairo_gl_composite_t *setup,
+_cairo_gl_composite_set_source (cairo_gl_composite_t *setup,
 			        const cairo_pattern_t *pattern,
                                 int src_x, int src_y,
                                 int dst_x, int dst_y,
                                 int width, int height)
 {
     _cairo_gl_operand_destroy (&setup->src);
-    return _cairo_gl_operand_init (ctx, &setup->src, pattern,
+    return _cairo_gl_operand_init (&setup->src, pattern,
                                    setup->dst,
                                    src_x, src_y,
                                    dst_x, dst_y,
@@ -454,8 +459,7 @@ _cairo_gl_composite_set_source (cairo_gl_context_t *ctx,
 }
 
 cairo_int_status_t
-_cairo_gl_composite_set_mask (cairo_gl_context_t *ctx,
-                              cairo_gl_composite_t *setup,
+_cairo_gl_composite_set_mask (cairo_gl_composite_t *setup,
 			      const cairo_pattern_t *pattern,
                               int src_x, int src_y,
                               int dst_x, int dst_y,
@@ -466,7 +470,7 @@ _cairo_gl_composite_set_mask (cairo_gl_context_t *ctx,
     if (pattern == NULL)
         return CAIRO_STATUS_SUCCESS;
 
-    return _cairo_gl_operand_init (ctx, &setup->mask, pattern,
+    return _cairo_gl_operand_init (&setup->mask, pattern,
                                    setup->dst,
                                    src_x, src_y,
                                    dst_x, dst_y,
@@ -474,8 +478,7 @@ _cairo_gl_composite_set_mask (cairo_gl_context_t *ctx,
 }
 
 void
-_cairo_gl_composite_set_mask_spans (cairo_gl_context_t *ctx,
-                                    cairo_gl_composite_t *setup)
+_cairo_gl_composite_set_mask_spans (cairo_gl_composite_t *setup)
 {
     _cairo_gl_operand_destroy (&setup->mask);
     setup->mask.type = CAIRO_GL_OPERAND_SPANS;

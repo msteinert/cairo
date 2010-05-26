@@ -923,14 +923,14 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     if (unlikely (status))
         goto CLEANUP;
 
-    status = _cairo_gl_composite_set_source (ctx, &setup, src,
+    status = _cairo_gl_composite_set_source (&setup, src,
                                              src_x, src_y,
                                              dst_x, dst_y,
                                              width, height);
     if (unlikely (status))
         goto CLEANUP;
 
-    status = _cairo_gl_composite_set_mask (ctx, &setup, mask,
+    status = _cairo_gl_composite_set_mask (&setup, mask,
                                            mask_x, mask_y,
                                            dst_x, dst_y,
                                            width, height);
@@ -1051,14 +1051,14 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_dst,
         goto CLEANUP;
 
     _cairo_pattern_init_solid (&solid, color, CAIRO_CONTENT_COLOR_ALPHA);
-    status = _cairo_gl_composite_set_source (ctx, &setup, &solid.base,
+    status = _cairo_gl_composite_set_source (&setup, &solid.base,
                                              0, 0,
                                              0, 0,
                                              0, 0);
     if (unlikely (status))
         goto CLEANUP;
 
-    status = _cairo_gl_composite_set_mask (ctx, &setup, NULL,
+    status = _cairo_gl_composite_set_mask (&setup, NULL,
                                            0, 0,
                                            0, 0,
                                            0, 0);
@@ -1250,15 +1250,14 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     if (unlikely (status))
         goto FAIL;
 
-    status = _cairo_gl_composite_set_source (renderer->ctx,
-                                             &renderer->setup, src,
+    status = _cairo_gl_composite_set_source (&renderer->setup, src,
                                              rects->source.x, rects->source.y,
                                              extents->x, extents->y,
                                              extents->width, extents->height);
     if (unlikely (status))
         goto FAIL;
 
-    _cairo_gl_composite_set_mask_spans (renderer->ctx, &renderer->setup);
+    _cairo_gl_composite_set_mask_spans (&renderer->setup);
     _cairo_gl_composite_set_clip_region (renderer->ctx, &renderer->setup, clip_region);
 
     status = _cairo_gl_composite_begin (renderer->ctx, &renderer->setup);

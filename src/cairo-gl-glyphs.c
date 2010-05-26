@@ -251,7 +251,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 	goto FINISH;
     }
 
-    status = _cairo_gl_composite_set_source (ctx, &setup, source,
+    status = _cairo_gl_composite_set_source (&setup, source,
                                              glyph_extents->x, glyph_extents->y,
                                              dst_x, dst_y,
                                              glyph_extents->width,
@@ -301,8 +301,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 
 	    last_format = scaled_glyph->surface->format;
 
-            status = _cairo_gl_composite_set_mask (ctx,
-                                                   &setup,
+            status = _cairo_gl_composite_set_mask (&setup,
                                                    &cache->pattern.base,
                                                    0, 0, 0, 0, 0, 0);
             if (unlikely (status))
