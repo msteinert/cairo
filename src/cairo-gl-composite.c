@@ -1041,11 +1041,18 @@ _cairo_gl_composite_begin_component_alpha  (cairo_gl_context_t *ctx,
 }
 
 cairo_status_t
-_cairo_gl_composite_begin (cairo_gl_context_t *ctx,
-                           cairo_gl_composite_t *setup)
+_cairo_gl_composite_begin (cairo_gl_composite_t *setup,
+                           cairo_gl_context_t **ctx_out)
 {
     unsigned int dst_size, src_size, mask_size;
+    cairo_gl_context_t *ctx;
     cairo_status_t status;
+
+    assert (setup->dst);
+
+    status = _cairo_gl_context_acquire (setup->dst->base.device, &ctx);
+    if (unlikely (status))
+	return status;
 
     assert (! _cairo_gl_context_is_in_progress (ctx));
 
@@ -1053,7 +1060,7 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
     if (setup->has_component_alpha) {
         status = _cairo_gl_composite_begin_component_alpha (ctx, setup);
         if (unlikely (status))
-            return status;
+            goto FAIL;
     }
 
     status = _cairo_gl_set_shader_by_type (ctx,
@@ -1063,7 +1070,7 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
                                                                       : CAIRO_GL_SHADER_IN_NORMAL);
     if (unlikely (status)) {
         setup->pre_shader = NULL;
-	return status;
+        goto FAIL;
     }
 
     status = CAIRO_STATUS_SUCCESS;
@@ -1097,6 +1104,12 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
 
     if (setup->clip_region)
 	glEnable (GL_SCISSOR_TEST);
+
+    *ctx_out = ctx;
+
+FAIL:
+    if (unlikely (status))
+        _cairo_gl_context_release (ctx);
 
     return status;
 }

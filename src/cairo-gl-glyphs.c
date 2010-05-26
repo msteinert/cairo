@@ -309,9 +309,14 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 
 	    *has_component_alpha |= cache->pattern.base.has_component_alpha;
 
-            status = _cairo_gl_composite_begin (ctx, &setup);
+            status = _cairo_gl_composite_begin (&setup, &ctx);
             if (unlikely (status))
                 goto FINISH;
+
+            /* XXX: _cairo_gl_composite_begin() acquires the context a
+             * second time. Need to refactor this loop so this doesn't happen.
+             */
+            _cairo_gl_context_release (ctx);
 	}
 
 	if (scaled_glyph->surface_private == NULL) {
