@@ -671,19 +671,7 @@ _cairo_gl_operand_setup_fixed (cairo_gl_operand_t *operand,
         glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
         break;
     case CAIRO_GL_OPERAND_TEXTURE:
-        /* Set up the constant color we use to set color to 0 if needed. */
-        /* Force the mask color to 0 if the surface should be
-         * alpha-only.  We may have a teximage with color bits if
-         * the implementation doesn't support GL_ALPHA FBOs.
-         */
-        if (operand->texture.surface->base.content != CAIRO_CONTENT_ALPHA) {
-            glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0 + tex_unit);
-        } else {
-            GLfloat constant_color[4] = {0.0, 0.0, 0.0, 0.0};
-
-            glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
-            glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
-        }
+        glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0 + tex_unit);
         glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0 + tex_unit);
 	break;
         break;
