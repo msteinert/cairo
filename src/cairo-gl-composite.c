@@ -1102,7 +1102,9 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     else
         _cairo_gl_set_mask_operand (ctx, setup);
 
-    if (setup->clip_region)
+    cairo_region_destroy (ctx->clip_region);
+    ctx->clip_region = cairo_region_reference (setup->clip_region);
+    if (ctx->clip_region)
 	glEnable (GL_SCISSOR_TEST);
 
     *ctx_out = ctx;
@@ -1153,13 +1155,13 @@ _cairo_gl_composite_flush (cairo_gl_context_t *ctx,
     ctx->vb = NULL;
     ctx->vb_offset = 0;
 
-    if (setup->clip_region) {
-	int i, num_rectangles = cairo_region_num_rectangles (setup->clip_region);
+    if (ctx->clip_region) {
+	int i, num_rectangles = cairo_region_num_rectangles (ctx->clip_region);
 
 	for (i = 0; i < num_rectangles; i++) {
 	    cairo_rectangle_int_t rect;
 
-	    cairo_region_get_rectangle (setup->clip_region, i, &rect);
+	    cairo_region_get_rectangle (ctx->clip_region, i, &rect);
 
 	    glScissor (rect.x, rect.y, rect.width, rect.height);
             _cairo_gl_composite_draw (ctx, setup, count);
@@ -1316,8 +1318,11 @@ _cairo_gl_composite_end (cairo_gl_context_t *ctx,
 {
     _cairo_gl_composite_flush (ctx, setup);
 
-    if (setup->clip_region)
+    if (ctx->clip_region) {
 	glDisable (GL_SCISSOR_TEST);
+        cairo_region_destroy (ctx->clip_region);
+        ctx->clip_region = NULL;
+    }
 
     glBindBufferARB (GL_ARRAY_BUFFER_ARB, 0);
 

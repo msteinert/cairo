@@ -148,6 +148,7 @@ typedef struct _cairo_gl_context {
     char *vb;
     unsigned int vb_offset;
     unsigned int vertex_size;
+    cairo_region_t *clip_region;
 
     void (*acquire) (void *ctx);
     void (*release) (void *ctx);
