@@ -1033,13 +1033,13 @@ _cairo_gl_composite_draw (cairo_gl_context_t *ctx,
         cairo_gl_shader_t *prev_shader = ctx->current_shader;
 
         _cairo_gl_set_shader (ctx, ctx->pre_shader);
-        _cairo_gl_set_operator (setup->dst, CAIRO_OPERATOR_DEST_OUT, TRUE);
+        _cairo_gl_set_operator (ctx->current_target, CAIRO_OPERATOR_DEST_OUT, TRUE);
         _cairo_gl_set_src_alpha (ctx, TRUE);
         glDrawArrays (GL_TRIANGLES, 0, count);
         _cairo_gl_set_src_alpha (ctx, FALSE);
 
         _cairo_gl_set_shader (ctx, prev_shader);
-        _cairo_gl_set_operator (setup->dst, setup->op, TRUE);
+        _cairo_gl_set_operator (ctx->current_target, CAIRO_OPERATOR_ADD, TRUE);
         glDrawArrays (GL_TRIANGLES, 0, count);
     }
 }
