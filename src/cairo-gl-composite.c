@@ -1331,16 +1331,14 @@ _cairo_gl_composite_end (cairo_gl_context_t *ctx,
 }
 
 void
-_cairo_gl_composite_fini (cairo_gl_context_t *ctx,
-                          cairo_gl_composite_t *setup)
+_cairo_gl_composite_fini (cairo_gl_composite_t *setup)
 {
     _cairo_gl_operand_destroy (&setup->src);
     _cairo_gl_operand_destroy (&setup->mask);
 }
 
 cairo_status_t
-_cairo_gl_composite_init (cairo_gl_context_t *ctx,
-                          cairo_gl_composite_t *setup,
+_cairo_gl_composite_init (cairo_gl_composite_t *setup,
                           cairo_operator_t op,
                           cairo_gl_surface_t *dst,
                           cairo_bool_t assume_component_alpha,

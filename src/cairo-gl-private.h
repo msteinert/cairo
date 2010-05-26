@@ -279,16 +279,14 @@ cairo_private cairo_bool_t
 _cairo_gl_operator_is_supported (cairo_operator_t op);
 
 cairo_private cairo_status_t
-_cairo_gl_composite_init (cairo_gl_context_t *ctx,
-                          cairo_gl_composite_t *setup,
+_cairo_gl_composite_init (cairo_gl_composite_t *setup,
                           cairo_operator_t op,
                           cairo_gl_surface_t *dst,
                           cairo_bool_t has_component_alpha,
                           const cairo_rectangle_int_t *rect);
 
 cairo_private void
-_cairo_gl_composite_fini (cairo_gl_context_t *ctx,
-                          cairo_gl_composite_t *setup);
+_cairo_gl_composite_fini (cairo_gl_composite_t *setup);
 
 cairo_private void
 _cairo_gl_composite_set_clip_region (cairo_gl_context_t *ctx,

@@ -240,8 +240,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 
     _cairo_scaled_font_freeze_cache (scaled_font);
 
-    status = _cairo_gl_composite_init (ctx, &setup,
-                                       op, dst,
+    status = _cairo_gl_composite_init (&setup, op, dst,
                                        TRUE, glyph_extents);
 
     if (unlikely (status))
@@ -350,9 +349,9 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     _cairo_gl_composite_end (ctx, &setup);
     _cairo_scaled_font_thaw_cache (scaled_font);
 
-    _cairo_gl_composite_fini (ctx, &setup);
-
     _cairo_gl_context_release (ctx);
+
+    _cairo_gl_composite_fini (&setup);
 
     *remaining_glyphs = num_glyphs - i;
     return status;

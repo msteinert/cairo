@@ -917,8 +917,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     if (unlikely (status))
 	return status;
 
-    status = _cairo_gl_composite_init (ctx, &setup,
-                                       op, dst,
+    status = _cairo_gl_composite_init (&setup, op, dst,
                                        mask && mask->has_component_alpha,
                                        &rect);
     if (unlikely (status))
@@ -966,8 +965,8 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     _cairo_gl_composite_end (ctx, &setup);
 
   CLEANUP:
-    _cairo_gl_composite_fini (ctx, &setup);
     _cairo_gl_context_release (ctx);
+    _cairo_gl_composite_fini (&setup);
 
     return status;
 }
@@ -1045,8 +1044,7 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_dst,
     if (unlikely (status))
 	return status;
 
-    status = _cairo_gl_composite_init (ctx, &setup,
-                                       op, dst,
+    status = _cairo_gl_composite_init (&setup, op, dst,
                                        FALSE,
                                        /* XXX */ NULL);
     if (unlikely (status))
@@ -1083,8 +1081,8 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_dst,
     _cairo_gl_composite_end (ctx, &setup);
 
   CLEANUP:
-    _cairo_gl_composite_fini (ctx, &setup);
     _cairo_gl_context_release (ctx);
+    _cairo_gl_composite_fini (&setup);
 
     return status;
 }
@@ -1178,9 +1176,9 @@ _cairo_gl_surface_span_renderer_destroy (void *abstract_renderer)
     if (!renderer)
 	return;
 
-    _cairo_gl_composite_fini (renderer->ctx, &renderer->setup);
-
     _cairo_gl_context_release (renderer->ctx);
+
+    _cairo_gl_composite_fini (&renderer->setup);
 
     free (renderer);
 }
@@ -1246,8 +1244,7 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 	return _cairo_span_renderer_create_in_error (status);
     }
 
-    status = _cairo_gl_composite_init (renderer->ctx,
-                                       &renderer->setup,
+    status = _cairo_gl_composite_init (&renderer->setup,
                                        op, dst,
                                        FALSE, extents);
     if (unlikely (status))
@@ -1272,8 +1269,8 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 
 
 FAIL:
-    _cairo_gl_composite_fini (renderer->ctx, &renderer->setup);
     _cairo_gl_context_release (renderer->ctx);
+    _cairo_gl_composite_fini (&renderer->setup);
     free (renderer);
     return _cairo_span_renderer_create_in_error (status);
 }
