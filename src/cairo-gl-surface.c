@@ -359,6 +359,9 @@ cairo_gl_surface_create (cairo_device_t		*abstract_device,
 					   width, height);
     }
 
+    if (abstract_device->status)
+	return _cairo_surface_create_in_error (abstract_device->status);
+
     if (abstract_device->backend->type != CAIRO_DEVICE_TYPE_GL)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
 
