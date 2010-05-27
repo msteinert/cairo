@@ -1029,6 +1029,7 @@ _cairo_gl_composite_begin_component_alpha  (cairo_gl_context_t *ctx,
                                                CAIRO_GL_SHADER_IN_CA_SOURCE_ALPHA);
         if (unlikely (status))
             return status;
+
         _cairo_gl_composite_bind_to_shader (ctx, setup);
         setup->pre_shader = ctx->current_shader;
     }
@@ -1059,9 +1060,7 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
                                                                       : CAIRO_GL_SHADER_IN_NORMAL);
     if (unlikely (status)) {
         setup->pre_shader = NULL;
-        if (_cairo_status_is_error (status))
-	    return status;
-        /* fall back to fixed function here */
+	return status;
     }
 
     status = CAIRO_STATUS_SUCCESS;
@@ -1105,6 +1104,7 @@ _cairo_gl_composite_draw (cairo_gl_context_t *ctx,
 {
     unsigned int count = ctx->vb_offset / ctx->vertex_size;
 
+    _cairo_gl_check_error();
     if (! setup->pre_shader) {
         glDrawArrays (GL_TRIANGLES, 0, count);
     } else {
@@ -1122,6 +1122,7 @@ _cairo_gl_composite_draw (cairo_gl_context_t *ctx,
         _cairo_gl_set_component_alpha_mask_operand (ctx, setup);
         glDrawArrays (GL_TRIANGLES, 0, count);
     }
+    _cairo_gl_check_error();
 }
 
 void
