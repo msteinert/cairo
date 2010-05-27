@@ -1100,11 +1100,9 @@ _cairo_gl_composite_begin (cairo_gl_context_t *ctx,
 
 static inline void
 _cairo_gl_composite_draw (cairo_gl_context_t *ctx,
-                          cairo_gl_composite_t *setup)
+                          cairo_gl_composite_t *setup,
+			  unsigned int count)
 {
-    unsigned int count = ctx->vb_offset / ctx->vertex_size;
-
-    _cairo_gl_check_error();
     if (! setup->pre_shader) {
         glDrawArrays (GL_TRIANGLES, 0, count);
     } else {
@@ -1122,15 +1120,22 @@ _cairo_gl_composite_draw (cairo_gl_context_t *ctx,
         _cairo_gl_set_component_alpha_mask_operand (ctx, setup);
         glDrawArrays (GL_TRIANGLES, 0, count);
     }
-    _cairo_gl_check_error();
 }
 
 void
 _cairo_gl_composite_flush (cairo_gl_context_t *ctx,
                            cairo_gl_composite_t *setup)
 {
+    unsigned int count;
+
     if (ctx->vb_offset == 0)
         return;
+
+    count = ctx->vb_offset / ctx->vertex_size;
+
+    glUnmapBufferARB (GL_ARRAY_BUFFER_ARB);
+    ctx->vb = NULL;
+    ctx->vb_offset = 0;
 
     if (setup->clip_region) {
 	int i, num_rectangles = cairo_region_num_rectangles (setup->clip_region);
@@ -1141,15 +1146,11 @@ _cairo_gl_composite_flush (cairo_gl_context_t *ctx,
 	    cairo_region_get_rectangle (setup->clip_region, i, &rect);
 
 	    glScissor (rect.x, rect.y, rect.width, rect.height);
-            _cairo_gl_composite_draw (ctx, setup);
+            _cairo_gl_composite_draw (ctx, setup, count);
 	}
     } else {
-        _cairo_gl_composite_draw (ctx, setup);
+        _cairo_gl_composite_draw (ctx, setup, count);
     }
-
-    glUnmapBufferARB (GL_ARRAY_BUFFER_ARB);
-    ctx->vb = NULL;
-    ctx->vb_offset = 0;
 }
 
 static void
