@@ -392,16 +392,6 @@ _cairo_gl_context_init_shaders (cairo_gl_context_t *ctx);
 cairo_private void
 _cairo_gl_context_fini_shaders (cairo_gl_context_t *ctx);
 
-cairo_private void
-_cairo_gl_shader_init (cairo_gl_shader_t *shader);
-
-cairo_private cairo_status_t
-_cairo_gl_shader_compile (cairo_gl_context_t *ctx,
-			  cairo_gl_shader_t *program,
-			  cairo_gl_var_type_t src,
-			  cairo_gl_var_type_t mask,
-			  const char *fragment_text);
-
 cairo_private cairo_status_t
 _cairo_gl_set_shader_by_type (cairo_gl_context_t *ctx,
                               cairo_gl_operand_type_t source,

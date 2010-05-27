@@ -93,6 +93,13 @@ typedef struct cairo_gl_shader_impl {
     (*use) (cairo_gl_shader_t *shader);
 } shader_impl_t;
 
+static cairo_status_t
+_cairo_gl_shader_compile (cairo_gl_context_t *ctx,
+			  cairo_gl_shader_t *shader,
+			  cairo_gl_var_type_t src,
+			  cairo_gl_var_type_t mask,
+			  const char *fragment_text);
+
 /* ARB_shader_objects / ARB_vertex_shader / ARB_fragment_shader extensions
    API. */
 static void
@@ -475,6 +482,13 @@ _cairo_gl_shader_cache_destroy (void *data)
     free (entry);
 }
 
+static void
+_cairo_gl_shader_init (cairo_gl_shader_t *shader)
+{
+    shader->fragment_shader = 0;
+    shader->program = 0;
+}
+
 cairo_status_t
 _cairo_gl_context_init_shaders (cairo_gl_context_t *ctx)
 {
@@ -507,14 +521,16 @@ _cairo_gl_context_init_shaders (cairo_gl_context_t *ctx)
     if (unlikely (status))
 	return status;
 
-    _cairo_gl_shader_init (&ctx->fill_rectangles_shader);
-    status = _cairo_gl_shader_compile (ctx,
-				       &ctx->fill_rectangles_shader,
-				       CAIRO_GL_VAR_NONE,
-				       CAIRO_GL_VAR_NONE,
-				       fill_fs_source);
-    if (unlikely (status))
-	return status;
+    if (ctx->shader_impl != NULL) {
+	_cairo_gl_shader_init (&ctx->fill_rectangles_shader);
+	status = _cairo_gl_shader_compile (ctx,
+					   &ctx->fill_rectangles_shader,
+					   CAIRO_GL_VAR_NONE,
+					   CAIRO_GL_VAR_NONE,
+					   fill_fs_source);
+	if (unlikely (status))
+	    return status;
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -530,13 +546,6 @@ _cairo_gl_context_fini_shaders (cairo_gl_context_t *ctx)
     }
 
     _cairo_cache_fini (&ctx->shaders);
-}
-
-void
-_cairo_gl_shader_init (cairo_gl_shader_t *shader)
-{
-    shader->fragment_shader = 0;
-    shader->program = 0;
 }
 
 void
@@ -809,7 +818,7 @@ cairo_gl_shader_get_fragment_source (GLuint tex_target,
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t
+static cairo_status_t
 _cairo_gl_shader_compile (cairo_gl_context_t *ctx,
 			  cairo_gl_shader_t *shader,
 			  cairo_gl_var_type_t src,
