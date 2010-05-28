@@ -87,7 +87,7 @@ typedef struct cairo_gl_shader_impl {
     void
     (*bind_texture) (cairo_gl_shader_t *shader,
 		     const char *name,
-		     GLuint tex_unit);
+		     cairo_gl_tex_t tex_unit);
 
     void
     (*use) (cairo_gl_shader_t *shader);
@@ -243,7 +243,7 @@ bind_matrix_arb (cairo_gl_shader_t *shader,
 static void
 bind_texture_arb (cairo_gl_shader_t *shader,
 		  const char *name,
-		  GLuint tex_unit)
+		  cairo_gl_tex_t tex_unit)
 {
     GLint location = glGetUniformLocationARB (shader->program, name);
     assert (location != -1);
@@ -397,7 +397,7 @@ bind_matrix_core_2_0 (cairo_gl_shader_t *shader, const char *name, cairo_matrix_
 }
 
 static void
-bind_texture_core_2_0 (cairo_gl_shader_t *shader, const char *name, GLuint tex_unit)
+bind_texture_core_2_0 (cairo_gl_shader_t *shader, const char *name, cairo_gl_tex_t tex_unit)
 {
     GLint location = glGetUniformLocation (shader->program, name);
     assert (location != -1);
@@ -559,12 +559,6 @@ _cairo_gl_shader_fini (cairo_gl_context_t *ctx,
         ctx->shader_impl->destroy_program (shader->program);
 }
 
-typedef enum cairo_gl_operand_name {
-  CAIRO_GL_OPERAND_SOURCE,
-  CAIRO_GL_OPERAND_MASK,
-  CAIRO_GL_OPERAND_DEST
-} cairo_gl_operand_name_t;
-
 static const char *operand_names[] = { "source", "mask", "dest" };
 
 static cairo_gl_var_type_t
@@ -589,7 +583,7 @@ cairo_gl_operand_get_var_type (cairo_gl_operand_type_t type)
 static void
 cairo_gl_shader_emit_variable (cairo_output_stream_t *stream,
                                cairo_gl_var_type_t type,
-                               cairo_gl_operand_name_t name)
+                               cairo_gl_tex_t name)
 {
     switch (type) {
     default:
@@ -612,7 +606,7 @@ cairo_gl_shader_emit_variable (cairo_output_stream_t *stream,
 static void
 cairo_gl_shader_emit_vertex (cairo_output_stream_t *stream,
                              cairo_gl_var_type_t type,
-                             cairo_gl_operand_name_t name)
+                             cairo_gl_tex_t name)
 {
     switch (type) {
     default:
@@ -643,18 +637,16 @@ cairo_gl_shader_get_vertex_source (cairo_gl_var_type_t src,
     unsigned int length;
     cairo_status_t status;
 
-    cairo_gl_shader_emit_variable (stream, src, CAIRO_GL_OPERAND_SOURCE);
-    cairo_gl_shader_emit_variable (stream, mask, CAIRO_GL_OPERAND_MASK);
-    cairo_gl_shader_emit_variable (stream, dest, CAIRO_GL_OPERAND_DEST);
+    cairo_gl_shader_emit_variable (stream, src, CAIRO_GL_TEX_SOURCE);
+    cairo_gl_shader_emit_variable (stream, mask, CAIRO_GL_TEX_MASK);
 
     _cairo_output_stream_printf (stream,
 				 "void main()\n"
 				 "{\n"
 				 "    gl_Position = ftransform();\n");
 
-    cairo_gl_shader_emit_vertex (stream, src, CAIRO_GL_OPERAND_SOURCE);
-    cairo_gl_shader_emit_vertex (stream, mask, CAIRO_GL_OPERAND_MASK);
-    cairo_gl_shader_emit_vertex (stream, dest, CAIRO_GL_OPERAND_DEST);
+    cairo_gl_shader_emit_vertex (stream, src, CAIRO_GL_TEX_SOURCE);
+    cairo_gl_shader_emit_vertex (stream, mask, CAIRO_GL_TEX_MASK);
 
     _cairo_output_stream_write (stream,
 				"}\n\0", 3);
@@ -671,7 +663,7 @@ static void
 cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
                             GLuint tex_target,
                             cairo_gl_operand_type_t type,
-                            cairo_gl_operand_name_t name)
+                            cairo_gl_tex_t name)
 {
     const char *namestr = operand_names[name];
     const char *rectstr = (tex_target == GL_TEXTURE_RECTANGLE_EXT ? "Rect" : "");
@@ -781,10 +773,8 @@ cairo_gl_shader_get_fragment_source (GLuint tex_target,
     unsigned int length;
     cairo_status_t status;
 
-    cairo_gl_shader_emit_color (stream, tex_target, src, CAIRO_GL_OPERAND_SOURCE);
-    cairo_gl_shader_emit_color (stream, tex_target, mask, CAIRO_GL_OPERAND_MASK);
-    if (dest != CAIRO_GL_OPERAND_NONE)
-      cairo_gl_shader_emit_color (stream, tex_target, dest, CAIRO_GL_OPERAND_DEST);
+    cairo_gl_shader_emit_color (stream, tex_target, src, CAIRO_GL_TEX_SOURCE);
+    cairo_gl_shader_emit_color (stream, tex_target, mask, CAIRO_GL_TEX_MASK);
 
     _cairo_output_stream_printf (stream,
         "void main()\n"

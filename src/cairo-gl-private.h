@@ -88,6 +88,11 @@ typedef struct cairo_gl_glyph_cache {
     cairo_surface_pattern_t pattern;
 } cairo_gl_glyph_cache_t;
 
+typedef enum cairo_gl_tex {
+    CAIRO_GL_TEX_SOURCE = 0,
+    CAIRO_GL_TEX_MASK = 1
+} cairo_gl_tex_t;
+
 typedef enum cairo_gl_operand_type {
     CAIRO_GL_OPERAND_NONE,
     CAIRO_GL_OPERAND_CONSTANT,

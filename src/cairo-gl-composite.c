@@ -607,7 +607,7 @@ _cairo_gl_texture_set_attributes (cairo_gl_context_t         *ctx,
 
 static void
 _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
-                                 GLuint              tex_unit,
+                                 cairo_gl_tex_t      tex_unit,
                                  cairo_gl_operand_t *operand,
                                  unsigned int        vertex_offset)
 {
@@ -660,14 +660,14 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
 
 static void
 _cairo_gl_context_destroy_operand (cairo_gl_context_t *ctx,
-                                   GLuint              tex_unit)
+                                   cairo_gl_tex_t tex_unit)
 {
   memset (&ctx->operands[tex_unit], 0, sizeof (cairo_gl_operand_t));
 }
 
 static void
 _cairo_gl_operand_setup_fixed (cairo_gl_operand_t *operand,
-                               GLuint tex_unit)
+                               cairo_gl_tex_t tex_unit)
 {
     switch (operand->type) {
     case CAIRO_GL_OPERAND_CONSTANT:
@@ -709,7 +709,7 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
     glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
     glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
 
-    _cairo_gl_operand_setup_fixed (&setup->src, 0);
+    _cairo_gl_operand_setup_fixed (&setup->src, CAIRO_GL_TEX_SOURCE);
 }
 
 /* Swizzles the source for creating the "source alpha" value
@@ -751,7 +751,7 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
     glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
     glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
 
-    _cairo_gl_operand_setup_fixed (&setup->mask, 1);
+    _cairo_gl_operand_setup_fixed (&setup->mask, CAIRO_GL_TEX_MASK);
 }
 
 static void
@@ -775,7 +775,7 @@ _cairo_gl_set_mask_operand (cairo_gl_context_t *ctx,
     glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_ALPHA);
     glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
 
-    _cairo_gl_operand_setup_fixed (&setup->mask, 1);
+    _cairo_gl_operand_setup_fixed (&setup->mask, CAIRO_GL_TEX_MASK);
 }
 
 static void
@@ -1004,8 +1004,8 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     glVertexPointer (2, GL_FLOAT, ctx->vertex_size, NULL);
     glEnableClientState (GL_VERTEX_ARRAY);
 
-    _cairo_gl_context_setup_operand (ctx, 0, &setup->src, dst_size);
-    _cairo_gl_context_setup_operand (ctx, 1, &setup->mask, dst_size + src_size);
+    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_SOURCE, &setup->src, dst_size);
+    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_MASK, &setup->mask, dst_size + src_size);
 
     _cairo_gl_set_src_operand (ctx, setup);
     if (setup->has_component_alpha)
@@ -1250,8 +1250,8 @@ _cairo_gl_composite_end (cairo_gl_context_t *ctx,
     glDisable (GL_TEXTURE_1D);
     glDisable (ctx->tex_target);
 
-    _cairo_gl_context_destroy_operand (ctx, 0);
-    _cairo_gl_context_destroy_operand (ctx, 1);
+    _cairo_gl_context_destroy_operand (ctx, CAIRO_GL_TEX_SOURCE);
+    _cairo_gl_context_destroy_operand (ctx, CAIRO_GL_TEX_MASK);
 
     ctx->pre_shader = NULL;
 
