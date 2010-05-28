@@ -398,6 +398,12 @@ _cairo_gl_context_init_shaders (cairo_gl_context_t *ctx);
 cairo_private void
 _cairo_gl_context_fini_shaders (cairo_gl_context_t *ctx);
 
+static cairo_always_inline cairo_bool_t
+_cairo_gl_context_is_flushed (cairo_gl_context_t *ctx)
+{
+    return ctx->vb == NULL;
+}
+
 cairo_private cairo_status_t
 _cairo_gl_get_shader_by_type (cairo_gl_context_t *ctx,
                               cairo_gl_operand_type_t source,

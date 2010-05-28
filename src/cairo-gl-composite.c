@@ -733,7 +733,7 @@ void
 _cairo_gl_context_destroy_operand (cairo_gl_context_t *ctx,
                                    cairo_gl_tex_t tex_unit)
 {
-    assert (ctx->vb == NULL);
+    assert (_cairo_gl_context_is_flushed (ctx));
 
     switch (ctx->operands[tex_unit].type) {
     default:
@@ -860,6 +860,7 @@ static cairo_status_t
 _cairo_gl_composite_begin_component_alpha  (cairo_gl_context_t *ctx,
                                             cairo_gl_composite_t *setup)
 {
+    cairo_gl_shader_t *pre_shader = NULL;
     cairo_status_t status;
 
     /* For CLEAR, cairo's rendering equation (quoting Owen's description in:
@@ -938,7 +939,6 @@ _cairo_gl_composite_begin_component_alpha  (cairo_gl_context_t *ctx,
      * lets two values come out of the shader and into the blend unit.
      */
     if (setup->op == CAIRO_OPERATOR_OVER) {
-        cairo_gl_shader_t *pre_shader;
 	setup->op = CAIRO_OPERATOR_ADD;
 	status = _cairo_gl_get_shader_by_type (ctx,
                                                setup->src.type,
@@ -947,11 +947,11 @@ _cairo_gl_composite_begin_component_alpha  (cairo_gl_context_t *ctx,
                                                &pre_shader);
         if (unlikely (status))
             return status;
-
-        _cairo_gl_set_shader (ctx, pre_shader);
-        _cairo_gl_composite_bind_to_shader (ctx, setup);
-        ctx->pre_shader = pre_shader;
     }
+
+    if (ctx->pre_shader != pre_shader)
+        _cairo_gl_composite_flush (ctx);
+    ctx->pre_shader = pre_shader;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -983,6 +983,11 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
         status = _cairo_gl_composite_begin_component_alpha (ctx, setup);
         if (unlikely (status))
             goto FAIL;
+    } else {
+        if (ctx->pre_shader) {
+            _cairo_gl_composite_flush (ctx);
+            ctx->pre_shader = NULL;
+        }
     }
 
     status = _cairo_gl_get_shader_by_type (ctx,
@@ -995,6 +1000,8 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
         ctx->pre_shader = NULL;
         goto FAIL;
     }
+    if (ctx->current_shader != shader)
+        _cairo_gl_composite_flush (ctx);
 
     status = CAIRO_STATUS_SUCCESS;
 
@@ -1009,8 +1016,14 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
                             setup->op,
                             component_alpha);
 
-    _cairo_gl_set_shader (ctx, shader);
-    _cairo_gl_composite_bind_to_shader (ctx, setup);
+    if (_cairo_gl_context_is_flushed (ctx)) {
+        if (ctx->pre_shader) {
+            _cairo_gl_set_shader (ctx, ctx->pre_shader);
+            _cairo_gl_composite_bind_to_shader (ctx, setup);
+        }
+        _cairo_gl_set_shader (ctx, shader);
+        _cairo_gl_composite_bind_to_shader (ctx, setup);
+    }
 
     glBindBufferARB (GL_ARRAY_BUFFER_ARB, ctx->vbo);
 
@@ -1062,7 +1075,7 @@ _cairo_gl_composite_flush (cairo_gl_context_t *ctx)
 {
     unsigned int count;
 
-    if (ctx->vb_offset == 0)
+    if (_cairo_gl_context_is_flushed (ctx))
         return;
 
     count = ctx->vb_offset / ctx->vertex_size;
@@ -1231,14 +1244,10 @@ _cairo_gl_composite_end (cairo_gl_context_t *ctx,
 
     glBindBufferARB (GL_ARRAY_BUFFER_ARB, 0);
 
-    _cairo_gl_set_shader (ctx, NULL);
-
     glDisableClientState (GL_VERTEX_ARRAY);
 
     _cairo_gl_context_destroy_operand (ctx, CAIRO_GL_TEX_SOURCE);
     _cairo_gl_context_destroy_operand (ctx, CAIRO_GL_TEX_MASK);
-
-    ctx->pre_shader = NULL;
 
     ctx->vertex_size = 0;
 }

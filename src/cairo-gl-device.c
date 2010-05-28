@@ -80,6 +80,9 @@ _gl_flush (void *device)
         ctx->clip_region = NULL;
     }
 
+    ctx->pre_shader = NULL;
+    _cairo_gl_set_shader (ctx, NULL);
+
     glDisable (GL_SCISSOR_TEST);
     glDisable (GL_BLEND);
 
