@@ -1002,7 +1002,7 @@ slim_hidden_def (cairo_surface_get_font_options);
  * @surface: a #cairo_surface_t
  *
  * Do any pending drawing for the surface and also restore any
- * temporary modification's cairo has made to the surface's
+ * temporary modifications cairo has made to the surface's
  * state. This function must be called before switching from
  * drawing on the surface with cairo to drawing on it directly
  * with native APIs. If the surface doesn't support direct access,
