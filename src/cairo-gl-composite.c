@@ -972,7 +972,6 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     if (unlikely (status))
 	return status;
 
-    assert (! _cairo_gl_context_is_in_progress (ctx));
     glEnable (GL_BLEND);
 
     component_alpha = ((setup->mask.type == CAIRO_GL_OPERAND_TEXTURE) &&

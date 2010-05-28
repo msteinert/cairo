@@ -226,13 +226,6 @@ _cairo_gl_context_create_in_error (cairo_status_t status)
 cairo_private cairo_status_t
 _cairo_gl_context_init (cairo_gl_context_t *ctx);
 
-static cairo_always_inline cairo_bool_t cairo_warn
-_cairo_gl_context_is_in_progress (cairo_gl_context_t *ctx)
-{
-    /* This variable gets set when _begin() is called */
-    return ctx->vertex_size != 0;
-}
-
 cairo_private void
 _cairo_gl_surface_init (cairo_device_t *device,
 			cairo_gl_surface_t *surface,
