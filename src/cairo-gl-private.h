@@ -329,7 +329,6 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
 
 cairo_private void
 _cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
-                               cairo_gl_composite_t *setup,
                                GLfloat x1,
                                GLfloat y1,
                                GLfloat x2,
@@ -338,7 +337,6 @@ _cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
 
 cairo_private void
 _cairo_gl_composite_emit_glyph (cairo_gl_context_t *ctx,
-                                cairo_gl_composite_t *setup,
                                 GLfloat x1,
                                 GLfloat y1,
                                 GLfloat x2,

@@ -946,13 +946,13 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 	    cairo_rectangle_int_t rect;
 
 	    cairo_region_get_rectangle (clip_region, i, &rect);
-            _cairo_gl_composite_emit_rect (ctx, &setup,
+            _cairo_gl_composite_emit_rect (ctx,
                                            rect.x,              rect.y,
                                            rect.x + rect.width, rect.y + rect.height,
                                            0);
 	}
     } else {
-        _cairo_gl_composite_emit_rect (ctx, &setup,
+        _cairo_gl_composite_emit_rect (ctx,
                                        dst_x,         dst_y,
                                        dst_x + width, dst_y + height,
                                        0);
@@ -1062,7 +1062,7 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_dst,
         goto CLEANUP;
 
     for (i = 0; i < num_rects; i++) {
-        _cairo_gl_composite_emit_rect (ctx, &setup,
+        _cairo_gl_composite_emit_rect (ctx,
                                        rects[i].x,
                                        rects[i].y,
                                        rects[i].x + rects[i].width,
@@ -1103,7 +1103,6 @@ _cairo_gl_render_bounded_spans (void *abstract_renderer,
     do {
 	if (spans[0].coverage) {
             _cairo_gl_composite_emit_rect (renderer->ctx,
-                                           &renderer->setup,
                                            spans[0].x, y,
                                            spans[1].x, y + height,
                                            spans[0].coverage);
@@ -1125,7 +1124,6 @@ _cairo_gl_render_unbounded_spans (void *abstract_renderer,
 
     if (num_spans == 0) {
         _cairo_gl_composite_emit_rect (renderer->ctx,
-                                       &renderer->setup,
                                        renderer->xmin, y,
                                        renderer->xmax, y + height,
                                        0);
@@ -1134,7 +1132,6 @@ _cairo_gl_render_unbounded_spans (void *abstract_renderer,
 
     if (spans[0].x != renderer->xmin) {
         _cairo_gl_composite_emit_rect (renderer->ctx,
-                                       &renderer->setup,
                                        renderer->xmin, y,
                                        spans[0].x,     y + height,
                                        0);
@@ -1142,7 +1139,6 @@ _cairo_gl_render_unbounded_spans (void *abstract_renderer,
 
     do {
         _cairo_gl_composite_emit_rect (renderer->ctx,
-                                       &renderer->setup,
                                        spans[0].x, y,
                                        spans[1].x, y + height,
                                        spans[0].coverage);
@@ -1151,7 +1147,6 @@ _cairo_gl_render_unbounded_spans (void *abstract_renderer,
 
     if (spans[0].x != renderer->xmax) {
         _cairo_gl_composite_emit_rect (renderer->ctx,
-                                       &renderer->setup,
                                        spans[0].x,     y,
                                        renderer->xmax, y + height,
                                        0);
