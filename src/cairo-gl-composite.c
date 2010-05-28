@@ -606,6 +606,35 @@ _cairo_gl_texture_set_attributes (cairo_gl_context_t         *ctx,
 }
 
 static void
+_cairo_gl_operand_setup_fixed (cairo_gl_operand_t *operand,
+                               cairo_gl_tex_t tex_unit)
+{
+    switch (operand->type) {
+    case CAIRO_GL_OPERAND_CONSTANT:
+        glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, operand->constant.color);
+        glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
+        glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
+        break;
+    case CAIRO_GL_OPERAND_TEXTURE:
+        glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0 + tex_unit);
+        glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0 + tex_unit);
+	break;
+        break;
+    case CAIRO_GL_OPERAND_SPANS:
+        glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PRIMARY_COLOR);
+        glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PRIMARY_COLOR);
+        break;
+    case CAIRO_GL_OPERAND_COUNT:
+    default:
+        ASSERT_NOT_REACHED;
+    case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
+    case CAIRO_GL_OPERAND_NONE:
+        break;
+    }
+}
+
+static void
 _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
                                  cairo_gl_tex_t      tex_unit,
                                  cairo_gl_operand_t *operand,
@@ -663,35 +692,6 @@ _cairo_gl_context_destroy_operand (cairo_gl_context_t *ctx,
                                    cairo_gl_tex_t tex_unit)
 {
   memset (&ctx->operands[tex_unit], 0, sizeof (cairo_gl_operand_t));
-}
-
-static void
-_cairo_gl_operand_setup_fixed (cairo_gl_operand_t *operand,
-                               cairo_gl_tex_t tex_unit)
-{
-    switch (operand->type) {
-    case CAIRO_GL_OPERAND_CONSTANT:
-        glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, operand->constant.color);
-        glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
-        glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
-        break;
-    case CAIRO_GL_OPERAND_TEXTURE:
-        glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0 + tex_unit);
-        glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0 + tex_unit);
-	break;
-        break;
-    case CAIRO_GL_OPERAND_SPANS:
-        glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PRIMARY_COLOR);
-        glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PRIMARY_COLOR);
-        break;
-    case CAIRO_GL_OPERAND_COUNT:
-    default:
-        ASSERT_NOT_REACHED;
-    case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
-    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
-    case CAIRO_GL_OPERAND_NONE:
-        break;
-    }
 }
 
 static void
