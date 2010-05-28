@@ -60,7 +60,7 @@ struct _cairo_device_backend {
     void (*lock) (void *device);
     void (*unlock) (void *device);
 
-    void (*flush) (void *device);
+    cairo_warn cairo_status_t (*flush) (void *device);
     void (*finish) (void *device);
     void (*destroy) (void *device);
 };

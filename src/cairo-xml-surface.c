@@ -215,13 +215,15 @@ _format_to_string (cairo_format_t format)
     return "INVALID";
 }
 
-static void
+static cairo_status_t
 _device_flush (void *abstract_device)
 {
     cairo_xml_t *xml = abstract_device;
     cairo_status_t status;
 
     status = _cairo_output_stream_flush (xml->stream);
+
+    return status;
 }
 
 static void

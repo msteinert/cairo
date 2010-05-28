@@ -150,11 +150,16 @@ cairo_device_status (cairo_device_t *device)
 void
 cairo_device_flush (cairo_device_t *device)
 {
+    cairo_status_t status;
+
     if (device == NULL || device->status)
 	return;
 
-    if (device->backend->flush != NULL)
-	device->backend->flush (device);
+    if (device->backend->flush != NULL) {
+	status = device->backend->flush (device);
+	if (unlikely (status))
+	    status = _cairo_device_set_error (device, status);
+    }
 }
 slim_hidden_def (cairo_device_flush);
 
