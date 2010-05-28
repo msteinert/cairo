@@ -83,6 +83,10 @@ _gl_flush (void *device)
     ctx->pre_shader = NULL;
     _cairo_gl_set_shader (ctx, NULL);
 
+    glBindBufferARB (GL_ARRAY_BUFFER_ARB, 0);
+
+    glDisableClientState (GL_VERTEX_ARRAY);
+
     glDisable (GL_SCISSOR_TEST);
     glDisable (GL_BLEND);
 

@@ -1023,12 +1023,12 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
         }
         _cairo_gl_set_shader (ctx, shader);
         _cairo_gl_composite_bind_to_shader (ctx, setup);
+
+        glBindBufferARB (GL_ARRAY_BUFFER_ARB, ctx->vbo);
+
+        glVertexPointer (2, GL_FLOAT, ctx->vertex_size, NULL);
+        glEnableClientState (GL_VERTEX_ARRAY);
     }
-
-    glBindBufferARB (GL_ARRAY_BUFFER_ARB, ctx->vbo);
-
-    glVertexPointer (2, GL_FLOAT, ctx->vertex_size, NULL);
-    glEnableClientState (GL_VERTEX_ARRAY);
 
     _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_SOURCE, &setup->src, dst_size);
     _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_MASK, &setup->mask, dst_size + src_size);
@@ -1241,10 +1241,6 @@ _cairo_gl_composite_end (cairo_gl_context_t *ctx,
                          cairo_gl_composite_t *setup)
 {
     _cairo_gl_composite_flush (ctx);
-
-    glBindBufferARB (GL_ARRAY_BUFFER_ARB, 0);
-
-    glDisableClientState (GL_VERTEX_ARRAY);
 
     _cairo_gl_context_destroy_operand (ctx, CAIRO_GL_TEX_SOURCE);
     _cairo_gl_context_destroy_operand (ctx, CAIRO_GL_TEX_MASK);
