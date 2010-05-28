@@ -462,7 +462,6 @@ _cairo_gl_composite_set_mask (cairo_gl_composite_t *setup,
                               int width, int height)
 {
     _cairo_gl_operand_destroy (&setup->mask);
-    setup->has_component_alpha = pattern && pattern->has_component_alpha;
     if (pattern == NULL)
         return CAIRO_STATUS_SUCCESS;
 
@@ -478,7 +477,6 @@ _cairo_gl_composite_set_mask_spans (cairo_gl_composite_t *setup)
 {
     _cairo_gl_operand_destroy (&setup->mask);
     setup->mask.type = CAIRO_GL_OPERAND_SPANS;
-    setup->has_component_alpha = FALSE;
 }
 
 void
@@ -922,6 +920,7 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     unsigned int dst_size, src_size, mask_size;
     cairo_gl_context_t *ctx;
     cairo_status_t status;
+    cairo_bool_t component_alpha;
 
     assert (setup->dst);
 
@@ -931,8 +930,11 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
 
     assert (! _cairo_gl_context_is_in_progress (ctx));
 
+    component_alpha = ((setup->mask.type == CAIRO_GL_OPERAND_TEXTURE) &&
+                       setup->mask.texture.attributes.has_component_alpha);
+
     /* Do various magic for component alpha */
-    if (setup->has_component_alpha) {
+    if (component_alpha) {
         status = _cairo_gl_composite_begin_component_alpha (ctx, setup);
         if (unlikely (status))
             goto FAIL;
@@ -941,8 +943,8 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     status = _cairo_gl_set_shader_by_type (ctx,
                                            setup->src.type,
                                            setup->mask.type,
-                                           setup->has_component_alpha ? CAIRO_GL_SHADER_IN_CA_SOURCE
-                                                                      : CAIRO_GL_SHADER_IN_NORMAL);
+                                           component_alpha ? CAIRO_GL_SHADER_IN_CA_SOURCE
+                                                           : CAIRO_GL_SHADER_IN_NORMAL);
     if (unlikely (status)) {
         ctx->pre_shader = NULL;
         goto FAIL;
@@ -959,7 +961,7 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     _cairo_gl_context_set_destination (ctx, setup->dst);
     _cairo_gl_set_operator (setup->dst,
                             setup->op,
-                            setup->has_component_alpha);
+                            component_alpha);
 
     _cairo_gl_composite_bind_to_shader (ctx, setup);
 

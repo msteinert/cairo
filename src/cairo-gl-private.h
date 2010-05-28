@@ -202,7 +202,6 @@ typedef struct _cairo_gl_context {
 typedef struct _cairo_gl_composite {
     cairo_gl_surface_t *dst;
     cairo_operator_t op;
-    cairo_bool_t has_component_alpha;
     cairo_region_t *clip_region;
 
     cairo_gl_operand_t src;
