@@ -179,6 +179,8 @@ typedef struct _cairo_gl_context {
     cairo_gl_shader_t *pre_shader; /* for component alpha */
     cairo_gl_shader_t *current_shader;
 
+    cairo_gl_operand_t operands[2];
+
     char *vb;
     unsigned int vb_offset;
     unsigned int vertex_size;

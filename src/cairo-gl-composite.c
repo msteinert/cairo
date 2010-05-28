@@ -606,11 +606,13 @@ _cairo_gl_texture_set_attributes (cairo_gl_context_t         *ctx,
 }
 
 static void
-_cairo_gl_operand_setup_texture (cairo_gl_context_t *ctx,
-                                 cairo_gl_operand_t *operand,
+_cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
                                  GLuint              tex_unit,
+                                 cairo_gl_operand_t *operand,
                                  unsigned int        vertex_offset)
 {
+    memcpy (&ctx->operands[tex_unit], operand, sizeof (cairo_gl_operand_t));
+
     switch (operand->type) {
     default:
     case CAIRO_GL_OPERAND_COUNT:
@@ -654,6 +656,13 @@ _cairo_gl_operand_setup_texture (cairo_gl_context_t *ctx,
         glEnable (GL_TEXTURE_1D);
         break;
     }
+}
+
+static void
+_cairo_gl_context_destroy_operand (cairo_gl_context_t *ctx,
+                                   GLuint              tex_unit)
+{
+  memset (&ctx->operands[tex_unit], 0, sizeof (cairo_gl_operand_t));
 }
 
 static void
@@ -995,8 +1004,8 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     glVertexPointer (2, GL_FLOAT, ctx->vertex_size, NULL);
     glEnableClientState (GL_VERTEX_ARRAY);
 
-    _cairo_gl_operand_setup_texture (ctx, &setup->src, 0, dst_size);
-    _cairo_gl_operand_setup_texture (ctx, &setup->mask, 1, dst_size + src_size);
+    _cairo_gl_context_setup_operand (ctx, 0, &setup->src, dst_size);
+    _cairo_gl_context_setup_operand (ctx, 1, &setup->mask, dst_size + src_size);
 
     _cairo_gl_set_src_operand (ctx, setup);
     if (setup->has_component_alpha)
@@ -1240,6 +1249,9 @@ _cairo_gl_composite_end (cairo_gl_context_t *ctx,
     glActiveTexture (GL_TEXTURE1);
     glDisable (GL_TEXTURE_1D);
     glDisable (ctx->tex_target);
+
+    _cairo_gl_context_destroy_operand (ctx, 0);
+    _cairo_gl_context_destroy_operand (ctx, 1);
 
     ctx->pre_shader = NULL;
 
