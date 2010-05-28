@@ -760,13 +760,14 @@ slim_hidden_def (cairo_region_contains_point);
 
 /**
  * cairo_region_equal:
- * @region_a: a #cairo_region_t
- * @region_b: a #cairo_region_t
+ * @region_a: a #cairo_region_t or %NULL
+ * @region_b: a #cairo_region_t or %NULL
  *
- * Compares whether region_a is equivalent to region_b.
+ * Compares whether region_a is equivalent to region_b. %NULL as an argument
+ * is equal to itself, but not to any non-%NULL region.
  *
  * Return value: %TRUE if both regions contained the same coverage,
- * %FALSE if it is not.
+ * %FALSE if it is not or any region is in an error status.
  *
  * Since: 1.10
  **/
