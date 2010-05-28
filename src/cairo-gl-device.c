@@ -223,23 +223,24 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 
 void
 _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
-                           cairo_gl_surface_t *surface)
+                                   cairo_gl_surface_t *surface)
 {
-    cairo_surface_flush (&surface->base);
+    if (ctx->current_target == surface)
+        return;
 
-    if (ctx->current_target != surface) {
-	ctx->current_target = surface;
+    _cairo_gl_composite_flush (ctx);
 
-	if (_cairo_gl_surface_is_texture (surface)) {
-	    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, surface->fb);
-	    glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
-	    glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
-	} else {
-	    ctx->make_current (ctx, surface);
-	    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
-	    glDrawBuffer (GL_BACK_LEFT);
-	    glReadBuffer (GL_BACK_LEFT);
-	}
+    ctx->current_target = surface;
+
+    if (_cairo_gl_surface_is_texture (surface)) {
+        glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, surface->fb);
+        glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
+        glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
+    } else {
+        ctx->make_current (ctx, surface);
+        glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+        glDrawBuffer (GL_BACK_LEFT);
+        glReadBuffer (GL_BACK_LEFT);
     }
 
     glViewport (0, 0, surface->width, surface->height);
