@@ -486,13 +486,14 @@ _cairo_gl_composite_set_clip_region (cairo_gl_composite_t *setup,
 static void
 _cairo_gl_operand_bind_to_shader (cairo_gl_context_t *ctx,
                                   cairo_gl_operand_t *operand,
-                                  const char         *name)
+                                  cairo_gl_tex_t      tex_unit)
 {
     char uniform_name[50];
     char *custom_part;
+    static const char *names[] = { "source", "mask" };
 
-    strcpy (uniform_name, name);
-    custom_part = uniform_name + strlen (name);
+    strcpy (uniform_name, names[tex_unit]);
+    custom_part = uniform_name + strlen (names[tex_unit]);
 
     switch (operand->type) {
     default:
@@ -500,7 +501,6 @@ _cairo_gl_operand_bind_to_shader (cairo_gl_context_t *ctx,
         ASSERT_NOT_REACHED;
     case CAIRO_GL_OPERAND_NONE:
     case CAIRO_GL_OPERAND_SPANS:
-    case CAIRO_GL_OPERAND_TEXTURE:
         break;
     case CAIRO_GL_OPERAND_CONSTANT:
         strcpy (custom_part, "_constant");
@@ -521,6 +521,10 @@ _cairo_gl_operand_bind_to_shader (cairo_gl_context_t *ctx,
                                       uniform_name,
 				      operand->linear.segment_x,
 				      operand->linear.segment_y);
+        strcpy (custom_part, "_sampler");
+	_cairo_gl_shader_bind_texture(ctx,
+                                      uniform_name,
+                                      tex_unit);
         break;
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
         strcpy (custom_part, "_matrix");
@@ -540,6 +544,16 @@ _cairo_gl_operand_bind_to_shader (cairo_gl_context_t *ctx,
         _cairo_gl_shader_bind_float  (ctx,
                                       uniform_name,
                                       operand->radial.radius_1);
+        strcpy (custom_part, "_sampler");
+	_cairo_gl_shader_bind_texture(ctx,
+                                      uniform_name,
+                                      tex_unit);
+        break;
+    case CAIRO_GL_OPERAND_TEXTURE:
+        strcpy (custom_part, "_sampler");
+	_cairo_gl_shader_bind_texture(ctx,
+                                      uniform_name,
+                                      tex_unit);
         break;
     }
 }
@@ -551,8 +565,8 @@ _cairo_gl_composite_bind_to_shader (cairo_gl_context_t   *ctx,
     if (ctx->current_shader == NULL)
         return;
 
-    _cairo_gl_operand_bind_to_shader (ctx, &setup->src, "source");
-    _cairo_gl_operand_bind_to_shader (ctx, &setup->mask, "mask");
+    _cairo_gl_operand_bind_to_shader (ctx, &setup->src,  CAIRO_GL_TEX_SOURCE);
+    _cairo_gl_operand_bind_to_shader (ctx, &setup->mask, CAIRO_GL_TEX_MASK);
 }
 
 static void
