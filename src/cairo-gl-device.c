@@ -60,6 +60,26 @@ _gl_unlock (void *device)
     ctx->current_target = NULL;
 }
 
+static cairo_status_t
+_gl_flush (void *device)
+{
+    cairo_gl_context_t *ctx;
+    cairo_status_t status;
+
+    status = _cairo_gl_context_acquire (device, &ctx);
+    if (unlikely (status))
+        return status;
+
+    _cairo_gl_composite_flush (ctx);
+
+    _cairo_gl_context_destroy_operand (ctx, CAIRO_GL_TEX_SOURCE);
+    _cairo_gl_context_destroy_operand (ctx, CAIRO_GL_TEX_MASK);
+
+    _cairo_gl_context_release (ctx);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static void
 _gl_finish (void *device)
 {
@@ -106,7 +126,7 @@ static const cairo_device_backend_t _cairo_gl_device_backend = {
     _gl_lock,
     _gl_unlock,
 
-    NULL, /* flush */
+    _gl_flush, /* flush */
     _gl_finish,
     _gl_destroy,
 };

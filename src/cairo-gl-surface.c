@@ -697,11 +697,17 @@ _cairo_gl_surface_finish (void *abstract_surface)
     if (unlikely (status))
         return status;
 
-    glDeleteFramebuffersEXT (1, &surface->fb);
-    glDeleteTextures (1, &surface->tex);
-
+    if (ctx->operands[CAIRO_GL_TEX_SOURCE].type == CAIRO_GL_OPERAND_TEXTURE &&
+        ctx->operands[CAIRO_GL_TEX_SOURCE].texture.surface == surface)
+        _cairo_gl_context_destroy_operand (ctx, CAIRO_GL_TEX_SOURCE);
+    if (ctx->operands[CAIRO_GL_TEX_MASK].type == CAIRO_GL_OPERAND_TEXTURE &&
+        ctx->operands[CAIRO_GL_TEX_MASK].texture.surface == surface)
+        _cairo_gl_context_destroy_operand (ctx, CAIRO_GL_TEX_MASK);
     if (ctx->current_target == surface)
 	ctx->current_target = NULL;
+
+    glDeleteFramebuffersEXT (1, &surface->fb);
+    glDeleteTextures (1, &surface->tex);
 
     _cairo_gl_context_release (ctx);
 
@@ -1276,6 +1282,28 @@ _cairo_gl_surface_get_font_options (void                  *abstract_surface,
     cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_ON);
 }
 
+static cairo_status_t
+_cairo_gl_surface_flush (void *abstract_surface)
+{
+    cairo_gl_surface_t *surface = abstract_surface;
+    cairo_status_t status;
+    cairo_gl_context_t *ctx;
+
+    status = _cairo_gl_context_acquire (surface->base.device, &ctx);
+    if (unlikely (status))
+        return status;
+
+    if ((ctx->operands[CAIRO_GL_TEX_SOURCE].type == CAIRO_GL_OPERAND_TEXTURE &&
+         ctx->operands[CAIRO_GL_TEX_SOURCE].texture.surface == surface) ||
+        (ctx->operands[CAIRO_GL_TEX_MASK].type == CAIRO_GL_OPERAND_TEXTURE &&
+         ctx->operands[CAIRO_GL_TEX_MASK].texture.surface == surface) ||
+        (ctx->current_target == surface))
+      _cairo_gl_composite_flush (ctx);
+
+    _cairo_gl_context_release (ctx);
+
+    return CAIRO_STATUS_SUCCESS;
+}
 
 static cairo_int_status_t
 _cairo_gl_surface_paint (void *abstract_surface,
@@ -1320,7 +1348,7 @@ const cairo_surface_backend_t _cairo_gl_surface_backend = {
     _cairo_gl_surface_get_extents,
     NULL, /* old_show_glyphs */
     _cairo_gl_surface_get_font_options,
-    NULL, /* flush */
+    _cairo_gl_surface_flush,
     NULL, /* mark_dirty_rectangle */
     _cairo_gl_surface_scaled_font_fini,
     _cairo_gl_surface_scaled_glyph_fini,

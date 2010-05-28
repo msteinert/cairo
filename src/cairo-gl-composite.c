@@ -249,8 +249,6 @@ _cairo_gl_pattern_texture_setup (cairo_gl_operand_t *operand,
 
     assert (surface->base.backend == &_cairo_gl_surface_backend);
 
-    cairo_surface_flush (&surface->base);
-
     operand->type = CAIRO_GL_OPERAND_TEXTURE;
     operand->texture.surface = surface;
     operand->texture.tex = surface->tex;
@@ -717,10 +715,12 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
         _cairo_gl_operand_setup_fixed (operand, tex_unit);
 }
 
-static void
+void
 _cairo_gl_context_destroy_operand (cairo_gl_context_t *ctx,
                                    cairo_gl_tex_t tex_unit)
 {
+    assert (ctx->vb == NULL);
+
     switch (ctx->operands[tex_unit].type) {
     default:
     case CAIRO_GL_OPERAND_COUNT:
