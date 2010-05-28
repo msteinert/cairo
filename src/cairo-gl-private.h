@@ -157,8 +157,6 @@ typedef struct cairo_gl_operand {
 	    float radius_1;
 	} radial;
     };
-
-    const cairo_pattern_t *pattern;
 } cairo_gl_operand_t;
 
 typedef struct _cairo_gl_context {

@@ -87,7 +87,7 @@ _cairo_gl_gradient_sample_width (const cairo_gradient_pattern_t *gradient)
 
 static cairo_status_t
 _render_gradient (const cairo_gl_context_t *ctx,
-		  cairo_gradient_pattern_t *pattern,
+		  const cairo_gradient_pattern_t *pattern,
 		  void *bytes,
 		  int width)
 {
@@ -151,7 +151,7 @@ _render_gradient (const cairo_gl_context_t *ctx,
 
 static cairo_int_status_t
 _cairo_gl_create_gradient_texture (cairo_gl_surface_t *dst,
-				   cairo_gradient_pattern_t *pattern,
+				   const cairo_gradient_pattern_t *pattern,
 				   GLuint *tex)
 {
     cairo_gl_context_t *ctx;
@@ -241,7 +241,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_operand_t *operand,
 	(attributes->extend == CAIRO_EXTEND_REPEAT ||
 	 attributes->extend == CAIRO_EXTEND_REFLECT))
     {
-	_cairo_pattern_release_surface (operand->pattern,
+	_cairo_pattern_release_surface (src,
 					&surface->base,
 					attributes);
 	return UNSUPPORTED ("EXT_texture_rectangle with repeat/reflect");
@@ -300,9 +300,10 @@ _cairo_gl_solid_operand_init (cairo_gl_operand_t *operand,
 
 static cairo_status_t
 _cairo_gl_gradient_operand_init (cairo_gl_operand_t *operand,
-				 cairo_gl_surface_t *dst)
+				 cairo_gl_surface_t *dst,
+                                 const cairo_pattern_t *pattern)
 {
-    cairo_gradient_pattern_t *gradient = (cairo_gradient_pattern_t *)operand->pattern;
+    const cairo_gradient_pattern_t *gradient = (const cairo_gradient_pattern_t *)pattern;
     cairo_status_t status;
 
     if (! _cairo_gl_device_has_glsl (dst->base.device))
@@ -328,7 +329,7 @@ _cairo_gl_gradient_operand_init (cairo_gl_operand_t *operand,
 	 */
 	cairo_matrix_init_translate (&operand->linear.m, -x0, -y0);
 	cairo_matrix_multiply (&operand->linear.m,
-			       &operand->pattern->matrix,
+			       &pattern->matrix,
 			       &operand->linear.m);
 	cairo_matrix_translate (&operand->linear.m, 0, dst->height);
 	cairo_matrix_scale (&operand->linear.m, 1.0, -1.0);
@@ -360,7 +361,7 @@ _cairo_gl_gradient_operand_init (cairo_gl_operand_t *operand,
 	 */
 	cairo_matrix_init_translate (&operand->radial.m, -x0, -y0);
 	cairo_matrix_multiply (&operand->radial.m,
-			       &operand->pattern->matrix,
+			       &pattern->matrix,
 			       &operand->radial.m);
 	cairo_matrix_translate (&operand->radial.m, 0, dst->height);
 	cairo_matrix_scale (&operand->radial.m, 1.0, -1.0);
@@ -390,7 +391,7 @@ _cairo_gl_operand_destroy (cairo_gl_operand_t *operand)
 	glDeleteTextures (1, &operand->radial.tex);
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
-        _cairo_pattern_release_surface (operand->pattern,
+        _cairo_pattern_release_surface (NULL, /* XXX */
                                         &operand->texture.surface->base,
                                         &operand->texture.attributes);
 	break;
@@ -415,15 +416,13 @@ _cairo_gl_operand_init (cairo_gl_operand_t *operand,
 {
     cairo_status_t status;
 
-    operand->pattern = pattern;
-
     switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
 	return _cairo_gl_solid_operand_init (operand,
 		                             &((cairo_solid_pattern_t *) pattern)->color);
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
-	status = _cairo_gl_gradient_operand_init (operand, dst);
+	status = _cairo_gl_gradient_operand_init (operand, dst, pattern);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    return status;
 
