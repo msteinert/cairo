@@ -399,10 +399,11 @@ cairo_private void
 _cairo_gl_context_fini_shaders (cairo_gl_context_t *ctx);
 
 cairo_private cairo_status_t
-_cairo_gl_set_shader_by_type (cairo_gl_context_t *ctx,
+_cairo_gl_get_shader_by_type (cairo_gl_context_t *ctx,
                               cairo_gl_operand_type_t source,
                               cairo_gl_operand_type_t mask,
-                              cairo_gl_shader_in_t in);
+                              cairo_gl_shader_in_t in,
+                              cairo_gl_shader_t **shader);
 
 cairo_private void
 _cairo_gl_shader_bind_float (cairo_gl_context_t *ctx,

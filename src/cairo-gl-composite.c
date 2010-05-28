@@ -938,16 +938,19 @@ _cairo_gl_composite_begin_component_alpha  (cairo_gl_context_t *ctx,
      * lets two values come out of the shader and into the blend unit.
      */
     if (setup->op == CAIRO_OPERATOR_OVER) {
+        cairo_gl_shader_t *pre_shader;
 	setup->op = CAIRO_OPERATOR_ADD;
-	status = _cairo_gl_set_shader_by_type (ctx,
+	status = _cairo_gl_get_shader_by_type (ctx,
                                                setup->src.type,
                                                setup->mask.type,
-                                               CAIRO_GL_SHADER_IN_CA_SOURCE_ALPHA);
+                                               CAIRO_GL_SHADER_IN_CA_SOURCE_ALPHA,
+                                               &pre_shader);
         if (unlikely (status))
             return status;
 
+        _cairo_gl_set_shader (ctx, pre_shader);
         _cairo_gl_composite_bind_to_shader (ctx, setup);
-        ctx->pre_shader = ctx->current_shader;
+        ctx->pre_shader = pre_shader;
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -961,6 +964,7 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     cairo_gl_context_t *ctx;
     cairo_status_t status;
     cairo_bool_t component_alpha;
+    cairo_gl_shader_t *shader;
 
     assert (setup->dst);
 
@@ -981,11 +985,12 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
             goto FAIL;
     }
 
-    status = _cairo_gl_set_shader_by_type (ctx,
+    status = _cairo_gl_get_shader_by_type (ctx,
                                            setup->src.type,
                                            setup->mask.type,
                                            component_alpha ? CAIRO_GL_SHADER_IN_CA_SOURCE
-                                                           : CAIRO_GL_SHADER_IN_NORMAL);
+                                                           : CAIRO_GL_SHADER_IN_NORMAL,
+                                           &shader);
     if (unlikely (status)) {
         ctx->pre_shader = NULL;
         goto FAIL;
@@ -1004,6 +1009,7 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
                             setup->op,
                             component_alpha);
 
+    _cairo_gl_set_shader (ctx, shader);
     _cairo_gl_composite_bind_to_shader (ctx, setup);
 
     glBindBufferARB (GL_ARRAY_BUFFER_ARB, ctx->vbo);
