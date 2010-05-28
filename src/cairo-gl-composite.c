@@ -721,7 +721,35 @@ static void
 _cairo_gl_context_destroy_operand (cairo_gl_context_t *ctx,
                                    cairo_gl_tex_t tex_unit)
 {
-  memset (&ctx->operands[tex_unit], 0, sizeof (cairo_gl_operand_t));
+    switch (ctx->operands[tex_unit].type) {
+    default:
+    case CAIRO_GL_OPERAND_COUNT:
+        ASSERT_NOT_REACHED;
+    case CAIRO_GL_OPERAND_NONE:
+        break;
+    case CAIRO_GL_OPERAND_SPANS:
+        glDisableClientState (GL_COLOR_ARRAY);
+        /* fall through */
+    case CAIRO_GL_OPERAND_CONSTANT:
+        if (ctx->current_shader == NULL) {
+            glActiveTexture (GL_TEXTURE0 + tex_unit);
+            glDisable (ctx->tex_target);
+        }
+        break;
+    case CAIRO_GL_OPERAND_TEXTURE:
+        glActiveTexture (GL_TEXTURE0 + tex_unit);
+        glDisable (ctx->tex_target);
+        glClientActiveTexture (GL_TEXTURE0 + tex_unit);
+        glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+        break;
+    case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
+        glActiveTexture (GL_TEXTURE0 + tex_unit);
+        glDisable (GL_TEXTURE_1D);
+        break;
+    }
+
+    memset (&ctx->operands[tex_unit], 0, sizeof (cairo_gl_operand_t));
 }
 
 /* Swizzles the source for creating the "source alpha" value
@@ -1191,19 +1219,6 @@ _cairo_gl_composite_end (cairo_gl_context_t *ctx,
     glDisable (GL_BLEND);
 
     glDisableClientState (GL_VERTEX_ARRAY);
-    glDisableClientState (GL_COLOR_ARRAY);
-
-    glClientActiveTexture (GL_TEXTURE0);
-    glDisableClientState (GL_TEXTURE_COORD_ARRAY);
-    glActiveTexture (GL_TEXTURE0);
-    glDisable (GL_TEXTURE_1D);
-    glDisable (ctx->tex_target);
-
-    glClientActiveTexture (GL_TEXTURE1);
-    glDisableClientState (GL_TEXTURE_COORD_ARRAY);
-    glActiveTexture (GL_TEXTURE1);
-    glDisable (GL_TEXTURE_1D);
-    glDisable (ctx->tex_target);
 
     _cairo_gl_context_destroy_operand (ctx, CAIRO_GL_TEX_SOURCE);
     _cairo_gl_context_destroy_operand (ctx, CAIRO_GL_TEX_MASK);
