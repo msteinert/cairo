@@ -816,7 +816,6 @@ _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op,
 	    dst_factor = GL_SRC_COLOR;
     }
 
-    glEnable (GL_BLEND);
     if (dst->base.content == CAIRO_CONTENT_ALPHA) {
         glBlendFuncSeparate (GL_ZERO, GL_ZERO, src_factor, dst_factor);
     } else {
@@ -956,6 +955,7 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
 	return status;
 
     assert (! _cairo_gl_context_is_in_progress (ctx));
+    glEnable (GL_BLEND);
 
     component_alpha = ((setup->mask.type == CAIRO_GL_OPERAND_TEXTURE) &&
                        setup->mask.texture.attributes.has_component_alpha);
@@ -1004,6 +1004,8 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     ctx->clip_region = cairo_region_reference (setup->clip_region);
     if (ctx->clip_region)
 	glEnable (GL_SCISSOR_TEST);
+    else
+	glDisable (GL_SCISSOR_TEST);
 
     *ctx_out = ctx;
 
@@ -1207,16 +1209,9 @@ _cairo_gl_composite_end (cairo_gl_context_t *ctx,
 {
     _cairo_gl_composite_flush (ctx);
 
-    if (ctx->clip_region) {
-	glDisable (GL_SCISSOR_TEST);
-        cairo_region_destroy (ctx->clip_region);
-        ctx->clip_region = NULL;
-    }
-
     glBindBufferARB (GL_ARRAY_BUFFER_ARB, 0);
 
     _cairo_gl_set_shader (ctx, NULL);
-    glDisable (GL_BLEND);
 
     glDisableClientState (GL_VERTEX_ARRAY);
 

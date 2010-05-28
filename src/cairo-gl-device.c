@@ -75,6 +75,14 @@ _gl_flush (void *device)
     _cairo_gl_context_destroy_operand (ctx, CAIRO_GL_TEX_SOURCE);
     _cairo_gl_context_destroy_operand (ctx, CAIRO_GL_TEX_MASK);
 
+    if (ctx->clip_region) {
+        cairo_region_destroy (ctx->clip_region);
+        ctx->clip_region = NULL;
+    }
+
+    glDisable (GL_SCISSOR_TEST);
+    glDisable (GL_BLEND);
+
     _cairo_gl_context_release (ctx);
 
     return CAIRO_STATUS_SUCCESS;
