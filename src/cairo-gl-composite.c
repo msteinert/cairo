@@ -960,7 +960,7 @@ cairo_status_t
 _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
                            cairo_gl_context_t **ctx_out)
 {
-    unsigned int dst_size, src_size, mask_size;
+    unsigned int dst_size, src_size, mask_size, vertex_size;
     cairo_gl_context_t *ctx;
     cairo_status_t status;
     cairo_bool_t component_alpha;
@@ -1008,7 +1008,11 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     src_size  = _cairo_gl_operand_get_vertex_size (setup->src.type);
     mask_size = _cairo_gl_operand_get_vertex_size (setup->mask.type);
 
-    ctx->vertex_size = dst_size + src_size + mask_size;
+    vertex_size = dst_size + src_size + mask_size;
+    if (ctx->vertex_size != vertex_size) {
+        _cairo_gl_composite_flush (ctx);
+        ctx->vertex_size = vertex_size;
+    }
 
     _cairo_gl_context_set_destination (ctx, setup->dst);
     _cairo_gl_set_operator (setup->dst,
@@ -1243,8 +1247,6 @@ _cairo_gl_composite_end (cairo_gl_context_t *ctx,
 
     _cairo_gl_context_destroy_operand (ctx, CAIRO_GL_TEX_SOURCE);
     _cairo_gl_context_destroy_operand (ctx, CAIRO_GL_TEX_MASK);
-
-    ctx->vertex_size = 0;
 }
 
 void

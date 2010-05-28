@@ -80,6 +80,7 @@ _gl_flush (void *device)
         ctx->clip_region = NULL;
     }
 
+    ctx->vertex_size = 0;
     ctx->pre_shader = NULL;
     _cairo_gl_set_shader (ctx, NULL);
 
