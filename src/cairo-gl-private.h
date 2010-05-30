@@ -235,7 +235,7 @@ _cairo_gl_surface_init (cairo_device_t *device,
 static cairo_always_inline cairo_bool_t cairo_warn
 _cairo_gl_surface_is_texture (cairo_gl_surface_t *surface)
 {
-    return surface->fb != 0;
+    return surface->tex != 0;
 }
 
 cairo_private cairo_status_t

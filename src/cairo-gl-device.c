@@ -221,6 +221,31 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void
+_cairo_gl_ensure_framebuffer (cairo_gl_context_t *ctx,
+                              cairo_gl_surface_t *surface)
+{
+    GLenum status;
+
+    if (likely (surface->fb))
+        return;
+
+    /* Create a framebuffer object wrapping the texture so that we can render
+     * to it.
+     */
+    glGenFramebuffersEXT (1, &surface->fb);
+    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, surface->fb);
+    glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
+			       GL_COLOR_ATTACHMENT0_EXT,
+			       ctx->tex_target,
+			       surface->tex,
+			       0);
+
+    status = glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT);
+    if (status != GL_FRAMEBUFFER_COMPLETE_EXT)
+	fprintf (stderr, "destination is framebuffer incomplete\n");
+}
+
 void
 _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
                                    cairo_gl_surface_t *surface)
@@ -233,6 +258,7 @@ _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
     ctx->current_target = surface;
 
     if (_cairo_gl_surface_is_texture (surface)) {
+        _cairo_gl_ensure_framebuffer (ctx, surface);
         glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, surface->fb);
         glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
         glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);

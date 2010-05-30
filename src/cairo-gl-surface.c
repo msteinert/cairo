@@ -242,7 +242,6 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
 {
     cairo_gl_surface_t *surface;
     GLenum format;
-    cairo_status_t status;
 
     assert (width <= ctx->max_framebuffer_size && height <= ctx->max_framebuffer_size);
 
@@ -288,22 +287,6 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
     glTexParameteri (ctx->tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexImage2D (ctx->tex_target, 0, format, width, height, 0,
 		  format, GL_UNSIGNED_BYTE, NULL);
-
-    /* Create a framebuffer object wrapping the texture so that we can render
-     * to it.
-     */
-    glGenFramebuffersEXT (1, &surface->fb);
-    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, surface->fb);
-    glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
-			       GL_COLOR_ATTACHMENT0_EXT,
-			       ctx->tex_target,
-			       surface->tex,
-			       0);
-    ctx->current_target = NULL;
-
-    status = glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT);
-    if (status != GL_FRAMEBUFFER_COMPLETE_EXT)
-	fprintf (stderr, "destination is framebuffer incomplete\n");
 
     return &surface->base;
 }
@@ -707,7 +690,8 @@ _cairo_gl_surface_finish (void *abstract_surface)
     if (ctx->current_target == surface)
 	ctx->current_target = NULL;
 
-    glDeleteFramebuffersEXT (1, &surface->fb);
+    if (surface->fb)
+        glDeleteFramebuffersEXT (1, &surface->fb);
     glDeleteTextures (1, &surface->tex);
 
     _cairo_gl_context_release (ctx);
