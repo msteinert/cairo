@@ -181,6 +181,7 @@ _cairo_gl_create_gradient_texture (cairo_gl_surface_t *dst,
     glUnmapBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB);
 
     glGenTextures (1, tex);
+    _cairo_gl_context_activate (ctx, CAIRO_GL_TEX_TEMP);
     glBindTexture (GL_TEXTURE_1D, *tex);
     glTexImage1D (GL_TEXTURE_1D, 0, GL_RGBA8, tex_width, 0,
                   GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, 0);
@@ -642,6 +643,7 @@ _cairo_gl_operand_setup_fixed (cairo_gl_operand_t *operand,
     }
 
     switch (tex_unit) {
+    case CAIRO_GL_TEX_TEMP:
     default:
         ASSERT_NOT_REACHED;
         break;

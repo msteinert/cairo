@@ -90,7 +90,8 @@ typedef struct cairo_gl_glyph_cache {
 
 typedef enum cairo_gl_tex {
     CAIRO_GL_TEX_SOURCE = 0,
-    CAIRO_GL_TEX_MASK = 1
+    CAIRO_GL_TEX_MASK = 1,
+    CAIRO_GL_TEX_TEMP = 2
 } cairo_gl_tex_t;
 
 typedef enum cairo_gl_operand_type {
@@ -167,6 +168,7 @@ typedef struct _cairo_gl_context {
     GLuint vbo;
     GLint max_framebuffer_size;
     GLint max_texture_size;
+    GLint max_textures;
     GLenum tex_target;
 
     const cairo_gl_shader_impl_t *shader_impl;
@@ -278,6 +280,10 @@ _cairo_gl_context_acquire (cairo_device_t *device,
 
 cairo_private void
 _cairo_gl_context_set_destination (cairo_gl_context_t *ctx, cairo_gl_surface_t *surface);
+
+cairo_private void
+_cairo_gl_context_activate (cairo_gl_context_t *ctx,
+                            cairo_gl_tex_t      tex_unit);
 
 cairo_private cairo_bool_t
 _cairo_gl_operator_is_supported (cairo_operator_t op);

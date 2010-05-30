@@ -281,6 +281,7 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
     }
 
     /* Create the texture used to store the surface's data. */
+    _cairo_gl_context_activate (ctx, CAIRO_GL_TEX_TEMP);
     glGenTextures (1, &surface->tex);
     glBindTexture (ctx->tex_target, surface->tex);
     glTexParameteri (ctx->tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -525,6 +526,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
     glPixelStorei (GL_UNPACK_ROW_LENGTH, src->stride / cpp);
     if (_cairo_gl_surface_is_texture (dst)) {
+        _cairo_gl_context_activate (ctx, CAIRO_GL_TEX_TEMP);
 	glBindTexture (ctx->tex_target, dst->tex);
 	glTexParameteri (ctx->tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri (ctx->tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);

@@ -214,11 +214,28 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     glGetIntegerv (GL_MAX_RENDERBUFFER_SIZE, &ctx->max_framebuffer_size);
     ctx->max_texture_size = 0;
     glGetIntegerv (GL_MAX_TEXTURE_SIZE, &ctx->max_texture_size);
+    ctx->max_textures = 0;
+    glGetIntegerv (GL_MAX_TEXTURE_UNITS, &ctx->max_textures);
 
     for (n = 0; n < ARRAY_LENGTH (ctx->glyph_cache); n++)
 	_cairo_gl_glyph_cache_init (&ctx->glyph_cache[n]);
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+void
+_cairo_gl_context_activate (cairo_gl_context_t *ctx,
+                            cairo_gl_tex_t      tex_unit)
+{
+    if (ctx->max_textures <= (GLint) tex_unit) {
+        if (tex_unit < 2) {
+            _cairo_gl_composite_flush (ctx);
+            _cairo_gl_context_destroy_operand (ctx, ctx->max_textures - 1);   
+        }
+        glActiveTexture (ctx->max_textures - 1);
+    } else {
+        glActiveTexture (GL_TEXTURE0 + tex_unit);
+    }
 }
 
 static void
