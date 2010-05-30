@@ -663,8 +663,8 @@ cairo_surface_finish (cairo_surface_t *surface)
     if (surface->snapshot_of != NULL)
 	_cairo_surface_detach_snapshot (surface);
 
-    surface->finished = TRUE;
     cairo_surface_flush (surface);
+    surface->finished = TRUE;
 
     /* call finish even if in error mode */
     if (surface->backend->finish) {
