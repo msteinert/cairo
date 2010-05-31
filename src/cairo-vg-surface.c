@@ -430,7 +430,7 @@ _vg_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clipper,
 
     status = _cairo_surface_fill (&mask->base,
 				  CAIRO_OPERATOR_SOURCE,
-				  _cairo_pattern_white.base,
+				  &_cairo_pattern_white.base,
 				  path, fill_rule, tolerance, antialias,
 				  NULL);
     if (status) {
