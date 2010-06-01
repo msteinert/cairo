@@ -1726,6 +1726,69 @@ _cairo_pattern_reset_solid_surface_cache (void)
     CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_surface_cache_lock);
 }
 
+static void
+_extents_to_linear_parameter (const cairo_linear_pattern_t *linear,
+			      const cairo_rectangle_int_t *extents,
+			      double t[2])
+{
+    double t0, tdx, tdy;
+    double p1x, p1y, pdx, pdy, invsqnorm;
+
+    p1x = _cairo_fixed_to_double (linear->p1.x);
+    p1y = _cairo_fixed_to_double (linear->p1.y);
+    pdx = _cairo_fixed_to_double (linear->p2.x) - p1x;
+    pdy = _cairo_fixed_to_double (linear->p2.y) - p1y;
+    invsqnorm = 1.0 / (pdx * pdx + pdy * pdy);
+    pdx *= invsqnorm;
+    pdy *= invsqnorm;
+
+    t0 = (extents->x - p1x) * pdx + (extents->y - p1y) * pdy;
+    tdx = extents->width * pdx;
+    tdy = extents->height * pdy;
+
+    t[0] = t[1] = t0;
+    if (tdx < 0)
+	t[0] += tdx;
+    else
+	t[1] += tdx;
+
+    if (tdy < 0)
+	t[0] += tdy;
+    else
+	t[1] += tdy;
+}
+
+static cairo_bool_t
+_gradient_is_clear (const cairo_gradient_pattern_t *gradient,
+		    const cairo_rectangle_int_t *extents)
+{
+    unsigned int i;
+
+    /* Check if the extents intersect the drawn part of the pattern.
+     * TODO: radial gradients, other linear extend modes.
+     */
+    if (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR) {
+	if (gradient->base.extend == CAIRO_EXTEND_NONE) {
+	    cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) gradient;
+	    if (linear->p1.x == linear->p2.x && linear->p1.y == linear->p2.y)
+		return TRUE;
+
+	    if (extents != NULL) {
+		double t[2];
+		_extents_to_linear_parameter (linear, extents, t);
+		if ((t[0] <= 0.0 && t[1] <= 0.0) || (t[0] >= 1.0 && t[1] >= 1.0))
+		    return TRUE;
+	    }
+	}
+    }
+
+    for (i = 0; i < gradient->n_stops; i++)
+	if (! CAIRO_COLOR_IS_CLEAR (&gradient->stops[i].color))
+	    return FALSE;
+
+    return TRUE;
+}
+
 /**
  * _cairo_pattern_is_opaque_solid
  *
@@ -1779,11 +1842,44 @@ _surface_is_opaque (const cairo_surface_pattern_t *pattern,
 }
 
 static cairo_bool_t
-_gradient_is_opaque (const cairo_gradient_pattern_t *gradient)
+_surface_is_clear (const cairo_surface_pattern_t *pattern)
+{
+    cairo_rectangle_int_t extents;
+
+    if (_cairo_surface_get_extents (pattern->surface, &extents) &&
+	(extents.width == 0 || extents.height == 0))
+	return TRUE;
+
+    return pattern->surface->is_clear &&
+	pattern->surface->content & CAIRO_CONTENT_ALPHA;
+}
+
+static cairo_bool_t
+_gradient_is_opaque (const cairo_gradient_pattern_t *gradient,
+		     const cairo_rectangle_int_t *extents)
 {
     unsigned int i;
 
     if (gradient->n_stops == 0)
+	return FALSE;
+
+    /* TODO: radial gradients, degenerate linear gradients */
+    if (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR) {
+	cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) gradient;
+	if (linear->p1.x == linear->p2.x && linear->p1.y == linear->p2.y)
+	    return FALSE;
+
+	if (gradient->base.extend == CAIRO_EXTEND_NONE) {
+	    double t[2];
+
+	    if (extents == NULL)
+		return FALSE;
+
+	    _extents_to_linear_parameter (linear, extents, t);
+	    if (t[0] < 0.0 || t[1] > 1.0)
+		return FALSE;
+	}
+    } else
 	return FALSE;
 
     for (i = 0; i < gradient->n_stops; i++)
@@ -1819,7 +1915,7 @@ _cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern,
 	return _surface_is_opaque (&pattern->surface, extents);
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
-	return _gradient_is_opaque (&pattern->gradient.base);
+	return _gradient_is_opaque (&pattern->gradient.base, extents);
     }
 
     ASSERT_NOT_REACHED;
@@ -1837,16 +1933,16 @@ _cairo_pattern_is_clear (const cairo_pattern_t *abstract_pattern)
     pattern = (cairo_pattern_union_t *) abstract_pattern;
     switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
-	return pattern->solid.color.alpha_short == 0x0000;
+	return CAIRO_COLOR_IS_CLEAR (&pattern->solid.color);
     case CAIRO_PATTERN_TYPE_SURFACE:
-	return pattern->surface.surface->is_clear &&
-	       pattern->surface.surface->content & CAIRO_CONTENT_ALPHA;
-    default:
-	ASSERT_NOT_REACHED;
+	return _surface_is_clear (&pattern->surface);
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
-	return pattern->gradient.base.n_stops == 0;
+	return _gradient_is_clear (&pattern->gradient.base, NULL);
     }
+
+    ASSERT_NOT_REACHED;
+    return FALSE;
 }
 
 /**
