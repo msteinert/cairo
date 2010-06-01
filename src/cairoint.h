@@ -2216,6 +2216,11 @@ _cairo_pattern_transform (cairo_pattern_t      *pattern,
 			  const cairo_matrix_t *ctm_inverse);
 
 cairo_private cairo_bool_t
+_cairo_gradient_pattern_is_solid (const cairo_gradient_pattern_t *gradient,
+				  const cairo_rectangle_int_t *extents,
+				  cairo_color_t *color);
+
+cairo_private cairo_bool_t
 _cairo_pattern_is_opaque_solid (const cairo_pattern_t *pattern);
 
 cairo_private cairo_bool_t

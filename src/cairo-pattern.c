@@ -1790,6 +1790,59 @@ _gradient_is_clear (const cairo_gradient_pattern_t *gradient,
 }
 
 /**
+ * _cairo_gradient_pattern_is_solid
+ *
+ * Convenience function to determine whether a gradient pattern is
+ * a solid color within the given extents. In this case the color
+ * argument is initialized to the color the pattern represents.
+ * This functions doesn't handle completely transparent gradients,
+ * thus it should be called only after _cairo_pattern_is_clear has
+ * returned FALSE.
+ *
+ * Return value: %TRUE if the pattern is a solid color.
+ **/
+cairo_bool_t
+_cairo_gradient_pattern_is_solid (const cairo_gradient_pattern_t *gradient,
+				  const cairo_rectangle_int_t *extents,
+				  cairo_color_t *color)
+{
+    unsigned int i;
+
+     /* TODO: radial, degenerate linear */
+    if (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR) {
+	if (gradient->base.extend == CAIRO_EXTEND_NONE) {
+	    cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) gradient;
+	    double t[2];
+
+	    /* We already know that the pattern is not clear, thus if some
+	     * part of it is clear, the whole is not solid.
+	     */
+
+	    if (extents == NULL)
+		return FALSE;
+
+	    _extents_to_linear_parameter (linear, extents, t);
+	    if (t[0] < 0.0 || t[1] > 1.0)
+		return FALSE;
+	}
+    } else
+	return FALSE;
+
+    for (i = 1; i < gradient->n_stops; i++)
+	if (! _cairo_color_stop_equal (&gradient->stops[0].color,
+				       &gradient->stops[i].color))
+	    return FALSE;
+
+    _cairo_color_init_rgba (color,
+			    gradient->stops[0].color.red,
+			    gradient->stops[0].color.green,
+			    gradient->stops[0].color.blue,
+			    gradient->stops[0].color.alpha);
+
+    return TRUE;
+}
+
+/**
  * _cairo_pattern_is_opaque_solid
  *
  * Convenience function to determine whether a pattern is an opaque
