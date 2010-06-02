@@ -882,6 +882,8 @@ _cairo_gl_set_operator (cairo_gl_context_t *ctx,
 
     if (ctx->current_target->base.content == CAIRO_CONTENT_ALPHA) {
         glBlendFuncSeparate (GL_ZERO, GL_ZERO, src_factor, dst_factor);
+    } else if (ctx->current_target->base.content == CAIRO_CONTENT_COLOR) {
+        glBlendFuncSeparate (src_factor, dst_factor, GL_ONE, GL_ONE);
     } else {
         glBlendFunc (src_factor, dst_factor);
     }
