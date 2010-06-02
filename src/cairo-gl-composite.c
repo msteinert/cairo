@@ -682,6 +682,7 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
                                  unsigned int        vertex_offset)
 {
     memcpy (&ctx->operands[tex_unit], operand, sizeof (cairo_gl_operand_t));
+    ctx->operands[tex_unit].vertex_offset = vertex_offset;
 
     switch (operand->type) {
     default:

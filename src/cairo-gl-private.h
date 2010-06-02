@@ -158,6 +158,7 @@ typedef struct cairo_gl_operand {
 	    float radius_1;
 	} radial;
     };
+    unsigned int vertex_offset;
 } cairo_gl_operand_t;
 
 typedef struct _cairo_gl_context {
