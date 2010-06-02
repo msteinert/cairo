@@ -675,14 +675,59 @@ _cairo_gl_operand_setup_fixed (cairo_gl_operand_t *operand,
     }
 }
 
+static cairo_bool_t
+_cairo_gl_operand_needs_setup (cairo_gl_operand_t *dest,
+                               cairo_gl_operand_t *source,
+                               unsigned int        vertex_offset)
+{
+    if (dest->type != source->type)
+        return TRUE;
+    if (dest->vertex_offset != vertex_offset)
+        return TRUE;
+
+    switch (source->type) {
+    case CAIRO_GL_OPERAND_NONE:
+    case CAIRO_GL_OPERAND_SPANS:
+        return FALSE;
+    case CAIRO_GL_OPERAND_CONSTANT:
+        return dest->constant.color[0] != source->constant.color[0] ||
+               dest->constant.color[1] != source->constant.color[1] ||
+               dest->constant.color[2] != source->constant.color[2] ||
+               dest->constant.color[3] != source->constant.color[3];
+    case CAIRO_GL_OPERAND_TEXTURE:
+        return dest->texture.surface != source->texture.surface ||
+               dest->texture.attributes.extend != source->texture.attributes.extend ||
+               dest->texture.attributes.filter != source->texture.attributes.filter ||
+               dest->texture.attributes.has_component_alpha != source->texture.attributes.has_component_alpha;
+    case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
+        /* XXX: improve this */
+        return TRUE;
+    default:
+    case CAIRO_GL_OPERAND_COUNT:
+        ASSERT_NOT_REACHED;
+        break;
+    }
+    return TRUE;
+}
+
 static void
 _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
                                  cairo_gl_tex_t      tex_unit,
                                  cairo_gl_operand_t *operand,
                                  unsigned int        vertex_offset)
 {
+    cairo_bool_t needs_setup;
+
+    needs_setup = _cairo_gl_operand_needs_setup (&ctx->operands[tex_unit],
+                                                 operand,
+                                                 vertex_offset);
+
     memcpy (&ctx->operands[tex_unit], operand, sizeof (cairo_gl_operand_t));
     ctx->operands[tex_unit].vertex_offset = vertex_offset;
+
+    if (! needs_setup)
+        return;
 
     switch (operand->type) {
     default:
