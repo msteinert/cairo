@@ -715,10 +715,13 @@ static void
 _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
                                  cairo_gl_tex_t      tex_unit,
                                  cairo_gl_operand_t *operand,
-                                 unsigned int        vertex_offset)
+                                 unsigned int        vertex_offset,
+                                 cairo_bool_t        use_shaders)
 {
     cairo_bool_t needs_setup;
 
+    /* XXX: we need to do setup when switching from shaders
+     * to no shaders (or back) */
     needs_setup = _cairo_gl_operand_needs_setup (&ctx->operands[tex_unit],
                                                  operand,
                                                  vertex_offset);
@@ -741,13 +744,11 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
 	glEnableClientState (GL_COLOR_ARRAY);
         /* fall through */
     case CAIRO_GL_OPERAND_CONSTANT:
-        if (ctx->current_shader == NULL) {
+        if (! use_shaders) {
             glActiveTexture (GL_TEXTURE0 + tex_unit);
             /* Have to have a dummy texture bound in order to use the combiner unit. */
             glBindTexture (ctx->tex_target, ctx->dummy_tex);
             glEnable (ctx->tex_target);
-        } else {
-            glDisable (ctx->tex_target);
         }
         break;
     case CAIRO_GL_OPERAND_TEXTURE:
@@ -773,7 +774,7 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
         break;
     }
 
-    if (ctx->current_shader == NULL)
+    if (! use_shaders)
         _cairo_gl_operand_setup_fixed (operand, tex_unit);
 }
 
@@ -1085,8 +1086,8 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
         glEnableClientState (GL_VERTEX_ARRAY);
     }
 
-    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_SOURCE, &setup->src, dst_size);
-    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_MASK, &setup->mask, dst_size + src_size);
+    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_SOURCE, &setup->src, dst_size, shader != NULL);
+    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_MASK, &setup->mask, dst_size + src_size, shader != NULL);
 
     cairo_region_destroy (ctx->clip_region);
     ctx->clip_region = cairo_region_reference (setup->clip_region);
