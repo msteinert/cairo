@@ -726,6 +726,11 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
                                                  operand,
                                                  vertex_offset);
 
+    if (needs_setup) {
+        _cairo_gl_composite_flush (ctx);
+        _cairo_gl_context_destroy_operand (ctx, tex_unit);
+    }
+
     memcpy (&ctx->operands[tex_unit], operand, sizeof (cairo_gl_operand_t));
     ctx->operands[tex_unit].vertex_offset = vertex_offset;
 
@@ -858,6 +863,9 @@ _cairo_gl_set_operator (cairo_gl_context_t *ctx,
     GLenum src_factor, dst_factor;
 
     assert (op < ARRAY_LENGTH (blend_factors));
+    /* different dst and component_alpha changes cause flushes elsewhere */
+    if (ctx->current_operator != op)
+        _cairo_gl_composite_flush (ctx);
     ctx->current_operator = op;
 
     src_factor = blend_factors[op].src;
@@ -1068,6 +1076,17 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     }
 
     _cairo_gl_context_set_destination (ctx, setup->dst);
+
+    if (_cairo_gl_context_is_flushed (ctx)) {
+        glBindBufferARB (GL_ARRAY_BUFFER_ARB, ctx->vbo);
+
+        glVertexPointer (2, GL_FLOAT, ctx->vertex_size, NULL);
+        glEnableClientState (GL_VERTEX_ARRAY);
+    }
+
+    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_SOURCE, &setup->src, dst_size, shader != NULL);
+    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_MASK, &setup->mask, dst_size + src_size, shader != NULL);
+
     _cairo_gl_set_operator (ctx,
                             setup->op,
                             component_alpha);
@@ -1079,16 +1098,11 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
         }
         _cairo_gl_set_shader (ctx, shader);
         _cairo_gl_composite_bind_to_shader (ctx, setup);
-
-        glBindBufferARB (GL_ARRAY_BUFFER_ARB, ctx->vbo);
-
-        glVertexPointer (2, GL_FLOAT, ctx->vertex_size, NULL);
-        glEnableClientState (GL_VERTEX_ARRAY);
     }
 
-    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_SOURCE, &setup->src, dst_size, shader != NULL);
-    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_MASK, &setup->mask, dst_size + src_size, shader != NULL);
-
+    if (! _cairo_gl_context_is_flushed (ctx) &&
+        ! cairo_region_equal (ctx->clip_region, setup->clip_region))
+        _cairo_gl_composite_flush (ctx);
     cairo_region_destroy (ctx->clip_region);
     ctx->clip_region = cairo_region_reference (setup->clip_region);
     if (ctx->clip_region)
@@ -1290,16 +1304,6 @@ _cairo_gl_composite_emit_glyph (cairo_gl_context_t *ctx,
     _cairo_gl_composite_emit_glyph_vertex (ctx, x2, y1, glyph_x2, glyph_y1);
     _cairo_gl_composite_emit_glyph_vertex (ctx, x2, y2, glyph_x2, glyph_y2);
     _cairo_gl_composite_emit_glyph_vertex (ctx, x1, y2, glyph_x1, glyph_y2);
-}
-
-void
-_cairo_gl_composite_end (cairo_gl_context_t *ctx,
-                         cairo_gl_composite_t *setup)
-{
-    _cairo_gl_composite_flush (ctx);
-
-    _cairo_gl_context_destroy_operand (ctx, CAIRO_GL_TEX_SOURCE);
-    _cairo_gl_context_destroy_operand (ctx, CAIRO_GL_TEX_MASK);
 }
 
 void

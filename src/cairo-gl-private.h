@@ -348,10 +348,6 @@ cairo_private void
 _cairo_gl_composite_flush (cairo_gl_context_t *ctx);
 
 cairo_private void
-_cairo_gl_composite_end (cairo_gl_context_t *ctx,
-                         cairo_gl_composite_t *setup);
-
-cairo_private void
 _cairo_gl_context_destroy_operand (cairo_gl_context_t *ctx,
                                    cairo_gl_tex_t tex_unit);
 

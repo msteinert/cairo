@@ -440,6 +440,8 @@ cairo_gl_surface_swapbuffers (cairo_surface_t *abstract_surface)
         if (_cairo_gl_context_acquire (surface->base.device, &ctx))
             return;
 
+        cairo_surface_flush (abstract_surface);
+
 	ctx->swap_buffers (ctx, surface);
 
         _cairo_gl_context_release (ctx);
@@ -553,11 +555,13 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	    color.blue = 0.0;
 	    color.alpha = 1.0;
 
+            _cairo_gl_composite_flush (ctx);
 	    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
 	    _cairo_gl_surface_fill_rectangles (dst,
 					       CAIRO_OPERATOR_SOURCE,
 					       &color,
 					       &rect, 1);
+            _cairo_gl_composite_flush (ctx);
 	    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	}
     } else {
@@ -652,6 +656,8 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
     status = _cairo_gl_context_acquire (surface->base.device, &ctx);
     if (unlikely (status))
         return status;
+
+    _cairo_gl_composite_flush (ctx);
     _cairo_gl_context_set_destination (ctx, surface);
 
     glPixelStorei (GL_PACK_ALIGNMENT, 1);
@@ -951,7 +957,6 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
                                        0);
     }
 
-    _cairo_gl_composite_end (ctx, &setup);
     _cairo_gl_context_release (ctx);
 
   CLEANUP:
@@ -1063,7 +1068,6 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_dst,
                                        0);
     }
 
-    _cairo_gl_composite_end (ctx, &setup);
     _cairo_gl_context_release (ctx);
 
   CLEANUP:
@@ -1166,10 +1170,6 @@ _cairo_gl_surface_span_renderer_destroy (void *abstract_renderer)
 static cairo_status_t
 _cairo_gl_surface_span_renderer_finish (void *abstract_renderer)
 {
-    cairo_gl_surface_span_renderer_t *renderer = abstract_renderer;
-
-    _cairo_gl_composite_end (renderer->ctx, &renderer->setup);
-
     return CAIRO_STATUS_SUCCESS;
 }
 

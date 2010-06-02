@@ -293,9 +293,6 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 	}
 
 	if (scaled_glyph->surface->format != last_format) {
-            if (last_format != CAIRO_FORMAT_INVALID)
-                _cairo_gl_composite_end (ctx, &setup);
-
 	    cache = cairo_gl_context_get_glyph_cache (ctx,
 						      scaled_glyph->surface->format);
 
@@ -350,7 +347,6 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 
     status = CAIRO_STATUS_SUCCESS;
   FINISH:
-    _cairo_gl_composite_end (ctx, &setup);
     _cairo_scaled_font_thaw_cache (scaled_font);
 
     _cairo_gl_context_release (ctx);
