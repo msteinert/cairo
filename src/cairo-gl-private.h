@@ -182,6 +182,7 @@ typedef struct _cairo_gl_context {
     cairo_list_t fonts;
 
     cairo_gl_surface_t *current_target;
+    cairo_operator_t current_operator;
     cairo_gl_shader_t *pre_shader; /* for component alpha */
     cairo_gl_shader_t *current_shader;
 

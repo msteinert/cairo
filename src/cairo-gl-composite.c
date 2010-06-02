@@ -830,8 +830,9 @@ _cairo_gl_set_src_alpha (cairo_gl_context_t *ctx,
 }
 
 static void
-_cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op,
-			cairo_bool_t component_alpha)
+_cairo_gl_set_operator (cairo_gl_context_t *ctx,
+                        cairo_operator_t    op,
+			cairo_bool_t        component_alpha)
 {
     struct {
 	GLenum src;
@@ -856,6 +857,7 @@ _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op,
     GLenum src_factor, dst_factor;
 
     assert (op < ARRAY_LENGTH (blend_factors));
+    ctx->current_operator = op;
 
     src_factor = blend_factors[op].src;
     dst_factor = blend_factors[op].dst;
@@ -864,7 +866,7 @@ _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op,
      * due to texture filtering of GL_CLAMP_TO_BORDER.  So fix those
      * bits in that case.
      */
-    if (dst->base.content == CAIRO_CONTENT_COLOR) {
+    if (ctx->current_target->base.content == CAIRO_CONTENT_COLOR) {
 	if (src_factor == GL_ONE_MINUS_DST_ALPHA)
 	    src_factor = GL_ZERO;
 	if (src_factor == GL_DST_ALPHA)
@@ -878,7 +880,7 @@ _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op,
 	    dst_factor = GL_SRC_COLOR;
     }
 
-    if (dst->base.content == CAIRO_CONTENT_ALPHA) {
+    if (ctx->current_target->base.content == CAIRO_CONTENT_ALPHA) {
         glBlendFuncSeparate (GL_ZERO, GL_ZERO, src_factor, dst_factor);
     } else {
         glBlendFunc (src_factor, dst_factor);
@@ -1063,7 +1065,7 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     }
 
     _cairo_gl_context_set_destination (ctx, setup->dst);
-    _cairo_gl_set_operator (setup->dst,
+    _cairo_gl_set_operator (ctx,
                             setup->op,
                             component_alpha);
 
@@ -1110,13 +1112,13 @@ _cairo_gl_composite_draw (cairo_gl_context_t *ctx,
         cairo_gl_shader_t *prev_shader = ctx->current_shader;
 
         _cairo_gl_set_shader (ctx, ctx->pre_shader);
-        _cairo_gl_set_operator (ctx->current_target, CAIRO_OPERATOR_DEST_OUT, TRUE);
+        _cairo_gl_set_operator (ctx, CAIRO_OPERATOR_DEST_OUT, TRUE);
         _cairo_gl_set_src_alpha (ctx, TRUE);
         glDrawArrays (GL_TRIANGLES, 0, count);
         _cairo_gl_set_src_alpha (ctx, FALSE);
 
         _cairo_gl_set_shader (ctx, prev_shader);
-        _cairo_gl_set_operator (ctx->current_target, CAIRO_OPERATOR_ADD, TRUE);
+        _cairo_gl_set_operator (ctx, CAIRO_OPERATOR_ADD, TRUE);
         glDrawArrays (GL_TRIANGLES, 0, count);
     }
 }

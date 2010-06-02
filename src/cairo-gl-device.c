@@ -80,6 +80,7 @@ _gl_flush (void *device)
     }
 
     ctx->current_target = NULL;
+    ctx->current_operator = -1;
     ctx->vertex_size = 0;
     ctx->pre_shader = NULL;
     _cairo_gl_set_shader (ctx, NULL);
@@ -195,6 +196,8 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 	ctx->tex_target = GL_TEXTURE_RECTANGLE_EXT;
     else
 	ctx->tex_target = GL_TEXTURE_2D;
+
+    ctx->current_operator = -1;
 
     status = _cairo_gl_context_init_shaders (ctx);
     if (unlikely (status))
