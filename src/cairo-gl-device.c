@@ -57,7 +57,6 @@ _gl_unlock (void *device)
     cairo_gl_context_t *ctx = (cairo_gl_context_t *) device;
 
     ctx->release (ctx);
-    ctx->current_target = NULL;
 }
 
 static cairo_status_t
@@ -80,6 +79,7 @@ _gl_flush (void *device)
         ctx->clip_region = NULL;
     }
 
+    ctx->current_target = NULL;
     ctx->vertex_size = 0;
     ctx->pre_shader = NULL;
     _cairo_gl_set_shader (ctx, NULL);
