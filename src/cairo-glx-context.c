@@ -67,13 +67,23 @@ static void
 _glx_acquire (void *abstract_ctx)
 {
     cairo_glx_context_t *ctx = abstract_ctx;
+    GLXDrawable current_drawable;
 
     ctx->prev_context = glXGetCurrentContext ();
     ctx->prev_drawable = glXGetCurrentDrawable ();
 
-    /* XXX: This is necessary with current code, but shouldn't be */
-    if (ctx->prev_context != ctx->context)
-        glXMakeCurrent (ctx->display, ctx->dummy_window, ctx->context);
+    if (ctx->base.current_target == NULL ||
+        _cairo_gl_surface_is_texture (ctx->base.current_target)) {
+        current_drawable = ctx->dummy_window;
+    } else {
+        cairo_glx_surface_t *surface = (cairo_glx_surface_t *) ctx->base.current_target;
+        current_drawable = surface->win;
+    }
+
+    if (ctx->prev_context != ctx->context ||
+        (ctx->prev_drawable != current_drawable &&
+         current_drawable != ctx->dummy_window))
+        glXMakeCurrent (ctx->display, current_drawable, ctx->context);
 }
 
 static void
