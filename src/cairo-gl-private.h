@@ -148,6 +148,7 @@ typedef struct cairo_gl_operand {
 	    cairo_matrix_t m;
 	    float segment_x;
 	    float segment_y;
+            cairo_extend_t extend;
 	} linear;
 	struct {
 	    GLuint tex;
@@ -156,6 +157,7 @@ typedef struct cairo_gl_operand {
 	    float circle_1_y;
 	    float radius_0;
 	    float radius_1;
+            cairo_extend_t extend;
 	} radial;
     };
     unsigned int vertex_offset;

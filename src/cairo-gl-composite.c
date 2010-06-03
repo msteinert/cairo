@@ -188,24 +188,6 @@ _cairo_gl_create_gradient_texture (cairo_gl_surface_t *dst,
 
     glBindBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    switch (pattern->base.extend) {
-    case CAIRO_EXTEND_NONE:
-	glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	break;
-    case CAIRO_EXTEND_PAD:
-	glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	break;
-    case CAIRO_EXTEND_REPEAT:
-	glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	break;
-    case CAIRO_EXTEND_REFLECT:
-	glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	break;
-    }
-    
     _cairo_gl_context_release (ctx);
     return CAIRO_STATUS_SUCCESS;
 }
@@ -336,6 +318,8 @@ _cairo_gl_gradient_operand_init (cairo_gl_operand_t *operand,
 	operand->linear.segment_x = x1 - x0;
 	operand->linear.segment_y = y1 - y0;
 
+        operand->linear.extend = pattern->extend;
+
 	operand->type = CAIRO_GL_OPERAND_LINEAR_GRADIENT;
         return CAIRO_STATUS_SUCCESS;
     } else {
@@ -369,6 +353,8 @@ _cairo_gl_gradient_operand_init (cairo_gl_operand_t *operand,
 	operand->radial.circle_1_y = y1 - y0;
 	operand->radial.radius_0 = r0;
 	operand->radial.radius_1 = r1;
+
+        operand->radial.extend = pattern->extend;
 
 	operand->type = CAIRO_GL_OPERAND_RADIAL_GRADIENT;
         return CAIRO_STATUS_SUCCESS;
@@ -779,11 +765,15 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
         glActiveTexture (GL_TEXTURE0 + tex_unit);
         glBindTexture (GL_TEXTURE_1D, operand->linear.tex);
+        _cairo_gl_texture_set_extend (ctx, GL_TEXTURE_1D, operand->linear.extend);
+        _cairo_gl_texture_set_filter (ctx, GL_TEXTURE_1D, CAIRO_FILTER_BILINEAR);
         glEnable (GL_TEXTURE_1D);
         break;
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
         glActiveTexture (GL_TEXTURE0 + tex_unit);
         glBindTexture (GL_TEXTURE_1D, operand->radial.tex);
+        _cairo_gl_texture_set_extend (ctx, GL_TEXTURE_1D, operand->radial.extend);
+        _cairo_gl_texture_set_filter (ctx, GL_TEXTURE_1D, CAIRO_FILTER_BILINEAR);
         glEnable (GL_TEXTURE_1D);
         break;
     }
