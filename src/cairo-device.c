@@ -175,9 +175,9 @@ cairo_device_finish (cairo_device_t *device)
     if (device->finished)
 	return;
 
-    device->finished = TRUE;
-
     cairo_device_flush (device);
+
+    device->finished = TRUE;
 
     if (device->backend->finish != NULL)
 	device->backend->finish (device);
