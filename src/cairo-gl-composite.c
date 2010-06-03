@@ -571,43 +571,49 @@ _cairo_gl_composite_bind_to_shader (cairo_gl_context_t   *ctx,
 }
 
 static void
-_cairo_gl_texture_set_attributes (cairo_gl_context_t         *ctx,
-                                  cairo_surface_attributes_t *attributes)
+_cairo_gl_texture_set_extend (cairo_gl_context_t *ctx,
+                              GLuint              target,
+                              cairo_extend_t      extend)
 {
     assert (! _cairo_gl_device_requires_power_of_two_textures (&ctx->base) ||
-              (attributes->extend != CAIRO_EXTEND_REPEAT &&
-	       attributes->extend != CAIRO_EXTEND_REFLECT));
+            (extend != CAIRO_EXTEND_REPEAT && extend != CAIRO_EXTEND_REFLECT));
 
-    switch (attributes->extend) {
+    switch (extend) {
     case CAIRO_EXTEND_NONE:
-	glTexParameteri (ctx->tex_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri (ctx->tex_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameteri (target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri (target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	break;
     case CAIRO_EXTEND_PAD:
-	glTexParameteri (ctx->tex_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri (ctx->tex_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri (target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri (target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	break;
     case CAIRO_EXTEND_REPEAT:
-	glTexParameteri (ctx->tex_target, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri (ctx->tex_target, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri (target, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri (target, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	break;
     case CAIRO_EXTEND_REFLECT:
-	glTexParameteri (ctx->tex_target, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	glTexParameteri (ctx->tex_target, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	glTexParameteri (target, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri (target, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 	break;
     }
+}
 
-    switch (attributes->filter) {
+static void
+_cairo_gl_texture_set_filter (cairo_gl_context_t *ctx,
+                              GLuint              target,
+                              cairo_filter_t      filter)
+{
+    switch (filter) {
     case CAIRO_FILTER_FAST:
     case CAIRO_FILTER_NEAREST:
-	glTexParameteri (ctx->tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri (ctx->tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri (target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri (target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	break;
     case CAIRO_FILTER_GOOD:
     case CAIRO_FILTER_BEST:
     case CAIRO_FILTER_BILINEAR:
-	glTexParameteri (ctx->tex_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri (ctx->tex_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri (target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri (target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	break;
     default:
     case CAIRO_FILTER_GAUSSIAN:
@@ -760,7 +766,10 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
         glActiveTexture (GL_TEXTURE0 + tex_unit);
         glBindTexture (ctx->tex_target, operand->texture.tex);
         glEnable (ctx->tex_target);
-        _cairo_gl_texture_set_attributes (ctx, &operand->texture.attributes);
+        _cairo_gl_texture_set_extend (ctx, ctx->tex_target,
+                                      operand->texture.attributes.extend);
+        _cairo_gl_texture_set_filter (ctx, ctx->tex_target,
+                                      operand->texture.attributes.filter);
 
 	glClientActiveTexture (GL_TEXTURE0 + tex_unit);
 	glTexCoordPointer (2, GL_FLOAT, ctx->vertex_size,
