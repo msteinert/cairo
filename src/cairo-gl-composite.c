@@ -43,153 +43,22 @@
 #include "cairo-error-private.h"
 #include "cairo-gl-private.h"
 
-static int
-_cairo_gl_gradient_sample_width (const cairo_gradient_pattern_t *gradient)
-{
-    unsigned int n;
-    int width;
-
-    width = 8;
-    for (n = 1; n < gradient->n_stops; n++) {
-	double dx = gradient->stops[n].offset - gradient->stops[n-1].offset;
-	double delta, max;
-	int ramp;
-
-	if (dx == 0)
-	    continue;
-
-	max = gradient->stops[n].color.red -
-	      gradient->stops[n-1].color.red;
-
-	delta = gradient->stops[n].color.green -
-	        gradient->stops[n-1].color.green;
-	if (delta > max)
-	    max = delta;
-
-	delta = gradient->stops[n].color.blue -
-	        gradient->stops[n-1].color.blue;
-	if (delta > max)
-	    max = delta;
-
-	delta = gradient->stops[n].color.alpha -
-	        gradient->stops[n-1].color.alpha;
-	if (delta > max)
-	    max = delta;
-
-	ramp = 128 * max / dx;
-	if (ramp > width)
-	    width = ramp;
-    }
-
-    width = (width + 7) & -8;
-    return MIN (width, 1024);
-}
-
-static cairo_status_t
-_render_gradient (const cairo_gl_context_t *ctx,
-		  const cairo_gradient_pattern_t *pattern,
-		  void *bytes,
-		  int width)
-{
-    pixman_image_t *gradient, *image;
-    pixman_gradient_stop_t pixman_stops_stack[32];
-    pixman_gradient_stop_t *pixman_stops;
-    pixman_point_fixed_t p1, p2;
-    unsigned int i;
-
-    pixman_stops = pixman_stops_stack;
-    if (unlikely (pattern->n_stops > ARRAY_LENGTH (pixman_stops_stack))) {
-	pixman_stops = _cairo_malloc_ab (pattern->n_stops,
-					 sizeof (pixman_gradient_stop_t));
-	if (unlikely (pixman_stops == NULL))
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    }
-
-    for (i = 0; i < pattern->n_stops; i++) {
-	pixman_stops[i].x = _cairo_fixed_16_16_from_double (pattern->stops[i].offset);
-	pixman_stops[i].color.red   = pattern->stops[i].color.red_short;
-	pixman_stops[i].color.green = pattern->stops[i].color.green_short;
-	pixman_stops[i].color.blue  = pattern->stops[i].color.blue_short;
-	pixman_stops[i].color.alpha = pattern->stops[i].color.alpha_short;
-    }
-
-    p1.x = 0;
-    p1.y = 0;
-    p2.x = width << 16;
-    p2.y = 0;
-
-    gradient = pixman_image_create_linear_gradient (&p1, &p2,
-						    pixman_stops,
-						    pattern->n_stops);
-    if (pixman_stops != pixman_stops_stack)
-	free (pixman_stops);
-
-    if (unlikely (gradient == NULL))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    pixman_image_set_filter (gradient, PIXMAN_FILTER_BILINEAR, NULL, 0);
-    pixman_image_set_repeat (gradient, PIXMAN_REPEAT_PAD);
-
-    image = pixman_image_create_bits (PIXMAN_a8r8g8b8, width, 1,
-				      bytes, sizeof(uint32_t)*width);
-    if (unlikely (image == NULL)) {
-	pixman_image_unref (gradient);
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    }
-
-    pixman_image_composite32 (PIXMAN_OP_SRC,
-                              gradient, NULL, image,
-                              0, 0,
-                              0, 0,
-                              0, 0,
-                              width, 1);
-
-    pixman_image_unref (gradient);
-    pixman_image_unref (image);
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static cairo_int_status_t
 _cairo_gl_create_gradient_texture (cairo_gl_surface_t *dst,
 				   const cairo_gradient_pattern_t *pattern,
-				   GLuint *tex)
+                                   cairo_gl_gradient_t **gradient)
 {
     cairo_gl_context_t *ctx;
     cairo_status_t status;
-    int tex_width;
-    GLubyte *data;
-
-    assert (pattern->n_stops != 0);
 
     status = _cairo_gl_context_acquire (dst->base.device, &ctx);
     if (unlikely (status))
 	return status;
 
-    if ((unsigned int) ctx->max_texture_size / 2 <= pattern->n_stops) {
-        _cairo_gl_context_release (ctx);
-        return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
-
-    tex_width = _cairo_gl_gradient_sample_width (pattern);
-
-    glBindBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, ctx->texture_load_pbo);
-    glBufferDataARB (GL_PIXEL_UNPACK_BUFFER_ARB, tex_width * sizeof (uint32_t), 0, GL_STREAM_DRAW);
-    data = glMapBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY);
-
-    _render_gradient (ctx, pattern, data, tex_width);
-
-    glUnmapBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB);
-
-    glGenTextures (1, tex);
-    _cairo_gl_context_activate (ctx, CAIRO_GL_TEX_TEMP);
-    glBindTexture (GL_TEXTURE_1D, *tex);
-    glTexImage1D (GL_TEXTURE_1D, 0, GL_RGBA8, tex_width, 0,
-                  GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, 0);
-
-    glBindBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+    status = _cairo_gl_gradient_create (ctx, pattern->n_stops, pattern->stops, gradient);
 
     _cairo_gl_context_release (ctx);
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 /**
@@ -301,7 +170,7 @@ _cairo_gl_gradient_operand_init (cairo_gl_operand_t *operand,
 
         status = _cairo_gl_create_gradient_texture (dst,
                                                     gradient,
-                                                    &operand->linear.tex);
+                                                    &operand->linear.gradient);
         if (unlikely (status))
             return status;
 
@@ -335,7 +204,7 @@ _cairo_gl_gradient_operand_init (cairo_gl_operand_t *operand,
 
         status = _cairo_gl_create_gradient_texture (dst,
                                                     gradient,
-                                                    &operand->radial.tex);
+                                                    &operand->radial.gradient);
         if (unlikely (status))
             return status;
 
@@ -370,10 +239,10 @@ _cairo_gl_operand_destroy (cairo_gl_operand_t *operand)
     case CAIRO_GL_OPERAND_CONSTANT:
 	break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
-	glDeleteTextures (1, &operand->linear.tex);
+	_cairo_gl_gradient_destroy (operand->linear.gradient);
 	break;
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
-	glDeleteTextures (1, &operand->radial.tex);
+	_cairo_gl_gradient_destroy (operand->radial.gradient);
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
         _cairo_pattern_release_surface (NULL, /* XXX */
@@ -763,15 +632,17 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
         break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
+        _cairo_gl_gradient_reference (operand->linear.gradient);
         glActiveTexture (GL_TEXTURE0 + tex_unit);
-        glBindTexture (GL_TEXTURE_1D, operand->linear.tex);
+        glBindTexture (GL_TEXTURE_1D, operand->linear.gradient->tex);
         _cairo_gl_texture_set_extend (ctx, GL_TEXTURE_1D, operand->linear.extend);
         _cairo_gl_texture_set_filter (ctx, GL_TEXTURE_1D, CAIRO_FILTER_BILINEAR);
         glEnable (GL_TEXTURE_1D);
         break;
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
+        _cairo_gl_gradient_reference (operand->radial.gradient);
         glActiveTexture (GL_TEXTURE0 + tex_unit);
-        glBindTexture (GL_TEXTURE_1D, operand->radial.tex);
+        glBindTexture (GL_TEXTURE_1D, operand->radial.gradient->tex);
         _cairo_gl_texture_set_extend (ctx, GL_TEXTURE_1D, operand->radial.extend);
         _cairo_gl_texture_set_filter (ctx, GL_TEXTURE_1D, CAIRO_FILTER_BILINEAR);
         glEnable (GL_TEXTURE_1D);
@@ -810,7 +681,12 @@ _cairo_gl_context_destroy_operand (cairo_gl_context_t *ctx,
         glDisableClientState (GL_TEXTURE_COORD_ARRAY);
         break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
+        _cairo_gl_gradient_destroy (ctx->operands[tex_unit].linear.gradient);
+        glActiveTexture (GL_TEXTURE0 + tex_unit);
+        glDisable (GL_TEXTURE_1D);
+        break;
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
+        _cairo_gl_gradient_destroy (ctx->operands[tex_unit].radial.gradient);
         glActiveTexture (GL_TEXTURE0 + tex_unit);
         glDisable (GL_TEXTURE_1D);
         break;

@@ -43,6 +43,7 @@
 #define CAIRO_GL_PRIVATE_H
 
 #include "cairoint.h"
+#include "cairo-gl-gradient-private.h"
 #include "cairo-device-private.h"
 #include "cairo-rtree-private.h"
 
@@ -144,14 +145,14 @@ typedef struct cairo_gl_operand {
 	    GLfloat color[4];
 	} constant;
 	struct {
-	    GLuint tex;
+	    cairo_gl_gradient_t *gradient;
 	    cairo_matrix_t m;
 	    float segment_x;
 	    float segment_y;
             cairo_extend_t extend;
 	} linear;
 	struct {
-	    GLuint tex;
+	    cairo_gl_gradient_t *gradient;
 	    cairo_matrix_t m;
 	    float circle_1_x;
 	    float circle_1_y;
@@ -163,7 +164,7 @@ typedef struct cairo_gl_operand {
     unsigned int vertex_offset;
 } cairo_gl_operand_t;
 
-typedef struct _cairo_gl_context {
+struct _cairo_gl_context {
     cairo_device_t base;
 
     GLuint dummy_tex;
@@ -201,7 +202,7 @@ typedef struct _cairo_gl_context {
     void (*make_current) (void *ctx, cairo_gl_surface_t *surface);
     void (*swap_buffers)(void *ctx, cairo_gl_surface_t *surface);
     void (*destroy) (void *ctx);
-} cairo_gl_context_t;
+};
 
 typedef struct _cairo_gl_composite {
     cairo_gl_surface_t *dst;
