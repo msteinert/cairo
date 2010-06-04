@@ -104,6 +104,8 @@ _gl_finish (void *device)
 
     _gl_lock (device);
 
+    _cairo_cache_fini (&ctx->gradients);
+
     _cairo_gl_context_fini_shaders (ctx);
 
     _gl_unlock (device);
@@ -201,7 +203,15 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 
     status = _cairo_gl_context_init_shaders (ctx);
     if (unlikely (status))
-	return status;
+        return status;
+
+    status = _cairo_cache_init (&ctx->gradients,
+                                _cairo_gl_gradient_equal,
+                                NULL,
+                                (cairo_destroy_func_t) _cairo_gl_gradient_destroy,
+                                CAIRO_GL_GRADIENT_CACHE_SIZE);
+    if (unlikely (status))
+        return status;
 
     /* Set up the dummy texture for tex_env_combine with constant color. */
     glGenTextures (1, &ctx->dummy_tex);

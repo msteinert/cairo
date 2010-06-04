@@ -41,6 +41,7 @@
 #ifndef CAIRO_GL_GRADIENT_PRIVATE_H
 #define CAIRO_GL_GRADIENT_PRIVATE_H
 
+#include "cairo-cache-private.h"
 #include "cairo-device-private.h"
 #include "cairo-reference-count-private.h"
 #include "cairo-types-private.h"
@@ -53,15 +54,19 @@
 #define GL_GLEXT_PROTOTYPES
 #include <GL/glext.h>
 
+#define CAIRO_GL_GRADIENT_CACHE_SIZE 4096
+
 /* XXX: Declare in a better place */
 typedef struct _cairo_gl_context cairo_gl_context_t;
 
 typedef struct _cairo_gl_gradient {
-    cairo_reference_count_t   ref_count;
-    cairo_device_t           *device; /* NB: we don't hold a reference */
-    GLuint                    tex;
-    unsigned int	      n_stops;
-    cairo_gradient_stop_t     stops[2];
+    cairo_cache_entry_t           cache_entry;
+    cairo_reference_count_t       ref_count;
+    cairo_device_t               *device; /* NB: we don't hold a reference */
+    GLuint                        tex;
+    unsigned int	          n_stops;
+    const cairo_gradient_stop_t  *stops;
+    cairo_gradient_stop_t         stops_embedded[2];
 } cairo_gl_gradient_t;
 
 cairo_private cairo_int_status_t
@@ -75,6 +80,9 @@ _cairo_gl_gradient_reference (cairo_gl_gradient_t *gradient);
 
 cairo_private void
 _cairo_gl_gradient_destroy (cairo_gl_gradient_t *gradient);
+
+cairo_private cairo_bool_t
+_cairo_gl_gradient_equal (const void *key_a, const void *key_b);
 
 
 #endif /* CAIRO_GL_GRADIENT_PRIVATE_H */

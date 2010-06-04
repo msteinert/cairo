@@ -149,12 +149,49 @@ _cairo_gl_gradient_render (const cairo_gl_context_t    *ctx,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static unsigned long
+_cairo_gl_gradient_hash (unsigned int                  n_stops,
+                         const cairo_gradient_stop_t  *stops)
+{
+    return _cairo_hash_bytes (n_stops,
+                              stops,
+                              sizeof (cairo_gradient_stop_t) * n_stops);
+}
+
+static cairo_gl_gradient_t *
+_cairo_gl_gradient_lookup (cairo_gl_context_t           *ctx,
+                           unsigned long                 hash,
+                           unsigned int                  n_stops,
+                           const cairo_gradient_stop_t  *stops)
+{
+    cairo_gl_gradient_t lookup;
+
+    lookup.cache_entry.hash = hash,
+    lookup.n_stops = n_stops;
+    lookup.stops = stops;
+
+    return _cairo_cache_lookup (&ctx->gradients, &lookup.cache_entry);
+}
+
+cairo_bool_t
+_cairo_gl_gradient_equal (const void *key_a, const void *key_b)
+{
+    const cairo_gl_gradient_t *a = key_a;
+    const cairo_gl_gradient_t *b = key_b;
+
+    if (a->n_stops != b->n_stops)
+        return FALSE;
+
+    return memcmp (a->stops, b->stops, a->n_stops * sizeof (cairo_gradient_stop_t)) == 0;
+}
+
 cairo_int_status_t
 _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
                            unsigned int                  n_stops,
                            const cairo_gradient_stop_t  *stops,
                            cairo_gl_gradient_t         **gradient_out)
 {
+    unsigned long hash;
     cairo_gl_gradient_t *gradient;
     int tex_width;
     void *data;
@@ -163,16 +200,27 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
     if ((unsigned int) ctx->max_texture_size / 2 <= n_stops)
         return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    hash = _cairo_gl_gradient_hash (n_stops, stops);
+    
+    gradient = _cairo_gl_gradient_lookup (ctx, hash, n_stops, stops);
+    if (gradient) {
+        *gradient_out = _cairo_gl_gradient_reference (gradient);
+        return CAIRO_STATUS_SUCCESS;
+    }
+
     gradient = malloc (sizeof (cairo_gl_gradient_t) + sizeof (cairo_gradient_stop_t) * (n_stops - 2));
     if (gradient == NULL)
         return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
+    tex_width = _cairo_gl_gradient_sample_width (n_stops, stops);
+
     CAIRO_REFERENCE_COUNT_INIT (&gradient->ref_count, 1);
+    gradient->cache_entry.hash = hash;
+    gradient->cache_entry.size = tex_width;
     gradient->device = &ctx->base;
     gradient->n_stops = n_stops;
-    memcpy (gradient->stops, stops, n_stops * sizeof (cairo_gradient_stop_t));
-
-    tex_width = _cairo_gl_gradient_sample_width (n_stops, stops);
+    gradient->stops = gradient->stops_embedded;
+    memcpy (gradient->stops_embedded, stops, n_stops * sizeof (cairo_gradient_stop_t));
 
     glBindBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, ctx->texture_load_pbo);
     glBufferDataARB (GL_PIXEL_UNPACK_BUFFER_ARB, tex_width * sizeof (uint32_t), 0, GL_STREAM_DRAW);
@@ -189,6 +237,10 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
                   GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, 0);
 
     glBindBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+
+    /* we ignore errors here and just return an uncached gradient */
+    if (likely (! _cairo_cache_insert (&ctx->gradients, &gradient->cache_entry)))
+        _cairo_gl_gradient_reference (gradient);
 
     *gradient_out = gradient;
     return CAIRO_STATUS_SUCCESS;
