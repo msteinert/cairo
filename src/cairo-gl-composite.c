@@ -576,6 +576,7 @@ static void
 _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
                                  cairo_gl_tex_t      tex_unit,
                                  cairo_gl_operand_t *operand,
+                                 unsigned int        vertex_size,
                                  unsigned int        vertex_offset,
                                  cairo_bool_t        use_shaders)
 {
@@ -583,7 +584,8 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
 
     /* XXX: we need to do setup when switching from shaders
      * to no shaders (or back) */
-    needs_setup = _cairo_gl_operand_needs_setup (&ctx->operands[tex_unit],
+    needs_setup = ctx->vertex_size != vertex_size;
+    needs_setup |= _cairo_gl_operand_needs_setup (&ctx->operands[tex_unit],
                                                  operand,
                                                  vertex_offset);
 
@@ -605,7 +607,7 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
     case CAIRO_GL_OPERAND_NONE:
         break;
     case CAIRO_GL_OPERAND_SPANS:
-	glColorPointer (4, GL_UNSIGNED_BYTE, ctx->vertex_size,
+	glColorPointer (4, GL_UNSIGNED_BYTE, vertex_size,
                         (void *) (uintptr_t) vertex_offset);
 	glEnableClientState (GL_COLOR_ARRAY);
         /* fall through */
@@ -627,7 +629,7 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
                                       operand->texture.attributes.filter);
 
 	glClientActiveTexture (GL_TEXTURE0 + tex_unit);
-	glTexCoordPointer (2, GL_FLOAT, ctx->vertex_size,
+	glTexCoordPointer (2, GL_FLOAT, vertex_size,
                            (void *) (uintptr_t) vertex_offset);
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
         break;
@@ -947,7 +949,6 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     vertex_size = dst_size + src_size + mask_size;
     if (ctx->vertex_size != vertex_size) {
         _cairo_gl_composite_flush (ctx);
-        ctx->vertex_size = vertex_size;
     }
 
     _cairo_gl_context_set_destination (ctx, setup->dst);
@@ -955,16 +956,18 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     if (_cairo_gl_context_is_flushed (ctx)) {
         glBindBufferARB (GL_ARRAY_BUFFER_ARB, ctx->vbo);
 
-        glVertexPointer (2, GL_FLOAT, ctx->vertex_size, NULL);
+        glVertexPointer (2, GL_FLOAT, vertex_size, NULL);
         glEnableClientState (GL_VERTEX_ARRAY);
     }
 
-    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_SOURCE, &setup->src, dst_size, shader != NULL);
-    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_MASK, &setup->mask, dst_size + src_size, shader != NULL);
+    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_SOURCE, &setup->src, vertex_size, dst_size, shader != NULL);
+    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_MASK, &setup->mask, vertex_size, dst_size + src_size, shader != NULL);
 
     _cairo_gl_set_operator (ctx,
                             setup->op,
                             component_alpha);
+
+    ctx->vertex_size = vertex_size;
 
     if (_cairo_gl_context_is_flushed (ctx)) {
         if (ctx->pre_shader) {
