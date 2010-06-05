@@ -985,20 +985,6 @@ _cairo_gl_surface_composite_trapezoids (cairo_operator_t op,
     if (! _cairo_gl_operator_is_supported (op))
 	return UNSUPPORTED ("unsupported operator");
 
-    if (_cairo_surface_check_span_renderer (op,pattern,&dst->base, antialias)) {
-	status =
-	    _cairo_surface_composite_trapezoids_as_polygon (&dst->base,
-							    op, pattern,
-							    antialias,
-							    src_x, src_y,
-							    dst_x, dst_y,
-							    width, height,
-							    traps, num_traps,
-							    clip_region);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
-    }
-
     status = _cairo_gl_get_traps_pattern (dst,
 					  dst_x, dst_y, width, height,
 					  traps, num_traps, antialias,

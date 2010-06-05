@@ -1973,18 +1973,6 @@ _cairo_surface_composite_trapezoids (cairo_operator_t	op,
 				     int		ntraps,
 				     cairo_region_t	*clip_region);
 
-cairo_private cairo_status_t
-_cairo_surface_composite_trapezoids_as_polygon (cairo_surface_t	*surface,
-						cairo_operator_t	 op,
-						const cairo_pattern_t	*pattern,
-						cairo_antialias_t	antialias,
-						int src_x, int src_y,
-						int dst_x, int dst_y,
-						int width, int height,
-						cairo_trapezoid_t	*traps,
-						int num_traps,
-						cairo_region_t	*clip_region);
-
 cairo_private cairo_span_renderer_t *
 _cairo_surface_create_span_renderer (cairo_operator_t			 op,
 				     const cairo_pattern_t		*pattern,
