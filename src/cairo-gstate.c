@@ -1008,21 +1008,8 @@ _reduce_op (cairo_gstate_t *gstate)
     const cairo_pattern_t *pattern;
 
     op = gstate->op;
-    if (op == CAIRO_OPERATOR_IN &&
-	gstate->target->is_clear &&
-	gstate->target->content & CAIRO_CONTENT_ALPHA)
-    {
-	return CAIRO_OPERATOR_CLEAR;
-    }
-
-    if (op != CAIRO_OPERATOR_SOURCE &&
-	! (gstate->target->is_clear &&
-	   (op == CAIRO_OPERATOR_OVER ||
-	    (op == CAIRO_OPERATOR_ADD &&
-	     gstate->target->content & CAIRO_CONTENT_ALPHA))))
-    {
+    if (op != CAIRO_OPERATOR_SOURCE)
 	return op;
-    }
 
     pattern = gstate->source;
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
