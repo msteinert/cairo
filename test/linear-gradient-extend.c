@@ -86,7 +86,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (linear_gradient_extend,
 	    "Tests gradient to solid reduction of linear gradients",
-	    "radial, pattern, extend", /* keywords */
+	    "linear, pattern, extend", /* keywords */
 	    NULL, /* requirements */
 	    (WIDTH+PAD) * NUM_EXTEND + PAD, 2*(HEIGHT + PAD) + PAD,
 	    NULL, draw)
