@@ -1068,6 +1068,7 @@ typedef struct _cairo_gl_surface_span_renderer {
     cairo_gl_composite_t setup;
 
     int xmin, xmax;
+    int ymin, ymax;
 
     cairo_gl_context_t *ctx;
 } cairo_gl_surface_span_renderer_t;
@@ -1105,36 +1106,64 @@ _cairo_gl_render_unbounded_spans (void *abstract_renderer,
 {
     cairo_gl_surface_span_renderer_t *renderer = abstract_renderer;
 
+    if (y > renderer->ymin) {
+        _cairo_gl_composite_emit_rect (renderer->ctx,
+                                       renderer->xmin, renderer->ymin,
+                                       renderer->xmax, y,
+                                       0);
+    }
+
     if (num_spans == 0) {
         _cairo_gl_composite_emit_rect (renderer->ctx,
                                        renderer->xmin, y,
                                        renderer->xmax, y + height,
                                        0);
-	return CAIRO_STATUS_SUCCESS;
+    } else {
+        if (spans[0].x != renderer->xmin) {
+            _cairo_gl_composite_emit_rect (renderer->ctx,
+                                           renderer->xmin, y,
+                                           spans[0].x,     y + height,
+                                           0);
+        }
+
+        do {
+            _cairo_gl_composite_emit_rect (renderer->ctx,
+                                           spans[0].x, y,
+                                           spans[1].x, y + height,
+                                           spans[0].coverage);
+            spans++;
+        } while (--num_spans > 1);
+
+        if (spans[0].x != renderer->xmax) {
+            _cairo_gl_composite_emit_rect (renderer->ctx,
+                                           spans[0].x,     y,
+                                           renderer->xmax, y + height,
+                                           0);
+        }
     }
 
-    if (spans[0].x != renderer->xmin) {
+    renderer->ymin = y + height;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_gl_finish_unbounded_spans (void *abstract_renderer)
+{
+    cairo_gl_surface_span_renderer_t *renderer = abstract_renderer;
+
+    if (renderer->ymax > renderer->ymin) {
         _cairo_gl_composite_emit_rect (renderer->ctx,
-                                       renderer->xmin, y,
-                                       spans[0].x,     y + height,
+                                       renderer->xmin, renderer->ymin,
+                                       renderer->xmax, renderer->ymax,
                                        0);
     }
 
-    do {
-        _cairo_gl_composite_emit_rect (renderer->ctx,
-                                       spans[0].x, y,
-                                       spans[1].x, y + height,
-                                       spans[0].coverage);
-	spans++;
-    } while (--num_spans > 1);
+    return CAIRO_STATUS_SUCCESS;
+}
 
-    if (spans[0].x != renderer->xmax) {
-        _cairo_gl_composite_emit_rect (renderer->ctx,
-                                       spans[0].x,     y,
-                                       renderer->xmax, y + height,
-                                       0);
-    }
-
+static cairo_status_t
+_cairo_gl_finish_bounded_spans (void *abstract_renderer)
+{
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1151,12 +1180,6 @@ _cairo_gl_surface_span_renderer_destroy (void *abstract_renderer)
     _cairo_gl_composite_fini (&renderer->setup);
 
     free (renderer);
-}
-
-static cairo_status_t
-_cairo_gl_surface_span_renderer_finish (void *abstract_renderer)
-{
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_bool_t
@@ -1193,16 +1216,19 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 	return _cairo_span_renderer_create_in_error (CAIRO_STATUS_NO_MEMORY);
 
     renderer->base.destroy = _cairo_gl_surface_span_renderer_destroy;
-    renderer->base.finish = _cairo_gl_surface_span_renderer_finish;
     if (rects->is_bounded) {
 	renderer->base.render_rows = _cairo_gl_render_bounded_spans;
+        renderer->base.finish =      _cairo_gl_finish_bounded_spans;
 	extents = &rects->bounded;
     } else {
 	renderer->base.render_rows = _cairo_gl_render_unbounded_spans;
+        renderer->base.finish =      _cairo_gl_finish_unbounded_spans;
 	extents = &rects->unbounded;
     }
     renderer->xmin = extents->x;
     renderer->xmax = extents->x + extents->width;
+    renderer->ymin = extents->y;
+    renderer->ymax = extents->y + extents->height;
 
     status = _cairo_gl_composite_init (&renderer->setup,
                                        op, dst,
