@@ -1342,6 +1342,13 @@ _cairo_gl_surface_polygon (cairo_gl_surface_t *dst,
     if (! _cairo_surface_check_span_renderer (op, src, &dst->base, antialias))
         return UNSUPPORTED ("no span renderer");
 
+    if (op == CAIRO_OPERATOR_SOURCE)
+        return UNSUPPORTED ("SOURCE compositing doesn't work in GL");
+    if (op == CAIRO_OPERATOR_CLEAR) {
+        op = CAIRO_OPERATOR_DEST_OUT;
+        src = &_cairo_pattern_white.base;
+    }
+
     status = _cairo_surface_composite_polygon (&dst->base,
                                                op,
                                                src,
