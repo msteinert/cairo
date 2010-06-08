@@ -543,23 +543,17 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	 */
 	if (!has_alpha) {
 	    cairo_rectangle_int_t rect;
-	    cairo_color_t color;
 
 	    rect.x = dst_x;
 	    rect.y = dst_y;
 	    rect.width = width;
 	    rect.height = height;
 
-	    color.red = 0.0;
-	    color.green = 0.0;
-	    color.blue = 0.0;
-	    color.alpha = 1.0;
-
             _cairo_gl_composite_flush (ctx);
 	    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
 	    _cairo_gl_surface_fill_rectangles (dst,
 					       CAIRO_OPERATOR_SOURCE,
-					       &color,
+					       CAIRO_COLOR_BLACK,
 					       &rect, 1);
             _cairo_gl_composite_flush (ctx);
 	    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
