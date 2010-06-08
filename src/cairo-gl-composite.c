@@ -100,6 +100,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_operand_t *operand,
     }
 
     assert (surface->base.backend == &_cairo_gl_surface_backend);
+    assert (_cairo_gl_surface_is_texture (surface));
 
     operand->type = CAIRO_GL_OPERAND_TEXTURE;
     operand->texture.surface = surface;
