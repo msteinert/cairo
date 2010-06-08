@@ -68,8 +68,10 @@ test_sources = \
 	degenerate-arcs.c				\
 	degenerate-curve-to.c				\
 	degenerate-dash.c				\
+	degenerate-linear-gradient.c			\
 	degenerate-path.c				\
 	degenerate-pen.c				\
+	degenerate-radial-gradient.c			\
 	degenerate-rel-curve-to.c			\
 	device-offset.c					\
 	device-offset-fractional.c			\
@@ -138,6 +140,7 @@ test_sources = \
 	line-width-zero.c				\
 	linear-gradient.c				\
 	linear-gradient-extend.c			\
+	linear-gradient-one-stop.c			\
 	linear-gradient-reflect.c			\
 	linear-gradient-subset.c			\
 	linear-step-function.c				\
@@ -182,9 +185,10 @@ test_sources = \
 	push-group-color.c				\
 	radial-gradient.c				\
 	radial-gradient-extend.c			\
-	radial-gradient-source.c			\
 	radial-gradient-mask.c				\
 	radial-gradient-mask-source.c			\
+	radial-gradient-one-stop.c			\
+	radial-gradient-source.c			\
 	random-intersections-eo.c			\
 	random-intersections-nonzero.c			\
 	random-intersections-curves-eo.c		\
