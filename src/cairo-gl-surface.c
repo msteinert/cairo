@@ -577,8 +577,8 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
         status = _cairo_gl_surface_draw_image ((cairo_gl_surface_t *) tmp,
                                                src,
                                                src_x, src_y,
-                                               0, 0,
-                                               width, height);
+                                               width, height,
+                                               0, 0);
         if (status == CAIRO_STATUS_SUCCESS) {
             cairo_surface_pattern_t tmp_pattern;
 
