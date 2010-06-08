@@ -849,21 +849,6 @@ _cairo_gstate_path_extents (cairo_gstate_t     *gstate,
 }
 
 static void
-_init_solid_for_color_stop (cairo_solid_pattern_t *solid,
-			    const cairo_color_stop_t *color)
-{
-    cairo_color_t premult;
-
-    /* Color stops aren't premultiplied, so fix that here */
-    _cairo_color_init_rgba (&premult,
-			    color->red,
-			    color->green,
-			    color->blue,
-			    color->alpha);
-    _cairo_pattern_init_solid (solid, &premult);
-}
-
-static void
 _cairo_gstate_copy_pattern (cairo_pattern_t *pattern,
 			    const cairo_pattern_t *original)
 {
@@ -871,60 +856,24 @@ _cairo_gstate_copy_pattern (cairo_pattern_t *pattern,
      * pattern. For example, gradients that are uniform or just have a single
      * stop can be replace with a solid.
      */
-    switch (original->type) {
-    case CAIRO_PATTERN_TYPE_SOLID:
-	break;
 
-    case CAIRO_PATTERN_TYPE_SURFACE:
-        {
-            cairo_surface_pattern_t *surface = (cairo_surface_pattern_t *) original;
-            cairo_rectangle_int_t extents;
+    if (_cairo_pattern_is_clear (original)) {
+        _cairo_pattern_init_solid ((cairo_solid_pattern_t *) pattern,
+				   CAIRO_COLOR_TRANSPARENT);
+	return;
+    }
 
-            if (_cairo_surface_get_extents (surface->surface, &extents) &&
-                (extents.width == 0 || extents.height == 0)) {
-                _cairo_pattern_init_solid ((cairo_solid_pattern_t *) pattern,
-                                           CAIRO_COLOR_TRANSPARENT);
-
-                return;
-            }
-        }
-	break;
-
-    case CAIRO_PATTERN_TYPE_LINEAR:
-    case CAIRO_PATTERN_TYPE_RADIAL:
+    if (original->type == CAIRO_PATTERN_TYPE_LINEAR ||
+	original->type == CAIRO_PATTERN_TYPE_RADIAL)
+    {
+        cairo_color_t color;
+	if (_cairo_gradient_pattern_is_solid ((cairo_gradient_pattern_t *) original,
+					      NULL,
+					      &color))
 	{
-	    cairo_gradient_pattern_t *src = (cairo_gradient_pattern_t *) original;
-
-	    /* fast path for gradients with less than 2 color stops */
-	    if (src->n_stops < 2) {
-		if (src->n_stops) {
-		    _init_solid_for_color_stop ((cairo_solid_pattern_t *) pattern,
-						&src->stops->color);
-		} else {
-		    _cairo_pattern_init_solid ((cairo_solid_pattern_t *) pattern,
-					       CAIRO_COLOR_TRANSPARENT);
-		}
-
-		return;
-	    } else {
-		unsigned int i;
-
-		/* Is the gradient a uniform colour?
-		 * Happens more often than you would believe.
-		 */
-		for (i = 1; i < src->n_stops; i++) {
-		    if (! _cairo_color_stop_equal (&src->stops[0].color,
-						   &src->stops[i].color))
-		    {
-			break;
-		    }
-		}
-		if (i == src->n_stops) {
-		    _init_solid_for_color_stop ((cairo_solid_pattern_t *) pattern,
-						&src->stops->color);
-		    return;
-		}
-	    }
+	    _cairo_pattern_init_solid ((cairo_solid_pattern_t *) pattern,
+				       &color);
+	    return;
 	}
     }
 
