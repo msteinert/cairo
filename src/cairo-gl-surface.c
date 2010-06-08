@@ -1332,9 +1332,19 @@ _cairo_gl_surface_polygon (cairo_gl_surface_t *dst,
                            cairo_clip_t *clip)
 {
     cairo_status_t status;
+    cairo_region_t *clip_region = NULL;
 
-    if (clip)
-        return UNSUPPORTED ("a clip!");
+    if (clip != NULL) {
+	status = _cairo_clip_get_region (clip, &clip_region);
+	if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
+	    return CAIRO_STATUS_SUCCESS;
+	if (unlikely (_cairo_status_is_error (status)))
+	    return status;
+
+	if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+            return UNSUPPORTED ("a clip surface would be required");
+    }
+
     if (! _cairo_surface_check_span_renderer (op, src, &dst->base, antialias))
         return UNSUPPORTED ("no span renderer");
 
@@ -1352,7 +1362,7 @@ _cairo_gl_surface_polygon (cairo_gl_surface_t *dst,
                                                antialias,
                                                extents,
                                                polygon,
-                                               NULL);
+                                               clip_region);
     return status;
 }
 
