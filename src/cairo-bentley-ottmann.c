@@ -44,7 +44,7 @@
 
 #define DEBUG_PRINT_STATE 0
 #define DEBUG_EVENTS 0
-#define DEBUG_TRAPS 1
+#define DEBUG_TRAPS 0
 
 typedef cairo_point_t cairo_bo_point32_t;
 
