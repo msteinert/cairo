@@ -1570,6 +1570,106 @@ ZERO_EXTENTS:
 }
 slim_hidden_def (cairo_scaled_font_glyph_extents);
 
+#define GLYPH_LUT_SIZE 256
+static cairo_status_t
+cairo_scaled_font_text_to_glyphs_internal_multiple (cairo_scaled_font_t		 *scaled_font,
+						    double			  x,
+						    double			  y,
+						    const char			 *utf8,
+						    cairo_glyph_t		 *glyphs,
+						    cairo_text_cluster_t	**clusters,
+						    int				  num_chars)
+{
+    struct glyph_lut_elt {
+	unsigned long index;
+	double x_advance;
+	double y_advance;
+    } glyph_lut[GLYPH_LUT_SIZE];
+    uint32_t glyph_lut_unicode[GLYPH_LUT_SIZE];
+    cairo_status_t status;
+    const char *p;
+    int i;
+
+    for (i = 0; i < GLYPH_LUT_SIZE; i++)
+	glyph_lut_unicode[i] = ~0U;
+
+    p = utf8;
+    for (i = 0; i < num_chars; i++) {
+	int idx, num_bytes;
+	uint32_t unicode;
+	cairo_scaled_glyph_t *scaled_glyph;
+	struct glyph_lut_elt *glyph_slot;
+
+	num_bytes = _cairo_utf8_get_char_validated (p, &unicode);
+	p += num_bytes;
+
+	glyphs[i].x = x;
+	glyphs[i].y = y;
+
+	idx = unicode % ARRAY_LENGTH (glyph_lut);
+	glyph_slot = &glyph_lut[idx];
+	if (glyph_lut_unicode[idx] == unicode) {
+	    glyphs[i].index = glyph_slot->index;
+	    x += glyph_slot->x_advance;
+	    y += glyph_slot->y_advance;
+	} else {
+	    unsigned long g;
+
+	    g = scaled_font->backend->ucs4_to_index (scaled_font, unicode);
+	    status = _cairo_scaled_glyph_lookup (scaled_font,
+						 g,
+						 CAIRO_SCALED_GLYPH_INFO_METRICS,
+						 &scaled_glyph);
+	    if (unlikely (status))
+		return status;
+
+	    x += scaled_glyph->metrics.x_advance;
+	    y += scaled_glyph->metrics.y_advance;
+
+	    glyph_lut_unicode[idx] = unicode;
+	    glyph_slot->index = g;
+	    glyph_slot->x_advance = scaled_glyph->metrics.x_advance;
+	    glyph_slot->y_advance = scaled_glyph->metrics.y_advance;
+
+	    glyphs[i].index = g;
+	}
+
+	if (clusters) {
+	    (*clusters)[i].num_bytes  = num_bytes;
+	    (*clusters)[i].num_glyphs = 1;
+	}
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+cairo_scaled_font_text_to_glyphs_internal_single (cairo_scaled_font_t	 *scaled_font,
+						  double		  x,
+						  double		  y,
+						  const char		 *utf8,
+						  cairo_glyph_t		 *glyphs,
+						  cairo_text_cluster_t	**clusters,
+						  int			  num_chars)
+{
+    uint32_t unicode;
+    int num_bytes;
+
+    glyphs[0].x = x;
+    glyphs[0].y = y;
+
+    num_bytes = _cairo_utf8_get_char_validated (utf8, &unicode);
+    glyphs[0].index =
+	scaled_font->backend->ucs4_to_index (scaled_font, unicode);
+
+    if (clusters) {
+	(*clusters)[0].num_bytes  = num_bytes;
+	(*clusters)[0].num_glyphs = 1;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 /**
  * cairo_scaled_font_text_to_glyphs:
  * @x: X position to place first glyph
@@ -1717,18 +1817,10 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
 				  int		        *num_clusters,
 				  cairo_text_cluster_flags_t *cluster_flags)
 {
-    int i;
     int num_chars = 0;
-    const char *p;
     cairo_status_t status;
     cairo_glyph_t *orig_glyphs;
     cairo_text_cluster_t *orig_clusters;
-    struct glyph_lut_elt {
-	uint32_t unicode;
-	unsigned long index;
-	double x_advance;
-	double y_advance;
-    } glyph_lut[256];
 
     status = scaled_font->status;
     if (unlikely (status))
@@ -1866,52 +1958,20 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
 	*num_clusters = num_chars;
     }
 
-    for (i = 0; i < ARRAY_LENGTH (glyph_lut); i++)
-	glyph_lut[i].unicode = ~0U;
-
-    p = utf8;
-    for (i = 0; i < num_chars; i++) {
-	int num_bytes;
-	uint32_t unicode;
-	cairo_scaled_glyph_t *scaled_glyph;
-	struct glyph_lut_elt *glyph_slot;
-
-	num_bytes = _cairo_utf8_get_char_validated (p, &unicode);
-	p += num_bytes;
-
-	(*glyphs)[i].x = x;
-	(*glyphs)[i].y = y;
-
-	glyph_slot = &glyph_lut[unicode % ARRAY_LENGTH (glyph_lut)];
-	if (glyph_slot->unicode == unicode) {
-	    (*glyphs)[i].index = glyph_slot->index;
-	    x += glyph_slot->x_advance;
-	    y += glyph_slot->y_advance;
-	} else {
-	    (*glyphs)[i].index =
-		(*scaled_font->backend->ucs4_to_index) (scaled_font, unicode);
-
-	    status = _cairo_scaled_glyph_lookup (scaled_font,
-						 (*glyphs)[i].index,
-						 CAIRO_SCALED_GLYPH_INFO_METRICS,
-						 &scaled_glyph);
-	    if (unlikely (status))
-		goto DONE;
-
-	    x += scaled_glyph->metrics.x_advance;
-	    y += scaled_glyph->metrics.y_advance;
-
-	    glyph_slot->unicode = unicode;
-	    glyph_slot->index = (*glyphs)[i].index;
-	    glyph_slot->x_advance = scaled_glyph->metrics.x_advance;
-	    glyph_slot->y_advance = scaled_glyph->metrics.y_advance;
-	}
-
-	if (clusters) {
-	    (*clusters)[i].num_bytes  = num_bytes;
-	    (*clusters)[i].num_glyphs = 1;
-	}
-    }
+    if (num_chars > 1)
+	status = cairo_scaled_font_text_to_glyphs_internal_multiple (scaled_font,
+								     x, y,
+								     utf8,
+								     *glyphs,
+								     clusters,
+								     num_chars);
+    else
+	status = cairo_scaled_font_text_to_glyphs_internal_single (scaled_font,
+								   x, y,
+								   utf8,
+								   *glyphs,
+								   clusters,
+								   num_chars);
 
  DONE: /* error that should be logged on scaled_font happened */
     _cairo_scaled_font_thaw_cache (scaled_font);
