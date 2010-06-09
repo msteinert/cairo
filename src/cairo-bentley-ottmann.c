@@ -44,7 +44,7 @@
 
 #define DEBUG_PRINT_STATE 0
 #define DEBUG_EVENTS 0
-#define DEBUG_TRAPS 0
+#define DEBUG_TRAPS 1
 
 typedef cairo_point_t cairo_bo_point32_t;
 
@@ -130,21 +130,25 @@ static void
 dump_traps (cairo_traps_t *traps, const char *filename)
 {
     FILE *file;
+    cairo_box_t extents;
     int n;
 
     if (getenv ("CAIRO_DEBUG_TRAPS") == NULL)
 	return;
 
+#if 0
     if (traps->has_limits) {
 	printf ("%s: limits=(%d, %d, %d, %d)\n",
 		filename,
 		traps->limits.p1.x, traps->limits.p1.y,
 		traps->limits.p2.x, traps->limits.p2.y);
     }
+#endif
+    _cairo_traps_extents (traps, &extents);
     printf ("%s: extents=(%d, %d, %d, %d)\n",
 	    filename,
-	    traps->extents.p1.x, traps->extents.p1.y,
-	    traps->extents.p2.x, traps->extents.p2.y);
+	    extents.p1.x, extents.p1.y,
+	    extents.p2.x, extents.p2.y);
 
     file = fopen (filename, "a");
     if (file != NULL) {
