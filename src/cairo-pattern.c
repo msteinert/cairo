@@ -1767,6 +1767,11 @@ _gradient_is_clear (const cairo_gradient_pattern_t *gradient,
     assert (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR ||
 	    gradient->base.type == CAIRO_PATTERN_TYPE_RADIAL);
 
+    if (gradient->n_stops == 0 ||
+	(gradient->base.extend == CAIRO_EXTEND_NONE &&
+	 gradient->stops[0].offset == gradient->stops[gradient->n_stops - 1].offset))
+	return TRUE;
+
     /* Check if the extents intersect the drawn part of the pattern. */
     if (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR) {
 	if (gradient->base.extend == CAIRO_EXTEND_NONE) {
@@ -1928,7 +1933,9 @@ _gradient_is_opaque (const cairo_gradient_pattern_t *gradient,
     assert (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR ||
 	    gradient->base.type == CAIRO_PATTERN_TYPE_RADIAL);
 
-    if (gradient->n_stops == 0)
+    if (gradient->n_stops == 0 ||
+	(gradient->base.extend == CAIRO_EXTEND_NONE &&
+	 gradient->stops[0].offset == gradient->stops[gradient->n_stops - 1].offset))
 	return FALSE;
 
     if (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR) {
