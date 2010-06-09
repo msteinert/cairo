@@ -196,7 +196,6 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
     int tex_width;
     void *data;
 
-    assert (n_stops >= 2);
     if ((unsigned int) ctx->max_texture_size / 2 <= n_stops)
         return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -208,7 +207,7 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
         return CAIRO_STATUS_SUCCESS;
     }
 
-    gradient = malloc (sizeof (cairo_gl_gradient_t) + sizeof (cairo_gradient_stop_t) * (n_stops - 2));
+    gradient = malloc (sizeof (cairo_gl_gradient_t) + sizeof (cairo_gradient_stop_t) * (n_stops - 1));
     if (gradient == NULL)
         return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 

@@ -66,7 +66,7 @@ typedef struct _cairo_gl_gradient {
     GLuint                        tex;
     unsigned int	          n_stops;
     const cairo_gradient_stop_t  *stops;
-    cairo_gradient_stop_t         stops_embedded[2];
+    cairo_gradient_stop_t         stops_embedded[1];
 } cairo_gl_gradient_t;
 
 cairo_private cairo_int_status_t
