@@ -78,7 +78,7 @@ draw (cairo_t *cr, int width, int height)
 	CAIRO_EXTEND_PAD
     };
 
-    cairo_test_paint_checkered (cr);
+    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 
     for (j = 0; j < NUM_EXTEND; j++) {
 	for (i = 0; i < NUM_GRADIENTS; i++) {

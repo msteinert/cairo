@@ -45,7 +45,7 @@ draw (cairo_t *cr, int width, int height)
 	CAIRO_EXTEND_PAD
     };
 
-    cairo_test_paint_checkered (cr);
+    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 
     cairo_translate (cr, PAD, PAD);
 
