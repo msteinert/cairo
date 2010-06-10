@@ -41,6 +41,7 @@ rectangles (cairo_t *cr, int width, int height)
 
     cairo_set_source_rgb (cr, 1.0, 0.0, 0.0);
     cairo_paint (cr);
+    cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
 
     for (i = 1; i <= SIZE; i++) {
 	int x, y;
@@ -52,6 +53,14 @@ rectangles (cairo_t *cr, int width, int height)
 	cairo_scale (cr, 1./SIZE, 1./SIZE);
 	for (x = -i; x < SIZE*WIDTH; x += 2*i) {
 	    for (y = -i; y < SIZE*HEIGHT; y += 2*i) {
+		/* Add a little tile composed of two non-overlapping squares
+		 *   +--+
+		 *   |  |
+		 *   |__|__
+		 *      |  |
+		 *      |  |
+		 *      +--+
+		 */
 		cairo_rectangle (cr, x, y, i, i);
 		cairo_rectangle (cr, x+i, y+i, i, i);
 	    }
@@ -72,6 +81,7 @@ triangles (cairo_t *cr, int width, int height)
 
     cairo_set_source_rgb (cr, 1.0, 0.0, 0.0);
     cairo_paint (cr);
+    cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
 
     for (i = 1; i <= SIZE; i++) {
 	int x, y;
@@ -83,22 +93,38 @@ triangles (cairo_t *cr, int width, int height)
 	cairo_scale (cr, 1./SIZE, 1./SIZE);
 	for (x = -i; x < SIZE*WIDTH; x += 2*i) {
 	    for (y = -i; y < SIZE*HEIGHT; y += 2*i) {
-		/* add internal edges just for fun */
+		/* Add a tile composed of four non-overlapping
+		 * triangles.  The plus and minus signs inside the
+		 * triangles denote the orientation of the triangle's
+		 * edges: + for clockwise and - for anticlockwise.
+		 *
+		 *   +-----+
+		 *    \-|+/
+		 *     \|/
+		 *     /|\
+		 *    /-|-\
+		 *   +-----+
+		 */
+
+		/* top left triangle */
 		cairo_move_to (cr, x, y);
 		cairo_line_to (cr, x+i, y+i);
 		cairo_line_to (cr, x+i, y);
 		cairo_close_path (cr);
 
+		/* top right triangle */
 		cairo_move_to (cr, x+i, y);
 		cairo_line_to (cr, x+2*i, y);
 		cairo_line_to (cr, x+i, y+i);
 		cairo_close_path (cr);
 
+		/* bottom left triangle */
 		cairo_move_to (cr, x+i, y+i);
 		cairo_line_to (cr, x, y+2*i);
 		cairo_line_to (cr, x+i, y+2*i);
 		cairo_close_path (cr);
 
+		/* bottom right triangle */
 		cairo_move_to (cr, x+i, y+i);
 		cairo_line_to (cr, x+i, y+2*i);
 		cairo_line_to (cr, x+2*i, y+2*i);
