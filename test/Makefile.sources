@@ -175,6 +175,7 @@ test_sources = \
 	paint-repeat.c					\
 	paint-source-alpha.c				\
 	paint-with-alpha.c				\
+	partial-coverage.c				\
 	path-append.c					\
 	path-stroke-twice.c				\
 	path-precision.c				\

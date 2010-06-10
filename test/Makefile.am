@@ -862,6 +862,9 @@ REFERENCE_IMAGES = \
 	paint-with-alpha.ref.png \
 	paint-with-alpha.svg.ref.png \
 	paint.ref.png \
+	partial-coverage-rectangles.ref.png \
+	partial-coverage-reference.ref.png \
+	partial-coverage-triangles.ref.png \
 	pass-through.ref.png \
 	pass-through.rgb24.ref.png \
 	path-append.image16.ref.png \
