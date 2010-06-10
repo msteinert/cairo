@@ -862,6 +862,8 @@ REFERENCE_IMAGES = \
 	paint-with-alpha.ref.png \
 	paint-with-alpha.svg.ref.png \
 	paint.ref.png \
+	partial-coverage-half-reference.ref.png \
+	partial-coverage-half-triangles.ref.png \
 	partial-coverage-rectangles.ref.png \
 	partial-coverage-reference.ref.png \
 	partial-coverage-triangles.ref.png \

@@ -99,6 +99,24 @@ reference (cairo_t *cr, int width, int height)
 }
 
 static cairo_test_status_t
+half_reference (cairo_t *cr, int width, int height)
+{
+    int i;
+
+    cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
+    cairo_paint (cr);
+
+    for (i = 0; i < SIZE*SIZE; i++) {
+	cairo_set_source_rgba (cr, 1., 1., 1.,
+			       .5 * i / (double) (SIZE * SIZE));
+	cairo_rectangle (cr, i % SIZE, i / SIZE, 1, 1);
+	cairo_fill (cr);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_test_status_t
 rectangles (cairo_t *cr, int width, int height)
 {
     uint8_t *occupancy;
@@ -145,7 +163,7 @@ rectangles (cairo_t *cr, int width, int height)
 }
 
 static cairo_test_status_t
-triangles (cairo_t *cr, int width, int height)
+half_triangles (cairo_t *cr, int width, int height)
 {
     uint8_t *occupancy;
     int i, j, channel;
@@ -191,23 +209,95 @@ triangles (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
+static cairo_test_status_t
+full_triangles (cairo_t *cr, int width, int height)
+{
+    uint8_t *occupancy;
+    int i, j, channel;
+
+    state = 0x12345678;
+    occupancy = xmalloc (SAMPLE*SAMPLE);
+
+    cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
+    cairo_paint (cr);
+
+    cairo_set_operator (cr, CAIRO_OPERATOR_ADD);
+    for (channel = 0; channel < 3; channel++) {
+	switch (channel) {
+	default:
+	case 0: cairo_set_source_rgb (cr, 1.0, 0.0, 0.0); break;
+	case 1: cairo_set_source_rgb (cr, 0.0, 1.0, 0.0); break;
+	case 2: cairo_set_source_rgb (cr, 0.0, 0.0, 1.0); break;
+	}
+
+	for (i = 0; i < SIZE*SIZE; i++) {
+	    int xs, ys;
+
+	    compute_occupancy (occupancy, SAMPLE*SAMPLE * i / (SIZE * SIZE));
+
+	    xs = i % SIZE * SAMPLE;
+	    ys = i / SIZE * SAMPLE;
+	    for (j = 0; j < SAMPLE*SAMPLE; j++) {
+		if (occupancy[j]) {
+		    /* Add a tile composed of two non-overlapping triangles.
+		     *   .__.
+		     *   | /|
+		     *   |/ |
+		     *   .--.
+		     */
+		    int x = j % SAMPLE + xs;
+		    int y = j / SAMPLE + ys;
+
+		    /* top-left triangle */
+		    cairo_move_to (cr, (x) / (double) SAMPLE,   (y) / (double) SAMPLE);
+		    cairo_line_to (cr, (x+1) / (double) SAMPLE, (y) / (double) SAMPLE);
+		    cairo_line_to (cr, (x) / (double) SAMPLE,   (y+1) / (double) SAMPLE);
+		    cairo_close_path (cr);
+
+		    /* bottom-right triangle */
+		    cairo_move_to (cr, (x) / (double) SAMPLE,   (y+1) / (double) SAMPLE);
+		    cairo_line_to (cr, (x+1) / (double) SAMPLE, (y+1) / (double) SAMPLE);
+		    cairo_line_to (cr, (x+1) / (double) SAMPLE, (y) / (double) SAMPLE);
+		    cairo_close_path (cr);
+		}
+	    }
+	    cairo_fill (cr);
+	}
+    }
+
+    free (occupancy);
+
+    return CAIRO_TEST_SUCCESS;
+}
+
 CAIRO_TEST (partial_coverage_rectangles,
 	    "Check the fidelity of the rasterisation.",
 	    "coverage raster", /* keywords */
 	    "raster", /* requirements */
 	    SIZE, SIZE,
 	    NULL, rectangles)
-
 CAIRO_TEST (partial_coverage_triangles,
 	    "Check the fidelity of the rasterisation.",
 	    "coverage raster", /* keywords */
 	    "raster", /* requirements */
 	    SIZE, SIZE,
-	    NULL, triangles)
-
+	    NULL, full_triangles)
 CAIRO_TEST (partial_coverage_reference,
 	    "Check the fidelity of this test.",
 	    "coverage raster", /* keywords */
 	    "raster", /* requirements */
 	    SIZE, SIZE,
 	    NULL, reference)
+
+CAIRO_TEST (partial_coverage_half_triangles,
+	    "Check the fidelity of the rasterisation.",
+	    "coverage raster", /* keywords */
+	    "raster", /* requirements */
+	    SIZE, SIZE,
+	    NULL, half_triangles)
+CAIRO_TEST (partial_coverage_half_reference,
+	    "Check the fidelity of this test.",
+	    "coverage raster", /* keywords */
+	    "raster", /* requirements */
+	    SIZE, SIZE,
+	    NULL, half_reference)
