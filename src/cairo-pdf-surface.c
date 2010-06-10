@@ -2781,11 +2781,11 @@ _cairo_pdf_surface_emit_pattern_stops (cairo_pdf_surface_t      *surface,
 	stops[n_stops-1].offset = 1.0;
     }
 
-    if (n_stops == 2) {
+    if (n_stops <= 2) {
         /* no need for stitched function */
         status = cairo_pdf_surface_emit_rgb_linear_function (surface,
                                                              &stops[0],
-                                                             &stops[1],
+                                                             &stops[n_stops - 1],
                                                              color_function);
         if (unlikely (status))
             goto BAIL;
@@ -2793,7 +2793,7 @@ _cairo_pdf_surface_emit_pattern_stops (cairo_pdf_surface_t      *surface,
         if (emit_alpha) {
             status = cairo_pdf_surface_emit_alpha_linear_function (surface,
                                                                    &stops[0],
-                                                                   &stops[1],
+                                                                   &stops[n_stops - 1],
                                                                    alpha_function);
             if (unlikely (status))
                 goto BAIL;
