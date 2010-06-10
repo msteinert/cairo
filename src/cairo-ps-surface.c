@@ -3114,7 +3114,10 @@ _cairo_ps_surface_emit_pattern_stops (cairo_ps_surface_t       *surface,
 
     _cairo_output_stream_printf (surface->stream,
 				 "/CairoFunction\n");
-    if (n_stops == 2) {
+    if (n_stops == 1) {
+	/* work around single stop gradients */
+	_cairo_ps_surface_emit_linear_colorgradient (surface, &stops[0], &stops[0]);
+    } else if (n_stops == 2) {
 	/* no need for stitched function */
 	_cairo_ps_surface_emit_linear_colorgradient (surface, &stops[0], &stops[1]);
     } else {
@@ -3175,8 +3178,6 @@ _cairo_ps_surface_emit_linear_pattern (cairo_ps_surface_t     *surface,
     cairo_gradient_pattern_t *gradient = &pattern->base;
     double first_stop, last_stop;
     int repeat_begin = 0, repeat_end = 1;
-
-    assert (pattern->base.n_stops >= 2);
 
     extend = cairo_pattern_get_extend (&pattern->base.base);
 
@@ -3301,8 +3302,6 @@ _cairo_ps_surface_emit_radial_pattern (cairo_ps_surface_t     *surface,
     cairo_matrix_t pat_to_ps;
     cairo_extend_t extend;
     cairo_status_t status;
-
-    assert (pattern->base.n_stops >= 2);
 
     extend = cairo_pattern_get_extend (&pattern->base.base);
 
