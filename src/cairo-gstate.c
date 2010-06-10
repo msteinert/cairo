@@ -105,6 +105,7 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     gstate->parent_target = NULL;
     gstate->original_target = cairo_surface_reference (target);
 
+    gstate->is_identity = _cairo_matrix_is_identity (&gstate->target->device_transform);
     cairo_matrix_init_identity (&gstate->ctm);
     gstate->ctm_inverse = gstate->ctm;
     gstate->source_ctm_inverse = gstate->ctm;
@@ -170,6 +171,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
     gstate->parent_target = NULL;
     gstate->original_target = cairo_surface_reference (other->original_target);
 
+    gstate->is_identity = other->is_identity;
     gstate->ctm = other->ctm;
     gstate->ctm_inverse = other->ctm_inverse;
     gstate->source_ctm_inverse = other->source_ctm_inverse;
@@ -306,6 +308,7 @@ _cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child)
     /* Now set up our new target; we overwrite gstate->target directly,
      * since its ref is now owned by gstate->parent_target */
     gstate->target = cairo_surface_reference (child);
+    gstate->is_identity &= _cairo_matrix_is_identity (&child->device_transform);
 
     /* The clip is in surface backend coordinates for the previous target;
      * translate it into the child's backend coordinates. */
@@ -608,6 +611,7 @@ _cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty)
 
     cairo_matrix_init_translate (&tmp, tx, ty);
     cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
+    gstate->is_identity = FALSE;
 
     /* paranoid check against gradual numerical instability */
     if (! _cairo_matrix_is_invertible (&gstate->ctm))
@@ -633,6 +637,7 @@ _cairo_gstate_scale (cairo_gstate_t *gstate, double sx, double sy)
 
     cairo_matrix_init_scale (&tmp, sx, sy);
     cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
+    gstate->is_identity = FALSE;
 
     /* paranoid check against gradual numerical instability */
     if (! _cairo_matrix_is_invertible (&gstate->ctm))
@@ -659,6 +664,7 @@ _cairo_gstate_rotate (cairo_gstate_t *gstate, double angle)
 
     cairo_matrix_init_rotate (&tmp, angle);
     cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
+    gstate->is_identity = FALSE;
 
     /* paranoid check against gradual numerical instability */
     if (! _cairo_matrix_is_invertible (&gstate->ctm))
@@ -692,6 +698,7 @@ _cairo_gstate_transform (cairo_gstate_t	      *gstate,
 
     cairo_matrix_multiply (&gstate->ctm, matrix, &gstate->ctm);
     cairo_matrix_multiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
+    gstate->is_identity = FALSE;
 
     /* paranoid check against gradual numerical instability */
     if (! _cairo_matrix_is_invertible (&gstate->ctm))
@@ -712,12 +719,18 @@ _cairo_gstate_set_matrix (cairo_gstate_t       *gstate,
     if (! _cairo_matrix_is_invertible (matrix))
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
+    if (_cairo_matrix_is_identity (matrix)) {
+	_cairo_gstate_identity_matrix (gstate);
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     _cairo_gstate_unset_scaled_font (gstate);
 
     gstate->ctm = *matrix;
     gstate->ctm_inverse = *matrix;
     status = cairo_matrix_invert (&gstate->ctm_inverse);
     assert (status == CAIRO_STATUS_SUCCESS);
+    gstate->is_identity = FALSE;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -732,6 +745,7 @@ _cairo_gstate_identity_matrix (cairo_gstate_t *gstate)
 
     cairo_matrix_init_identity (&gstate->ctm);
     cairo_matrix_init_identity (&gstate->ctm_inverse);
+    gstate->is_identity = _cairo_matrix_is_identity (&gstate->target->device_transform);
 }
 
 void
@@ -761,14 +775,14 @@ _cairo_gstate_device_to_user_distance (cairo_gstate_t *gstate,
 }
 
 void
-_cairo_gstate_user_to_backend (cairo_gstate_t *gstate, double *x, double *y)
+_do_cairo_gstate_user_to_backend (cairo_gstate_t *gstate, double *x, double *y)
 {
     cairo_matrix_transform_point (&gstate->ctm, x, y);
     cairo_matrix_transform_point (&gstate->target->device_transform, x, y);
 }
 
 void
-_cairo_gstate_backend_to_user (cairo_gstate_t *gstate, double *x, double *y)
+_do_cairo_gstate_backend_to_user (cairo_gstate_t *gstate, double *x, double *y)
 {
     cairo_matrix_transform_point (&gstate->target->device_transform_inverse, x, y);
     cairo_matrix_transform_point (&gstate->ctm_inverse, x, y);

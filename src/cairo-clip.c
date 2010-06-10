@@ -43,6 +43,7 @@
 #include "cairo-clip-private.h"
 #include "cairo-error-private.h"
 #include "cairo-freed-pool-private.h"
+#include "cairo-gstate-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-region-private.h"
