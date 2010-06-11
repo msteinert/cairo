@@ -1056,6 +1056,35 @@ _cairo_xlib_surface_set_picture_clip_rects (cairo_xlib_display_t *display,
 }
 
 static void
+_cairo_xlib_surface_set_precision (cairo_xlib_display_t	*display,
+				   cairo_xlib_surface_t	*surface,
+				   cairo_antialias_t	 antialias)
+{
+    int precision;
+
+    switch (antialias) {
+    case CAIRO_ANTIALIAS_NONE:
+    case CAIRO_ANTIALIAS_DEFAULT:
+	precision = PolyModePrecise;
+	break;
+    case CAIRO_ANTIALIAS_SUBPIXEL:
+    case CAIRO_ANTIALIAS_GRAY:
+	precision = PolyModeImprecise;
+	break;
+    }
+
+    if (surface->precision != precision) {
+	XRenderPictureAttributes pa;
+
+	pa.poly_mode = precision;
+	XRenderChangePicture (display->display, surface->dst_picture,
+			      CPPolyMode, &pa);
+
+	surface->precision = precision;
+    }
+}
+
+static void
 _cairo_xlib_surface_ensure_dst_picture (cairo_xlib_display_t    *display,
                                         cairo_xlib_surface_t    *surface)
 {
@@ -2730,6 +2759,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 	goto BAIL;
 
     _cairo_xlib_surface_ensure_dst_picture (display, dst);
+    _cairo_xlib_surface_set_precision (display, dst, antialias);
 
     status = _cairo_xlib_surface_set_attributes (display,
                                                  src, &attributes,
@@ -3082,6 +3112,7 @@ found:
     surface->filter = CAIRO_FILTER_NEAREST;
     surface->extend = CAIRO_EXTEND_NONE;
     surface->has_component_alpha = FALSE;
+    surface->precision = PolyModePrecise;
     surface->xtransform = identity;
 
     surface->clip_region = NULL;

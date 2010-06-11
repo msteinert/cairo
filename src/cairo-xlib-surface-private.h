@@ -94,6 +94,7 @@ struct _cairo_xlib_surface {
     cairo_filter_t filter;
     cairo_extend_t extend;
     cairo_bool_t has_component_alpha;
+    int precision;
     XTransform xtransform;
 
     uint32_t a_mask;
