@@ -78,15 +78,19 @@ typedef struct _cairo_test_runner {
     int num_skipped;
     int num_failed;
     int num_xfailed;
+    int num_error;
     int num_crashed;
 
     cairo_test_list_t *crashes_preamble;
+    cairo_test_list_t *errors_preamble;
     cairo_test_list_t *fails_preamble;
 
     cairo_test_list_t **crashes_per_target;
+    cairo_test_list_t **errors_per_target;
     cairo_test_list_t **fails_per_target;
 
     int *num_failed_per_target;
+    int *num_error_per_target;
     int *num_crashed_per_target;
 
     cairo_bool_t foreground;
@@ -384,12 +388,17 @@ _runner_init (cairo_test_runner_t *runner)
 
     runner->fails_preamble = NULL;
     runner->crashes_preamble = NULL;
+    runner->errors_preamble = NULL;
 
     runner->fails_per_target = xcalloc (sizeof (cairo_test_list_t *),
 					runner->base.num_targets);
     runner->crashes_per_target = xcalloc (sizeof (cairo_test_list_t *),
 					  runner->base.num_targets);
+    runner->errors_per_target = xcalloc (sizeof (cairo_test_list_t *),
+					  runner->base.num_targets);
     runner->num_failed_per_target = xcalloc (sizeof (int),
+					     runner->base.num_targets);
+    runner->num_error_per_target = xcalloc (sizeof (int),
 					     runner->base.num_targets);
     runner->num_crashed_per_target = xcalloc (sizeof (int),
 					      runner->base.num_targets);
@@ -443,6 +452,21 @@ _runner_print_details (cairo_test_runner_t *runner)
 	}
 	_log (&runner->base, "\n");
     }
+    if (runner->errors_preamble) {
+	int count = 0;
+
+	for (list = runner->errors_preamble; list != NULL; list = list->next)
+	    count++;
+
+	_log (&runner->base, "Preamble: %d error -", count);
+
+	for (list = runner->errors_preamble; list != NULL; list = list->next) {
+	    char *name = cairo_test_get_name (list->test);
+	    _log (&runner->base, " %s", name);
+	    free (name);
+	}
+	_log (&runner->base, "\n");
+    }
     if (runner->fails_preamble) {
 	int count = 0;
 
@@ -470,6 +494,22 @@ _runner_print_details (cairo_test_runner_t *runner)
 		  runner->num_crashed_per_target[n]);
 
 	    for (list = runner->crashes_per_target[n];
+		 list != NULL;
+		 list = list->next)
+	    {
+		char *name = cairo_test_get_name (list->test);
+		_log (&runner->base, " %s", name);
+		free (name);
+	    }
+	    _log (&runner->base, "\n");
+	}
+	if (runner->num_error_per_target[n]) {
+	    _log (&runner->base, "%s (%s): %d error -",
+		  target->name,
+		  cairo_boilerplate_content_name (target->content),
+		  runner->num_error_per_target[n]);
+
+	    for (list = runner->errors_per_target[n];
 		 list != NULL;
 		 list = list->next)
 	    {
@@ -519,16 +559,20 @@ _runner_fini (cairo_test_runner_t *runner)
     unsigned int n;
 
     _list_free (runner->crashes_preamble);
+    _list_free (runner->errors_preamble);
     _list_free (runner->fails_preamble);
 
     for (n = 0; n < runner->base.num_targets; n++) {
 	_list_free (runner->crashes_per_target[n]);
+	_list_free (runner->errors_per_target[n]);
 	_list_free (runner->fails_per_target[n]);
     }
     free (runner->crashes_per_target);
+    free (runner->errors_per_target);
     free (runner->fails_per_target);
 
     free (runner->num_crashed_per_target);
+    free (runner->num_error_per_target);
     free (runner->num_failed_per_target);
 
     cairo_test_fini (&runner->base);
@@ -700,7 +744,7 @@ main (int argc, char **argv)
     for (test = tests; test != NULL; test = test->next) {
 	cairo_test_context_t ctx;
 	cairo_test_status_t status;
-	cairo_bool_t failed = FALSE, xfailed = FALSE, crashed = FALSE, skipped = TRUE;
+	cairo_bool_t failed = FALSE, xfailed = FALSE, error = FALSE, crashed = FALSE, skipped = TRUE;
 	cairo_bool_t in_preamble = FALSE;
 	char *name = cairo_test_get_name (test);
 	int i;
@@ -810,6 +854,13 @@ main (int argc, char **argv)
 		failed = TRUE;
 		goto TEST_DONE;
 
+	    case CAIRO_TEST_ERROR:
+		runner.errors_preamble = _list_prepend (runner.errors_preamble,
+							 test);
+		in_preamble = TRUE;
+		failed = TRUE;
+		goto TEST_DONE;
+
 	    case CAIRO_TEST_NO_MEMORY:
 	    case CAIRO_TEST_CRASHED:
 		runner.crashes_preamble = _list_prepend (runner.crashes_preamble,
@@ -830,6 +881,7 @@ main (int argc, char **argv)
 	    const cairo_boilerplate_target_t *target;
 	    cairo_bool_t target_failed = FALSE,
 			 target_xfailed = FALSE,
+			 target_error = FALSE,
 			 target_crashed = FALSE,
 			 target_skipped = TRUE;
 	    int has_similar;
@@ -853,11 +905,14 @@ main (int argc, char **argv)
 		    case CAIRO_TEST_XFAILURE:
 			target_xfailed = TRUE;
 			break;
-		    case CAIRO_TEST_NO_MEMORY:
 		    case CAIRO_TEST_NEW:
 		    case CAIRO_TEST_FAILURE:
 			target_failed = TRUE;
 			break;
+		    case CAIRO_TEST_ERROR:
+			target_error = TRUE;
+			break;
+		    case CAIRO_TEST_NO_MEMORY:
 		    case CAIRO_TEST_CRASHED:
 			target_crashed = TRUE;
 			break;
@@ -873,6 +928,13 @@ main (int argc, char **argv)
 		runner.crashes_per_target[n] = _list_prepend (runner.crashes_per_target[n],
 							      test);
 		crashed = TRUE;
+	    } else if (target_error) {
+		target_status[n] = CAIRO_TEST_ERROR;
+		runner.num_error_per_target[n]++;
+		runner.errors_per_target[n] = _list_prepend (runner.errors_per_target[n],
+							     test);
+
+		error = TRUE;
 	    } else if (target_failed) {
 		target_status[n] = CAIRO_TEST_FAILURE;
 		runner.num_failed_per_target[n]++;
@@ -915,6 +977,28 @@ main (int argc, char **argv)
 		_log (&runner.base, "\n%s: CRASH!\n", name);
 	    }
 	    runner.num_crashed++;
+	    runner.passed = FALSE;
+	} else if (error) {
+	    if (! in_preamble) {
+		len = 0;
+		for (n = 0 ; n < runner.base.num_targets; n++) {
+		    if (target_status[n] == CAIRO_TEST_ERROR) {
+			if (strstr (targets,
+				    runner.base.targets_to_test[n]->name) == NULL)
+			{
+			    len += snprintf (targets + len,
+					     sizeof (targets) - len,
+					     "%s, ",
+					     runner.base.targets_to_test[n]->name);
+			}
+		    }
+		}
+		targets[len-2] = '\0';
+		_log (&runner.base, "%s: ERROR (%s)\n", name, targets);
+	    } else {
+		_log (&runner.base, "%s: ERROR\n", name);
+	    }
+	    runner.num_error++;
 	    runner.passed = FALSE;
 	} else if (failed) {
 	    if (! in_preamble) {
@@ -964,6 +1048,7 @@ main (int argc, char **argv)
 
     for (n = 0 ; n < runner.base.num_targets; n++) {
 	runner.crashes_per_target[n] = _list_reverse (runner.crashes_per_target[n]);
+	runner.errors_per_target[n] = _list_reverse (runner.errors_per_target[n]);
 	runner.fails_per_target[n] = _list_reverse (runner.fails_per_target[n]);
     }
 

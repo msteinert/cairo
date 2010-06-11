@@ -124,6 +124,7 @@ typedef enum cairo_test_status {
     CAIRO_TEST_FAILURE,
     CAIRO_TEST_NEW,
     CAIRO_TEST_XFAILURE,
+    CAIRO_TEST_ERROR,
     CAIRO_TEST_CRASHED,
     CAIRO_TEST_UNTESTED = 77 /* match automake's skipped exit status */
 } cairo_test_status_t;

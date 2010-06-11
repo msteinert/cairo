@@ -1444,7 +1444,7 @@ REPEAT:
     if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
 	cairo_test_log (ctx, "Error: Function under test left cairo status in an error state: %s\n",
 			cairo_status_to_string (cairo_status (cr)));
-	ret = CAIRO_TEST_FAILURE;
+	ret = CAIRO_TEST_ERROR;
 	goto UNWIND_CAIRO;
     }
 
@@ -1665,6 +1665,21 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 		     fail_face, normal_face);
 	    break;
 
+	case CAIRO_TEST_ERROR:
+	    if (print_fail_on_stdout && ctx->thread == 0) {
+		printf ("!!!ERROR!!!\n");
+	    } else {
+		/* eat the test name */
+		printf ("\r");
+		fflush (stdout);
+	    }
+	    cairo_test_log (ctx, "ERROR\n");
+	    fprintf (stderr, "%s.%s.%s [%d]%s:\t%s!!!ERROR!!!%s\n",
+		     ctx->test_name, target->name,
+		     cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
+		     fail_face, normal_face);
+	    break;
+
 	case CAIRO_TEST_XFAILURE:
 	    if (print_fail_on_stdout && ctx->thread == 0) {
 		printf ("XFAIL\n");
@@ -1731,6 +1746,9 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 	default:
 	case CAIRO_TEST_CRASHED:
 	    printf ("!!!CRASHED!!!\n");
+	    break;
+	case CAIRO_TEST_ERROR:
+	    printf ("!!!ERRORED!!!\n");
 	    break;
 	case CAIRO_TEST_XFAILURE:
 	    printf ("XFAIL\n");
