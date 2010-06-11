@@ -356,23 +356,6 @@ _cairo_pattern_fini (cairo_pattern_t *pattern)
 #endif
 }
 
-void
-_cairo_pattern_fini_snapshot (cairo_pattern_t *pattern)
-{
-    /* XXX this is quite ugly, but currently necessary to break the circular
-     * references with snapshot-cow and the recording-surface.
-     * This operation remains safe only whilst _cairo_surface_snapshot() is
-     * not public...
-     */
-    if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
-	cairo_surface_pattern_t *spat = (cairo_surface_pattern_t *) pattern;
-
-	cairo_surface_finish (spat->surface);
-    }
-
-    _cairo_pattern_fini (pattern);
-}
-
 cairo_status_t
 _cairo_pattern_create_copy (cairo_pattern_t	  **pattern_out,
 			    const cairo_pattern_t  *other)

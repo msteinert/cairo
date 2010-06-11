@@ -189,27 +189,27 @@ _cairo_recording_surface_finish (void *abstract_surface)
 
 	switch (command->header.type) {
 	case CAIRO_COMMAND_PAINT:
-	    _cairo_pattern_fini_snapshot (&command->paint.source.base);
+	    _cairo_pattern_fini (&command->paint.source.base);
 	    break;
 
 	case CAIRO_COMMAND_MASK:
-	    _cairo_pattern_fini_snapshot (&command->mask.source.base);
-	    _cairo_pattern_fini_snapshot (&command->mask.mask.base);
+	    _cairo_pattern_fini (&command->mask.source.base);
+	    _cairo_pattern_fini (&command->mask.mask.base);
 	    break;
 
 	case CAIRO_COMMAND_STROKE:
-	    _cairo_pattern_fini_snapshot (&command->stroke.source.base);
+	    _cairo_pattern_fini (&command->stroke.source.base);
 	    _cairo_path_fixed_fini (&command->stroke.path);
 	    _cairo_stroke_style_fini (&command->stroke.style);
 	    break;
 
 	case CAIRO_COMMAND_FILL:
-	    _cairo_pattern_fini_snapshot (&command->fill.source.base);
+	    _cairo_pattern_fini (&command->fill.source.base);
 	    _cairo_path_fixed_fini (&command->fill.path);
 	    break;
 
 	case CAIRO_COMMAND_SHOW_TEXT_GLYPHS:
-	    _cairo_pattern_fini_snapshot (&command->show_text_glyphs.source.base);
+	    _cairo_pattern_fini (&command->show_text_glyphs.source.base);
 	    free (command->show_text_glyphs.utf8);
 	    free (command->show_text_glyphs.glyphs);
 	    free (command->show_text_glyphs.clusters);
@@ -333,7 +333,7 @@ _cairo_recording_surface_paint (void			  *abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 
   CLEANUP_SOURCE:
-    _cairo_pattern_fini_snapshot (&command->source.base);
+    _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
     _cairo_clip_fini (&command->header.clip);
     free (command);
@@ -375,9 +375,9 @@ _cairo_recording_surface_mask (void			*abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 
   CLEANUP_MASK:
-    _cairo_pattern_fini_snapshot (&command->mask.base);
+    _cairo_pattern_fini (&command->mask.base);
   CLEANUP_SOURCE:
-    _cairo_pattern_fini_snapshot (&command->source.base);
+    _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
     _cairo_clip_fini (&command->header.clip);
     free (command);
@@ -437,7 +437,7 @@ _cairo_recording_surface_stroke (void			*abstract_surface,
   CLEANUP_PATH:
     _cairo_path_fixed_fini (&command->path);
   CLEANUP_SOURCE:
-    _cairo_pattern_fini_snapshot (&command->source.base);
+    _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
     _cairo_clip_fini (&command->header.clip);
     free (command);
@@ -488,7 +488,7 @@ _cairo_recording_surface_fill (void			*abstract_surface,
   CLEANUP_PATH:
     _cairo_path_fixed_fini (&command->path);
   CLEANUP_SOURCE:
-    _cairo_pattern_fini_snapshot (&command->source.base);
+    _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
     _cairo_clip_fini (&command->header.clip);
     free (command);
@@ -582,7 +582,7 @@ _cairo_recording_surface_show_text_glyphs (void				*abstract_surface,
     free (command->glyphs);
     free (command->clusters);
 
-    _cairo_pattern_fini_snapshot (&command->source.base);
+    _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
     _cairo_clip_fini (&command->header.clip);
     free (command);
