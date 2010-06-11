@@ -2341,21 +2341,6 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
     return status;
 }
 
-static void
-_init_solid_for_color_stop (cairo_solid_pattern_t *solid,
-			    const cairo_color_stop_t *color)
-{
-    cairo_color_t premult;
-
-    /* Color stops aren't premultiplied, so fix that here */
-    _cairo_color_init_rgba (&premult,
-			    color->red,
-			    color->green,
-			    color->blue,
-			    color->alpha);
-    _cairo_pattern_init_solid (solid, &premult);
-}
-
 /**
  * _cairo_pattern_acquire_surface:
  * @pattern: a #cairo_pattern_t
@@ -2387,97 +2372,36 @@ _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 				cairo_surface_t		   **surface_out,
 				cairo_surface_attributes_t *attributes)
 {
-    cairo_status_t status;
-
     if (unlikely (pattern->status)) {
 	*surface_out = NULL;
 	return pattern->status;
     }
 
     switch (pattern->type) {
-    case CAIRO_PATTERN_TYPE_SOLID: {
-	cairo_solid_pattern_t *src = (cairo_solid_pattern_t *) pattern;
+    case CAIRO_PATTERN_TYPE_SOLID:
+	return _cairo_pattern_acquire_surface_for_solid ((cairo_solid_pattern_t *) pattern,
+							 dst, x, y, width, height,
+							 surface_out,
+							 attributes);
 
-	status = _cairo_pattern_acquire_surface_for_solid (src, dst,
-							   x, y, width, height,
+    case CAIRO_PATTERN_TYPE_LINEAR:
+    case CAIRO_PATTERN_TYPE_RADIAL:
+	return _cairo_pattern_acquire_surface_for_gradient ((cairo_gradient_pattern_t *) pattern,
+							    dst, x, y, width, height,
+							    surface_out,
+							    attributes);
+
+    case CAIRO_PATTERN_TYPE_SURFACE:
+	return _cairo_pattern_acquire_surface_for_surface ((cairo_surface_pattern_t *) pattern,
+							   dst, x, y, width, height,
+							   flags,
 							   surface_out,
 							   attributes);
-	} break;
-    case CAIRO_PATTERN_TYPE_LINEAR:
-    case CAIRO_PATTERN_TYPE_RADIAL: {
-	cairo_gradient_pattern_t *src = (cairo_gradient_pattern_t *) pattern;
 
-	/* XXX The gradient->solid conversion code should now be redundant. */
-
-	/* fast path for gradients with less than 2 color stops */
-	if (src->n_stops < 2)
-	{
-	    cairo_solid_pattern_t solid;
-
-	    if (src->n_stops) {
-		_init_solid_for_color_stop (&solid, &src->stops->color);
-	    } else {
-		_cairo_pattern_init_solid (&solid,
-					   CAIRO_COLOR_TRANSPARENT);
-	    }
-
-	    status = _cairo_pattern_acquire_surface_for_solid (&solid, dst,
-							       x, y,
-							       width, height,
-							       surface_out,
-							       attributes);
-	}
-	else
-	{
-	    unsigned int i;
-
-	    /* Is the gradient a uniform colour?
-	     * Happens more often than you would believe.
-	     */
-	    for (i = 1; i < src->n_stops; i++) {
-		if (! _cairo_color_stop_equal (&src->stops[0].color,
-					       &src->stops[i].color))
-		{
-		    break;
-		}
-	    }
-	    if (i == src->n_stops) {
-		cairo_solid_pattern_t solid;
-
-		_init_solid_for_color_stop (&solid, &src->stops->color);
-
-		status =
-		    _cairo_pattern_acquire_surface_for_solid (&solid, dst,
-							      x, y,
-							      width, height,
-							      surface_out,
-							      attributes);
-	    } else {
-		status =
-		    _cairo_pattern_acquire_surface_for_gradient (src, dst,
-								 x, y,
-								 width, height,
-								 surface_out,
-								 attributes);
-	    }
-	}
-    } break;
-    case CAIRO_PATTERN_TYPE_SURFACE: {
-	cairo_surface_pattern_t *src = (cairo_surface_pattern_t *) pattern;
-
-	status = _cairo_pattern_acquire_surface_for_surface (src, dst,
-							     x, y,
-							     width, height,
-							     flags,
-							     surface_out,
-							     attributes);
-    } break;
     default:
 	ASSERT_NOT_REACHED;
-	status = _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
+	return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
     }
-
-    return status;
 }
 
 /**
