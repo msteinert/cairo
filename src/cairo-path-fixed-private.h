@@ -61,9 +61,10 @@ typedef char cairo_path_op_t;
 
 typedef struct _cairo_path_buf {
     cairo_list_t link;
-    unsigned int buf_size;
     unsigned int num_ops;
+    unsigned int size_ops;
     unsigned int num_points;
+    unsigned int size_points;
 
     cairo_path_op_t *op;
     cairo_point_t *points;

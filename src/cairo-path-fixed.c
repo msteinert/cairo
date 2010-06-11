@@ -53,7 +53,7 @@ _cairo_path_fixed_add_buf (cairo_path_fixed_t *path,
 			   cairo_path_buf_t   *buf);
 
 static cairo_path_buf_t *
-_cairo_path_buf_create (int buf_size);
+_cairo_path_buf_create (int size_ops, int size_points);
 
 static void
 _cairo_path_buf_destroy (cairo_path_buf_t *buf);
@@ -89,7 +89,8 @@ _cairo_path_fixed_init (cairo_path_fixed_t *path)
 
     path->buf.base.num_ops = 0;
     path->buf.base.num_points = 0;
-    path->buf.base.buf_size = CAIRO_PATH_BUF_SIZE;
+    path->buf.base.size_ops = ARRAY_LENGTH (path->buf.op);
+    path->buf.base.size_points = ARRAY_LENGTH (path->buf.points);
     path->buf.base.op = path->buf.op;
     path->buf.base.points = path->buf.points;
 
@@ -112,7 +113,7 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
 			     const cairo_path_fixed_t *other)
 {
     cairo_path_buf_t *buf, *other_buf;
-    unsigned int num_points, num_ops, buf_size;
+    unsigned int num_points, num_ops;
 
     VG (VALGRIND_MAKE_MEM_UNDEFINED (path, sizeof (cairo_path_fixed_t)));
 
@@ -120,6 +121,8 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
 
     path->buf.base.op = path->buf.op;
     path->buf.base.points = path->buf.points;
+    path->buf.base.size_ops = ARRAY_LENGTH (path->buf.op);
+    path->buf.base.size_points = ARRAY_LENGTH (path->buf.points);
 
     path->current_point = other->current_point;
     path->last_move_point = other->last_move_point;
@@ -134,7 +137,6 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
 
     path->buf.base.num_ops = other->buf.base.num_ops;
     path->buf.base.num_points = other->buf.base.num_points;
-    path->buf.base.buf_size = other->buf.base.buf_size;
     memcpy (path->buf.op, other->buf.base.op,
 	    other->buf.base.num_ops * sizeof (other->buf.op[0]));
     memcpy (path->buf.points, other->buf.points,
@@ -149,9 +151,8 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
 	num_points += other_buf->num_points;
     }
 
-    buf_size = MAX (num_ops, (num_points + 1) / 2);
-    if (buf_size) {
-	buf = _cairo_path_buf_create (buf_size);
+    if (num_ops) {
+	buf = _cairo_path_buf_create (num_ops, num_points);
 	if (unlikely (buf == NULL)) {
 	    _cairo_path_fixed_fini (path);
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -682,10 +683,10 @@ _cairo_path_fixed_add (cairo_path_fixed_t   *path,
 {
     cairo_path_buf_t *buf = cairo_path_tail (path);
 
-    if (buf->num_ops + 1 > buf->buf_size ||
-	buf->num_points + num_points > 2 * buf->buf_size)
+    if (buf->num_ops + 1 > buf->size_ops ||
+	buf->num_points + num_points > buf->size_points)
     {
-	buf = _cairo_path_buf_create (buf->buf_size * 2);
+	buf = _cairo_path_buf_create (buf->num_ops * 2, buf->num_points * 2);
 	if (unlikely (buf == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -731,25 +732,23 @@ _cairo_path_fixed_add_buf (cairo_path_fixed_t *path,
     cairo_list_add_tail (&buf->link, &cairo_path_head (path)->link);
 }
 
+COMPILE_TIME_ASSERT (sizeof (cairo_path_op_t) == 1);
 static cairo_path_buf_t *
-_cairo_path_buf_create (int buf_size)
+_cairo_path_buf_create (int size_ops, int size_points)
 {
     cairo_path_buf_t *buf;
 
-    /* adjust buf_size to ensure that buf->points is naturally aligned */
-    buf_size += sizeof (double)
-	       - ((buf_size + sizeof (cairo_path_buf_t)) & (sizeof (double)-1));
-    buf = _cairo_malloc_ab_plus_c (buf_size,
-	                           sizeof (cairo_path_op_t) +
-				   2 * sizeof (cairo_point_t),
-				   sizeof (cairo_path_buf_t));
+    /* adjust size_ops to ensure that buf->points is naturally aligned */
+    size_ops += sizeof (double) - ((sizeof (cairo_path_buf_t) + size_ops) % sizeof (double));
+    buf = _cairo_malloc_ab_plus_c (size_points, sizeof (cairo_point_t), size_ops + sizeof (cairo_path_buf_t));
     if (buf) {
 	buf->num_ops = 0;
 	buf->num_points = 0;
-	buf->buf_size = buf_size;
+	buf->size_ops = size_ops;
+	buf->size_points = size_points;
 
 	buf->op = (cairo_path_op_t *) (buf + 1);
-	buf->points = (cairo_point_t *) (buf->op + buf_size);
+	buf->points = (cairo_point_t *) (buf->op + size_ops);
     }
 
     return buf;
