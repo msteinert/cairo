@@ -38,11 +38,10 @@
  *	Eric Anholt <eric@anholt.net>
  */
 
-#include "cairo-gl-gradient-private.h"
-
-#include <string.h>
+#include "cairoint.h"
 
 #include "cairo-error-private.h"
+#include "cairo-gl-gradient-private.h"
 #include "cairo-gl-private.h"
 
 static int
