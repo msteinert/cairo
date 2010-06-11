@@ -140,7 +140,7 @@ _add_edge (cairo_polygon_t *polygon,
 
     assert (top < bottom);
 
-    if (polygon->num_edges == polygon->edges_size) {
+    if (unlikely (polygon->num_edges == polygon->edges_size)) {
 	if (! _cairo_polygon_grow (polygon))
 	    return;
     }
@@ -197,7 +197,20 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 	if (bottom <= limits->p1.y)
 	    continue;
 
-	if (p1->x <= limits->p1.x && p2->x <= limits->p1.x)
+	if (p1->x >= limits->p1.x && p2->x >= limits->p1.x &&
+	    p1->x <= limits->p2.x && p2->x <= limits->p2.x)
+	{
+	    top_y = top;
+	    if (top_y < limits->p1.y)
+		top_y = limits->p1.y;
+
+	    bot_y = bottom;
+	    if (bot_y > limits->p2.y)
+		bot_y = limits->p2.y;
+
+	    _add_edge (polygon, p1, p2, top_y, bot_y, dir);
+	}
+	else if (p1->x <= limits->p1.x && p2->x <= limits->p1.x)
 	{
 	    p[0].x = limits->p1.x;
 	    p[0].y = limits->p1.y;
@@ -228,19 +241,6 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 		bot_y = p[1].y;
 
 	    _add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-	}
-	else if (p1->x >= limits->p1.x && p2->x >= limits->p1.x &&
-		 p1->x <= limits->p2.x && p2->x <= limits->p2.x)
-	{
-	    top_y = top;
-	    if (top_y < limits->p1.y)
-		top_y = limits->p1.y;
-
-	    bot_y = bottom;
-	    if (bot_y > limits->p2.y)
-		bot_y = limits->p2.y;
-
-	    _add_edge (polygon, p1, p2, top_y, bot_y, dir);
 	}
 	else
 	{
