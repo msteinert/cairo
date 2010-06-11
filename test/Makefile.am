@@ -183,6 +183,7 @@ REFERENCE_IMAGES = \
 	clear-source.ref.png \
 	clear-source.image16.ref.png \
 	clear-source.ps.xfail.png \
+	clear-source.pdf.xfail.png \
 	clip-all.ref.png \
 	clip-contexts.ref.png \
 	clip-device-offset.argb32.ref.png \
@@ -214,6 +215,7 @@ REFERENCE_IMAGES = \
 	clip-fill-unbounded.image16.ref.png \
 	clip-fill-unbounded.argb32.ref.png \
 	clip-fill-unbounded.rgb24.ref.png \
+	clip-fill-unbounded.pdf.argb32.ref.png \
 	clip-fill-unbounded.ps.argb32.xfail.png \
 	clip-fill-unbounded.svg12.argb32.xfail.png \
 	clip-fill-unbounded.svg12.rgb24.xfail.png \
@@ -256,6 +258,8 @@ REFERENCE_IMAGES = \
 	clip-unbounded.ref.png \
 	clip-unbounded.rgb24.ref.png \
 	clip-unbounded.svg12.rgb24.xfail.png \
+	clip-unbounded.pdf.rgb24.xfail.png \
+	clip-unbounded.pdf.argb32.xfail.png \
 	clipped-surface.image16.ref.png \
 	clipped-surface.ref.png \
 	clip-push-group.image16.ref.png \
@@ -281,6 +285,7 @@ REFERENCE_IMAGES = \
 	clip-stroke-unbounded.argb32.ref.png \
 	clip-stroke-unbounded.rgb24.ref.png \
 	clip-stroke-unbounded.ps.argb32.ref.png \
+	clip-stroke-unbounded.pdf.argb32.xfail.png \
 	clip-stroke-unbounded.svg12.argb32.xfail.png \
 	clip-stroke-unbounded.svg12.rgb24.xfail.png \
 	clip-stroke-unbounded.xlib.argb32.ref.png \
@@ -901,6 +906,7 @@ REFERENCE_IMAGES = \
 	pthread-show-text.ref.png \
 	pthread-show-text.image16.ref.png \
 	pthread-show-text.ps.ref.png \
+	pthread-show-text.pdf.ref.png \
 	ps-surface-source.image16.ref.png \
 	ps-surface-source.rgb24.ref.png \
 	ps-surface-source.argb32.ref.png \
@@ -928,6 +934,7 @@ REFERENCE_IMAGES = \
 	radial-gradient-source.image16.ref.png \
 	radial-gradient-source.argb32.ref.png \
 	radial-gradient-source.rgb24.ref.png \
+	radial-gradient-source.pdf.argb32.ref.png \
 	radial-gradient-mask.argb32.ref.png \
 	radial-gradient-mask.rgb24.ref.png \
 	radial-gradient-mask.image16.ref.png \
@@ -1017,6 +1024,8 @@ REFERENCE_IMAGES = \
 	scale-offset-similar.xlib-fallback.xfail.png \
 	scale-source-surface-paint.ref.png \
 	scale-source-surface-paint.rgb24.ref.png \
+	scale-source-surface-paint.pdf.argb32.xfail.png \
+	scale-source-surface-paint.pdf.rgb24.xfail.png \
 	scale-source-surface-paint.svg.argb32.xfail.png \
 	scale-source-surface-paint.svg.rgb24.xfail.png \
 	select-font-face.image16.ref.png \
@@ -1121,6 +1130,8 @@ REFERENCE_IMAGES = \
 	surface-pattern-operator.image16.ref.png \
 	surface-pattern-operator.xlib.argb32.ref.png \
 	surface-pattern-operator.xlib.rgb24.ref.png \
+	surface-pattern-operator.pdf.argb32.xfail.png \
+	surface-pattern-operator.pdf.rgb24.xfail.png \
 	surface-pattern-scale-down.image16.ref.png \
 	surface-pattern-scale-down.pdf.ref.png \
 	surface-pattern-scale-down.ps2.ref.png \
