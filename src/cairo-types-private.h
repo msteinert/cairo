@@ -60,6 +60,7 @@ typedef struct _cairo_hash_entry cairo_hash_entry_t;
 typedef struct _cairo_hash_table cairo_hash_table_t;
 typedef struct _cairo_image_surface cairo_image_surface_t;
 typedef struct _cairo_mime_data cairo_mime_data_t;
+typedef struct _cairo_observer cairo_observer_t;
 typedef struct _cairo_output_stream cairo_output_stream_t;
 typedef struct _cairo_paginated_surface_backend cairo_paginated_surface_backend_t;
 typedef struct _cairo_path_fixed cairo_path_fixed_t;
@@ -75,6 +76,11 @@ typedef struct _cairo_unscaled_font_backend cairo_unscaled_font_backend_t;
 typedef struct _cairo_xlib_screen_info cairo_xlib_screen_info_t;
 
 typedef cairo_array_t cairo_user_data_array_t;
+
+struct _cairo_observer {
+    cairo_list_t link;
+    void (*callback) (cairo_observer_t *self, void *arg);
+};
 
 /**
  * cairo_hash_entry_t:

@@ -70,6 +70,18 @@ _cairo_gstate_transform_glyphs_to_backend (cairo_gstate_t      *gstate,
 					   int			*num_transformed_glyphs,
 					   cairo_text_cluster_t *transformed_clusters);
 
+static void
+_cairo_gstate_update_device_transform (cairo_observer_t *observer,
+				       void *arg)
+{
+    cairo_gstate_t *gstate = cairo_container_of (observer,
+						 cairo_gstate_t,
+						 device_transform_observer);
+
+    gstate->is_identity = (_cairo_matrix_is_identity (&gstate->ctm) &&
+			   _cairo_matrix_is_identity (&gstate->target->device_transform));
+}
+
 cairo_status_t
 _cairo_gstate_init (cairo_gstate_t  *gstate,
 		    cairo_surface_t *target)
@@ -105,6 +117,10 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     gstate->parent_target = NULL;
     gstate->original_target = cairo_surface_reference (target);
 
+    gstate->device_transform_observer.callback = _cairo_gstate_update_device_transform;
+    cairo_list_add (&gstate->device_transform_observer.link,
+		    &gstate->target->device_transform_observers);
+
     gstate->is_identity = _cairo_matrix_is_identity (&gstate->target->device_transform);
     cairo_matrix_init_identity (&gstate->ctm);
     gstate->ctm_inverse = gstate->ctm;
@@ -115,10 +131,6 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     /* Now that the gstate is fully initialized and ready for the eventual
      * _cairo_gstate_fini(), we can check for errors (and not worry about
      * the resource deallocation). */
-
-    if (target == NULL)
-	return _cairo_error (CAIRO_STATUS_NULL_POINTER);
-
     status = target->status;
     if (unlikely (status))
 	return status;
@@ -171,6 +183,10 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
     gstate->parent_target = NULL;
     gstate->original_target = cairo_surface_reference (other->original_target);
 
+    gstate->device_transform_observer.callback = _cairo_gstate_update_device_transform;
+    cairo_list_add (&gstate->device_transform_observer.link,
+		    &gstate->target->device_transform_observers);
+
     gstate->is_identity = other->is_identity;
     gstate->ctm = other->ctm;
     gstate->ctm_inverse = other->ctm_inverse;
@@ -198,6 +214,8 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
     gstate->scaled_font = NULL;
 
     _cairo_clip_reset (&gstate->clip);
+
+    cairo_list_del (&gstate->device_transform_observer.link);
 
     cairo_surface_destroy (gstate->target);
     gstate->target = NULL;
@@ -309,6 +327,8 @@ _cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child)
      * since its ref is now owned by gstate->parent_target */
     gstate->target = cairo_surface_reference (child);
     gstate->is_identity &= _cairo_matrix_is_identity (&child->device_transform);
+    cairo_list_move (&gstate->device_transform_observer.link,
+		     &gstate->target->device_transform_observers);
 
     /* The clip is in surface backend coordinates for the previous target;
      * translate it into the child's backend coordinates. */

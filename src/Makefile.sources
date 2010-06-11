@@ -138,6 +138,7 @@ cairo_sources = \
 	cairo-recording-surface.c \
 	cairo-misc.c \
 	cairo-mutex.c \
+	cairo-observer.c \
 	cairo-output-stream.c \
 	cairo-paginated-surface.c \
 	cairo-path-bounds.c \

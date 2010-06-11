@@ -60,6 +60,9 @@ struct _cairo_gstate {
     cairo_surface_t *parent_target;	/* The previous target which was receiving rendering */
     cairo_surface_t *original_target;	/* The original target the initial gstate was created with */
 
+    /* the user is allowed to update the device after we have cached the matrices... */
+    cairo_observer_t device_transform_observer;
+
     cairo_matrix_t ctm;
     cairo_matrix_t ctm_inverse;
     cairo_matrix_t source_ctm_inverse; /* At the time ->source was set */

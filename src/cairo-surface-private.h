@@ -72,6 +72,7 @@ struct _cairo_surface {
 
     cairo_matrix_t device_transform;
     cairo_matrix_t device_transform_inverse;
+    cairo_list_t device_transform_observers;
 
     /* The actual resolution of the device, in dots per inch. */
     double x_resolution;

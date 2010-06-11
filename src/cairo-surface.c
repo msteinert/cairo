@@ -63,6 +63,7 @@ const cairo_surface_t name = {					\
     { 0, 0, 0, NULL, },			/* mime_data */         \
     { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 },   /* device_transform */	\
     { 1.0, 0.0,	0.0, 1.0, 0.0, 0.0 },	/* device_transform_inverse */	\
+    { NULL, NULL },			/* device_transform_observers */ \
     0.0,				/* x_resolution */	\
     0.0,				/* y_resolution */	\
     0.0,				/* x_fallback_resolution */	\
@@ -364,6 +365,7 @@ _cairo_surface_init (cairo_surface_t			*surface,
 
     cairo_matrix_init_identity (&surface->device_transform);
     cairo_matrix_init_identity (&surface->device_transform_inverse);
+    cairo_list_init (&surface->device_transform_observers);
 
     surface->x_resolution = CAIRO_SURFACE_RESOLUTION_DEFAULT;
     surface->y_resolution = CAIRO_SURFACE_RESOLUTION_DEFAULT;
@@ -1150,6 +1152,8 @@ _cairo_surface_set_device_scale (cairo_surface_t *surface,
     status = cairo_matrix_invert (&surface->device_transform_inverse);
     /* should always be invertible unless given pathological input */
     assert (status == CAIRO_STATUS_SUCCESS);
+
+    _cairo_observers_notify (&surface->device_transform_observers, surface);
 }
 
 /**
@@ -1196,6 +1200,8 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
     status = cairo_matrix_invert (&surface->device_transform_inverse);
     /* should always be invertible unless given pathological input */
     assert (status == CAIRO_STATUS_SUCCESS);
+
+    _cairo_observers_notify (&surface->device_transform_observers, surface);
 }
 slim_hidden_def (cairo_surface_set_device_offset);
 

@@ -2340,6 +2340,11 @@ _cairo_utf8_to_utf16 (const char *str,
 		      int	 *items_written);
 #endif
 
+/* cairo-observer.c */
+
+cairo_private void
+_cairo_observers_notify (cairo_list_t *observers, void *arg);
+
 /* Avoid unnecessary PLT entries.  */
 slim_hidden_proto (cairo_clip_preserve);
 slim_hidden_proto (cairo_close_path);
