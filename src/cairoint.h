@@ -1021,7 +1021,7 @@ cairo_private cairo_bool_t
 _cairo_color_stop_equal (const cairo_color_stop_t *color_a,
 			 const cairo_color_stop_t *color_b) cairo_pure;
 
-cairo_content_t
+cairo_private cairo_content_t
 _cairo_color_get_content (const cairo_color_t *color) cairo_pure;
 
 /* cairo-font-face.c */
