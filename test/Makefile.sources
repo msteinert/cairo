@@ -50,6 +50,7 @@ test_sources = \
 	composite-integer-translate-over.c		\
 	composite-integer-translate-over-repeat.c	\
 	copy-path.c					\
+	coverage.c					\
 	create-for-stream.c				\
 	create-from-png.c				\
 	create-from-png-stream.c			\

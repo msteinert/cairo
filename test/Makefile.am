@@ -332,6 +332,8 @@ REFERENCE_IMAGES = \
 	copy-path.ps2.ref.png \
 	copy-path.ps3.ref.png \
 	copy-path.ref.png \
+	coverage-rectangles.ref.png \
+	coverage-triangles.ref.png \
 	create-from-png-stream.ref.png \
 	create-from-png.alpha.ref.png \
 	create-from-png.gray-alpha.ref.png \
