@@ -74,15 +74,18 @@ int main (int argc, char *argv[])
 
     poppler_page_get_size (page, &width, &height);
 
-    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+    surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24, width, height);
     cr = cairo_create (surface);
     cairo_surface_destroy (surface);
+
+    cairo_set_source_rgb (cr, 1,1,1);
+    cairo_paint (cr);
+    cairo_push_group_with_content (cr, CAIRO_CONTENT_COLOR_ALPHA);
 
     poppler_page_render (page, cr);
     g_object_unref (page);
 
-    cairo_set_operator (cr, CAIRO_OPERATOR_DEST_OVER);
-    cairo_set_source_rgb (cr, 1., 1., 1.);
+    cairo_pop_group_to_source (cr);
     cairo_paint (cr);
 
     status = cairo_surface_write_to_png (cairo_get_target (cr),
