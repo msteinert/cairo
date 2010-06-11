@@ -149,9 +149,11 @@ REFERENCE_IMAGES = \
 	alpha-similar.svg.rgb24.xfail.png \
 	big-line.ref.png \
 	big-line.image16.ref.png \
+	big-line.ps.ref.png \
 	big-line.xlib.ref.png \
 	bug-bo-rectangular.ref.png \
 	bug-bo-rectangular.image16.ref.png \
+	bug-bo-rectangular.ps.xfail.png \
 	bilevel-image.ref.png \
 	bitmap-font.ref.png \
 	bitmap-font.rgb24.ref.png \
@@ -168,6 +170,7 @@ REFERENCE_IMAGES = \
 	caps-joins.image16.ref.png \
 	caps-sub-paths.ref.png \
 	caps-sub-paths.image16.ref.png \
+	caps-sub-paths.ps.ref.png \
 	caps.image16.ref.png \
 	caps.ps.ref.png \
 	caps.ref.png \
@@ -179,12 +182,14 @@ REFERENCE_IMAGES = \
 	clear.svg12.rgb24.xfail.png \
 	clear-source.ref.png \
 	clear-source.image16.ref.png \
+	clear-source.ps.xfail.png \
 	clip-all.ref.png \
 	clip-contexts.ref.png \
 	clip-device-offset.argb32.ref.png \
 	clip-device-offset.rgb24.ref.png \
 	clip-disjoint.ref.png \
 	clip-disjoint.image16.ref.png \
+	clip-disjoint.ps.ref.png \
 	clip-disjoint.xlib.ref.png \
 	clip-empty.ref.png \
 	clip-empty-group.ref.png \
@@ -200,10 +205,8 @@ REFERENCE_IMAGES = \
 	clip-fill-rule-pixel-aligned.rgb24.ref.png \
 	clip-fill-rule.image16.ref.png \
 	clip-fill-rule.pdf.argb32.ref.png \
-	clip-fill-rule.ps2.argb32.ref.png \
-	clip-fill-rule.ps2.rgb24.ref.png \
-	clip-fill-rule.ps3.argb32.ref.png \
-	clip-fill-rule.ps3.rgb24.ref.png \
+	clip-fill-rule.ps.argb32.ref.png \
+	clip-fill-rule.ps.rgb24.ref.png \
 	clip-fill-rule.ref.png \
 	clip-fill-rule.rgb24.ref.png \
 	clip-fill-rule.test-paginated.rgb24.ref.png \
@@ -211,18 +214,21 @@ REFERENCE_IMAGES = \
 	clip-fill-unbounded.image16.ref.png \
 	clip-fill-unbounded.argb32.ref.png \
 	clip-fill-unbounded.rgb24.ref.png \
+	clip-fill-unbounded.ps.argb32.xfail.png \
 	clip-fill-unbounded.svg12.argb32.xfail.png \
 	clip-fill-unbounded.svg12.rgb24.xfail.png \
 	clip-fill-unbounded.xlib.argb32.ref.png \
 	clip-fill-unbounded.xlib.rgb24.ref.png \
 	clip-fill-unbounded.xlib-fallback.rgb24.ref.png \
+	clip-group-shapes-aligned-rectangles.ref.png \
+	clip-group-shapes-unaligned-rectangles.ref.png \
+	clip-group-shapes-circles.ref.png \
 	clip-image.image16.ref.png \
 	clip-image.ref.png \
+	clip-image.ps.ref.png \
 	clip-nesting.pdf.argb32.ref.png \
-	clip-nesting.ps2.argb32.ref.png \
-	clip-nesting.ps2.rgb24.ref.png \
-	clip-nesting.ps3.argb32.ref.png \
-	clip-nesting.ps3.rgb24.ref.png \
+	clip-nesting.ps.argb32.ref.png \
+	clip-nesting.ps.rgb24.ref.png \
 	clip-nesting.quartz.ref.png \
 	clip-nesting.quartz.rgb24.ref.png \
 	clip-nesting.ref.png \
@@ -254,10 +260,7 @@ REFERENCE_IMAGES = \
 	clipped-surface.ref.png \
 	clip-push-group.image16.ref.png \
 	clip-push-group.pdf.ref.png \
-	clip-push-group.ps2.argb32.ref.png \
-	clip-push-group.ps2.rgb24.ref.png \
-	clip-push-group.ps3.argb32.ref.png \
-	clip-push-group.ps3.rgb24.ref.png \
+	clip-push-group.ps.ref.png \
 	clip-push-group.quartz.ref.png \
 	clip-push-group.ref.png \
 	clip-push-group.svg.ref.png \
@@ -269,6 +272,7 @@ REFERENCE_IMAGES = \
 	clip-shape.xlib-fallback.ref.png \
 	clip-stroke.image16.ref.png \
 	clip-stroke.ref.png \
+	clip-stroke.ps.xfail.png \
 	clip-stroke.xlib.ref.png \
 	clip-stroke.xlib-fallback.ref.png \
 	clip-stroke-no-op.image16.ref.png \
@@ -276,6 +280,7 @@ REFERENCE_IMAGES = \
 	clip-stroke-unbounded.image16.ref.png \
 	clip-stroke-unbounded.argb32.ref.png \
 	clip-stroke-unbounded.rgb24.ref.png \
+	clip-stroke-unbounded.ps.argb32.ref.png \
 	clip-stroke-unbounded.svg12.argb32.xfail.png \
 	clip-stroke-unbounded.svg12.rgb24.xfail.png \
 	clip-stroke-unbounded.xlib.argb32.ref.png \
@@ -288,10 +293,8 @@ REFERENCE_IMAGES = \
 	clip-text.xlib.ref.png \
 	clip-twice.image16.ref.png \
 	clip-twice.pdf.argb32.ref.png \
-	clip-twice.ps2.argb32.ref.png \
-	clip-twice.ps2.rgb24.ref.png \
-	clip-twice.ps3.argb32.ref.png \
-	clip-twice.ps3.rgb24.ref.png \
+	clip-twice.ps.argb32.ref.png \
+	clip-twice.ps.rgb24.ref.png \
 	clip-twice.quartz.ref.png \
 	clip-twice.quartz.rgb24.ref.png \
 	clip-twice.ref.png \
@@ -329,8 +332,7 @@ REFERENCE_IMAGES = \
 	composite-integer-translate-source.svg12.argb32.xfail.png \
 	composite-integer-translate-source.svg12.rgb24.xfail.png \
 	copy-path.image16.ref.png \
-	copy-path.ps2.ref.png \
-	copy-path.ps3.ref.png \
+	copy-path.ps.ref.png \
 	copy-path.ref.png \
 	coverage-rectangles.ref.png \
 	coverage-triangles.ref.png \
@@ -347,10 +349,7 @@ REFERENCE_IMAGES = \
 	curve-to-as-line-to.ps.xfail.png \
 	curve-to-as-line-to.ref.png \
 	dash-caps-joins.image16.ref.png \
-	dash-caps-joins.ps2.argb32.ref.png \
-	dash-caps-joins.ps2.rgb24.ref.png \
-	dash-caps-joins.ps3.argb32.ref.png \
-	dash-caps-joins.ps3.rgb24.ref.png \
+	dash-caps-joins.ps.ref.png \
 	dash-caps-joins.quartz.ref.png \
 	dash-caps-joins.ref.png \
 	dash-curve.image16.ref.png \
@@ -360,14 +359,12 @@ REFERENCE_IMAGES = \
 	dash-curve.ref.png \
 	dash-curve.xlib.ref.png \
 	dash-infinite-loop.ref.png \
+	dash-infinite-loop.ps.ref.png \
 	dash-no-dash.ref.png \
 	dash-offset.ref.png \
 	dash-offset-negative.ref.png \
 	dash-scale.image16.ref.png \
-	dash-scale.ps2.argb32.ref.png \
-	dash-scale.ps2.rgb24.ref.png \
-	dash-scale.ps3.argb32.ref.png \
-	dash-scale.ps3.rgb24.ref.png \
+	dash-scale.ps.ref.png \
 	dash-scale.quartz.ref.png \
 	dash-scale.ref.png \
 	dash-state.image16.ref.png \
@@ -394,6 +391,7 @@ REFERENCE_IMAGES = \
 	degenerate-dash.ps.xfail.png \
 	degenerate-dash.ref.png \
 	degenerate-dash.xlib.ref.png \
+	degenerate-linear-gradient.ref.png \
 	degenerate-path.ps.argb32.xfail.png \
 	degenerate-path.ps.rgb24.xfail.png \
 	degenerate-path.quartz.ref.png \
@@ -401,14 +399,14 @@ REFERENCE_IMAGES = \
 	degenerate-path.argb32.ref.png \
 	degenerate-path.rgb24.ref.png \
 	degenerate-pen.image16.ref.png \
-	degenerate-pen.ps2.ref.png \
-	degenerate-pen.ps3.ref.png \
+	degenerate-pen.ps.ref.png \
 	degenerate-pen.quartz.ref.png \
 	degenerate-pen.ref.png \
 	degenerate-pen.xlib.ref.png \
+	degenerate-radial-gradient.ref.png \
 	degenerate-rel-curve-to.image16.ref.png \
 	degenerate-rel-curve-to.ref.png \
-	degenerate-rel-curve-to.ps.xfail.png \
+	degenerate-rel-curve-to.ps.ref.png \
 	device-offset-fractional.gl.xfail.png \
 	device-offset-fractional.pdf.xfail.png \
 	device-offset-fractional.ps2.ref.png \
@@ -488,10 +486,8 @@ REFERENCE_IMAGES = \
 	fill-and-stroke-alpha.quartz.ref.png \
 	fill-and-stroke-alpha.ref.png \
 	fill-and-stroke.image16.ref.png \
-	fill-and-stroke.ps2.argb32.ref.png \
-	fill-and-stroke.ps2.rgb24.ref.png \
-	fill-and-stroke.ps3.argb32.ref.png \
-	fill-and-stroke.ps3.rgb24.ref.png \
+	fill-and-stroke.ps.argb32.ref.png \
+	fill-and-stroke.ps.rgb24.ref.png \
 	fill-and-stroke.quartz.ref.png \
 	fill-and-stroke.quartz.rgb24.ref.png \
 	fill-and-stroke.argb32.ref.png \
@@ -624,6 +620,7 @@ REFERENCE_IMAGES = \
 	group-paint.ref.png \
 	group-unaligned.image16.ref.png \
 	group-unaligned.ps.ref.png \
+	group-unaligned.ps.rgb24.xfail.png \
 	group-unaligned.ref.png \
 	group-unaligned.svg.argb32.xfail.png \
 	group-unaligned.svg.rgb24.xfail.png \
@@ -646,10 +643,13 @@ REFERENCE_IMAGES = \
 	image-surface-source.svg12.argb32.xfail.png \
 	image-surface-source.svg12.rgb24.xfail.png \
 	implicit-close.ref.png \
+	implicit-close.ps.ref.png \
 	infinite-join.ps2.ref.png \
 	infinite-join.ps3.ref.png \
 	infinite-join.ref.png \
 	inverse-text.ref.png \
+	inverse-text.image16.ref.png \
+	inverse-text.ps.ref.png \
 	joins.image16.ref.png \
 	joins.ps.ref.png \
 	joins.ref.png \
@@ -673,20 +673,19 @@ REFERENCE_IMAGES = \
 	leaky-dashed-rectangle.ref.png \
 	leaky-dashed-rectangle.xlib.ref.png \
 	leaky-dashed-stroke.image16.ref.png \
-	leaky-dashed-stroke.ps2.ref.png \
-	leaky-dashed-stroke.ps3.ref.png \
+	leaky-dashed-stroke.ps.ref.png \
 	leaky-dashed-stroke.ref.png \
 	leaky-dashed-stroke.xlib.ref.png \
 	leaky-polygon.image16.ref.png \
-	leaky-polygon.ps2.ref.png \
-	leaky-polygon.ps3.ref.png \
 	leaky-polygon.ref.png \
+	leaky-polygon.ps.ref.png \
 	line-width-scale.image16.ref.png \
 	line-width-scale.ps2.ref.png \
 	line-width-scale.ps3.ref.png \
 	line-width-scale.quartz.ref.png \
 	line-width-scale.ref.png \
 	line-width.ref.png \
+	linear-gradient-extend.ref.png \
 	linear-gradient-reflect.image16.ref.png \
 	linear-gradient-reflect.pdf.argb32.ref.png \
 	linear-gradient-reflect.pdf.rgb24.ref.png \
@@ -700,6 +699,9 @@ REFERENCE_IMAGES = \
 	linear-gradient.xlib.ref.png \
 	linear-gradient-subset.image16.ref.png \
 	linear-gradient-subset.ref.png \
+	linear-gradient-subset.ps3.ref.png \
+	linear-gradient-one-stop.argb32.ref.png \
+	linear-gradient-one-stop.rgb24.ref.png \
 	linear-step-function.xfail.png \
 	linear-uniform.image16.ref.png \
 	linear-uniform.ref.png \
@@ -746,10 +748,8 @@ REFERENCE_IMAGES = \
 	recording-surface-pattern.gl.argb32.ref.png \
 	recording-surface-pattern.pdf.argb32.ref.png \
 	recording-surface-pattern.pdf.rgb24.ref.png \
-	recording-surface-pattern.ps2.argb32.ref.png \
-	recording-surface-pattern.ps2.rgb24.ref.png \
-	recording-surface-pattern.ps3.argb32.ref.png \
-	recording-surface-pattern.ps3.rgb24.ref.png \
+	recording-surface-pattern.ps.argb32.ref.png \
+	recording-surface-pattern.ps.rgb24.ref.png \
 	recording-surface-pattern.quartz.ref.png \
 	recording-surface-pattern.quartz.rgb24.ref.png \
 	recording-surface-pattern.ref.png \
@@ -836,6 +836,8 @@ REFERENCE_IMAGES = \
 	over-below-source.pdf.argb32.ref.png \
 	over-below-source.ps2.argb32.ref.png \
 	over-below-source.ps3.argb32.ref.png \
+	over-below-source.ps2.rgb24.ref.png \
+	over-below-source.ps3.rgb24.ref.png \
 	over-below-source.ref.png \
 	over-below-source.rgb24.ref.png \
 	over-below-source.svg12.argb32.xfail.png \
@@ -892,6 +894,7 @@ REFERENCE_IMAGES = \
 	pdf-surface-source.svg12.rgb24.xfail.png \
 	pixman-rotate.ref.png \
 	pixman-rotate.rgb24.ref.png \
+	pixman-rotate.ps.argb32.ref.png \
 	pthread-same-source.image16.ref.png \
 	pthread-same-source.ref.png \
 	pthread-similar.ref.png \
@@ -910,6 +913,7 @@ REFERENCE_IMAGES = \
 	push-group.xlib.rgb24.ref.png \
 	push-group-color.image16.ref.png \
 	push-group-color.ref.png \
+	push-group-color.ps3.ref.png \
 	push-group-color.xlib.ref.png \
 	quartz-surface-source.rgb24.ref.png \
 	quartz-surface-source.argb32.ref.png \
@@ -920,6 +924,7 @@ REFERENCE_IMAGES = \
 	radial-gradient.quartz.ref.png \
 	radial-gradient.ref.png \
 	radial-gradient.svg.xfail.png \
+	radial-gradient-extend.ref.png \
 	radial-gradient-source.image16.ref.png \
 	radial-gradient-source.argb32.ref.png \
 	radial-gradient-source.rgb24.ref.png \
@@ -929,6 +934,8 @@ REFERENCE_IMAGES = \
 	radial-gradient-mask-source.argb32.ref.png \
 	radial-gradient-mask-source.rgb24.ref.png \
 	radial-gradient-mask-source.image16.ref.png \
+	radial-gradient-one-stop.argb32.ref.png \
+	radial-gradient-one-stop.rgb24.ref.png \
 	random-intersections-eo.image16.ref.png \
 	random-intersections-eo.ps.ref.png \
 	random-intersections-eo.quartz.ref.png \
@@ -958,8 +965,7 @@ REFERENCE_IMAGES = \
 	rectilinear-miter-limit.ref.png \
 	rectilinear-stroke.ref.png \
 	reflected-stroke.image16.ref.png \
-	reflected-stroke.ps2.ref.png \
-	reflected-stroke.ps3.ref.png \
+	reflected-stroke.ps.ref.png \
 	reflected-stroke.quartz.ref.png \
 	reflected-stroke.ref.png \
 	rel-path.ps2.rgb24.ref.png \
@@ -981,9 +987,11 @@ REFERENCE_IMAGES = \
 	rotated-clip.xlib.ref.png \
 	rounded-rectangle-fill.image16.ref.png \
 	rounded-rectangle-fill.ref.png \
+	rounded-rectangle-fill.ps.ref.png \
 	rounded-rectangle-fill.xlib.ref.png \
 	rounded-rectangle-stroke.image16.ref.png \
 	rounded-rectangle-stroke.ref.png \
+	rounded-rectangle-stroke.ps.ref.png \
 	rounded-rectangle-stroke.xlib.ref.png \
 	scale-down-source-surface-paint.ref.png \
 	scale-offset-image.image16.ref.png \
@@ -1097,6 +1105,7 @@ REFERENCE_IMAGES = \
 	stroke-image.xlib.ref.png \
 	subsurface.ref.png \
 	subsurface.image16.ref.png \
+	subsurface.ps.ref.png \
 	subsurface-reflect.ref.png \
 	subsurface-repeat.ref.png \
 	subsurface-image-repeat.ref.png \
@@ -1106,7 +1115,7 @@ REFERENCE_IMAGES = \
 	subsurface-modify-parent.ref.png \
 	subsurface-similar-repeat.ref.png \
 	surface-pattern-big-scale-down.ref.png \
-	surface-pattern-big-scale-down.ps.xfail.png \
+	surface-pattern-big-scale-down.ps.ref.png \
 	surface-pattern-operator.argb32.ref.png \
 	surface-pattern-operator.rgb24.ref.png \
 	surface-pattern-operator.image16.ref.png \
@@ -1118,6 +1127,10 @@ REFERENCE_IMAGES = \
 	surface-pattern-scale-down.ps3.ref.png \
 	surface-pattern-scale-down.quartz.ref.png \
 	surface-pattern-scale-down.ref.png \
+	surface-pattern-scale-down-extend-none.ref.png \
+	surface-pattern-scale-down-extend-pad.ref.png \
+	surface-pattern-scale-down-extend-reflect.ref.png \
+	surface-pattern-scale-down-extend-repeat.ref.png \
 	surface-pattern-scale-up.image16.ref.png \
 	surface-pattern-scale-up.pdf.ref.png \
 	surface-pattern-scale-up.ps2.ref.png \
@@ -1145,8 +1158,7 @@ REFERENCE_IMAGES = \
 	text-antialias-subpixel.quartz.ref.png \
 	text-antialias-subpixel.ref.png \
 	text-glyph-range.image16.ref.png \
-	text-glyph-range.ps2.ref.png \
-	text-glyph-range.ps3.ref.png \
+	text-glyph-range.ps.ref.png \
 	text-glyph-range.ref.png \
 	text-pattern.pdf.argb32.ref.png \
 	text-pattern.pdf.rgb24.ref.png \
@@ -1160,16 +1172,14 @@ REFERENCE_IMAGES = \
 	text-pattern.svg.rgb24.ref.png \
 	text-rotate.image16.ref.png \
 	text-rotate.pdf.ref.png \
-	text-rotate.ps2.ref.png \
-	text-rotate.ps3.ref.png \
+	text-rotate.ps.ref.png \
 	text-rotate.quartz.ref.png \
 	text-rotate.ref.png \
 	text-rotate.svg.ref.png \
 	text-rotate.xlib.ref.png \
 	text-transform.image16.ref.png \
 	text-transform.pdf.ref.png \
-	text-transform.ps2.ref.png \
-	text-transform.ps3.ref.png \
+	text-transform.ps.ref.png \
 	text-transform.ref.png \
 	text-transform.svg.ref.png \
 	transforms.image16.ref.png \
@@ -1235,8 +1245,7 @@ REFERENCE_IMAGES = \
 	user-font-proxy.svg.ref.png \
 	user-font-proxy.xlib.ref.png \
 	user-font-rescale.image16.ref.png \
-	user-font-rescale.ps2.ref.png \
-	user-font-rescale.ps3.ref.png \
+	user-font-rescale.ps.ref.png \
 	user-font-rescale.ref.png \
 	user-font-rescale.svg.ref.png \
 	user-font.image16.ref.png \
@@ -1251,6 +1260,7 @@ REFERENCE_IMAGES = \
 	xcomposite-projection.image16.ref.png \
 	xlib-expose-event.ref.png \
 	xlib-expose-event.image16.ref.png \
+	xlib-expose-event.ps.ref.png \
 	xlib-surface-source.rgb24.ref.png \
 	xlib-surface-source.argb32.ref.png \
 	xlib-surface-source.image16.ref.png \
@@ -1258,6 +1268,8 @@ REFERENCE_IMAGES = \
 	xlib-surface-source.ps3.ref.png \
 	xlib-surface-source.svg12.argb32.xfail.png \
 	xlib-surface-source.svg12.rgb24.xfail.png \
+	zero-mask.ref.png \
+	zero-mask.rgb24.ref.png \
 	zero-alpha.ref.png
 
 EXTRA_DIST +=		\

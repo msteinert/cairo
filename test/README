@@ -117,7 +117,7 @@ Here are some of the relevant details:
     the fixes you will need to avoid false negatives from the test
     suite.
 
-  * To test the ps backend, you will need ghostscript version 8.64.
+  * To test the ps backend, you will need ghostscript version 8.71.
 
   * Testing the xlib backend is problematic since many X server
     drivers have bugs that are exercised by the test suite. (Or, if
