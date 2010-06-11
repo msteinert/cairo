@@ -357,14 +357,15 @@ _poppler_render_page (const char *filename,
 
     poppler_page_get_size (page, &width, &height);
 
-    surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24, width, height);
+    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
     cr = cairo_create (surface);
-
-    cairo_set_source_rgb (cr, 1., 1., 1.);
-    cairo_paint (cr);
 
     poppler_page_render (page, cr);
     g_object_unref (page);
+
+    cairo_set_operator (cr, CAIRO_OPERATOR_DEST_OVER);
+    cairo_set_source_rgb (cr, 1., 1., 1.);
+    cairo_paint (cr);
 
     status = cairo_status (cr);
     cairo_destroy (cr);
