@@ -126,7 +126,7 @@ cairo_test_trace_DEPENDENCIES = \
 endif
 
 BUILT_SOURCES += cairo-test-constructors.c
-EXTRA_DIST += $(BUILT_SOURCES) $(noinst_SCRIPTS) COPYING make-cairo-test-constructors.sh
+EXTRA_DIST += $(BUILT_SOURCES) $(noinst_SCRIPTS) COPYING make-cairo-test-constructors.sh run-cairo-test-suite.sh
 CLEANFILES += $(BUILT_SOURCES)
 
 # All tests which have a reference image go here.
