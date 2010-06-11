@@ -224,7 +224,9 @@ REFERENCE_IMAGES = \
 	clip-fill-unbounded.xlib-fallback.rgb24.ref.png \
 	clip-group-shapes-aligned-rectangles.ref.png \
 	clip-group-shapes-unaligned-rectangles.ref.png \
+	clip-group-shapes-unaligned-rectangles.xlib.ref.png \
 	clip-group-shapes-circles.ref.png \
+	clip-group-shapes-circles.xlib.ref.png \
 	clip-image.image16.ref.png \
 	clip-image.ref.png \
 	clip-image.ps.ref.png \
@@ -314,6 +316,8 @@ REFERENCE_IMAGES = \
 	clipped-group.ps2.ref.png \
 	clipped-group.ps3.ref.png \
 	clipped-group.svg.ref.png \
+	clipped-group.xlib.ref.png \
+	clipped-group.xlib-fallback.ref.png \
 	clipped-group.ref.png \
 	clipped-surface.ref.png \
 	clipped-trapezoids.ref.png \
@@ -340,7 +344,9 @@ REFERENCE_IMAGES = \
 	copy-path.ps.ref.png \
 	copy-path.ref.png \
 	coverage-rectangles.ref.png \
+	coverage-rectangles.xlib.xfail.png \
 	coverage-triangles.ref.png \
+	coverage-triangles.xlib.xfail.png \
 	create-from-png-stream.ref.png \
 	create-from-png.alpha.ref.png \
 	create-from-png.gray-alpha.ref.png \
@@ -563,6 +569,7 @@ REFERENCE_IMAGES = \
 	finer-grained-fallbacks.svg12.rgb24.ref.png \
 	finer-grained-fallbacks.xlib.ref.png \
 	finer-grained-fallbacks.xlib.rgb24.ref.png \
+	finer-grained-fallbacks.xlib-fallback.ref.png \
 	font-matrix-translation.image16.ref.png \
 	font-matrix-translation.ps2.argb32.ref.png \
 	font-matrix-translation.ps2.rgb24.ref.png \
@@ -704,6 +711,7 @@ REFERENCE_IMAGES = \
 	linear-gradient.xlib.ref.png \
 	linear-gradient-subset.image16.ref.png \
 	linear-gradient-subset.ref.png \
+	linear-gradient-subset.xlib.ref.png \
 	linear-gradient-subset.ps3.ref.png \
 	linear-gradient-one-stop.argb32.ref.png \
 	linear-gradient-one-stop.rgb24.ref.png \
@@ -761,6 +769,8 @@ REFERENCE_IMAGES = \
 	recording-surface-pattern.rgb24.ref.png \
 	recording-surface-pattern.svg.argb32.ref.png \
 	recording-surface-pattern.svg.rgb24.ref.png \
+	recording-surface-pattern.xlib.argb32.ref.png \
+	recording-surface-pattern.xlib.rgb24.ref.png \
 	mime-data.pdf.ref.png \
 	mime-data.ps.ref.png \
 	mime-data.ref.png \
@@ -907,6 +917,7 @@ REFERENCE_IMAGES = \
 	pthread-show-text.image16.ref.png \
 	pthread-show-text.ps.ref.png \
 	pthread-show-text.pdf.ref.png \
+	pthread-show-text.xlib-fallback.ref.png \
 	ps-surface-source.image16.ref.png \
 	ps-surface-source.rgb24.ref.png \
 	ps-surface-source.argb32.ref.png \
@@ -1009,7 +1020,7 @@ REFERENCE_IMAGES = \
 	scale-offset-image.ref.png \
 	scale-offset-image.xfail.png \
 	scale-offset-image.script.xfail.png \
-	scale-offset-image.xlib.xfail.png \
+	scale-offset-image.xlib.ref.png \
 	scale-offset-image.xlib-fallback.xfail.png \
 	scale-offset-similar.image16.ref.png \
 	scale-offset-similar.gl.ref.png \
@@ -1075,6 +1086,7 @@ REFERENCE_IMAGES = \
 	smask-text.svg.ref.png \
 	smask-text.script.ref.png \
 	smask-text.xlib.ref.png \
+	smask-text.xlib-fallback.ref.png \
 	smask.image16.ref.png \
 	smask.pdf.xfail.png \
 	smask.ps.ref.png \
@@ -1082,6 +1094,7 @@ REFERENCE_IMAGES = \
 	smask.svg.ref.png \
 	smask.script.ref.png \
 	smask.xlib.ref.png \
+	smask.xlib-fallback.ref.png \
 	solid-pattern-cache-stress.ref.png \
 	source-clip-scale.gl.ref.png \
 	source-clip-scale.pdf.ref.png \
@@ -1115,6 +1128,7 @@ REFERENCE_IMAGES = \
 	subsurface.ref.png \
 	subsurface.image16.ref.png \
 	subsurface.ps.ref.png \
+	subsurface.xlib.ref.png \
 	subsurface-reflect.ref.png \
 	subsurface-repeat.ref.png \
 	subsurface-image-repeat.ref.png \
@@ -1188,6 +1202,7 @@ REFERENCE_IMAGES = \
 	text-rotate.ref.png \
 	text-rotate.svg.ref.png \
 	text-rotate.xlib.ref.png \
+	text-rotate.xlib-fallback.ref.png \
 	text-transform.image16.ref.png \
 	text-transform.pdf.ref.png \
 	text-transform.ps.ref.png \
@@ -1583,10 +1598,7 @@ retest:
 	$(MAKE) $(AM_MAKEFLAGS) check; \
 	$(MAKE) $(AM_MAKEFLAGS) html
 
-# Make index.html with no dependency tracking.
-html-local:
-	@echo Creating index.html
-	@perl $(srcdir)/make-html.pl $(test_sources:.c=.log) > index.html
+html-local: index.html
 
 # Make index.html with no dependency tracking, containing only the failed tests.
 rehtml:
@@ -1608,9 +1620,9 @@ NOLOG_TESTS_LOG = $(NOLOG_TESTS:=.log)
 $(NOLOG_TESTS_LOG):
 	@echo dummy > $@
 
-index.html: $(srcdir)/make-html.pl $(test_sources:.c=.log)
+index.html: $(srcdir)/make-html.pl
 	@echo Creating index.html
-	@perl $^ > $@
+	@perl $(srcdir)/make-html.pl > $@
 
 
 # Identify identical reference images
