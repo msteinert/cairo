@@ -123,13 +123,13 @@ triangles (cairo_t *cr, int width, int height)
 CAIRO_TEST (coverage_rectangles,
 	    "Check the fidelity of the rasterisation.",
 	    NULL, /* keywords */
-	    "raster", /* requirements */
+	    "target=raster", /* requirements */
 	    WIDTH, HEIGHT,
 	    NULL, rectangles)
 
 CAIRO_TEST (coverage_triangles,
 	    "Check the fidelity of the rasterisation.",
 	    NULL, /* keywords */
-	    "raster", /* requirements */
+	    "target=raster", /* requirements */
 	    WIDTH, HEIGHT,
 	    NULL, triangles)
