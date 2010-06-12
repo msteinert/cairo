@@ -280,7 +280,7 @@ column_triangles (cairo_t *cr, int width, int height)
 		     *  s ---  .      ---
 		     *  t  |   |\      |
 		     *  e  |   | \     |
-		     *  p ---  ....    |  2 * step = 1 / WIDTH
+		     *  p ---  ....    |  2 * step = x / WIDTH
 		     *          \ |    |
 		     *           \|    |
 		     *            .   ---
