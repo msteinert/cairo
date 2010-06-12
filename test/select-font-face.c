@@ -39,17 +39,17 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_font_size (cr, TEXT_SIZE);
     cairo_move_to (cr, 0, TEXT_SIZE);
 
-    cairo_select_font_face (cr, "Bitstream Vera Serif",
+    cairo_select_font_face (cr, CAIRO_TEST_FONT_FAMILY " Serif",
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
     cairo_show_text (cr, "i-am-serif");
 
-    cairo_select_font_face (cr, "Bitstream Vera Sans",
+    cairo_select_font_face (cr, CAIRO_TEST_FONT_FAMILY " Sans",
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
     cairo_show_text (cr, " i-am-sans");
 
-    cairo_select_font_face (cr, "Bitstream Vera Sans Mono",
+    cairo_select_font_face (cr, CAIRO_TEST_FONT_FAMILY " Sans Mono",
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
     cairo_show_text (cr, " i-am-mono");

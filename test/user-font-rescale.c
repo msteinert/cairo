@@ -312,7 +312,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_paint (cr);
 
     cairo_select_font_face (cr,
-			    "Bitstream Vera Sans",
+			    CAIRO_TEST_FONT_FAMILY " Sans",
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
 
@@ -328,7 +328,7 @@ draw (cairo_t *cr, int width, int height)
     /* same text in 'mono' with widths that match the 'sans' version */
     old = cairo_font_face_reference (cairo_get_font_face (cr));
     cairo_select_font_face (cr,
-			    "Bitstream Vera Sans Mono",
+			    CAIRO_TEST_FONT_FAMILY " Sans Mono",
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
     substitute = cairo_get_font_face (cr);
@@ -349,7 +349,7 @@ draw (cairo_t *cr, int width, int height)
 
     /* mono text */
     cairo_select_font_face (cr,
-			    "Bitstream Vera Sans Mono",
+			    CAIRO_TEST_FONT_FAMILY " Sans Mono",
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
 

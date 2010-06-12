@@ -44,7 +44,7 @@
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    cairo_select_font_face (cr, "Bitstream Vera Sans",
+    cairo_select_font_face (cr, CAIRO_TEST_FONT_FAMILY " Sans",
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_BOLD);
 

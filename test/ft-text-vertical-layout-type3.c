@@ -54,7 +54,7 @@ create_scaled_font (cairo_t * cr,
     if (pattern == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    FcPatternAddString (pattern, FC_FAMILY, (FcChar8 *)"Bitstream Vera Sans");
+    FcPatternAddString (pattern, FC_FAMILY, (FcChar8 *)CAIRO_TEST_FONT_FAMILY " Sans");
     FcPatternAddDouble (pattern, FC_PIXEL_SIZE, TEXT_SIZE);
     FcConfigSubstitute (NULL, pattern, FcMatchPattern);
 

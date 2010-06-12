@@ -83,6 +83,8 @@ cairo_test_NaN (void)
 
 #define CAIRO_TEST_LOG_SUFFIX ".log"
 
+#define CAIRO_TEST_FONT_FAMILY "Bitstream Vera"
+
 /* What is a fail and what isn't?
  * When running the test suite we want to detect unexpected output. This
  * can be caused by a change we have made to cairo itself, or a change

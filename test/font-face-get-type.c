@@ -39,7 +39,7 @@ preamble (cairo_test_context_t *ctx)
     surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
     cr = cairo_create (surface);
 
-    cairo_select_font_face (cr, "Bitstream Vera Sans",
+    cairo_select_font_face (cr, CAIRO_TEST_FONT_FAMILY " Sans",
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
 

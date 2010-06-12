@@ -105,7 +105,7 @@ preamble (cairo_test_context_t *ctx)
 
     cr = cairo_create (surface);
 
-    cairo_select_font_face (cr, "Bitstream Vera Sans",
+    cairo_select_font_face (cr, CAIRO_TEST_FONT_FAMILY " Sans",
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size (cr, TEXT_SIZE);

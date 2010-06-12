@@ -57,7 +57,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_pattern_destroy (pattern);
 
     cairo_select_font_face (cr2,
-			    "Bitstream Vera Sans",
+			    CAIRO_TEST_FONT_FAMILY " Sans",
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size (cr2, 0.5 * height);

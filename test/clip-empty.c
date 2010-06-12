@@ -46,7 +46,7 @@ draw (cairo_t *cr, int width, int height)
 
     /* https://bugs.freedesktop.org/show_bug.cgi?id=13084 */
     cairo_select_font_face (cr,
-	                    "Bitstream Vera Sans",
+	                    CAIRO_TEST_FONT_FAMILY " Sans",
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
 
