@@ -138,11 +138,6 @@ ITERS = $(CAIRO_PERF_ITERATIONS)
 
 CAIRO_PERF_ENVIRONMENT = CAIRO_PERF_ITERATIONS="$(ITERS)" CAIRO_TEST_TARGET="$(TARGETS)" CAIRO_TEST_TARGET_EXCLUDE="$(TARGETS_EXCLUDE)"
 
-# Cap the maximum number of iterations during 'make check'
-TESTS_ENVIRONMENT = CAIRO_TEST_TARGET="$(TARGETS)" CAIRO_PERF_ITERATIONS="10"
-
-TESTS += cairo-perf-micro$(EXEEXT)
-
 perf: cairo-perf-micro$(EXEEXT) cairo-perf-trace$(EXEEXT)
 	-$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf-micro$(EXEEXT)
 	-$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf-trace$(EXEEXT)
@@ -170,19 +165,17 @@ CLEANFILES += \
 	callgrind.out.* \
 	index.html
 
-check-valgrind perf-valgrind:
-	$(MAKE) $(AM_MAKEFLAGS) check \
-	    TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) \
+perf-valgrind:
+	$(MAKE) $(AM_MAKEFLAGS) perf \
 	    $(top_builddir)/libtool --mode=execute \
 	    valgrind $(VALGRIND_MEMCHECK_FLAGS) $(EXTRA_VALGRIND_FLAGS)' \
 	    | tee valgrind-log
 
 perf-callgrind:
-	$(MAKE) $(AM_MAKEFLAGS) check \
-	    TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) \
+	$(MAKE) $(AM_MAKEFLAGS) perf \
 	    $(top_builddir)/libtool --mode=execute \
 	    valgrind $(VALGRIND_CALLGRIND_FLAGS) $(EXTRA_VALGRIND_FLAGS)'
 
-.PHONY: perf check-valgrind perf-valgrind perf-callgrind
+.PHONY: perf perf-valgrind perf-callgrind
 
 EXTRA_DIST += Makefile.win32
