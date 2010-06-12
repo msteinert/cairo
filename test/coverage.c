@@ -277,13 +277,19 @@ column_triangles (cairo_t *cr, int width, int height)
 		     * edges on either side that may co-align with their
 		     * neighbours:
 		     *
-		     *       ---  .      ---
-		     * 1 /    |   |\      |
-		     *  / 2x  |   | \     |
-		     *       ---  ....    |  1 / x
-		     *             \ |    |
-		     *              \|    |
-		     *               .   ---
+		     *  s ---  .      ---
+		     *  t  |   |\      |
+		     *  e  |   | \     |
+		     *  p ---  ....    |  2 * step = 1 / WIDTH
+		     *          \ |    |
+		     *           \|    |
+		     *            .   ---
+		     *        |---|
+		     *     1 / PRECISION
+		     *
+		     * Each column contains two triangles of width one quantum and
+		     * total height of (x / WIDTH), thus the total area covered by all
+		     * columns in each pixel is .5 * (x / WIDTH).
 		     */
 
 		    cairo_move_to (cr, x + i / (double) PRECISION, y + dy);
