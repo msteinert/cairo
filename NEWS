@@ -9,10 +9,10 @@ Snapshot 1.9.8 (2010-06-12)
    well fixing them. And last but not least we must all thank Adrian Johnson for
    continuing to eliminate bugs and improving the PostScript and PDF backends.
 
-   This snapshot represents almost 4 months of bug fixing, bring Cairo to a
-   point where we consider it almost ready to be a candidate for release.
+   This snapshot represents almost 4 months of bug fixing, bringing Cairo to
+   a point where we consider it almost ready to be a candidate for release.
    There are a few known bugs left to be fixed, being tracked in
-   https://bugs.freedesktop.org/show_bug.cgi?id=24384, please give Cairo a
+   https://bugs.freedesktop.org/show_bug.cgi?id=24384, so please give Cairo a
    whirl and report any regressions. The plan is to release a new snapshot
    every other week leading to a 1.10 release with a target date of
    2010-08-16.
@@ -34,26 +34,26 @@ API additions
     target.
 
   cairo_region_create()
-  cairo_region_create_rectangle ()
-  cairo_region_create_rectangles ()
-  cairo_region_copy ()
-  cairo_region_reference ()
-  cairo_region_destroy ()
-  cairo_region_equal ()
-  cairo_region_status ()
-  cairo_region_get_extents ()
-  cairo_region_num_rectangles ()
-  cairo_region_get_rectangle ()
-  cairo_region_is_empty ()
-  cairo_region_contains_rectangle ()
-  cairo_region_contains_point ()
-  cairo_region_translate ()
-  cairo_region_subtract ()
-  cairo_region_subtract_rectangle ()
-  cairo_region_intersect ()
-  cairo_region_intersect_rectangle ()
-  cairo_region_union ()
-  cairo_region_union_rectangle ()
+  cairo_region_create_rectangle()
+  cairo_region_create_rectangles()
+  cairo_region_copy()
+  cairo_region_reference()
+  cairo_region_destroy()
+  cairo_region_equal()
+  cairo_region_status()
+  cairo_region_get_extents()
+  cairo_region_num_rectangles()
+  cairo_region_get_rectangle()
+  cairo_region_is_empty()
+  cairo_region_contains_rectangle()
+  cairo_region_contains_point()
+  cairo_region_translate()
+  cairo_region_subtract()
+  cairo_region_subtract_rectangle()
+  cairo_region_intersect()
+  cairo_region_intersect_rectangle()
+  cairo_region_union()
+  cairo_region_union_rectangle()
 
     The Cairo region API was actually added a couple of snapshots ago, but we
     forgot to mention it at the time. A simple API for the handling of
