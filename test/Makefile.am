@@ -345,6 +345,14 @@ REFERENCE_IMAGES = \
 	copy-path.ref.png \
 	coverage-rectangles.ref.png \
 	coverage-rectangles.xlib.xfail.png \
+	coverage-intersecting-triangles.ref.png \
+	coverage-intersecting-triangles.xlib.xfail.png \
+	coverage-intersecting-quads.ref.png \
+	coverage-intersecting-quads.xlib.xfail.png \
+	coverage-row-trianges.ref.png \
+	coverage-row-trianges.xlib.xfail.png \
+	coverage-column-trianges.ref.png \
+	coverage-column-trianges.xlib.xfail.png \
 	coverage-triangles.ref.png \
 	coverage-triangles.xlib.xfail.png \
 	create-from-png-stream.ref.png \
