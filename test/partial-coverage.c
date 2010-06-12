@@ -187,6 +187,54 @@ rectangles (cairo_t *cr, int width, int height)
 }
 
 static cairo_test_status_t
+intersecting_quads (cairo_t *cr, int width, int height)
+{
+    uint8_t *occupancy;
+    int i, j, channel;
+
+    state = 0x12345678;
+    occupancy = xmalloc (SAMPLE*SAMPLE);
+
+    cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
+    cairo_paint (cr);
+
+    cairo_set_operator (cr, CAIRO_OPERATOR_ADD);
+    for (channel = 0; channel < 3; channel++) {
+	switch (channel) {
+	default:
+	case 0: cairo_set_source_rgb (cr, 1.0, 0.0, 0.0); break;
+	case 1: cairo_set_source_rgb (cr, 0.0, 1.0, 0.0); break;
+	case 2: cairo_set_source_rgb (cr, 0.0, 0.0, 1.0); break;
+	}
+
+	for (i = 0; i < SIZE*SIZE; i++) {
+	    int xs, ys;
+
+	    compute_occupancy (occupancy, SAMPLE*SAMPLE * i / (SIZE * SIZE), SAMPLE*SAMPLE);
+
+	    xs = i % SIZE * SAMPLE;
+	    ys = i / SIZE * SAMPLE;
+	    for (j = 0; j < SAMPLE*SAMPLE; j++) {
+		if (occupancy[j]) {
+		    cairo_move_to (cr,
+				     (j % SAMPLE + xs) / (double) SAMPLE,
+				     (j / SAMPLE + ys) / (double) SAMPLE);
+		    cairo_rel_line_to (cr, 1 / (double) SAMPLE, 1 / (double) SAMPLE);
+		    cairo_rel_line_to (cr, 0, -1 / (double) SAMPLE);
+		    cairo_rel_line_to (cr, -1 / (double) SAMPLE, 1 / (double) SAMPLE);
+		    cairo_close_path (cr);
+		}
+	    }
+	    cairo_fill (cr);
+	}
+    }
+
+    free (occupancy);
+
+    return CAIRO_TEST_SUCCESS;
+}
+
+static cairo_test_status_t
 half_triangles (cairo_t *cr, int width, int height)
 {
     uint8_t *occupancy;
@@ -491,6 +539,76 @@ triangles (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
+static cairo_test_status_t
+intersecting_triangles (cairo_t *cr, int width, int height)
+{
+    uint8_t *occupancy;
+    int i, j, channel;
+
+    state = 0x12345678;
+    occupancy = xmalloc (SAMPLE*SAMPLE);
+
+    cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
+    cairo_paint (cr);
+
+    cairo_set_operator (cr, CAIRO_OPERATOR_ADD);
+    for (channel = 0; channel < 3; channel++) {
+	switch (channel) {
+	default:
+	case 0: cairo_set_source_rgb (cr, 1.0, 0.0, 0.0); break;
+	case 1: cairo_set_source_rgb (cr, 0.0, 1.0, 0.0); break;
+	case 2: cairo_set_source_rgb (cr, 0.0, 0.0, 1.0); break;
+	}
+
+	for (i = 0; i < SIZE*SIZE; i++) {
+	    int xs, ys;
+
+	    compute_occupancy (occupancy, SAMPLE*SAMPLE * i / (SIZE * SIZE), SAMPLE*SAMPLE);
+
+	    xs = i % SIZE * SAMPLE;
+	    ys = i / SIZE * SAMPLE;
+	    for (j = 0; j < SAMPLE*SAMPLE; j++) {
+		if (occupancy[j]) {
+		    /* Add 2 overlapping tiles in a single cell, each composed
+		     * of two non-overlapping triangles.
+		     *   .--.   .--.
+		     *   | /|   |\ |
+		     *   |/ | + | \|
+		     *   .--.   .--.
+		     */
+		    int x = j % SAMPLE + xs;
+		    int y = j / SAMPLE + ys;
+
+		    /* first pair of triangles, diagonal bottom-left to top-right */
+		    cairo_move_to (cr, (x) / (double) SAMPLE,   (y) / (double) SAMPLE);
+		    cairo_line_to (cr, (x+1) / (double) SAMPLE, (y) / (double) SAMPLE);
+		    cairo_line_to (cr, (x) / (double) SAMPLE,   (y+1) / (double) SAMPLE);
+		    cairo_close_path (cr);
+		    cairo_move_to (cr, (x) / (double) SAMPLE,   (y+1) / (double) SAMPLE);
+		    cairo_line_to (cr, (x+1) / (double) SAMPLE, (y+1) / (double) SAMPLE);
+		    cairo_line_to (cr, (x+1) / (double) SAMPLE, (y) / (double) SAMPLE);
+		    cairo_close_path (cr);
+
+		    /* second pair of triangles, diagonal top-left to bottom-right */
+		    cairo_move_to (cr, (x) / (double) SAMPLE,   (y) / (double) SAMPLE);
+		    cairo_line_to (cr, (x+1) / (double) SAMPLE, (y+1) / (double) SAMPLE);
+		    cairo_line_to (cr, (x+1) / (double) SAMPLE,   (y) / (double) SAMPLE);
+		    cairo_close_path (cr);
+		    cairo_move_to (cr, (x) / (double) SAMPLE,   (y) / (double) SAMPLE);
+		    cairo_line_to (cr, (x+1) / (double) SAMPLE, (y+1) / (double) SAMPLE);
+		    cairo_line_to (cr, (x) / (double) SAMPLE, (y+1) / (double) SAMPLE);
+		    cairo_close_path (cr);
+		}
+	    }
+	    cairo_fill (cr);
+	}
+    }
+
+    free (occupancy);
+
+    return CAIRO_TEST_SUCCESS;
+}
+
 CAIRO_TEST (partial_coverage_rectangles,
 	    "Check the fidelity of the rasterisation.",
 	    "coverage raster", /* keywords */
@@ -498,6 +616,19 @@ CAIRO_TEST (partial_coverage_rectangles,
 	    SIZE, SIZE,
 	    NULL, rectangles)
 
+CAIRO_TEST (partial_coverage_intersecting_quads,
+	    "Check the fidelity of the rasterisation.",
+	    "coverage raster", /* keywords */
+	    "target=raster", /* requirements */
+	    SIZE, SIZE,
+	    NULL, intersecting_quads)
+
+CAIRO_TEST (partial_coverage_intersecting_triangles,
+	    "Check the fidelity of the rasterisation.",
+	    "coverage raster", /* keywords */
+	    "target=raster", /* requirements */
+	    SIZE, SIZE,
+	    NULL, intersecting_triangles)
 CAIRO_TEST (partial_coverage_triangles,
 	    "Check the fidelity of the rasterisation.",
 	    "coverage raster", /* keywords */
