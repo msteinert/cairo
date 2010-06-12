@@ -270,6 +270,22 @@ column_triangles (cairo_t *cr, int width, int height)
 		for (i = 0; i < PRECISION; i++) {
 		    double dy = random_offset (WIDTH - x, FALSE);
 
+		    /*
+		     * We want to test some sharing of edges to further
+		     * stress the rasterisers, so instead of using one
+		     * tall triangle, it is split into two, with vertical
+		     * edges on either side that may co-align with their
+		     * neighbours:
+		     *
+		     *       ---  .      ---
+		     * 1 /    |   |\      |
+		     *  / 2x  |   | \     |
+		     *       ---  ....    |  1 / x
+		     *             \ |    |
+		     *              \|    |
+		     *               .   ---
+		     */
+
 		    cairo_move_to (cr, x + i / (double) PRECISION, y + dy);
 		    cairo_rel_line_to (cr, 0, step);
 		    cairo_rel_line_to (cr, 1 / (double) PRECISION, step);
@@ -316,6 +332,10 @@ row_triangles (cairo_t *cr, int width, int height)
 	    for (y = 0; y < HEIGHT; y++) {
 		for (i = 0; i < PRECISION; i++) {
 		    double dx = random_offset (WIDTH - x, FALSE);
+
+		    /* See column_triangles() for a transposed description
+		     * of this geometry.
+		     */
 
 		    cairo_move_to (cr, x + dx, y + i / (double) PRECISION);
 		    cairo_rel_line_to (cr,  step, 0);
