@@ -92,9 +92,7 @@ _gl_flush (void *device)
     glDisable (GL_SCISSOR_TEST);
     glDisable (GL_BLEND);
 
-    _cairo_gl_context_release (ctx);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_gl_context_release (ctx);
 }
 
 static void
@@ -194,7 +192,7 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 	fprintf (stderr, "    GL_ARB_texture_non_power_of_two, GL_ARB_texture_rectangle\n");
     }
 
-    if (!GLEW_ARB_texture_non_power_of_two)
+    if (! GLEW_ARB_texture_non_power_of_two)
 	ctx->tex_target = GL_TEXTURE_RECTANGLE_EXT;
     else
 	ctx->tex_target = GL_TEXTURE_2D;
@@ -272,8 +270,23 @@ _cairo_gl_ensure_framebuffer (cairo_gl_context_t *ctx,
 			       0);
 
     status = glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT);
-    if (status != GL_FRAMEBUFFER_COMPLETE_EXT)
-	fprintf (stderr, "destination is framebuffer incomplete\n");
+    if (status != GL_FRAMEBUFFER_COMPLETE_EXT) {
+	const char *str;
+	switch (status) {
+	//case GL_FRAMEBUFFER_UNDEFINED_EXT: str= "undefined"; break;
+	case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT: str= "incomplete attachment"; break;
+	case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT: str= "incomplete/missing attachment"; break;
+	case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT: str= "incomplete draw buffer"; break;
+	case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT: str= "incomplete read buffer"; break;
+	case GL_FRAMEBUFFER_UNSUPPORTED_EXT: str= "unsupported"; break;
+	case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE_EXT: str= "incomplete multiple"; break;
+	default: str = "unknown error"; break;
+	}
+
+	fprintf (stderr,
+		 "destination is framebuffer incomplete: %s [%#x]\n",
+		 str, status);
+    }
 }
 
 void
@@ -311,4 +324,3 @@ _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
     glMatrixMode (GL_MODELVIEW);
     glLoadIdentity ();
 }
-

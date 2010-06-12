@@ -66,7 +66,8 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 			     unsigned int		  height,
 			     cairo_region_t		 *clip_region);
 
-#define BIAS .375
+static cairo_status_t
+_cairo_gl_surface_flush (void *abstract_surface);
 
 static cairo_bool_t _cairo_surface_is_gl (cairo_surface_t *surface)
 {
@@ -86,6 +87,7 @@ const char *_cairo_gl_error_to_string (GLenum err)
     case GL_STACK_OVERFLOW:    return "stack overflow";
     case GL_STACK_UNDERFLOW:   return "stack underflow";
     case GL_OUT_OF_MEMORY:     return "out of memory";
+    case GL_INVALID_FRAMEBUFFER_OPERATION_EXT:     return "invalid framebuffer operation";
 
     default:
 	return "unknown error";
@@ -321,9 +323,8 @@ _cairo_gl_surface_clear (cairo_gl_surface_t  *surface,
     glDisable (GL_SCISSOR_TEST);
     glClearColor (r, g, b, a);
     glClear (GL_COLOR_BUFFER_BIT);
-    _cairo_gl_context_release (ctx);
 
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_gl_context_release (ctx);
 }
 
 cairo_surface_t *
@@ -369,7 +370,11 @@ cairo_gl_surface_create (cairo_device_t		*abstract_device,
 	return _cairo_surface_create_in_error (status);
     }
 
-    _cairo_gl_context_release (ctx);
+    status = _cairo_gl_context_release (ctx);
+    if (unlikely (status)) {
+	_cairo_gl_context_release (ctx);
+	return _cairo_surface_create_in_error (status);
+    }
 
     return &surface->base;
 }
@@ -436,7 +441,7 @@ cairo_gl_surface_swapbuffers (cairo_surface_t *abstract_surface)
 
     if (! _cairo_gl_surface_is_texture (surface)) {
 	cairo_gl_context_t *ctx;
-        
+
         if (_cairo_gl_context_acquire (surface->base.device, &ctx))
             return;
 
@@ -523,7 +528,9 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
     if (unlikely (status))
 	return status;
 
-    cairo_surface_flush (&dst->base);
+    status = _cairo_gl_surface_flush (&dst->base);
+    if (unlikely (status))
+	goto FAIL;
 
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
     glPixelStorei (GL_UNPACK_ROW_LENGTH, src->stride / cpp);
@@ -664,11 +671,16 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
     if (! _cairo_gl_surface_is_texture (surface) && GLEW_MESA_pack_invert)
 	glPixelStorei (GL_PACK_INVERT_MESA, 0);
 
-    _cairo_gl_context_release (ctx);
+    status = _cairo_gl_context_release (ctx);
+    if (unlikely (status)) {
+	cairo_surface_destroy (&image->base);
+	return status;
+    }
 
     *image_out = image;
     if (rect_out != NULL)
 	*rect_out = *interest;
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -692,13 +704,13 @@ _cairo_gl_surface_finish (void *abstract_surface)
     if (ctx->current_target == surface)
 	ctx->current_target = NULL;
 
+    if (surface->depth)
+        glDeleteFramebuffersEXT (1, &surface->depth);
     if (surface->fb)
         glDeleteFramebuffersEXT (1, &surface->fb);
     glDeleteTextures (1, &surface->tex);
 
-    _cairo_gl_context_release (ctx);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_gl_context_release (ctx);
 }
 
 static cairo_status_t
@@ -953,7 +965,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
                                        0);
     }
 
-    _cairo_gl_context_release (ctx);
+    status = _cairo_gl_context_release (ctx);
 
   CLEANUP:
     _cairo_gl_composite_fini (&setup);
@@ -1050,7 +1062,7 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_dst,
                                        0);
     }
 
-    _cairo_gl_context_release (ctx);
+    status = _cairo_gl_context_release (ctx);
 
   CLEANUP:
     _cairo_gl_composite_fini (&setup);
@@ -1295,9 +1307,7 @@ _cairo_gl_surface_flush (void *abstract_surface)
         (ctx->current_target == surface))
       _cairo_gl_composite_flush (ctx);
 
-    _cairo_gl_context_release (ctx);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_gl_context_release (ctx);
 }
 
 static cairo_int_status_t

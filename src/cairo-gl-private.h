@@ -43,9 +43,14 @@
 #define CAIRO_GL_PRIVATE_H
 
 #include "cairoint.h"
+
 #include "cairo-gl-gradient-private.h"
+
 #include "cairo-device-private.h"
+#include "cairo-error-private.h"
 #include "cairo-rtree-private.h"
+
+#include <assert.h>
 
 #include <GL/glew.h>
 
@@ -82,6 +87,7 @@ typedef struct _cairo_gl_surface {
 
     GLuint tex; /* GL texture object containing our data. */
     GLuint fb; /* GL framebuffer object wrapping our data. */
+    GLuint depth; /* GL framebuffer object holding depth */
 } cairo_gl_surface_t;
 
 typedef struct cairo_gl_glyph_cache {
@@ -218,13 +224,22 @@ typedef struct _cairo_gl_composite {
 cairo_private extern const cairo_surface_backend_t _cairo_gl_surface_backend;
 
 cairo_private const char *_cairo_gl_error_to_string (GLenum err);
-#define _cairo_gl_check_error() do { \
-    GLenum err; \
-    while ((err = glGetError ())) { \
-	fprintf (stderr, "%s:%d: GL error 0x%04x: %s\n", __FILE__,__LINE__, (int) err, _cairo_gl_error_to_string (err)); \
-	_cairo_error_throw (CAIRO_STATUS_DEVICE_ERROR); \
-    } \
-} while (0)
+static cairo_always_inline cairo_status_t
+_do_cairo_gl_check_error (const char *file, int line)
+{
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    GLenum err;
+
+    while (unlikely ((err = glGetError ()))) {
+	fprintf (stderr, "%s:%d: GL error 0x%04x: %s\n",
+		 file, line, (int) err,
+		 _cairo_gl_error_to_string (err));
+	status = _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
+    }
+
+    return status;
+}
+#define _cairo_gl_check_error() _do_cairo_gl_check_error(__FILE__, __LINE__)
 
 static inline cairo_device_t *
 _cairo_gl_context_create_in_error (cairo_status_t status)
@@ -276,14 +291,22 @@ _cairo_gl_context_acquire (cairo_device_t *device,
     if (unlikely (status))
 	return status;
 
+    assert (_cairo_gl_check_error () == CAIRO_STATUS_SUCCESS);
+
     *ctx = (cairo_gl_context_t *) device;
     return CAIRO_STATUS_SUCCESS;
 }
 
-#define _cairo_gl_context_release(ctx) do {\
-    _cairo_gl_check_error (); \
-    cairo_device_release (&(ctx)->base); \
-} while (0)
+static cairo_always_inline cairo_status_t
+_cairo_gl_context_release (cairo_gl_context_t *ctx)
+{
+    cairo_status_t status;
+
+    status = _cairo_gl_check_error ();
+    cairo_device_release (&(ctx)->base);
+
+    return status;
+}
 
 cairo_private void
 _cairo_gl_context_set_destination (cairo_gl_context_t *ctx, cairo_gl_surface_t *surface);

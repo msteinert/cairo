@@ -229,7 +229,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     cairo_gl_glyph_cache_t *cache = NULL;
     cairo_gl_context_t *ctx;
     cairo_gl_composite_t setup;
-    cairo_status_t status;
+    cairo_status_t status, status_maybe_ignored;
     int i = 0;
 
     *has_component_alpha = FALSE;
@@ -313,7 +313,9 @@ _render_glyphs (cairo_gl_surface_t	*dst,
             /* XXX: _cairo_gl_composite_begin() acquires the context a
              * second time. Need to refactor this loop so this doesn't happen.
              */
-            _cairo_gl_context_release (ctx);
+            status = _cairo_gl_context_release (ctx);
+	    if (unlikely (status))
+		goto FINISH;
 	}
 
 	if (scaled_glyph->surface_private == NULL) {
@@ -349,7 +351,9 @@ _render_glyphs (cairo_gl_surface_t	*dst,
   FINISH:
     _cairo_scaled_font_thaw_cache (scaled_font);
 
-    _cairo_gl_context_release (ctx);
+    status_maybe_ignored = _cairo_gl_context_release (ctx);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status_maybe_ignored;
 
     _cairo_gl_composite_fini (&setup);
 
