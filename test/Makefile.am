@@ -892,6 +892,7 @@ REFERENCE_IMAGES = \
 	partial-coverage-half-reference.ref.png \
 	partial-coverage-half-triangles.ref.png \
 	partial-coverage-intersecting-quads.ref.png \
+	partial-coverage-intersecting-quads.xfail.png \
 	partial-coverage-intersecting-triangles.ref.png \
 	partial-coverage-overlap-half-triangles.ref.png \
 	partial-coverage-overlap-half-triangles-eo.ref.png \
