@@ -612,51 +612,51 @@ intersecting_triangles (cairo_t *cr, int width, int height)
 CAIRO_TEST (partial_coverage_rectangles,
 	    "Check the fidelity of the rasterisation.",
 	    "coverage raster", /* keywords */
-	    "target=raster", /* requirements */
+	    "target=raster slow", /* requirements */
 	    SIZE, SIZE,
 	    NULL, rectangles)
 
 CAIRO_TEST (partial_coverage_intersecting_quads,
 	    "Check the fidelity of the rasterisation.",
 	    "coverage raster", /* keywords */
-	    "target=raster", /* requirements */
+	    "target=raster slow", /* requirements */
 	    SIZE, SIZE,
 	    NULL, intersecting_quads)
 
 CAIRO_TEST (partial_coverage_intersecting_triangles,
 	    "Check the fidelity of the rasterisation.",
 	    "coverage raster", /* keywords */
-	    "target=raster", /* requirements */
+	    "target=raster slow", /* requirements */
 	    SIZE, SIZE,
 	    NULL, intersecting_triangles)
 CAIRO_TEST (partial_coverage_triangles,
 	    "Check the fidelity of the rasterisation.",
 	    "coverage raster", /* keywords */
-	    "target=raster", /* requirements */
+	    "target=raster slow", /* requirements */
 	    SIZE, SIZE,
 	    NULL, triangles)
 CAIRO_TEST (partial_coverage_overlap_three_quarter_triangles,
 	    "Check the fidelity of the rasterisation.",
 	    "coverage raster", /* keywords */
-	    "target=raster", /* requirements */
+	    "target=raster slow", /* requirements */
 	    SIZE, SIZE,
 	    NULL, overlap_three_quarter_triangles)
 CAIRO_TEST (partial_coverage_overlap_half_triangles_eo,
 	    "Check the fidelity of the rasterisation.",
 	    "coverage raster", /* keywords */
-	    "target=raster", /* requirements */
+	    "target=raster slow", /* requirements */
 	    SIZE, SIZE,
 	    NULL, overlap_half_triangles_eo)
 CAIRO_TEST (partial_coverage_overlap_half_triangles,
 	    "Check the fidelity of the rasterisation.",
 	    "coverage raster", /* keywords */
-	    "target=raster", /* requirements */
+	    "target=raster slow", /* requirements */
 	    SIZE, SIZE,
 	    NULL, overlap_half_triangles)
 CAIRO_TEST (partial_coverage_half_triangles,
 	    "Check the fidelity of the rasterisation.",
 	    "coverage raster", /* keywords */
-	    "target=raster", /* requirements */
+	    "target=raster slow", /* requirements */
 	    SIZE, SIZE,
 	    NULL, half_triangles)
 

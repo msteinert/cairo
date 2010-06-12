@@ -98,6 +98,7 @@ typedef struct _cairo_test_runner {
     cairo_bool_t list_only;
     cairo_bool_t full_test;
     cairo_bool_t keyword_match;
+    cairo_bool_t slow;
     cairo_bool_t force_pass;
 } cairo_test_runner_t;
 
@@ -321,7 +322,7 @@ static void
 usage (const char *argv0)
 {
     fprintf (stderr,
-	     "Usage: %s [-afkxl] [test-names|keywords ...]\n"
+	     "Usage: %s [-afkxsl] [test-names|keywords ...]\n"
 	     "       %s -l\n"
 	     "\n"
 	     "Run the cairo conformance test suite over the given tests (all by default)\n"
@@ -331,6 +332,7 @@ usage (const char *argv0)
 	     "          skips similar surface and device offset testing.\n"
 	     "  -f	foreground; do not fork\n"
 	     "  -k	match tests by keyword\n"
+	     "  -s	include slow, long running tests\n"
 	     "  -x	exit on first failure\n"
 	     "  -l	list only; just list selected test case names without executing\n"
 	     "\n"
@@ -347,13 +349,16 @@ _parse_cmdline (cairo_test_runner_t *runner, int *argc, char **argv[])
     int c;
 
     while (1) {
-	c = _cairo_getopt (*argc, *argv, ":aflxt");
+	c = _cairo_getopt (*argc, *argv, ":aflstx");
 	if (c == -1)
 	    break;
 
 	switch (c) {
 	case 'a':
 	    runner->full_test = TRUE;
+	    break;
+	case 's':
+	    runner->slow = TRUE;
 	    break;
 	case 'l':
 	    runner->list_only = TRUE;
@@ -789,6 +794,14 @@ main (int argc, char **argv)
 	if (test->requirements != NULL) {
 	    const char *requirements = test->requirements;
 	    const char *str;
+
+	    str = strstr (requirements, "slow");
+	    if (str != NULL && ! runner.slow) {
+		if (runner.list_only)
+		    goto TEST_NEXT;
+		else
+		    goto TEST_SKIPPED;
+	    }
 
 	    str = strstr (requirements, "cairo");
 	    if (str != NULL && ! _has_required_cairo_version (str)) {
