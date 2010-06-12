@@ -389,6 +389,9 @@ struct _cairo_font_face {
 };
 
 cairo_private void
+_cairo_reset_static_data (void);
+
+cairo_private void
 _cairo_toy_font_face_reset_static_data (void);
 
 cairo_private void

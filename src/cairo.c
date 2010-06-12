@@ -221,6 +221,61 @@ _context_put (cairo_t *cr)
 #define _context_put(cr) free (cr)
 #endif
 
+/* XXX This should disappear in favour of a common pool of error objects. */
+static cairo_t *_cairo_nil__objects[CAIRO_STATUS_LAST_STATUS + 1];
+
+static cairo_t *
+_cairo_create_in_error (cairo_status_t status)
+{
+    cairo_t *cr;
+
+    assert (status != CAIRO_STATUS_SUCCESS);
+
+    /* special case OOM in order to avoid another allocation */
+    switch ((int) status) {
+    case CAIRO_STATUS_NO_MEMORY:
+	return (cairo_t *) &_cairo_nil;
+    case CAIRO_STATUS_NULL_POINTER:
+	return (cairo_t *) &_cairo_nil__null_pointer;
+    }
+
+    CAIRO_MUTEX_LOCK (_cairo_error_mutex);
+    cr = _cairo_nil__objects[status];
+    if (cr == NULL) {
+	cr = malloc (sizeof (cairo_t));
+	if (unlikely (cr == NULL)) {
+	    CAIRO_MUTEX_UNLOCK (_cairo_error_mutex);
+	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	    return (cairo_t *) &_cairo_nil;
+	}
+
+	*cr = _cairo_nil;
+	cr->status = status;
+	_cairo_nil__objects[status] = cr;
+    }
+    CAIRO_MUTEX_UNLOCK (_cairo_error_mutex);
+
+    return cr;
+}
+
+void
+_cairo_reset_static_data (void)
+{
+    int status;
+
+    CAIRO_MUTEX_LOCK (_cairo_error_mutex);
+    for (status = CAIRO_STATUS_SUCCESS;
+	 status <= CAIRO_STATUS_LAST_STATUS;
+	 status++)
+    {
+	if (_cairo_nil__objects[status] != NULL) {
+	    free (_cairo_nil__objects[status]);
+	    _cairo_nil__objects[status] = NULL;
+	}
+    }
+    CAIRO_MUTEX_UNLOCK (_cairo_error_mutex);
+}
+
 /**
  * cairo_create:
  * @target: target surface for the context
@@ -250,17 +305,14 @@ cairo_create (cairo_surface_t *target)
     cairo_t *cr;
     cairo_status_t status;
 
-    /* special case OOM in order to avoid another allocation */
-    if (target == NULL)
-	return (cairo_t *) &_cairo_nil__null_pointer;
-    if (target->status == CAIRO_STATUS_NO_MEMORY)
-	return (cairo_t *) &_cairo_nil;
+    if (unlikely (target == NULL))
+	return _cairo_create_in_error (_cairo_error (CAIRO_STATUS_NULL_POINTER));
+    if (unlikely (target->status))
+	return _cairo_create_in_error (target->status);
 
     cr = _context_get ();
-    if (unlikely (cr == NULL)) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_t *) &_cairo_nil;
-    }
+    if (unlikely (cr == NULL))
+	return _cairo_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     CAIRO_REFERENCE_COUNT_INIT (&cr->ref_count, 1);
 
@@ -274,8 +326,10 @@ cairo_create (cairo_surface_t *target)
     cr->gstate_tail[1].next = NULL;
 
     status = _cairo_gstate_init (cr->gstate, target);
-    if (unlikely (status))
-	_cairo_set_error (cr, status);
+    if (unlikely (status)) {
+	_context_put (cr);
+	cr = _cairo_create_in_error (status);
+    }
 
     return cr;
 }
