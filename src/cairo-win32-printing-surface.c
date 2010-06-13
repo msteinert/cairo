@@ -285,9 +285,9 @@ _cairo_win32_printing_surface_init_clear_color (cairo_win32_surface_t *surface,
 						cairo_solid_pattern_t *color)
 {
     if (surface->content == CAIRO_CONTENT_COLOR_ALPHA)
-	_cairo_pattern_init_solid (color, CAIRO_COLOR_WHITE, CAIRO_CONTENT_COLOR);
+	_cairo_pattern_init_solid (color, CAIRO_COLOR_WHITE);
     else
-	_cairo_pattern_init_solid (color, CAIRO_COLOR_BLACK, CAIRO_CONTENT_COLOR);
+	_cairo_pattern_init_solid (color, CAIRO_COLOR_BLACK);
 }
 
 static COLORREF
@@ -677,8 +677,7 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
 	}
 
 	_cairo_pattern_init_solid (&background_pattern,
-				   background_color,
-				   CAIRO_CONTENT_COLOR);
+				   background_color);
 	status = _cairo_surface_paint (opaque_surface,
 				       CAIRO_OPERATOR_SOURCE,
 				       &background_pattern.base,
@@ -788,7 +787,7 @@ _cairo_win32_printing_surface_paint_surface_pattern (cairo_win32_surface_t   *su
 }
 
 static void
-vertex_set_color (TRIVERTEX *vert, cairo_color_t *color)
+vertex_set_color (TRIVERTEX *vert, cairo_color_stop_t *color)
 {
     /* MSDN says that the range here is 0x0000 .. 0xff00;
      * that may well be a typo, but just chop the low bits
