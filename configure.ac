@@ -348,6 +348,7 @@ CAIRO_ENABLE_SURFACE_BACKEND(gl, OpenGL, no, [
     CAIRO_CFLAGS="$CAIRO_CFLAGS -I\$(top_srcdir)/src/glew"
   fi
   need_glx_functions=yes
+  need_wgl_functions=yes
   need_egl_functions=yes
 ])
 
@@ -414,6 +415,14 @@ CAIRO_ENABLE_FUNCTIONS(glx, GLX, auto, [
     CFLAGS="$save_CFLAGS"
   else
       use_glx="no (not required by any backend)"
+  fi
+])
+
+CAIRO_ENABLE_FUNCTIONS(wgl, WGL, auto, [
+  if test "x$need_wgl_functions" = "xyes"; then
+    AC_CHECK_HEADER(windows.h,, [use_wgl="no (WGL headers not found)"])
+  else
+      use_wgl="no (not required by any backend)"
   fi
 ])
 

@@ -390,6 +390,7 @@ AC_DEFUN([CAIRO_REPORT],
 	echo "  PNG functions:   $use_png"
 	echo "  GLEW functions:  $use_glew"
 	echo "  GLX functions:   $use_glx"
+	echo "  WGL functions:   $use_wgl"
 	echo "  EGL functions:   $use_egl"
 	echo "  X11-xcb functions: $use_xlib_xcb"
 	echo "  XCB-drm functions: $use_xcb_drm"

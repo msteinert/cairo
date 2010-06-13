@@ -75,6 +75,22 @@ cairo_gl_surface_create_for_window (cairo_device_t *device,
 				    int width, int height);
 #endif
 
+#if CAIRO_HAS_WGL_FUNCTIONS
+#include <windows.h>
+
+cairo_public cairo_device_t *
+cairo_wgl_device_create (HGLRC rc);
+
+cairo_public HGLRC
+cairo_wgl_device_get_context (cairo_device_t *device);
+
+cairo_public cairo_surface_t *
+cairo_gl_surface_create_for_dc (cairo_device_t		*device,
+				HDC			 dc,
+				int			 width,
+				int			 height);
+#endif
+
 #if CAIRO_HAS_EGL_FUNCTIONS
 #include <EGL/egl.h>
 
