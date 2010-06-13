@@ -37,6 +37,9 @@
 #include <unistd.h>
 #include <errno.h>
 #endif
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
 
 #include "cairo-test.h"
 #include "buffer-diff.h"
@@ -299,6 +302,24 @@ generate_reference (double ppi_x, double ppi_y, const char *filename)
 }
 #endif
 
+static cairo_bool_t
+_cairo_test_mkdir (const char *path)
+{
+#if ! HAVE_MKDIR
+    return FALSE;
+#elif HAVE_MKDIR == 1
+    if (mkdir (path) == 0)
+	return TRUE;
+#elif HAVE_MKDIR == 2
+    if (mkdir (path, 0770) == 0)
+	return TRUE;
+#else
+#error Bad value for HAVE_MKDIR
+#endif
+
+    return errno == EEXIST;
+}
+
 static cairo_test_status_t
 preamble (cairo_test_context_t *ctx)
 {
@@ -331,6 +352,7 @@ preamble (cairo_test_context_t *ctx)
     };
     unsigned int i;
     int n, num_ppi;
+    const char *path = _cairo_test_mkdir (CAIRO_TEST_OUTPUT_DIR) ? CAIRO_TEST_OUTPUT_DIR : ".";
 
     num_ppi = sizeof (ppi) / sizeof (ppi[0]);
 
@@ -359,8 +381,8 @@ preamble (cairo_test_context_t *ctx)
 	    continue;
 
 	format = cairo_boilerplate_content_name (target->content);
-	xasprintf (&base_name, "fallback-resolution.%s.%s",
-		   target->name,
+	xasprintf (&base_name, "%s/fallback-resolution.%s.%s",
+		   path, target->name,
 		   format);
 
 	surface = (target->create_surface) (base_name,
@@ -393,8 +415,8 @@ preamble (cairo_test_context_t *ctx)
 
 	    xasprintf (&test_name, "fallback-resolution.ppi%gx%g",
 		       ppi[n].x, ppi[n].y);
-	    xasprintf (&base_name, "%s.%s.%s",
-		       test_name,
+	    xasprintf (&base_name, "%s/%s.%s.%s",
+		       path, test_name,
 		       target->name,
 		       format);
 

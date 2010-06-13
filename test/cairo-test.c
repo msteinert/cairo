@@ -436,6 +436,24 @@ done:
     return ref_name;
 }
 
+static cairo_bool_t
+_cairo_test_mkdir (const char *path)
+{
+#if ! HAVE_MKDIR
+    return FALSE;
+#elif HAVE_MKDIR == 1
+    if (mkdir (path) == 0)
+	return TRUE;
+#elif HAVE_MKDIR == 2
+    if (mkdir (path, 0770) == 0)
+	return TRUE;
+#else
+#error Bad value for HAVE_MKDIR
+#endif
+
+    return errno == EEXIST;
+}
+
 cairo_bool_t
 cairo_test_target_has_similar (const cairo_test_context_t *ctx,
 			       const cairo_boilerplate_target_t *target)
@@ -446,6 +464,7 @@ cairo_test_target_has_similar (const cairo_test_context_t *ctx,
     cairo_surface_t *similar;
     cairo_status_t status;
     void *closure;
+    char *path;
 
     /* ignore image intermediate targets */
     if (target->expected_type == CAIRO_SURFACE_TYPE_IMAGE)
@@ -454,9 +473,14 @@ cairo_test_target_has_similar (const cairo_test_context_t *ctx,
     if (getenv ("CAIRO_TEST_IGNORE_SIMILAR"))
 	return FALSE;
 
+    xasprintf (&path, "%s/%s",
+	       _cairo_test_mkdir (CAIRO_TEST_OUTPUT_DIR) ? CAIRO_TEST_OUTPUT_DIR : ".",
+	       ctx->test_name);
+
+    has_similar = FALSE;
     do {
 	do {
-	    surface = (target->create_surface) (ctx->test->name,
+	    surface = (target->create_surface) (path,
 						target->content,
 						ctx->test->width,
 						ctx->test->height,
@@ -466,12 +490,11 @@ cairo_test_target_has_similar (const cairo_test_context_t *ctx,
 						0,
 						&closure);
 	    if (surface == NULL)
-		return FALSE;
+		goto out;
 	} while (cairo_test_malloc_failure (ctx, cairo_surface_status (surface)));
 
 	if (cairo_surface_status (surface))
-	    return FALSE;
-
+	    goto out;
 
 	cr = cairo_create (surface);
 	cairo_push_group_with_content (cr,
@@ -486,7 +509,9 @@ cairo_test_target_has_similar (const cairo_test_context_t *ctx,
 
 	if (target->cleanup)
 	    target->cleanup (closure);
-    } while (cairo_test_malloc_failure (ctx, status));
+    } while (! has_similar && cairo_test_malloc_failure (ctx, status));
+out:
+    free (path);
 
     return has_similar;
 }
@@ -653,24 +678,6 @@ cairo_test_copy_file (const char *src_filename,
     fclose (dst);
 
     return TRUE;
-}
-
-static cairo_bool_t
-_cairo_test_mkdir (const char *path)
-{
-#if ! HAVE_MKDIR
-    return FALSE;
-#elif HAVE_MKDIR == 1
-    if (mkdir (path) == 0)
-	return TRUE;
-#elif HAVE_MKDIR == 2
-    if (mkdir (path, 0770) == 0)
-	return TRUE;
-#else
-#error Bad value for HAVE_MKDIR
-#endif
-
-    return errno == EEXIST;
 }
 
 static cairo_test_status_t
