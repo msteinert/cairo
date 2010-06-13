@@ -30,8 +30,8 @@ API additions
     It is common practice to cut an image up into many smaller pieces and use
     each of those as a source - a technique called texture atlasing.
     cairo_surface_create_for_rectangle() extends Cairo to directly support use
-    these subregions of another cairo_surface_t both as a source and as a render
-    target.
+    of these subregions of another cairo_surface_t both as a source and as a
+    render target.
 
   cairo_region_create()
   cairo_region_create_rectangle()
@@ -64,7 +64,7 @@ Backend-specific improvements
 -----------------------------
 cairo-gl
 
-  Benjamin Otte made more than 300 commits in which he refactored the cairo-gl
+  Benjamin Otte made more than 200 commits in which he refactored the cairo-gl
   backend, reducing a lot of code duplication and enabled him to begin working
   on improving performance by reducing state changes and associated overhead.
 
