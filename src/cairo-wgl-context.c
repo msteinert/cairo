@@ -50,7 +50,7 @@ typedef struct _cairo_wgl_context {
     cairo_gl_context_t base;
 
     HDC dummy_dc;
-    HWND dummy_hwnd;
+    HWND dummy_wnd;
     HGLRC rc;
 
     HDC prev_dc;
@@ -130,9 +130,9 @@ _wgl_destroy (void *abstract_ctx)
     cairo_wgl_context_t *ctx = abstract_ctx;
 
     if (ctx->dummy_dc != 0) {
-        ReleaseDC (ctx->dummy_hwnd, ctx->dummy_dc);
-        DestroyWindow (ctx->dummy_hwnd);
-        CloseHandle (ctx->dummy_hwnd);
+        ReleaseDC (ctx->dummy_wnd, ctx->dummy_dc);
+        DestroyWindow (ctx->dummy_wnd);
+        CloseHandle (ctx->dummy_wnd);
     }
 
     wglMakeCurrent (0, 0);
@@ -155,8 +155,8 @@ _wgl_dummy_ctx (cairo_wgl_context_t *ctx)
 
     RegisterClassExA (&wincl);
 
-    ctx->dummy_hwnd = CreateWindow ("cairo_wgl_context_dummy", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    ctx->dummy_dc = GetDC (ctx->dummy_hwnd);
+    ctx->dummy_wnd = CreateWindow ("cairo_wgl_context_dummy", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    ctx->dummy_dc = GetDC (ctx->dummy_wnd);
 
     ZeroMemory (&pfd, sizeof (PIXELFORMATDESCRIPTOR));
     pfd.nSize = sizeof (PIXELFORMATDESCRIPTOR);
