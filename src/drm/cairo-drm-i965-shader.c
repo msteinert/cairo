@@ -123,10 +123,7 @@ i965_shader_acquire_solid (i965_shader_t *shader,
     src->type.vertex = VS_NONE;
     src->type.pattern = PATTERN_SOLID;
 
-    src->base.content = solid->content;
-    if (CAIRO_COLOR_IS_OPAQUE(&solid->color))
-	src->base.content &= ~CAIRO_CONTENT_ALPHA;
-
+    src->base.content = _cairo_color_get_content (&solid->color);
     src->base.constants[0] = solid->color.red   * solid->color.alpha;
     src->base.constants[1] = solid->color.green * solid->color.alpha;
     src->base.constants[2] = solid->color.blue  * solid->color.alpha;

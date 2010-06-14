@@ -1111,7 +1111,7 @@ i915_shader_acquire_solid (i915_shader_t *shader,
 {
     cairo_content_t content;
 
-    content = solid->content;
+    content = CAIRO_CONTENT_COLOR_ALPHA;
     src->solid.color = solid->color;
     if (content == 0 || solid->color.alpha_short <= 0x00ff)
     {

@@ -1584,8 +1584,7 @@ intel_gradient_render (intel_device_t *device,
 	intel_bo_destroy (device, buffer->bo);
 	/* Ensure the cache is correctly initialised for i965_device_destroy */
 	_cairo_pattern_init_solid (&device->gradient_cache.cache[i].pattern.solid,
-		                   CAIRO_COLOR_TRANSPARENT,
-				   CAIRO_CONTENT_ALPHA);
+		                   CAIRO_COLOR_TRANSPARENT);
 	return status;
     }
 
