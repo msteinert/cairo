@@ -1570,9 +1570,9 @@ ZERO_EXTENTS:
 }
 slim_hidden_def (cairo_scaled_font_glyph_extents);
 
-#define GLYPH_LUT_SIZE 256
+#define GLYPH_LUT_SIZE 64
 static cairo_status_t
-cairo_scaled_font_text_to_glyphs_internal_multiple (cairo_scaled_font_t		 *scaled_font,
+cairo_scaled_font_text_to_glyphs_internal_cached (cairo_scaled_font_t		 *scaled_font,
 						    double			  x,
 						    double			  y,
 						    const char			 *utf8,
@@ -1644,7 +1644,7 @@ cairo_scaled_font_text_to_glyphs_internal_multiple (cairo_scaled_font_t		 *scale
 }
 
 static cairo_status_t
-cairo_scaled_font_text_to_glyphs_internal_single (cairo_scaled_font_t	 *scaled_font,
+cairo_scaled_font_text_to_glyphs_internal_uncached (cairo_scaled_font_t	 *scaled_font,
 						  double		  x,
 						  double		  y,
 						  const char		 *utf8,
@@ -1652,19 +1652,47 @@ cairo_scaled_font_text_to_glyphs_internal_single (cairo_scaled_font_t	 *scaled_f
 						  cairo_text_cluster_t	**clusters,
 						  int			  num_chars)
 {
-    uint32_t unicode;
-    int num_bytes;
+    const char *p;
+    int i;
 
-    glyphs[0].x = x;
-    glyphs[0].y = y;
+    p = utf8;
+    for (i = 0; i < num_chars; i++) {
+	unsigned long g;
+	int num_bytes;
+	uint32_t unicode;
+	cairo_scaled_glyph_t *scaled_glyph;
+	cairo_status_t status;
 
-    num_bytes = _cairo_utf8_get_char_validated (utf8, &unicode);
-    glyphs[0].index =
-	scaled_font->backend->ucs4_to_index (scaled_font, unicode);
+	num_bytes = _cairo_utf8_get_char_validated (p, &unicode);
+	p += num_bytes;
 
-    if (clusters) {
-	(*clusters)[0].num_bytes  = num_bytes;
-	(*clusters)[0].num_glyphs = 1;
+	glyphs[i].x = x;
+	glyphs[i].y = y;
+
+	g = scaled_font->backend->ucs4_to_index (scaled_font, unicode);
+
+	/*
+	 * No advance needed for a single character string. So, let's speed up
+	 * one-character strings by skipping glyph lookup.
+	 */
+	if (num_chars > 1) {
+	    status = _cairo_scaled_glyph_lookup (scaled_font,
+					     g,
+					     CAIRO_SCALED_GLYPH_INFO_METRICS,
+					     &scaled_glyph);
+	    if (unlikely (status))
+		return status;
+
+	    x += scaled_glyph->metrics.x_advance;
+	    y += scaled_glyph->metrics.y_advance;
+	}
+
+	glyphs[i].index = g;
+
+	if (clusters) {
+	    (*clusters)[i].num_bytes  = num_bytes;
+	    (*clusters)[i].num_glyphs = 1;
+	}
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -1805,6 +1833,7 @@ cairo_scaled_font_text_to_glyphs_internal_single (cairo_scaled_font_t	 *scaled_f
  *
  * Since: 1.8
  **/
+#define CACHING_THRESHOLD 16
 cairo_status_t
 cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
 				  double		 x,
@@ -1958,15 +1987,15 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
 	*num_clusters = num_chars;
     }
 
-    if (num_chars > 1)
-	status = cairo_scaled_font_text_to_glyphs_internal_multiple (scaled_font,
+    if (num_chars > CACHING_THRESHOLD)
+	status = cairo_scaled_font_text_to_glyphs_internal_cached (scaled_font,
 								     x, y,
 								     utf8,
 								     *glyphs,
 								     clusters,
 								     num_chars);
     else
-	status = cairo_scaled_font_text_to_glyphs_internal_single (scaled_font,
+	status = cairo_scaled_font_text_to_glyphs_internal_uncached (scaled_font,
 								   x, y,
 								   utf8,
 								   *glyphs,
