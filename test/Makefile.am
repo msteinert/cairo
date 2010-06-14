@@ -684,6 +684,9 @@ REFERENCE_IMAGES = \
 	group-unaligned.svg.rgb24.xfail.png \
 	group-unaligned.xlib-fallback.ref.png \
 	group-unaligned.xlib.ref.png \
+	halo.ref.png \
+	halo.image16.ref.png \
+	halo.xlib.ref.png \
 	huge-linear.image16.ref.png \
 	huge-linear.pdf.ref.png \
 	huge-linear.ps3.ref.png \
