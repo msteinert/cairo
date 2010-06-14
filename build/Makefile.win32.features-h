@@ -77,6 +77,9 @@ endif
 ifeq ($(CAIRO_HAS_GLX_FUNCTIONS),1)
 	@echo "#define CAIRO_HAS_GLX_FUNCTIONS 1" >> src/cairo-features.h
 endif
+ifeq ($(CAIRO_HAS_WGL_FUNCTIONS),1)
+	@echo "#define CAIRO_HAS_WGL_FUNCTIONS 1" >> src/cairo-features.h
+endif
 ifeq ($(CAIRO_HAS_SCRIPT_SURFACE),1)
 	@echo "#define CAIRO_HAS_SCRIPT_SURFACE 1" >> src/cairo-features.h
 endif

@@ -259,6 +259,16 @@ enabled_cairo_boilerplate_private += $(cairo_boilerplate_glx_private)
 enabled_cairo_boilerplate_sources += $(cairo_boilerplate_glx_sources)
 endif
 
+supported_cairo_boilerplate_headers += $(cairo_boilerplate_wgl_headers)
+all_cairo_boilerplate_headers += $(cairo_boilerplate_wgl_headers)
+all_cairo_boilerplate_private += $(cairo_boilerplate_wgl_private)
+all_cairo_boilerplate_sources += $(cairo_boilerplate_wgl_sources)
+ifeq ($(CAIRO_HAS_WGL_FUNCTIONS),1)
+enabled_cairo_boilerplate_headers += $(cairo_boilerplate_wgl_headers)
+enabled_cairo_boilerplate_private += $(cairo_boilerplate_wgl_private)
+enabled_cairo_boilerplate_sources += $(cairo_boilerplate_wgl_sources)
+endif
+
 unsupported_cairo_boilerplate_headers += $(cairo_boilerplate_script_headers)
 all_cairo_boilerplate_headers += $(cairo_boilerplate_script_headers)
 all_cairo_boilerplate_private += $(cairo_boilerplate_script_private)
