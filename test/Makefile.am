@@ -140,6 +140,9 @@ REFERENCE_IMAGES = \
 	a1-traps-sample.ref.png \
 	a1-traps-sample.quartz.xfail.png \
 	a8-mask.ref.png \
+	aliasing.ref.png \
+	aliasing.image16.ref.png \
+	aliasing.xlib.ref.png \
 	alpha-similar.gl.argb32.xfail.png \
 	alpha-similar.gl.rgb24.xfail.png \
 	alpha-similar.pdf.argb32.xfail.png \
