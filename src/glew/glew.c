@@ -65,6 +65,10 @@
 #  define GLXEW_CONTEXT_ARG_DEF_LIST void
 #endif /* GLEW_MX */
 
+#ifndef NULL
+#define NULL (void *) 0
+#endif
+
 #if defined(__APPLE__)
 #include <mach-o/dyld.h>
 #include <stdlib.h>
