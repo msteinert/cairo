@@ -335,10 +335,16 @@ CAIRO_ENABLE_SURFACE_BACKEND(gl, OpenGL, no, [
 	      gl_NONPKGCONFIG_LIBS="-lGL"
 	  fi])
 
+  # Disable system GLEW on UNIX since it assumes X and crashes with EGL
   have_glew="no"
-  # Disable system GLEW since it assumes X and crashes with EGL
-  #AC_CHECK_LIB(GLEW, glewInit,
-  #	       [AC_CHECK_HEADER(GL/glew.h, [have_glew="yes"], [])])
+  case "$host" in
+    *-linux*|*-*bsd*|*-solaris*)
+      ;;
+    *)
+      AC_CHECK_LIB(GLEW, glewInit,
+		   [AC_CHECK_HEADER(GL/glew.h, [have_glew="yes"], [])])
+      ;;
+  esac
   if test "x$have_glew" = "xyes"; then
     gl_NONPKGCONFIG_LIBS="-lGLEW $gl_NONPKGCONFIG_LIBS"
     use_glew="yes (system library)"
