@@ -40,7 +40,11 @@ static const  struct color {
     { 0, 0, 0 },
     { 1, 0, 0 },
     { 0, 1, 0 },
-    { 0, 0, 1 }
+    { 0, 0, 1 },
+    { 1, 1, 0 },
+    { 0, 1, 1 },
+    { 1, 0, 1 },
+    { .5, .5, .5 },
 };
 #define NUM_COLORS (sizeof (color) / sizeof (color[0]))
 #ifndef MAX
