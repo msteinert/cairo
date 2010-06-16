@@ -129,13 +129,11 @@ _wgl_destroy (void *abstract_ctx)
 {
     cairo_wgl_context_t *ctx = abstract_ctx;
 
-    if (ctx->dummy_dc != 0) {
+    if (ctx->dummy_dc != 0) {	
+        wglMakeCurrent (ctx->dummy_dc, 0);
         ReleaseDC (ctx->dummy_wnd, ctx->dummy_dc);
         DestroyWindow (ctx->dummy_wnd);
-        CloseHandle (ctx->dummy_wnd);
     }
-
-    wglMakeCurrent (0, 0);
 }
 
 static cairo_status_t
