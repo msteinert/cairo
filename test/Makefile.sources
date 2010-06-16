@@ -3,6 +3,7 @@ test_sources = \
 	a1-mask.c					\
 	a1-mask-sample.c 				\
 	a1-traps-sample.c				\
+	a1-rasterisation.c				\
 	a8-mask.c					\
 	aliasing.c					\
 	alpha-similar.c					\

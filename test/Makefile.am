@@ -137,6 +137,8 @@ REFERENCE_IMAGES = \
 	a1-mask.ref.png \
 	a1-mask-sample.ref.png \
 	a1-mask-sample.quartz.xfail.png \
+	a1-rasterisation-rectangles.ref.png \
+	a1-rasterisation-triangles.ref.png \
 	a1-traps-sample.ref.png \
 	a1-traps-sample.quartz.xfail.png \
 	a8-mask.ref.png \
