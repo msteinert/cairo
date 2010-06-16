@@ -690,6 +690,11 @@ REFERENCE_IMAGES = \
 	halo.ref.png \
 	halo.image16.ref.png \
 	halo.xlib.ref.png \
+	halo.ps.ref.png \
+	halo-transform.ref.png \
+	halo-transform.image16.ref.png \
+	halo-transform.xlib.ref.png \
+	halo-transform.ps.ref.png \
 	huge-linear.image16.ref.png \
 	huge-linear.pdf.ref.png \
 	huge-linear.ps3.ref.png \
