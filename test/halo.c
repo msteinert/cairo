@@ -143,6 +143,42 @@ draw_transform (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
+static cairo_test_status_t
+draw_transform (cairo_t *cr, int width, int height)
+{
+    const char *string = "0123456789";
+    cairo_text_extents_t extents;
+
+    cairo_translate (cr, 50, 50);
+    cairo_scale (cr, M_SQRT2, M_SQRT2);
+
+    cairo_set_source_rgb (cr, 1, 1, 1);
+    cairo_paint (cr);
+
+    cairo_text_extents (cr, string, &extents);
+
+    cairo_set_line_width (cr, 3);
+    cairo_move_to (cr, 9, 4 + extents.height);
+    halo_around_path (cr, string);
+
+    cairo_move_to (cr, 109, 4 + extents.height);
+    halo_around_path (cr, string);
+
+    cairo_set_font_size (cr, 64);
+    cairo_set_line_width (cr, 10);
+    cairo_move_to (cr, 8, 70);
+    halo_around_path (cr, "6");
+    cairo_move_to (cr, 32, 90);
+    halo_around_path (cr, "7");
+
+    cairo_move_to (cr, 108, 70);
+    halo_around_text (cr, "6");
+    cairo_move_to (cr, 132, 90);
+    halo_around_text (cr, "7");
+
+    return CAIRO_TEST_SUCCESS;
+}
+
 CAIRO_TEST (halo,
 	    "Check the show_glyphs() vs glyph_path()",
 	    "text", /* keywords */
