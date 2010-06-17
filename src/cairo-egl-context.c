@@ -47,6 +47,11 @@ typedef struct _cairo_egl_context {
 
     EGLDisplay display;
     EGLContext context;
+
+    EGLContext prev_context;
+    EGLSurface prev_draw_surface;
+    EGLSurface prev_read_surface;
+    EGLSurface dummy_surface;
 } cairo_egl_context_t;
 
 typedef struct _cairo_egl_surface {
@@ -54,6 +59,29 @@ typedef struct _cairo_egl_surface {
 
     EGLSurface egl;
 } cairo_egl_surface_t;
+
+
+static void
+_egl_acquire (void *abstract_ctx)
+{
+    cairo_egl_context_t *ctx = abstract_ctx;
+
+    ctx->prev_context = eglGetCurrentContext ();
+    ctx->prev_draw_surface = eglGetCurrentSurface (EGL_DRAW);
+    ctx->prev_read_surface = eglGetCurrentSurface (EGL_READ);
+
+    eglMakeCurrent (ctx->display,
+		    ctx->dummy_surface, ctx->dummy_surface, ctx->context);
+}
+
+static void
+_egl_release (void *abstract_ctx)
+{
+    cairo_egl_context_t *ctx = abstract_ctx;
+
+    eglMakeCurrent (ctx->display,
+		    EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+}
 
 static void
 _egl_make_current (void *abstract_ctx,
@@ -80,7 +108,9 @@ _egl_destroy (void *abstract_ctx)
 {
     cairo_egl_context_t *ctx = abstract_ctx;
 
-    eglMakeCurrent (ctx->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    eglMakeCurrent (ctx->display,
+		    EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    eglDestroySurface (ctx->display, ctx->dummy_surface);
 }
 
 cairo_device_t *
@@ -93,7 +123,6 @@ cairo_egl_device_create (EGLDisplay dpy, EGLContext egl)
 	EGL_HEIGHT, 1,
 	EGL_NONE,
     };
-    EGLSurface surface;
     EGLConfig *configs;
     EGLint numConfigs;
 
@@ -104,8 +133,8 @@ cairo_egl_device_create (EGLDisplay dpy, EGLContext egl)
     ctx->display = dpy;
     ctx->context = egl;
 
-    ctx->base.acquire = NULL; /* FIXME */
-    ctx->base.release = NULL; /* FIXME */
+    ctx->base.acquire = _egl_acquire;
+    ctx->base.release = _egl_release;
     ctx->base.make_current = _egl_make_current;
     ctx->base.swap_buffers = _egl_swap_buffers;
     ctx->base.destroy = _egl_destroy;
@@ -118,27 +147,26 @@ cairo_egl_device_create (EGLDisplay dpy, EGLContext egl)
 	return _cairo_gl_context_create_in_error (CAIRO_STATUS_NO_MEMORY);
     }
     eglGetConfigs (dpy, configs, numConfigs, &numConfigs);
-    surface = eglCreatePbufferSurface (dpy, configs[0], attribs);
+    ctx->dummy_surface = eglCreatePbufferSurface (dpy, configs[0], attribs);
     free (configs);
 
-    if (surface == NULL) {
+    if (ctx->dummy_surface == NULL) {
 	free (ctx);
 	return _cairo_gl_context_create_in_error (CAIRO_STATUS_NO_MEMORY);
     }
 
-    if (! eglMakeCurrent (dpy, surface, surface, egl)) {
+    if (!eglMakeCurrent (dpy, ctx->dummy_surface, ctx->dummy_surface, egl)) {
 	free (ctx);
 	return _cairo_gl_context_create_in_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     status = _cairo_gl_context_init (&ctx->base);
     if (unlikely (status)) {
-	eglDestroySurface (dpy, surface);
+	eglDestroySurface (dpy, ctx->dummy_surface);
 	free (ctx);
 	return _cairo_gl_context_create_in_error (status);
     }
 
-    eglDestroySurface (dpy, surface);
     eglMakeCurrent (dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 
     return &ctx->base.base;
