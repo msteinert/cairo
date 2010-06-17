@@ -200,7 +200,7 @@ _cairo_boilerplate_wgl_synchronize (void *closure)
     if (cairo_device_acquire (wgltc->device))
         return;
 
-    //glFinish ();
+    glFinish ();
 
     cairo_device_release (wgltc->device);
 }
