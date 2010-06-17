@@ -115,6 +115,21 @@ _egl_destroy (void *abstract_ctx)
     eglDestroySurface (ctx->display, ctx->dummy_surface);
 }
 
+static cairo_bool_t
+_egl_make_current_surfaceless(cairo_egl_context_t *ctx)
+{
+    const char *extensions;
+
+    extensions = eglQueryString(ctx->display, EGL_EXTENSIONS);
+    if (!strstr(extensions, "EGL_KHR_surfaceless_opengl"))
+	return FALSE;
+    if (!eglMakeCurrent(ctx->display,
+			EGL_NO_SURFACE, EGL_NO_SURFACE, ctx->context))
+	return FALSE;
+
+    return TRUE;
+}
+
 cairo_device_t *
 cairo_egl_device_create (EGLDisplay dpy, EGLContext egl)
 {
@@ -141,30 +156,33 @@ cairo_egl_device_create (EGLDisplay dpy, EGLContext egl)
     ctx->base.swap_buffers = _egl_swap_buffers;
     ctx->base.destroy = _egl_destroy;
 
-    /* dummy surface, meh. */
-    eglGetConfigs (dpy, NULL, 0, &numConfigs);
-    configs = malloc (sizeof(*configs) *numConfigs);
-    if (configs == NULL) {
-	free (ctx);
-	return _cairo_gl_context_create_in_error (CAIRO_STATUS_NO_MEMORY);
-    }
-    eglGetConfigs (dpy, configs, numConfigs, &numConfigs);
-    ctx->dummy_surface = eglCreatePbufferSurface (dpy, configs[0], attribs);
-    free (configs);
+    if (!_egl_make_current_surfaceless (ctx)) {
+	/* Fall back to dummy surface, meh. */
+	eglGetConfigs (dpy, NULL, 0, &numConfigs);
+	configs = malloc (sizeof(*configs) *numConfigs);
+	if (configs == NULL) {
+	    free (ctx);
+	    return _cairo_gl_context_create_in_error (CAIRO_STATUS_NO_MEMORY);
+	}
+	eglGetConfigs (dpy, configs, numConfigs, &numConfigs);
+	ctx->dummy_surface = eglCreatePbufferSurface (dpy, configs[0], attribs);
+	free (configs);
 
-    if (ctx->dummy_surface == NULL) {
-	free (ctx);
-	return _cairo_gl_context_create_in_error (CAIRO_STATUS_NO_MEMORY);
-    }
+	if (ctx->dummy_surface == NULL) {
+	    free (ctx);
+	    return _cairo_gl_context_create_in_error (CAIRO_STATUS_NO_MEMORY);
+	}
 
-    if (!eglMakeCurrent (dpy, ctx->dummy_surface, ctx->dummy_surface, egl)) {
-	free (ctx);
-	return _cairo_gl_context_create_in_error (CAIRO_STATUS_NO_MEMORY);
+	if (!eglMakeCurrent (dpy, ctx->dummy_surface, ctx->dummy_surface, egl)) {
+	    free (ctx);
+	    return _cairo_gl_context_create_in_error (CAIRO_STATUS_NO_MEMORY);
+	}
     }
 
     status = _cairo_gl_context_init (&ctx->base);
     if (unlikely (status)) {
-	eglDestroySurface (dpy, ctx->dummy_surface);
+	if (ctx->dummy_surface != EGL_NO_SURFACE)
+	    eglDestroySurface (dpy, ctx->dummy_surface);
 	free (ctx);
 	return _cairo_gl_context_create_in_error (status);
     }
