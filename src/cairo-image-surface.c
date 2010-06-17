@@ -2889,7 +2889,6 @@ _composite_boxes (cairo_image_surface_t *dst,
 	    cairo_box_t *box = chunk->base;
 
 	    for (i = 0; i < chunk->count; i++) {
-                /* round down here to match Pixman's behavior when using traps. */
 		int x1 = _cairo_fixed_integer_round_down (box[i].p1.x);
 		int y1 = _cairo_fixed_integer_round_down (box[i].p1.y);
 		int x2 = _cairo_fixed_integer_round_down (box[i].p2.x);
@@ -2945,10 +2944,10 @@ _composite_boxes (cairo_image_surface_t *dst,
 	    const cairo_box_t *box = chunk->base;
 
 	    for (i = 0; i < chunk->count; i++) {
-		int x1 = _cairo_fixed_integer_round (box[i].p1.x);
-		int y1 = _cairo_fixed_integer_round (box[i].p1.y);
-		int x2 = _cairo_fixed_integer_round (box[i].p2.x);
-		int y2 = _cairo_fixed_integer_round (box[i].p2.y);
+		int x1 = _cairo_fixed_integer_round_down (box[i].p1.x);
+		int y1 = _cairo_fixed_integer_round_down (box[i].p1.y);
+		int x2 = _cairo_fixed_integer_round_down (box[i].p2.x);
+		int y2 = _cairo_fixed_integer_round_down (box[i].p2.y);
 
 		if (x2 == x1 || y2 == y1)
 		    continue;
@@ -3015,7 +3014,7 @@ _clip_and_composite_boxes (cairo_image_surface_t *dst,
 static cairo_bool_t
 _mono_edge_is_vertical (const cairo_line_t *line)
 {
-    return _cairo_fixed_integer_round (line->p1.x) == _cairo_fixed_integer_round (line->p2.x);
+    return _cairo_fixed_integer_round_down (line->p1.x) == _cairo_fixed_integer_round_down (line->p2.x);
 }
 
 static cairo_bool_t
@@ -3053,7 +3052,8 @@ _traps_are_pixel_aligned (cairo_traps_t *traps,
 
 static void
 _boxes_for_traps (cairo_boxes_t *boxes,
-		  cairo_traps_t *traps)
+		  cairo_traps_t *traps,
+		  cairo_antialias_t antialias)
 {
     int i;
 
@@ -3064,21 +3064,33 @@ _boxes_for_traps (cairo_boxes_t *boxes,
     boxes->chunks.count = traps->num_traps;
     boxes->chunks.size  = traps->num_traps;
 
-    for (i = 0; i < traps->num_traps; i++) {
-	cairo_fixed_t x1 = traps->traps[i].left.p1.x;
-	cairo_fixed_t x2 = traps->traps[i].right.p1.x;
-	cairo_fixed_t y1 = traps->traps[i].top;
-	cairo_fixed_t y2 = traps->traps[i].bottom;
+    if (antialias != CAIRO_ANTIALIAS_NONE) {
+	for (i = 0; i < traps->num_traps; i++) {
+	    cairo_fixed_t x1 = traps->traps[i].left.p1.x;
+	    cairo_fixed_t x2 = traps->traps[i].right.p1.x;
+	    cairo_fixed_t y1 = traps->traps[i].top;
+	    cairo_fixed_t y2 = traps->traps[i].bottom;
 
-	boxes->chunks.base[i].p1.x = x1;
-	boxes->chunks.base[i].p1.y = y1;
-	boxes->chunks.base[i].p2.x = x2;
-	boxes->chunks.base[i].p2.y = y2;
+	    boxes->chunks.base[i].p1.x = x1;
+	    boxes->chunks.base[i].p1.y = y1;
+	    boxes->chunks.base[i].p2.x = x2;
+	    boxes->chunks.base[i].p2.y = y2;
 
-	if (boxes->is_pixel_aligned) {
-	    boxes->is_pixel_aligned =
-		_cairo_fixed_is_integer (x1) && _cairo_fixed_is_integer (y1) &&
-		_cairo_fixed_is_integer (x2) && _cairo_fixed_is_integer (y2);
+	    if (boxes->is_pixel_aligned) {
+		boxes->is_pixel_aligned =
+		    _cairo_fixed_is_integer (x1) && _cairo_fixed_is_integer (y1) &&
+		    _cairo_fixed_is_integer (x2) && _cairo_fixed_is_integer (y2);
+	    }
+	}
+    } else {
+	boxes->is_pixel_aligned = TRUE;
+
+	for (i = 0; i < traps->num_traps; i++) {
+	    /* round down here to match Pixman's behavior when using traps. */
+	    boxes->chunks.base[i].p1.x = _cairo_fixed_round_down (traps->traps[i].left.p1.x);
+	    boxes->chunks.base[i].p1.y = _cairo_fixed_round_down (traps->traps[i].top);
+	    boxes->chunks.base[i].p2.x = _cairo_fixed_round_down (traps->traps[i].right.p1.x);
+	    boxes->chunks.base[i].p2.y = _cairo_fixed_round_down (traps->traps[i].bottom);
 	}
     }
 }
@@ -3127,7 +3139,7 @@ _clip_and_composite_trapezoids (cairo_image_surface_t *dst,
     {
 	cairo_boxes_t boxes;
 
-	_boxes_for_traps (&boxes, traps);
+	_boxes_for_traps (&boxes, traps, antialias);
 	return _clip_and_composite_boxes (dst, op, src,
 					  &boxes, antialias,
 					  extents, clip);
