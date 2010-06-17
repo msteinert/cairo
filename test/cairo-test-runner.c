@@ -349,7 +349,7 @@ _parse_cmdline (cairo_test_runner_t *runner, int *argc, char **argv[])
     int c;
 
     while (1) {
-	c = _cairo_getopt (*argc, *argv, ":aflstx");
+	c = _cairo_getopt (*argc, *argv, ":afkxsl");
 	if (c == -1)
 	    break;
 
