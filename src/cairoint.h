@@ -1072,6 +1072,13 @@ cairo_private void
 _cairo_font_options_init_copy (cairo_font_options_t		*options,
 			       const cairo_font_options_t	*other);
 
+cairo_private void
+_cairo_font_options_set_lcd_filter (cairo_font_options_t   *options,
+				   cairo_lcd_filter_t  lcd_filter);
+
+cairo_private cairo_lcd_filter_t
+_cairo_font_options_get_lcd_filter (const cairo_font_options_t *options);
+
 /* cairo-hull.c */
 cairo_private cairo_status_t
 _cairo_hull_compute (cairo_pen_vertex_t *vertices, int *num_vertices);
