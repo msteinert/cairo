@@ -88,6 +88,7 @@ typedef struct _cairo_gl_surface {
     GLuint tex; /* GL texture object containing our data. */
     GLuint fb; /* GL framebuffer object wrapping our data. */
     GLuint depth; /* GL framebuffer object holding depth */
+    int owns_tex;
 } cairo_gl_surface_t;
 
 typedef struct cairo_gl_glyph_cache {
@@ -479,5 +480,6 @@ cairo_private void
 _cairo_gl_shader_fini (cairo_gl_context_t *ctx, cairo_gl_shader_t *shader);
 
 slim_hidden_proto (cairo_gl_surface_create);
+slim_hidden_proto (cairo_gl_surface_create_for_texture);
 
 #endif /* CAIRO_GL_PRIVATE_H */

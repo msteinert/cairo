@@ -217,13 +217,13 @@ _cairo_gl_surface_init (cairo_device_t *device,
 }
 
 static cairo_surface_t *
-_cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
-				  cairo_content_t	content,
-				  int			width,
-				  int			height)
+_cairo_gl_surface_create_scratch_for_texture (cairo_gl_context_t   *ctx,
+					      cairo_content_t	    content,
+					      GLuint		    tex,
+					      int		    width,
+					      int		    height)
 {
     cairo_gl_surface_t *surface;
-    GLenum format;
 
     assert (width <= ctx->max_framebuffer_size && height <= ctx->max_framebuffer_size);
 
@@ -232,6 +232,35 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_gl_surface_init (&ctx->base, surface, content, width, height);
+    surface->tex = tex;
+
+    /* Create the texture used to store the surface's data. */
+    _cairo_gl_context_activate (ctx, CAIRO_GL_TEX_TEMP);
+    glBindTexture (ctx->tex_target, surface->tex);
+    glTexParameteri (ctx->tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri (ctx->tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    return &surface->base;
+}
+
+static cairo_surface_t *
+_cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
+				  cairo_content_t	content,
+				  int			width,
+				  int			height)
+{
+    cairo_gl_surface_t *surface;
+    GLenum format;
+    GLuint tex;
+
+    glGenTextures (1, &tex);
+    surface = (cairo_gl_surface_t *)
+	_cairo_gl_surface_create_scratch_for_texture (ctx, content,
+						      tex, width, height);
+    if (unlikely (surface->base.status))
+	return &surface->base;
+
+    surface->owns_tex = TRUE;
 
     /* adjust the texture size after setting our real extents */
     if (width < 1)
@@ -262,12 +291,6 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
 	break;
     }
 
-    /* Create the texture used to store the surface's data. */
-    _cairo_gl_context_activate (ctx, CAIRO_GL_TEX_TEMP);
-    glGenTextures (1, &surface->tex);
-    glBindTexture (ctx->tex_target, surface->tex);
-    glTexParameteri (ctx->tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri (ctx->tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexImage2D (ctx->tex_target, 0, format, width, height, 0,
 		  format, GL_UNSIGNED_BYTE, NULL);
 
@@ -355,6 +378,69 @@ cairo_gl_surface_create (cairo_device_t		*abstract_device,
     return &surface->base;
 }
 slim_hidden_def (cairo_gl_surface_create);
+
+
+/**
+ * cairo_gl_surface_create_for_texture:
+ * @content: type of content in the surface
+ * @tex: name of texture to use for storage of surface pixels
+ * @width: width of the surface, in pixels
+ * @height: height of the surface, in pixels
+ *
+ * Creates a GL surface for the specified texture with the specified
+ * content and dimensions.  The texture must be kept around until the
+ * #cairo_surface_t is destroyed or cairo_surface_finish() is called
+ * on the surface.  The initial contents of @tex will be used as the
+ * initial image contents; you must explicitly clear the buffer,
+ * using, for example, cairo_rectangle() and cairo_fill() if you want
+ * it cleared.  The format of @tex should be compatible with @content,
+ * in the sense that it must have the color components required by
+ * @content.
+ *
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy() when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if an error such as out of memory
+ * occurs. You can use cairo_surface_status() to check for this.
+ **/
+cairo_surface_t *
+cairo_gl_surface_create_for_texture (cairo_device_t	*abstract_device,
+				     cairo_content_t	 content,
+				     GLuint		 tex,
+				     int		 width,
+				     int		 height)
+{
+    cairo_gl_context_t *ctx;
+    cairo_gl_surface_t *surface;
+    cairo_status_t status;
+
+    if (! CAIRO_CONTENT_VALID (content))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_CONTENT));
+
+    if (abstract_device == NULL)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NULL_POINTER));
+
+    if (abstract_device->status)
+	return _cairo_surface_create_in_error (abstract_device->status);
+
+    if (abstract_device->backend->type != CAIRO_DEVICE_TYPE_GL)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
+
+    status = _cairo_gl_context_acquire (abstract_device, &ctx);
+    if (unlikely (status))
+	return _cairo_surface_create_in_error (status);
+
+    surface = (cairo_gl_surface_t *)
+	_cairo_gl_surface_create_scratch_for_texture (ctx, content,
+						      tex, width, height);
+    _cairo_gl_context_release (ctx);
+
+    return &surface->base;
+}
+slim_hidden_def (cairo_gl_surface_create_for_texture);
+
 
 void
 cairo_gl_surface_set_size (cairo_surface_t *abstract_surface,
@@ -702,7 +788,8 @@ _cairo_gl_surface_finish (void *abstract_surface)
         glDeleteFramebuffersEXT (1, &surface->depth);
     if (surface->fb)
         glDeleteFramebuffersEXT (1, &surface->fb);
-    glDeleteTextures (1, &surface->tex);
+    if (surface->owns_tex)
+	glDeleteTextures (1, &surface->tex);
 
     return _cairo_gl_context_release (ctx, status);
 }
