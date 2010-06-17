@@ -314,7 +314,7 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
 	diff++;
 	num_diffs++;
     }
-    if (num_diffs < 2)
+    if (num_diffs == 0)
 	goto DONE;
 
     if (num_reports == 2)
