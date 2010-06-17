@@ -131,6 +131,9 @@ CLEANFILES += $(BUILT_SOURCES)
 
 # All tests which have a reference image go here.
 REFERENCE_IMAGES = \
+	a1-bug.ref.png \
+	a1-bug.image16.ref.png \
+	a1-bug.xlib.ref.png \
 	a1-image-sample.ref.png \
 	a1-image-sample.gl.xfail.png \
 	a1-image-sample.quartz.xfail.png \
