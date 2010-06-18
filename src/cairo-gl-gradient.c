@@ -258,6 +258,7 @@ void
 _cairo_gl_gradient_destroy (cairo_gl_gradient_t *gradient)
 {
     cairo_gl_context_t *ctx;
+    cairo_status_t ignore;
 
     assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&gradient->ref_count));
 
@@ -266,7 +267,7 @@ _cairo_gl_gradient_destroy (cairo_gl_gradient_t *gradient)
 
     if (_cairo_gl_context_acquire (gradient->device, &ctx) == CAIRO_STATUS_SUCCESS) {
         glDeleteTextures (1, &gradient->tex);
-        _cairo_gl_context_release (ctx);
+        ignore = _cairo_gl_context_release (ctx, CAIRO_STATUS_SUCCESS);
     }
 
     free (gradient);

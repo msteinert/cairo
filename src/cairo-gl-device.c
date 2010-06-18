@@ -92,7 +92,7 @@ _gl_flush (void *device)
     glDisable (GL_SCISSOR_TEST);
     glDisable (GL_BLEND);
 
-    return _cairo_gl_context_release (ctx);
+    return _cairo_gl_context_release (ctx, status);
 }
 
 static void

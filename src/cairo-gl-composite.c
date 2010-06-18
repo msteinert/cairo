@@ -57,9 +57,7 @@ _cairo_gl_create_gradient_texture (cairo_gl_surface_t *dst,
 
     status = _cairo_gl_gradient_create (ctx, pattern->n_stops, pattern->stops, gradient);
 
-    _cairo_gl_context_release (ctx);
-
-    return status;
+    return _cairo_gl_context_release (ctx, status);
 }
 
 /**
@@ -994,7 +992,7 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
 
 FAIL:
     if (unlikely (status))
-        _cairo_gl_context_release (ctx);
+        status = _cairo_gl_context_release (ctx, status);
 
     return status;
 }

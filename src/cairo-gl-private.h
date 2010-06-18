@@ -292,16 +292,18 @@ _cairo_gl_context_acquire (cairo_device_t *device,
 }
 
 static cairo_always_inline cairo_warn cairo_status_t
-_cairo_gl_context_release (cairo_gl_context_t *ctx)
+_cairo_gl_context_release (cairo_gl_context_t *ctx, cairo_status_t status)
 {
-    cairo_status_t status;
     GLenum err;
 
     err = _cairo_gl_get_error ();
-    if (unlikely (err))
-	status = _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
-    else
-        status = CAIRO_STATUS_SUCCESS;
+
+    if (unlikely (err)) {
+        cairo_status_t new_status;
+	new_status = _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
+        if (status == CAIRO_STATUS_SUCCESS)
+            status = new_status;
+    }
 
     cairo_device_release (&(ctx)->base);
 
