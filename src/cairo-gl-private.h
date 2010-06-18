@@ -299,7 +299,8 @@ _cairo_gl_context_acquire (cairo_device_t *device,
     if (unlikely (status))
 	return status;
 
-    assert (_cairo_gl_check_error () == CAIRO_STATUS_SUCCESS);
+    /* clear potential previous GL errors */
+    _cairo_gl_get_error ();
 
     *ctx = (cairo_gl_context_t *) device;
     return CAIRO_STATUS_SUCCESS;
