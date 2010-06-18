@@ -87,6 +87,10 @@ _cairo_boilerplate_egl_create_surface (const char		 *name,
     }
 
     eglGetConfigs (gltc->dpy, NULL, 0, &numConfigs);
+    if (numConfigs == 0) {
+	free (gltc);
+	return NULL;
+    }
     configs = xmalloc(sizeof(*configs) *numConfigs);
     eglGetConfigs (gltc->dpy, configs, numConfigs, &numConfigs);
 
