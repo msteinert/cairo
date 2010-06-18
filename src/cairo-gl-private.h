@@ -297,7 +297,7 @@ _cairo_gl_context_acquire (cairo_device_t *device,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_always_inline cairo_status_t
+static cairo_always_inline cairo_warn cairo_status_t
 _cairo_gl_context_release (cairo_gl_context_t *ctx)
 {
     cairo_status_t status;
