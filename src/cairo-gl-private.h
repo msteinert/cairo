@@ -223,15 +223,28 @@ typedef struct _cairo_gl_composite {
 
 cairo_private extern const cairo_surface_backend_t _cairo_gl_surface_backend;
 
+static cairo_always_inline GLenum
+_cairo_gl_get_error (void)
+{
+    GLenum err = glGetError();
+
+    if (unlikely (err))
+        while (glGetError ());
+
+    return err;
+}
+
 static cairo_always_inline cairo_status_t
 _cairo_gl_check_error (void)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_status_t status;
     GLenum err;
 
-    while (unlikely ((err = glGetError ()))) {
+    err = _cairo_gl_get_error ();
+    if (unlikely (err))
 	status = _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
-    }
+    else
+        status = CAIRO_STATUS_SUCCESS;
 
     return status;
 }
