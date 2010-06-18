@@ -234,21 +234,6 @@ _cairo_gl_get_error (void)
     return err;
 }
 
-static cairo_always_inline cairo_status_t
-_cairo_gl_check_error (void)
-{
-    cairo_status_t status;
-    GLenum err;
-
-    err = _cairo_gl_get_error ();
-    if (unlikely (err))
-	status = _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
-    else
-        status = CAIRO_STATUS_SUCCESS;
-
-    return status;
-}
-
 static inline cairo_device_t *
 _cairo_gl_context_create_in_error (cairo_status_t status)
 {
@@ -310,8 +295,14 @@ static cairo_always_inline cairo_warn cairo_status_t
 _cairo_gl_context_release (cairo_gl_context_t *ctx)
 {
     cairo_status_t status;
+    GLenum err;
 
-    status = _cairo_gl_check_error ();
+    err = _cairo_gl_get_error ();
+    if (unlikely (err))
+	status = _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
+    else
+        status = CAIRO_STATUS_SUCCESS;
+
     cairo_device_release (&(ctx)->base);
 
     return status;
