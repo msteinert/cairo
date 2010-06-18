@@ -52,9 +52,6 @@ typedef struct _cairo_glx_context {
     Display *display;
     Window dummy_window;
     GLXContext context;
-
-    GLXContext prev_context;
-    GLXDrawable prev_drawable;
 } cairo_glx_context_t;
 
 typedef struct _cairo_glx_surface {
@@ -69,9 +66,6 @@ _glx_acquire (void *abstract_ctx)
     cairo_glx_context_t *ctx = abstract_ctx;
     GLXDrawable current_drawable;
 
-    ctx->prev_context = glXGetCurrentContext ();
-    ctx->prev_drawable = glXGetCurrentDrawable ();
-
     if (ctx->base.current_target == NULL ||
         _cairo_gl_surface_is_texture (ctx->base.current_target)) {
         current_drawable = ctx->dummy_window;
@@ -80,10 +74,7 @@ _glx_acquire (void *abstract_ctx)
         current_drawable = surface->win;
     }
 
-    if (ctx->prev_context != ctx->context ||
-        (ctx->prev_drawable != current_drawable &&
-         current_drawable != ctx->dummy_window))
-        glXMakeCurrent (ctx->display, current_drawable, ctx->context);
+    glXMakeCurrent (ctx->display, current_drawable, ctx->context);
 }
 
 static void
@@ -101,11 +92,7 @@ _glx_release (void *abstract_ctx)
 {
     cairo_glx_context_t *ctx = abstract_ctx;
 
-    if (ctx->prev_context != glXGetCurrentContext () ||
-        ctx->prev_drawable != glXGetCurrentDrawable ())
-        glXMakeCurrent (ctx->display, 
-                        ctx->prev_drawable,
-                        ctx->prev_context);
+    glXMakeCurrent (ctx->display, None, None);
 }
 
 static void
@@ -199,8 +186,6 @@ cairo_glx_device_create (Display *dpy, GLXContext gl_ctx)
     ctx->display = dpy;
     ctx->dummy_window = dummy;
     ctx->context = gl_ctx;
-    ctx->prev_context = NULL;
-    ctx->prev_drawable = None;
 
     ctx->base.acquire = _glx_acquire;
     ctx->base.release = _glx_release;
