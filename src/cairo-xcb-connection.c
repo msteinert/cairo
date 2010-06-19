@@ -468,7 +468,7 @@ _cairo_xcb_connection_query_dri2 (cairo_xcb_connection_t *connection)
 }
 #endif
 
-static void
+static cairo_status_t
 _device_flush (void *device)
 {
     cairo_xcb_connection_t *connection = device;
@@ -477,7 +477,7 @@ _device_flush (void *device)
 
     status = cairo_device_acquire (&connection->device);
     if (unlikely (status))
-	return;
+	return status;
 
     CAIRO_MUTEX_LOCK (connection->screens_mutex);
     cairo_list_foreach_entry (screen, cairo_xcb_screen_t,
@@ -491,6 +491,7 @@ _device_flush (void *device)
     xcb_flush (connection->xcb_connection);
 
     cairo_device_release (&connection->device);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_bool_t
