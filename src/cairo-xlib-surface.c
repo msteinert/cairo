@@ -52,6 +52,8 @@
 #include "cairo-clip-private.h"
 #include "cairo-error-private.h"
 #include "cairo-scaled-font-private.h"
+#include "cairo-surface-snapshot-private.h"
+#include "cairo-surface-subsurface-private.h"
 #include "cairo-region-private.h"
 
 #include <X11/Xutil.h> /* for XDestroyImage */
@@ -2272,6 +2274,105 @@ _cairo_xlib_surface_acquire_pattern_surfaces (cairo_xlib_display_t       *displa
 }
 
 static cairo_int_status_t
+_cairo_xlib_surface_upload(cairo_xlib_surface_t *surface,
+			   cairo_operator_t op,
+			   const cairo_pattern_t *pattern,
+			   int src_x, int src_y,
+			   int dst_x, int dst_y,
+			   unsigned int width,
+			   unsigned int height,
+			   cairo_region_t *clip_region)
+{
+    cairo_image_surface_t *image;
+    cairo_rectangle_int_t extents;
+    cairo_status_t status;
+    int tx, ty;
+
+    if (pattern->type != CAIRO_PATTERN_TYPE_SURFACE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    image = (cairo_image_surface_t *) ((cairo_surface_pattern_t *) pattern)->surface;
+    if (image->base.type != CAIRO_SURFACE_TYPE_IMAGE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (! (op == CAIRO_OPERATOR_SOURCE ||
+	   (op == CAIRO_OPERATOR_OVER &&
+	    (image->base.content & CAIRO_CONTENT_ALPHA) == 0)))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (image->base.backend->type != CAIRO_SURFACE_TYPE_IMAGE) {
+	if (image->base.backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT) {
+	    image = (cairo_image_surface_t *) ((cairo_surface_snapshot_t *) image)->target;
+	    extents.x = extents.y = 0;
+	    extents.width = image->width;
+	    extents.height = image->height;
+	} else if (image->base.backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE) {
+	    cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) image;
+	    image = (cairo_image_surface_t *) sub->target;
+	    src_x += sub->extents.x;
+	    src_y += sub->extents.y;
+	    extents = sub->extents;
+	} else {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+    } else {
+	extents.x = extents.y = 0;
+	extents.width = image->width;
+	extents.height = image->height;
+    }
+
+    if (image->format == CAIRO_FORMAT_INVALID)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    if (image->depth != surface->depth)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (! _cairo_matrix_is_integer_translation (&pattern->matrix, &tx, &ty))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* XXX for EXTEND_NONE perform unbounded fixups? */
+    if (src_x + tx < extents.x ||
+	src_y + ty < extents.y ||
+	src_x + tx + width  > (unsigned) extents.width ||
+	src_y + ty + height > (unsigned) extents.height)
+    {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    status = cairo_device_acquire (surface->base.device);
+    if (unlikely (status))
+        return status;
+
+    if (clip_region != NULL) {
+	int n, num_rect;
+
+	src_x -= dst_x;
+	src_y -= dst_y;
+
+	num_rect = cairo_region_num_rectangles (clip_region);
+	for (n = 0; n < num_rect; n++) {
+	    cairo_rectangle_int_t rect;
+
+	    cairo_region_get_rectangle (clip_region, n, &rect);
+	    status = _draw_image_surface (surface, image,
+					  rect.x + src_x, rect.x + src_y,
+					  rect.width, rect.height,
+					  rect.x, rect.y);
+	    if (unlikely (status))
+		break;
+	}
+    } else {
+	status = _draw_image_surface (surface, image,
+				      src_x, src_y,
+				      width, height,
+				      dst_x, dst_y);
+    }
+
+    cairo_device_release (surface->base.device);
+
+    return status;
+}
+
+static cairo_int_status_t
 _cairo_xlib_surface_composite (cairo_operator_t		op,
 			       const cairo_pattern_t	*src_pattern,
 			       const cairo_pattern_t	*mask_pattern,
@@ -2306,6 +2407,17 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 	return UNSUPPORTED ("unsupported operation");
 
     X_DEBUG ((display->display, "composite (dst=%x)", (unsigned int) dst->drawable));
+
+    if (mask_pattern == NULL) {
+	/* Can we do a simple upload in-place? */
+	status = _cairo_xlib_surface_upload(dst, op, src_pattern,
+					    src_x, src_y,
+					    dst_x, dst_y,
+					    width, height,
+					    clip_region);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
 
     status = _cairo_xlib_display_acquire (dst-> base.device, &display);
     if (unlikely (status))
