@@ -2613,7 +2613,7 @@ _emit_type42_font (cairo_script_surface_t *surface,
     if (unlikely (buf == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    status = backend->load_truetype_table (scaled_font, 0, 0, buf, NULL);
+    status = backend->load_truetype_table (scaled_font, 0, 0, buf, &size);
     if (unlikely (status)) {
 	free (buf);
 	return status;
