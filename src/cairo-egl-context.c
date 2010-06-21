@@ -48,9 +48,6 @@ typedef struct _cairo_egl_context {
     EGLDisplay display;
     EGLContext context;
 
-    EGLContext prev_context;
-    EGLSurface prev_draw_surface;
-    EGLSurface prev_read_surface;
     EGLSurface dummy_surface;
 } cairo_egl_context_t;
 
@@ -65,10 +62,6 @@ static void
 _egl_acquire (void *abstract_ctx)
 {
     cairo_egl_context_t *ctx = abstract_ctx;
-
-    ctx->prev_context = eglGetCurrentContext ();
-    ctx->prev_draw_surface = eglGetCurrentSurface (EGL_DRAW);
-    ctx->prev_read_surface = eglGetCurrentSurface (EGL_READ);
 
     eglMakeCurrent (ctx->display,
 		    ctx->dummy_surface, ctx->dummy_surface, ctx->context);
