@@ -62,6 +62,15 @@ static void
 _egl_acquire (void *abstract_ctx)
 {
     cairo_egl_context_t *ctx = abstract_ctx;
+    EGLSurface current_surface;
+
+    if (ctx->base.current_target == NULL ||
+        _cairo_gl_surface_is_texture (ctx->base.current_target)) {
+        current_surface = ctx->dummy_surface;
+    } else {
+        cairo_egl_surface_t *surface = (cairo_egl_surface_t *) ctx->base.current_target;
+        current_surface = surface->egl ;
+    }
 
     eglMakeCurrent (ctx->display,
 		    ctx->dummy_surface, ctx->dummy_surface, ctx->context);
