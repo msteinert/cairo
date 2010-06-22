@@ -339,7 +339,8 @@ cairo_gl_surface_create (cairo_device_t		*abstract_device,
 	_cairo_gl_surface_create_scratch (ctx, content, width, height);
     if (unlikely (surface->base.status)) {
 	status = _cairo_gl_context_release (ctx, surface->base.status);
-	return &surface->base;
+	cairo_surface_destroy (&surface->base);
+	return _cairo_surface_create_in_error (status);
     }
 
     /* Cairo surfaces start out initialized to transparent (black) */
