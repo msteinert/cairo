@@ -99,33 +99,20 @@ typedef enum PrivateCGCompositeMode PrivateCGCompositeMode;
 CG_EXTERN void CGContextSetCompositeOperation (CGContextRef, PrivateCGCompositeMode);
 CG_EXTERN void CGContextSetCTM (CGContextRef, CGAffineTransform);
 
-/* We need to work with the 10.3 SDK as well (and 10.3 machines; luckily, 10.3.9
- * has all the stuff we care about, just some of it isn't exported in the SDK.
- */
-#ifndef kCGBitmapByteOrder32Host
-#define USE_10_3_WORKAROUNDS
-#define kCGBitmapAlphaInfoMask 0x1F
-#define kCGBitmapByteOrderMask 0x7000
-#define kCGBitmapByteOrder32Host 0
-
-typedef uint32_t CGBitmapInfo;
-
-/* public in 10.4, present in 10.3.9 */
-CG_EXTERN void CGContextReplacePathWithStrokedPath (CGContextRef);
-CG_EXTERN CGImageRef CGBitmapContextCreateImage (CGContextRef);
-#endif
-
 /* Some of these are present in earlier versions of the OS than where
- * they are public; others are not public at all (CGContextCopyPath,
- * CGContextReplacePathWithClipPath, many of the getters, etc.)
+ * they are public; other are not public at all
  */
-static void (*CGContextClipToMaskPtr) (CGContextRef, CGRect, CGImageRef) = NULL;
+/* public since 10.5 */
 static void (*CGContextDrawTiledImagePtr) (CGContextRef, CGRect, CGImageRef) = NULL;
+
+/* public since 10.6 */
+static CGPathRef (*CGContextCopyPathPtr) (CGContextRef) = NULL;
+static void (*CGContextSetAllowsFontSmoothingPtr) (CGContextRef, bool) = NULL;
+
+/* not yet public */
 static unsigned int (*CGContextGetTypePtr) (CGContextRef) = NULL;
 static void (*CGContextSetShouldAntialiasFontsPtr) (CGContextRef, bool) = NULL;
-static void (*CGContextSetAllowsFontSmoothingPtr) (CGContextRef, bool) = NULL;
 static bool (*CGContextGetAllowsFontSmoothingPtr) (CGContextRef) = NULL;
-static CGPathRef (*CGContextCopyPathPtr) (CGContextRef) = NULL;
 
 static cairo_bool_t _cairo_quartz_symbol_lookup_done = FALSE;
 
@@ -153,7 +140,6 @@ static void quartz_ensure_symbols (void)
     if (likely (_cairo_quartz_symbol_lookup_done))
 	return;
 
-    CGContextClipToMaskPtr = dlsym (RTLD_DEFAULT, "CGContextClipToMask");
     CGContextDrawTiledImagePtr = dlsym (RTLD_DEFAULT, "CGContextDrawTiledImage");
     CGContextGetTypePtr = dlsym (RTLD_DEFAULT, "CGContextGetType");
     CGContextSetShouldAntialiasFontsPtr = dlsym (RTLD_DEFAULT, "CGContextSetShouldAntialiasFonts");
@@ -643,10 +629,6 @@ _cairo_quartz_fixup_unbounded_operation (cairo_quartz_surface_t *surface,
     CGContextRef cgc;
     CGImageRef maskImage;
 
-    /* TODO: handle failure */
-    if (!CGContextClipToMaskPtr)
-	return;
-
     clipBox = CGContextGetClipBoundingBox (surface->cgContext);
     clipBoxRound = CGRectIntegral (clipBox);
 
@@ -740,7 +722,7 @@ _cairo_quartz_fixup_unbounded_operation (cairo_quartz_surface_t *surface,
     CGContextSaveGState (surface->cgContext);
 
     CGContextSetCompositeOperation (surface->cgContext, kPrivateCGCompositeCopy);
-    CGContextClipToMaskPtr (surface->cgContext, clipBoxRound, maskImage);
+    CGContextClipToMask (surface->cgContext, clipBoxRound, maskImage);
     CGImageRelease (maskImage);
 
     /* Finally, clear out the entire clipping region through our mask */
@@ -1407,11 +1389,7 @@ _cairo_quartz_get_image (cairo_quartz_surface_t *surface,
 
 	imageData = (unsigned char *) CGBitmapContextGetData (surface->cgContext);
 
-#ifdef USE_10_3_WORKAROUNDS
-	bitinfo = CGBitmapContextGetAlphaInfo (surface->cgContext);
-#else
 	bitinfo = CGBitmapContextGetBitmapInfo (surface->cgContext);
-#endif
 	stride = CGBitmapContextGetBytesPerRow (surface->cgContext);
 	bpp = CGBitmapContextGetBitsPerPixel (surface->cgContext);
 	bpc = CGBitmapContextGetBitsPerComponent (surface->cgContext);
@@ -2286,7 +2264,7 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
     mask_matrix = CGAffineTransformScale (mask_matrix, 1.0, -1.0);
 
     CGContextConcatCTM (surface->cgContext, mask_matrix);
-    CGContextClipToMaskPtr (surface->cgContext, rect, img);
+    CGContextClipToMask (surface->cgContext, rect, img);
 
     CGContextSetCTM (surface->cgContext, ctm);
 
@@ -2374,23 +2352,11 @@ _cairo_quartz_surface_mask_cg (cairo_quartz_surface_t *surface,
 	return rv;
     }
 
-    /* If we have CGContextClipToMask, we can do more complex masks */
-    if (CGContextClipToMaskPtr) {
-	/* For these, we can skip creating a temporary surface, since we already have one */
-	if (mask->type == CAIRO_PATTERN_TYPE_SURFACE && mask->extend == CAIRO_EXTEND_NONE)
-	    return _cairo_quartz_surface_mask_with_surface (surface, op, source, (cairo_surface_pattern_t *) mask, clip);
+    /* For these, we can skip creating a temporary surface, since we already have one */
+    if (mask->type == CAIRO_PATTERN_TYPE_SURFACE && mask->extend == CAIRO_EXTEND_NONE)
+	return _cairo_quartz_surface_mask_with_surface (surface, op, source, (cairo_surface_pattern_t *) mask, clip);
 
-	return _cairo_quartz_surface_mask_with_generic (surface, op, source, mask, clip);
-    }
-
-    /* So, CGContextClipToMask is not present in 10.3.9, so we're
-     * doomed; if we have imageData, we can do fallback, otherwise
-     * just pretend success.
-     */
-    if (surface->imageData)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_quartz_surface_mask_with_generic (surface, op, source, mask, clip);
 }
 
 static cairo_int_status_t
