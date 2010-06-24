@@ -124,8 +124,6 @@ static bool (*CGContextGetAllowsFontSmoothingPtr) (CGContextRef) = NULL;
 static CGPathRef (*CGContextCopyPathPtr) (CGContextRef) = NULL;
 static void (*CGContextReplacePathWithClipPathPtr) (CGContextRef) = NULL;
 
-static SInt32 _cairo_quartz_osx_version = 0x0;
-
 static cairo_bool_t _cairo_quartz_symbol_lookup_done = FALSE;
 
 /*
@@ -159,11 +157,6 @@ static void quartz_ensure_symbols(void)
     CGContextReplacePathWithClipPathPtr = dlsym(RTLD_DEFAULT, "CGContextReplacePathWithClipPath");
     CGContextGetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextGetAllowsFontSmoothing");
     CGContextSetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextSetAllowsFontSmoothing");
-
-    if (Gestalt(gestaltSystemVersion, &_cairo_quartz_osx_version) != noErr) {
-	// assume 10.4
-	_cairo_quartz_osx_version = 0x1040;
-    }
 
     _cairo_quartz_symbol_lookup_done = TRUE;
 }
