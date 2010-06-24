@@ -136,12 +136,6 @@ static const uint32_t i915_batch_setup[] = {
 	CSB_TCB (6, 6) |
 	CSB_TCB (7, 7),
 
-    _3DSTATE_RASTER_RULES_CMD |
-	ENABLE_POINT_RASTER_RULE | OGL_POINT_RASTER_RULE |
-	ENABLE_LINE_STRIP_PROVOKE_VRTX | LINE_STRIP_PROVOKE_VRTX (1) |
-	ENABLE_TRI_FAN_PROVOKE_VRTX | TRI_FAN_PROVOKE_VRTX (2) |
-	ENABLE_TEXKILL_3D_4D | TEXKILL_4D,
-
     _3DSTATE_MODES_4_CMD | ENABLE_LOGIC_OP_FUNC | LOGIC_OP_FUNC (LOGICOP_COPY),
 
     _3DSTATE_LOAD_STATE_IMMEDIATE_1 |
@@ -165,16 +159,10 @@ static const uint32_t i915_batch_setup[] = {
     S6_COLOR_WRITE_ENABLE,
 
     _3DSTATE_SCISSOR_ENABLE_CMD | DISABLE_SCISSOR_RECT,
-    _3DSTATE_DEPTH_SUBRECT_DISABLE,
 
     /* disable indirect state */
     _3DSTATE_LOAD_INDIRECT,
     0,
-
-    _3DSTATE_STIPPLE,
-    0,
-
-    _3DSTATE_BACKFACE_STENCIL_OPS | BFO_ENABLE_STENCIL_TWO_SIDE,
 };
 
 static const cairo_surface_backend_t i915_surface_backend;
@@ -559,7 +547,7 @@ i915_batch_flush (i915_device_t *device)
 	return CAIRO_STATUS_SUCCESS;
 
     i915_batch_emit_dword (device, MI_BATCH_BUFFER_END);
-    if ((device->batch.used & 1) != (sizeof (device->batch_header) & 4))
+    if ((device->batch.used & 1) != ((sizeof (device->batch_header)>>2) & 1))
 	i915_batch_emit_dword (device, MI_NOOP);
 
     length = (device->batch.used << 2) + sizeof (device->batch_header);
@@ -1091,7 +1079,7 @@ i915_blt (i915_surface_t *src,
     OUT_DWORD (cmd);
     OUT_DWORD (br13);
     OUT_DWORD ((dst_y << 16) | dst_x);
-    OUT_DWORD (((dst_y + height) << 16) | (dst_x + width));
+    OUT_DWORD (((dst_y + height - 1) << 16) | (dst_x + width - 1));
     OUT_RELOC_FENCED (dst, I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER);
     OUT_DWORD ((src_y << 16) | src_x);
     OUT_DWORD (src->intel.drm.stride);
@@ -1198,7 +1186,7 @@ i915_clear_boxes (i915_surface_t *dst,
 	    OUT_DWORD (cmd);
 	    OUT_DWORD (br13);
 	    OUT_DWORD ((y1 << 16) | x1);
-	    OUT_DWORD ((y2 << 16) | x2);
+	    OUT_DWORD (((y2 - 1) << 16) | (x2 - 1));
 	    OUT_RELOC_FENCED (dst, I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER);
 	    OUT_DWORD (clear);
 	}
@@ -1393,7 +1381,7 @@ i915_blt_boxes (i915_surface_t *dst,
 	    OUT_DWORD (cmd);
 	    OUT_DWORD (br13);
 	    OUT_DWORD ((y1 << 16) | x1);
-	    OUT_DWORD ((y2 << 16) | x2);
+	    OUT_DWORD (((y2 - 1) << 16) | (x2 - 1));
 	    OUT_RELOC_FENCED (dst, I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER);
 	    OUT_DWORD (((y1 + ty) << 16) | (x1 + tx));
 	    OUT_DWORD (src->intel.drm.stride);
@@ -1712,8 +1700,8 @@ i915_surface_clear (i915_surface_t *dst)
 	OUT_DWORD (cmd);
 	OUT_DWORD (br13);
 	OUT_DWORD (0);
-	OUT_DWORD ((dst->intel.drm.height << 16) |
-		   dst->intel.drm.width);
+	OUT_DWORD (((dst->intel.drm.height - 1) << 16) |
+		   (dst->intel.drm.width - 1));
 	OUT_RELOC_FENCED (dst,
 			  I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER);
 	OUT_DWORD (clear);

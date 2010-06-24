@@ -705,7 +705,7 @@ struct i915_device {
 
     cairo_list_t image_caches[2];
 
-    uint32_t batch_header[18];
+    uint32_t batch_header[13];
     uint32_t batch_base[I915_BATCH_SIZE / sizeof (uint32_t)];
     uint8_t vbo_base[I915_VBO_SIZE];
 };

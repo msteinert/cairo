@@ -203,8 +203,8 @@
 #define DRAW_YMIN(x)			((x)<<16)
 #define DRAW_XMIN(x)			(x)
 /* Dword 3 */
-#define DRAW_YMAX(x)			((x)<<16)
-#define DRAW_XMAX(x)			(x)
+#define DRAW_YMAX(x)			((x-1)<<16)
+#define DRAW_XMAX(x)			(x-1)
 /* Dword 4 */
 #define DRAW_YORG(x)			((x)<<16)
 #define DRAW_XORG(x)			(x)

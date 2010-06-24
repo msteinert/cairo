@@ -2527,8 +2527,8 @@ i965_emit_composite (i965_device_t *device,
     /* The drawing rectangle clipping is always on.  Set it to values that
      * shouldn't do any clipping.
      */
-    draw_rectangle = DRAW_YMAX (shader->target->intel.drm.height - 1) |
-	             DRAW_XMAX (shader->target->intel.drm.width  - 1);
+    draw_rectangle = DRAW_YMAX (shader->target->intel.drm.height) |
+	             DRAW_XMAX (shader->target->intel.drm.width);
     if (draw_rectangle != device->draw_rectangle) {
 	OUT_BATCH (BRW_3DSTATE_DRAWING_RECTANGLE | 2);
 	OUT_BATCH (0x00000000);	/* ymin, xmin */
@@ -2789,8 +2789,8 @@ i965_clipped_vertices (i965_device_t *device,
 		/* XXX scissor? */
 		OUT_BATCH (BRW_3DSTATE_DRAWING_RECTANGLE | 2);
 		OUT_BATCH (DRAW_YMIN (rect.y) | DRAW_XMIN (rect.x));
-		OUT_BATCH (DRAW_YMAX (rect.y + rect.height - 1) |
-			   DRAW_XMIN (rect.x + rect.width  - 1));
+		OUT_BATCH (DRAW_YMAX (rect.y + rect.height) |
+			   DRAW_XMAX (rect.x + rect.width));
 		OUT_BATCH (0x00000000);	/* yorigin, xorigin */
 
 		OUT_BATCH (BRW_3DPRIMITIVE |
@@ -2826,8 +2826,8 @@ i965_clipped_vertices (i965_device_t *device,
 	    /* XXX scissor? */
 	    OUT_BATCH (BRW_3DSTATE_DRAWING_RECTANGLE | 2);
 	    OUT_BATCH (DRAW_YMIN (rect.y) | DRAW_XMIN (rect.x));
-	    OUT_BATCH (DRAW_YMAX (rect.y + rect.height - 1) |
-		       DRAW_XMIN (rect.x + rect.width  - 1));
+	    OUT_BATCH (DRAW_YMAX (rect.y + rect.height) |
+		       DRAW_XMAX (rect.x + rect.width));
 	    OUT_BATCH (0x00000000);	/* yorigin, xorigin */
 
 	    OUT_BATCH (BRW_3DPRIMITIVE |
