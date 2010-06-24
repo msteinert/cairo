@@ -166,6 +166,9 @@ REFERENCE_IMAGES = \
 	bug-bo-rectangular.ref.png \
 	bug-bo-rectangular.image16.ref.png \
 	bug-bo-rectangular.ps.xfail.png \
+	bug-seams.ref.png \
+	bug-seams.xlib.ref.png \
+	bug-seams.xlib-fallback.ref.png \
 	bilevel-image.ref.png \
 	bitmap-font.ref.png \
 	bitmap-font.rgb24.ref.png \

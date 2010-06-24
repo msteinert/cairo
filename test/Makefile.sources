@@ -12,6 +12,7 @@ test_sources = \
 	big-trap.c					\
 	bilevel-image.c					\
 	bug-bo-rectangular.c				\
+	bug-seams.c					\
 	caps.c						\
 	caps-joins.c					\
 	caps-joins-alpha.c				\
