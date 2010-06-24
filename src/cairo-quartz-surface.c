@@ -2490,6 +2490,7 @@ _cairo_quartz_surface_show_glyphs_cg (void *abstract_surface,
     CGGlyph *cg_glyphs = &glyphs_static[0];
     CGSize *cg_advances = &cg_advances_static[0];
 
+    cairo_rectangle_int_t glyph_extents;
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
     cairo_quartz_action_t action;
@@ -2519,11 +2520,10 @@ _cairo_quartz_surface_show_glyphs_cg (void *abstract_surface,
 
     CGContextSaveGState (surface->cgContext);
 
-    if (_cairo_quartz_source_needs_extents (source))
+    if (_cairo_quartz_source_needs_extents (source) &&
+	!_cairo_scaled_font_glyph_device_extents (scaled_font, glyphs, num_glyphs,
+						  &glyph_extents, NULL))
     {
-        cairo_rectangle_int_t glyph_extents;
-        _cairo_scaled_font_glyph_device_extents (scaled_font, glyphs, num_glyphs,
-                                                 &glyph_extents, NULL);
         action = _cairo_quartz_setup_source (surface, source, &glyph_extents);
     } else {
         action = _cairo_quartz_setup_source (surface, source, NULL);
