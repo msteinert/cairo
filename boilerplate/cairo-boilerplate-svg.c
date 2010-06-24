@@ -43,7 +43,7 @@ static const cairo_user_data_key_t svg_closure_key;
 
 typedef struct _svg_target_closure {
     char    *filename;
-    int	    width, height;
+    int     width, height;
     cairo_surface_t	*target;
 } svg_target_closure_t;
 
@@ -55,8 +55,8 @@ _cairo_boilerplate_svg_create_surface (const char		 *name,
 				       double			  height,
 				       double			  max_width,
 				       double			  max_height,
-				       cairo_boilerplate_mode_t	  mode,
-				       int                        id,
+				       cairo_boilerplate_mode_t   mode,
+				       int			  id,
 				       void			**closure)
 {
     svg_target_closure_t *ptc;
@@ -104,15 +104,15 @@ _cairo_boilerplate_svg_create_surface (const char		 *name,
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_svg11_create_surface (const char		 *name,
-					 cairo_content_t	  content,
-					 double			  width,
-					 double			  height,
-					 double			  max_width,
-					 double			  max_height,
-					 cairo_boilerplate_mode_t	  mode,
-					 int                        id,
-					 void			**closure)
+_cairo_boilerplate_svg11_create_surface (const char		   *name,
+					 cairo_content_t	    content,
+					 double 		    width,
+					 double 		    height,
+					 double 		    max_width,
+					 double 		    max_height,
+					 cairo_boilerplate_mode_t   mode,
+					 int			    id,
+					 void			  **closure)
 {
     /* current default, but be explicit in case the default changes */
     return _cairo_boilerplate_svg_create_surface (name, content,
@@ -124,15 +124,15 @@ _cairo_boilerplate_svg11_create_surface (const char		 *name,
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_svg12_create_surface (const char		 *name,
-					 cairo_content_t	  content,
-					 double			  width,
-					 double			  height,
-					 double			  max_width,
-					 double			  max_height,
-					 cairo_boilerplate_mode_t	  mode,
-					 int                        id,
-					 void			**closure)
+_cairo_boilerplate_svg12_create_surface (const char		   *name,
+					 cairo_content_t	    content,
+					 double 		    width,
+					 double 		    height,
+					 double 		    max_width,
+					 double 		    max_height,
+					 cairo_boilerplate_mode_t   mode,
+					 int			    id,
+					 void			  **closure)
 {
     return _cairo_boilerplate_svg_create_surface (name, content,
 						  CAIRO_SVG_VERSION_1_2,
@@ -143,10 +143,10 @@ _cairo_boilerplate_svg12_create_surface (const char		 *name,
 }
 
 static cairo_status_t
-_cairo_boilerplate_svg_finish_surface (cairo_surface_t		*surface)
+_cairo_boilerplate_svg_finish_surface (cairo_surface_t *surface)
 {
     svg_target_closure_t *ptc = cairo_surface_get_user_data (surface,
-	                                                     &svg_closure_key);
+							     &svg_closure_key);
     cairo_status_t status;
 
     /* Both surface and ptc->target were originally created at the
@@ -187,10 +187,11 @@ _cairo_boilerplate_svg_finish_surface (cairo_surface_t		*surface)
 }
 
 static cairo_status_t
-_cairo_boilerplate_svg_surface_write_to_png (cairo_surface_t *surface, const char *filename)
+_cairo_boilerplate_svg_surface_write_to_png (cairo_surface_t *surface,
+					     const char      *filename)
 {
     svg_target_closure_t *ptc = cairo_surface_get_user_data (surface,
-	                                                     &svg_closure_key);
+							     &svg_closure_key);
     char    command[4096];
     int exitstatus;
 
@@ -219,9 +220,9 @@ _cairo_boilerplate_svg_convert_to_image (cairo_surface_t *surface)
 
 static cairo_surface_t *
 _cairo_boilerplate_svg_get_image_surface (cairo_surface_t *surface,
-					  int page,
-					  int width,
-					  int height)
+					  int		   page,
+					  int		   width,
+					  int		   height)
 {
     cairo_surface_t *image;
 
@@ -252,7 +253,7 @@ _cairo_boilerplate_svg_cleanup (void *closure)
 
 static void
 _cairo_boilerplate_svg_force_fallbacks (cairo_surface_t *abstract_surface,
-	                                unsigned int flags)
+					unsigned int	 flags)
 {
     svg_target_closure_t *ptc = cairo_surface_get_user_data (abstract_surface,
 							     &svg_closure_key);

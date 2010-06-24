@@ -22,7 +22,7 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Authors: Vladimir Vukicevic <vladimir@pobox.com>
- *          Carl Worth <cworth@cworth.org>
+ *	    Carl Worth <cworth@cworth.org>
  */
 
 /* Portions of this file come from liboil:
@@ -91,18 +91,18 @@ oil_profile_stamp_rdtsc (void)
 
 #if defined(__powerpc__) || defined(__PPC__) || defined(__ppc__)
 static inline cairo_perf_ticks_t
-oil_profile_stamp_tb(void)
+oil_profile_stamp_tb (void)
 {
     uint32_t junk;
     uint64_t ts;
 
     __asm__ __volatile__ (
-        "1:     mftbu   %1;"
-        "       mftb    %0+1;"
-        "       mftbu   %0;"
-        "       cmpw    %0,%1;"
-        "       bne     1b" :
-        "=r" (ts), "=r" (junk));
+	"1:     mftbu   %1;"
+	"       mftb    %0+1;"
+	"       mftbu   %0;"
+	"       cmpw    %0,%1;"
+	"       bne     1b" :
+	"=r" (ts), "=r" (junk));
 
     return ts;
 }
@@ -111,7 +111,7 @@ oil_profile_stamp_tb(void)
 
 #if defined(__alpha__)
 static inline cairo_perf_ticks_t
-oil_profile_stamp_alpha(void)
+oil_profile_stamp_alpha (void)
 {
     unsigned int ts;
     __asm__ __volatile__ ("rpcc %0\n" : "=r"(ts));
@@ -122,7 +122,7 @@ oil_profile_stamp_alpha(void)
 
 #if defined(__s390__)
 static cairo_perf_ticks_t
-oil_profile_stamp_s390(void)
+oil_profile_stamp_s390 (void)
 {
     uint64_t ts;
     __asm__ __volatile__ ("STCK %0\n" : : "m" (ts));
@@ -157,8 +157,8 @@ static cairo_perf_timer_t timer;
 static cairo_perf_timer_synchronize_t cairo_perf_timer_synchronize = NULL;
 static void *cairo_perf_timer_synchronize_closure = NULL;
 void
-cairo_perf_timer_set_synchronize (cairo_perf_timer_synchronize_t	 synchronize,
-				  void					*closure)
+cairo_perf_timer_set_synchronize (cairo_perf_timer_synchronize_t  synchronize,
+				  void				 *closure)
 {
     cairo_perf_timer_synchronize = synchronize;
     cairo_perf_timer_synchronize_closure = closure;

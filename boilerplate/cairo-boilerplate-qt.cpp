@@ -53,15 +53,15 @@ _cairo_boilerplate_qt_cleanup (void *closure)
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_qt_create_surface (const char		 *name,
-				      cairo_content_t		  content,
-				      double			  width,
-				      double			  height,
-				      double			  max_width,
-				      double			  max_height,
-				      cairo_boilerplate_mode_t	  mode,
-				      int			  id,
-				      void			**closure)
+_cairo_boilerplate_qt_create_surface (const char		*name,
+				      cairo_content_t		 content,
+				      double			 width,
+				      double			 height,
+				      double			 max_width,
+				      double			 max_height,
+				      cairo_boilerplate_mode_t	 mode,
+				      int			 id,
+				      void		       **closure)
 {
     qt_closure_t *qtc;
 

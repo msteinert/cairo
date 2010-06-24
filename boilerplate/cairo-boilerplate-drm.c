@@ -41,7 +41,7 @@ _cairo_boilerplate_drm_create_surface (const char		 *name,
 				       double			  height,
 				       double			  max_width,
 				       double			  max_height,
-				       cairo_boilerplate_mode_t	  mode,
+				       cairo_boilerplate_mode_t   mode,
 				       int			  id,
 				       void			**closure)
 {

@@ -54,7 +54,8 @@ xmalloc (size_t size)
 }
 
 void *
-xcalloc (size_t nmemb, size_t size)
+xcalloc (size_t nmemb,
+	 size_t size)
 {
     void *buf;
 
@@ -71,7 +72,8 @@ xcalloc (size_t nmemb, size_t size)
 }
 
 void *
-xrealloc (void *buf, size_t size)
+xrealloc (void	 *buf,
+	  size_t  size)
 {
     buf = realloc (buf, size);
     if (buf == NULL && size != 0) {
@@ -83,7 +85,9 @@ xrealloc (void *buf, size_t size)
 }
 
 void
-xasprintf (char **strp, const char *fmt, ...)
+xasprintf (char       **strp,
+	   const char  *fmt,
+			...)
 {
 #ifdef HAVE_VASPRINTF
     va_list va;

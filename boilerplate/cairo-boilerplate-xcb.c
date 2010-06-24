@@ -70,7 +70,9 @@ _cairo_boilerplate_xcb_synchronize (void *closure)
 }
 
 static xcb_render_pictforminfo_t *
-find_depth (xcb_connection_t *connection, int depth, void **formats_out)
+find_depth (xcb_connection_t  *connection,
+	    int 	       depth,
+	    void	     **formats_out)
 {
     xcb_render_query_pict_formats_reply_t *formats;
     xcb_render_query_pict_formats_cookie_t cookie;
@@ -108,8 +110,8 @@ _cairo_boilerplate_xcb_create_surface (const char		 *name,
 				       double			  height,
 				       double			  max_width,
 				       double			  max_height,
-				       cairo_boilerplate_mode_t	  mode,
-				       int                        id,
+				       cairo_boilerplate_mode_t   mode,
+				       int			  id,
 				       void			**closure)
 {
     xcb_screen_t *root;
@@ -194,7 +196,8 @@ _cairo_boilerplate_xcb_create_surface (const char		 *name,
 }
 
 static xcb_visualtype_t *
-lookup_visual (xcb_screen_t *s, xcb_visualid_t visual)
+lookup_visual (xcb_screen_t   *s,
+	       xcb_visualid_t  visual)
 {
     xcb_depth_iterator_t d;
 
@@ -211,15 +214,15 @@ lookup_visual (xcb_screen_t *s, xcb_visualid_t visual)
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_xcb_create_window (const char		 *name,
-				      cairo_content_t		  content,
-				      double			  width,
-				      double			  height,
-				      double			  max_width,
-				      double			  max_height,
-				      cairo_boilerplate_mode_t	  mode,
-				      int                        id,
-				      void			**closure)
+_cairo_boilerplate_xcb_create_window (const char		*name,
+				      cairo_content_t		 content,
+				      double			 width,
+				      double			 height,
+				      double			 max_width,
+				      double			 max_height,
+				      cairo_boilerplate_mode_t	 mode,
+				      int			 id,
+				      void		       **closure)
 {
     xcb_target_closure_t *xtc;
     xcb_connection_t *c;
@@ -282,15 +285,15 @@ _cairo_boilerplate_xcb_create_window (const char		 *name,
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_xcb_create_window_db (const char		 *name,
-					 cairo_content_t	  content,
-					 double			  width,
-					 double			  height,
-					 double			  max_width,
-					 double			  max_height,
-					 cairo_boilerplate_mode_t mode,
-					 int                      id,
-					 void			**closure)
+_cairo_boilerplate_xcb_create_window_db (const char		   *name,
+					 cairo_content_t	    content,
+					 double 		    width,
+					 double 		    height,
+					 double 		    max_width,
+					 double 		    max_height,
+					 cairo_boilerplate_mode_t   mode,
+					 int			    id,
+					 void			  **closure)
 {
     xcb_target_closure_t *xtc;
     xcb_connection_t *c;
@@ -354,15 +357,15 @@ _cairo_boilerplate_xcb_create_window_db (const char		 *name,
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_xcb_create_render_0_0 (const char		 *name,
-					  cairo_content_t	  content,
-					  double		  width,
-					  double		  height,
-					  double		  max_width,
-					  double		  max_height,
-					  cairo_boilerplate_mode_t  mode,
-					  int                       id,
-					  void			**closure)
+_cairo_boilerplate_xcb_create_render_0_0 (const char		    *name,
+					  cairo_content_t	     content,
+					  double		     width,
+					  double		     height,
+					  double		     max_width,
+					  double		     max_height,
+					  cairo_boilerplate_mode_t   mode,
+					  int			     id,
+					  void			   **closure)
 {
     xcb_screen_t *root;
     xcb_target_closure_t *xtc;
@@ -463,15 +466,15 @@ _cairo_boilerplate_xcb_create_render_0_0 (const char		 *name,
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_xcb_create_fallback (const char		 *name,
-					cairo_content_t		  content,
-					double			  width,
-					double			  height,
-					double			  max_width,
-					double			  max_height,
-					cairo_boilerplate_mode_t  mode,
-					int                       id,
-					void			**closure)
+_cairo_boilerplate_xcb_create_fallback (const char		  *name,
+					cairo_content_t 	   content,
+					double			   width,
+					double			   height,
+					double			   max_width,
+					double			   max_height,
+					cairo_boilerplate_mode_t   mode,
+					int			   id,
+					void			 **closure)
 {
     xcb_target_closure_t *xtc;
     xcb_connection_t *c;
@@ -553,7 +556,7 @@ _cairo_boilerplate_xcb_create_fallback (const char		 *name,
 }
 
 static cairo_status_t
-_cairo_boilerplate_xcb_finish_surface (cairo_surface_t		*surface)
+_cairo_boilerplate_xcb_finish_surface (cairo_surface_t *surface)
 {
     xcb_target_closure_t *xtc = cairo_surface_get_user_data (surface,
 							     &xcb_closure_key);

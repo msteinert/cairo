@@ -23,7 +23,7 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Authors: Vladimir Vukicevic <vladimir@pobox.com>
- *          Carl Worth <cworth@cworth.org>
+ *	    Carl Worth <cworth@cworth.org>
  */
 
 #define _GNU_SOURCE 1	/* for sched_getaffinity() */
@@ -50,8 +50,8 @@
 
 #define CAIRO_PERF_ITERATIONS_DEFAULT		100
 #define CAIRO_PERF_LOW_STD_DEV			0.03
-#define CAIRO_PERF_STABLE_STD_DEV_COUNT		5
-#define CAIRO_PERF_ITERATION_MS_DEFAULT		2000
+#define CAIRO_PERF_STABLE_STD_DEV_COUNT 	5
+#define CAIRO_PERF_ITERATION_MS_DEFAULT 	2000
 #define CAIRO_PERF_ITERATION_MS_FAST		5
 
 typedef struct _cairo_perf_case {
@@ -63,7 +63,8 @@ typedef struct _cairo_perf_case {
 const cairo_perf_case_t perf_cases[];
 
 static const char *
-_content_to_string (cairo_content_t content, cairo_bool_t similar)
+_content_to_string (cairo_content_t content,
+		    cairo_bool_t    similar)
 {
     switch (content|similar) {
     case CAIRO_CONTENT_COLOR:
@@ -100,9 +101,9 @@ cairo_perf_has_similar (cairo_perf_t *perf)
 }
 
 cairo_bool_t
-cairo_perf_can_run (cairo_perf_t	*perf,
-		    const char		*name,
-		    cairo_bool_t	*is_explicit)
+cairo_perf_can_run (cairo_perf_t *perf,
+		    const char	 *name,
+		    cairo_bool_t *is_explicit)
 {
     unsigned int i;
 
@@ -124,8 +125,8 @@ cairo_perf_can_run (cairo_perf_t	*perf,
 }
 
 static unsigned
-cairo_perf_calibrate (cairo_perf_t *perf,
-		      cairo_perf_func_t	 perf_func)
+cairo_perf_calibrate (cairo_perf_t	*perf,
+		      cairo_perf_func_t  perf_func)
 {
     cairo_perf_ticks_t calibration0, calibration;
     unsigned loops, min_loops;
@@ -162,10 +163,10 @@ cairo_perf_calibrate (cairo_perf_t *perf,
 }
 
 void
-cairo_perf_run (cairo_perf_t		*perf,
-		const char		*name,
-		cairo_perf_func_t	 perf_func,
-		cairo_count_func_t	 count_func)
+cairo_perf_run (cairo_perf_t	   *perf,
+		const char	   *name,
+		cairo_perf_func_t   perf_func,
+		cairo_count_func_t  count_func)
 {
     static cairo_bool_t first_run = TRUE;
     unsigned int i, similar, has_similar;
@@ -231,7 +232,7 @@ cairo_perf_run (cairo_perf_t		*perf,
 	cairo_perf_yield ();
 	if (similar)
 	    cairo_push_group_with_content (perf->cr,
-		                           cairo_boilerplate_content (perf->target->content));
+					   cairo_boilerplate_content (perf->target->content));
 	perf_func (perf->cr, perf->size, perf->size, 1);
 	loops = cairo_perf_calibrate (perf, perf_func);
 	if (similar)
@@ -242,7 +243,7 @@ cairo_perf_run (cairo_perf_t		*perf,
 	    cairo_perf_yield ();
 	    if (similar)
 		cairo_push_group_with_content (perf->cr,
-			                       cairo_boilerplate_content (perf->target->content));
+					       cairo_boilerplate_content (perf->target->content));
 	    times[i] = perf_func (perf->cr, perf->size, perf->size, loops) / loops;
 	    if (similar)
 		cairo_pattern_destroy (cairo_pop_group (perf->cr));
@@ -320,7 +321,9 @@ usage (const char *argv0)
 }
 
 static void
-parse_options (cairo_perf_t *perf, int argc, char *argv[])
+parse_options (cairo_perf_t *perf,
+	       int	     argc,
+	       char	    *argv[])
 {
     int c;
     const char *iters;
@@ -395,7 +398,7 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
 }
 
 static int 
-check_cpu_affinity(void)
+check_cpu_affinity (void)
 {
 #ifdef HAVE_SCHED_GETAFFINITY
 
@@ -403,27 +406,27 @@ check_cpu_affinity(void)
     int i, cpu_count;
 
     if (sched_getaffinity(0, sizeof(affinity), &affinity)) {
-        perror("sched_getaffinity");
-        return -1;
+	perror("sched_getaffinity");
+	return -1;
     }
 
     for(i = 0, cpu_count = 0; i < CPU_SETSIZE; ++i) {
-        if (CPU_ISSET(i, &affinity))
-            ++cpu_count;
+	if (CPU_ISSET(i, &affinity))
+	    ++cpu_count;
     }
 
     if (cpu_count > 1) {
-        fputs(
-            "WARNING: cairo-perf has not been bound to a single CPU.\n", 
-            stderr);
-        return -1;
+	fputs(
+	    "WARNING: cairo-perf has not been bound to a single CPU.\n",
+	    stderr);
+	return -1;
     }
 
     return 0;
 #else
     fputs(
-        "WARNING: Cannot check CPU affinity for this platform.\n", 
-        stderr);
+	"WARNING: Cannot check CPU affinity for this platform.\n",
+	stderr);
     return -1;
 #endif
 }
@@ -443,7 +446,8 @@ cairo_perf_fini (cairo_perf_t *perf)
 
 
 int
-main (int argc, char *argv[])
+main (int   argc,
+      char *argv[])
 {
     int i, j;
     cairo_perf_t perf;
@@ -452,23 +456,23 @@ main (int argc, char *argv[])
     parse_options (&perf, argc, argv);
 
     if (check_cpu_affinity()) {
-        fputs(
-            "NOTICE: cairo-perf and the X server should be bound to CPUs (either the same\n"
-            "or separate) on SMP systems. Not doing so causes random results when the X\n"
-            "server is moved to or from cairo-perf's CPU during the benchmarks:\n"
-            "\n"
-            "    $ sudo taskset -cp 0 $(pidof X)\n"
-            "    $ taskset -cp 1 $$\n"
-            "\n"
-            "See taskset(1) for information about changing CPU affinity.\n",
-            stderr);
+	fputs(
+	    "NOTICE: cairo-perf and the X server should be bound to CPUs (either the same\n"
+	    "or separate) on SMP systems. Not doing so causes random results when the X\n"
+	    "server is moved to or from cairo-perf's CPU during the benchmarks:\n"
+	    "\n"
+	    "    $ sudo taskset -cp 0 $(pidof X)\n"
+	    "    $ taskset -cp 1 $$\n"
+	    "\n"
+	    "See taskset(1) for information about changing CPU affinity.\n",
+	    stderr);
     }
 
     perf.targets = cairo_boilerplate_get_targets (&perf.num_targets, NULL);
     perf.times = xmalloc (perf.iterations * sizeof (cairo_perf_ticks_t));
 
     for (i = 0; i < perf.num_targets; i++) {
-        const cairo_boilerplate_target_t *target = perf.targets[i];
+	const cairo_boilerplate_target_t *target = perf.targets[i];
 
 	if (! target->is_measurable)
 	    continue;

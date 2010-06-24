@@ -37,15 +37,15 @@ typedef struct _script_target_closure {
 } script_target_closure_t;
 
 static cairo_surface_t *
-_cairo_boilerplate_script_create_surface (const char		 *name,
-					  cairo_content_t	  content,
-					  double			  width,
-					  double			  height,
-					  double			  max_width,
-					  double			  max_height,
-					  cairo_boilerplate_mode_t	  mode,
-					  int                        id,
-					  void			**closure)
+_cairo_boilerplate_script_create_surface (const char		    *name,
+					  cairo_content_t	     content,
+					  double		     width,
+					  double		     height,
+					  double		     max_width,
+					  double		     max_height,
+					  cairo_boilerplate_mode_t   mode,
+					  int			     id,
+					  void			   **closure)
 {
     script_target_closure_t *ptc;
     cairo_device_t *ctx;
@@ -78,7 +78,7 @@ _cairo_boilerplate_script_create_surface (const char		 *name,
 }
 
 static cairo_status_t
-_cairo_boilerplate_script_finish_surface (cairo_surface_t		*surface)
+_cairo_boilerplate_script_finish_surface (cairo_surface_t *surface)
 {
     cairo_surface_finish (surface);
     return cairo_surface_status (surface);
@@ -86,14 +86,14 @@ _cairo_boilerplate_script_finish_surface (cairo_surface_t		*surface)
 
 static cairo_status_t
 _cairo_boilerplate_script_surface_write_to_png (cairo_surface_t *surface,
-						const char *filename)
+						const char	*filename)
 {
     return CAIRO_STATUS_WRITE_ERROR;
 }
 
 static cairo_surface_t *
 _cairo_boilerplate_script_convert_to_image (cairo_surface_t *surface,
-					    int page)
+					    int 	     page)
 {
     script_target_closure_t *ptc = cairo_surface_get_user_data (surface,
 								&script_closure_key);
@@ -102,9 +102,9 @@ _cairo_boilerplate_script_convert_to_image (cairo_surface_t *surface,
 
 static cairo_surface_t *
 _cairo_boilerplate_script_get_image_surface (cairo_surface_t *surface,
-					     int page,
-					     int width,
-					     int height)
+					     int	      page,
+					     int	      width,
+					     int	      height)
 {
     cairo_surface_t *image;
 

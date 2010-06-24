@@ -90,22 +90,22 @@ public:
 
     void ReadyToRun()
     {
-        release_sem(init);
+	release_sem(init);
     }
 
     static int32 Main(void *args)
     {
-        nsBeOSApp *app = new nsBeOSApp( (sem_id)args );
-        if(app == NULL)
-            return B_ERROR;
-        return app->Run();
+	nsBeOSApp *app = new nsBeOSApp( (sem_id)args );
+	if(app == NULL)
+	    return B_ERROR;
+	return app->Run();
     }
 
 private:
 
     const char *GetAppSig()
     {
-        return "application/x-vnd.cairo-test-app";
+	return "application/x-vnd.cairo-test-app";
     }
 
     sem_id init;
@@ -126,7 +126,7 @@ AppRunner::AppRunner()
     sem_id initsem = create_sem(0, "Cairo BApplication init");
     if (initsem < B_OK) {
 	fprintf (stderr, "Error creating BeOS initialization semaphore\n");
-        return;
+	return;
     }
 
     thread_id tid = spawn_thread(nsBeOSApp::Main, "Cairo/BeOS test", B_NORMAL_PRIORITY, (void *)initsem);
@@ -165,12 +165,12 @@ struct beos_boilerplate_closure {
 
 // Test a real window
 static cairo_surface_t *
-_cairo_boilerplate_beos_create_surface (const char			 *name,
-					cairo_content_t			  content,
-					double				  width,
-					double				  height,
-					cairo_boilerplate_mode_t	  mode,
-					void				**closure)
+_cairo_boilerplate_beos_create_surface (const char		  *name,
+					cairo_content_t 	   content,
+					double			   width,
+					double			   height,
+					cairo_boilerplate_mode_t   mode,
+					void			 **closure)
 {
     float right = width ? width - 1 : 0;
     float bottom = height ? height - 1 : 0;
@@ -188,7 +188,7 @@ _cairo_boilerplate_beos_create_surface (const char			 *name,
 }
 
 static void
-_cairo_boilerplate_beos_cleanup (void* closure)
+_cairo_boilerplate_beos_cleanup (void *closure)
 {
     beos_boilerplate_closure* bclosure = reinterpret_cast<beos_boilerplate_closure*>(closure);
 
@@ -200,12 +200,12 @@ _cairo_boilerplate_beos_cleanup (void* closure)
 
 // Test a bitmap
 static cairo_surface_t *
-_cairo_boilerplate_beos_create_surface_for_bitmap (const char			 *name,
-						   cairo_content_t		  content,
-						   double				  width,
-						   double				  height,
-						   cairo_boilerplate_mode_t	  mode,
-						   void				**closure)
+_cairo_boilerplate_beos_create_surface_for_bitmap (const char		     *name,
+						   cairo_content_t	      content,
+						   double		      width,
+						   double		      height,
+						   cairo_boilerplate_mode_t   mode,
+						   void 		    **closure)
 {
     BRect rect(0.0, 0.0, width - 1, height - 1);
     color_space beosformat = (content == CAIRO_CONTENT_COLOR_ALPHA) ? B_RGBA32
@@ -224,7 +224,7 @@ _cairo_boilerplate_beos_create_surface_for_bitmap (const char			 *name,
 }
 
 static void
-_cairo_boilerplate_beos_cleanup_bitmap (void* closure)
+_cairo_boilerplate_beos_cleanup_bitmap (void *closure)
 {
     beos_boilerplate_closure* bclosure = reinterpret_cast<beos_boilerplate_closure*>(closure);
 

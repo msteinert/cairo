@@ -71,15 +71,15 @@ _cairo_boilerplate_vg_cleanup_glx (void *closure)
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_vg_create_surface_glx (const char	*name,
-					  cairo_content_t	 content,
-					  double		 width,
-					  double		 height,
-					  double		 max_width,
-					  double		 max_height,
-					  cairo_boilerplate_mode_t mode,
-					  int		 id,
-					  void		**closure)
+_cairo_boilerplate_vg_create_surface_glx (const char		    *name,
+					  cairo_content_t	     content,
+					  double		     width,
+					  double		     height,
+					  double		     max_width,
+					  double		     max_height,
+					  cairo_boilerplate_mode_t   mode,
+					  int			     id,
+					  void			   **closure)
 {
     int rgba_attribs[] = {
 	GLX_RGBA,
@@ -200,15 +200,15 @@ _cairo_boilerplate_vg_cleanup_egl (void *closure)
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_vg_create_surface_egl (const char	*name,
-					  cairo_content_t	 content,
-					  double		 width,
-					  double		 height,
-					  double		 max_width,
-					  double		 max_height,
-					  cairo_boilerplate_mode_t mode,
-					  int		 id,
-					  void		**closure)
+_cairo_boilerplate_vg_create_surface_egl (const char		    *name,
+					  cairo_content_t	     content,
+					  double		     width,
+					  double		     height,
+					  double		     max_width,
+					  double		     max_height,
+					  cairo_boilerplate_mode_t   mode,
+					  int			     id,
+					  void			   **closure)
 {
     int rgba_attribs[] = {
 	EGL_RED_SIZE, 8,

@@ -22,7 +22,7 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Authors: Vladimir Vukicevic <vladimir@pobox.com>
- *          Carl Worth <cworth@cworth.org>
+ *	    Carl Worth <cworth@cworth.org>
  */
 
 #ifndef _CAIRO_PERF_H_
@@ -53,8 +53,8 @@ typedef void
 (*cairo_perf_timer_synchronize_t) (void *closure);
 
 void
-cairo_perf_timer_set_synchronize (cairo_perf_timer_synchronize_t	 synchronize,
-				  void					*closure);
+cairo_perf_timer_set_synchronize (cairo_perf_timer_synchronize_t  synchronize,
+				  void				 *closure);
 
 cairo_perf_ticks_t
 cairo_perf_timer_elapsed (void);
@@ -103,21 +103,21 @@ typedef double
 (*cairo_count_func_t) (cairo_t *cr, int width, int height);
 
 cairo_bool_t
-cairo_perf_can_run (cairo_perf_t	*perf,
-		    const char		*name,
-		    cairo_bool_t	*is_explicit);
+cairo_perf_can_run (cairo_perf_t *perf,
+		    const char	 *name,
+		    cairo_bool_t *is_explicit);
 
 void
-cairo_perf_run (cairo_perf_t		*perf,
-		const char		*name,
-		cairo_perf_func_t	 perf_func,
-		cairo_count_func_t	 count_func);
+cairo_perf_run (cairo_perf_t	   *perf,
+		const char	   *name,
+		cairo_perf_func_t   perf_func,
+		cairo_count_func_t  count_func);
 
 void
-cairo_perf_cover_sources_and_operators (cairo_perf_t		*perf,
-					const char		*name,
-					cairo_perf_func_t	 perf_func,
-					cairo_count_func_t	 count_func);
+cairo_perf_cover_sources_and_operators (cairo_perf_t	   *perf,
+					const char	   *name,
+					cairo_perf_func_t   perf_func,
+					cairo_count_func_t  count_func);
 
 /* reporter convenience routines */
 
@@ -164,18 +164,20 @@ typedef enum {
 
 void
 cairo_perf_report_load (cairo_perf_report_t *report,
-	                const char *filename,
+			const char *filename,
 			int (*cmp) (const void *, const void *));
 
 void
 cairo_perf_report_sort_and_compute_stats (cairo_perf_report_t *report,
-	                                  int (*cmp) (const void *, const void *));
+					  int (*cmp) (const void *, const void *));
 
 int
-test_report_cmp_backend_then_name (const void *a, const void *b);
+test_report_cmp_backend_then_name (const void *a,
+				   const void *b);
 
 int
-test_report_cmp_name (const void *a, const void *b);
+test_report_cmp_name (const void *a,
+		      const void *b);
 
 #define CAIRO_PERF_DECL(func) void (func) (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 

@@ -67,15 +67,15 @@ _cairo_boilerplate_gl_cleanup (void *closure)
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_gl_create_surface (const char		 *name,
-				      cairo_content_t		  content,
-				      double			  width,
-				      double			  height,
-				      double			  max_width,
-				      double			  max_height,
-				      cairo_boilerplate_mode_t	  mode,
-				      int			  id,
-				      void			**closure)
+_cairo_boilerplate_gl_create_surface (const char		*name,
+				      cairo_content_t		 content,
+				      double			 width,
+				      double			 height,
+				      double			 max_width,
+				      double			 max_height,
+				      cairo_boilerplate_mode_t	 mode,
+				      int			 id,
+				      void		       **closure)
 {
     int rgba_attribs[] = { GLX_RGBA,
 			   GLX_RED_SIZE, 1,
@@ -135,7 +135,7 @@ _cairo_boilerplate_gl_create_surface (const char		 *name,
 
     gltc->surface = surface = cairo_gl_surface_create (gltc->device,
 						       content,
-					               ceil (width),
+						       ceil (width),
 						       ceil (height));
     if (cairo_surface_status (surface))
 	_cairo_boilerplate_gl_cleanup (gltc);
@@ -144,15 +144,15 @@ _cairo_boilerplate_gl_create_surface (const char		 *name,
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_gl_create_window (const char			 *name,
-				     cairo_content_t		  content,
-				     double			  width,
-				     double			  height,
-				     double			  max_width,
-				     double			  max_height,
-				     cairo_boilerplate_mode_t	  mode,
-				     int			  id,
-				     void			**closure)
+_cairo_boilerplate_gl_create_window (const char 	       *name,
+				     cairo_content_t		content,
+				     double			width,
+				     double			height,
+				     double			max_width,
+				     double			max_height,
+				     cairo_boilerplate_mode_t	mode,
+				     int			id,
+				     void		      **closure)
 {
     int rgba_attribs[] = { GLX_RGBA,
 			   GLX_RED_SIZE, 1,
@@ -225,15 +225,15 @@ _cairo_boilerplate_gl_create_window (const char			 *name,
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_gl_create_window_db (const char		 *name,
-					cairo_content_t		  content,
-					double			  width,
-					double			  height,
-					double			  max_width,
-					double			  max_height,
-					cairo_boilerplate_mode_t  mode,
-					int			  id,
-					void			**closure)
+_cairo_boilerplate_gl_create_window_db (const char		  *name,
+					cairo_content_t 	   content,
+					double			   width,
+					double			   height,
+					double			   max_width,
+					double			   max_height,
+					cairo_boilerplate_mode_t   mode,
+					int			   id,
+					void			 **closure)
 {
     int rgba_attribs[] = { GLX_RGBA,
 			   GLX_RED_SIZE, 1,
@@ -311,7 +311,7 @@ _cairo_boilerplate_gl_create_window_db (const char		 *name,
 }
 
 static cairo_status_t
-_cairo_boilerplate_gl_finish_window (cairo_surface_t		*surface)
+_cairo_boilerplate_gl_finish_window (cairo_surface_t *surface)
 {
     gl_target_closure_t *gltc = cairo_surface_get_user_data (surface,
 							     &gl_closure_key);
@@ -339,7 +339,7 @@ _cairo_boilerplate_gl_synchronize (void *closure)
     gl_target_closure_t *gltc = closure;
 
     if (cairo_device_acquire (gltc->device))
-        return;
+	return;
 
     glFinish ();
 

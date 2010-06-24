@@ -69,10 +69,10 @@ _cairo_boilerplate_xlib_synchronize (void *closure)
 }
 
 static cairo_bool_t
-_cairo_boilerplate_xlib_check_screen_size (Display	*dpy,
-	                                   int		 screen,
-					   int		 width,
-					   int		 height)
+_cairo_boilerplate_xlib_check_screen_size (Display *dpy,
+					   int	    screen,
+					   int	    width,
+					   int	    height)
 {
     Screen *scr = XScreenOfDisplay (dpy, screen);
     return width <= WidthOfScreen (scr) && height <= HeightOfScreen (scr);
@@ -91,11 +91,11 @@ _cairo_boilerplate_xlib_check_screen_size (Display	*dpy,
  * For obvious reasons, we don't use XSynchronize.
  */
 static cairo_surface_t *
-_cairo_boilerplate_xlib_test_create_surface (Display			*dpy,
-					     cairo_content_t		 content,
-					     int			 width,
-					     int			 height,
-					     xlib_target_closure_t	*xtc)
+_cairo_boilerplate_xlib_test_create_surface (Display		   *dpy,
+					     cairo_content_t	    content,
+					     int		    width,
+					     int		    height,
+					     xlib_target_closure_t *xtc)
 {
     XRenderPictFormat *xrender_format;
 
@@ -111,7 +111,7 @@ _cairo_boilerplate_xlib_test_create_surface (Display			*dpy,
      * for each test even if the server does have the Render
      * extension. That would probably be through another
      * cairo_boilerplate_target which would use an extended version of
-     * cairo_test_xlib_disable_render.  */
+     * cairo_test_xlib_disable_render.	*/
     switch (content) {
     case CAIRO_CONTENT_COLOR_ALPHA:
 	xrender_format = XRenderFindStandardFormat (dpy, PictStandardARGB32);
@@ -140,11 +140,11 @@ _cairo_boilerplate_xlib_test_create_surface (Display			*dpy,
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_xlib_perf_create_surface (Display			*dpy,
-					     cairo_content_t		 content,
-					     int			 width,
-					     int			 height,
-					     xlib_target_closure_t	*xtc)
+_cairo_boilerplate_xlib_perf_create_surface (Display		   *dpy,
+					     cairo_content_t	    content,
+					     int		    width,
+					     int		    height,
+					     xlib_target_closure_t *xtc)
 {
     XSetWindowAttributes attr;
     XRenderPictFormat *xrender_format;
@@ -165,8 +165,8 @@ _cairo_boilerplate_xlib_perf_create_surface (Display			*dpy,
 
     case CAIRO_CONTENT_COLOR:
 	if (! _cairo_boilerplate_xlib_check_screen_size (dpy,
-		                                         DefaultScreen (dpy),
-		                                         width, height)) {
+							 DefaultScreen (dpy),
+							 width, height)) {
 	    CAIRO_BOILERPLATE_DEBUG (("Surface is larger than the Screen.\n"));
 	    return NULL;
 	}
@@ -199,15 +199,15 @@ _cairo_boilerplate_xlib_perf_create_surface (Display			*dpy,
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_xlib_create_surface (const char			 *name,
-					cairo_content_t			  content,
-					double				  width,
-					double				  height,
-					double				  max_width,
-					double				  max_height,
-					cairo_boilerplate_mode_t	  mode,
-					int                               id,
-					void				**closure)
+_cairo_boilerplate_xlib_create_surface (const char		  *name,
+					cairo_content_t 	   content,
+					double			   width,
+					double			   height,
+					double			   max_width,
+					double			   max_height,
+					cairo_boilerplate_mode_t   mode,
+					int			   id,
+					void			 **closure)
 {
     xlib_target_closure_t *xtc;
     Display *dpy;
@@ -242,15 +242,15 @@ _cairo_boilerplate_xlib_create_surface (const char			 *name,
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_xlib_window_create_surface (const char			 *name,
+_cairo_boilerplate_xlib_window_create_surface (const char		 *name,
 					       cairo_content_t		  content,
-					       double				  width,
-					       double				  height,
-					       double				  max_width,
-					       double				  max_height,
-					       cairo_boilerplate_mode_t	  mode,
-					       int				  id,
-					       void				**closure)
+					       double			  width,
+					       double			  height,
+					       double			  max_width,
+					       double			  max_height,
+					       cairo_boilerplate_mode_t   mode,
+					       int			  id,
+					       void			**closure)
 {
     xlib_target_closure_t *xtc;
     Display *dpy;
@@ -293,7 +293,7 @@ _cairo_boilerplate_xlib_window_create_surface (const char			 *name,
 
     screen = DefaultScreen (dpy);
     if (! _cairo_boilerplate_xlib_check_screen_size (dpy, screen,
-		                                     width, height)) {
+						     width, height)) {
 	CAIRO_BOILERPLATE_DEBUG (("Surface is larger than the Screen.\n"));
 	XCloseDisplay (dpy);
 	free (xtc);
@@ -384,15 +384,15 @@ cairo_boilerplate_xlib_surface_disable_render (cairo_surface_t *abstract_surface
  * cairo-xlib-surface.c
  */
 static cairo_surface_t *
-_cairo_boilerplate_xlib_fallback_create_surface (const char			 *name,
-						 cairo_content_t		  content,
-						 double				  width,
-						 double				  height,
-						 double				  max_width,
-						 double				  max_height,
-						 cairo_boilerplate_mode_t	  mode,
-						 int				  id,
-						 void				**closure)
+_cairo_boilerplate_xlib_fallback_create_surface (const char		   *name,
+						 cairo_content_t	    content,
+						 double 		    width,
+						 double 		    height,
+						 double 		    max_width,
+						 double 		    max_height,
+						 cairo_boilerplate_mode_t   mode,
+						 int			    id,
+						 void			  **closure)
 {
     xlib_target_closure_t *xtc;
     Display *dpy;
@@ -435,7 +435,7 @@ _cairo_boilerplate_xlib_fallback_create_surface (const char			 *name,
 
     screen = DefaultScreen (dpy);
     if (! _cairo_boilerplate_xlib_check_screen_size (dpy, screen,
-		                                     width, height)) {
+						     width, height)) {
 	CAIRO_BOILERPLATE_DEBUG (("Surface is larger than the Screen.\n"));
 	XCloseDisplay (dpy);
 	free (xtc);

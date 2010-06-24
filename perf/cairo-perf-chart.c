@@ -24,7 +24,7 @@
  * SOFTWARE.
  *
  * Authors: Carl Worth <cworth@cworth.org>
- *          Chris Wilson <chris@chris-wilson.co.uk>
+ *	    Chris Wilson <chris@chris-wilson.co.uk>
  */
 
 #include "cairo-perf.h"
@@ -72,7 +72,8 @@ to_factor (double x)
 }
 
 static int
-_double_cmp (const void *_a, const void *_b)
+_double_cmp (const void *_a,
+	     const void *_b)
 {
     const double *a = _a;
     const double *b = _b;
@@ -85,8 +86,10 @@ _double_cmp (const void *_a, const void *_b)
 }
 
 static void
-trim_outliers (double *values, int num_values,
-	       double *min, double *max)
+trim_outliers (double *values,
+	       int     num_values,
+	       double *min,
+	       double *max)
 {
     double q1, q3, iqr;
     double outlier_min, outlier_max;
@@ -231,7 +234,10 @@ find_ranges (struct chart *chart)
 
 #define SET_COLOR(C, R, G, B) (C)->red = (R), (C)->green = (G), (C)->blue = (B)
 static void
-hsv_to_rgb (double h, double s, double v, struct color *color)
+hsv_to_rgb (double	  h,
+	    double	  s,
+	    double	  v,
+	    struct color *color)
 {
     double m, n, f;
     int i;
@@ -279,7 +285,8 @@ static void set_report_color (struct chart *chart, int report)
 }
 
 static void
-test_background (struct chart *c, int test)
+test_background (struct chart *c,
+		 int	       test)
 {
     double dx, x;
 
@@ -292,12 +299,15 @@ test_background (struct chart *c, int test)
 	cairo_set_source_rgba (c->cr, .8, .8, .8, .2);
 
     cairo_rectangle (c->cr, floor (x), 0,
-	             floor (dx + x) - floor (x), c->height);
+		     floor (dx + x) - floor (x), c->height);
     cairo_fill (c->cr);
 }
 
 static void
-add_chart (struct chart *c, int test, int report, double value)
+add_chart (struct chart *c,
+	   int		 test,
+	   int		 report,
+	   double	 value)
 {
     double dx, dy, x;
 
@@ -371,7 +381,9 @@ add_chart (struct chart *c, int test, int report, double value)
 }
 
 static void
-add_label (struct chart *c, int test, const char *label)
+add_label (struct chart *c,
+	   int		 test,
+	   const char	*label)
 {
     cairo_text_extents_t extents;
     double dx, x;
@@ -585,7 +597,8 @@ add_slower_faster_guide (struct chart *c)
 }
 
 static void
-cairo_perf_reports_compare (struct chart *chart, cairo_bool_t print)
+cairo_perf_reports_compare (struct chart *chart,
+			    cairo_bool_t  print)
 {
     test_report_t **tests, *min_test;
     double test_time, best_time;
@@ -797,7 +810,8 @@ add_legend (struct chart *chart)
 }
 
 int
-main (int argc, const char *argv[])
+main (int	  argc,
+      const char *argv[])
 {
     cairo_surface_t *surface;
     struct chart chart;
@@ -826,7 +840,7 @@ main (int argc, const char *argv[])
 	    chart.names[chart.num_reports] = argv[i] + 7;
 	} else {
 	    cairo_perf_report_load (&chart.reports[chart.num_reports++],
-		                    argv[i],
+				    argv[i],
 				    test_report_cmp_name);
 	}
     }

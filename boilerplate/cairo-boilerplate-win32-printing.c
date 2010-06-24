@@ -23,7 +23,7 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Authors: Carl D. Worth <cworth@cworth.org>
- *          Adrian Johnson <ajohnson@redneon.com>
+ *	    Adrian Johnson <ajohnson@redneon.com>
  */
 
 /* We require Windows 2000 features such as GetDefaultPrinter() */
@@ -160,15 +160,15 @@ create_printer_dc (win32_target_closure_t *ptc)
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_win32_printing_create_surface (const char              *name,
-						  cairo_content_t          content,
-						  double                      width,
-						  double                      height,
-						  double                      max_width,
-						  double                      max_height,
-						  cairo_boilerplate_mode_t mode,
-						  int                      id,
-						  void                   **closure)
+_cairo_boilerplate_win32_printing_create_surface (const char		    *name,
+						  cairo_content_t	     content,
+						  double		     width,
+						  double		     height,
+						  double		     max_width,
+						  double		     max_height,
+						  cairo_boilerplate_mode_t   mode,
+						  int			     id,
+						  void			   **closure)
 {
     win32_target_closure_t *ptc;
     cairo_surface_t *surface;
@@ -232,7 +232,8 @@ _cairo_boilerplate_win32_printing_create_surface (const char              *name,
 }
 
 static cairo_status_t
-_cairo_boilerplate_win32_printing_surface_write_to_png (cairo_surface_t *surface, const char *filename)
+_cairo_boilerplate_win32_printing_surface_write_to_png (cairo_surface_t *surface,
+							const char	*filename)
 {
     win32_target_closure_t *ptc = cairo_surface_get_user_data (surface, &win32_closure_key);
     char command[4096];
@@ -300,9 +301,9 @@ _cairo_boilerplate_win32_printing_surface_write_to_png (cairo_surface_t *surface
 
 static cairo_surface_t *
 _cairo_boilerplate_win32_printing_get_image_surface (cairo_surface_t *surface,
-						     int page,
-						     int width,
-						     int height)
+						     int	      page,
+						     int	      width,
+						     int	      height)
 {
     win32_target_closure_t *ptc = cairo_surface_get_user_data (surface,
 							       &win32_closure_key);

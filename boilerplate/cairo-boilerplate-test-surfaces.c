@@ -43,15 +43,15 @@
 #endif
 
 static cairo_surface_t *
-_cairo_boilerplate_test_fallback_create_surface (const char			 *name,
-						 cairo_content_t		  content,
-						 double				  width,
-						 double				  height,
-						 double				  max_width,
-						 double				  max_height,
-						 cairo_boilerplate_mode_t	  mode,
-						 int                              id,
-						 void				**closure)
+_cairo_boilerplate_test_fallback_create_surface (const char		   *name,
+						 cairo_content_t	    content,
+						 double 		    width,
+						 double 		    height,
+						 double 		    max_width,
+						 double 		    max_height,
+						 cairo_boilerplate_mode_t   mode,
+						 int			    id,
+						 void			  **closure)
 {
     *closure = NULL;
     return _cairo_test_fallback_surface_create (content,
@@ -59,15 +59,15 @@ _cairo_boilerplate_test_fallback_create_surface (const char			 *name,
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_test_fallback16_create_surface (const char			 *name,
-						   cairo_content_t		  content,
-						   double				  width,
-						   double				  height,
-						   double				  max_width,
-						   double				  max_height,
-						   cairo_boilerplate_mode_t	  mode,
-						   int                              id,
-						   void				**closure)
+_cairo_boilerplate_test_fallback16_create_surface (const char		     *name,
+						   cairo_content_t	      content,
+						   double		      width,
+						   double		      height,
+						   double		      max_width,
+						   double		      max_height,
+						   cairo_boilerplate_mode_t   mode,
+						   int			      id,
+						   void 		    **closure)
 {
     *closure = NULL;
     return _cairo_test_fallback16_surface_create (content,
@@ -76,15 +76,15 @@ _cairo_boilerplate_test_fallback16_create_surface (const char			 *name,
 
 #if CAIRO_HAS_TEST_NULL_SURFACE
 static cairo_surface_t *
-_cairo_boilerplate_test_null_create_surface (const char			 *name,
-					     cairo_content_t		  content,
-					     double			  width,
-					     double			  height,
-					     double			  max_width,
-					     double			  max_height,
-					     cairo_boilerplate_mode_t	  mode,
-					     int                          id,
-					     void			**closure)
+_cairo_boilerplate_test_null_create_surface (const char 	       *name,
+					     cairo_content_t		content,
+					     double			width,
+					     double			height,
+					     double			max_width,
+					     double			max_height,
+					     cairo_boilerplate_mode_t	mode,
+					     int			id,
+					     void		      **closure)
 {
     *closure = NULL;
     return _cairo_test_null_surface_create (content);
@@ -99,15 +99,15 @@ typedef struct {
 } test_paginated_closure_t;
 
 static cairo_surface_t *
-_cairo_boilerplate_test_paginated_create_surface (const char			 *name,
-						  cairo_content_t		  content,
-						  double				  width,
-						  double				  height,
-						  double				  max_width,
-						  double				  max_height,
-						  cairo_boilerplate_mode_t	  mode,
-						  int                             id,
-						  void				**closure)
+_cairo_boilerplate_test_paginated_create_surface (const char		    *name,
+						  cairo_content_t	     content,
+						  double		     width,
+						  double		     height,
+						  double		     max_width,
+						  double		     max_height,
+						  cairo_boilerplate_mode_t   mode,
+						  int			     id,
+						  void			   **closure)
 {
     test_paginated_closure_t *tpc;
     cairo_format_t format;
@@ -152,8 +152,8 @@ _cairo_boilerplate_test_paginated_create_surface (const char			 *name,
  * tested.
  */
 static cairo_status_t
-_cairo_boilerplate_test_paginated_surface_write_to_png (cairo_surface_t	*surface,
-						        const char	*filename)
+_cairo_boilerplate_test_paginated_surface_write_to_png (cairo_surface_t *surface,
+							const char	*filename)
 {
     test_paginated_closure_t *tpc;
     cairo_status_t status;
@@ -170,9 +170,9 @@ _cairo_boilerplate_test_paginated_surface_write_to_png (cairo_surface_t	*surface
 
 static cairo_surface_t *
 _cairo_boilerplate_test_paginated_get_image_surface (cairo_surface_t *surface,
-						     int page,
-						     int width,
-						     int height)
+						     int	      page,
+						     int	      width,
+						     int	      height)
 {
     test_paginated_closure_t *tpc;
     cairo_status_t status;
@@ -203,15 +203,15 @@ _cairo_boilerplate_test_paginated_cleanup (void *closure)
 
 #if CAIRO_HAS_TEST_WRAPPING_SURFACE
 static cairo_surface_t *
-_cairo_boilerplate_test_wrapping_create_surface (const char			 *name,
-						 cairo_content_t		  content,
-						 double				  width,
-						 double				  height,
-						 double				  max_width,
-						 double				  max_height,
-						 cairo_boilerplate_mode_t	  mode,
-						 int                              id,
-						 void				**closure)
+_cairo_boilerplate_test_wrapping_create_surface (const char		   *name,
+						 cairo_content_t	    content,
+						 double 		    width,
+						 double 		    height,
+						 double 		    max_width,
+						 double 		    max_height,
+						 cairo_boilerplate_mode_t   mode,
+						 int			    id,
+						 void			  **closure)
 {
     cairo_surface_t *target;
     cairo_surface_t *surface;

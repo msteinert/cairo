@@ -51,18 +51,23 @@ typedef ptrdiff_t ssize_t;
 
 #if !defined (__USE_GNU) && !defined(__USE_XOPEN2K8)
 static ssize_t
-getline (char **lineptr, size_t *n, FILE *stream);
+getline (char	**lineptr,
+	 size_t  *n,
+	 FILE	 *stream);
 
 static char *
-strndup (const char *s, size_t n);
+strndup (const char *s,
+	 size_t      n);
 #endif
 
 #ifdef _MSC_VER
 static long long
-strtoll(const char *nptr, char **endptr, int base);
+strtoll (const char  *nptr,
+	 char	    **endptr,
+	 int	      base);
 
 static char *
-basename(char *path);
+basename (char *path);
 #endif
 
 /* Ad-hoc parsing, macros with a strong dependence on the calling
@@ -87,7 +92,7 @@ do {									\
 	parse_error("expected integer but found %s", s);		\
     }									\
 } while (0)
-#define parse_long_long(result)						\
+#define parse_long_long(result) 					\
 do {									\
     (result) = strtoll (s, &end, 10);					\
     if (*s && end != s) {						\
@@ -120,7 +125,9 @@ do {									\
 } while (0)
 
 static test_report_status_t
-test_report_parse (test_report_t *report, char *line, char *configuration)
+test_report_parse (test_report_t *report,
+		   char 	 *line,
+		   char 	 *configuration)
 {
     char *end;
     char *s = line;
@@ -230,23 +237,25 @@ test_report_parse (test_report_t *report, char *line, char *configuration)
 #if !defined (__USE_GNU) && !defined(__USE_XOPEN2K8)
 #define POORMANS_GETLINE_BUFFER_SIZE (65536)
 static ssize_t
-getline (char **lineptr, size_t *n, FILE *stream)
+getline (char	**lineptr,
+	 size_t  *n,
+	 FILE	 *stream)
 {
     if (!*lineptr)
     {
-        *n = POORMANS_GETLINE_BUFFER_SIZE;
-        *lineptr = (char *) malloc (*n);
+	*n = POORMANS_GETLINE_BUFFER_SIZE;
+	*lineptr = (char *) malloc (*n);
     }
 
     if (!fgets (*lineptr, *n, stream))
-        return -1;
+	return -1;
 
     if (!feof (stream) && !strchr (*lineptr, '\n'))
     {
-        fprintf (stderr, "The poor man's implementation of getline in "
-                          __FILE__ " needs a bigger buffer. Perhaps it's "
-                         "time for a complete implementation of getline.\n");
-        exit (0);
+	fprintf (stderr, "The poor man's implementation of getline in "
+			  __FILE__ " needs a bigger buffer. Perhaps it's "
+			 "time for a complete implementation of getline.\n");
+	exit (0);
     }
 
     return strlen (*lineptr);
@@ -254,21 +263,22 @@ getline (char **lineptr, size_t *n, FILE *stream)
 #undef POORMANS_GETLINE_BUFFER_SIZE
 
 static char *
-strndup (const char *s, size_t n)
+strndup (const char *s,
+	 size_t      n)
 {
     size_t len;
     char *sdup;
 
     if (!s)
-        return NULL;
+	return NULL;
 
     len = strlen (s);
     len = (n < len ? n : len);
     sdup = (char *) malloc (len + 1);
     if (sdup)
     {
-        memcpy (sdup, s, len);
-        sdup[len] = '\0';
+	memcpy (sdup, s, len);
+	sdup[len] = '\0';
     }
 
     return sdup;
@@ -281,13 +291,15 @@ strndup (const char *s, size_t n)
  */
 #ifdef _MSC_VER
 long long
-strtoll(const char *nptr, char **endptr, int base)
+strtoll (const char  *nptr,
+	 char	    **endptr,
+	 int	      base)
 {
     return _atoi64(nptr);
 }
 
 static char *
-basename(char *path)
+basename (char *path)
 {
     char *end, *s;
 
@@ -311,7 +323,8 @@ basename(char *path)
 #endif /* ifndef _MSC_VER */
 
 int
-test_report_cmp_backend_then_name (const void *a, const void *b)
+test_report_cmp_backend_then_name (const void *a,
+				   const void *b)
 {
     const test_report_t *a_test = a;
     const test_report_t *b_test = b;
@@ -348,7 +361,8 @@ test_report_cmp_backend_then_name (const void *a, const void *b)
 }
 
 int
-test_report_cmp_name (const void *a, const void *b)
+test_report_cmp_name (const void *a,
+		      const void *b)
 {
     const test_report_t *a_test = a;
     const test_report_t *b_test = b;
@@ -378,7 +392,7 @@ test_report_cmp_name (const void *a, const void *b)
 
 void
 cairo_perf_report_sort_and_compute_stats (cairo_perf_report_t *report,
-	                                  int (*cmp) (const void*, const void*))
+					  int (*cmp) (const void*, const void*))
 {
     test_report_t *base, *next, *last, *t;
 
@@ -426,7 +440,7 @@ cairo_perf_report_sort_and_compute_stats (cairo_perf_report_t *report,
 
 void
 cairo_perf_report_load (cairo_perf_report_t *report,
-	                const char *filename,
+			const char *filename,
 			int (*cmp) (const void *, const void *))
 {
     FILE *file;

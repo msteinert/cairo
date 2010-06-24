@@ -45,8 +45,8 @@ static const cairo_user_data_key_t pdf_closure_key;
 typedef struct _pdf_target_closure
 {
     char		*filename;
-    int			 width;
-    int			 height;
+    int 		 width;
+    int 		 height;
     cairo_surface_t	*target;
 } pdf_target_closure_t;
 
@@ -59,8 +59,8 @@ _cairo_boilerplate_pdf_create_surface (const char		 *name,
 				       double			  height,
 				       double			  max_width,
 				       double			  max_height,
-				       cairo_boilerplate_mode_t	  mode,
-				       int                        id,
+				       cairo_boilerplate_mode_t   mode,
+				       int			  id,
 				       void			**closure)
 {
     pdf_target_closure_t *ptc;
@@ -112,7 +112,7 @@ _cairo_boilerplate_pdf_create_surface (const char		 *name,
 }
 
 static cairo_status_t
-_cairo_boilerplate_pdf_finish_surface (cairo_surface_t		*surface)
+_cairo_boilerplate_pdf_finish_surface (cairo_surface_t *surface)
 {
     pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface,
 							     &pdf_closure_key);
@@ -156,7 +156,8 @@ _cairo_boilerplate_pdf_finish_surface (cairo_surface_t		*surface)
 }
 
 static cairo_status_t
-_cairo_boilerplate_pdf_surface_write_to_png (cairo_surface_t *surface, const char *filename)
+_cairo_boilerplate_pdf_surface_write_to_png (cairo_surface_t *surface,
+					     const char      *filename)
 {
     pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface, &pdf_closure_key);
     char    command[4096];
@@ -177,7 +178,8 @@ _cairo_boilerplate_pdf_surface_write_to_png (cairo_surface_t *surface, const cha
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_pdf_convert_to_image (cairo_surface_t *surface, int page)
+_cairo_boilerplate_pdf_convert_to_image (cairo_surface_t *surface,
+					 int		  page)
 {
     pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface,
 							     &pdf_closure_key);
@@ -187,9 +189,9 @@ _cairo_boilerplate_pdf_convert_to_image (cairo_surface_t *surface, int page)
 
 static cairo_surface_t *
 _cairo_boilerplate_pdf_get_image_surface (cairo_surface_t *surface,
-					  int page,
-					  int width,
-					  int height)
+					  int		   page,
+					  int		   width,
+					  int		   height)
 {
     cairo_surface_t *image;
 
@@ -217,7 +219,7 @@ _cairo_boilerplate_pdf_cleanup (void *closure)
 
 static void
 _cairo_boilerplate_pdf_force_fallbacks (cairo_surface_t *abstract_surface,
-	                                unsigned int flags)
+					unsigned int	 flags)
 {
     pdf_target_closure_t *ptc = cairo_surface_get_user_data (abstract_surface,
 							     &pdf_closure_key);

@@ -64,7 +64,9 @@ _cairo_boilerplate_wgl_cleanup (void *closure)
 }
 
 static void
-_cairo_boilerplate_wgl_create_window (int width, int height,  wgl_target_closure_t *wgltc)
+_cairo_boilerplate_wgl_create_window (int		    width,
+				      int		    height,
+				      wgl_target_closure_t *wgltc)
 {
     WNDCLASSEXA wincl;
     PIXELFORMATDESCRIPTOR pfd;
@@ -101,14 +103,14 @@ _cairo_boilerplate_wgl_create_window (int width, int height,  wgl_target_closure
 
 static cairo_surface_t *
 _cairo_boilerplate_wgl_create_surface (const char		 *name,
-				      cairo_content_t		  content,
-				      double			  width,
-				      double			  height,
-				      double			  max_width,
-				      double			  max_height,
-				      cairo_boilerplate_mode_t	  mode,
-				      int			  id,
-				      void			**closure)
+				       cairo_content_t		  content,
+				       double			  width,
+				       double			  height,
+				       double			  max_width,
+				       double			  max_height,
+				       cairo_boilerplate_mode_t   mode,
+				       int			  id,
+				       void			**closure)
 {
     wgl_target_closure_t *wgltc;
     cairo_surface_t *surface;
@@ -120,32 +122,32 @@ _cairo_boilerplate_wgl_create_surface (const char		 *name,
     _cairo_boilerplate_wgl_create_window(0, 0, wgltc);
     
     if (width == 0)
-        width = 1;
+	width = 1;
     if (height == 0)
-        height = 1;
+	height = 1;
     
     wgltc->surface = surface = cairo_gl_surface_create (wgltc->device,
 						       content,
-					               ceil (width),
+						       ceil (width),
 						       ceil (height));
     if (cairo_surface_status (surface)) {
-        _cairo_boilerplate_wgl_cleanup (wgltc);
-        return NULL;
+	_cairo_boilerplate_wgl_cleanup (wgltc);
+	return NULL;
     }
 
     return surface;
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_wgl_for_create_window (const char			 *name,
-				     cairo_content_t		  content,
-				     double			  width,
-				     double			  height,
-				     double			  max_width,
-				     double			  max_height,
-				     cairo_boilerplate_mode_t	  mode,
-				     int			  id,
-				     void			**closure)
+_cairo_boilerplate_wgl_for_create_window (const char		    *name,
+					  cairo_content_t	     content,
+					  double		     width,
+					  double		     height,
+					  double		     max_width,
+					  double		     max_height,
+					  cairo_boilerplate_mode_t   mode,
+					  int			     id,
+					  void			   **closure)
 {
     wgl_target_closure_t *wgltc;
     cairo_surface_t *surface;
@@ -158,19 +160,19 @@ _cairo_boilerplate_wgl_for_create_window (const char			 *name,
     
     wgltc->surface = surface = cairo_gl_surface_create_for_dc (wgltc->device,
 						       wgltc->dc,
-					               ceil (width),
+						       ceil (width),
 						       ceil (height));
     
     if (cairo_surface_status (surface)) {
-        _cairo_boilerplate_wgl_cleanup (wgltc);
-        return NULL;
+	_cairo_boilerplate_wgl_cleanup (wgltc);
+	return NULL;
     }
 
     return surface;
 }
 
 static cairo_status_t
-_cairo_boilerplate_wgl_finish_window (cairo_surface_t		*surface)
+_cairo_boilerplate_wgl_finish_window (cairo_surface_t *surface)
 {
     wgl_target_closure_t *wgltc = cairo_surface_get_user_data (surface,
 							     &gl_closure_key);
@@ -198,7 +200,7 @@ _cairo_boilerplate_wgl_synchronize (void *closure)
     wgl_target_closure_t *wgltc = closure;
 
     if (cairo_device_acquire (wgltc->device))
-        return;
+	return;
 
     glFinish ();
 

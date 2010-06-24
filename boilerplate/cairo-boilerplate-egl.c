@@ -61,14 +61,14 @@ _cairo_boilerplate_egl_cleanup (void *closure)
 
 static cairo_surface_t *
 _cairo_boilerplate_egl_create_surface (const char		 *name,
-				      cairo_content_t		  content,
-				      double			  width,
-				      double			  height,
-				      double			  max_width,
-				      double			  max_height,
-				      cairo_boilerplate_mode_t	  mode,
-				      int			  id,
-				      void			**closure)
+				       cairo_content_t		  content,
+				       double			  width,
+				       double			  height,
+				       double			  max_width,
+				       double			  max_height,
+				       cairo_boilerplate_mode_t   mode,
+				       int			  id,
+				       void			**closure)
 {
     egl_target_closure_t *gltc;
     cairo_surface_t *surface;
@@ -107,7 +107,7 @@ _cairo_boilerplate_egl_create_surface (const char		 *name,
 
     gltc->surface = surface = cairo_gl_surface_create (gltc->device,
 						       content,
-					               ceil (width),
+						       ceil (width),
 						       ceil (height));
     if (cairo_surface_status (surface))
 	_cairo_boilerplate_egl_cleanup (gltc);
@@ -121,7 +121,7 @@ _cairo_boilerplate_egl_synchronize (void *closure)
     egl_target_closure_t *gltc = closure;
 
     if (cairo_device_acquire (gltc->device))
-        return;
+	return;
 
     glFinish ();
 

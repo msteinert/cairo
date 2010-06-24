@@ -123,15 +123,15 @@ cairo_boilerplate_format_from_content (cairo_content_t content)
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_image_create_surface (const char			 *name,
-					 cairo_content_t		  content,
-					 double				  width,
-					 double				  height,
-					 double				  max_width,
-					 double				  max_height,
-					 cairo_boilerplate_mode_t	  mode,
-					 int                              id,
-					 void				**closure)
+_cairo_boilerplate_image_create_surface (const char		   *name,
+					 cairo_content_t	    content,
+					 double 		    width,
+					 double 		    height,
+					 double 		    max_width,
+					 double 		    max_height,
+					 cairo_boilerplate_mode_t   mode,
+					 int			    id,
+					 void			  **closure)
 {
     cairo_format_t format;
 
@@ -150,15 +150,15 @@ _cairo_boilerplate_image_create_surface (const char			 *name,
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_image16_create_surface (const char			 *name,
-					   cairo_content_t		  content,
-					   double			  width,
-					   double			  height,
-					   double			  max_width,
-					   double			  max_height,
-					   cairo_boilerplate_mode_t	  mode,
-					   int                            id,
-					   void				**closure)
+_cairo_boilerplate_image16_create_surface (const char		     *name,
+					   cairo_content_t	      content,
+					   double		      width,
+					   double		      height,
+					   double		      max_width,
+					   double		      max_height,
+					   cairo_boilerplate_mode_t   mode,
+					   int			      id,
+					   void 		    **closure)
 {
     *closure = NULL;
 
@@ -168,15 +168,15 @@ _cairo_boilerplate_image16_create_surface (const char			 *name,
 
 #if CAIRO_HAS_RECORDING_SURFACE
 static cairo_surface_t *
-_cairo_boilerplate_recording_create_surface (const char		     *name,
-					     cairo_content_t	      content,
-					     double		      width,
-					     double		      height,
-					     double		      max_width,
-					     double		      max_height,
-					     cairo_boilerplate_mode_t mode,
-					     int		      id,
-					     void		    **closure)
+_cairo_boilerplate_recording_create_surface (const char 	       *name,
+					     cairo_content_t		content,
+					     double			width,
+					     double			height,
+					     double			max_width,
+					     double			max_height,
+					     cairo_boilerplate_mode_t	mode,
+					     int			id,
+					     void		      **closure)
 {
     cairo_rectangle_t extents;
 
@@ -199,9 +199,9 @@ const cairo_user_data_key_t cairo_boilerplate_output_basename_key;
 
 cairo_surface_t *
 _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
-				      int page,
-				      int width,
-				      int height)
+				      int	       page,
+				      int	       width,
+				      int	       height)
 {
     cairo_surface_t *surface, *image;
     cairo_t *cr;
@@ -228,7 +228,7 @@ _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
 	    cairo_device_t *ctx;
 	    char *filename;
 
-            cairo_surface_destroy (surface);
+	    cairo_surface_destroy (surface);
 
 	    xasprintf (&filename, "%s.out.trace", test_name);
 	    ctx = cairo_script_create (filename);
@@ -257,10 +257,10 @@ _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
 }
 
 cairo_surface_t *
-cairo_boilerplate_get_image_surface_from_png (const char *filename,
-					      int width,
-					      int height,
-					      cairo_bool_t flatten)
+cairo_boilerplate_get_image_surface_from_png (const char   *filename,
+					      int	    width,
+					      int	    height,
+					      cairo_bool_t  flatten)
 {
     cairo_surface_t *surface;
 
@@ -398,7 +398,7 @@ probe_target (const cairo_boilerplate_target_t *target)
 
 void
 _cairo_boilerplate_register_backend (const cairo_boilerplate_target_t *targets,
-				     unsigned int count)
+				     unsigned int		       count)
 {
     targets += count;
     while (count--) {
@@ -417,8 +417,8 @@ _cairo_boilerplate_register_backend (const cairo_boilerplate_target_t *targets,
 
 static cairo_bool_t
 _cairo_boilerplate_target_matches_name (const cairo_boilerplate_target_t *target,
-					const char                       *tname,
-					const char                       *end)
+					const char			 *tname,
+					const char			 *end)
 {
     char const *content_name;
     const char *content_start = strpbrk (tname, ".");
@@ -455,7 +455,8 @@ _cairo_boilerplate_target_matches_name (const cairo_boilerplate_target_t *target
 }
 
 const cairo_boilerplate_target_t **
-cairo_boilerplate_get_targets (int *pnum_targets, cairo_bool_t *plimited_targets)
+cairo_boilerplate_get_targets (int	    *pnum_targets,
+			       cairo_bool_t *plimited_targets)
 {
     size_t i, num_targets;
     cairo_bool_t limited_targets = FALSE;
@@ -477,7 +478,7 @@ cairo_boilerplate_get_targets (int *pnum_targets, cairo_bool_t *plimited_targets
 	    int found = 0;
 	    const char *end = strpbrk (tname, " \t\r\n;:,");
 	    if (!end)
-	        end = tname + strlen (tname);
+		end = tname + strlen (tname);
 
 	    if (end == tname) {
 		tname = end + 1;
@@ -551,7 +552,7 @@ cairo_boilerplate_get_targets (int *pnum_targets, cairo_bool_t *plimited_targets
 	    int j;
 	    const char *end = strpbrk (tname, " \t\r\n;:,");
 	    if (!end)
-	        end = tname + strlen (tname);
+		end = tname + strlen (tname);
 
 	    if (end == tname) {
 		tname = end + 1;
@@ -604,8 +605,8 @@ cairo_boilerplate_get_image_target (cairo_content_t content)
 }
 
 const cairo_boilerplate_target_t *
-cairo_boilerplate_get_target_by_name (const char *name,
-				      cairo_content_t content)
+cairo_boilerplate_get_target_by_name (const char      *name,
+				      cairo_content_t  content)
 {
     struct cairo_boilerplate_target_list *list;
 
@@ -666,7 +667,7 @@ cairo_boilerplate_surface_create_in_error (cairo_status_t status)
 
 void
 cairo_boilerplate_scaled_font_set_max_glyphs_cached (cairo_scaled_font_t *scaled_font,
-						     int max_glyphs)
+						     int		  max_glyphs)
 {
     /* XXX CAIRO_DEBUG */
 }
@@ -701,9 +702,9 @@ any2ppm_daemon_exists (void)
 #endif
 
 FILE *
-cairo_boilerplate_open_any2ppm (const char *filename,
-				int page,
-				unsigned int flags)
+cairo_boilerplate_open_any2ppm (const char   *filename,
+				int	      page,
+				unsigned int  flags)
 {
     char command[4096];
 #if HAS_DAEMON
@@ -747,7 +748,9 @@ POPEN:
 }
 
 static cairo_bool_t
-freadn (unsigned char *buf, int len, FILE *file)
+freadn (unsigned char *buf,
+	int	       len,
+	FILE	      *file)
 {
     int ret;
 
@@ -827,7 +830,8 @@ FAIL:
 }
 
 cairo_surface_t *
-cairo_boilerplate_convert_to_image (const char *filename, int page)
+cairo_boilerplate_convert_to_image (const char *filename,
+				    int 	page)
 {
     FILE *file;
     unsigned int flags = 0;

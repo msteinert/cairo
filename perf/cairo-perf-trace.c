@@ -24,8 +24,8 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Authors: Vladimir Vukicevic <vladimir@pobox.com>
- *          Carl Worth <cworth@cworth.org>
- *          Chris Wilson <chris@chris-wilson.co.uk>
+ *	    Carl Worth <cworth@cworth.org>
+ *	    Chris Wilson <chris@chris-wilson.co.uk>
  */
 
 #define _GNU_SOURCE 1	/* for sched_getaffinity() and getline() */
@@ -66,12 +66,12 @@
 #define CAIRO_PERF_ITERATIONS_DEFAULT	15
 #define CAIRO_PERF_LOW_STD_DEV		0.05
 #define CAIRO_PERF_MIN_STD_DEV_COUNT	3
-#define CAIRO_PERF_STABLE_STD_DEV_COUNT	3
+#define CAIRO_PERF_STABLE_STD_DEV_COUNT 3
 
 cairo_bool_t
-cairo_perf_can_run (cairo_perf_t	*perf,
-		    const char		*name,
-		    cairo_bool_t	*is_explicit)
+cairo_perf_can_run (cairo_perf_t *perf,
+		    const char	 *name,
+		    cairo_bool_t *is_explicit)
 {
     unsigned int i;
     char *copy, *dot;
@@ -147,7 +147,8 @@ static cairo_hash_table_t *surface_cache;
 static cairo_surface_t *surface_holdovers[16];
 
 static cairo_bool_t
-scache_equal (const void *A, const void *B)
+scache_equal (const void *A,
+	      const void *B)
 {
     const struct scache *a = A, *b = B;
     return a->entry.hash == b->entry.hash;
@@ -200,10 +201,11 @@ scache_remove (void *closure)
 }
 
 static cairo_surface_t *
-_similar_surface_create (void *closure,
-			 cairo_content_t content,
-			 double width, double height,
-			 long uid)
+_similar_surface_create (void		 *closure,
+			 cairo_content_t  content,
+			 double 	  width,
+			 double 	  height,
+			 long		  uid)
 {
     cairo_surface_t *surface;
     struct scache skey, *s;
@@ -250,7 +252,7 @@ _similar_surface_create (void *closure,
 }
 
 static cairo_t *
-_context_create (void *closure,
+_context_create (void		 *closure,
 		 cairo_surface_t *surface)
 {
     scache_mark_active (surface);
@@ -271,9 +273,9 @@ interrupt (int sig)
 }
 
 static void
-execute (cairo_perf_t		 *perf,
-	 cairo_surface_t	 *target,
-	 const char		 *trace)
+execute (cairo_perf_t	 *perf,
+	 cairo_surface_t *target,
+	 const char	 *trace)
 {
     static cairo_bool_t first_run = TRUE;
     unsigned int i;
@@ -452,23 +454,25 @@ usage (const char *argv0)
 #ifndef __USE_GNU
 #define POORMANS_GETLINE_BUFFER_SIZE (65536)
 static ssize_t
-getline (char **lineptr, size_t *n, FILE *stream)
+getline (char	**lineptr,
+	 size_t  *n,
+	 FILE	 *stream)
 {
     if (!*lineptr)
     {
-        *n = POORMANS_GETLINE_BUFFER_SIZE;
-        *lineptr = (char *) malloc (*n);
+	*n = POORMANS_GETLINE_BUFFER_SIZE;
+	*lineptr = (char *) malloc (*n);
     }
 
     if (!fgets (*lineptr, *n, stream))
-        return -1;
+	return -1;
 
     if (!feof (stream) && !strchr (*lineptr, '\n'))
     {
-        fprintf (stderr, "The poor man's implementation of getline in "
-                          __FILE__ " needs a bigger buffer. Perhaps it's "
-                         "time for a complete implementation of getline.\n");
-        exit (0);
+	fprintf (stderr, "The poor man's implementation of getline in "
+			  __FILE__ " needs a bigger buffer. Perhaps it's "
+			 "time for a complete implementation of getline.\n");
+	exit (0);
     }
 
     return strlen (*lineptr);
@@ -476,21 +480,22 @@ getline (char **lineptr, size_t *n, FILE *stream)
 #undef POORMANS_GETLINE_BUFFER_SIZE
 
 static char *
-strndup (const char *s, size_t n)
+strndup (const char *s,
+	 size_t      n)
 {
     size_t len;
     char *sdup;
 
     if (!s)
-        return NULL;
+	return NULL;
 
     len = strlen (s);
     len = (n < len ? n : len);
     sdup = (char *) malloc (len + 1);
     if (sdup)
     {
-        memcpy (sdup, s, len);
-        sdup[len] = '\0';
+	memcpy (sdup, s, len);
+	sdup[len] = '\0';
     }
 
     return sdup;
@@ -498,7 +503,8 @@ strndup (const char *s, size_t n)
 #endif /* ifndef __USE_GNU */
 
 static cairo_bool_t
-read_excludes (cairo_perf_t *perf, const char *filename)
+read_excludes (cairo_perf_t *perf,
+	       const char   *filename)
 {
     FILE *file;
     char *line = NULL;
@@ -541,7 +547,9 @@ read_excludes (cairo_perf_t *perf, const char *filename)
 }
 
 static void
-parse_options (cairo_perf_t *perf, int argc, char *argv[])
+parse_options (cairo_perf_t *perf,
+	       int	     argc,
+	       char	    *argv[])
 {
     int c;
     const char *iters;
@@ -655,9 +663,9 @@ have_trace_filenames (cairo_perf_t *perf)
 }
 
 static void
-cairo_perf_trace (cairo_perf_t *perf,
+cairo_perf_trace (cairo_perf_t			   *perf,
 		  const cairo_boilerplate_target_t *target,
-		  const char *trace)
+		  const char			   *trace)
 {
     cairo_surface_t *surface;
     void *closure;
@@ -692,7 +700,8 @@ cairo_perf_trace (cairo_perf_t *perf,
 }
 
 static void
-warn_no_traces (const char *message, const char *trace_dir)
+warn_no_traces (const char *message,
+		const char *trace_dir)
 {
     fprintf (stderr,
 "Error: %s '%s'.\n"
@@ -704,9 +713,9 @@ warn_no_traces (const char *message, const char *trace_dir)
 }
 
 static int
-cairo_perf_trace_dir (cairo_perf_t *perf,
+cairo_perf_trace_dir (cairo_perf_t		       *perf,
 		      const cairo_boilerplate_target_t *target,
-		      const char *dirname)
+		      const char		       *dirname)
 {
     DIR *dir;
     struct dirent *de;
@@ -760,7 +769,8 @@ next:
 }
 
 int
-main (int argc, char *argv[])
+main (int   argc,
+      char *argv[])
 {
     cairo_perf_t perf;
     const char *trace_dir = "cairo-traces:/usr/src/cairo-traces:/usr/share/cairo-traces";
@@ -781,7 +791,7 @@ main (int argc, char *argv[])
     perf.exact_names = have_trace_filenames (&perf);
 
     for (i = 0; i < perf.num_targets; i++) {
-        const cairo_boilerplate_target_t *target = perf.targets[i];
+	const cairo_boilerplate_target_t *target = perf.targets[i];
 
 	if (! perf.list_only && ! target->is_measurable)
 	    continue;

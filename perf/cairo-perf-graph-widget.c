@@ -57,10 +57,10 @@ static guint signals[LAST_SIGNAL];
 G_DEFINE_TYPE (GraphView, graph_view, GTK_TYPE_WIDGET)
 
 static void
-draw_baseline_performance (test_case_t *cases,
-	                   cairo_perf_report_t *reports,
-	                   int num_reports,
-			   cairo_t *cr,
+draw_baseline_performance (test_case_t		*cases,
+			   cairo_perf_report_t	*reports,
+			   int			 num_reports,
+			   cairo_t		*cr,
 			   const cairo_matrix_t *m)
 {
     test_report_t **tests;
@@ -203,7 +203,11 @@ draw_baseline_performance (test_case_t *cases,
 }
 
 static void
-draw_hline (cairo_t *cr, const cairo_matrix_t *m, double y0, double xmin, double xmax)
+draw_hline (cairo_t		 *cr,
+	    const cairo_matrix_t *m,
+	    double		  y0,
+	    double		  xmin,
+	    double		  xmax)
 {
     double x, y;
     double py_offset;
@@ -222,8 +226,11 @@ draw_hline (cairo_t *cr, const cairo_matrix_t *m, double y0, double xmin, double
 }
 
 static void
-draw_label (cairo_t *cr, const cairo_matrix_t *m,
-	    double y0, double xmin, double xmax)
+draw_label (cairo_t		 *cr,
+	    const cairo_matrix_t *m,
+	    double		  y0,
+	    double		  xmin,
+	    double		  xmax)
 {
     double x, y;
     char buf[80];
@@ -254,9 +261,12 @@ draw_label (cairo_t *cr, const cairo_matrix_t *m,
 #define ALIGN_X(v) ((v)<<0)
 #define ALIGN_Y(v) ((v)<<2)
 static void
-draw_rotated_label (cairo_t *cr, const char *text,
-		    double x, double y, double angle,
-		    int align)
+draw_rotated_label (cairo_t    *cr,
+		    const char *text,
+		    double	x,
+		    double	y,
+		    double	angle,
+		    int 	align)
 {
     cairo_text_extents_t extents;
 
@@ -320,7 +330,8 @@ draw_rotated_label (cairo_t *cr, const char *text,
 
 #define PAD 36
 static void
-graph_view_draw (GraphView *self, cairo_t *cr)
+graph_view_draw (GraphView *self,
+		 cairo_t   *cr)
 {
     cairo_matrix_t m;
     const double dash[2] = {4, 4};
@@ -413,7 +424,7 @@ graph_view_draw (GraphView *self, cairo_t *cr)
     } cairo_restore (cr);
 
     draw_baseline_performance (self->cases,
-	                       self->reports, self->num_reports,
+			       self->reports, self->num_reports,
 			       cr, &m);
 
     cairo_save (cr); {
@@ -425,7 +436,8 @@ graph_view_draw (GraphView *self, cairo_t *cr)
 }
 
 static gboolean
-graph_view_expose (GtkWidget *w, GdkEventExpose *ev)
+graph_view_expose (GtkWidget	  *w,
+		   GdkEventExpose *ev)
 {
     GraphView *self = (GraphView *) w;
     cairo_t *cr;
@@ -442,7 +454,8 @@ graph_view_expose (GtkWidget *w, GdkEventExpose *ev)
 }
 
 static gboolean
-graph_view_button_press (GtkWidget *w, GdkEventButton *ev)
+graph_view_button_press (GtkWidget	*w,
+			 GdkEventButton *ev)
 {
     GraphView *self = (GraphView *) w;
     cairo_matrix_t m;
@@ -473,7 +486,8 @@ graph_view_button_press (GtkWidget *w, GdkEventButton *ev)
 }
 
 static gboolean
-graph_view_button_release (GtkWidget *w, GdkEventButton *ev)
+graph_view_button_release (GtkWidget	  *w,
+			   GdkEventButton *ev)
 {
     GraphView *self = (GraphView *) w;
 
@@ -496,9 +510,9 @@ graph_view_realize (GtkWidget *widget)
     attributes.visual = gtk_widget_get_visual (widget);
     attributes.colormap = gtk_widget_get_colormap (widget);
     attributes.event_mask = gtk_widget_get_events (widget) |
-	                    GDK_BUTTON_PRESS_MASK |
-	                    GDK_BUTTON_RELEASE_MASK |
-	                    GDK_EXPOSURE_MASK;
+			    GDK_BUTTON_PRESS_MASK |
+			    GDK_BUTTON_RELEASE_MASK |
+			    GDK_EXPOSURE_MASK;
 
     widget->window = gdk_window_new (gtk_widget_get_parent_window (widget),
 				     &attributes,
@@ -531,7 +545,7 @@ graph_view_class_init (GraphViewClass *klass)
 
     signals[REPORT_SELECTED] =
 	g_signal_new ("report-selected",
-	              G_TYPE_FROM_CLASS (object_class),
+		      G_TYPE_FROM_CLASS (object_class),
 		      G_SIGNAL_RUN_FIRST,
 		      0,//G_STRUCT_OFFSET (GraphView, report_selected),
 		      NULL, NULL,
@@ -576,10 +590,10 @@ graph_view_update_visible (GraphView *gv)
 }
 
 void
-graph_view_set_reports (GraphView *gv,
-	                test_case_t *cases,
-	                cairo_perf_report_t *reports,
-			int num_reports)
+graph_view_set_reports (GraphView	    *gv,
+			test_case_t	    *cases,
+			cairo_perf_report_t *reports,
+			int		     num_reports)
 {
     /* XXX ownership? */
     gv->cases = cases;

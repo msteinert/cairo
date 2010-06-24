@@ -49,7 +49,8 @@ typedef struct _cairo_perf_diff_files_args {
 } cairo_perf_diff_files_args_t;
 
 static int
-test_diff_cmp_speedup_before_slowdown (const void *a, const void *b)
+test_diff_cmp_speedup_before_slowdown (const void *a,
+				       const void *b)
 {
     const test_diff_t *a_diff = a;
     const test_diff_t *b_diff = b;
@@ -83,7 +84,8 @@ test_diff_cmp_speedup_before_slowdown (const void *a, const void *b)
 }
 
 static int
-test_diff_cmp (const void *a, const void *b)
+test_diff_cmp (const void *a,
+	       const void *b)
 {
     const test_diff_t *a_diff = a;
     const test_diff_t *b_diff = b;
@@ -101,7 +103,9 @@ test_diff_cmp (const void *a, const void *b)
 
 #define CHANGE_BAR_WIDTH 70
 static void
-print_change_bar (double change, double max_change, int use_utf)
+print_change_bar (double change,
+		  double max_change,
+		  int	 use_utf)
 {
     int units_per_cell = ceil (max_change / CHANGE_BAR_WIDTH);
     static char const *ascii_boxes[8] = {
@@ -146,9 +150,9 @@ print_change_bar (double change, double max_change, int use_utf)
 }
 
 static void
-test_diff_print_binary (test_diff_t			*diff,
-			double				 max_change,
-			cairo_perf_report_options_t	*options)
+test_diff_print_binary (test_diff_t		    *diff,
+			double			     max_change,
+			cairo_perf_report_options_t *options)
 {
     printf ("%5s-%-4s %26s-%-3d  %6.2f (%.2f %4.2f%%) -> %6.2f (%.2f %4.2f%%): %5.2fx ",
 	    diff->tests[0]->backend, diff->tests[0]->content,
@@ -172,9 +176,9 @@ test_diff_print_binary (test_diff_t			*diff,
 }
 
 static void
-test_diff_print_multi (test_diff_t			*diff,
-		       double				 max_change,
-		       cairo_perf_report_options_t	*options)
+test_diff_print_multi (test_diff_t		   *diff,
+		       double			    max_change,
+		       cairo_perf_report_options_t *options)
 {
     int i;
     double test_time;
@@ -205,9 +209,9 @@ test_diff_print_multi (test_diff_t			*diff,
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 static void
-cairo_perf_reports_compare (cairo_perf_report_t		*reports,
-			    int				 num_reports,
-			    cairo_perf_report_options_t	*options)
+cairo_perf_reports_compare (cairo_perf_report_t 	*reports,
+			    int 			 num_reports,
+			    cairo_perf_report_options_t *options)
 {
     int i;
     test_report_t **tests, *min_test;
@@ -399,9 +403,9 @@ usage (const char *argv0)
 }
 
 static void
-parse_args(int				  argc,
-	   char const			**argv,
-	   cairo_perf_diff_files_args_t  *args)
+parse_args (int 			   argc,
+	    char const			 **argv,
+	    cairo_perf_diff_files_args_t  *args)
 {
     int i;
 
@@ -442,7 +446,8 @@ parse_args(int				  argc,
 }
 
 int
-main (int argc, const char *argv[])
+main (int	  argc,
+      const char *argv[])
 {
     cairo_perf_diff_files_args_t args = {
 	NULL,			/* filenames */
