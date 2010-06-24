@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Soeren Sandmann Petersen
+ * Copyright 2010 Soeren Sandmann Pedersen
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
