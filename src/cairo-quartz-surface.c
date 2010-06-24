@@ -680,8 +680,9 @@ _cairo_quartz_fixup_unbounded_operation (cairo_quartz_surface_t *surface,
     } else if (op->op == UNBOUNDED_SHOW_GLYPHS) {
 	CGContextSetFont (cgc, op->u.show_glyphs.font);
 	CGContextSetFontSize (cgc, 1.0);
-	CGContextSetTextMatrix (cgc, op->u.show_glyphs.textTransform);
+	CGContextSetTextMatrix (cgc, CGAffineTransformIdentity);
 	CGContextTranslateCTM (cgc, op->u.show_glyphs.origin.x, op->u.show_glyphs.origin.y);
+	CGContextConcatCTM (cgc, op->u.show_glyphs.textTransform);
 
 	if (op->u.show_glyphs.isClipping) {
 	    /* Note that the comment in show_glyphs about kCGTextClip
@@ -2482,7 +2483,7 @@ _cairo_quartz_surface_show_glyphs_cg (void *abstract_surface,
 				      cairo_clip_t *clip,
 				      int *remaining_glyphs)
 {
-    CGAffineTransform textTransform, ctm;
+    CGAffineTransform textTransform, ctm, invTextTransform;
 #define STATIC_BUF_SIZE 64
     CGGlyph glyphs_static[STATIC_BUF_SIZE];
     CGSize cg_advances_static[STATIC_BUF_SIZE];
@@ -2581,20 +2582,14 @@ _cairo_quartz_surface_show_glyphs_cg (void *abstract_surface,
 	}
     }
 
-    textTransform = CGAffineTransformMake (scaled_font->font_matrix.xx,
-					   scaled_font->font_matrix.yx,
-					   scaled_font->font_matrix.xy,
-					   scaled_font->font_matrix.yy,
-					   0., 0.);
-    textTransform = CGAffineTransformScale (textTransform, 1.0, -1.0);
-    textTransform = CGAffineTransformConcat (CGAffineTransformMake(scaled_font->ctm.xx,
-								   -scaled_font->ctm.yx,
-								   -scaled_font->ctm.xy,
-								   scaled_font->ctm.yy,
-								   0., 0.),
-					     textTransform);
+    textTransform = CGAffineTransformMake (scaled_font->scale.xx,
+					   scaled_font->scale.yx,
+					   -scaled_font->scale.xy,
+					   -scaled_font->scale.yy,
+					   0, 0);
+    _cairo_quartz_cairo_matrix_to_quartz (&scaled_font->scale_inverse, &invTextTransform);
 
-    CGContextSetTextMatrix (surface->cgContext, textTransform);
+    CGContextSetTextMatrix (surface->cgContext, CGAffineTransformIdentity);
 
     /* Convert our glyph positions to glyph advances.  We need n-1 advances,
      * since the advance at index 0 is applied after glyph 0. */
@@ -2607,32 +2602,15 @@ _cairo_quartz_surface_show_glyphs_cg (void *abstract_surface,
 	cairo_quartz_float_t xf = glyphs[i].x;
 	cairo_quartz_float_t yf = glyphs[i].y;
 	cg_glyphs[i] = glyphs[i].index;
-	cg_advances[i-1].width = xf - xprev;
-	cg_advances[i-1].height = yf - yprev;
+	cg_advances[i - 1] = CGSizeApplyAffineTransform(CGSizeMake (xf - xprev, yf - yprev), invTextTransform);
 	xprev = xf;
 	yprev = yf;
     }
 
-    if (_cairo_quartz_osx_version >= 0x1050 && isClipping) {
-	/* If we're clipping, OSX 10.5 (at least as of 10.5.2) has a
-	 * bug (apple bug ID #5834794) where the glyph
-	 * advances/positions are not transformed by the text matrix
-	 * if kCGTextClip is being used.  So, we pre-transform here.
-	 * 10.4 does not have this problem (as of 10.4.11).
-	 */
-	for (i = 0; i < num_glyphs - 1; i++)
-	    cg_advances[i] = CGSizeApplyAffineTransform(cg_advances[i], textTransform);
-    }
-
-#if 0
-    for (i = 0; i < num_glyphs; i++) {
-	ND((stderr, "[%d: %d %f,%f]\n", i, cg_glyphs[i], cg_advances[i].width, cg_advances[i].height));
-    }
-#endif
-
     /* Translate to the first glyph's position before drawing */
     ctm = CGContextGetCTM (surface->cgContext);
     CGContextTranslateCTM (surface->cgContext, glyphs[0].x, glyphs[0].y);
+    CGContextConcatCTM (surface->cgContext, textTransform);
 
     CGContextShowGlyphsWithAdvances (surface->cgContext,
 				     cg_glyphs,
