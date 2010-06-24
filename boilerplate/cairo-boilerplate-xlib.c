@@ -509,8 +509,6 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_xlib_synchronize,
 	FALSE, FALSE, FALSE
     },
-#endif
-#if CAIRO_HAS_XLIB_SURFACE
     {
 	"xlib-window", "xlib", NULL, NULL,
 	CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR, 1,
@@ -523,6 +521,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_xlib_synchronize,
 	FALSE, FALSE, FALSE
     },
+#endif
+#if CAIRO_HAS_XLIB_SURFACE
     /* This is a fallback surface which uses xlib fallbacks instead of
      * the Render extension. */
     {
