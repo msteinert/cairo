@@ -532,14 +532,12 @@ _cairo_quartz_init_glyph_path (cairo_quartz_scaled_font_t *font,
 	return CAIRO_STATUS_SUCCESS;
     }
 
+    /* scale(1,-1) * font->base.scale */
     textMatrix = CGAffineTransformMake (font->base.scale.xx,
-					-font->base.scale.yx,
+					font->base.scale.yx,
 					-font->base.scale.xy,
-					font->base.scale.yy,
-					font->base.scale.x0,
-					font->base.scale.y0);
-
-    textMatrix = CGAffineTransformConcat (textMatrix, CGAffineTransformMake (1.0, 0.0, 0.0, -1.0, 0.0, 0.0));
+					-font->base.scale.yy,
+					0, 0);
 
     glyphPath = CGFontGetGlyphPathPtr (font_face->cgFont, &textMatrix, 0, glyph);
     if (!glyphPath)
@@ -612,11 +610,12 @@ _cairo_quartz_init_glyph_surface (cairo_quartz_scaled_font_t *font,
     if (status)
 	return status;
 
+    /* scale(1,-1) * font->base.scale * scale(1,-1) */
     textMatrix = CGAffineTransformMake (font->base.scale.xx,
 					-font->base.scale.yx,
 					-font->base.scale.xy,
 					font->base.scale.yy,
-					0.0f, 0.0f);
+					0, -0);
     glyphRect = CGRectMake (bbox.origin.x / emscale,
 			    bbox.origin.y / emscale,
 			    bbox.size.width / emscale,
