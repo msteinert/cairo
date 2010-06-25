@@ -191,6 +191,7 @@ test_sources = \
 	png.c						\
 	push-group.c					\
 	push-group-color.c				\
+	push-group-path-offset.c			\
 	radial-gradient.c				\
 	radial-gradient-extend.c			\
 	radial-gradient-mask.c				\
