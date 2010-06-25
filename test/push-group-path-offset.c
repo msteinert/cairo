@@ -26,8 +26,7 @@
 
 #include "cairo-test.h"
 
-#define DEVICE_OFFSET -10
-#define CLIP_OFFSET 25
+#define CLIP_OFFSET 15
 #define CLIP_SIZE 20
 
 #define WIDTH 50
@@ -36,47 +35,35 @@
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    cairo_surface_t *similar;
-    cairo_t *similar_cr;
-
-    similar = cairo_surface_create_similar (cairo_get_target (cr), 
-                                            cairo_surface_get_content (cairo_get_target (cr)),
-                                            width, height);
-    cairo_surface_set_device_offset (similar, DEVICE_OFFSET, DEVICE_OFFSET);
-
-    similar_cr = cairo_create (similar);
-
     /* Neutral gray background */
-    cairo_set_source_rgb (similar_cr, 0.51613, 0.55555, 0.51613);
-    cairo_paint (similar_cr);
+    cairo_set_source_rgb (cr, 0.51613, 0.55555, 0.51613);
+    cairo_paint (cr);
+
+    /* the rest uses CAIRO_OPERATOR_SOURCE so we see better when something goes wrong */
+    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 
     /* add a rectangle */
-    cairo_rectangle (similar_cr, CLIP_OFFSET, CLIP_OFFSET, CLIP_SIZE, CLIP_SIZE);
+    cairo_rectangle (cr, CLIP_OFFSET, CLIP_OFFSET, CLIP_SIZE, CLIP_SIZE);
 
     /* clip to the rectangle */
-    cairo_clip_preserve (similar_cr);
+    cairo_clip_preserve (cr);
 
     /* push a group. We now have a device offset. */
-    cairo_push_group (similar_cr);
+    cairo_push_group (cr);
 
     /* push a group again. This is where the bug used to happen. */
+    cairo_push_group (cr);
 
     /* draw something */
-    cairo_set_source_rgb (similar_cr, 1, 0, 0);
-    cairo_fill (similar_cr);
+    cairo_set_source_rgb (cr, 1, 0, 0);
+    cairo_fill_preserve (cr);
 
     /* make sure the stuff we drew ends up on the output */
-    cairo_pop_group_to_source (similar_cr);
-    cairo_paint (similar_cr);
+    cairo_pop_group_to_source (cr);
+    cairo_fill_preserve (cr);
 
-    cairo_pop_group_to_source (similar_cr);
-    cairo_paint (similar_cr);
-
-    cairo_destroy (similar_cr);
-
-    cairo_set_source_surface (cr, similar, DEVICE_OFFSET, DEVICE_OFFSET);
-    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-    cairo_paint (cr);
+    cairo_pop_group_to_source (cr);
+    cairo_fill_preserve (cr);
 
     return CAIRO_TEST_SUCCESS;
 }
