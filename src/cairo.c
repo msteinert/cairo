@@ -615,6 +615,7 @@ cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
 	cairo_surface_t *parent_surface;
 	const cairo_rectangle_int_t *clip_extents;
 	cairo_rectangle_int_t extents;
+        cairo_matrix_t matrix;
 	cairo_bool_t is_empty;
 
 	parent_surface = _cairo_gstate_get_target (cr->gstate);
@@ -646,8 +647,8 @@ cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
 
 	/* If we have a current path, we need to adjust it to compensate for
 	 * the device offset just applied. */
-	_cairo_path_fixed_transform (cr->path,
-				     &group_surface->device_transform);
+        cairo_matrix_init_translate (&matrix, -extents.x, -extents.y);
+	_cairo_path_fixed_transform (cr->path, &matrix);
     }
 
     /* create a new gstate for the redirect */
