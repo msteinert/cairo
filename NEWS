@@ -1,3 +1,31 @@
+Snapshot 1.9.10 (2010-06-26)
+============================
+
+   The first "quick" snapshot in the run up to the stable release.  The
+   last snapshot was picked up by the bleeding edge distributions and so the
+   bug reports have to started to roll in.  The most frequent of these are the
+   introduction of rendering errors by applications that modify a surface
+   without subsequently calling cairo_surface_mark_dirty(). Make sure the
+   application developers are aware of increased reliance on strict use of the
+   Cairo API before 1.10 is released!
+
+   The usual slew of bugs reported and we would like to thank Zoxc for
+   contributing the WGL interface for cairo-gl, and finding more build
+   failures on win32.  And it just wouldn't be a 1.9 snapshot unless
+   Benjamin Otte improved the error handling within cairo-gl, as well as
+   isolating and fixing some more errors in the test suite. The biggest bug of
+   the snapshot turned out to be a major sign extension issue that had lain
+   hidden for many years and was suddenly exposed by incorrectly rounding
+   rectangles when performing non-antialiased rendering.  Also to the relief
+   of many we have included the downstream patch to honour the user's LCD
+   filtering preferences for subpixel rendering of fonts.  The interface
+   remains private for the time being, whilst the proposed public API is
+   finalized.
+
+API changes
+-----------
+   None.
+
 Snapshot 1.9.8 (2010-06-12)
 ===========================
 
