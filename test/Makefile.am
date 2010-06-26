@@ -999,6 +999,7 @@ REFERENCE_IMAGES = \
 	ps-surface-source.argb32.ref.png \
 	ps-surface-source.svg12.argb32.xfail.png \
 	ps-surface-source.svg12.rgb24.xfail.png \
+	push-group-path-offset.ref.png \
 	push-group.image16.ref.png \
 	push-group.quartz.argb32.ref.png \
 	push-group.quartz.rgb24.ref.png \
