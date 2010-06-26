@@ -75,10 +75,18 @@ AC_DEFUN([CAIRO_CONFIG_COMMANDS],
 	], $3)
 ])
 
-dnl check compiler flags with a program and no muttering.
-AC_DEFUN([CAIRO_CC_TRY_FLAG_SILENT],
-[dnl     (flags..., optional program, true-action, false-action)
-
+dnl CAIRO_CC_TRY_LINK_WITH_ENV_SILENT(env-setup, program,
+dnl				      true-action, false-action)
+dnl
+dnl Compile and link the program with the given environment setup.
+dnl The global cairo_cc_flag is set to "yes" or "no" according as
+dnl the link succeeded or not.  The link step must complete without
+dnl warnings or errors to stderr.
+dnl
+dnl Perform true-action on success and false-action on failure.
+dnl The values of CFLAGS, LIBS, LDFLAGS are saved before env-setup
+dnl is executed and restored right before the end of the macro.
+AC_DEFUN([CAIRO_CC_TRY_LINK_WITH_ENV_SILENT],[dnl
 	# AC_LANG_PROGRAM() produces a main() w/o args,
 	# but -Wold-style-definition doesn't like that.
 	# We need _some_ program so that we don't get
@@ -88,14 +96,15 @@ AC_DEFUN([CAIRO_CC_TRY_FLAG_SILENT],
 		int main(int c, char **v) { (void)c; (void)v; return 0; }'
 
 	_save_cflags="$CFLAGS"
-	CFLAGS="$CFLAGS $1"
+	_save_ldflags="$LDFLAGS"
+	_save_libs="$LIBS"
+	$1
 	AC_LINK_IFELSE(
 		[$_compile_program],
 		[cairo_cc_stderr=`test -f conftest.err && cat conftest.err`
 		 cairo_cc_flag=yes],
 		[cairo_cc_stderr=`test -f conftest.err && cat conftest.err`
 		 cairo_cc_flag=no])
-	CFLAGS="$_save_cflags"
 
 	if test "x$cairo_cc_stderr" != "x"; then
 		cairo_cc_flag=no
@@ -106,6 +115,16 @@ AC_DEFUN([CAIRO_CC_TRY_FLAG_SILENT],
 	else
 		ifelse([$4], , :, [$4])
 	fi
+	CFLAGS="$_save_cflags"
+	LDFLAGS="$_save_ldflags"
+	LIBS="$_save_libs"
+])
+
+dnl check compiler flags with a program and no muttering.
+AC_DEFUN([CAIRO_CC_TRY_FLAG_SILENT],
+[dnl     (flags..., optional program, true-action, false-action)
+	CAIRO_CC_TRY_LINK_WITH_ENV_SILENT([CFLAGS="$CFLAGS $1"],
+					  [$2], [$3], [$4])
 ])
 
 dnl find a -Werror equivalent
