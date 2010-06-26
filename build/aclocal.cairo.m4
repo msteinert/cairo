@@ -153,27 +153,6 @@ AC_DEFUN([CAIRO_CC_TRY_FLAG],
 	AC_MSG_RESULT([$cairo_cc_flag])
 ])
 
-dnl check compiler/ld flags
-AC_DEFUN([CAIRO_CC_TRY_LINK_FLAG],
-[dnl
-	CAIRO_CC_CHECK_WERROR
-	AC_MSG_CHECKING([whether $CC supports $1])
-
-	_save_cflags="$CFLAGS"
-	CFLAGS="$CFLAGS $WERROR $1"
-	AC_LINK_IFELSE([int main(void){ return 0;} ],
-                       [cairo_cc_flag=yes],
-                       [cairo_cc_flag=no])
-	CFLAGS="$_save_cflags"
-
-	if test "x$cairo_cc_flag" = "xyes"; then
-		ifelse([$2], , :, [$2])
-	else
-		ifelse([$3], , :, [$3])
-	fi
-	AC_MSG_RESULT([$cairo_cc_flag])
-])
-
 dnl Usage:
 dnl   CAIRO_CHECK_NATIVE_ATOMIC_PRIMITIVES
 AC_DEFUN([CAIRO_CHECK_NATIVE_ATOMIC_PRIMITIVES],
