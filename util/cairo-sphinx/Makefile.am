@@ -16,8 +16,9 @@ cairo_sphinx_la_LIBADD = -ldl
 
 cairo_sphinx_SOURCES = sphinx.c
 cairo_sphinx_CPPFLAGS = $(AM_CPPFLAGS) -DLIBDIR="\"$(cairolibdir)\""
-cairo_sphinx_CFLAGS = $(CAIRO_CFLAGS) $(glib_CFLAGS)
+cairo_sphinx_CFLAGS = $(CAIRO_CFLAGS) $(real_pthread_CFLAGS)  $(glib_CFLAGS)
 cairo_sphinx_LDADD = \
+	$(real_pthread_LIBS)					\
         $(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
         $(top_builddir)/boilerplate/libcairoboilerplate.la	\
 	$(top_builddir)/src/libcairo.la 			\

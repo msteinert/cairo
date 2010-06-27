@@ -47,7 +47,7 @@
 #if HAVE_FCFINI
 #include <fontconfig/fontconfig.h>
 #endif
-#if CAIRO_HAS_PTHREAD
+#if CAIRO_HAS_REAL_PTHREAD
 #include <pthread.h>
 #endif
 #if HAVE_SYS_STAT_H
@@ -1832,7 +1832,7 @@ _cairo_test_context_run (cairo_test_context_t *ctx)
     return ret;
 }
 
-#if CAIRO_HAS_PTHREAD
+#if CAIRO_HAS_REAL_PTHREAD
 typedef struct _cairo_test_thread {
     pthread_t thread;
     cairo_test_context_t *ctx;
@@ -1867,7 +1867,7 @@ cairo_test_expecting (const cairo_test_t *test)
     _cairo_test_init (&ctx, NULL, test, test->name);
     printf ("%s\n", test->description);
 
-#if CAIRO_HAS_PTHREAD
+#if CAIRO_HAS_REAL_PTHREAD
     num_threads = 0;
     if (getenv ("CAIRO_TEST_NUM_THREADS"))
 	num_threads = atoi (getenv ("CAIRO_TEST_NUM_THREADS"));

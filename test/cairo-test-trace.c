@@ -82,7 +82,7 @@
 #include <sys/un.h>
 #include <errno.h>
 #include <assert.h>
-#if CAIRO_HAS_PTHREAD
+#if CAIRO_HAS_REAL_PTHREAD
 #include <pthread.h>
 #endif
 
@@ -162,7 +162,7 @@ struct surface_tag {
 };
 static const cairo_user_data_key_t surface_tag;
 
-#if CAIRO_HAS_PTHREAD
+#if CAIRO_HAS_REAL_PTHREAD
 #define tr_die(t) t->is_recording ? pthread_exit(NULL) : exit(1)
 #else
 #define tr_die(t) exit(1)
@@ -245,7 +245,7 @@ send_recording_surface (test_runner_t *tr,
 			int width, int height,
 			struct context_closure *closure)
 {
-#if CAIRO_HAS_PTHREAD
+#if CAIRO_HAS_REAL_PTHREAD
     const struct request_image rq = {
 	closure->id,
 	closure->start_line,
@@ -591,7 +591,7 @@ spawn_target (const char *socket_path,
     exit (0);
 }
 
-#if CAIRO_HAS_PTHREAD
+#if CAIRO_HAS_REAL_PTHREAD
 static void
 cleanup_recorder (void *arg)
 {
@@ -1274,7 +1274,7 @@ _test_trace (test_trace_t *test,
 
     s = slaves = xcalloc (2*test->num_targets + 1, sizeof (struct slave));
 
-#if CAIRO_HAS_PTHREAD
+#if CAIRO_HAS_REAL_PTHREAD
     /* set-up a recording-surface to reconstruct errors */
     slave = spawn_recorder (socket_path, trace);
     if (slave < 0) {

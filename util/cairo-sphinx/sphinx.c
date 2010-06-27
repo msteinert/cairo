@@ -23,6 +23,10 @@
 
 #include <glib.h> /* for checksumming */
 
+#ifndef CAIRO_HAS_REAL_PTHREAD
+# error "cairo-sphinx needs real pthreads"
+#endif
+
 #define DATA_SIZE (256 << 20)
 #define SHM_PATH_XXX "/shmem-cairo-sphinx"
 

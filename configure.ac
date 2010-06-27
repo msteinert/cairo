@@ -28,34 +28,8 @@ m4_include(build/configure.ac.warnings)	dnl checks for compiler warning
 m4_include(build/configure.ac.system)	dnl checks for system functions, headers, libs
 m4_include(build/configure.ac.analysis)	dnl checks for analysis tools (lcov, etc)
 m4_include(build/configure.ac.noversion) dnl disable builtin libtool versioning
+m4_include(build/configure.ac.pthread)  dnl checks for pthreads
 AC_CACHE_SAVE
-
-dnl ===========================================================================
-
-AC_ARG_ENABLE(pthread,
-  AS_HELP_STRING([--disable-pthread],
-		 [Do not use pthread]),
-  [use_pthread=$enableval], [use_pthread=auto])
-
-have_pthread=no
-if test "x$use_pthread" != "xno"; then
-  pthread_REQUIRES="pthread"
-  PKG_CHECK_MODULES(PTHREAD, $pthread_REQUIRES,
-		    [use_pthread=yes; have_pthread=yes],
-		    [AX_PTHREAD([use_pthread=yes;
-                                 have_pthread=yes
-                                ], [use_pthread="no (requires $pthread_REQUIRES)"])])
-  if test "x$have_pthread" = "xyes"; then
-    AC_DEFINE([CAIRO_HAS_PTHREAD], 1, [Define to 1 if we have pthread support])
-  fi
-fi
-AM_CONDITIONAL(HAVE_PTHREAD, test "x$have_pthread" = "xyes")
-if test "x$have_pthread" = xno -a "x$use_pthread" = xyes; then
-  AC_MSG_ERROR([pthread requested but not found])
-fi
-CAIRO_CFLAGS="$CAIRO_CFLAGS $PTHREAD_CFLAGS"
-CAIRO_LDFLAGS="$PTHREAD_CFLAGS $CAIRO_LDFLAGS"
-CAIRO_LIBS="$CAIRO_LIBS $PTHREAD_LIBS"
 
 dnl ===========================================================================
 
@@ -662,6 +636,22 @@ dnl ===========================================================================
 CAIRO_ENABLE_FONT_BACKEND(user, user, always)
 
 dnl ===========================================================================
+dnl
+dnl This needs to be last on our list of features so that the pthread libs and flags
+dnl gets prefixed in front of everything else in CAIRO_{CFLAGS,LIBS}.
+dnl
+have_real_pthread=no
+have_pthread=no
+CAIRO_ENABLE(pthread, pthread, auto, [CAIRO_CONFIGURE_PTHREAD])
+AM_CONDITIONAL(HAVE_REAL_PTHREAD, test "x$use_pthread" = "xyes" -a "x$have_real_pthread" = "xyes")
+AM_CONDITIONAL(HAVE_PTHREAD, test "x$use_pthread" = "xyes")
+AC_SUBST(pthread_CFLAGS)
+AC_SUBST(pthread_LIBS)
+AC_SUBST(real_pthread_CFLAGS)
+AC_SUBST(real_pthread_LIBS)
+
+
+dnl ===========================================================================
 dnl Default to quick testing during development, but force a full test before
 dnl release
 
@@ -715,8 +705,9 @@ esac
 CAIRO_ENABLE(trace, cairo-trace, auto, [
 	if test "x$have_ld_preload" != "xyes" -o \
 		"x$have_libz" != "xyes" -o \
+		"x$have_real_pthread" != "xyes" -o \
 		"x$have_dlsym" != "xyes"; then
-		use_trace="no (requires dynamic linker and zlib)"
+		use_trace="no (requires dynamic linker and zlib and real pthreads)"
 	fi
 ])
 

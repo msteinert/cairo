@@ -6,7 +6,7 @@ SUBDIRS=pdiff .
 
 # Then we have a collection of tests that are only run if certain
 # features are compiled into cairo
-if HAVE_PTHREAD
+if HAVE_REAL_PTHREAD
 test_sources += $(pthread_test_sources)
 endif
 
@@ -81,8 +81,9 @@ cairo_test_suite_SOURCES = 		\
 	$(cairo_test_suite_headers)	\
 	$(test_sources)			\
 	cairo-test-constructors.c
-cairo_test_suite_CFLAGS = $(AM_CFLAGS)
+cairo_test_suite_CFLAGS = $(AM_CFLAGS) $(real_pthread_CFLAGS) 
 cairo_test_suite_LDADD = 					\
+	$(real_pthread_LIBS)					\
 	$(top_builddir)/test/pdiff/libpdiff.la 			\
         $(top_builddir)/boilerplate/libcairoboilerplate.la	\
 	$(top_builddir)/src/libcairo.la 			\
@@ -95,10 +96,6 @@ if BUILD_ANY2PPM
 cairo_test_suite_DEPENDENCIES += \
 	any2ppm
 endif
-if HAVE_PTHREAD
-cairo_test_suite_CFLAGS += -pthread
-cairo_test_suite_LDADD += -lpthread
-endif
 
 if HAVE_SHM
 EXTRA_PROGRAMS += cairo-test-trace
@@ -106,18 +103,15 @@ cairo_test_trace_SOURCES =		\
 	cairo-test-trace.c		\
 	buffer-diff.c			\
 	buffer-diff.h
-cairo_test_trace_CFLAGS = $(AM_CFLAGS)
+cairo_test_trace_CFLAGS = $(AM_CFLAGS) $(real_pthread_CFLAGS) 
 cairo_test_trace_LDADD =		\
+	$(real_pthread_LIBS)					\
 	$(top_builddir)/test/pdiff/libpdiff.la 			\
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
         $(top_builddir)/boilerplate/libcairoboilerplate.la	\
 	$(top_builddir)/src/libcairo.la 			\
 	$(CAIRO_LDADD) \
 	$(SHM_LIBS)
-if HAVE_PTHREAD
-cairo_test_trace_CFLAGS += -pthread
-cairo_test_trace_LDADD += -lpthread
-endif
 cairo_test_trace_DEPENDENCIES = \
 	$(top_builddir)/test/pdiff/libpdiff.la 			\
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
