@@ -67,6 +67,7 @@ cairo_private = \
 	cairo-fixed-type-private.h \
 	cairo-freelist-private.h \
 	cairo-freed-pool-private.h \
+	cairo-fontconfig-private.h \
 	cairo-gstate-private.h \
 	cairo-hash-private.h \
 	cairo-image-info-private.h \

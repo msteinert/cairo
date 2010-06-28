@@ -534,3 +534,4 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
 
     return &surface->base;
 }
+/* XXX observe mark-dirty */

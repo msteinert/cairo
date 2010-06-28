@@ -60,9 +60,7 @@
 #include "cairo-xlib-surface-private.h"
 #include "cairo-error-private.h"
 
-#if CAIRO_HAS_FC_FONT
-#include <fontconfig/fontconfig.h>
-#endif
+#include "cairo-fontconfig-private.h"
 
 static int
 parse_boolean (const char *v)
@@ -127,22 +125,6 @@ get_integer_default (Display    *dpy,
 
     return FALSE;
 }
-
-#ifndef FC_RGBA_UNKNOWN
-#define FC_RGBA_UNKNOWN	    0
-#define FC_RGBA_RGB	    1
-#define FC_RGBA_BGR	    2
-#define FC_RGBA_VRGB	    3
-#define FC_RGBA_VBGR	    4
-#define FC_RGBA_NONE	    5
-#endif
-
-#ifndef FC_HINT_NONE
-#define FC_HINT_NONE        0
-#define FC_HINT_SLIGHT      1
-#define FC_HINT_MEDIUM      2
-#define FC_HINT_FULL        3
-#endif
 
 static void
 _cairo_xlib_init_screen_font_options (Display *dpy,
