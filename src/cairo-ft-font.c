@@ -46,7 +46,7 @@
 
 #include <float.h>
 
-#include "cairo-fontcontig-private.h"
+#include "cairo-fontconfig-private.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
