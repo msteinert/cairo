@@ -48,14 +48,6 @@
 #define RTLD_DEFAULT ((void *) 0)
 #endif
 
-/* The 10.5 SDK includes a funky new definition of FloatToFixed which
- * causes all sorts of breakage; so reset to old-style definition
- */
-#ifdef FloatToFixed
-#undef FloatToFixed
-#define FloatToFixed(a)     ((Fixed)((float)(a) * fixed1))
-#endif
-
 #include <limits.h>
 
 #undef QUARTZ_DEBUG
@@ -88,10 +80,7 @@ enum PrivateCGCompositeMode {
 };
 typedef enum PrivateCGCompositeMode PrivateCGCompositeMode;
 CG_EXTERN void CGContextSetCompositeOperation (CGContextRef, PrivateCGCompositeMode);
-CG_EXTERN void CGContextResetCTM (CGContextRef);
 CG_EXTERN void CGContextSetCTM (CGContextRef, CGAffineTransform);
-CG_EXTERN void CGContextResetClip (CGContextRef);
-CG_EXTERN CGSize CGContextGetPatternPhase (CGContextRef);
 
 /* We need to work with the 10.3 SDK as well (and 10.3 machines; luckily, 10.3.9
  * has all the stuff we care about, just some of it isn't exported in the SDK.
@@ -117,12 +106,9 @@ static void (*CGContextClipToMaskPtr) (CGContextRef, CGRect, CGImageRef) = NULL;
 static void (*CGContextDrawTiledImagePtr) (CGContextRef, CGRect, CGImageRef) = NULL;
 static unsigned int (*CGContextGetTypePtr) (CGContextRef) = NULL;
 static void (*CGContextSetShouldAntialiasFontsPtr) (CGContextRef, bool) = NULL;
-static bool (*CGContextGetShouldAntialiasFontsPtr) (CGContextRef) = NULL;
-static bool (*CGContextGetShouldSmoothFontsPtr) (CGContextRef) = NULL;
 static void (*CGContextSetAllowsFontSmoothingPtr) (CGContextRef, bool) = NULL;
 static bool (*CGContextGetAllowsFontSmoothingPtr) (CGContextRef) = NULL;
 static CGPathRef (*CGContextCopyPathPtr) (CGContextRef) = NULL;
-static void (*CGContextReplacePathWithClipPathPtr) (CGContextRef) = NULL;
 
 static cairo_bool_t _cairo_quartz_symbol_lookup_done = FALSE;
 
@@ -151,10 +137,7 @@ static void quartz_ensure_symbols(void)
     CGContextDrawTiledImagePtr = dlsym(RTLD_DEFAULT, "CGContextDrawTiledImage");
     CGContextGetTypePtr = dlsym(RTLD_DEFAULT, "CGContextGetType");
     CGContextSetShouldAntialiasFontsPtr = dlsym(RTLD_DEFAULT, "CGContextSetShouldAntialiasFonts");
-    CGContextGetShouldAntialiasFontsPtr = dlsym(RTLD_DEFAULT, "CGContextGetShouldAntialiasFonts");
-    CGContextGetShouldSmoothFontsPtr = dlsym(RTLD_DEFAULT, "CGContextGetShouldSmoothFonts");
     CGContextCopyPathPtr = dlsym(RTLD_DEFAULT, "CGContextCopyPath");
-    CGContextReplacePathWithClipPathPtr = dlsym(RTLD_DEFAULT, "CGContextReplacePathWithClipPath");
     CGContextGetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextGetAllowsFontSmoothing");
     CGContextSetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextSetAllowsFontSmoothing");
 
