@@ -80,6 +80,7 @@ _cairo_user_scaled_font_create_recording_context (cairo_user_scaled_font_t *scal
 {
     cairo_content_t content;
     cairo_surface_t *recording_surface;
+    cairo_matrix_t scale;
     cairo_t *cr;
 
     content = scaled_font->base.options.antialias == CAIRO_ANTIALIAS_SUBPIXEL ?
@@ -90,7 +91,10 @@ _cairo_user_scaled_font_create_recording_context (cairo_user_scaled_font_t *scal
     cr = cairo_create (recording_surface);
     cairo_surface_destroy (recording_surface);
 
-    cairo_set_matrix (cr, &scaled_font->base.scale);
+    scale = scaled_font->base.scale;
+    scale.x0 = scale.y0 = 0.;
+
+    cairo_set_matrix (cr, &scale);
     cairo_set_font_size (cr, 1.0);
     cairo_set_font_options (cr, &scaled_font->base.options);
     cairo_set_source_rgb (cr, 1., 1., 1.);
