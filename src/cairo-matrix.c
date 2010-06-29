@@ -578,6 +578,15 @@ _cairo_matrix_is_invertible (const cairo_matrix_t *matrix)
     return ISFINITE (det) && det != 0.;
 }
 
+cairo_bool_t
+_cairo_matrix_is_scale_0 (const cairo_matrix_t *matrix)
+{
+    return matrix->xx == 0. &&
+           matrix->xy == 0. &&
+           matrix->yx == 0. &&
+           matrix->yy == 0.;
+}
+
 double
 _cairo_matrix_compute_determinant (const cairo_matrix_t *matrix)
 {

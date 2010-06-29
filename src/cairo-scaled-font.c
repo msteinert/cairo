@@ -704,13 +704,12 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 	 *
 	 * Also, the check for == 0. below may be too harsh...
 	 */
-        if (scaled_font->scale.xx == 0. && scaled_font->scale.xy == 0. &&
-	    scaled_font->scale.yx == 0. && scaled_font->scale.yy == 0.)
+        if (_cairo_matrix_is_scale_0 (&scaled_font->scale)) {
 	    cairo_matrix_init (&scaled_font->scale_inverse,
 			       0, 0, 0, 0,
 			       -scaled_font->scale.x0,
 			       -scaled_font->scale.y0);
-	else
+	} else
 	    return status;
     }
 
