@@ -57,7 +57,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
-	NULL, NULL,
+	NULL, NULL, NULL,
 	TRUE, FALSE, FALSE
     },
     {
@@ -68,7 +68,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
-	NULL, NULL, FALSE, FALSE, FALSE
+	NULL, NULL, NULL,
+        FALSE, FALSE, FALSE
     },
 };
 CAIRO_BOILERPLATE (quartz, targets)

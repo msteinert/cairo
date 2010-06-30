@@ -286,7 +286,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_svg_get_image_surface,
 	_cairo_boilerplate_svg_surface_write_to_png,
 	_cairo_boilerplate_svg_cleanup,
-	NULL, FALSE, TRUE, TRUE
+	NULL, NULL, FALSE, TRUE, TRUE
     },
     {
 	"svg11", "svg", NULL, NULL,
@@ -298,7 +298,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_svg_get_image_surface,
 	_cairo_boilerplate_svg_surface_write_to_png,
 	_cairo_boilerplate_svg_cleanup,
-	NULL, FALSE, TRUE, TRUE
+	NULL, NULL, FALSE, TRUE, TRUE
     },
     {
 	"svg12", "svg", NULL, NULL,
@@ -310,7 +310,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_svg_get_image_surface,
 	_cairo_boilerplate_svg_surface_write_to_png,
 	_cairo_boilerplate_svg_cleanup,
-	NULL, FALSE, TRUE, TRUE
+	NULL, NULL, FALSE, TRUE, TRUE
     },
     {
 	"svg12", "svg", NULL, NULL,
@@ -322,7 +322,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_svg_get_image_surface,
 	_cairo_boilerplate_svg_surface_write_to_png,
 	_cairo_boilerplate_svg_cleanup,
-	NULL, FALSE, TRUE, TRUE
+	NULL, NULL, FALSE, TRUE, TRUE
     },
 #endif
 };

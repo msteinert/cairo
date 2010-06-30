@@ -218,6 +218,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_wgl_cleanup,
 	_cairo_boilerplate_wgl_synchronize,
+        NULL,
 	TRUE, FALSE, FALSE
     },
     {
@@ -231,6 +232,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_wgl_cleanup,
 	_cairo_boilerplate_wgl_synchronize,
+        NULL,
 	FALSE, FALSE, FALSE
     },
 };

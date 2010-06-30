@@ -623,6 +623,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xcb_cleanup,
 	_cairo_boilerplate_xcb_synchronize,
+        NULL,
 	TRUE, FALSE, FALSE
     },
     {
@@ -636,6 +637,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xcb_cleanup,
 	_cairo_boilerplate_xcb_synchronize,
+        NULL,
 	FALSE, FALSE, FALSE
     },
     {
@@ -649,6 +651,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xcb_cleanup,
 	_cairo_boilerplate_xcb_synchronize,
+        NULL,
 	FALSE, FALSE, FALSE
     },
     {
@@ -662,6 +665,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xcb_cleanup,
 	_cairo_boilerplate_xcb_synchronize,
+        NULL,
 	FALSE, FALSE, FALSE
     },
     {
@@ -675,6 +679,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xcb_cleanup,
 	_cairo_boilerplate_xcb_synchronize,
+        NULL,
 	FALSE, FALSE, FALSE
     },
     {
@@ -688,6 +693,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xcb_cleanup,
 	_cairo_boilerplate_xcb_synchronize,
+        NULL,
 	FALSE, FALSE, FALSE
     },
     {
@@ -701,6 +707,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xcb_cleanup,
 	_cairo_boilerplate_xcb_synchronize,
+        NULL,
 	FALSE, FALSE, FALSE
     },
 };

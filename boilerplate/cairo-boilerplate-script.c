@@ -136,6 +136,6 @@ static const cairo_boilerplate_target_t target[] = {{
     _cairo_boilerplate_script_get_image_surface,
     _cairo_boilerplate_script_surface_write_to_png,
     _cairo_boilerplate_script_cleanup,
-    NULL, FALSE, FALSE, FALSE
+    NULL, NULL, FALSE, FALSE, FALSE
 }};
 CAIRO_BOILERPLATE (script, target)

@@ -326,7 +326,7 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
-	NULL, NULL,
+	NULL, NULL, NULL,
 	TRUE, FALSE, FALSE
     },
     {
@@ -336,7 +336,7 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
-	NULL, NULL,
+	NULL, NULL, NULL,
 	FALSE, FALSE, FALSE
     },
     {
@@ -346,7 +346,7 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
-	NULL, NULL,
+	NULL, NULL, NULL,
 	TRUE, FALSE, FALSE
     },
 #if CAIRO_HAS_RECORDING_SURFACE
@@ -359,7 +359,7 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_recording_surface_cleanup,
-	NULL,
+	NULL, NULL,
 	FALSE, FALSE, TRUE
     },
     {
@@ -371,7 +371,7 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_recording_surface_cleanup,
-	NULL,
+	NULL, NULL,
 	FALSE, FALSE, TRUE
     },
 #endif

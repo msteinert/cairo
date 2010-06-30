@@ -357,6 +357,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_gl_cleanup,
 	_cairo_boilerplate_gl_synchronize,
+        NULL,
 	TRUE, FALSE, FALSE
     },
     {
@@ -369,6 +370,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_gl_cleanup,
 	_cairo_boilerplate_gl_synchronize,
+        NULL,
 	FALSE, FALSE, FALSE
     },
     {
@@ -382,6 +384,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_gl_cleanup,
 	_cairo_boilerplate_gl_synchronize,
+        NULL,
 	FALSE, FALSE, FALSE
     },
     {
@@ -395,6 +398,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_gl_cleanup,
 	_cairo_boilerplate_gl_synchronize,
+        NULL,
 	FALSE, FALSE, FALSE
     },
 };

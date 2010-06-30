@@ -495,6 +495,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xlib_cleanup,
 	_cairo_boilerplate_xlib_synchronize,
+        NULL,
 	TRUE, FALSE, FALSE
     },
     {
@@ -507,6 +508,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xlib_cleanup,
 	_cairo_boilerplate_xlib_synchronize,
+        NULL,
 	FALSE, FALSE, FALSE
     },
     {
@@ -519,6 +521,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xlib_cleanup,
 	_cairo_boilerplate_xlib_synchronize,
+        NULL,
 	FALSE, FALSE, FALSE
     },
 #endif
@@ -535,6 +538,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xlib_cleanup,
 	_cairo_boilerplate_xlib_synchronize,
+        NULL,
 	FALSE, FALSE, FALSE
     },
 #endif

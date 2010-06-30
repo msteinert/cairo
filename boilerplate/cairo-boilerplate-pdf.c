@@ -249,7 +249,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_pdf_get_image_surface,
 	_cairo_boilerplate_pdf_surface_write_to_png,
 	_cairo_boilerplate_pdf_cleanup,
-	NULL, FALSE, TRUE, TRUE
+	NULL, NULL, FALSE, TRUE, TRUE
     },
     {
 	"pdf", "pdf", ".pdf", NULL,
@@ -261,7 +261,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_pdf_get_image_surface,
 	_cairo_boilerplate_pdf_surface_write_to_png,
 	_cairo_boilerplate_pdf_cleanup,
-	NULL, FALSE, TRUE, TRUE
+	NULL, NULL, FALSE, TRUE, TRUE
     },
 #endif
 };
