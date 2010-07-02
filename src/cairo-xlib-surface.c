@@ -2329,11 +2329,14 @@ _cairo_xlib_surface_upload(cairo_xlib_surface_t *surface,
     if (! _cairo_matrix_is_integer_translation (&pattern->matrix, &tx, &ty))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    src_x += tx;
+    src_y += ty;
+
     /* XXX for EXTEND_NONE perform unbounded fixups? */
-    if (src_x + tx < extents.x ||
-	src_y + ty < extents.y ||
-	src_x + tx + width  > (unsigned) extents.width ||
-	src_y + ty + height > (unsigned) extents.height)
+    if (src_x < extents.x ||
+	src_y < extents.y ||
+	src_x + width  > (unsigned) extents.width ||
+	src_y + height > (unsigned) extents.height)
     {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
@@ -2354,7 +2357,7 @@ _cairo_xlib_surface_upload(cairo_xlib_surface_t *surface,
 
 	    cairo_region_get_rectangle (clip_region, n, &rect);
 	    status = _draw_image_surface (surface, image,
-					  rect.x + src_x, rect.x + src_y,
+					  rect.x + src_x, rect.y + src_y,
 					  rect.width, rect.height,
 					  rect.x, rect.y);
 	    if (unlikely (status))
