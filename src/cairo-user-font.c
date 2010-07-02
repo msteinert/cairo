@@ -136,10 +136,10 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	    status = face->scaled_font_methods.render_glyph ((cairo_scaled_font_t *)scaled_font,
 							     _cairo_scaled_glyph_index(scaled_glyph),
 							     cr, &extents);
-	    cairo_destroy (cr);
-
 	    if (status == CAIRO_STATUS_SUCCESS)
 	        status = cairo_status (cr);
+
+	    cairo_destroy (cr);
 
 	    if (unlikely (status)) {
 	        cairo_surface_destroy (recording_surface);
