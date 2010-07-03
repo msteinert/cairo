@@ -29,6 +29,8 @@
 #include "cairo-boilerplate-private.h"
 #include "cairo-boilerplate-scaled-font.h"
 
+#include <pixman.h>
+
 #include <cairo-types-private.h>
 #include <cairo-scaled-font-private.h>
 
@@ -164,6 +166,16 @@ _cairo_boilerplate_image16_create_surface (const char		     *name,
 
     /* XXX force CAIRO_CONTENT_COLOR */
     return cairo_image_surface_create (CAIRO_FORMAT_RGB16_565, ceil (width), ceil (height));
+}
+
+static char *
+_cairo_boilerplate_image_describe (void *closure)
+{
+    char *s;
+  
+    xasprintf (&s, "pixman %s", pixman_version_string ());
+
+    return s;
 }
 
 #if CAIRO_HAS_RECORDING_SURFACE
@@ -326,7 +338,8 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
-	NULL, NULL, NULL,
+	NULL, NULL,
+        _cairo_boilerplate_image_describe,
 	TRUE, FALSE, FALSE
     },
     {
@@ -336,7 +349,8 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
-	NULL, NULL, NULL,
+	NULL, NULL,
+        _cairo_boilerplate_image_describe,
 	FALSE, FALSE, FALSE
     },
     {
@@ -346,7 +360,8 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
-	NULL, NULL, NULL,
+	NULL, NULL,
+        _cairo_boilerplate_image_describe,
 	TRUE, FALSE, FALSE
     },
 #if CAIRO_HAS_RECORDING_SURFACE
