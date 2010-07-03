@@ -273,7 +273,34 @@ interrupt (int sig)
 }
 
 static void
+describe (cairo_perf_t *perf,
+          void *closure)
+{
+    char *description = NULL;
+
+    if (perf->target->describe)
+        description = perf->target->describe (closure);
+
+    if (description == NULL)
+        return;
+
+    if (perf->raw) {
+        printf ("[ # ] %s: %s\n", perf->target->name, description);
+    }
+
+    if (perf->summary) {
+        fprintf (perf->summary,
+                 "[ # ] %8s: %s\n",
+                 perf->target->name,
+                 description);
+    }
+
+    free (description);
+}
+
+static void
 execute (cairo_perf_t	 *perf,
+         void            *closure,
 	 cairo_surface_t *target,
 	 const char	 *trace)
 {
@@ -315,6 +342,8 @@ execute (cairo_perf_t	 *perf,
 	}
 	first_run = FALSE;
     }
+
+    describe (perf, closure);
 
     times = perf->times;
 
@@ -686,7 +715,7 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 
     cairo_perf_timer_set_synchronize (target->synchronize, closure);
 
-    execute (perf, surface, trace);
+    execute (perf, closure, surface, trace);
 
     cairo_surface_destroy (surface);
 
