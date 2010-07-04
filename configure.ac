@@ -781,11 +781,7 @@ dnl ===========================================================================
 PKG_CHECK_MODULES(gtk, "gtk+-2.0",have_gtk=yes, have_gtk=no)
 AM_CONDITIONAL(HAVE_GTK, test "x$have_gtk" = "xyes")
 
-SHAVE_INIT([build], [enable]) # dnl Make the output pretty
-
 AC_CONFIG_FILES([
-build/shave
-build/shave-libtool
 Makefile
 boilerplate/Makefile
 src/Makefile

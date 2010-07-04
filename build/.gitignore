@@ -10,5 +10,3 @@ mkinstalldirs
 #Makefile.win32.features-h
 libtool.m4
 lt*.m4
-shave
-shave-libtool
