@@ -497,7 +497,7 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
     if (unlikely (target->status))
 	return _cairo_surface_create_in_error (target->status);
     if (unlikely (target->finished))
-	return _cairo_surface_create_in_error (CAIRO_STATUS_SURFACE_FINISHED);
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 
     surface = malloc (sizeof (cairo_surface_subsurface_t));
     if (unlikely (surface == NULL))

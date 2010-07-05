@@ -858,7 +858,7 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
     if (unlikely (surface->status))
 	return surface->status;
     if (surface->finished)
-	return _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
+	return _cairo_surface_set_error (surface, _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 
     status = _cairo_intern_string (&mime_type, -1);
     if (unlikely (status))
@@ -954,7 +954,7 @@ _cairo_surface_set_font_options (cairo_surface_t       *surface,
 
     if (surface->finished) {
 	status = _cairo_surface_set_error (surface,
-		                           CAIRO_STATUS_SURFACE_FINISHED);
+		                           _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 	return;
     }
 
@@ -1083,7 +1083,7 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
     assert (surface->snapshot_of == NULL);
 
     if (surface->finished) {
-	status = _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
+	status = _cairo_surface_set_error (surface, _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 	return;
     }
 
@@ -1142,7 +1142,7 @@ _cairo_surface_set_device_scale (cairo_surface_t *surface,
     assert (surface->snapshot_of == NULL);
 
     if (surface->finished) {
-	status = _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
+	status = _cairo_surface_set_error (surface, _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 	return;
     }
 
@@ -1192,7 +1192,7 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
     assert (surface->snapshot_of == NULL);
 
     if (surface->finished) {
-	status = _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
+	status = _cairo_surface_set_error (surface, _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 	return;
     }
 
@@ -1279,7 +1279,7 @@ cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
     assert (surface->snapshot_of == NULL);
 
     if (surface->finished) {
-	status = _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
+	status = _cairo_surface_set_error (surface, _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 	return;
     }
 
