@@ -8,6 +8,7 @@ test_sources = \
 	a8-mask.c					\
 	aliasing.c					\
 	alpha-similar.c					\
+	api-special-cases.c				\
 	big-line.c					\
 	big-trap.c					\
 	bilevel-image.c					\
