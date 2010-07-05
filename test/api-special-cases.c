@@ -336,6 +336,46 @@ test_cairo_surface_write_to_png_stream (cairo_surface_t *surface)
 
 #endif
 
+static cairo_test_status_t
+test_cairo_recording_surface_ink_extents (cairo_surface_t *surface)
+{
+    double x, y, w, h;
+
+    cairo_recording_surface_ink_extents (surface, &x, &y, &w, &h);
+    return x == 0 && y == 0 && w == 0 && h == 0 ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
+
+static cairo_test_status_t
+test_cairo_tee_surface_add (cairo_surface_t *surface)
+{
+    cairo_surface_t *image = cairo_image_surface_create (CAIRO_FORMAT_A8, 10, 10);
+
+    cairo_tee_surface_add (surface, image);
+    cairo_surface_destroy (image);
+    return CAIRO_TEST_SUCCESS;
+}
+
+static cairo_test_status_t
+test_cairo_tee_surface_remove (cairo_surface_t *surface)
+{
+    cairo_surface_t *image = cairo_image_surface_create (CAIRO_FORMAT_A8, 10, 10);
+
+    cairo_tee_surface_remove (surface, image);
+    cairo_surface_destroy (image);
+    return CAIRO_TEST_SUCCESS;
+}
+
+static cairo_test_status_t
+test_cairo_tee_surface_index (cairo_surface_t *surface)
+{
+    cairo_surface_t *master;
+    cairo_status_t status;
+
+    master = cairo_tee_surface_index (surface, 0);
+    status = cairo_surface_status (master);
+    cairo_surface_destroy (master);
+    return status ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
 
 
 #define TEST(name, surface_type, sets_status) { #name, test_ ## name, surface_type, sets_status }
@@ -378,6 +418,10 @@ struct {
     TEST (cairo_surface_write_to_png, -1, FALSE),
     TEST (cairo_surface_write_to_png_stream, -1, FALSE),
 #endif
+    TEST (cairo_recording_surface_ink_extents, CAIRO_SURFACE_TYPE_RECORDING, FALSE),
+    TEST (cairo_tee_surface_add, CAIRO_SURFACE_TYPE_TEE, TRUE),
+    TEST (cairo_tee_surface_remove, CAIRO_SURFACE_TYPE_TEE, TRUE),
+    TEST (cairo_tee_surface_index, CAIRO_SURFACE_TYPE_TEE, FALSE),
 };
 
 static cairo_test_status_t
