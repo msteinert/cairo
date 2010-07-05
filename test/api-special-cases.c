@@ -422,6 +422,42 @@ draw (cairo_t *cr, int width, int height)
         }
     }
 
+    /* Test a normal surface for functions that have the wrong type */
+    for (i = 0; i < ARRAY_LENGTH (tests); i++) {
+        cairo_status_t desired_status;
+
+        if (tests[i].surface_type == -1)
+            continue;
+        similar = cairo_surface_create_similar (target,
+                                                cairo_surface_get_content (target),
+                                                10, 10);
+        if (cairo_surface_get_type (similar) == (cairo_surface_type_t) tests[i].surface_type) {
+            cairo_surface_destroy (similar);
+            continue;
+        }
+
+        test_status = tests[i].func (similar);
+        status = cairo_surface_status (similar);
+        cairo_surface_destroy (similar);
+
+        if (test_status != CAIRO_TEST_SUCCESS) {
+            cairo_test_log (ctx,
+                            "Failed test %s with %d\n",
+                            tests[i].name, (int) test_status);
+            return test_status;
+        }
+
+        desired_status = tests[i].modifies_surface ? CAIRO_STATUS_SURFACE_TYPE_MISMATCH : CAIRO_STATUS_SUCCESS;
+        if (status != desired_status) {
+            cairo_test_log (ctx,
+                            "Failed test %s: Surface status should be %u (%s), but is %u (%s)\n",
+                            tests[i].name,
+                            desired_status, cairo_status_to_string (desired_status),
+                            status, cairo_status_to_string (status));
+            return CAIRO_TEST_ERROR;
+        }
+    }
+
     /* 565-compatible gray background */
     cairo_set_source_rgb (cr, 0.51613, 0.55555, 0.51613);
     cairo_paint (cr);
