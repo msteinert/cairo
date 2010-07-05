@@ -498,6 +498,11 @@ _extract_pdf_surface (cairo_surface_t		 *surface,
 
     if (surface->status)
 	return FALSE;
+    if (surface->finished) {
+	status_ignored = _cairo_surface_set_error (surface,
+						   _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
+        return FALSE;
+    }
 
     if (! _cairo_surface_is_paginated (surface)) {
 	status_ignored = _cairo_surface_set_error (surface,
@@ -509,6 +514,11 @@ _extract_pdf_surface (cairo_surface_t		 *surface,
     if (target->status) {
 	status_ignored = _cairo_surface_set_error (surface,
 						   target->status);
+	return FALSE;
+    }
+    if (target->finished) {
+	status_ignored = _cairo_surface_set_error (surface,
+						   _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 	return FALSE;
     }
 
