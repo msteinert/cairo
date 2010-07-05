@@ -366,11 +366,16 @@ cairo_gl_surface_set_size (cairo_surface_t *abstract_surface,
 
     if (unlikely (abstract_surface->status))
 	return;
+    if (unlikely (abstract_surface->finished)) {
+	status = _cairo_surface_set_error (abstract_surface,
+		                           _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
+        return;
+    }
 
     if (! _cairo_surface_is_gl (abstract_surface) ||
         ! _cairo_gl_surface_is_texture (surface)) {
 	status = _cairo_surface_set_error (abstract_surface,
-		                           CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+		                           _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
 	return;
     }
 
@@ -408,6 +413,11 @@ cairo_gl_surface_swapbuffers (cairo_surface_t *abstract_surface)
 
     if (unlikely (abstract_surface->status))
 	return;
+    if (unlikely (abstract_surface->finished)) {
+	status = _cairo_surface_set_error (abstract_surface,
+		                           _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
+        return;
+    }
 
     if (! _cairo_surface_is_gl (abstract_surface)) {
 	status = _cairo_surface_set_error (abstract_surface,
