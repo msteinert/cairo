@@ -334,7 +334,7 @@ test_cairo_surface_write_to_png_stream (cairo_surface_t *surface)
     return status && status != CAIRO_STATUS_WRITE_ERROR ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
 }
 
-#endif
+#endif /* CAIRO_HAS_PNG_FUNCTIONS */
 
 static cairo_test_status_t
 test_cairo_recording_surface_ink_extents (cairo_surface_t *surface)
@@ -377,6 +377,37 @@ test_cairo_tee_surface_index (cairo_surface_t *surface)
     return status ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
 }
 
+#if CAIRO_HAS_GL_SURFACE
+
+static cairo_test_status_t
+test_cairo_gl_surface_set_size (cairo_surface_t *surface)
+{
+    cairo_gl_surface_set_size (surface, 5, 5);
+    return CAIRO_TEST_SUCCESS;
+}
+
+static cairo_test_status_t
+test_cairo_gl_surface_get_width (cairo_surface_t *surface)
+{
+    unsigned int width = cairo_gl_surface_get_width (surface);
+    return width == 0 || surface_has_type (surface, CAIRO_SURFACE_TYPE_GL) ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
+
+static cairo_test_status_t
+test_cairo_gl_surface_get_height (cairo_surface_t *surface)
+{
+    unsigned int height = cairo_gl_surface_get_height (surface);
+    return height == 0 || surface_has_type (surface, CAIRO_SURFACE_TYPE_GL) ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
+
+static cairo_test_status_t
+test_cairo_gl_surface_swapbuffers (cairo_surface_t *surface)
+{
+    cairo_gl_surface_swapbuffers (surface);
+    return CAIRO_TEST_SUCCESS;
+}
+
+#endif /* CAIRO_HAS_GL_SURFACE */
 
 #define TEST(name, surface_type, sets_status) { #name, test_ ## name, surface_type, sets_status }
 
@@ -422,6 +453,12 @@ struct {
     TEST (cairo_tee_surface_add, CAIRO_SURFACE_TYPE_TEE, TRUE),
     TEST (cairo_tee_surface_remove, CAIRO_SURFACE_TYPE_TEE, TRUE),
     TEST (cairo_tee_surface_index, CAIRO_SURFACE_TYPE_TEE, FALSE),
+#if CAIRO_HAS_GL_SURFACE
+    TEST (cairo_gl_surface_set_size, CAIRO_SURFACE_TYPE_GL, TRUE),
+    TEST (cairo_gl_surface_get_width, CAIRO_SURFACE_TYPE_GL, FALSE),
+    TEST (cairo_gl_surface_get_height, CAIRO_SURFACE_TYPE_GL, FALSE),
+    TEST (cairo_gl_surface_swapbuffers, CAIRO_SURFACE_TYPE_GL, TRUE),
+#endif
 };
 
 static cairo_test_status_t
