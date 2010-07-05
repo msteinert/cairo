@@ -23,6 +23,33 @@
  * Author: Benjamin Otte <otte@redhat.com>
  */
 
+/*
+ * WHAT THIS TEST DOES
+ *
+ * This test tests that for all public APIs Cairo behaves correct, consistent
+ * and most of all doesn't crash. It does this by calling all APIs that take
+ * surfaces and calling them on specially prepared surfaces that should fail 
+ * when called on this function.
+ *
+ * ADDING NEW FUNCTIONS
+ *
+ * You need (for adding the function cairo_surface_foo):
+ * 1) A surface_test_func_t named test_cairo_surface_foo that gets passed the
+ *    prepared surface and has the job of calling the function and checking
+ *    the return value (if one exists) for correctness. The top of this file
+ *    contains all these shim functions.
+ * 2) Knowledge if the function behaves like a setter or like a setter. A 
+ *    setter should set an error status on the surface, a getter does not
+ *    modify the function.
+ * 3) Knowledge if the function only works for a specific surface type and for
+ *    which one.
+ * 4) An entry in the tests array using the TEST() macro. It takes as arguments:
+ *    - The function name
+ *    - TRUE if the function modifies the surface, FALSE otherwise
+ *    - the surface type for which the function is valid or -1 if it is valid
+ *      for all surface types.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
