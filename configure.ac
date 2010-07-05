@@ -13,7 +13,6 @@ AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_LIBTOOL_WIN32_DLL dnl Must be called before AC_PROG_LIBTOOL
 AC_PROG_LIBTOOL dnl ([1.4]) Don't remove!
-DOLT dnl Make my libtool fast!
 GTK_DOC_CHECK([1.6])
 
 AC_SYS_LARGEFILE

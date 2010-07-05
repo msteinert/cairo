@@ -53,9 +53,8 @@ EXTRA_DIST += \
 	cairo-version.h \
 	$(NULL)
 
-DISTCLEANFILES += config.cache	\
-		  doltlibtool	\
-		  doltcompile
+DISTCLEANFILES += config.cache
+
 MAINTAINERCLEANFILES += \
 	$(srcdir)/aclocal.m4 \
 	$(srcdir)/autoscan.log \
