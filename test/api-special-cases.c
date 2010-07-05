@@ -52,6 +52,7 @@
 #endif
 
 #define ARRAY_LENGTH(array) (sizeof (array) / sizeof ((array)[0]))
+#define surface_has_type(surface,type) (cairo_surface_get_type (surface) == (type))
 
 typedef cairo_test_status_t (* surface_test_func_t) (cairo_surface_t *surface);
 
@@ -268,38 +269,79 @@ test_cairo_surface_has_show_text_glyphs (cairo_surface_t *surface)
     return CAIRO_TEST_SUCCESS;
 }
 
+static cairo_test_status_t
+test_cairo_image_surface_get_data (cairo_surface_t *surface)
+{
+    unsigned char *data = cairo_image_surface_get_data (surface);
+    return data == NULL || surface_has_type (surface, CAIRO_SURFACE_TYPE_IMAGE) ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
+
+static cairo_test_status_t
+test_cairo_image_surface_get_format (cairo_surface_t *surface)
+{
+    cairo_format_t format = cairo_image_surface_get_format (surface);
+    return format == CAIRO_FORMAT_INVALID || surface_has_type (surface, CAIRO_SURFACE_TYPE_IMAGE) ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
+
+static cairo_test_status_t
+test_cairo_image_surface_get_width (cairo_surface_t *surface)
+{
+    unsigned int width = cairo_image_surface_get_width (surface);
+    return width == 0 || surface_has_type (surface, CAIRO_SURFACE_TYPE_IMAGE) ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
+
+static cairo_test_status_t
+test_cairo_image_surface_get_height (cairo_surface_t *surface)
+{
+    unsigned int height = cairo_image_surface_get_height (surface);
+    return height == 0 || surface_has_type (surface, CAIRO_SURFACE_TYPE_IMAGE) ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
+
+static cairo_test_status_t
+test_cairo_image_surface_get_stride (cairo_surface_t *surface)
+{
+    unsigned int stride = cairo_image_surface_get_stride (surface);
+    return stride == 0 || surface_has_type (surface, CAIRO_SURFACE_TYPE_IMAGE) ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
 
 
-#define TEST(name, sets_status) { #name, test_ ## name, sets_status }
+
+#define TEST(name, surface_type, sets_status) { #name, test_ ## name, surface_type, sets_status }
 
 struct {
     const char *name;
     surface_test_func_t func;
+    int surface_type; /* cairo_surface_type_t or -1 */
     cairo_bool_t modifies_surface;
 } tests[] = {
-    TEST (cairo_surface_create_similar, FALSE),
-    TEST (cairo_surface_create_for_rectangle, FALSE),
-    TEST (cairo_surface_reference, FALSE),
-    TEST (cairo_surface_finish, TRUE),
-    TEST (cairo_surface_get_device, FALSE),
-    TEST (cairo_surface_get_reference_count, FALSE),
-    TEST (cairo_surface_status, FALSE),
-    TEST (cairo_surface_get_type, FALSE),
-    TEST (cairo_surface_get_content, FALSE),
-    TEST (cairo_surface_set_user_data, FALSE),
-    TEST (cairo_surface_set_mime_data, TRUE),
-    TEST (cairo_surface_get_mime_data, FALSE),
-    TEST (cairo_surface_get_font_options, FALSE),
-    TEST (cairo_surface_flush, TRUE),
-    TEST (cairo_surface_mark_dirty, TRUE),
-    TEST (cairo_surface_mark_dirty_rectangle, TRUE),
-    TEST (cairo_surface_set_device_offset, TRUE),
-    TEST (cairo_surface_get_device_offset, FALSE),
-    TEST (cairo_surface_set_fallback_resolution, TRUE),
-    TEST (cairo_surface_get_fallback_resolution, FALSE),
-    TEST (cairo_surface_copy_page, TRUE),
-    TEST (cairo_surface_show_page, TRUE),
-    TEST (cairo_surface_has_show_text_glyphs, FALSE)
+    TEST (cairo_surface_create_similar, -1, FALSE),
+    TEST (cairo_surface_create_for_rectangle, -1, FALSE),
+    TEST (cairo_surface_reference, -1, FALSE),
+    TEST (cairo_surface_finish, -1, TRUE),
+    TEST (cairo_surface_get_device, -1, FALSE),
+    TEST (cairo_surface_get_reference_count, -1, FALSE),
+    TEST (cairo_surface_status, -1, FALSE),
+    TEST (cairo_surface_get_type, -1, FALSE),
+    TEST (cairo_surface_get_content, -1, FALSE),
+    TEST (cairo_surface_set_user_data, -1, FALSE),
+    TEST (cairo_surface_set_mime_data, -1, TRUE),
+    TEST (cairo_surface_get_mime_data, -1, FALSE),
+    TEST (cairo_surface_get_font_options, -1, FALSE),
+    TEST (cairo_surface_flush, -1, TRUE),
+    TEST (cairo_surface_mark_dirty, -1, TRUE),
+    TEST (cairo_surface_mark_dirty_rectangle, -1, TRUE),
+    TEST (cairo_surface_set_device_offset, -1, TRUE),
+    TEST (cairo_surface_get_device_offset, -1, FALSE),
+    TEST (cairo_surface_set_fallback_resolution, -1, TRUE),
+    TEST (cairo_surface_get_fallback_resolution, -1, FALSE),
+    TEST (cairo_surface_copy_page, -1, TRUE),
+    TEST (cairo_surface_show_page, -1, TRUE),
+    TEST (cairo_surface_has_show_text_glyphs, -1, FALSE),
+    TEST (cairo_image_surface_get_data, CAIRO_SURFACE_TYPE_IMAGE, FALSE),
+    TEST (cairo_image_surface_get_format, CAIRO_SURFACE_TYPE_IMAGE, FALSE),
+    TEST (cairo_image_surface_get_width, CAIRO_SURFACE_TYPE_IMAGE, FALSE),
+    TEST (cairo_image_surface_get_height, CAIRO_SURFACE_TYPE_IMAGE, FALSE),
+    TEST (cairo_image_surface_get_stride, CAIRO_SURFACE_TYPE_IMAGE, FALSE),
 };
 
 static cairo_test_status_t
