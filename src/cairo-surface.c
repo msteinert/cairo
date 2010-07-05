@@ -2346,13 +2346,13 @@ cairo_surface_show_page (cairo_surface_t *surface)
     if (surface->status)
 	return;
 
-    _cairo_surface_begin_modification (surface);
-
     if (surface->finished) {
 	status_ignored = _cairo_surface_set_error (surface,
 		                                 CAIRO_STATUS_SURFACE_FINISHED);
 	return;
     }
+
+    _cairo_surface_begin_modification (surface);
 
     /* It's fine if some backends don't implement show_page */
     if (surface->backend->show_page == NULL)
