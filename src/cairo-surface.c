@@ -857,6 +857,8 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
 
     if (unlikely (surface->status))
 	return surface->status;
+    if (surface->finished)
+	return _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
 
     status = _cairo_intern_string (&mime_type, -1);
     if (unlikely (status))
