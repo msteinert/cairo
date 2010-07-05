@@ -48,6 +48,12 @@
  *    - TRUE if the function modifies the surface, FALSE otherwise
  *    - the surface type for which the function is valid or -1 if it is valid
  *      for all surface types.
+ *
+ * FIXING FAILURES
+ *
+ * The test will dump failures notices into the api-special-cases.log file (when 
+ * it doesn't crash). These should be pretty self-explanatory. Usually it is 
+ * enough to just add a new check to the function it complained about.
  */
 
 #ifdef HAVE_CONFIG_H
