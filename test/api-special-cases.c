@@ -304,6 +304,38 @@ test_cairo_image_surface_get_stride (cairo_surface_t *surface)
     return stride == 0 || surface_has_type (surface, CAIRO_SURFACE_TYPE_IMAGE) ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
 }
 
+#if CAIRO_HAS_PNG_FUNCTIONS
+
+static cairo_test_status_t
+test_cairo_surface_write_to_png (cairo_surface_t *surface)
+{
+    cairo_status_t status;
+
+    status = cairo_surface_write_to_png (surface, "/this/file/will/definitely/not/exist.png");
+    
+    return status ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
+
+static cairo_status_t
+write_func_that_always_fails (void *closure, const unsigned char *data, unsigned int length)
+{
+    return CAIRO_STATUS_WRITE_ERROR;
+}
+
+static cairo_test_status_t
+test_cairo_surface_write_to_png_stream (cairo_surface_t *surface)
+{
+    cairo_status_t status;
+
+    status = cairo_surface_write_to_png_stream (surface,
+                                                write_func_that_always_fails,
+                                                NULL);
+    
+    return status && status != CAIRO_STATUS_WRITE_ERROR ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
+
+#endif
+
 
 
 #define TEST(name, surface_type, sets_status) { #name, test_ ## name, surface_type, sets_status }
@@ -342,6 +374,10 @@ struct {
     TEST (cairo_image_surface_get_width, CAIRO_SURFACE_TYPE_IMAGE, FALSE),
     TEST (cairo_image_surface_get_height, CAIRO_SURFACE_TYPE_IMAGE, FALSE),
     TEST (cairo_image_surface_get_stride, CAIRO_SURFACE_TYPE_IMAGE, FALSE),
+#if CAIRO_HAS_PNG_FUNCTIONS
+    TEST (cairo_surface_write_to_png, -1, FALSE),
+    TEST (cairo_surface_write_to_png_stream, -1, FALSE),
+#endif
 };
 
 static cairo_test_status_t
