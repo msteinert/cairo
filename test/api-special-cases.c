@@ -494,6 +494,83 @@ test_cairo_svg_surface_restrict_to_version (cairo_surface_t *surface)
 
 #endif /* CAIRO_HAS_SVG_SURFACE */
 
+#if CAIRO_HAS_XCB_SURFACE
+
+static cairo_test_status_t
+test_cairo_xcb_surface_set_size (cairo_surface_t *surface)
+{
+    cairo_xcb_surface_set_size (surface, 5, 5);
+    return CAIRO_TEST_SUCCESS;
+}
+
+#endif
+
+#if CAIRO_HAS_XLIB_SURFACE
+
+static cairo_test_status_t
+test_cairo_xlib_surface_set_size (cairo_surface_t *surface)
+{
+    cairo_xlib_surface_set_size (surface, 5, 5);
+    return CAIRO_TEST_SUCCESS;
+}
+
+static cairo_test_status_t
+test_cairo_xlib_surface_set_drawable (cairo_surface_t *surface)
+{
+    cairo_xlib_surface_set_drawable (surface, 0, 5, 5);
+    return CAIRO_TEST_SUCCESS;
+}
+
+static cairo_test_status_t
+test_cairo_xlib_surface_get_display (cairo_surface_t *surface)
+{
+    Display *display = cairo_xlib_surface_get_display (surface);
+    return display == NULL || surface_has_type (surface, CAIRO_SURFACE_TYPE_XLIB) ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
+
+static cairo_test_status_t
+test_cairo_xlib_surface_get_screen (cairo_surface_t *surface)
+{
+    Screen *screen = cairo_xlib_surface_get_screen (surface);
+    return screen == NULL || surface_has_type (surface, CAIRO_SURFACE_TYPE_XLIB) ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
+
+static cairo_test_status_t
+test_cairo_xlib_surface_get_visual (cairo_surface_t *surface)
+{
+    Visual *visual = cairo_xlib_surface_get_visual (surface);
+    return visual == NULL || surface_has_type (surface, CAIRO_SURFACE_TYPE_XLIB) ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
+
+static cairo_test_status_t
+test_cairo_xlib_surface_get_drawable (cairo_surface_t *surface)
+{
+    Drawable drawable = cairo_xlib_surface_get_drawable (surface);
+    return drawable == 0 || surface_has_type (surface, CAIRO_SURFACE_TYPE_XLIB) ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
+
+static cairo_test_status_t
+test_cairo_xlib_surface_get_depth (cairo_surface_t *surface)
+{
+    int depth = cairo_xlib_surface_get_depth (surface);
+    return depth == 0 || surface_has_type (surface, CAIRO_SURFACE_TYPE_XLIB) ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
+
+static cairo_test_status_t
+test_cairo_xlib_surface_get_width (cairo_surface_t *surface)
+{
+    int width = cairo_xlib_surface_get_width (surface);
+    return width == 0 || surface_has_type (surface, CAIRO_SURFACE_TYPE_XLIB) ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
+
+static cairo_test_status_t
+test_cairo_xlib_surface_get_height (cairo_surface_t *surface)
+{
+    int height = cairo_xlib_surface_get_height (surface);
+    return height == 0 || surface_has_type (surface, CAIRO_SURFACE_TYPE_XLIB) ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
+
+#endif
 
 
 #define TEST(name, surface_type, sets_status) { #name, test_ ## name, surface_type, sets_status }
@@ -561,6 +638,20 @@ struct {
 #endif
 #if CAIRO_HAS_SVG_SURFACE
     TEST (cairo_svg_surface_restrict_to_version, CAIRO_SURFACE_TYPE_SVG, TRUE),
+#endif
+#if CAIRO_HAS_XCB_SURFACE
+    TEST (cairo_xcb_surface_set_size, CAIRO_SURFACE_TYPE_XCB, TRUE),
+#endif
+#if CAIRO_HAS_XLIB_SURFACE
+    TEST (cairo_xlib_surface_set_size, CAIRO_SURFACE_TYPE_XLIB, TRUE),
+    TEST (cairo_xlib_surface_set_drawable, CAIRO_SURFACE_TYPE_XLIB, TRUE),
+    TEST (cairo_xlib_surface_get_display, CAIRO_SURFACE_TYPE_XLIB, FALSE),
+    TEST (cairo_xlib_surface_get_drawable, CAIRO_SURFACE_TYPE_XLIB, FALSE),
+    TEST (cairo_xlib_surface_get_screen, CAIRO_SURFACE_TYPE_XLIB, FALSE),
+    TEST (cairo_xlib_surface_get_visual, CAIRO_SURFACE_TYPE_XLIB, FALSE),
+    TEST (cairo_xlib_surface_get_depth, CAIRO_SURFACE_TYPE_XLIB, FALSE),
+    TEST (cairo_xlib_surface_get_width, CAIRO_SURFACE_TYPE_XLIB, FALSE),
+    TEST (cairo_xlib_surface_get_height, CAIRO_SURFACE_TYPE_XLIB, FALSE),
 #endif
 };
 
