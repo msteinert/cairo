@@ -44,6 +44,9 @@
 #if CAIRO_HAS_PS_SURFACE
 #include <cairo-ps.h>
 #endif
+#if CAIRO_HAS_SVG_SURFACE
+#include <cairo-svg.h>
+#endif
 #if CAIRO_HAS_XCB_SURFACE
 #include <cairo-xcb.h>
 #endif
@@ -409,6 +412,90 @@ test_cairo_gl_surface_swapbuffers (cairo_surface_t *surface)
 
 #endif /* CAIRO_HAS_GL_SURFACE */
 
+#if CAIRO_HAS_PDF_SURFACE
+
+static cairo_test_status_t
+test_cairo_pdf_surface_restrict_to_version (cairo_surface_t *surface)
+{
+    cairo_pdf_surface_restrict_to_version (surface, CAIRO_PDF_VERSION_1_4);
+    return CAIRO_TEST_SUCCESS;
+}
+
+static cairo_test_status_t
+test_cairo_pdf_surface_set_size (cairo_surface_t *surface)
+{
+    cairo_pdf_surface_set_size (surface, 5, 5);
+    return CAIRO_TEST_SUCCESS;
+}
+
+#endif /* CAIRO_HAS_PDF_SURFACE */
+
+#if CAIRO_HAS_PS_SURFACE
+
+static cairo_test_status_t
+test_cairo_ps_surface_restrict_to_level (cairo_surface_t *surface)
+{
+    cairo_ps_surface_restrict_to_level (surface, CAIRO_PS_LEVEL_2);
+    return CAIRO_TEST_SUCCESS;
+}
+
+static cairo_test_status_t
+test_cairo_ps_surface_set_eps (cairo_surface_t *surface)
+{
+    cairo_ps_surface_set_eps (surface, TRUE);
+    return CAIRO_TEST_SUCCESS;
+}
+
+static cairo_test_status_t
+test_cairo_ps_surface_get_eps (cairo_surface_t *surface)
+{
+    cairo_bool_t eps = cairo_ps_surface_get_eps (surface);
+    return eps ? CAIRO_TEST_ERROR : CAIRO_TEST_SUCCESS;
+}
+
+static cairo_test_status_t
+test_cairo_ps_surface_set_size (cairo_surface_t *surface)
+{
+    cairo_ps_surface_set_size (surface, 5, 5);
+    return CAIRO_TEST_SUCCESS;
+}
+
+static cairo_test_status_t
+test_cairo_ps_surface_dsc_comment (cairo_surface_t *surface)
+{
+    cairo_ps_surface_dsc_comment (surface, "54, 74, 90, 2010");
+    return CAIRO_TEST_SUCCESS;
+}
+
+static cairo_test_status_t
+test_cairo_ps_surface_dsc_begin_setup (cairo_surface_t *surface)
+{
+    cairo_ps_surface_dsc_begin_setup (surface);
+    return CAIRO_TEST_SUCCESS;
+}
+
+static cairo_test_status_t
+test_cairo_ps_surface_dsc_begin_page_setup (cairo_surface_t *surface)
+{
+    cairo_ps_surface_dsc_begin_page_setup (surface);
+    return CAIRO_TEST_SUCCESS;
+}
+
+#endif /* CAIRO_HAS_PS_SURFACE */
+
+#if CAIRO_HAS_SVG_SURFACE
+
+static cairo_test_status_t
+test_cairo_svg_surface_restrict_to_version (cairo_surface_t *surface)
+{
+    cairo_svg_surface_restrict_to_version (surface, CAIRO_SVG_VERSION_1_1);
+    return CAIRO_TEST_SUCCESS;
+}
+
+#endif /* CAIRO_HAS_SVG_SURFACE */
+
+
+
 #define TEST(name, surface_type, sets_status) { #name, test_ ## name, surface_type, sets_status }
 
 struct {
@@ -458,6 +545,22 @@ struct {
     TEST (cairo_gl_surface_get_width, CAIRO_SURFACE_TYPE_GL, FALSE),
     TEST (cairo_gl_surface_get_height, CAIRO_SURFACE_TYPE_GL, FALSE),
     TEST (cairo_gl_surface_swapbuffers, CAIRO_SURFACE_TYPE_GL, TRUE),
+#endif
+#if CAIRO_HAS_PDF_SURFACE
+    TEST (cairo_pdf_surface_restrict_to_version, CAIRO_SURFACE_TYPE_PDF, TRUE),
+    TEST (cairo_pdf_surface_set_size, CAIRO_SURFACE_TYPE_PDF, TRUE),
+#endif
+#if CAIRO_HAS_PS_SURFACE
+    TEST (cairo_ps_surface_restrict_to_level, CAIRO_SURFACE_TYPE_PS, TRUE),
+    TEST (cairo_ps_surface_set_eps, CAIRO_SURFACE_TYPE_PS, TRUE),
+    TEST (cairo_ps_surface_get_eps, CAIRO_SURFACE_TYPE_PS, FALSE),
+    TEST (cairo_ps_surface_set_size, CAIRO_SURFACE_TYPE_PS, TRUE),
+    TEST (cairo_ps_surface_dsc_comment, CAIRO_SURFACE_TYPE_PS, TRUE),
+    TEST (cairo_ps_surface_dsc_begin_setup, CAIRO_SURFACE_TYPE_PS, TRUE),
+    TEST (cairo_ps_surface_dsc_begin_page_setup, CAIRO_SURFACE_TYPE_PS, TRUE),
+#endif
+#if CAIRO_HAS_SVG_SURFACE
+    TEST (cairo_svg_surface_restrict_to_version, CAIRO_SURFACE_TYPE_SVG, TRUE),
 #endif
 };
 
