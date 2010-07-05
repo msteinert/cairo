@@ -27,6 +27,7 @@
 #include "config.h"
 #endif
 
+#include <assert.h>
 #include <limits.h>
 
 #include "cairo-test.h"
@@ -304,6 +305,39 @@ struct {
 static cairo_test_status_t
 preamble (cairo_test_context_t *ctx)
 {
+    cairo_surface_t *surface;
+    cairo_test_status_t test_status;
+    cairo_status_t status_before, status_after;
+    unsigned int i;
+
+    /* Test an error surface */
+    for (i = 0; i < ARRAY_LENGTH (tests); i++) {
+        surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, INT_MAX, INT_MAX);
+        status_before = cairo_surface_status (surface);
+        assert (status_before);
+
+        test_status = tests[i].func (surface);
+
+        status_after = cairo_surface_status (surface);
+        cairo_surface_destroy (surface);
+
+        if (test_status != CAIRO_TEST_SUCCESS) {
+            cairo_test_log (ctx,
+                            "Failed test %s with %d\n",
+                            tests[i].name, (int) test_status);
+            return test_status;
+        }
+
+        if (status_before != status_after) {
+            cairo_test_log (ctx,
+                            "Failed test %s: Modified surface status from %u (%s) to %u (%s)\n",
+                            tests[i].name,
+                            status_before, cairo_status_to_string (status_before),
+                            status_after, cairo_status_to_string (status_after));
+            return CAIRO_TEST_ERROR;
+        }
+    }
+
     return CAIRO_TEST_SUCCESS;
 }
 
@@ -318,6 +352,7 @@ draw (cairo_t *cr, int width, int height)
 
     target = cairo_get_target (cr);
 
+    /* Test a finished similar surface */
     for (i = 0; i < ARRAY_LENGTH (tests); i++) {
         similar = cairo_surface_create_similar (target,
                                                 cairo_surface_get_content (target),
