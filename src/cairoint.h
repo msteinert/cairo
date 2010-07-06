@@ -2498,6 +2498,8 @@ slim_hidden_proto (cairo_region_intersect);
 slim_hidden_proto (cairo_region_intersect_rectangle);
 slim_hidden_proto (cairo_region_union);
 slim_hidden_proto (cairo_region_union_rectangle);
+slim_hidden_proto (cairo_region_xor);
+slim_hidden_proto (cairo_region_xor_rectangle);
 
 #if CAIRO_HAS_PNG_FUNCTIONS
 

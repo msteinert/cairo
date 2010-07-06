@@ -2685,6 +2685,12 @@ cairo_public cairo_status_t
 cairo_region_union_rectangle (cairo_region_t *dst,
 			      const cairo_rectangle_int_t *rectangle);
 
+cairo_public cairo_status_t
+cairo_region_xor (cairo_region_t *dst, const cairo_region_t *other);
+
+cairo_public cairo_status_t
+cairo_region_xor_rectangle (cairo_region_t *dst,
+			    const cairo_rectangle_int_t *rectangle);
 
 /* Functions to be used while debugging (not intended for use in production code) */
 cairo_public void

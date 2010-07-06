@@ -652,6 +652,86 @@ cairo_region_union_rectangle (cairo_region_t *dst,
 slim_hidden_def (cairo_region_union_rectangle);
 
 /**
+ * cairo_region_xor:
+ * @dst: a #cairo_region_t
+ * @other: another #cairo_region_t
+ *
+ * Computes the exclusive difference of @dst with @other and places the
+ * result in @dst. That is, @dst will be set to contain all areas that
+ * are either in @dst or in @other, but not in both.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY
+ *
+ * Since: 1.10
+ **/
+cairo_status_t
+cairo_region_xor (cairo_region_t *dst, const cairo_region_t *other)
+{
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    pixman_region32_t tmp;
+
+    if (dst->status)
+	return dst->status;
+
+    if (other->status)
+	return _cairo_region_set_error (dst, other->status);
+
+    pixman_region32_init (&tmp);
+
+    /* XXX: get an xor function into pixman */
+    if (! pixman_region32_subtract (&tmp, CONST_CAST &other->rgn, &dst->rgn) ||
+        ! pixman_region32_subtract (&dst->rgn, &dst->rgn, CONST_CAST &other->rgn) || 
+        ! pixman_region32_union (&dst->rgn, &dst->rgn, &tmp))
+	status = _cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
+
+    pixman_region32_fini (&tmp);
+
+    return status;
+}
+slim_hidden_def (cairo_region_xor);
+
+/**
+ * cairo_region_xor_rectangle:
+ * @dst: a #cairo_region_t
+ * @rectangle: a #cairo_rectangle_int_t
+ *
+ * Computes the exclusive difference of @dst with @rectangle and places the
+ * result in @dst. That is, @dst will be set to contain all areas that are 
+ * either in @dst or in @rectangle, but not in both.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY
+ *
+ * Since: 1.10
+ **/
+cairo_status_t
+cairo_region_xor_rectangle (cairo_region_t *dst,
+			    const cairo_rectangle_int_t *rectangle)
+{
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    pixman_region32_t region, tmp;
+
+    if (dst->status)
+	return dst->status;
+
+    pixman_region32_init_rect (&region,
+			       rectangle->x, rectangle->y,
+			       rectangle->width, rectangle->height);
+    pixman_region32_init (&tmp);
+
+    /* XXX: get an xor function into pixman */
+    if (! pixman_region32_subtract (&tmp, &region, &dst->rgn) ||
+        ! pixman_region32_subtract (&dst->rgn, &dst->rgn, &region) || 
+        ! pixman_region32_union (&dst->rgn, &dst->rgn, &tmp))
+	status = _cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
+
+    pixman_region32_fini (&tmp);
+    pixman_region32_fini (&region);
+
+    return status;
+}
+slim_hidden_def (cairo_region_xor_rectangle);
+
+/**
  * cairo_region_is_empty:
  * @region: a #cairo_region_t
  *
