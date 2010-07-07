@@ -20,6 +20,8 @@ EXTRA_HFILES=$(top_builddir)/src/cairo-supported-features.h
 
 # Headers to ignore
 IGNORE_HFILES= \
+	drm \
+	glew \
 	cairo-features.h \
 	cairo-features-win32.h \
 	$(all_cairo_private) \
