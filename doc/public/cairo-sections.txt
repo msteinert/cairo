@@ -482,6 +482,7 @@ cairo_get_tolerance
 cairo_clip
 cairo_clip_preserve
 cairo_clip_extents
+cairo_in_clip
 cairo_reset_clip
 cairo_rectangle_t
 cairo_rectangle_list_t
