@@ -198,11 +198,13 @@ CAIRO_MIME_TYPE_URI
 cairo_surface_t
 cairo_content_t
 cairo_surface_create_similar
+cairo_surface_create_for_rectangle
 cairo_surface_reference
 cairo_surface_destroy
 cairo_surface_status
 cairo_surface_finish
 cairo_surface_flush
+cairo_surface_get_device
 cairo_surface_get_font_options
 cairo_surface_get_content
 cairo_surface_mark_dirty
