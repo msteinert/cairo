@@ -187,8 +187,10 @@ cd "$ORIGDIR" || exit 1
 
 rm -f config.cache
 
-do_cmd $srcdir/configure \
+if test -z "$NOCONFIGURE"; then
+  do_cmd $srcdir/configure \
 	--cache-file=config.cache \
 	--disable-static \
 	--enable-test-surfaces \
 	${1+"$@"} && echo "Now type \`make' to compile $PROJECT." || exit 1
+fi
