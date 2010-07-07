@@ -29,6 +29,7 @@
   </chapter>
   <chapter id="cairo-surfaces">
     <title>Surfaces</title>
+    <xi:include href="xml/cairo-device.xml"/>
     <xi:include href="xml/cairo-surface.xml"/>
     <xi:include href="xml/cairo-image.xml"/>
     <xi:include href="xml/cairo-pdf.xml"/>

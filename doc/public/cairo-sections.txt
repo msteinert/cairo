@@ -171,6 +171,24 @@ cairo_svg_version_to_string
 </SECTION>
 
 <SECTION>
+<FILE>cairo-device</FILE>
+<TITLE>device</TITLE>
+cairo_device_t
+cairo_device_reference
+cairo_device_destroy
+cairo_device_status
+cairo_device_finish
+cairo_device_flush
+cairo_device_type_t
+cairo_device_get_type
+cairo_device_get_reference_count
+cairo_device_set_user_data
+cairo_device_get_user_data
+cairo_device_acquire
+cairo_device_release
+</SECTION>
+
+<SECTION>
 <FILE>cairo-surface</FILE>
 <TITLE>surface</TITLE>
 CAIRO_MIME_TYPE_JP2
