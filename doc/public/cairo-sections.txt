@@ -622,7 +622,6 @@ cairo_set_target_xcb
 cairo_set_target_drawable
 cairo_get_status_string
 cairo_status_string
-CAIRO_FORMAT_RGB16_565
 CAIRO_FONT_TYPE_ATSUI
 cairo_atsui_font_face_create_for_atsu_font_id
 </SECTION>
