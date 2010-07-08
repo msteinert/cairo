@@ -38,7 +38,7 @@
  *    prepared surface and has the job of calling the function and checking
  *    the return value (if one exists) for correctness. The top of this file
  *    contains all these shim functions.
- * 2) Knowledge if the function behaves like a setter or like a setter. A 
+ * 2) Knowledge if the function behaves like a setter or like a getter. A 
  *    setter should set an error status on the surface, a getter does not
  *    modify the function.
  * 3) Knowledge if the function only works for a specific surface type and for
