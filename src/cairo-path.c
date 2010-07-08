@@ -41,6 +41,15 @@
 #include "cairo-path-private.h"
 #include "cairo-path-fixed-private.h"
 
+/**
+ * SECTION:cairo-paths
+ * @Title: Paths
+ * @Short_Description: Creating paths and manipulating path data
+ *
+ * Paths are the most basic drawing tools and are primarily used to implicitly
+ * generate simple masks.
+ */
+
 static const cairo_path_t _cairo_path_nil = { CAIRO_STATUS_NO_MEMORY, NULL, 0 };
 
 /* Closure for path interpretation. */

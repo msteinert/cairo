@@ -61,6 +61,19 @@ slim_hidden_proto (cairo_xcb_surface_create_with_xrender_format);
 #include "drm/cairo-drm-private.h"
 #endif
 
+/**
+ * SECTION:cairo-xcb
+ * @Title: XCB Surfaces
+ * @Short_Description: X Window System rendering using the XCB library
+ * @See_Also: #cairo_surface_t
+ *
+ * The XCB surface is used to render cairo graphics to X Window System
+ * windows and pixmaps using the XCB library.
+ *
+ * Note that the XCB surface automatically takes advantage of the X render
+ * extension if it is available.
+ */
+
 #if CAIRO_HAS_XCB_SHM_FUNCTIONS
 static cairo_status_t
 _cairo_xcb_surface_create_similar_shm (cairo_xcb_surface_t *other,

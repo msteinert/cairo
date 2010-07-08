@@ -334,7 +334,7 @@ cairo_debug_reset_static_data
 
 <SECTION>
 <FILE>cairo-font-face</FILE>
-<TITLE>font-face</TITLE>
+<TITLE>cairo_font_face_t</TITLE>
 cairo_font_face_t
 cairo_font_face_reference
 cairo_font_face_destroy
@@ -373,7 +373,7 @@ cairo_scaled_font_get_user_data
 
 <SECTION>
 <FILE>cairo-font-options</FILE>
-<TITLE>font-options</TITLE>
+<TITLE>cairo_font_options_t</TITLE>
 cairo_font_options_t
 cairo_font_options_create
 cairo_font_options_copy

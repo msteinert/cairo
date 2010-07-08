@@ -45,6 +45,24 @@
 #include <errno.h>
 #include <png.h>
 
+/**
+ * SECTION:cairo-png
+ * @Title: PNG Support
+ * @Short_Description: Reading and writing PNG images
+ * @See_Also: #cairo_surface_t
+ *
+ * The PNG functions allow reading PNG images into image surfaces, and writing
+ * any surface to a PNG file.
+ */
+
+/**
+ * CAIRO_HAS_PNG_FUNCTIONS:
+ *
+ * Defined if the PNG functions are available.
+ * This macro can be used to conditionally compile code using the cairo
+ * PNG functions.
+ */
+
 struct png_read_closure_t {
     cairo_read_func_t		 read_func;
     void			*closure;

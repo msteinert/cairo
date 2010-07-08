@@ -107,6 +107,46 @@ _x_bread_crumb (Display *dpy,
 #define X_DEBUG(x)
 #endif
 
+/**
+ * SECTION:cairo-xlib
+ * @Title: XLib Surfaces
+ * @Short_Description: X Window System rendering using XLib
+ * @See_Also: #cairo_surface_t
+ *
+ * The XLib surface is used to render cairo graphics to X Window System
+ * windows and pixmaps using the XLib library.
+ *
+ * Note that the XLib surface automatically takes advantage of X render extension
+ * if it is available.
+ */
+
+/**
+ * CAIRO_HAS_XLIB_SURFACE:
+ *
+ * Defined if the Xlib surface backend is available.
+ * This macro can be used to conditionally compile backend-specific code.
+ */
+
+/**
+ * SECTION:cairo-xlib-xrender
+ * @Title: XLib/XRender Backend
+ * @Short_Description: X Window System rendering using XLib and the X Render extension
+ * @See_Also: #cairo_surface_t
+ *
+ * The XLib surface is used to render cairo graphics to X Window System
+ * windows and pixmaps using the XLib and Xrender libraries.
+ *
+ * Note that the XLib surface automatically takes advantage of X Render extension
+ * if it is available.
+ */
+
+/**
+ * CAIRO_HAS_XLIB_XRENDER_SURFACE:
+ *
+ * Defined if the XLib/XRender surface functions are available.
+ * This macro can be used to conditionally compile backend-specific code.
+ */
+
 /* Xlib doesn't define a typedef, so define one ourselves */
 typedef int (*cairo_xlib_error_func_t) (Display     *display,
 					XErrorEvent *event);

@@ -43,6 +43,23 @@
 
 #include "cairo-error-private.h"
 
+/**
+ * SECTION:cairo-quartz-fonts
+ * @Title: Quartz (CGFont) Fonts
+ * @Short_Description: Font support via CGFont on OS X
+ * @See_Also: #cairo_font_face_t
+ * The Quartz font backend is primarily used to render text on Apple
+ * MacOS X systems.  The CGFont API is used for the internal
+ * implementation of the font backend methods.
+ */
+
+/**
+ * CAIRO_HAS_QUARTZ_FONT:
+ *
+ * Defined if the Quartz font backend is available.
+ * This macro can be used to conditionally compile backend-specific code.
+ */
+
 /* CreateWithFontName exists in 10.5, but not in 10.4; CreateWithName isn't public in 10.4 */
 static CGFontRef (*CGFontCreateWithFontNamePtr) (CFStringRef) = NULL;
 static CGFontRef (*CGFontCreateWithNamePtr) (const char *) = NULL;

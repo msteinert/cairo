@@ -53,6 +53,23 @@
 #include "cairo-surface-clipper-private.h"
 #include "cairo-svg-surface-private.h"
 
+/**
+ * SECTION:cairo-svg
+ * @Title: SVG Surfaces
+ * @Short_Description: Rendering SVG documents
+ * @See_Also: #cairo_surface_t
+ *
+ * The SVG surface is used to render cairo graphics to
+ * SVG files and is a multi-page vector surface backend.
+ */
+
+/**
+ * CAIRO_HAS_SVG_SURFACE:
+ *
+ * Defined if the SVG surface backend is available.
+ * This macro can be used to conditionally compile backend-specific code.
+ */
+
 typedef struct cairo_svg_page cairo_svg_page_t;
 
 static const int invalid_pattern_id = -1;

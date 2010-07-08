@@ -54,6 +54,27 @@
 #define MAX_IMAGE_SIZE 32767
 #define PIXMAN_MAX_INT ((pixman_fixed_1 >> 1) - pixman_fixed_e) /* need to ensure deltas also fit */
 
+/**
+ * SECTION:cairo-image
+ * @Title: Image Surfaces
+ * @Short_Description: Rendering to memory buffers
+ * @See_Also: #cairo_surface_t
+ *
+ * Image surfaces provide the ability to render to memory buffers
+ * either allocated by cairo or by the calling code.  The supported
+ * image formats are those defined in #cairo_format_t.
+ */
+
+/**
+ * CAIRO_HAS_IMAGE_SURFACE:
+ *
+ * Defined if the image surface backend is available.
+ * The image surface backend is always built in.
+ * This macro was added for completeness in cairo 1.8.
+ *
+ * @Since: 1.8
+ */
+
 static cairo_int_status_t
 _cairo_image_surface_fill (void *dst,
 			   cairo_operator_t		 op,

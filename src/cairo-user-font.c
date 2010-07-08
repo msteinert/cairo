@@ -40,6 +40,28 @@
 #include "cairo-analysis-surface-private.h"
 #include "cairo-error-private.h"
 
+/**
+ * SECTION:cairo-user-fonts
+ * @Title:User Fonts
+ * @Short_Description: Font support with font data provided by the user
+ * 
+ * The user-font feature allows the cairo user to provide drawings for glyphs
+ * in a font.  This is most useful in implementing fonts in non-standard
+ * formats, like SVG fonts and Flash fonts, but can also be used by games and
+ * other application to draw "funky" fonts.
+ */
+
+/**
+ * CAIRO_HAS_USER_FONT:
+ *
+ * Defined if the user font backend is available.
+ * This macro can be used to conditionally compile backend-specific code.
+ * The user font backend is always built in versions of cairo that support
+ * this feature (1.8 and later).
+ *
+ * @Since: 1.8
+ */
+
 typedef struct _cairo_user_scaled_font_methods {
     cairo_user_scaled_font_init_func_t			init;
     cairo_user_scaled_font_render_glyph_func_t		render_glyph;

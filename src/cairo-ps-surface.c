@@ -88,6 +88,23 @@
 #define ctime_r(T, BUF) ctime (T)
 #endif
 
+/**
+ * SECTION:cairo-ps
+ * @Title: PostScript Surfaces
+ * @Short_Description: Rendering PostScript documents
+ * @See_Also: #cairo_surface_t
+ *
+ * The PostScript surface is used to render cairo graphics to Adobe
+ * PostScript files and is a multi-page vector surface backend.
+ */
+
+/**
+ * CAIRO_HAS_PS_SURFACE:
+ * 
+ * Defined if the PostScript surface backend is available.
+ * This macro can be used to conditionally compile backend-specific code.
+ */
+
 static const cairo_surface_backend_t cairo_ps_surface_backend;
 static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backend;
 

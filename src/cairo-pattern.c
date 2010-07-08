@@ -32,6 +32,23 @@
 #include "cairo-error-private.h"
 #include "cairo-freed-pool-private.h"
 
+/**
+ * SECTION:cairo-pattern
+ * @Title: cairo_pattern_t
+ * @Short_Description: Sources for drawing
+ * @See_Also: #cairo_t, #cairo_surface_t
+ *
+ * #cairo_pattern_t is the paint with which cairo draws.
+ * The primary use of patterns is as the source for all cairo drawing 
+ * operations, although they can also be used as masks, that is, as the 
+ * brush too.
+ *
+ * A cairo pattern is created by using one of the many constructors,
+ * of the form cairo_pattern_create_<emphasis>type</emphasis>()
+ * or implicitly through
+ * cairo_set_source_<emphasis>type</emphasis>() functions.
+ */
+
 #if HAS_FREED_POOL
 static freed_pool_t freed_pattern_pool[4];
 #endif

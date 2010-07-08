@@ -74,6 +74,30 @@
 
 #define PELS_72DPI  ((LONG)(72. / 0.0254))
 
+/**
+ * SECTION:cairo-win32
+ * @Title: Win32 Surfaces
+ * @Short_Description: Microsoft Windows surface support
+ * @See_Also: #cairo_surface_t
+ *
+ * The Microsoft Windows surface is used to render cairo graphics to
+ * Microsoft Windows windows, bitmaps, and printing device contexts.
+ *
+ * The surface returned by cairo_win32_printing_surface_create() is of surface
+ * type %CAIRO_SURFACE_TYPE_WIN32_PRINTING and is a multi-page vector surface
+ * type.
+ *
+ * The surface returned by the other win32 constructors is of surface type
+ * %CAIRO_SURFACE_TYPE_WIN32 and is a raster surface type.
+ */
+
+/**
+ * CAIRO_HAS_WIN32_SURFACE:
+ *
+ * Defined if the Microsoft Windows surface backend is available.
+ * This macro can be used to conditionally compile backend-specific code.
+ */
+
 static const cairo_surface_backend_t cairo_win32_surface_backend;
 
 /**

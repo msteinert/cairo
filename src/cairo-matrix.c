@@ -43,6 +43,29 @@
 #define ISFINITE(x) ((x) * (x) >= 0.) /* check for NaNs */
 #endif
 
+/**
+ * SECTION:cairo-matrix
+ * @Title: cairo_matrix_t
+ * @Short_Description: Generic matrix operations
+ * @See_Also: #cairo_t
+ *
+ * #cairo_matrix_t is used throughout cairo to convert between different
+ * coordinate spaces.  A #cairo_matrix_t holds an affine transformation,
+ * such as a scale, rotation, shear, or a combination of these.
+ * The transformation of a point (<literal>x</literal>,<literal>y</literal>)
+ * is given by:
+ *
+ * <programlisting>
+ * x_new = xx * x + xy * y + x0;
+ * y_new = yx * x + yy * y + y0;
+ * </programlisting>
+ *
+ * The current transformation matrix of a #cairo_t, represented as a
+ * #cairo_matrix_t, defines the transformation from user-space
+ * coordinates to device-space coordinates. See cairo_get_matrix() and
+ * cairo_set_matrix().
+ */
+
 static void
 _cairo_matrix_scalar_multiply (cairo_matrix_t *matrix, double scalar);
 

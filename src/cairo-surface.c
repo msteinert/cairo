@@ -46,6 +46,21 @@
 #include "cairo-region-private.h"
 #include "cairo-tee-surface-private.h"
 
+/**
+ * SECTION:cairo-surface
+ * @Title: cairo_surface_t
+ * @Short_Description: Base class for surfaces
+ * @See_Also: #cairo_t, #cairo_pattern_t
+ *
+ * #cairo_surface_t is the abstract type representing all different drawing
+ * targets that cairo can render to.  The actual drawings are
+ * performed using a cairo <firstterm>context</firstterm>.
+ *
+ * A cairo surface is created by using <firstterm>backend</firstterm>-specific
+ * constructors, typically of the form
+ * cairo_<emphasis>backend</emphasis>_surface_create().
+ */
+
 #define DEFINE_NIL_SURFACE(status, name)			\
 const cairo_surface_t name = {					\
     NULL,				/* backend */		\
@@ -809,6 +824,38 @@ _cairo_mime_data_destroy (void *ptr)
 
     free (mime_data);
 }
+
+/**
+ * CAIRO_MIME_TYPE_JP2:
+ *
+ * The Joint Photographic Experts Group (JPEG) 2000 image coding standard (ISO/IEC 15444-1).
+ *
+ * @Since: 1.10
+ */
+
+/**
+ * CAIRO_MIME_TYPE_JPEG:
+ *
+ * The Joint Photographic Experts Group (JPEG) image coding standard (ISO/IEC 10918-1).
+ *
+ * @Since: 1.10
+ */
+
+/**
+ * CAIRO_MIME_TYPE_PNG:
+ *
+ * The Portable Network Graphics image file format (ISO/IEC 15948).
+ *
+ * @Since: 1.10
+ */
+
+/**
+ * CAIRO_MIME_TYPE_URI:
+ *
+ * URI for an image file (unofficial MIME type).
+ *
+ * @Since: 1.10
+ */
 
 /**
  * cairo_surface_set_mime_data:

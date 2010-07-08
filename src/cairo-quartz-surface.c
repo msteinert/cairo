@@ -60,6 +60,23 @@
 
 #define IS_EMPTY(s) ((s)->extents.width == 0 || (s)->extents.height == 0)
 
+/**
+ * SECTION:cairo-quartz
+ * @Title: Quartz Surfaces
+ * @Short_Description: Rendering to Quartz surfaces
+ * @See_Also: #cairo_surface_t
+ *
+ * The Quartz surface is used to render cairo graphics targeting the
+ * Apple OS X Quartz rendering system.
+ */
+
+/**
+ * CAIRO_HAS_QUARTZ_SURFACE:
+ *
+ * Defined if the Quartz surface backend is available.
+ * This macro can be used to conditionally compile backend-specific code.
+ */
+
 /* This method is private, but it exists.  Its params are are exposed
  * as args to the NS* method, but not as CG.
  */

@@ -44,6 +44,26 @@
 COMPILE_TIME_ASSERT (CAIRO_STATUS_LAST_STATUS < CAIRO_INT_STATUS_UNSUPPORTED);
 COMPILE_TIME_ASSERT (CAIRO_INT_STATUS_LAST_STATUS <= 127);
 
+/**
+ * SECTION:cairo-status
+ * @Title: Error handling
+ * @Short_Description: Decoding cairo's status
+ * @See_Also: cairo_status(), cairo_surface_status(), cairo_pattern_status(),
+ *            cairo_font_face_status(), cairo_scaled_font_status(), 
+ *            cairo_region_status()
+ *
+ * Cairo uses a single status type to represent all kinds of errors.  A status
+ * value of %CAIRO_STATUS_SUCCESS represents no error and has an integer value
+ * of zero.  All other status values represent an error.
+ *
+ * Cairo's error handling is designed to be easy to use and safe.  All major
+ * cairo objects <firstterm>retain</firstterm> an error status internally which
+ * can be queried anytime by the users using cairo*_status() calls.  In
+ * the mean time, it is safe to call all cairo functions normally even if the
+ * underlying object is in an error status.  This means that no error handling
+ * code is required before or after each individual cairo function call.
+ */
+
 /* Public stuff */
 
 /**

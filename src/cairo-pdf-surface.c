@@ -115,6 +115,23 @@
  *   XObject instead of using an indirect object.
  */
 
+/**
+ * SECTION:cairo-pdf
+ * @Title: PDF Surfaces
+ * @Short_Description: Rendering PDF documents
+ * @See_Also: #cairo_surface_t
+ *
+ * The PDF surface is used to render cairo graphics to Adobe
+ * PDF files and is a multi-page vector surface backend.
+ */
+
+/**
+ * CAIRO_HAS_PDF_SURFACE:
+ *
+ * Defined if the PDF surface backend is available.
+ * This macro can be used to conditionally compile backend-specific code.
+ */
+
 static const cairo_pdf_version_t _cairo_pdf_versions[] =
 {
     CAIRO_PDF_VERSION_1_4,

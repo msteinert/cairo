@@ -43,6 +43,63 @@
 #include "cairo-error-private.h"
 #include "cairo-path-private.h"
 
+/**
+ * SECTION:cairo
+ * @Title: cairo_t
+ * @Short_Description: The cairo drawing context
+ * @See_Also: #cairo_surface_t
+ *
+ * #cairo_t is the main object used when drawing with cairo. To
+ * draw with cairo, you create a #cairo_t, set the target surface,
+ * and drawing options for the #cairo_t, create shapes with
+ * functions like cairo_move_to() and cairo_line_to(), and then
+ * draw shapes with cairo_stroke() or cairo_fill().
+ *
+ * #cairo_t<!-- -->'s can be pushed to a stack via cairo_save().
+ * They may then safely be changed, without loosing the current state.
+ * Use cairo_restore() to restore to the saved state.
+ */
+
+/**
+ * SECTION:cairo-text
+ * @Title: text
+ * @Short_Description: Rendering text and glyphs
+ * @See_Also: #cairo_font_face_t, #cairo_scaled_font_t, cairo_text_path(),
+ *            cairo_glyph_path()
+ *
+ * The functions with <emphasis>text</emphasis> in their name form cairo's
+ * <firstterm>toy</firstterm> text API.  The toy API takes UTF-8 encoded
+ * text and is limited in its functionality to rendering simple
+ * left-to-right text with no advanced features.  That means for example
+ * that most complex scripts like Hebrew, Arabic, and Indic scripts are
+ * out of question.  No kerning or correct positioning of diacritical marks
+ * either.  The font selection is pretty limited too and doesn't handle the
+ * case that the selected font does not cover the characters in the text.
+ * This set of functions are really that, a toy text API, for testing and
+ * demonstration purposes.  Any serious application should avoid them.
+ *
+ * The functions with <emphasis>glyphs</emphasis> in their name form cairo's
+ * <firstterm>low-level</firstterm> text API.  The low-level API relies on
+ * the user to convert text to a set of glyph indexes and positions.  This
+ * is a very hard problem and is best handled by external libraries, like
+ * the pangocairo that is part of the Pango text layout and rendering library.
+ * Pango is available from <ulink
+ * url="http://www.pango.org/">http://www.pango.org/</ulink>.
+ */
+
+/**
+ * SECTION:cairo-transforms
+ * @Title: Transformations
+ * @Short_Description: Manipulating the current transformation matrix
+ * @See_Also: #cairo_matrix_t
+ *
+ * The current transformation matrix, <firstterm>ctm</firstterm>, is a
+ * two-dimensional affine transformation that maps all coordinates and other
+ * drawing instruments from the <firstterm>user space</firstterm> into the
+ * surface's canonical coordinate system, also known as the <firstterm>device
+ * space</firstterm>.
+ */
+
 #define CAIRO_TOLERANCE_MINIMUM	_cairo_fixed_to_double(1)
 
 #if !defined(INFINITY)

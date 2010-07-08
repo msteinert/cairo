@@ -53,6 +53,16 @@
 #include <Window.h>
 #include <Locker.h>
 
+/**
+ * SECTION:beos-surface
+ * @Title: BeOS Surfaces
+ * @Short_Description: BeOS surface support
+ * @See_Also: #cairo_surface_t
+ *
+ * The BeOS surface is used to render cairo graphics to BeOS views 
+ * and bitmaps.
+ */
+
 #define CAIRO_INT_STATUS_SUCCESS (cairo_int_status_t)(CAIRO_STATUS_SUCCESS)
 
 struct cairo_beos_surface_t {
