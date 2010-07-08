@@ -29,7 +29,7 @@ IGNORE_HFILES= \
 	$(NULL)
 
 # Extra options to supply to gtkdoc-mkdb
-MKDB_OPTIONS=--sgml-mode --output-format=xml
+MKDB_OPTIONS=--sgml-mode --output-format=xml --name-space=cairo
 
 # Extra options to supply to gtkdoc-mktmpl
 MKTMPL_OPTIONS=
