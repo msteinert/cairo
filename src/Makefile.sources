@@ -302,7 +302,7 @@ cairo_win32_sources = cairo-win32-surface.c cairo-win32-printing-surface.c
 
 cairo_win32_font_sources = cairo-win32-font.c
 
-cairo_skia_headers =
+cairo_skia_headers = cairo-skia.h
 cairo_skia_sources = cairo-skia-surface.cpp
 
 cairo_os2_headers = cairo-os2.h
