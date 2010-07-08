@@ -77,6 +77,10 @@
 #if CAIRO_HAS_PS_SURFACE
 #include <cairo-ps.h>
 #endif
+#if CAIRO_HAS_QUARTZ_SURFACE
+#define Cursor QuartzCursor
+#include <cairo-quartz.h>
+#endif
 #if CAIRO_HAS_SVG_SURFACE
 #include <cairo-svg.h>
 #endif
@@ -84,6 +88,7 @@
 #include <cairo-xcb.h>
 #endif
 #if CAIRO_HAS_XLIB_SURFACE
+#define Cursor XCursor
 #include <cairo-xlib.h>
 #endif
 
@@ -516,6 +521,17 @@ test_cairo_ps_surface_dsc_begin_page_setup (cairo_surface_t *surface)
 
 #endif /* CAIRO_HAS_PS_SURFACE */
 
+#if CAIRO_HAS_QUARTZ_SURFACE
+
+static cairo_test_status_t
+test_cairo_quartz_surface_get_cg_context (cairo_surface_t *surface)
+{
+    CGContextRef context = cairo_quartz_surface_get_cg_context (surface);
+    return context == NULL || surface_has_type (surface, CAIRO_SURFACE_TYPE_QUARTZ) ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
+}
+
+#endif /* CAIRO_HAS_QUARTZ_SURFACE */
+
 #if CAIRO_HAS_SVG_SURFACE
 
 static cairo_test_status_t
@@ -668,6 +684,9 @@ struct {
     TEST (cairo_ps_surface_dsc_comment, CAIRO_SURFACE_TYPE_PS, TRUE),
     TEST (cairo_ps_surface_dsc_begin_setup, CAIRO_SURFACE_TYPE_PS, TRUE),
     TEST (cairo_ps_surface_dsc_begin_page_setup, CAIRO_SURFACE_TYPE_PS, TRUE),
+#endif
+#if CAIRO_HAS_QUARTZ_SURFACE
+    TEST (cairo_quartz_surface_get_cg_context, CAIRO_SURFACE_TYPE_QUARTZ, FALSE),
 #endif
 #if CAIRO_HAS_SVG_SURFACE
     TEST (cairo_svg_surface_restrict_to_version, CAIRO_SURFACE_TYPE_SVG, TRUE),
