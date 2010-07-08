@@ -48,6 +48,7 @@
  * @Title: Quartz (CGFont) Fonts
  * @Short_Description: Font support via CGFont on OS X
  * @See_Also: #cairo_font_face_t
+ *
  * The Quartz font backend is primarily used to render text on Apple
  * MacOS X systems.  The CGFont API is used for the internal
  * implementation of the font backend methods.
