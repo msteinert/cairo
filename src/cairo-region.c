@@ -44,6 +44,16 @@
 /* XXX need to update pixman headers to be const as appropriate */
 #define CONST_CAST (pixman_region32_t *)
 
+/**
+ * SECTION:cairo-region
+ * @Title: Regions
+ * @Short_Description: Representing a pixel-aligned area
+ *
+ * Regions are a simple graphical data type representing an area of 
+ * integer-aligned rectangles. They are often used on raster surfaces 
+ * to track areas of interest, such as change or clip areas.
+ */
+
 static const cairo_region_t _cairo_region_nil = {
     CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
     CAIRO_STATUS_NO_MEMORY,		/* status */
@@ -196,6 +206,21 @@ cairo_region_create (void)
 }
 slim_hidden_def (cairo_region_create);
 
+/**
+ * cairo_region_create_rectangles:
+ * @rects: an array of @count rectangles
+ * @count: number of rectangles
+ *
+ * Allocates a new region object containing the union of all given @rects.
+ *
+ * Return value: A newly allocated #cairo_region_t. Free with
+ *   cairo_region_destroy(). This function always returns a
+ *   valid pointer; if memory cannot be allocated, then a special
+ *   error object is returned where all operations on the object do nothing.
+ *   You can check for this with cairo_region_status().
+ *
+ * Since: 1.10
+ **/
 cairo_region_t *
 cairo_region_create_rectangles (const cairo_rectangle_int_t *rects,
 				int count)
