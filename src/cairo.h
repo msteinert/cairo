@@ -2603,6 +2603,18 @@ cairo_matrix_transform_point (const cairo_matrix_t *matrix,
 
 typedef struct _cairo_region cairo_region_t;
 
+/**
+ * cairo_rectangle_int_t:
+ * @x: X coordinate of the left side of the rectangle
+ * @y: Y coordinate of the the top side of the rectangle
+ * @width: width of the rectangle
+ * @height: height of the rectangle
+ *
+ * A data structure for holding a rectangle with integer coordinates.
+ *
+ * Since: 1.10
+ **/
+
 typedef struct _cairo_rectangle_int {
     int x, y;
     int width, height;
@@ -2647,8 +2659,8 @@ cairo_public int
 cairo_region_num_rectangles (const cairo_region_t *region);
 
 cairo_public void
-cairo_region_get_rectangle (const cairo_region_t        *region,
-			    int                    nth_rectangle,
+cairo_region_get_rectangle (const cairo_region_t  *region,
+			    int                    nth,
 			    cairo_rectangle_int_t *rectangle);
 
 cairo_public cairo_bool_t

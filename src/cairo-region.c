@@ -417,7 +417,7 @@ slim_hidden_def (cairo_region_get_rectangle);
 /**
  * cairo_region_get_extents:
  * @region: a #cairo_region_t
- * @rectangle: rectangle into which to store the extents
+ * @extents: rectangle into which to store the extents
  *
  * Gets the bounding rectangle of @region as a #cairo_rectangle_int_t
  *
@@ -773,6 +773,16 @@ cairo_region_translate (cairo_region_t *region,
 slim_hidden_def (cairo_region_translate);
 
 /**
+ * cairo_region_overlap_t:
+ * @CAIRO_REGION_OVERLAP_IN: The contents are entirely inside the region
+ * @CAIRO_REGION_OVERLAP_OUT: The contents are entirely outside the region
+ * @CAIRO_REGION_OVERLAP_PART: The contents are partially inside and
+ *     partially outside the region.
+ * 
+ * Used as the return value for cairo_region_contains_rectangle().
+ */
+
+/**
  * cairo_region_contains_rectangle:
  * @region: a #cairo_region_t
  * @rectangle: a #cairo_rectangle_int_t
@@ -840,8 +850,8 @@ slim_hidden_def (cairo_region_contains_point);
 
 /**
  * cairo_region_equal:
- * @region_a: a #cairo_region_t or %NULL
- * @region_b: a #cairo_region_t or %NULL
+ * @a: a #cairo_region_t or %NULL
+ * @b: a #cairo_region_t or %NULL
  *
  * Compares whether region_a is equivalent to region_b. %NULL as an argument
  * is equal to itself, but not to any non-%NULL region.
