@@ -435,7 +435,7 @@ cairo_gl_surface_create_for_texture (cairo_device_t	*abstract_device,
     surface = (cairo_gl_surface_t *)
 	_cairo_gl_surface_create_scratch_for_texture (ctx, content,
 						      tex, width, height);
-    _cairo_gl_context_release (ctx);
+    status = _cairo_gl_context_release (ctx, status);
 
     return &surface->base;
 }
