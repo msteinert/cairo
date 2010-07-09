@@ -2,7 +2,7 @@
 SPARSE = sparse
 sparse:
 	@echo Checking enabled sources with sparse checker
-	@status=true; for f in $(enabled_cairo_sources); do \
+	@status=true; for f in $(enabled_cairo_sources) $(enabled_cairo_cxx_sources); do \
 		echo $(SPARSE) $(PREPROCESS_ARGS) $(srcdir)/$$f; \
 		$(SPARSE) $(PREPROCESS_ARGS) $(srcdir)/$$f || status=false; \
 	done; $$status
@@ -10,7 +10,7 @@ sparse:
 SPLINT = splint -badflag
 splint:
 	@echo Checking enabled sources with splint checker
-	@status=true; for f in $(enabled_cairo_sources); do \
+	@status=true; for f in $(enabled_cairo_sources) $(enabled_cairo_cxx_sources); do \
 		echo $(SPLINT) $(PREPROCESS_ARGS) $(srcdir)/$$f; \
 		$(SPLINT) $(PREPROCESS_ARGS) $(srcdir)/$$f || status=false; \
 	done; $$status

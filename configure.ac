@@ -777,6 +777,16 @@ fi
 
 dnl ===========================================================================
 
+dnl Extra stuff we need to do when building C++ code
+need_cxx="no"
+AS_IF([test "x$use_skia" = "xyes"], [need_cxx="yes"])
+AS_IF([test "x$use_qt" = "xyes"], [need_cxx="yes"])
+AS_IF([test "x$use_beos" = "xyes"], [need_cxx="yes"])
+
+AM_CONDITIONAL(BUILD_CXX, test "x$need_cxx" = "xyes")
+
+dnl ===========================================================================
+
 # We use GTK+ for some utility/debugging tools
 PKG_CHECK_MODULES(gtk, "gtk+-2.0",have_gtk=yes, have_gtk=no)
 AM_CONDITIONAL(HAVE_GTK, test "x$have_gtk" = "xyes")

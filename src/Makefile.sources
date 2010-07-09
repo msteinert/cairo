@@ -285,7 +285,7 @@ cairo_xcb_sources += \
 endif
 
 cairo_qt_headers = cairo-qt.h
-cairo_qt_sources = cairo-qt-surface.cpp
+cairo_qt_cxx_sources = cairo-qt-surface.cpp
 
 cairo_quartz_headers = cairo-quartz.h
 cairo_quartz_private = cairo-quartz-private.h
@@ -303,7 +303,7 @@ cairo_win32_sources = cairo-win32-surface.c cairo-win32-printing-surface.c
 cairo_win32_font_sources = cairo-win32-font.c
 
 cairo_skia_headers = cairo-skia.h
-cairo_skia_sources = cairo-skia-surface.cpp
+cairo_skia_cxx_sources = cairo-skia-surface.cpp
 
 cairo_os2_headers = cairo-os2.h
 cairo_os2_private = cairo-os2-private.h
@@ -312,7 +312,7 @@ cairo_os2_sources = cairo-os2-surface.c
 # automake is stupid enough to always use c++ linker if we enable the
 # following lines, even if beos surface is not enabled.  Disable it for now.
 cairo_beos_headers = cairo-beos.h
-#cairo_beos_sources = cairo-beos-surface.cpp
+cairo_beos_cxx_sources = cairo-beos-surface.cpp
 
 cairo_gl_headers = cairo-gl.h
 cairo_gl_private = cairo-gl-private.h \
