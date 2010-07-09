@@ -62,7 +62,6 @@ endif
 ifeq ($(CAIRO_HAS_PNG_FUNCTIONS),1)
 	@echo "#define CAIRO_HAS_PNG_FUNCTIONS 1" >> src/cairo-features.h
 endif
-	@echo "#define CAIRO_HAS_GLEW_FUNCTIONS 1" >> src/cairo-features.h
 ifeq ($(CAIRO_HAS_GL_SURFACE),1)
 	@echo "#define CAIRO_HAS_GL_SURFACE 1" >> src/cairo-features.h
 endif
