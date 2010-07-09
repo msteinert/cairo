@@ -27,7 +27,7 @@ lib_LTLIBRARIES = libcairo.la
 if BUILD_CXX
 cairo_cxx_lib = libcairo_cxx.la
 else
-cairo_cxx_lib = libcairo_cxx.la
+cairo_cxx_lib =
 endif
 
 noinst_LTLIBRARIES = $(cairo_cxx_lib)
