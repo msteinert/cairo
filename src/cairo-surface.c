@@ -239,7 +239,8 @@ _cairo_surface_allocate_unique_id (void)
  * This function returns the device for a @surface.
  * See #cairo_device_t.
  *
- * Return value: The device for @surface.
+ * Return value: The device for @surface or %NULL if the surface does
+ *               not have an associated device.
  *
  * Since: 1.10
  **/
