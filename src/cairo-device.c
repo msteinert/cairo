@@ -37,6 +37,57 @@
 #include "cairo-device-private.h"
 #include "cairo-error-private.h"
 
+/**
+ * SECTION:cairo-device
+ * @Title: cairo_device_t
+ * @Short_Description: interface to underlying rendering system
+ * @See_Also: #cairo_surface_t
+ *
+ * Devices are the abstraction Cairo employs for the rendering system
+ * used by a #cairo_surface_t. You can get the device of a surface using
+ * cairo_surface_get_device().
+ *
+ * Devices are created using custom functions specific to the rendering
+ * system you want to use. See the documentation for the surface types
+ * for those functions.
+ *
+ * An important function that devices fulfill is sharing access to the
+ * rendering system between Cairo and your application. If you want to
+ * access a device directly that you used to draw to with Cairo, you must
+ * first call cairo_device_flush() to ensure that Cairo finishes all
+ * operations on the device and resets it to a clean state.
+ *
+ * Cairo also provides the functions cairo_device_acquire() and
+ * cairo_device_release() to synchronize access to the rendering system
+ * in a multithreaded environment. This is done internally, but can also
+ * be used by applications.
+ *
+ * Putting this all together, a function that works with devices should
+ * look something like this:
+ * <informalexample><programlisting>
+ * void
+ * my_device_modifying_function (cairo_device_t *device)
+ * {
+ *   cairo_status_t status;
+ *
+ *   // Ensure the device is properly reset
+ *   cairo_device_flush (device);
+ *   // Try to acquire the device
+ *   status = cairo_device_acquire (device);
+ *   if (status != CAIRO_STATUS_SUCCESS) {
+ *     printf ("Failed to acquire the device: %s\n", cairo_status_to_string (status));
+ *     return;
+ *   }
+ *
+ *   // Do the custom operations on the device here.
+ *   // But do not call any Cairo functions that might acquire devices.
+ *   
+ *   // Release the device when done.
+ *   cairo_device_release (device);
+ * }
+ * </programlisting></informalexample>
+ */
+
 static const cairo_device_t _nil_device = {
     CAIRO_REFERENCE_COUNT_INVALID,
     CAIRO_STATUS_NO_MEMORY,
@@ -267,6 +318,34 @@ cairo_device_get_type (cairo_device_t *device)
     return device->backend->type;
 }
 
+/**
+ * cairo_device_acquire:
+ * @device: a #cairo_device_t
+ *
+ * Acquires the @device for the current thread. This function will block
+ * until no other thread has acquired the device.
+ *
+ * If the return value is %CAIRO_STATUS_SUCCESS, you successfully acquired the
+ * device. From now on your thread owns the device and no other thread will be
+ * able to acquire it until a matching call to cairo_device_release(). It is
+ * allowed to recursively acquire the device multiple times from the same
+ * thread.
+ *
+ * <note><para>You must never acquire two different devices at the same time
+ * unless this is explicitly allowed. Otherwise the possibility of deadlocks
+ * exist.
+ *
+ * As various Cairo functions can acquire devices when called, these functions
+ * may also cause deadlocks when you call them with an acquired device. So you
+ * must not have a device acquired when calling them. These functions are
+ * marked in the documentation.
+ * </para></note>
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS on success or an error code if
+ *               the device is in an error state and could not be
+ *               acquired. After a successful call to cairo_device_acquire(),
+ *               a matching call to cairo_device_release() is required.
+ **/
 cairo_status_t
 cairo_device_acquire (cairo_device_t *device)
 {
@@ -289,6 +368,13 @@ cairo_device_acquire (cairo_device_t *device)
 }
 slim_hidden_def (cairo_device_acquire);
 
+/**
+ * cairo_device_release:
+ * @device: a #cairo_device_t
+ *
+ * Releases a @device previously acquired using cairo_device_acquire(). See
+ * that function for details.
+ **/
 void
 cairo_device_release (cairo_device_t *device)
 {
