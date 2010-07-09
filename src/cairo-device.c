@@ -221,6 +221,19 @@ cairo_device_status (cairo_device_t *device)
     return device->status;
 }
 
+/**
+ * cairo_device_flush:
+ * @device: a #cairo_device_t
+ *
+ * Finish any pending operations for the device and also restore any
+ * temporary modifications cairo has made to the device's state.
+ * This function must be called before switching from using the 
+ * device with Cairo to operating on it directly with native APIs.
+ * If the device doesn't support direct access, then this function
+ * does nothing.
+ *
+ * This function may acquire devices.
+ **/
 void
 cairo_device_flush (cairo_device_t *device)
 {
@@ -237,6 +250,23 @@ cairo_device_flush (cairo_device_t *device)
 }
 slim_hidden_def (cairo_device_flush);
 
+/**
+ * cairo_device_finish:
+ * @device: the #cairo_device_t to finish
+ *
+ * This function finishes the device and drops all references to
+ * external resources. All surfaces, fonts and other objects created
+ * for this @device will be finished, too.
+ * Further operations on the @device will not affect the @device but
+ * will instead trigger a %CAIRO_STATUS_DEVICE_FINISHED error.
+ *
+ * When the last call to cairo_device_destroy() decreases the
+ * reference count to zero, cairo will call cairo_device_finish() if
+ * it hasn't been called already, before freeing the resources
+ * associated with the device.
+ *
+ * This function may acquire devices.
+ **/
 void
 cairo_device_finish (cairo_device_t *device)
 {
@@ -265,6 +295,8 @@ slim_hidden_def (cairo_device_finish);
  * Decreases the reference count on @device by one. If the result is
  * zero, then @device and all associated resources are freed.  See
  * cairo_device_reference().
+ *
+ * This function may acquire devices if the last reference was dropped.
  **/
 void
 cairo_device_destroy (cairo_device_t *device)
