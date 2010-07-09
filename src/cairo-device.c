@@ -185,6 +185,8 @@ _cairo_device_init (cairo_device_t *device,
  * cairo_device_get_reference_count().
  *
  * Return value: the referenced #cairo_device_t.
+ *
+ * Since: 1.10
  **/
 cairo_device_t *
 cairo_device_reference (cairo_device_t *device)
@@ -211,6 +213,8 @@ slim_hidden_def (cairo_device_reference);
  *
  * Return value: %CAIRO_STATUS_SUCCESS on success or an error code if
  *               the device is in an error state.
+ *
+ * Since: 1.10
  **/
 cairo_status_t
 cairo_device_status (cairo_device_t *device)
@@ -233,6 +237,8 @@ cairo_device_status (cairo_device_t *device)
  * does nothing.
  *
  * This function may acquire devices.
+ *
+ * Since: 1.10
  **/
 void
 cairo_device_flush (cairo_device_t *device)
@@ -266,6 +272,8 @@ slim_hidden_def (cairo_device_flush);
  * associated with the device.
  *
  * This function may acquire devices.
+ *
+ * Since: 1.10
  **/
 void
 cairo_device_finish (cairo_device_t *device)
@@ -297,6 +305,8 @@ slim_hidden_def (cairo_device_finish);
  * cairo_device_reference().
  *
  * This function may acquire devices if the last reference was dropped.
+ *
+ * Since: 1.10
  **/
 void
 cairo_device_destroy (cairo_device_t *device)
@@ -377,6 +387,8 @@ cairo_device_get_type (cairo_device_t *device)
  *               the device is in an error state and could not be
  *               acquired. After a successful call to cairo_device_acquire(),
  *               a matching call to cairo_device_release() is required.
+ *
+ * Since: 1.10
  **/
 cairo_status_t
 cairo_device_acquire (cairo_device_t *device)
@@ -406,6 +418,8 @@ slim_hidden_def (cairo_device_acquire);
  *
  * Releases a @device previously acquired using cairo_device_acquire(). See
  * that function for details.
+ *
+ * Since: 1.10
  **/
 void
 cairo_device_release (cairo_device_t *device)

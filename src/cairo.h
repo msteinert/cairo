@@ -159,6 +159,8 @@ typedef struct _cairo_surface cairo_surface_t;
  *
  * Memory management of #cairo_device_t is done with
  * cairo_device_reference() and cairo_device_destroy().
+ *
+ * Since: 1.10
  **/
 typedef struct _cairo_device cairo_device_t;
 
