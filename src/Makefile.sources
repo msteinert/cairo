@@ -206,9 +206,6 @@ cairo_sources += $(_cairo_pdf_operators_sources)
 
 cairo_png_sources = cairo-png.c
 
-cairo_glew_sources = glew/glew.c
-cairo_glew_private = glew/GL/glew.h glew/GL/glxew.h
-
 cairo_ps_headers = cairo-ps.h
 cairo_ps_private = cairo-ps-surface-private.h
 cairo_ps_sources = cairo-ps-surface.c
@@ -316,13 +313,19 @@ cairo_beos_cxx_sources = cairo-beos-surface.cpp
 
 cairo_gl_headers = cairo-gl.h
 cairo_gl_private = cairo-gl-private.h \
-		   cairo-gl-gradient-private.h
+		   cairo-gl-gradient-private.h \
+		   glew/GL/glew.h \
+		   glew/GL/glxew.h
+
 cairo_gl_sources = cairo-gl-composite.c \
 		   cairo-gl-device.c \
 		   cairo-gl-glyphs.c \
 		   cairo-gl-gradient.c \
 		   cairo-gl-shaders.c \
 		   cairo-gl-surface.c
+if BUILD_PRIVATE_GLEW
+cairo_gl_sources += glew/glew.c
+endif
 
 cairo_egl_sources += cairo-egl-context.c
 cairo_glx_sources += cairo-glx-context.c

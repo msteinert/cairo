@@ -347,18 +347,18 @@ CAIRO_ENABLE_SURFACE_BACKEND(gl, OpenGL, no, [
 						  [])])])
       ;;
   esac
-  if test "x$have_glew" != "xno"; then
+  AS_IF([test "x$have_glew" != "xno"],[
     gl_NONPKGCONFIG_LIBS="-l$have_glew $gl_NONPKGCONFIG_LIBS"
     use_glew="yes (system library)"
-  else
-    CAIRO_ENABLE_FUNCTIONS(glew, GLEW, always)
+  ], [
     use_glew="yes (private copy)"
     CAIRO_CFLAGS="$CAIRO_CFLAGS -I\$(top_srcdir)/src/glew"
-  fi
+  ])
   need_glx_functions=yes
   need_wgl_functions=yes
   need_egl_functions=yes
 ])
+AM_CONDITIONAL(BUILD_PRIVATE_GLEW, test "x$use_glew" = "xyes (private copy)")
 
 dnl ===========================================================================
 
