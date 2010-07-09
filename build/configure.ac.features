@@ -98,7 +98,6 @@ all_$1_sources += $($1_$2_sources)]dnl
 dnl Collect list of source files for enabled public features
 CAIRO_MAKEFILE_ACCUMULATE(*,
 [dnl
-enabled_$1_files = $(enabled_$1_headers) $(enabled_$1_private) $(enabled_$1_sources)
 enabled_$1_headers = $($1_headers)
 enabled_$1_private = $($1_private)
 enabled_$1_sources = $($1_sources)

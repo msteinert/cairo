@@ -67,7 +67,6 @@ TESTS_ENVIRONMENT = \
 	all_cairo_headers="$(all_cairo_headers)" \
 	all_cairo_private="$(all_cairo_private)" \
 	all_cairo_sources="$(all_cairo_sources)" \
-	enabled_cairo_files="$(enabled_cairo_files)" \
 	enabled_cairo_headers="$(enabled_cairo_headers)" \
 	enabled_cairo_private="$(enabled_cairo_private)" \
 	enabled_cairo_sources="$(enabled_cairo_sources)" \
