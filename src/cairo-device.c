@@ -122,6 +122,19 @@ _cairo_device_init (cairo_device_t *device,
     _cairo_user_data_array_init (&device->user_data);
 }
 
+/**
+ * cairo_device_reference:
+ * @device: a #cairo_device_t
+ *
+ * Increases the reference count on @device by one. This prevents
+ * @device from being destroyed until a matching call to
+ * cairo_device_destroy() is made.
+ *
+ * The number of references to a #cairo_device_t can be get using
+ * cairo_device_get_reference_count().
+ *
+ * Return value: the referenced #cairo_device_t.
+ **/
 cairo_device_t *
 cairo_device_reference (cairo_device_t *device)
 {
@@ -138,6 +151,16 @@ cairo_device_reference (cairo_device_t *device)
 }
 slim_hidden_def (cairo_device_reference);
 
+/**
+ * cairo_device_status:
+ * @device: a #cairo_device_t
+ *
+ * Checks whether an error has previously occurred for this
+ * device.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS on success or an error code if
+ *               the device is in an error state.
+ **/
 cairo_status_t
 cairo_device_status (cairo_device_t *device)
 {
@@ -184,6 +207,14 @@ cairo_device_finish (cairo_device_t *device)
 }
 slim_hidden_def (cairo_device_finish);
 
+/**
+ * cairo_device_destroy:
+ * @device: a #cairo_device_t
+ *
+ * Decreases the reference count on @device by one. If the result is
+ * zero, then @device and all associated resources are freed.  See
+ * cairo_device_reference().
+ **/
 void
 cairo_device_destroy (cairo_device_t *device)
 {
@@ -213,6 +244,17 @@ cairo_device_destroy (cairo_device_t *device)
 }
 slim_hidden_def (cairo_device_destroy);
 
+/**
+ * cairo_device_get_type:
+ * @device: a #cairo_device_t
+ *
+ * This function returns the type of the device. See #cairo_device_type_t
+ * for available types.
+ *
+ * Return value: The type of @device.
+ *
+ * Since: 1.10
+ **/
 cairo_device_type_t
 cairo_device_get_type (cairo_device_t *device)
 {
