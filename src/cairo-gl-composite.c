@@ -60,7 +60,7 @@ _cairo_gl_create_gradient_texture (cairo_gl_surface_t *dst,
     return _cairo_gl_context_release (ctx, status);
 }
 
-/**
+/*
  * Like cairo_pattern_acquire_surface(), but returns a matrix that transforms
  * from dest to src coords.
  */
@@ -826,7 +826,7 @@ _cairo_gl_composite_begin_component_alpha  (cairo_gl_context_t *ctx,
 	setup->op = CAIRO_OPERATOR_DEST_OUT;
     }
 
-    /**
+    /*
      * implements component-alpha %CAIRO_OPERATOR_OVER using two passes of
      * the simpler operations %CAIRO_OPERATOR_DEST_OUT and %CAIRO_OPERATOR_ADD.
      *
