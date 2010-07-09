@@ -48,7 +48,8 @@ cairo_gl_surface_create (cairo_device_t *device,
 cairo_public cairo_surface_t *
 cairo_gl_surface_create_for_texture (cairo_device_t *abstract_device,
 				     cairo_content_t content,
-				     GLuint tex, int width, int height);
+				     unsigned int tex,
+                                     int width, int height);
 cairo_public void
 cairo_gl_surface_set_size (cairo_surface_t *surface, int width, int height);
 

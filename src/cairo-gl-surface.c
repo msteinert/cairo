@@ -408,7 +408,7 @@ slim_hidden_def (cairo_gl_surface_create);
 cairo_surface_t *
 cairo_gl_surface_create_for_texture (cairo_device_t	*abstract_device,
 				     cairo_content_t	 content,
-				     GLuint		 tex,
+				     unsigned int	 tex,
 				     int		 width,
 				     int		 height)
 {
