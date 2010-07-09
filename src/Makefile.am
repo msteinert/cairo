@@ -36,7 +36,7 @@ libcairo_cxx_la_SOURCES = \
 	$(enabled_cairo_private) \
 	$(enabled_cairo_cxx_sources) \
 	$(NULL)
-libcairo_cxx_la_LDFLAGS = $(AM_LDFLAGS) -version-info $(CAIRO_LIBTOOL_VERSION_INFO) -no-undefined $(export_symbols)
+libcairo_cxx_la_LDFLAGS = $(AM_LDFLAGS) $(export_symbols)
 libcairo_cxx_la_LIBADD = $(CAIRO_LIBS)
 libcairo_cxx_la_DEPENDENCIES = $(cairo_def_dependency)
 
