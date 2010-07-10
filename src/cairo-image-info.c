@@ -214,7 +214,7 @@ _jpx_extract_info (const unsigned char *p, cairo_image_info_t *info)
 cairo_int_status_t
 _cairo_image_info_get_jpx_info (cairo_image_info_t	*info,
 				const unsigned char	*data,
-				long			 length)
+				unsigned long		 length)
 {
     const unsigned char *p = data;
     const unsigned char *end = data + length;
@@ -262,7 +262,7 @@ static const unsigned char _png_magic[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 cairo_int_status_t
 _cairo_image_info_get_png_info (cairo_image_info_t     *info,
                                const unsigned char     *data,
-                               long                     length)
+                               unsigned long            length)
 {
     const unsigned char *p = data;
     const unsigned char *end = data + length;

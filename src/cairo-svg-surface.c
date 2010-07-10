@@ -1086,7 +1086,7 @@ _cairo_surface_base64_encode_jpeg (cairo_surface_t       *surface,
 				   cairo_output_stream_t *output)
 {
     const unsigned char *mime_data;
-    unsigned int mime_data_length;
+    unsigned long mime_data_length;
     cairo_image_info_t image_info;
     base64_write_closure_t info;
     cairo_status_t status;
@@ -1125,7 +1125,7 @@ _cairo_surface_base64_encode_png (cairo_surface_t       *surface,
 				  cairo_output_stream_t *output)
 {
     const unsigned char *mime_data;
-    unsigned int mime_data_length;
+    unsigned long mime_data_length;
     base64_write_closure_t info;
     cairo_status_t status;
 
@@ -1266,7 +1266,7 @@ _cairo_svg_surface_emit_surface (cairo_svg_document_t *document,
     cairo_bool_t is_bounded;
     cairo_status_t status;
     const unsigned char *uri;
-    unsigned int uri_len;
+    unsigned long uri_len;
 
     if (_cairo_user_data_array_get_data (&surface->user_data,
 					 (cairo_user_data_key_t *) document))

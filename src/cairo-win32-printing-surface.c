@@ -521,11 +521,11 @@ static cairo_int_status_t
 _cairo_win32_printing_surface_check_jpeg (cairo_win32_surface_t   *surface,
 					  cairo_surface_t         *source,
 					  const unsigned char    **data,
-					  unsigned int            *length,
+					  unsigned long           *length,
 					  cairo_image_info_t      *info)
 {
     const unsigned char *mime_data;
-    unsigned int mime_data_length;
+    unsigned long mime_data_length;
     cairo_int_status_t status;
     DWORD result;
 
@@ -559,11 +559,11 @@ static cairo_int_status_t
 _cairo_win32_printing_surface_check_png (cairo_win32_surface_t   *surface,
 					 cairo_surface_t         *source,
 					 const unsigned char    **data,
-					 unsigned int            *length,
+					 unsigned long           *length,
 					 cairo_image_info_t      *info)
 {
     const unsigned char *mime_data;
-    unsigned int mime_data_length;
+    unsigned long mime_data_length;
 
     cairo_int_status_t status;
     DWORD result;
@@ -611,7 +611,7 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
     RECT clip;
     const cairo_color_t *background_color;
     const unsigned char *mime_data;
-    unsigned int mime_size;
+    unsigned long mime_size;
     cairo_image_info_t mime_info;
     cairo_bool_t use_mime;
     DWORD mime_type;

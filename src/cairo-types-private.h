@@ -374,7 +374,7 @@ typedef enum _cairo_image_transparency {
 struct _cairo_mime_data {
     cairo_reference_count_t ref_count;
     unsigned char *data;
-    unsigned int length;
+    unsigned long length;
     cairo_destroy_func_t destroy;
     void *closure;
 };

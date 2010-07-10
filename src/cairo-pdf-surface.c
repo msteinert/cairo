@@ -1041,10 +1041,10 @@ _cairo_pdf_source_surface_init_key (cairo_pdf_source_surface_entry_t *key)
 }
 
 static cairo_int_status_t
-_get_jpx_image_info (cairo_surface_t	 	 *source,
-		     cairo_image_info_t 	 *info,
-		     const unsigned char 	**mime_data,
-		     unsigned int 		 *mime_data_length)
+_get_jpx_image_info (cairo_surface_t		 *source,
+		     cairo_image_info_t		*info,
+		     const unsigned char	**mime_data,
+		     unsigned long		 *mime_data_length)
 {
     cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_JP2,
 				 mime_data, mime_data_length);
@@ -1055,10 +1055,10 @@ _get_jpx_image_info (cairo_surface_t	 	 *source,
 }
 
 static cairo_int_status_t
-_get_jpeg_image_info (cairo_surface_t	 *source,
+_get_jpeg_image_info (cairo_surface_t		 *source,
 		      cairo_image_info_t	 *info,
 		      const unsigned char	**mime_data,
-		      unsigned int		 *mime_data_length)
+		      unsigned long		 *mime_data_length)
 {
     cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_JPEG,
 				 mime_data, mime_data_length);
@@ -1077,7 +1077,7 @@ _get_source_surface_size (cairo_surface_t         *source,
     cairo_rectangle_int_t extents;
     cairo_image_info_t info;
     const unsigned char *mime_data;
-    unsigned int mime_data_length;
+    unsigned long mime_data_length;
 
     if (source->type == CAIRO_SURFACE_TYPE_RECORDING) {
 	if (source->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE) {
@@ -2004,7 +2004,7 @@ _cairo_pdf_surface_emit_jpx_image (cairo_pdf_surface_t   *surface,
 {
     cairo_status_t status;
     const unsigned char *mime_data;
-    unsigned int mime_data_length;
+    unsigned long mime_data_length;
     cairo_image_info_t info;
 
     if (surface->pdf_version < CAIRO_PDF_VERSION_1_5)
@@ -2045,7 +2045,7 @@ _cairo_pdf_surface_emit_jpeg_image (cairo_pdf_surface_t   *surface,
 {
     cairo_status_t status;
     const unsigned char *mime_data;
-    unsigned int mime_data_length;
+    unsigned long mime_data_length;
     cairo_image_info_t info;
 
     cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_JPEG,

@@ -1320,7 +1320,7 @@ _expand_four_tuple_to_five (unsigned char four_tuple[4],
 static void
 _write_base85_data (struct _data_stream *stream,
 		    const unsigned char	  *data,
-		    unsigned int	   length)
+		    unsigned long	   length)
 {
     unsigned char five_tuple[5];
     int ret;
@@ -1555,7 +1555,7 @@ _emit_image (cairo_surface_t *image,
 
 	for (mime_type = mime_types; *mime_type; mime_type++) {
 	    const unsigned char *mime_data;
-	    unsigned int mime_length;
+	    unsigned long mime_length;
 
 	    DLCALL (cairo_surface_get_mime_data,
 		    image, *mime_type, &mime_data, &mime_length);
@@ -3652,7 +3652,7 @@ cairo_status_t
 cairo_surface_set_mime_data (cairo_surface_t		*surface,
                              const char			*mime_type,
                              const unsigned char	*data,
-                             unsigned int		 length,
+                             unsigned long		 length,
 			     cairo_destroy_func_t	 destroy,
 			     void			*closure)
 {

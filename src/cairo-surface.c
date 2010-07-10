@@ -783,7 +783,7 @@ void
 cairo_surface_get_mime_data (cairo_surface_t		*surface,
                              const char			*mime_type,
                              const unsigned char       **data,
-                             unsigned int		*length)
+                             unsigned long		*length)
 {
     cairo_user_data_slot_t *slots;
     int i, num_slots;
@@ -896,7 +896,7 @@ cairo_status_t
 cairo_surface_set_mime_data (cairo_surface_t		*surface,
                              const char			*mime_type,
                              const unsigned char	*data,
-                             unsigned int		 length,
+                             unsigned long		 length,
 			     cairo_destroy_func_t	 destroy,
 			     void			*closure)
 {

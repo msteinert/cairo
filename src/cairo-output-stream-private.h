@@ -175,7 +175,7 @@ _cairo_memory_stream_length (cairo_output_stream_t *stream);
 cairo_private cairo_status_t
 _cairo_memory_stream_destroy (cairo_output_stream_t *abstract_stream,
 			      unsigned char **data_out,
-			      unsigned int *length_out);
+			      unsigned long *length_out);
 
 cairo_private cairo_output_stream_t *
 _cairo_null_stream_create (void);

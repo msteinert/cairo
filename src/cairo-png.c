@@ -529,7 +529,7 @@ read_png (struct png_read_closure_t *png_closure)
     cairo_format_t format;
     cairo_status_t status;
     unsigned char *mime_data;
-    unsigned int mime_data_length;
+    unsigned long mime_data_length;
 
     png_closure->png_data = _cairo_memory_stream_create ();
 

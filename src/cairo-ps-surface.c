@@ -2327,7 +2327,7 @@ _cairo_ps_surface_emit_jpeg_image (cairo_ps_surface_t    *surface,
 {
     cairo_status_t status;
     const unsigned char *mime_data;
-    unsigned int mime_data_length;
+    unsigned long mime_data_length;
     cairo_image_info_t info;
 
     cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_JPEG,

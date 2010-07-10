@@ -1155,7 +1155,7 @@ _emit_png_surface (cairo_script_surface_t *surface,
     cairo_output_stream_t *base85_stream;
     cairo_status_t status;
     const uint8_t *mime_data;
-    unsigned int mime_data_length;
+    unsigned long mime_data_length;
 
     cairo_surface_get_mime_data (&image->base, CAIRO_MIME_TYPE_PNG,
 				 &mime_data, &mime_data_length);
@@ -1208,7 +1208,7 @@ _emit_image_surface (cairo_script_surface_t *surface,
     cairo_output_stream_t *zlib_stream;
     cairo_status_t status, status2;
     const uint8_t *mime_data;
-    unsigned int mime_data_length;
+    unsigned long mime_data_length;
     struct def *tag;
 
     if (_cairo_user_data_array_get_data (&image->base.user_data,
@@ -1310,7 +1310,7 @@ _emit_image_surface (cairo_script_surface_t *surface,
     cairo_list_add (&tag->link, &ctx->defines);
     status = _cairo_user_data_array_set_data (&image->base.user_data,
 					      (cairo_user_data_key_t *) ctx,
-					tag, _undef);
+					      tag, _undef);
     if (unlikely (status)) {
 	free (tag);
 	return status;
