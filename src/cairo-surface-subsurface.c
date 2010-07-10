@@ -46,16 +46,10 @@ static cairo_status_t
 _cairo_surface_subsurface_finish (void *abstract_surface)
 {
     cairo_surface_subsurface_t *surface = abstract_surface;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
-
-    if (surface->owns_target) {
-	cairo_surface_finish (surface->target);
-	status = surface->target->status;
-    }
 
     cairo_surface_destroy (surface->target);
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_surface_t *
@@ -419,7 +413,13 @@ _cairo_surface_subsurface_snapshot (void *abstract_surface)
 			 NULL, /* device */
 			 surface->target->content);
     snapshot->target = _cairo_surface_snapshot (surface->target);
-    snapshot->owns_target = TRUE;
+    if (unlikely (snapshot->target->status)) {
+	cairo_status_t status;
+
+	status = snapshot->target->status;
+	free (snapshot);
+	return _cairo_surface_create_in_error (status);
+    }
 
     snapshot->base.type = snapshot->target->type;
     snapshot->extents = surface->extents;
@@ -532,7 +532,6 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
     }
 
     surface->target = cairo_surface_reference (target);
-    surface->owns_target = FALSE;
 
     return &surface->base;
 }

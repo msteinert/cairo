@@ -44,7 +44,6 @@ struct _cairo_surface_subsurface {
     cairo_rectangle_int_t extents;
 
     cairo_surface_t *target;
-    cairo_bool_t owns_target;
 };
 
 #endif /* CAIRO_SURFACE_SUBSURFACE_PRIVATE_H */
