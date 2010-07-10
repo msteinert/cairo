@@ -230,14 +230,13 @@ bind_matrix_arb (cairo_gl_shader_t *shader,
 		 cairo_matrix_t* m)
 {
     GLint location = glGetUniformLocationARB (shader->program, name);
-    float gl_m[16] = {
-        m->xx, m->xy, 0,     m->x0,
-        m->yx, m->yy, 0,     m->y0,
-        0,     0,     1,     0,
-        0,     0,     0,     1
+    float gl_m[9] = {
+        m->xx, m->xy, m->x0,
+        m->yx, m->yy, m->y0,
+        0,     0,     1
     };
     assert (location != -1);
-    glUniformMatrix4fvARB (location, 1, GL_TRUE, gl_m);
+    glUniformMatrix3fvARB (location, 1, GL_TRUE, gl_m);
 }
 
 static void
@@ -387,13 +386,12 @@ bind_matrix_core_2_0 (cairo_gl_shader_t *shader, const char *name, cairo_matrix_
 {
     GLint location = glGetUniformLocation (shader->program, name);
     float gl_m[16] = {
-        m->xx, m->xy, 0,     m->x0,
-        m->yx, m->yy, 0,     m->y0,
-        0,     0,     1,     0,
-        0,     0,     0,     1
+        m->xx, m->xy, m->x0,
+        m->yx, m->yy, m->y0,
+        0,     0,     1
     };
     assert (location != -1);
-    glUniformMatrix4fv (location, 1, GL_TRUE, gl_m);
+    glUniformMatrix3fv (location, 1, GL_TRUE, gl_m);
 }
 
 static void
@@ -703,12 +701,12 @@ cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
         _cairo_output_stream_printf (stream, 
             "uniform sampler1D %s_sampler;\n"
-            "uniform mat4 %s_matrix;\n"
+            "uniform mat3 %s_matrix;\n"
             "uniform vec2 %s_segment;\n"
             "\n"
             "vec4 get_%s()\n"
             "{\n"
-            "    vec2 pos = (%s_matrix * vec4 (gl_FragCoord.xy, 0.0, 1.0)).xy;\n"
+            "    vec2 pos = (%s_matrix * vec3 (gl_FragCoord.xy, 1.0)).xy;\n"
             "    float t = dot (pos, %s_segment) / dot (%s_segment, %s_segment);\n"
             "    return texture1D (%s_sampler, t);\n"
             "}\n",
@@ -718,14 +716,14 @@ cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
         _cairo_output_stream_printf (stream, 
             "uniform sampler1D %s_sampler;\n"
-            "uniform mat4 %s_matrix;\n"
+            "uniform mat3 %s_matrix;\n"
             "uniform vec2 %s_circle_1;\n"
             "uniform float %s_radius_0;\n"
             "uniform float %s_radius_1;\n"
             "\n"
             "vec4 get_%s()\n"
             "{\n"
-            "    vec2 pos = (%s_matrix * vec4 (gl_FragCoord.xy, 0.0, 1.0)).xy;\n"
+            "    vec2 pos = (%s_matrix * vec3 (gl_FragCoord.xy, 1.0)).xy;\n"
             "    \n"
             "    float dr = %s_radius_1 - %s_radius_0;\n"
             "    float dot_circle_1 = dot (%s_circle_1, %s_circle_1);\n"
