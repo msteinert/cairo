@@ -29,7 +29,6 @@
 #endif
 
 #include <dlfcn.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -49,6 +48,11 @@
 #include <cairo.h>
 #if CAIRO_HAS_FT_FONT
 # include <cairo-ft.h>
+#endif
+
+#ifndef TRUE
+#define TRUE 1
+#define FALSE 0
 #endif
 
 #ifndef CAIRO_TRACE_OUTDIR
@@ -157,8 +161,8 @@ struct _object {
     Type *type;
     unsigned long int token;
     int width, height;
-    bool foreign;
-    bool defined;
+    cairo_bool_t foreign;
+    cairo_bool_t defined;
     int operand;
     void *data;
     void (*destroy)(void *);
@@ -196,10 +200,10 @@ static struct _type_table {
 } Types;
 
 static FILE *logfile;
-static bool _flush;
-static bool _error;
-static bool _line_info;
-static bool _mark_dirty;
+static cairo_bool_t _flush;
+static cairo_bool_t _error;
+static cairo_bool_t _line_info;
+static cairo_bool_t _mark_dirty;
 static const cairo_user_data_key_t destroy_key;
 static pthread_once_t once_control = PTHREAD_ONCE_INIT;
 static pthread_key_t counter_key;
@@ -216,7 +220,7 @@ static void _init_trace (void);
 #else
 static void _enter_trace (void);
 static void _exit_trace (void);
-static bool _should_trace (void);
+static cairo_bool_t _should_trace (void);
 # define USE_ENTER_EXIT 1
 #endif
 
@@ -418,8 +422,8 @@ _object_create (Type *type, const void *ptr)
     int bucket = BUCKET (type->objects, ptr);
 
     obj = malloc (sizeof (Object));
-    obj->defined = false;
-    obj->foreign = false;
+    obj->defined = FALSE;
+    obj->foreign = FALSE;
     obj->operand = -1;
     obj->type = type;
     obj->addr = ptr;
@@ -460,7 +464,7 @@ _exit_trace (void)
     _get_counter ()[0]--;
 }
 
-static bool
+static cairo_bool_t
 _should_trace (void)
 {
     return _get_counter ()[0] <= 1;
@@ -768,28 +772,28 @@ _emit_header (void)
     _trace_printf ("%%*** Warning CairoScript is still a new tracing format, and is subject to change.\n");
 }
 
-static bool
+static cairo_bool_t
 _init_logfile (void)
 {
-    static bool initialized;
+    static cairo_bool_t initialized;
     const char *filename;
     const char *env;
 
     if (initialized)
 	return logfile != NULL;
 
-    initialized = true;
+    initialized = TRUE;
 
     env = getenv ("CAIRO_TRACE_FLUSH");
     if (env != NULL)
 	_flush = atoi (env);
 
-    _line_info = true;
+    _line_info = TRUE;
     env = getenv ("CAIRO_TRACE_LINE_INFO");
     if (env != NULL)
 	_line_info = atoi (env);
 
-    _mark_dirty = true;
+    _mark_dirty = TRUE;
     env = getenv ("CAIRO_TRACE_MARK_DIRTY");
     if (env != NULL)
 	_mark_dirty = atoi (env);
@@ -798,13 +802,13 @@ _init_logfile (void)
     if (filename != NULL) {
 	int fd = atoi (filename);
 	if (fd == -1)
-	    return false;
+	    return FALSE;
 
 	logfile = fdopen (fd, "w");
 	if (logfile == NULL) {
 	    fprintf (stderr, "Failed to open trace file descriptor '%s': %s\n",
 		       filename, strerror (errno));
-	    return false;
+	    return FALSE;
 	}
 
 	setenv ("CAIRO_TRACE_FD", "-1", 1);
@@ -835,7 +839,7 @@ _init_logfile (void)
     if (logfile == NULL) {
 	fprintf (stderr, "Failed to open trace file '%s': %s\n",
 		   filename, strerror (errno));
-	return false;
+	return FALSE;
     }
 
     fprintf (stderr, "cairo-trace: Recording cairo trace data to %s\n",
@@ -844,25 +848,25 @@ _init_logfile (void)
 done:
     atexit (_close_trace);
     _emit_header ();
-    return true;
+    return TRUE;
 }
 
-static bool
+static cairo_bool_t
 _write_lock (void)
 {
     if (_error)
-	return false;
+	return FALSE;
 
     if (! _should_trace ())
-	return false;
+	return FALSE;
 
     if (! _init_logfile ())
-	return false;
+	return FALSE;
 
 #if HAVE_FLOCKFILE && HAVE_FUNLOCKFILE
     flockfile (logfile);
 #endif
-    return true;
+    return TRUE;
 }
 
 static void
@@ -942,7 +946,7 @@ _consume_operand (void)
 	_trace_printf ("dup /%s%ld exch def\n",
 		       obj->type->op_code,
 		       obj->token);
-	obj->defined = true;
+	obj->defined = TRUE;
     }
     obj->operand = -1;
 }
@@ -961,16 +965,16 @@ _exch_operands (void)
     tmp->operand++;
 }
 
-static bool
+static cairo_bool_t
 _pop_operands_to_object (Object *obj)
 {
     if (obj->operand == -1)
-	return false;
+	return FALSE;
 
     if (obj->operand == current_stack_depth - 2) {
 	_exch_operands ();
 	_trace_printf ("exch ");
-	return true;
+	return TRUE;
     }
 
     while (current_stack_depth > obj->operand + 1) {
@@ -983,31 +987,31 @@ _pop_operands_to_object (Object *obj)
 	    _trace_printf ("/%s%ld exch def\n",
 		     c_obj->type->op_code,
 		     c_obj->token);
-	    c_obj->defined = true;
+	    c_obj->defined = TRUE;
 	} else {
 	    _trace_printf ("pop %% %s%ld\n",
 			   c_obj->type->op_code, c_obj->token);
 	}
     }
 
-    return true;
+    return TRUE;
 }
 
-static bool
+static cairo_bool_t
 _pop_operands_to (enum operand_type t, const void *ptr)
 {
     return _pop_operands_to_object (_get_object (t, ptr));
 }
 
-static bool
+static cairo_bool_t
 _is_current_object (Object *obj, int depth)
 {
     if (current_stack_depth <= depth)
-	return false;
+	return FALSE;
     return current_object[current_stack_depth-depth-1] == obj;
 }
 
-static bool
+static cairo_bool_t
 _is_current (enum operand_type type, const void *ptr, int depth)
 {
     return _is_current_object (_get_object (type, ptr), depth);
@@ -1110,14 +1114,14 @@ _get_id (enum operand_type op_type, const void *ptr)
 	    _trace_printf ("%% Unknown object of type %s, trace is incomplete.",
 			   _get_type (op_type)->name);
 	}
-	_error = true;
+	_error = TRUE;
 	return -1;
     }
 
     return obj->token;
 }
 
-static bool
+static cairo_bool_t
 _has_id (enum operand_type op_type, const void *ptr)
 {
     return _get_object (op_type, ptr) != NULL;
@@ -1165,7 +1169,7 @@ _emit_font_face_id (cairo_font_face_t *font_face)
     }
 }
 
-static bool
+static cairo_bool_t
 _has_pattern_id (cairo_pattern_t *pattern)
 {
     return _has_id (PATTERN, pattern);
@@ -1223,13 +1227,13 @@ _get_scaled_font_id (const cairo_scaled_font_t *font)
     return _get_id (SCALED_FONT, font);
 }
 
-static bool
+static cairo_bool_t
 _has_scaled_font_id (const cairo_scaled_font_t *font)
 {
     return _has_id (SCALED_FONT, font);
 }
 
-static bool
+static cairo_bool_t
 _has_surface_id (const cairo_surface_t *surface)
 {
     return _has_id (SURFACE, surface);
@@ -1256,7 +1260,7 @@ _get_surface_id (cairo_surface_t *surface)
     return _get_id (SURFACE, surface);
 }
 
-static bool
+static cairo_bool_t
 _matrix_is_identity (const cairo_matrix_t *m)
 {
     return m->xx == 1. && m->yx == 0. &&
@@ -1294,13 +1298,13 @@ _write_base85_data_start (struct _data_stream *stream)
     stream->base85_pending = 0;
 }
 
-static bool
+static cairo_bool_t
 _expand_four_tuple_to_five (unsigned char four_tuple[4],
 			    unsigned char five_tuple[5])
 {
     uint32_t value;
     int digit, i;
-    bool all_zero = true;
+    cairo_bool_t all_zero = TRUE;
 
     value = four_tuple[0] << 24 |
 	    four_tuple[1] << 16 |
@@ -1309,7 +1313,7 @@ _expand_four_tuple_to_five (unsigned char four_tuple[4],
     for (i = 0; i < 5; i++) {
 	digit = value % 85;
 	if (digit != 0 && all_zero)
-	    all_zero = false;
+	    all_zero = FALSE;
 	five_tuple[4-i] = digit + 33;
 	value = value / 85;
     }
@@ -1340,9 +1344,9 @@ _write_base85_data (struct _data_stream *stream,
 }
 
 static void
-_write_zlib_data (struct _data_stream *stream, bool flush)
+_write_zlib_data (struct _data_stream *stream, cairo_bool_t flush)
 {
-    bool finished;
+    cairo_bool_t finished;
 
     do {
 	int ret = deflate (&stream->zlib_stream, flush ? Z_FINISH : Z_NO_FLUSH);
@@ -1354,11 +1358,11 @@ _write_zlib_data (struct _data_stream *stream, bool flush)
 	    stream->zlib_stream.avail_out = BUFFER_SIZE;
 	}
 
-	finished = true;
+	finished = TRUE;
 	if (stream->zlib_stream.avail_in != 0)
-	    finished = false;
+	    finished = FALSE;
 	if (flush && ret != Z_STREAM_END)
-	    finished = false;
+	    finished = FALSE;
     } while (! finished);
 
     stream->zlib_stream.next_in = stream->zin_buf;
@@ -1393,14 +1397,14 @@ _write_data (struct _data_stream *stream,
 	length -= count;
 
 	if (stream->zlib_stream.avail_in == BUFFER_SIZE)
-	    _write_zlib_data (stream, false);
+	    _write_zlib_data (stream, FALSE);
     }
 }
 
 static void
 _write_zlib_data_end (struct _data_stream *stream)
 {
-    _write_zlib_data (stream, true);
+    _write_zlib_data (stream, TRUE);
     deflateEnd (&stream->zlib_stream);
 
 }
@@ -1899,7 +1903,7 @@ cairo_create (cairo_surface_t *target)
     if (target != NULL && _write_lock ()) {
 	surface_id = _get_surface_id (target);
 	if (surface_id != -1) {
-	    _get_object (SURFACE, target)->foreign = false;
+	    _get_object (SURFACE, target)->foreign = FALSE;
 
 	    /* we presume that we will continue to use the context */
 	    if (_pop_operands_to (SURFACE, target)){
@@ -2089,7 +2093,7 @@ _emit_source_image (cairo_surface_t *surface)
     _trace_printf (" set-source-image ");
     DLCALL (cairo_surface_destroy, image);
 
-    obj->foreign = false;
+    obj->foreign = FALSE;
 }
 
 static void
@@ -2169,14 +2173,14 @@ cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
     _emit_line_info ();
     if (cr != NULL && source != NULL && _write_lock ()) {
 	Object *obj = _get_object (PATTERN, source);
-	bool need_context_and_pattern = true;
+	cairo_bool_t need_context_and_pattern = TRUE;
 
 	if (_is_current (PATTERN, source, 0) &&
 	    _is_current (CONTEXT, cr, 1))
 	{
 	    if (obj->defined) {
 		_consume_operand ();
-		need_context_and_pattern = false;
+		need_context_and_pattern = FALSE;
 	    }
 	}
 	else if (_is_current (PATTERN, source, 1) &&
@@ -2186,7 +2190,7 @@ cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
 		_trace_printf ("exch ");
 		_exch_operands ();
 		_consume_operand ();
-		need_context_and_pattern = false;
+		need_context_and_pattern = FALSE;
 	    }
 	}
 
@@ -2215,7 +2219,7 @@ cairo_get_source (cairo_t *cr)
     if (! _has_pattern_id (ret)) {
 	_emit_cairo_op (cr, "/source get /p%ld exch def\n",
 			_create_pattern_id (ret));
-	_get_object (PATTERN, ret)->defined = true;
+	_get_object (PATTERN, ret)->defined = TRUE;
     }
 
     _exit_trace ();
@@ -2445,7 +2449,7 @@ cairo_get_target (cairo_t *cr)
 
     if (cr != NULL && ! _has_surface_id (ret)) {
 	_emit_cairo_op (cr, "/target get /s%ld exch def\n", surface_id);
-	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->defined = TRUE;
     }
 
     _exit_trace ();
@@ -2465,7 +2469,7 @@ cairo_get_group_target (cairo_t *cr)
 
     if (cr != NULL && ! _has_surface_id (ret)) {
 	_emit_cairo_op (cr, "/group-target get /s%ld exch def\n", surface_id);
-	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->defined = TRUE;
     }
 
     _exit_trace ();
@@ -2620,14 +2624,14 @@ cairo_mask (cairo_t *cr, cairo_pattern_t *pattern)
     _emit_line_info ();
     if (cr != NULL && pattern != NULL && _write_lock ()) {
 	Object *obj = _get_object (PATTERN, pattern);
-	bool need_context_and_pattern = true;
+	cairo_bool_t need_context_and_pattern = TRUE;
 
 	if (_is_current (PATTERN, pattern, 0) &&
 	    _is_current (CONTEXT, cr, 1))
 	{
 	    if (obj->defined) {
 		_consume_operand ();
-		need_context_and_pattern = false;
+		need_context_and_pattern = FALSE;
 	    }
 	}
 	else if (_is_current (PATTERN, pattern, 1) &&
@@ -2637,7 +2641,7 @@ cairo_mask (cairo_t *cr, cairo_pattern_t *pattern)
 		_trace_printf ("exch ");
 		_exch_operands ();
 		_consume_operand ();
-		need_context_and_pattern = false;
+		need_context_and_pattern = FALSE;
 	    }
 	}
 
@@ -3001,7 +3005,7 @@ cairo_get_scaled_font (cairo_t *cr)
     if (cr != NULL && ! _has_scaled_font_id (ret)) {
 	_emit_cairo_op (cr, "/scaled-font get /sf%ld exch def\n",
 			_create_scaled_font_id (ret));
-	_get_object (SCALED_FONT, ret)->defined = true;
+	_get_object (SCALED_FONT, ret)->defined = TRUE;
     }
 
     _exit_trace ();
@@ -3101,7 +3105,7 @@ cairo_scaled_font_create (cairo_font_face_t *font_face,
 			   scaled_font_id);
 	    _push_operand (SCALED_FONT, ret);
 
-	    _get_object (SCALED_FONT, ret)->defined = true;
+	    _get_object (SCALED_FONT, ret)->defined = TRUE;
 	}
 
 	_write_unlock ();
@@ -3160,10 +3164,10 @@ _emit_glyphs (cairo_scaled_font_t *font,
     x = glyphs->x;
     y = glyphs->y;
     if (n < num_glyphs) { /* need full glyph range */
-	bool first;
+	cairo_bool_t first;
 
 	_trace_printf ("[%g %g [", x, y);
-	first = true;
+	first = TRUE;
 	while (num_glyphs--) {
 	    if (fabs (glyphs->x - x) > TOLERANCE ||
 		fabs (glyphs->y - y) > TOLERANCE)
@@ -3171,13 +3175,13 @@ _emit_glyphs (cairo_scaled_font_t *font,
 		x = glyphs->x;
 		y = glyphs->y;
 		_trace_printf ("] %g %g [", x, y);
-		first = true;
+		first = TRUE;
 	    }
 
 	    if (! first)
 		_trace_printf (" ");
 	    _trace_printf ("%lu", glyphs->index);
-	    first = false;
+	    first = FALSE;
 
 	    _glyph_advance (font, glyphs, &x, &y);
 	    glyphs++;
@@ -3397,7 +3401,7 @@ cairo_image_surface_create (cairo_format_t format, int width, int height)
 		       width, height, format_str, surface_id);
 	_get_object (SURFACE, ret)->width = width;
 	_get_object (SURFACE, ret)->height = height;
-	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->defined = TRUE;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -3442,12 +3446,12 @@ cairo_image_surface_create_for_data (unsigned char *data, cairo_format_t format,
 			   _format_to_string (format),
 			   surface_id);
 
-	    _get_object (SURFACE, ret)->foreign = true;
+	    _get_object (SURFACE, ret)->foreign = TRUE;
 	}
 
 	_get_object (SURFACE, ret)->width  = width;
 	_get_object (SURFACE, ret)->height = height;
-	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->defined = TRUE;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -3756,7 +3760,7 @@ cairo_pattern_create_rgb (double red, double green, double blue)
     if (_write_lock ()) {
 	_trace_printf ("/p%ld %g %g %g rgb def\n",
 		       pattern_id, red, green, blue);
-	_get_object (PATTERN, ret)->defined = true;
+	_get_object (PATTERN, ret)->defined = TRUE;
 	_write_unlock ();
     }
 
@@ -3779,7 +3783,7 @@ cairo_pattern_create_rgba (double red, double green, double blue, double alpha)
     if (_write_lock ()) {
 	_trace_printf ("/p%ld %g %g %g %g rgba def\n",
 		       pattern_id, red, green, blue, alpha);
-	_get_object (PATTERN, ret)->defined = true;
+	_get_object (PATTERN, ret)->defined = TRUE;
 	_write_unlock ();
     }
 
@@ -4060,7 +4064,7 @@ cairo_ft_font_face_create_for_ft_face (FT_Face face, int load_flags)
     return ret;
 }
 
-static bool
+static cairo_bool_t
 _ft_read_file (FtFaceData *data, const char *path)
 {
     char buf[8192];
@@ -4084,7 +4088,7 @@ _ft_read_file (FtFaceData *data, const char *path)
 		allocated *= 2;
 		data->data = realloc (data->data, allocated);
 	    }
-	} while (true);
+	} while (TRUE);
 	fclose (file);
     }
 
@@ -4458,7 +4462,7 @@ cairo_image_surface_create_from_png (const char *filename)
 	_trace_printf (" dup /s%ld exch def\n",
 		       surface_id);
 	_surface_object_set_size_from_surface (ret);
-	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->defined = TRUE;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -4484,7 +4488,7 @@ cairo_image_surface_create_from_png_stream (cairo_read_func_t read_func, void *c
 	_trace_printf (" dup /s%ld exch def\n",
 		       surface_id);
 	_surface_object_set_size_from_surface (ret);
-	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->defined = TRUE;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -4532,9 +4536,9 @@ cairo_xlib_surface_create (Display *dpy,
 		       width,
 		       height,
 		       surface_id);
-	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->defined = TRUE;
 	_surface_object_set_size (ret, width, height);
-	_get_object (SURFACE, ret)->foreign = true;
+	_get_object (SURFACE, ret)->foreign = TRUE;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -4573,9 +4577,9 @@ cairo_xlib_surface_create_for_bitmap (Display *dpy,
 		       width,
 		       height,
 		       surface_id);
-	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->defined = TRUE;
 	_surface_object_set_size (ret, width, height);
-	_get_object (SURFACE, ret)->foreign = true;
+	_get_object (SURFACE, ret)->foreign = TRUE;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -4618,9 +4622,9 @@ cairo_xlib_surface_create_with_xrender_format (Display *dpy,
 		       height,
 		       format->depth,
 		       surface_id);
-	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->defined = TRUE;
 	_surface_object_set_size (ret, width, height);
-	_get_object (SURFACE, ret)->foreign = true;
+	_get_object (SURFACE, ret)->foreign = TRUE;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -4659,7 +4663,7 @@ cairo_script_surface_create (cairo_device_t *device,
 		       width, height,
 		       surface_id);
 	_surface_object_set_size (ret, width, height);
-	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->defined = TRUE;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -4686,7 +4690,7 @@ cairo_script_surface_create_for_target (cairo_device_t *device,
 		       "  /type /script set\n"
 		       "  surface dup /s%ld exch def\n",
 		       surface_id);
-	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->defined = TRUE;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -4723,7 +4727,7 @@ _cairo_test_fallback_surface_create (cairo_content_t	content,
 		       width, height,
 		       surface_id);
 	_surface_object_set_size (ret, width, height);
-	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->defined = TRUE;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -4782,7 +4786,7 @@ _cairo_test_null_surface_create (cairo_content_t	content)
 		       "  surface dup /s%ld exch def\n",
 		       _content_to_string (content),
 		       surface_id);
-	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->defined = TRUE;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -4825,7 +4829,7 @@ cairo_recording_surface_create (cairo_content_t content,
 			   _content_to_string (content),
 			   surface_id);
 	}
-	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->defined = TRUE;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -4861,7 +4865,7 @@ cairo_vg_surface_create (cairo_vg_context_t *context,
 		       width, height,
 		       surface_id);
 	_surface_object_set_size (ret, width, height);
-	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->defined = TRUE;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -4900,7 +4904,7 @@ cairo_vg_surface_create_for_image (cairo_vg_context_t *context,
 		       width, height,
 		       surface_id);
 	_surface_object_set_size (ret, width, height);
-	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->defined = TRUE;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
