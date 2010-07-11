@@ -106,7 +106,7 @@ void cleaner (void *arg) { (void)arg; }
 void *
 test_thread_main (void *arg)
 {
-	pthread_cleanup_push (cleaner, arg)
+	pthread_cleanup_push (cleaner, arg);
 	pthread_exit (arg);
 	pthread_cleanup_pop (1);
 	return arg;
