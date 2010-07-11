@@ -14,7 +14,14 @@ AM_CPPFLAGS = \
 	$(NULL)
 AM_LDFLAGS = $(CAIRO_LDFLAGS)
 
-EXTRA_LTLIBRARIES += libcairoboilerplate.la
+if BUILD_CXX
+cxx_boilerplate_lib = libcairoboilerplate_cxx.la
+else
+cxx_boilerplate_lib =
+endif
+
+EXTRA_LTLIBRARIES += libcairoboilerplate.la $(cxx_boilerplate_lib)
+
 
 libcairoboilerplate_la_SOURCES = \
 	$(enabled_cairo_boilerplate_headers) \
@@ -22,24 +29,34 @@ libcairoboilerplate_la_SOURCES = \
 	$(enabled_cairo_boilerplate_sources) \
 	cairo-boilerplate-constructors.c \
 	$(NULL)
-libcairoboilerplate_la_LIBADD = $(top_builddir)/src/libcairo.la
+libcairoboilerplate_cxx_la_SOURCES = \
+	$(enabled_cairo_boilerplate_cxx_sources) \
+	$(NULL)
+libcairoboilerplate_la_LIBADD = $(top_builddir)/src/libcairo.la \
+	$(cxx_boilerplate_lib) \
+	$(CAIRO_LIBS) \
+	$(CAIROBOILERPLATE_LIBS) \
+	$(NULL)
+libcairoboilerplate_cxx_la_LIBADD = $(top_builddir)/src/libcairo.la \
+	$(CAIRO_LIBS) \
+	$(CAIROBOILERPLATE_LIBS) \
+	$(NULL)
+
 if CAIRO_HAS_DL
 libcairoboilerplate_la_LIBADD += -ldl
 endif
 
 if CAIRO_HAS_BEOS_SURFACE
 # BeOS system headers trigger this warning
-AM_CPPFLAGS += -Wno-multichar
+libcairoboilerplate_cxx_la_CXXFLAGS = -Wno-multichar
 endif
 
 if CAIRO_HAS_WIN32_SURFACE
 libcairoboilerplate_la_LIBADD += -lwinspool
 endif
 
-libcairoboilerplate_la_LIBADD += $(CAIROBOILERPLATE_LIBS)
-
-cairo-boilerplate-constructors.c: Makefile $(enabled_cairo_boilerplate_sources) make-cairo-boilerplate-constructors.sh
-	(cd $(srcdir) && sh ./make-cairo-boilerplate-constructors.sh $(enabled_cairo_boilerplate_sources)) > $@
+cairo-boilerplate-constructors.c: Makefile $(enabled_cairo_boilerplate_sources) $(enabled_cairo_boilerplate_cxx_sources) make-cairo-boilerplate-constructors.sh
+	(cd $(srcdir) && sh ./make-cairo-boilerplate-constructors.sh $(enabled_cairo_boilerplate_sources) $(enabled_cairo_boilerplate_cxx_sources)) > $@
 
 BUILT_SOURCES += cairo-boilerplate-constructors.c
 EXTRA_DIST += $(BUILT_SOURCES) make-cairo-boilerplate-constructors.sh
