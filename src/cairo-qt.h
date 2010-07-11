@@ -41,10 +41,10 @@
 
 #if CAIRO_HAS_QT_SURFACE
 
-#if defined(__cplusplus)
+#include <QtGui/QImage>
+#include <QtGui/QPainter>
 
-class QPainter;
-class QImage;
+CAIRO_BEGIN_DECLS
 
 cairo_public cairo_surface_t *
 cairo_qt_surface_create (QPainter *painter);
@@ -74,11 +74,7 @@ cairo_qt_surface_get_image (cairo_surface_t *surface);
 cairo_public QImage *
 cairo_qt_surface_get_qimage (cairo_surface_t *surface);
 
-#else /* ! __cplusplus */
-
-# warning cairo-qt only exports a C++ interface
-
-#endif /* __cplusplus */
+CAIRO_END_DECLS
 
 #else /* CAIRO_HAS_QT_SURFACE */
 
