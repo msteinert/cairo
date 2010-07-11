@@ -17,8 +17,6 @@ echo Checking documentation for incorrect syntax
 
 cd "$srcdir"
 
-# Note: this test is also run from doc/public/ to check the SGML files
-
 if test "x$SGML_DOCS" = x; then
     FILES=$all_cairo_files
     if test "x$FILES" = x; then
@@ -44,7 +42,7 @@ else
 	type_regexp='\(.'$type_regexp'\)\|\('$type_regexp'.\)'
 fi
 
-if echo $FILES | xargs grep . /dev/null | sed -e '/<programlisting>/,/<\/programlisting>/d' | grep "$type_regexp" | grep -v '#####'; then
+if echo $FILES | xargs grep . /dev/null | sed -e '/<programlisting>/,/<\/programlisting>/d' | grep -v "@Title" | grep "$type_regexp" | grep -v '#####'; then
 	stat=1
 	echo Error: some type names in the docs are not prefixed by hash sign,
 	echo neither are the only token in the doc line followed by colon.
