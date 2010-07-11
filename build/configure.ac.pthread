@@ -46,7 +46,9 @@ dnl A program to test all the pthread features we need to be able to
 dnl compile libcairo itself.  We could test the features independently,
 dnl but we need all of them anyway.
 m4_define([libcairo_pthread_program],[dnl
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE /* for PTHREAD_MUTEX_INITIALIZER under linux */
+#endif
 #include <pthread.h>
 
 pthread_mutex_t test_mutex_initializer = PTHREAD_MUTEX_INITIALIZER;
