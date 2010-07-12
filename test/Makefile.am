@@ -948,6 +948,9 @@ REFERENCE_IMAGES = \
 	paint-with-alpha.ref.png \
 	paint-with-alpha.svg.ref.png \
 	paint.ref.png \
+	partial-clip-text.ref.png \
+	partial-clip-text.ps.ref.png \
+	partial-clip-text.svg.ref.png \
 	partial-coverage-half-reference.ref.png \
 	partial-coverage-half-triangles.ref.png \
 	partial-coverage-intersecting-quads.ref.png \
