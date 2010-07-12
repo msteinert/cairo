@@ -26,6 +26,23 @@
 
 /* Exercises a case of seam appearing between two polygons in the image
  * backend but not in xlib [using pixman].
+ *
+ * The test case draws two abutting quads both individually on the
+ * leftm combining them with operator ADD, and in one go on the right.
+ * Both methods should show no signs of seaming at the common edge
+ * between the two quads, but the individually drawn ones have a
+ * slight seam.
+ *
+ * The cause of the seam is that there are slight differences in the
+ * output of the analytical coverage rasterization and the
+ * supersampling rasterization methods, both employed by
+ * cairo-tor-scan-converter.  When drawn individually, the scan
+ * converter gets a partial view of the geometry at a time, so it ends
+ * up making different decisions about which scanlines it rasterizes
+ * with which method, compared to when the geometry is draw all at
+ * once.  Though both methods produce seamless results individually
+ * (where applicable), they don't produce bit-exact identical results,
+ * and hence we get seaming where they meet.
  */
 
 #include "cairo-test.h"
@@ -51,6 +68,9 @@ draw (cairo_t *cr, int width, int height)
     cairo_scale (cr, 20, 20);
     cairo_translate (cr, 5, 1);
 
+    /* On the left side, we have two quads drawn one at a time and
+     * combined with OPERATOR_ADD.  This should be seamless, but
+     * isn't. */
     cairo_push_group (cr);
     cairo_set_operator (cr, CAIRO_OPERATOR_ADD);
 
@@ -72,6 +92,8 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
     cairo_paint (cr);
 
+    /* On the right side, we have the same two quads drawn both at the
+     * same time.  This is seamless. */
     cairo_translate (cr, 10, 0);
 
     cairo_set_source_rgb (cr, 0, 0.6, 0);
