@@ -3939,6 +3939,8 @@ _composite_glyphs (void				*closure,
 
 	glyph_surface = scaled_glyph->surface;
 	if (glyph_surface->width && glyph_surface->height) {
+	    int x1, y1, x2, y2;
+
 	    /* round glyph locations to the nearest pixel */
 	    /* XXX: FRAGILE: We're ignoring device_transform scaling here. A bug? */
 	    x = _cairo_lround (info->glyphs[i].x -
@@ -3946,13 +3948,26 @@ _composite_glyphs (void				*closure,
 	    y = _cairo_lround (info->glyphs[i].y -
 			       glyph_surface->base.device_transform.y0);
 
+	    x1 = x;
+	    if (x1 < extents->x)
+		x1 = extents->x;
+	    x2 = x + glyph_surface->width;
+	    if (x2 > extents->x + extents->width)
+		x2 = extents->x + extents->width;
+
+	    y1 = y;
+	    if (y1 < extents->y)
+		y1 = extents->y;
+	    y2 = y + glyph_surface->height;
+	    if (y2 > extents->y + extents->height)
+		y2 = extents->y + extents->height;
+
 	    pixman_image_composite32 (pixman_op,
                                       src, glyph_surface->pixman_image, dst,
-                                      x + src_x,  y + src_y,
+                                      x1 + src_x,  y1 + src_y,
                                       0, 0,
-                                      x - dst_x, y - dst_y,
-                                      glyph_surface->width,
-                                      glyph_surface->height);
+                                      x1 - dst_x, y1 - dst_y,
+                                      x2 - x1, y2 - y1);
 	}
     }
     _cairo_scaled_font_thaw_cache (info->font);
