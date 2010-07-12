@@ -1108,11 +1108,12 @@ cairo_bool_t
 _cairo_clip_contains_rectangle (cairo_clip_t *clip,
 				const cairo_rectangle_int_t *rect)
 {
-    cairo_clip_path_t *clip_path = clip->path;
+    cairo_clip_path_t *clip_path;
 
     if (clip == NULL)
 	return FALSE;
 
+    clip_path = clip->path;
     if (clip_path->extents.x > rect->x ||
 	clip_path->extents.y > rect->y ||
 	clip_path->extents.x + clip_path->extents.width  < rect->x + rect->width ||
