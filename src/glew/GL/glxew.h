@@ -29,6 +29,8 @@
 ** THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+//#include "cairo.h" /* keep distcheck happy */
+
 /*
  * Mesa 3-D graphics library
  * Version:  7.0

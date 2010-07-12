@@ -206,7 +206,8 @@ test_cairo_surface_set_mime_data (cairo_surface_t *surface)
 
     status = cairo_surface_set_mime_data (surface,
                                           mimetype,
-                                          (const unsigned char *) data, strlen (data),
+                                          (const unsigned char *) data,
+					  strlen (data),
                                           NULL, NULL);
     return status ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
 }
@@ -216,7 +217,7 @@ test_cairo_surface_get_mime_data (cairo_surface_t *surface)
 {
     const char *mimetype = "text/x-uri";
     const unsigned char *data;
-    unsigned int length;
+    unsigned long length;
 
     cairo_surface_get_mime_data (surface, mimetype, &data, &length);
     return data == NULL && length == 0 ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
