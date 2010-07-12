@@ -152,6 +152,7 @@ REFERENCE_IMAGES = \
 	alpha-similar.rgb24.ref.png \
 	alpha-similar.svg.argb32.xfail.png \
 	alpha-similar.svg.rgb24.xfail.png \
+	api-special-cases.ref.png \
 	big-line.ref.png \
 	big-line.image16.ref.png \
 	big-line.ps.ref.png \
@@ -693,10 +694,12 @@ REFERENCE_IMAGES = \
 	halo.image16.ref.png \
 	halo.xlib.ref.png \
 	halo.ps.ref.png \
+	halo.quartz.ref.png \
 	halo-transform.ref.png \
 	halo-transform.image16.ref.png \
 	halo-transform.xlib.ref.png \
 	halo-transform.ps.ref.png \
+	halo-transform.quartz.ref.png \
 	huge-linear.image16.ref.png \
 	huge-linear.pdf.ref.png \
 	huge-linear.ps3.ref.png \
