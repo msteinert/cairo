@@ -1889,7 +1889,7 @@ i915_surface_fill_with_alpha (void			*abstract_dst,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     if (extents.is_bounded && clip != NULL) {
@@ -2004,7 +2004,7 @@ i915_surface_paint_with_alpha (void			*abstract_dst,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     if (clip != NULL) {
@@ -2099,7 +2099,7 @@ i915_surface_mask (void				*abstract_dst,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     if (clip != NULL && extents.is_bounded) {
@@ -2243,7 +2243,7 @@ i915_surface_stroke (void			*abstract_dst,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     if (clip != NULL) {

@@ -136,6 +136,10 @@ _cairo_clip_to_boxes (cairo_clip_t **clip,
 
 cairo_private cairo_bool_t
 _cairo_clip_contains_rectangle (cairo_clip_t *clip,
+				const cairo_rectangle_int_t *rect);
+
+cairo_private cairo_bool_t
+_cairo_clip_contains_extents (cairo_clip_t *clip,
 				const cairo_composite_rectangles_t *extents);
 
 cairo_private void

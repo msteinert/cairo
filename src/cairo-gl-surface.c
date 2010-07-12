@@ -1487,7 +1487,7 @@ _cairo_gl_surface_stroke (void			        *abstract_surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     if (clip != NULL) {
@@ -1552,7 +1552,7 @@ _cairo_gl_surface_fill (void			*abstract_surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
 #if 0

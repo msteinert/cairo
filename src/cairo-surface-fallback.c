@@ -903,7 +903,7 @@ _cairo_surface_fallback_paint (cairo_surface_t		*surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     status = _cairo_clip_to_boxes (&clip, &extents, &clip_boxes, &num_boxes);
@@ -1012,7 +1012,7 @@ _cairo_surface_fallback_mask (cairo_surface_t		*surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     if (clip != NULL && extents.is_bounded) {
@@ -1060,7 +1060,7 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     status = _cairo_clip_to_boxes (&clip, &extents, &clip_boxes, &num_boxes);
@@ -1153,7 +1153,7 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     status = _cairo_clip_to_boxes (&clip, &extents, &clip_boxes, &num_boxes);
@@ -1326,7 +1326,7 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_rectangle (clip, &extents.mask))
 	clip = NULL;
 
     if (clip != NULL && extents.is_bounded) {

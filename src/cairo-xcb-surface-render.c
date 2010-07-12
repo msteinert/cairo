@@ -3129,7 +3129,7 @@ _cairo_xcb_surface_render_paint (cairo_xcb_surface_t	*surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     if (clip != NULL) {
@@ -3196,7 +3196,7 @@ _cairo_xcb_surface_render_mask (cairo_xcb_surface_t	*surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     if (clip != NULL && extents.is_bounded) {
@@ -3483,7 +3483,7 @@ _cairo_xcb_surface_render_stroke (cairo_xcb_surface_t	*surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     if (clip != NULL) {
@@ -3666,7 +3666,7 @@ _cairo_xcb_surface_render_fill (cairo_xcb_surface_t	*surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     if (clip != NULL) {
@@ -4630,7 +4630,7 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_rectangle (clip, &extents.mask))
 	clip = NULL;
 
     if (clip != NULL) {

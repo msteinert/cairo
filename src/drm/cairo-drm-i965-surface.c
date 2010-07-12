@@ -1110,7 +1110,7 @@ i965_surface_paint (void			*abstract_dst,
     if (unlikely (status))
 	return status;
 
-    if (clip != NULL && _cairo_clip_contains_rectangle (clip, &extents))
+    if (clip != NULL && _cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     if (clip != NULL) {
@@ -1163,7 +1163,7 @@ i965_surface_mask (void				*abstract_dst,
     if (unlikely (status))
 	return status;
 
-    if (clip != NULL && _cairo_clip_contains_rectangle (clip, &extents))
+    if (clip != NULL && _cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     if (clip != NULL && extents.is_bounded) {
@@ -1306,7 +1306,7 @@ i965_surface_stroke (void			*abstract_dst,
     if (unlikely (status))
 	return status;
 
-    if (clip != NULL && _cairo_clip_contains_rectangle (clip, &extents))
+    if (clip != NULL && _cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     if (clip != NULL) {
@@ -1413,7 +1413,7 @@ i965_surface_fill (void			*abstract_dst,
     if (unlikely (status))
 	return status;
 
-    if (clip != NULL && _cairo_clip_contains_rectangle (clip, &extents))
+    if (clip != NULL && _cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     if (clip != NULL) {

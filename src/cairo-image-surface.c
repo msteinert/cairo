@@ -3229,7 +3229,7 @@ _cairo_image_surface_paint (void			*abstract_surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     if (clip != NULL) {
@@ -3347,7 +3347,7 @@ _cairo_image_surface_mask (void				*abstract_surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     if (clip != NULL && extents.is_bounded) {
@@ -3581,7 +3581,7 @@ _cairo_image_surface_stroke (void			*abstract_surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     if (clip != NULL) {
@@ -3672,7 +3672,7 @@ _cairo_image_surface_fill (void				*abstract_surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_extents (clip, &extents))
 	clip = NULL;
 
     if (extents.is_bounded && clip != NULL) {
@@ -3991,7 +3991,7 @@ _cairo_image_surface_glyphs (void			*abstract_surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_rectangle (clip, &extents.mask))
 	clip = NULL;
 
     if (clip != NULL && extents.is_bounded) {

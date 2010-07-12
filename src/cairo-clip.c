@@ -1106,17 +1106,12 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
 
 cairo_bool_t
 _cairo_clip_contains_rectangle (cairo_clip_t *clip,
-				const cairo_composite_rectangles_t *extents)
+				const cairo_rectangle_int_t *rect)
 {
-    cairo_clip_path_t *clip_path;
-    const cairo_rectangle_int_t *rect;
+    cairo_clip_path_t *clip_path = clip->path;
 
     if (clip == NULL)
 	return FALSE;
-
-    rect = extents->is_bounded ? &extents->bounded : &extents->unbounded;
-
-    clip_path = clip->path;
 
     if (clip_path->extents.x > rect->x ||
 	clip_path->extents.y > rect->y ||
@@ -1145,6 +1140,19 @@ _cairo_clip_contains_rectangle (cairo_clip_t *clip,
     } while ((clip_path = clip_path->prev) != NULL);
 
     return TRUE;
+}
+
+cairo_bool_t
+_cairo_clip_contains_extents (cairo_clip_t *clip,
+			      const cairo_composite_rectangles_t *extents)
+{
+    const cairo_rectangle_int_t *rect;
+
+    if (clip == NULL)
+	return FALSE;
+
+    rect = extents->is_bounded ? &extents->bounded : &extents->unbounded;
+    return _cairo_clip_contains_rectangle (clip, rect);
 }
 
 void

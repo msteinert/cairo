@@ -310,7 +310,7 @@ i915_surface_glyphs (void			*abstract_surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_rectangle (clip, &extents))
+    if (_cairo_clip_contains_rectangle (clip, &extents.mask))
 	clip = NULL;
 
     if (clip != NULL && extents.is_bounded) {
