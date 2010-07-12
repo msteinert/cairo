@@ -582,6 +582,15 @@ enabled_cairo_private += $(cairo_user_private)
 enabled_cairo_cxx_sources += $(cairo_user_cxx_sources)
 enabled_cairo_sources += $(cairo_user_sources)
 
+all_cairo_private += $(cairo_pthread_private) $(cairo_pthread_headers)
+all_cairo_cxx_sources += $(cairo_pthread_cxx_sources)
+all_cairo_sources += $(cairo_pthread_sources)
+ifeq ($(CAIRO_HAS_PTHREAD),1)
+enabled_cairo_private += $(cairo_pthread_private) $(cairo_pthread_headers)
+enabled_cairo_cxx_sources += $(cairo_pthread_cxx_sources)
+enabled_cairo_sources += $(cairo_pthread_sources)
+endif
+
 all_cairo_private += $(cairo_trace_private) $(cairo_trace_headers)
 all_cairo_cxx_sources += $(cairo_trace_cxx_sources)
 all_cairo_sources += $(cairo_trace_sources)
