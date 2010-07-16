@@ -83,6 +83,8 @@ check_clip_extents (const cairo_test_context_t *ctx,
     cairo_clip_extents (cr, &ext_x1, &ext_y1, &ext_x2, &ext_y2);
     if (ext_x1 == x && ext_y1 == y && ext_x2 == x + width && ext_y2 == y + height)
         return 1;
+    if (width == 0.0 && height == 0.0 && ext_x1 == ext_x2 && ext_y1 == ext_y2)
+        return 1;
     cairo_test_log (ctx, "Error: %s; clip extents %f,%f,%f,%f should be %f,%f,%f,%f\n",
                     message, ext_x1, ext_y1, ext_x2 - ext_x1, ext_y2 - ext_y1,
                     x, y, width, height);
@@ -138,7 +140,8 @@ preamble (cairo_test_context_t *ctx)
     cairo_save (cr);
     cairo_clip (cr);
     rectangle_list = cairo_copy_clip_rectangle_list (cr);
-    if (! check_count (ctx, phase, rectangle_list, 0))
+    if (! check_count (ctx, phase, rectangle_list, 0) ||
+        ! check_clip_extents (ctx, phase, cr, 0, 0, 0, 0))
     {
 	goto FAIL;
     }
