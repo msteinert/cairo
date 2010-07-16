@@ -98,6 +98,7 @@ preamble (cairo_test_context_t *ctx)
     cairo_t                *cr;
     cairo_rectangle_list_t *rectangle_list;
     const char             *phase;
+    cairo_bool_t            completed = 0;
     cairo_status_t          status;
 
     surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, SIZE, SIZE);
@@ -224,10 +225,14 @@ preamble (cairo_test_context_t *ctx)
     if (! check_unrepresentable (ctx, phase, rectangle_list))
 	goto FAIL;
 
+    completed = 1;
 FAIL:
     cairo_rectangle_list_destroy (rectangle_list);
     status = cairo_status (cr);
     cairo_destroy (cr);
+
+    if (!completed)
+        return CAIRO_TEST_FAILURE;
 
     return cairo_test_status_from_status (ctx, status);
 }
