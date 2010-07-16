@@ -1499,7 +1499,10 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
     int n_rects = 0;
     int i;
 
-    if (clip != NULL && clip->path != NULL) {
+    if (clip->all_clipped)
+	goto DONE;
+
+    if (clip->path != NULL) {
 	status = _cairo_clip_get_region (clip, &region);
 	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO) {
 	    goto DONE;
