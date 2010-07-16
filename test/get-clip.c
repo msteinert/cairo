@@ -89,6 +89,8 @@ check_clip_extents (const cairo_test_context_t *ctx,
     return 0;
 }
 
+#define SIZE 100
+
 static cairo_test_status_t
 preamble (cairo_test_context_t *ctx)
 {
@@ -98,7 +100,7 @@ preamble (cairo_test_context_t *ctx)
     const char             *phase;
     cairo_status_t          status;
 
-    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 0, 0);
+    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, SIZE, SIZE);
     cr = cairo_create (surface);
     cairo_surface_destroy (surface);
 
@@ -108,8 +110,8 @@ preamble (cairo_test_context_t *ctx)
     phase = "No clip set";
     rectangle_list = cairo_copy_clip_rectangle_list (cr);
     if (! check_count (ctx, phase, rectangle_list, 1) ||
-        ! check_clip_extents (ctx, phase, cr, 0, 0, 100, 100) ||
-        ! check_rectangles_contain (ctx, phase, rectangle_list, 0, 0, 100, 100))
+        ! check_clip_extents (ctx, phase, cr, 0, 0, SIZE, SIZE) ||
+        ! check_rectangles_contain (ctx, phase, rectangle_list, 0, 0, SIZE, SIZE))
     {
 	goto FAIL;
     }
