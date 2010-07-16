@@ -41,6 +41,9 @@ libcairoboilerplate_cxx_la_LIBADD = $(top_builddir)/src/libcairo.la \
 	$(CAIRO_LIBS) \
 	$(CAIROBOILERPLATE_LIBS) \
 	$(NULL)
+libcairoboilerplate_la_DEPENDENCIES = \
+	$(cxx_boilerplate_lib) \
+	$(NULL)
 
 if CAIRO_HAS_DL
 libcairoboilerplate_la_LIBADD += -ldl

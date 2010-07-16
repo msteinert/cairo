@@ -49,7 +49,7 @@ libcairo_la_SOURCES = \
 libcairo_la_LDFLAGS = $(AM_LDFLAGS) -version-info $(CAIRO_LIBTOOL_VERSION_INFO) -no-undefined $(export_symbols)
 libcairo_la_LIBADD = $(CAIRO_LIBS) \
 	$(cairo_cxx_lib)
-libcairo_la_DEPENDENCIES = $(cairo_def_dependency)
+libcairo_la_DEPENDENCIES = $(cairo_def_dependency) $(cairo_cxx_lib)
 
 # Special headers
 cairoinclude_HEADERS += $(top_srcdir)/cairo-version.h
