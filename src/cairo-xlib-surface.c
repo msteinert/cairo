@@ -176,10 +176,6 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_clip_t	     *clip,
 				 int		     *remaining_glyphs);
 
-/* XXX temporarily used by cairo-qt-surface.c */
-slim_hidden_proto (cairo_xlib_surface_create);
-slim_hidden_proto (cairo_xlib_surface_create_with_xrender_format);
-
 /*
  * Instead of taking two round trips for each blending request,
  * assume that if a particular drawable fails GetImage that it will
@@ -3392,7 +3388,6 @@ cairo_xlib_surface_create (Display     *dpy,
                                                 visual, NULL,
                                                 width, height, 0);
 }
-slim_hidden_def (cairo_xlib_surface_create);
 
 /**
  * cairo_xlib_surface_create_for_bitmap:
@@ -3476,7 +3471,6 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
 						_visual_for_xrender_format (scr, format),
                                                 format, width, height, 0);
 }
-slim_hidden_def (cairo_xlib_surface_create_with_xrender_format);
 
 /**
  * cairo_xlib_surface_get_xrender_format:
