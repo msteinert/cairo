@@ -302,11 +302,11 @@ _cairo_boilerplate_xlib_window_create_surface (const char		 *name,
 
     /* tile the windows so threads do not overlap */
     scr = XScreenOfDisplay (dpy, screen);
-    x = y = 0;
+    x = 10; y = 15;
     if (id-- > 1) do {
 	x += max_width;
 	if (x + max_width > WidthOfScreen (scr)) {
-	    x = 0;
+	    x = 10;
 	    y += max_height;
 	    if (y + max_height > HeightOfScreen (scr)) {
 		XCloseDisplay (dpy);
