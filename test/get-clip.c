@@ -120,6 +120,22 @@ preamble (cairo_test_context_t *ctx)
     }
     cairo_rectangle_list_destroy (rectangle_list);
 
+    /* We should get the same results after applying a clip that contains the
+       existing clip. */
+    phase = "Clip beyond surface extents";
+    cairo_save (cr);
+    cairo_rectangle (cr, -10, -10, SIZE + 20 , SIZE + 20);
+    cairo_clip (cr);
+    rectangle_list = cairo_copy_clip_rectangle_list (cr);
+    if (! check_count (ctx, phase, rectangle_list, 1) ||
+        ! check_clip_extents (ctx, phase, cr, 0, 0, SIZE, SIZE) ||
+        ! check_rectangles_contain (ctx, phase, rectangle_list, 0, 0, SIZE, SIZE))
+    {
+	goto FAIL;
+    }
+    cairo_rectangle_list_destroy (rectangle_list);
+    cairo_restore (cr);
+
     /* Test simple clip rect. */
     phase = "Simple clip rect";
     cairo_save (cr);
