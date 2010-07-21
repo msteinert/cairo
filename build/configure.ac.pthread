@@ -6,8 +6,8 @@ dnl a) A minimal level denoted by -DCAIRO_HAS_PTHREAD=1: This level
 dnl requires mutex and recursive mutexattr support.  If possible we try
 dnl to use weakly linked stubs from libc over the real pthread library.
 dnl This level is required by the cairo library proper.  If the user
-dnl invokes configure with dnlenable-pthread=yes or
-dnl dnlenable-pthread=always then we avoid trying to use weak stubs.
+dnl invokes configure with --enable-pthread=yes or
+dnl --enable-pthread=always then we avoid trying to use weak stubs.
 dnl
 dnl b) A full level denoted by -DCAIRO_HAS_REAL_PTHREAD=1: This level
 dnl requires full support from a real pthread library, including thread
@@ -21,12 +21,12 @@ dnl			[CAIRO_CONFIGURE_PTHREAD])
 dnl
 dnl	This should be invoked near the end of configure.ac so that
 dnl	the pthread specific CFLAGS and LIBS end up at the front
-dnl	of CAIRO_CFLAGS and CAIRO_LIBS dnl this helps ensure that we
+dnl	of CAIRO_CFLAGS and CAIRO_LIBS -- this helps ensure that we
 dnl	really do get non-weak symbols from the actual pthread library
 dnl	rather than possible stubs in other libraries.
 dnl
 dnl	The user can override the choices made by
-dnl	CAIRO_CONFIGURE_PTHREAD by using dnlenable-pthread=yes and
+dnl	CAIRO_CONFIGURE_PTHREAD by using --enable-pthread=yes and
 dnl	giving PTHREAD_CFLAGS and PTHREAD_LIBS to configure.
 dnl
 dnl Sets environment variables:
