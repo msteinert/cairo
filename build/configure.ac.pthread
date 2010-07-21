@@ -243,7 +243,7 @@ AC_DEFUN([CAIRO_CONFIGURE_PTHREAD],[dnl
 	fi
 
 	dnl Make sure we scored some pthreads.
-	if test "x$use_pthread" = "xyes" -a "x$have_pthread" != "xyes"; then
+	if test "x$enable_pthread" = "xyes" -a "x$have_pthread" != "xyes"; then
 		AC_MSG_ERROR([pthread requested but not found])
 	fi
 
