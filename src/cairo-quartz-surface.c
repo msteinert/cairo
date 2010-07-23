@@ -77,6 +77,7 @@
  * This macro can be used to conditionally compile backend-specific code.
  */
 
+#if __MAC_OS_X_VERSION_MIN_REQUIRED < 1050
 /* This method is private, but it exists.  Its params are are exposed
  * as args to the NS* method, but not as CG.
  */
@@ -97,6 +98,7 @@ enum PrivateCGCompositeMode {
 };
 typedef enum PrivateCGCompositeMode PrivateCGCompositeMode;
 CG_EXTERN void CGContextSetCompositeOperation (CGContextRef, PrivateCGCompositeMode);
+#endif
 CG_EXTERN void CGContextSetCTM (CGContextRef, CGAffineTransform);
 
 /* Some of these are present in earlier versions of the OS than where
@@ -356,6 +358,7 @@ _cairo_quartz_cairo_path_to_quartz_context (cairo_path_fixed_t *path,
  * Misc helpers/callbacks
  */
 
+#if __MAC_OS_X_VERSION_MIN_REQUIRED < 1050
 static PrivateCGCompositeMode
 _cairo_quartz_cairo_operator_to_quartz_composite (cairo_operator_t op)
 {
@@ -403,114 +406,149 @@ _cairo_quartz_cairo_operator_to_quartz_composite (cairo_operator_t op)
 	case CAIRO_OPERATOR_HSL_COLOR:
 	case CAIRO_OPERATOR_HSL_LUMINOSITY:
         default:
-	    assert (0);
+	    ASSERT_NOT_REACHED;
     }
+}
+#endif
+
+static CGBlendMode
+_cairo_quartz_cairo_operator_to_quartz_blend (cairo_operator_t op)
+{
+    switch (op) {
+	case CAIRO_OPERATOR_MULTIPLY:
+	    return kCGBlendModeMultiply;
+	case CAIRO_OPERATOR_SCREEN:
+	    return kCGBlendModeScreen;
+	case CAIRO_OPERATOR_OVERLAY:
+	    return kCGBlendModeOverlay;
+	case CAIRO_OPERATOR_DARKEN:
+	    return kCGBlendModeDarken;
+	case CAIRO_OPERATOR_LIGHTEN:
+	    return kCGBlendModeLighten;
+	case CAIRO_OPERATOR_COLOR_DODGE:
+	    return kCGBlendModeColorDodge;
+	case CAIRO_OPERATOR_COLOR_BURN:
+	    return kCGBlendModeColorBurn;
+	case CAIRO_OPERATOR_HARD_LIGHT:
+	    return kCGBlendModeHardLight;
+	case CAIRO_OPERATOR_SOFT_LIGHT:
+	    return kCGBlendModeSoftLight;
+	case CAIRO_OPERATOR_DIFFERENCE:
+	    return kCGBlendModeDifference;
+	case CAIRO_OPERATOR_EXCLUSION:
+	    return kCGBlendModeExclusion;
+	case CAIRO_OPERATOR_HSL_HUE:
+	    return kCGBlendModeHue;
+	case CAIRO_OPERATOR_HSL_SATURATION:
+	    return kCGBlendModeSaturation;
+	case CAIRO_OPERATOR_HSL_COLOR:
+	    return kCGBlendModeColor;
+	case CAIRO_OPERATOR_HSL_LUMINOSITY:
+	    return kCGBlendModeLuminosity;
+
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
+	case CAIRO_OPERATOR_CLEAR:
+	    return kCGBlendModeClear;
+	case CAIRO_OPERATOR_SOURCE:
+	    return kCGBlendModeCopy;
+	case CAIRO_OPERATOR_OVER:
+	    return kCGBlendModeNormal;
+	case CAIRO_OPERATOR_IN:
+	    return kCGBlendModeSourceIn;
+	case CAIRO_OPERATOR_OUT:
+	    return kCGBlendModeSourceOut;
+	case CAIRO_OPERATOR_ATOP:
+	    return kCGBlendModeSourceAtop;
+	case CAIRO_OPERATOR_DEST_OVER:
+	    return kCGBlendModeDestinationOver;
+	case CAIRO_OPERATOR_DEST_IN:
+	    return kCGBlendModeDestinationIn;
+	case CAIRO_OPERATOR_DEST_OUT:
+	    return kCGBlendModeDestinationOut;
+	case CAIRO_OPERATOR_DEST_ATOP:
+	    return kCGBlendModeDestinationAtop;
+	case CAIRO_OPERATOR_XOR:
+	    return kCGBlendModeXOR;
+	case CAIRO_OPERATOR_ADD:
+	    return kCGBlendModePlusLighter;
+#else
+	case CAIRO_OPERATOR_CLEAR:
+	case CAIRO_OPERATOR_SOURCE:
+	case CAIRO_OPERATOR_OVER:
+	case CAIRO_OPERATOR_IN:
+	case CAIRO_OPERATOR_OUT:
+	case CAIRO_OPERATOR_ATOP:
+	case CAIRO_OPERATOR_DEST_OVER:
+	case CAIRO_OPERATOR_DEST_IN:
+	case CAIRO_OPERATOR_DEST_OUT:
+	case CAIRO_OPERATOR_DEST_ATOP:
+	case CAIRO_OPERATOR_XOR:
+	case CAIRO_OPERATOR_ADD:
+#endif
+
+	case CAIRO_OPERATOR_DEST:
+	case CAIRO_OPERATOR_SATURATE:
+        default:
+	    ASSERT_NOT_REACHED;
+    }
+}
+
+static cairo_int_status_t
+_cairo_cgcontext_set_cairo_operator (CGContextRef context, cairo_operator_t op)
+{
+    CGBlendMode blendmode;
+
+    if (op == CAIRO_OPERATOR_DEST)
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
+    /* Quartz doesn't support SATURATE at all. COLOR_DODGE and
+     * COLOR_BURN in Quartz follow the ISO32000 definition, but cairo
+     * uses the definition from the Adobe Supplement.
+     */
+    if (op == CAIRO_OPERATOR_SATURATE ||
+	op == CAIRO_OPERATOR_COLOR_DODGE ||
+	op == CAIRO_OPERATOR_COLOR_BURN)
+    {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+#if __MAC_OS_X_VERSION_MIN_REQUIRED < 1050
+    if (op <= CAIRO_OPERATOR_ADD) {
+	PrivateCGCompositeMode compmode;
+
+	compmode = _cairo_quartz_cairo_operator_to_quartz_composite (op);
+	CGContextSetCompositeOperation (context, compmode);
+	return CAIRO_STATUS_SUCCESS;
+    }
+#endif
+
+    blendmode = _cairo_quartz_cairo_operator_to_quartz_blend (op);
+    CGContextSetBlendMode (context, blendmode);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
 _cairo_quartz_surface_set_cairo_operator (cairo_quartz_surface_t *surface, cairo_operator_t op)
 {
-    ND ((stderr, "%p _cairo_quartz_surface_set_cairo_operator %d\n", surface, op));
+    ND((stderr, "%p _cairo_quartz_surface_set_cairo_operator %d\n", surface, op));
 
     if (surface->base.content == CAIRO_CONTENT_ALPHA) {
-	/* For some weird reason, some compositing operators are
-	   swapped when operating on masks */
-	switch (op) {
-	    case CAIRO_OPERATOR_CLEAR:
-	    case CAIRO_OPERATOR_SOURCE:
-	    case CAIRO_OPERATOR_OVER:
-	    case CAIRO_OPERATOR_DEST_IN:
-	    case CAIRO_OPERATOR_DEST_OUT:
-	    case CAIRO_OPERATOR_ADD:
-		CGContextSetCompositeOperation (surface->cgContext, _cairo_quartz_cairo_operator_to_quartz_composite (op));
-		return CAIRO_STATUS_SUCCESS;
-
-	    case CAIRO_OPERATOR_IN:
-		CGContextSetCompositeOperation (surface->cgContext, kPrivateCGCompositeDestinationAtop);
-		return CAIRO_STATUS_SUCCESS;
-
-	    case CAIRO_OPERATOR_DEST_OVER:
-	    case CAIRO_OPERATOR_MULTIPLY:
-	    case CAIRO_OPERATOR_SCREEN:
-	    case CAIRO_OPERATOR_OVERLAY:
-	    case CAIRO_OPERATOR_DARKEN:
-	    case CAIRO_OPERATOR_LIGHTEN:
-	    case CAIRO_OPERATOR_COLOR_DODGE:
-	    case CAIRO_OPERATOR_COLOR_BURN:
-	    case CAIRO_OPERATOR_HARD_LIGHT:
-	    case CAIRO_OPERATOR_SOFT_LIGHT:
-	    case CAIRO_OPERATOR_DIFFERENCE:
-	    case CAIRO_OPERATOR_EXCLUSION:
-	    case CAIRO_OPERATOR_HSL_HUE:
-	    case CAIRO_OPERATOR_HSL_SATURATION:
-	    case CAIRO_OPERATOR_HSL_COLOR:
-	    case CAIRO_OPERATOR_HSL_LUMINOSITY:
-		CGContextSetCompositeOperation (surface->cgContext, kPrivateCGCompositeSourceOver);
-		return CAIRO_STATUS_SUCCESS;
-
-	    case CAIRO_OPERATOR_DEST_ATOP:
-		CGContextSetCompositeOperation (surface->cgContext, kPrivateCGCompositeSourceIn);
-		return CAIRO_STATUS_SUCCESS;
-
-	    case CAIRO_OPERATOR_SATURATE:
-		CGContextSetCompositeOperation (surface->cgContext, kPrivateCGCompositePlusLighter);
-		return CAIRO_STATUS_SUCCESS;
-
-
-	    case CAIRO_OPERATOR_ATOP:
-		/*
-		CGContextSetCompositeOperation (surface->cgContext, kPrivateCGCompositeDestinationOver);
-		return CAIRO_STATUS_SUCCESS;
-		*/
-	    case CAIRO_OPERATOR_DEST:
-		return CAIRO_INT_STATUS_NOTHING_TO_DO;
-
-	    case CAIRO_OPERATOR_OUT:
-	    case CAIRO_OPERATOR_XOR:
-	    default:
-		return CAIRO_INT_STATUS_UNSUPPORTED;
-	}
-    } else {
-	switch (op) {
-	    case CAIRO_OPERATOR_CLEAR:
-	    case CAIRO_OPERATOR_SOURCE:
-	    case CAIRO_OPERATOR_OVER:
-	    case CAIRO_OPERATOR_IN:
-	    case CAIRO_OPERATOR_OUT:
-	    case CAIRO_OPERATOR_ATOP:
-	    case CAIRO_OPERATOR_DEST_OVER:
-	    case CAIRO_OPERATOR_DEST_IN:
-	    case CAIRO_OPERATOR_DEST_OUT:
-	    case CAIRO_OPERATOR_DEST_ATOP:
-	    case CAIRO_OPERATOR_XOR:
-	    case CAIRO_OPERATOR_ADD:
-		CGContextSetCompositeOperation (surface->cgContext, _cairo_quartz_cairo_operator_to_quartz_composite (op));
-		return CAIRO_STATUS_SUCCESS;
-
-	    case CAIRO_OPERATOR_DEST:
-		return CAIRO_INT_STATUS_NOTHING_TO_DO;
-
-	    case CAIRO_OPERATOR_SATURATE:
-	    /* TODO: the following are mostly supported by CGContextSetBlendMode*/
-	    case CAIRO_OPERATOR_MULTIPLY:
-	    case CAIRO_OPERATOR_SCREEN:
-	    case CAIRO_OPERATOR_OVERLAY:
-	    case CAIRO_OPERATOR_DARKEN:
-	    case CAIRO_OPERATOR_LIGHTEN:
-	    case CAIRO_OPERATOR_COLOR_DODGE:
-	    case CAIRO_OPERATOR_COLOR_BURN:
-	    case CAIRO_OPERATOR_HARD_LIGHT:
-	    case CAIRO_OPERATOR_SOFT_LIGHT:
-	    case CAIRO_OPERATOR_DIFFERENCE:
-	    case CAIRO_OPERATOR_EXCLUSION:
-	    case CAIRO_OPERATOR_HSL_HUE:
-	    case CAIRO_OPERATOR_HSL_SATURATION:
-	    case CAIRO_OPERATOR_HSL_COLOR:
-	    case CAIRO_OPERATOR_HSL_LUMINOSITY:
-	    default:
-		return CAIRO_INT_STATUS_UNSUPPORTED;
-	}
+	if (op == CAIRO_OPERATOR_OUT ||
+	    op == CAIRO_OPERATOR_XOR)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	else if (op == CAIRO_OPERATOR_SATURATE)
+	    op = CAIRO_OPERATOR_ADD;
+	else if (op == CAIRO_OPERATOR_IN)
+	    op = CAIRO_OPERATOR_DEST_ATOP;
+	else if (op == CAIRO_OPERATOR_DEST_ATOP)
+	    op = CAIRO_OPERATOR_IN;
+	else if (op == CAIRO_OPERATOR_ATOP)
+	    return CAIRO_INT_STATUS_NOTHING_TO_DO; /* op = CAIRO_OPERATOR_DEST_OVER */
+	else if (op == CAIRO_OPERATOR_DEST_OVER)
+	    op = CAIRO_OPERATOR_ATOP;
     }
+
+    return _cairo_cgcontext_set_cairo_operator (surface->cgContext, op);
 }
 
 static inline CGLineCap
@@ -641,14 +679,15 @@ _cairo_quartz_fixup_unbounded_operation (cairo_quartz_surface_t *surface,
     if (!cgc)
 	return;
 
-    CGContextSetCompositeOperation (cgc, kPrivateCGCompositeCopy);
+    _cairo_cgcontext_set_cairo_operator (cgc, CAIRO_OPERATOR_SOURCE);
+
     /* We want to mask out whatever we just rendered, so we fill the
      * surface opaque, and then we'll render transparent.
      */
     CGContextSetAlpha (cgc, 1.0f);
     CGContextFillRect (cgc, CGRectMake (0, 0, clipBoxRound.size.width, clipBoxRound.size.height));
 
-    CGContextSetCompositeOperation (cgc, kPrivateCGCompositeClear);
+    _cairo_cgcontext_set_cairo_operator (cgc, CAIRO_OPERATOR_CLEAR);
     CGContextSetShouldAntialias (cgc, (antialias != CAIRO_ANTIALIAS_NONE));
 
     CGContextTranslateCTM (cgc, -clipBoxRound.origin.x, -clipBoxRound.origin.y);
@@ -719,7 +758,7 @@ _cairo_quartz_fixup_unbounded_operation (cairo_quartz_surface_t *surface,
     /* Then render with the mask */
     CGContextSaveGState (surface->cgContext);
 
-    CGContextSetCompositeOperation (surface->cgContext, kPrivateCGCompositeCopy);
+    _cairo_quartz_surface_set_cairo_operator (surface, CAIRO_OPERATOR_SOURCE);
     CGContextClipToMask (surface->cgContext, clipBoxRound, maskImage);
     CGImageRelease (maskImage);
 
@@ -1663,8 +1702,7 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 
     CGContextSaveGState (new_surface->cgContext);
 
-    CGContextSetCompositeOperation (new_surface->cgContext,
-				    kPrivateCGCompositeCopy);
+    _cairo_quartz_surface_set_cairo_operator (new_surface, CAIRO_OPERATOR_SOURCE);
 
     CGContextTranslateCTM (new_surface->cgContext, -src_x, -src_y);
     CGContextDrawImage (new_surface->cgContext,

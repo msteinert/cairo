@@ -483,11 +483,15 @@ REFERENCE_IMAGES = \
 	extended-blend.image16.ref.png \
 	extended-blend.argb32.ref.png \
 	extended-blend.rgb24.ref.png \
+	extended-blend.quartz.argb32.ref.png \
+	extended-blend.quartz.rgb24.ref.png \
 	extended-blend.svg12.argb32.xfail.png \
 	extended-blend.svg12.rgb24.xfail.png \
 	extended-blend-alpha.image16.ref.png \
 	extended-blend-alpha.argb32.ref.png \
 	extended-blend-alpha.rgb24.ref.png \
+	extended-blend-alpha.quartz.argb32.ref.png \
+	extended-blend-alpha.quartz.rgb24.ref.png \
 	extended-blend-alpha.svg12.argb32.xfail.png \
 	extended-blend-alpha.svg12.rgb24.xfail.png \
 	extend-pad-border.image16.ref.png \
