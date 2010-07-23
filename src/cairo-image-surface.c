@@ -3965,7 +3965,7 @@ _composite_glyphs (void				*closure,
 	    pixman_image_composite32 (pixman_op,
                                       src, glyph_surface->pixman_image, dst,
                                       x1 + src_x,  y1 + src_y,
-                                      0, 0,
+                                      x1 - x, y1 - y,
                                       x1 - dst_x, y1 - dst_y,
                                       x2 - x1, y2 - y1);
 	}
