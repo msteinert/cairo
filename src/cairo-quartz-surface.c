@@ -1064,8 +1064,8 @@ CreateRepeatingRadialGradientFunction (cairo_quartz_surface_t *surface,
         input_value_range[0] = t_min;
         input_value_range[1] = t_max;
     } else {
-        input_value_range[0] = -t_max;
-        input_value_range[1] = -t_min;
+        input_value_range[0] = 1 - t_max;
+        input_value_range[1] = 1 - t_min;
     }
 
     if (_cairo_pattern_create_copy (&pat, &gpat->base))
