@@ -144,6 +144,9 @@ _cairo_quartz_surface_create_internal (CGContextRef cgContext,
 				       unsigned int width,
 				       unsigned int height);
 
+static cairo_bool_t
+_cairo_surface_is_quartz (const cairo_surface_t *surface);
+
 /* Load all extra symbols */
 static void quartz_ensure_symbols(void)
 {
@@ -1104,15 +1107,14 @@ _cairo_surface_to_cgimage (cairo_surface_t *target,
 {
     cairo_status_t status;
     quartz_source_image_t *source_img;
-    cairo_surface_type_t stype = source->backend->type;
 
-    if (stype == CAIRO_SURFACE_TYPE_QUARTZ_IMAGE) {
+    if (source->backend && source->backend->type == CAIRO_SURFACE_TYPE_QUARTZ_IMAGE) {
 	cairo_quartz_image_surface_t *surface = (cairo_quartz_image_surface_t *) source;
 	*image_out = CGImageRetain (surface->image);
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    if (stype == CAIRO_SURFACE_TYPE_QUARTZ) {
+    if (_cairo_surface_is_quartz (source)) {
 	cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) source;
 	if (IS_EMPTY(surface)) {
 	    *image_out = NULL;
@@ -2007,7 +2009,7 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    if (src->backend->type == CAIRO_SURFACE_TYPE_QUARTZ) {
+    if (_cairo_surface_is_quartz (src)) {
 	cairo_quartz_surface_t *qsurf = (cairo_quartz_surface_t *) src;
 
 	if (IS_EMPTY(qsurf)) {
@@ -3173,14 +3175,18 @@ cairo_quartz_surface_create (cairo_format_t format,
 CGContextRef
 cairo_quartz_surface_get_cg_context (cairo_surface_t *surface)
 {
-    cairo_quartz_surface_t *quartz = (cairo_quartz_surface_t*)surface;
-
-    if (cairo_surface_get_type(surface) != CAIRO_SURFACE_TYPE_QUARTZ)
+    if (surface && _cairo_surface_is_quartz (surface)) {
+	cairo_quartz_surface_t *quartz = (cairo_quartz_surface_t *) surface;
+	return quartz->cgContext;
+    } else
 	return NULL;
-
-    return quartz->cgContext;
 }
 
+static cairo_bool_t
+_cairo_surface_is_quartz (const cairo_surface_t *surface)
+{
+    return surface->backend == &cairo_quartz_surface_backend;
+}
 
 /* Debug stuff */
 
