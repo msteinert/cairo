@@ -1101,8 +1101,7 @@ DataProviderReleaseCallback (void *info, const void *data, size_t size)
 }
 
 static cairo_status_t
-_cairo_surface_to_cgimage (cairo_surface_t *target,
-			   cairo_surface_t *source,
+_cairo_surface_to_cgimage (cairo_surface_t *source,
 			   CGImageRef *image_out)
 {
     cairo_status_t status;
@@ -1246,7 +1245,7 @@ _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (cairo_quartz_surface_t 
     is_bounded = _cairo_surface_get_extents (pat_surf, &extents);
     assert (is_bounded);
 
-    status = _cairo_surface_to_cgimage ((cairo_surface_t*) dest, pat_surf, &image);
+    status = _cairo_surface_to_cgimage (pat_surf, &image);
     if (status)
 	return status;
     if (image == NULL)
@@ -1379,7 +1378,7 @@ _cairo_quartz_setup_fallback_source (cairo_quartz_surface_t *surface,
     }
 #endif
 
-    status = _cairo_surface_to_cgimage (&surface->base, fallback, &img);
+    status = _cairo_surface_to_cgimage (fallback, &img);
     if (status)
 	return DO_UNSUPPORTED;
     if (img == NULL)
@@ -1591,7 +1590,7 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 	cairo_fixed_t fw, fh;
 	cairo_bool_t is_bounded;
 
-	status = _cairo_surface_to_cgimage ((cairo_surface_t *) surface, pat_surf, &img);
+	status = _cairo_surface_to_cgimage (pat_surf, &img);
 	if (status)
 	    return DO_UNSUPPORTED;
 	if (img == NULL)
@@ -2022,7 +2021,7 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 	}
     }
 
-    status = _cairo_surface_to_cgimage ((cairo_surface_t*) abstract_surface, src, &quartz_image);
+    status = _cairo_surface_to_cgimage (src, &quartz_image);
     if (status)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -2712,7 +2711,7 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     CGAffineTransform ctm, mask_matrix;
 
-    status = _cairo_surface_to_cgimage ((cairo_surface_t *) surface, pat_surf, &img);
+    status = _cairo_surface_to_cgimage (pat_surf, &img);
     if (status)
 	return status;
     if (img == NULL) {
