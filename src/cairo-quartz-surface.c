@@ -1333,6 +1333,7 @@ static cairo_quartz_action_t
 _cairo_quartz_setup_fallback_source (cairo_quartz_surface_t *surface,
 				     const cairo_pattern_t *source)
 {
+    cairo_pattern_union_t pattern;
     CGRect clipBox = CGContextGetClipBoundingBox (surface->cgContext);
     double x0, y0, w, h;
 
@@ -1355,42 +1356,23 @@ _cairo_quartz_setup_fallback_source (cairo_quartz_surface_t *surface,
     fallback = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, (int) w, (int) h);
     cairo_surface_set_device_offset (fallback, -x0, -y0);
 
-#if 0
-    {
-	cairo_t *fallback_cr;
-	cairo_pattern_t *source_copy;
-
-	/* Paint the source onto our temporary */
-	fallback_cr = cairo_create (fallback);
-	cairo_set_operator (fallback_cr, CAIRO_OPERATOR_SOURCE);
-
-	/* Use a copy of the pattern because it is const and could be allocated
-	 * on the stack */
-	status = _cairo_pattern_create_copy (&source_copy, source);
-	cairo_set_source (fallback_cr, source_copy);
-	cairo_pattern_destroy (source_copy);
-
-	cairo_paint (fallback_cr);
-	cairo_destroy (fallback_cr);
+    _cairo_pattern_init_static_copy (&pattern.base, source);
+    _cairo_pattern_transform (&pattern.base, &fallback->device_transform_inverse);
+    status = _cairo_surface_paint (fallback, CAIRO_OPERATOR_SOURCE, &pattern.base, NULL);
+    if (unlikely (status)) {
+	cairo_surface_destroy (fallback);
+	return DO_UNSUPPORTED;
     }
-#else
-    {
-	cairo_pattern_union_t pattern;
-
-	_cairo_pattern_init_static_copy (&pattern.base, source);
-	_cairo_pattern_transform (&pattern.base,
-				  &fallback->device_transform_inverse);
-	status = _cairo_surface_paint (fallback,
-				       CAIRO_OPERATOR_SOURCE,
-				       &pattern.base, NULL);
-    }
-#endif
 
     status = _cairo_surface_to_cgimage (fallback, &img);
-    if (unlikely (status))
+    if (unlikely (status)) {
+	cairo_surface_destroy (fallback);
 	return DO_UNSUPPORTED;
-    if (unlikely (img == NULL))
+    }
+    if (unlikely (img == NULL)) {
+	cairo_surface_destroy (fallback);
 	return DO_NOTHING;
+    }
 
     surface->sourceImageRect = CGRectMake (0.0, 0.0, w, h);
     surface->sourceImage = img;
