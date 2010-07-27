@@ -2764,7 +2764,7 @@ _cairo_quartz_surface_mask_with_generic (cairo_quartz_surface_t *surface,
     int width = surface->extents.width;
     int height = surface->extents.height;
 
-    cairo_surface_t *gradient_surf = NULL;
+    cairo_surface_t *gradient_surf;
     cairo_surface_pattern_t surface_pattern;
     cairo_int_status_t status;
 
@@ -2781,9 +2781,8 @@ _cairo_quartz_surface_mask_with_generic (cairo_quartz_surface_t *surface,
     status = _cairo_quartz_surface_mask_with_surface (surface, op, source, &surface_pattern, clip);
     _cairo_pattern_fini (&surface_pattern.base);
 
-  BAIL:
-    if (gradient_surf)
-	cairo_surface_destroy (gradient_surf);
+ BAIL:
+    cairo_surface_destroy (gradient_surf);
 
     return status;
 }
