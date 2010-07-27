@@ -3029,15 +3029,10 @@ cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
 {
     cairo_quartz_surface_t *surf;
 
-    CGContextRetain (cgContext);
-
     surf = _cairo_quartz_surface_create_internal (cgContext, CAIRO_CONTENT_COLOR_ALPHA,
 						  width, height);
-    if (surf->base.status) {
-	CGContextRelease (cgContext);
-	// create_internal will have set an error
-	return &surf->base;
-    }
+    if (likely (!surf->base.status))
+	CGContextRetain (cgContext);
 
     return &surf->base;
 }
