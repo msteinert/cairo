@@ -2084,7 +2084,7 @@ _cairo_quartz_surface_paint_cg (void *abstract_surface,
     ND ((stderr, "%p _cairo_quartz_surface_paint op %d source->type %d\n", surface, op, source->type));
 
     if (IS_EMPTY (surface))
-	return CAIRO_STATUS_SUCCESS;
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
     rv = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (rv))
@@ -2092,7 +2092,7 @@ _cairo_quartz_surface_paint_cg (void *abstract_surface,
 
     rv = _cairo_quartz_surface_set_cairo_operator (surface, op);
     if (unlikely (rv))
-	return rv == CAIRO_INT_STATUS_NOTHING_TO_DO ? CAIRO_STATUS_SUCCESS : rv;
+	return rv;
 
     action = _cairo_quartz_setup_source (surface, source, NULL);
 
@@ -2184,7 +2184,7 @@ _cairo_quartz_surface_fill_cg (void *abstract_surface,
     ND ((stderr, "%p _cairo_quartz_surface_fill op %d source->type %d\n", surface, op, source->type));
 
     if (IS_EMPTY (surface))
-	return CAIRO_STATUS_SUCCESS;
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
     rv = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (rv))
@@ -2192,7 +2192,7 @@ _cairo_quartz_surface_fill_cg (void *abstract_surface,
 
     rv = _cairo_quartz_surface_set_cairo_operator (surface, op);
     if (unlikely (rv))
-	return rv == CAIRO_INT_STATUS_NOTHING_TO_DO ? CAIRO_STATUS_SUCCESS : rv;
+	return rv;
 
     CGContextSaveGState (surface->cgContext);
 
@@ -2318,7 +2318,7 @@ _cairo_quartz_surface_stroke_cg (void *abstract_surface,
     ND ((stderr, "%p _cairo_quartz_surface_stroke op %d source->type %d\n", surface, op, source->type));
 
     if (IS_EMPTY (surface))
-	return CAIRO_STATUS_SUCCESS;
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
     rv = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (rv))
@@ -2326,7 +2326,7 @@ _cairo_quartz_surface_stroke_cg (void *abstract_surface,
 
     rv = _cairo_quartz_surface_set_cairo_operator (surface, op);
     if (unlikely (rv))
-	return rv == CAIRO_INT_STATUS_NOTHING_TO_DO ? CAIRO_STATUS_SUCCESS : rv;
+	return rv;
 
     // Turning antialiasing off used to cause misrendering with
     // single-pixel lines (e.g. 20,10.5 -> 21,10.5 end up being rendered as 2 pixels).
@@ -2496,10 +2496,10 @@ _cairo_quartz_surface_show_glyphs_cg (void *abstract_surface,
     cairo_bool_t didForceFontSmoothing = FALSE;
 
     if (IS_EMPTY (surface))
-	return CAIRO_STATUS_SUCCESS;
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
     if (num_glyphs <= 0)
-	return CAIRO_STATUS_SUCCESS;
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
     if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_QUARTZ)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -2510,7 +2510,7 @@ _cairo_quartz_surface_show_glyphs_cg (void *abstract_surface,
 
     rv = _cairo_quartz_surface_set_cairo_operator (surface, op);
     if (unlikely (rv))
-	return rv == CAIRO_INT_STATUS_NOTHING_TO_DO ? CAIRO_STATUS_SUCCESS : rv;
+	return rv;
 
     CGContextSaveGState (surface->cgContext);
 
@@ -2801,7 +2801,7 @@ _cairo_quartz_surface_mask_cg (void *abstract_surface,
     ND ((stderr, "%p _cairo_quartz_surface_mask op %d source->type %d mask->type %d\n", surface, op, source->type, mask->type));
 
     if (IS_EMPTY (surface))
-	return CAIRO_STATUS_SUCCESS;
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
     rv = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (rv))
