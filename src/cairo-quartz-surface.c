@@ -1250,8 +1250,7 @@ _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (cairo_quartz_surface_t 
     cairo_matrix_t m;
 
     /* SURFACE is the only type we'll handle here */
-    if (apattern->type != CAIRO_PATTERN_TYPE_SURFACE)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    assert (apattern->type == CAIRO_PATTERN_TYPE_SURFACE);
 
     spattern = (cairo_surface_pattern_t *) apattern;
     pat_surf = spattern->surface;
@@ -1431,11 +1430,7 @@ _cairo_quartz_setup_linear_source (cairo_quartz_surface_t *surface,
     CGColorSpaceRef rgb;
     bool extend = abspat->extend == CAIRO_EXTEND_PAD;
 
-    if (lpat->base.n_stops == 0) {
-	CGContextSetRGBStrokeColor (surface->cgContext, 0., 0., 0., 0.);
-	CGContextSetRGBFillColor (surface->cgContext, 0., 0., 0., 0.);
-	return DO_SOLID;
-    }
+    assert (lpat->base.n_stops > 0);
 
     if (lpat->p1.x == lpat->p2.x &&
         lpat->p1.y == lpat->p2.y) {
@@ -1501,11 +1496,7 @@ _cairo_quartz_setup_radial_source (cairo_quartz_surface_t *surface,
     double dy = c1y - c2y;
     double centerDistance = sqrt (dx*dx + dy*dy);
 
-    if (rpat->base.n_stops == 0) {
-	CGContextSetRGBStrokeColor (surface->cgContext, 0., 0., 0., 0.);
-	CGContextSetRGBFillColor (surface->cgContext, 0., 0., 0., 0.);
-	return DO_SOLID;
-    }
+    assert (rpat->base.n_stops > 0);
 
     if (r2 <= centerDistance + r1 + 1e-6 && /* circle 2 doesn't contain circle 1 */
         r1 <= centerDistance + r2 + 1e-6) { /* circle 1 doesn't contain circle 2 */
