@@ -1910,10 +1910,10 @@ _cairo_quartz_surface_snapshot (void *abstract_surface)
 
 static void
 _cairo_quartz_surface_release_source_image (void *abstract_surface,
-					     cairo_image_surface_t *image,
-					     void *image_extra)
+					    cairo_image_surface_t *image,
+					    void *image_extra)
 {
-    cairo_surface_destroy ((cairo_surface_t *) image);
+    cairo_surface_destroy (&image->base);
 }
 
 
@@ -1950,7 +1950,7 @@ _cairo_quartz_surface_release_dest_image (void *abstract_surface,
 
     //ND((stderr, "%p _cairo_quartz_surface_release_dest_image\n", surface));
 
-    cairo_surface_destroy ((cairo_surface_t *) image);
+    cairo_surface_destroy (&image->base);
 }
 
 static cairo_surface_t *
@@ -2005,9 +2005,8 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
     }
 
     if (width == 0 || height == 0) {
-	*clone_out = (cairo_surface_t*)
-	    _cairo_quartz_surface_create_internal (NULL, CAIRO_CONTENT_COLOR_ALPHA,
-						   width, height);
+	*clone_out = &_cairo_quartz_surface_create_internal (NULL, CAIRO_CONTENT_COLOR_ALPHA,
+							     width, height)->base;
 	*clone_offset_x = 0;
 	*clone_offset_y = 0;
 	return CAIRO_STATUS_SUCCESS;
@@ -2016,10 +2015,11 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
     if (_cairo_surface_is_quartz (src)) {
 	cairo_quartz_surface_t *qsurf = (cairo_quartz_surface_t *) src;
 
-	if (IS_EMPTY(qsurf)) {
-	    *clone_out = (cairo_surface_t*)
-		_cairo_quartz_surface_create_internal (NULL, CAIRO_CONTENT_COLOR_ALPHA,
-						       qsurf->extents.width, qsurf->extents.height);
+	if (IS_EMPTY (qsurf)) {
+	    *clone_out = &_cairo_quartz_surface_create_internal (NULL,
+								 CAIRO_CONTENT_COLOR_ALPHA,
+								 qsurf->extents.width,
+								 qsurf->extents.height)->base;
 	    *clone_offset_x = 0;
 	    *clone_offset_y = 0;
 	    return CAIRO_STATUS_SUCCESS;
@@ -2063,7 +2063,7 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 FINISH:
     *clone_offset_x = src_x;
     *clone_offset_y = src_y;
-    *clone_out = (cairo_surface_t*) new_surface;
+    *clone_out = &new_surface->base;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -3048,10 +3048,10 @@ cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
     if (surf->base.status) {
 	CGContextRelease (cgContext);
 	// create_internal will have set an error
-	return (cairo_surface_t*) surf;
+	return &surf->base;
     }
 
-    return (cairo_surface_t *) surf;
+    return &surf->base;
 }
 
 /**
@@ -3087,8 +3087,8 @@ cairo_quartz_surface_create (cairo_format_t format,
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
 
     if (width == 0 || height == 0) {
-	return (cairo_surface_t*) _cairo_quartz_surface_create_internal (NULL, _cairo_content_from_format (format),
-									 width, height);
+	return &_cairo_quartz_surface_create_internal (NULL, _cairo_content_from_format (format),
+						       width, height)->base;
     }
 
     if (format == CAIRO_FORMAT_ARGB32 ||
@@ -3156,13 +3156,13 @@ cairo_quartz_surface_create (cairo_format_t format,
 	CGContextRelease (cgc);
 	free (imageData);
 	// create_internal will have set an error
-	return (cairo_surface_t*) surf;
+	return &surf->base;
     }
 
     surf->imageData = imageData;
     surf->imageSurfaceEquiv = cairo_image_surface_create_for_data (imageData, format, width, height, stride);
 
-    return (cairo_surface_t *) surf;
+    return &surf->base;
 }
 
 /**
