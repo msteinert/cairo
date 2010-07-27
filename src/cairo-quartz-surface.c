@@ -341,8 +341,7 @@ _cairo_path_to_quartz_context_curve_to (void *closure,
     double x2 = _cairo_fixed_to_double (p2->x);
     double y2 = _cairo_fixed_to_double (p2->y);
 
-    CGContextAddCurveToPoint (closure,
-			      x0, y0, x1, y1, x2, y2);
+    CGContextAddCurveToPoint (closure, x0, y0, x1, y1, x2, y2);
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1088,16 +1087,16 @@ CreateRepeatingRadialGradientFunction (cairo_quartz_surface_t *surface,
     }
 
     if (_cairo_pattern_create_copy (&pat, &gpat->base))
-  /* quartz doesn't deal very well with malloc failing, so there's
-   * not much point in us trying either */
-  return NULL;
+	/* quartz doesn't deal very well with malloc failing, so there's
+	 * not much point in us trying either */
+	return NULL;
 
     return CGFunctionCreate (pat,
-           1,
-           input_value_range,
-           4,
-           gradient_output_value_ranges,
-           &gradient_callbacks);
+			     1,
+			     input_value_range,
+			     4,
+			     gradient_output_value_ranges,
+			     &gradient_callbacks);
 }
 
 /* Obtain a CGImageRef from a #cairo_surface_t * */
@@ -1957,9 +1956,9 @@ _cairo_quartz_surface_release_dest_image (void *abstract_surface,
 
 static cairo_surface_t *
 _cairo_quartz_surface_create_similar (void *abstract_surface,
-				       cairo_content_t content,
-				       int width,
-				       int height)
+				      cairo_content_t content,
+				      int width,
+				      int height)
 {
     /*cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;*/
 
@@ -2790,9 +2789,7 @@ _cairo_quartz_surface_mask_with_generic (cairo_quartz_surface_t *surface,
 	goto BAIL;
 
     _cairo_pattern_init_for_surface (&surface_pattern, gradient_surf);
-
     status = _cairo_quartz_surface_mask_with_surface (surface, op, source, &surface_pattern, clip);
-
     _cairo_pattern_fini (&surface_pattern.base);
 
   BAIL:
@@ -2960,9 +2957,9 @@ static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
 
 cairo_quartz_surface_t *
 _cairo_quartz_surface_create_internal (CGContextRef cgContext,
-					cairo_content_t content,
-					unsigned int width,
-					unsigned int height)
+				       cairo_content_t content,
+				       unsigned int width,
+				       unsigned int height)
 {
     cairo_quartz_surface_t *surface;
 
