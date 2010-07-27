@@ -538,44 +538,58 @@ static inline CGLineCap
 _cairo_quartz_cairo_line_cap_to_quartz (cairo_line_cap_t ccap)
 {
     switch (ccap) {
-	case CAIRO_LINE_CAP_BUTT: return kCGLineCapButt; break;
-	case CAIRO_LINE_CAP_ROUND: return kCGLineCapRound; break;
-	case CAIRO_LINE_CAP_SQUARE: return kCGLineCapSquare; break;
-    }
+    default:
+	ASSERT_NOT_REACHED;
 
-    return kCGLineCapButt;
+    case CAIRO_LINE_CAP_BUTT:
+	return kCGLineCapButt;
+
+    case CAIRO_LINE_CAP_ROUND:
+	return kCGLineCapRound;
+
+    case CAIRO_LINE_CAP_SQUARE:
+	return kCGLineCapSquare;
+    }
 }
 
 static inline CGLineJoin
 _cairo_quartz_cairo_line_join_to_quartz (cairo_line_join_t cjoin)
 {
     switch (cjoin) {
-	case CAIRO_LINE_JOIN_MITER: return kCGLineJoinMiter; break;
-	case CAIRO_LINE_JOIN_ROUND: return kCGLineJoinRound; break;
-	case CAIRO_LINE_JOIN_BEVEL: return kCGLineJoinBevel; break;
-    }
+    default:
+	ASSERT_NOT_REACHED;
 
-    return kCGLineJoinMiter;
+    case CAIRO_LINE_JOIN_MITER:
+	return kCGLineJoinMiter;
+
+    case CAIRO_LINE_JOIN_ROUND:
+	return kCGLineJoinRound;
+
+    case CAIRO_LINE_JOIN_BEVEL:
+	return kCGLineJoinBevel;
+    }
 }
 
 static inline CGInterpolationQuality
 _cairo_quartz_filter_to_quartz (cairo_filter_t filter)
 {
     switch (filter) {
-	case CAIRO_FILTER_NEAREST:
-	    return kCGInterpolationNone;
+    case CAIRO_FILTER_NEAREST:
+	return kCGInterpolationNone;
 
-	case CAIRO_FILTER_FAST:
-	    return kCGInterpolationLow;
+    case CAIRO_FILTER_FAST:
+	return kCGInterpolationLow;
 
-	case CAIRO_FILTER_BEST:
-	case CAIRO_FILTER_GOOD:
-	case CAIRO_FILTER_BILINEAR:
-	case CAIRO_FILTER_GAUSSIAN:
-	    return kCGInterpolationDefault;
+    case CAIRO_FILTER_BEST:
+    case CAIRO_FILTER_GOOD:
+    case CAIRO_FILTER_BILINEAR:
+    case CAIRO_FILTER_GAUSSIAN:
+	return kCGInterpolationDefault;
+
+    default:
+	ASSERT_NOT_REACHED;
+	return kCGInterpolationDefault;
     }
-
-    return kCGInterpolationDefault;
 }
 
 static inline void
