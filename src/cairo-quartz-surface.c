@@ -2408,21 +2408,23 @@ _cairo_quartz_surface_stroke_cg (void *abstract_surface,
     CGContextRestoreGState (surface->cgContext);
 
     if (path_for_unbounded) {
-	CGContextSaveGState (surface->cgContext);
+	unbounded_op_data_t ub;
+	ub.op = UNBOUNDED_STROKE_FILL;
+	ub.u.stroke_fill.fill_rule = CAIRO_FILL_RULE_WINDING;
 
 	CGContextBeginPath (surface->cgContext);
 	CGContextAddPath (surface->cgContext, path_for_unbounded);
 	CGPathRelease (path_for_unbounded);
 
+	CGContextSaveGState (surface->cgContext);
 	CGContextConcatCTM (surface->cgContext, strokeTransform);
 	CGContextReplacePathWithStrokedPath (surface->cgContext);
-
-	CGContextAddRect (surface->cgContext, CGContextGetClipBoundingBox (surface->cgContext));
-
-	CGContextSetRGBFillColor (surface->cgContext, 0., 0., 0., 0.);
-	CGContextEOFillPath (surface->cgContext);
-
 	CGContextRestoreGState (surface->cgContext);
+
+	ub.u.stroke_fill.cgPath = CGContextCopyPathPtr (surface->cgContext);
+
+	_cairo_quartz_fixup_unbounded_operation (surface, &ub, antialias);
+	CGPathRelease (ub.u.stroke_fill.cgPath);
     }
 
     ND((stderr, "-- stroke\n"));
