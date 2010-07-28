@@ -1417,12 +1417,25 @@ _cairo_quartz_setup_radial_source (cairo_quartz_surface_t *surface,
 
 static cairo_int_status_t
 _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
+			    cairo_operator_t op,
 			    const cairo_pattern_t *source,
 			    const cairo_rectangle_int_t *extents)
 {
+    cairo_status_t status;
+
     assert (!(surface->sourceImage || surface->sourceShading || surface->sourcePattern));
 
-    surface->oldInterpolationQuality = CGContextGetInterpolationQuality (surface->cgContext);
+    /* Save before we change the pattern, colorspace, etc. so that
+     * we can restore and make sure that quartz releases our
+     * pattern (which may be stack allocated)
+     */
+
+    CGContextSaveGState (surface->cgContext);
+
+    status = _cairo_quartz_surface_set_cairo_operator (surface, op);
+    if (unlikely (status))
+	return status;
+
     CGContextSetInterpolationQuality (surface->cgContext, _cairo_quartz_filter_to_quartz (source->filter));
 
     if (source->type == CAIRO_PATTERN_TYPE_SOLID) {
@@ -1461,7 +1474,6 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 	CGImageRef img;
 	cairo_matrix_t m = spat->base.matrix;
 	cairo_rectangle_int_t extents;
-	cairo_status_t status;
 	CGAffineTransform xform;
 	CGRect srcRect;
 	cairo_fixed_t fw, fh;
@@ -1536,11 +1548,6 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 	if (unlikely (status))
 	    return status;
 
-	// Save before we change the pattern, colorspace, etc. so that
-	// we can restore and make sure that quartz releases our
-	// pattern (which may be stack allocated)
-	CGContextSaveGState (surface->cgContext);
-
 	patternSpace = CGColorSpaceCreatePattern (NULL);
 	CGContextSetFillColorSpace (surface->cgContext, patternSpace);
 	CGContextSetFillPattern (surface->cgContext, pattern, &patternAlpha);
@@ -1566,7 +1573,7 @@ static void
 _cairo_quartz_teardown_source (cairo_quartz_surface_t *surface,
 			       const cairo_pattern_t *source)
 {
-    CGContextSetInterpolationQuality (surface->cgContext, surface->oldInterpolationQuality);
+    CGContextRestoreGState (surface->cgContext);
 
     if (surface->sourceImage) {
 	CGImageRelease (surface->sourceImage);
@@ -1583,21 +1590,19 @@ _cairo_quartz_teardown_source (cairo_quartz_surface_t *surface,
 
     if (surface->sourcePattern) {
 	CGPatternRelease (surface->sourcePattern);
-	// To tear down the pattern and colorspace
-	CGContextRestoreGState (surface->cgContext);
-
 	surface->sourcePattern = NULL;
     }
 }
 
 static cairo_int_status_t
 _cairo_quartz_setup_source_safe (cairo_quartz_surface_t *surface,
+				 cairo_operator_t op,
 				 const cairo_pattern_t *source,
 				 const cairo_rectangle_int_t *extents)
 {
     cairo_int_status_t status;
 
-    status = _cairo_quartz_setup_source (surface, source, extents);
+    status = _cairo_quartz_setup_source (surface, op, source, extents);
     if (unlikely (status))
 	_cairo_quartz_teardown_source (surface, source);
 
@@ -1986,15 +1991,11 @@ _cairo_quartz_surface_paint_cg (cairo_quartz_surface_t *surface,
     if (unlikely (rv))
 	return rv;
 
-    rv = _cairo_quartz_surface_set_cairo_operator (surface, op);
-    if (unlikely (rv))
-	return rv;
-
     extents = surface->virtual_extents;
     extents.x -= surface->base.device_transform.x0;
     extents.y -= surface->base.device_transform.y0;
     _cairo_rectangle_union (&extents, &surface->extents);
-    rv = _cairo_quartz_setup_source_safe (surface, source, &extents);
+    rv = _cairo_quartz_setup_source_safe (surface, op, source, &extents);
     if (unlikely (rv))
 	return rv;
 
@@ -2004,14 +2005,10 @@ _cairo_quartz_surface_paint_cg (cairo_quartz_surface_t *surface,
 							   surface->extents.width,
 							   surface->extents.height));
     } else if (surface->action == DO_SHADING) {
-	CGContextSaveGState (surface->cgContext);
 	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
 	CGContextDrawShading (surface->cgContext, surface->sourceShading);
-	CGContextRestoreGState (surface->cgContext);
     } else if (surface->action == DO_IMAGE || surface->action == DO_TILED_IMAGE) {
-	CGContextSaveGState (surface->cgContext);
 	_cairo_quartz_draw_image (surface, op);
-	CGContextRestoreGState (surface->cgContext);
     }
 
     _cairo_quartz_teardown_source (surface, source);
@@ -2070,19 +2067,13 @@ _cairo_quartz_surface_fill_cg (cairo_quartz_surface_t *surface,
     if (unlikely (rv))
 	return rv;
 
-    rv = _cairo_quartz_surface_set_cairo_operator (surface, op);
-    if (unlikely (rv))
-	return rv;
-
     extents = surface->virtual_extents;
     extents.x -= surface->base.device_transform.x0;
     extents.y -= surface->base.device_transform.y0;
     _cairo_rectangle_union (&extents, &surface->extents);
-    rv = _cairo_quartz_setup_source_safe (surface, source, &extents);
+    rv = _cairo_quartz_setup_source_safe (surface, op, source, &extents);
     if (unlikely (rv))
 	return rv;
-
-    CGContextSaveGState (surface->cgContext);
 
     CGContextSetShouldAntialias (surface->cgContext, (antialias != CAIRO_ANTIALIAS_NONE));
 
@@ -2117,8 +2108,6 @@ _cairo_quartz_surface_fill_cg (cairo_quartz_surface_t *surface,
     }
 
     _cairo_quartz_teardown_source (surface, source);
-
-    CGContextRestoreGState (surface->cgContext);
 
     if (path_for_unbounded) {
 	unbounded_op_data_t ub;
@@ -2197,10 +2186,6 @@ _cairo_quartz_surface_stroke_cg (cairo_quartz_surface_t *surface,
     if (unlikely (rv))
 	return rv;
 
-    rv = _cairo_quartz_surface_set_cairo_operator (surface, op);
-    if (unlikely (rv))
-	return rv;
-
     // Turning antialiasing off used to cause misrendering with
     // single-pixel lines (e.g. 20,10.5 -> 21,10.5 end up being rendered as 2 pixels).
     // That's been since fixed in at least 10.5, and in the latest 10.4 dot releases.
@@ -2239,11 +2224,9 @@ _cairo_quartz_surface_stroke_cg (cairo_quartz_surface_t *surface,
     extents.x -= surface->base.device_transform.x0;
     extents.y -= surface->base.device_transform.y0;
     _cairo_rectangle_union (&extents, &surface->extents);
-    rv = _cairo_quartz_setup_source_safe (surface, source, &extents);
+    rv = _cairo_quartz_setup_source_safe (surface, op, source, &extents);
     if (unlikely (rv))
 	return rv;
-
-    CGContextSaveGState (surface->cgContext);
 
     _cairo_quartz_cairo_path_to_quartz_context (path, surface->cgContext);
 
@@ -2272,8 +2255,6 @@ _cairo_quartz_surface_stroke_cg (cairo_quartz_surface_t *surface,
     }
 
     _cairo_quartz_teardown_source (surface, source);
-
-    CGContextRestoreGState (surface->cgContext);
 
     if (path_for_unbounded) {
 	unbounded_op_data_t ub;
@@ -2375,19 +2356,13 @@ _cairo_quartz_surface_show_glyphs_cg (cairo_quartz_surface_t *surface,
     if (unlikely (rv))
 	return rv;
 
-    rv = _cairo_quartz_surface_set_cairo_operator (surface, op);
-    if (unlikely (rv))
-	return rv;
-
     extents = surface->virtual_extents;
     extents.x -= surface->base.device_transform.x0;
     extents.y -= surface->base.device_transform.y0;
     _cairo_rectangle_union (&extents, &surface->extents);
-    rv = _cairo_quartz_setup_source_safe (surface, source, &extents);
+    rv = _cairo_quartz_setup_source_safe (surface, op, source, &extents);
     if (unlikely (rv))
 	return rv;
-
-    CGContextSaveGState (surface->cgContext);
 
     if (surface->action == DO_SOLID || surface->action == DO_PATTERN) {
 	CGContextSetTextDrawingMode (surface->cgContext, kCGTextFill);
@@ -2487,8 +2462,6 @@ BAIL:
 
     if (didForceFontSmoothing)
 	CGContextSetAllowsFontSmoothingPtr (surface->cgContext, FALSE);
-
-    CGContextRestoreGState (surface->cgContext);
 
     if (rv == CAIRO_STATUS_SUCCESS &&
 	cgfref &&
