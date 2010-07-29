@@ -25,6 +25,7 @@ test_sources = \
 	clip-contexts.c					\
 	clip-disjoint.c					\
 	clip-device-offset.c				\
+	clip-draw-unbounded.c				\
 	clip-empty.c					\
 	clip-empty-group.c				\
 	clip-empty-save.c				\
@@ -32,7 +33,6 @@ test_sources = \
 	clip-fill-no-op.c				\
 	clip-fill-rule.c				\
 	clip-fill-rule-pixel-aligned.c			\
-	clip-fill-unbounded.c				\
 	clip-group-shapes.c				\
 	clip-image.c					\
 	clip-nesting.c					\
@@ -41,7 +41,6 @@ test_sources = \
 	clip-shape.c					\
 	clip-stroke.c					\
 	clip-stroke-no-op.c				\
-	clip-stroke-unbounded.c				\
 	clip-text.c					\
 	clip-twice.c					\
 	clip-twice-rectangle.c				\
