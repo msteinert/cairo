@@ -284,13 +284,11 @@ cairo_bool_t
 _cairo_quartz_verify_surface_size (int width, int height)
 {
     /* hmmm, allow width, height == 0 ? */
-    if (width < 0 || height < 0) {
+    if (width < 0 || height < 0)
 	return FALSE;
-    }
 
-    if (width > CG_MAX_WIDTH || height > CG_MAX_HEIGHT) {
+    if (width > CG_MAX_WIDTH || height > CG_MAX_HEIGHT)
 	return FALSE;
-    }
 
     return TRUE;
 }
@@ -772,15 +770,13 @@ ComputeGradientValue (void *info,
 	fdist = fdist - floor (fdist);
     } else if (grad->base.extend == CAIRO_EXTEND_REFLECT) {
 	fdist = fmod (fabs (fdist), 2.0);
-	if (fdist > 1.0) {
+	if (fdist > 1.0)
 	    fdist = 2.0 - fdist;
-	}
     }
 
-    for (i = 0; i < grad->n_stops; i++) {
+    for (i = 0; i < grad->n_stops; i++)
 	if (grad->stops[i].offset > fdist)
 	    break;
-    }
 
     if (i == 0 || i == grad->n_stops) {
 	if (i == grad->n_stops)
@@ -883,12 +879,11 @@ UpdateLinearParametersToIncludePoint (double *min_t, double *max_t, CGPoint *sta
     double denominator = dx*dx + dy*dy;
     double t = numerator/denominator;
 
-    if (*min_t > t) {
+    if (*min_t > t)
         *min_t = t;
-    }
-    if (*max_t < t) {
+
+    if (*max_t < t)
         *max_t = t;
-    }
 }
 
 static CGFunctionRef
@@ -994,9 +989,8 @@ UpdateRadialParameterToIncludePoint (double *max_t, CGPoint *center,
     double denominator = dx*dx + dy*dy - dr*dr;
     double t = numerator/denominator;
 
-    if (*max_t < t) {
+    if (*max_t < t)
         *max_t = t;
-    }
 }
 
 /* This must only be called when one of the circles properly contains the other */
@@ -2001,9 +1995,8 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
     *clone_out = NULL;
 
     // verify width and height of surface
-    if (!_cairo_quartz_verify_surface_size (width, height)) {
+    if (!_cairo_quartz_verify_surface_size (width, height))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
 
     if (width == 0 || height == 0) {
 	*clone_out = &_cairo_quartz_surface_create_internal (NULL, CAIRO_CONTENT_COLOR_ALPHA,
@@ -2032,9 +2025,8 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     new_format = CAIRO_FORMAT_ARGB32;  /* assumed */
-    if (_cairo_surface_is_image (src)) {
+    if (_cairo_surface_is_image (src))
 	new_format = ((cairo_image_surface_t *) src)->format;
-    }
 
     new_surface = (cairo_quartz_surface_t *)
 	cairo_quartz_surface_create (new_format, width, height);
@@ -2654,14 +2646,11 @@ BAIL:
 	_cairo_quartz_fixup_unbounded_operation (surface, &ub, scaled_font->options.antialias);
     }
 
-
-    if (cg_advances != &cg_advances_static[0]) {
+    if (cg_advances != cg_advances_static)
 	free (cg_advances);
-    }
 
-    if (cg_glyphs != &glyphs_static[0]) {
+    if (cg_glyphs != glyphs_static)
 	free (cg_glyphs);
-    }
 
     return rv;
 }
