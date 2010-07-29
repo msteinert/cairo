@@ -1606,11 +1606,15 @@ _cairo_quartz_setup_source_safe (cairo_quartz_surface_t *surface,
 }
 
 static void
-_cairo_quartz_draw_image (cairo_quartz_surface_t *surface, cairo_operator_t op)
+_cairo_quartz_draw_source (cairo_quartz_surface_t *surface, cairo_operator_t op)
 {
-    assert (surface && surface->sourceImage && (surface->action == DO_IMAGE || surface->action == DO_TILED_IMAGE));
-
     CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
+
+    if (surface->action == DO_SHADING) {
+	CGContextDrawShading (surface->cgContext, surface->sourceShading);
+	return;
+    }
+
     CGContextTranslateCTM (surface->cgContext, 0, surface->sourceImageRect.size.height);
     CGContextScaleCTM (surface->cgContext, 1, -1);
 
@@ -2000,11 +2004,8 @@ _cairo_quartz_surface_paint_cg (cairo_quartz_surface_t *surface,
 							   surface->extents.y,
 							   surface->extents.width,
 							   surface->extents.height));
-    } else if (surface->action == DO_SHADING) {
-	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
-	CGContextDrawShading (surface->cgContext, surface->sourceShading);
-    } else if (surface->action == DO_IMAGE || surface->action == DO_TILED_IMAGE) {
-	_cairo_quartz_draw_image (surface, op);
+    } else {
+	_cairo_quartz_draw_source (surface, op);
     }
 
     _cairo_quartz_teardown_source (surface, source);
@@ -2083,24 +2084,13 @@ _cairo_quartz_surface_fill_cg (cairo_quartz_surface_t *surface,
 	    CGContextFillPath (surface->cgContext);
 	else
 	    CGContextEOFillPath (surface->cgContext);
-    } else if (surface->action == DO_SHADING) {
-
-	// we have to clip and then paint the shading; we can't fill
-	// with the shading
+    } else {
 	if (fill_rule == CAIRO_FILL_RULE_WINDING)
 	    CGContextClip (surface->cgContext);
 	else
 	    CGContextEOClip (surface->cgContext);
 
-	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
-	CGContextDrawShading (surface->cgContext, surface->sourceShading);
-    } else if (surface->action == DO_IMAGE || surface->action == DO_TILED_IMAGE) {
-	if (fill_rule == CAIRO_FILL_RULE_WINDING)
-	    CGContextClip (surface->cgContext);
-	else
-	    CGContextEOClip (surface->cgContext);
-
-	_cairo_quartz_draw_image (surface, op);
+	_cairo_quartz_draw_source (surface, op);
     }
 
     _cairo_quartz_teardown_source (surface, source);
@@ -2234,20 +2224,12 @@ _cairo_quartz_surface_stroke_cg (cairo_quartz_surface_t *surface,
 
     if (surface->action == DO_DIRECT) {
 	CGContextStrokePath (surface->cgContext);
-    } else if (surface->action == DO_IMAGE || surface->action == DO_TILED_IMAGE) {
+    } else {
 	CGContextReplacePathWithStrokedPath (surface->cgContext);
 	CGContextClip (surface->cgContext);
 
 	CGContextSetCTM (surface->cgContext, origCTM);
-	_cairo_quartz_draw_image (surface, op);
-    } else if (surface->action == DO_SHADING) {
-	CGContextReplacePathWithStrokedPath (surface->cgContext);
-	CGContextClip (surface->cgContext);
-
-	CGContextSetCTM (surface->cgContext, origCTM);
-
-	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
-	CGContextDrawShading (surface->cgContext, surface->sourceShading);
+	_cairo_quartz_draw_source (surface, op);
     }
 
     _cairo_quartz_teardown_source (surface, source);
@@ -2362,7 +2344,7 @@ _cairo_quartz_surface_show_glyphs_cg (cairo_quartz_surface_t *surface,
 
     if (surface->action == DO_DIRECT) {
 	CGContextSetTextDrawingMode (surface->cgContext, kCGTextFill);
-    } else if (surface->action == DO_IMAGE || surface->action == DO_TILED_IMAGE || surface->action == DO_SHADING) {
+    } else {
 	CGContextSetTextDrawingMode (surface->cgContext, kCGTextClip);
 	isClipping = TRUE;
     }
@@ -2446,12 +2428,8 @@ _cairo_quartz_surface_show_glyphs_cg (cairo_quartz_surface_t *surface,
 
     CGContextSetCTM (surface->cgContext, ctm);
 
-    if (surface->action == DO_IMAGE || surface->action == DO_TILED_IMAGE) {
-	_cairo_quartz_draw_image (surface, op);
-    } else if (surface->action == DO_SHADING) {
-	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
-	CGContextDrawShading (surface->cgContext, surface->sourceShading);
-    }
+    if (surface->action != DO_DIRECT)
+	_cairo_quartz_draw_source (surface, op);
 
 BAIL:
     _cairo_quartz_teardown_source (surface, source);
