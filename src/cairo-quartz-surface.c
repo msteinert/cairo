@@ -1423,7 +1423,7 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 {
     cairo_status_t status;
 
-    assert (!(surface->sourceImage || surface->sourceShading || surface->sourcePattern));
+    assert (!(surface->sourceImage || surface->sourceShading));
 
     /* Save before we change the pattern, colorspace, etc. so that
      * we can restore and make sure that quartz releases our
@@ -1452,7 +1452,7 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 				  solid->color.blue,
 				  solid->color.alpha);
 
-	surface->action = DO_SOLID;
+	surface->action = DO_DIRECT;
 	return CAIRO_STATUS_SUCCESS;
     }
 
@@ -1561,8 +1561,9 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 	 */
 	CGContextSetPatternPhase (surface->cgContext, CGSizeMake (0, 0));
 
-	surface->sourcePattern = pattern;
-	surface->action = DO_PATTERN;
+	CGPatternRelease (pattern);
+
+	surface->action = DO_DIRECT;
 	return CAIRO_STATUS_SUCCESS;
     }
 
@@ -1586,11 +1587,6 @@ _cairo_quartz_teardown_source (cairo_quartz_surface_t *surface,
     if (surface->sourceShading) {
 	CGShadingRelease (surface->sourceShading);
 	surface->sourceShading = NULL;
-    }
-
-    if (surface->sourcePattern) {
-	CGPatternRelease (surface->sourcePattern);
-	surface->sourcePattern = NULL;
     }
 }
 
@@ -1999,7 +1995,7 @@ _cairo_quartz_surface_paint_cg (cairo_quartz_surface_t *surface,
     if (unlikely (rv))
 	return rv;
 
-    if (surface->action == DO_SOLID || surface->action == DO_PATTERN) {
+    if (surface->action == DO_DIRECT) {
 	CGContextFillRect (surface->cgContext, CGRectMake (surface->extents.x,
 							   surface->extents.y,
 							   surface->extents.width,
@@ -2082,7 +2078,7 @@ _cairo_quartz_surface_fill_cg (cairo_quartz_surface_t *surface,
     if (!_cairo_operator_bounded_by_mask (op) && CGContextCopyPathPtr)
 	path_for_unbounded = CGContextCopyPathPtr (surface->cgContext);
 
-    if (surface->action == DO_SOLID || surface->action == DO_PATTERN) {
+    if (surface->action == DO_DIRECT) {
 	if (fill_rule == CAIRO_FILL_RULE_WINDING)
 	    CGContextFillPath (surface->cgContext);
 	else
@@ -2236,7 +2232,7 @@ _cairo_quartz_surface_stroke_cg (cairo_quartz_surface_t *surface,
     _cairo_quartz_cairo_matrix_to_quartz (ctm, &strokeTransform);
     CGContextConcatCTM (surface->cgContext, strokeTransform);
 
-    if (surface->action == DO_SOLID || surface->action == DO_PATTERN) {
+    if (surface->action == DO_DIRECT) {
 	CGContextStrokePath (surface->cgContext);
     } else if (surface->action == DO_IMAGE || surface->action == DO_TILED_IMAGE) {
 	CGContextReplacePathWithStrokedPath (surface->cgContext);
@@ -2364,7 +2360,7 @@ _cairo_quartz_surface_show_glyphs_cg (cairo_quartz_surface_t *surface,
     if (unlikely (rv))
 	return rv;
 
-    if (surface->action == DO_SOLID || surface->action == DO_PATTERN) {
+    if (surface->action == DO_DIRECT) {
 	CGContextSetTextDrawingMode (surface->cgContext, kCGTextFill);
     } else if (surface->action == DO_IMAGE || surface->action == DO_TILED_IMAGE || surface->action == DO_SHADING) {
 	CGContextSetTextDrawingMode (surface->cgContext, kCGTextClip);

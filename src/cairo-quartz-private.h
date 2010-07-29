@@ -51,9 +51,8 @@ typedef float cairo_quartz_float_t;
 #endif
 
 typedef enum {
-    DO_SOLID,
+    DO_DIRECT,
     DO_SHADING,
-    DO_PATTERN,
     DO_IMAGE,
     DO_TILED_IMAGE
 } cairo_quartz_action_t;
@@ -82,7 +81,6 @@ typedef struct cairo_quartz_surface {
     CGRect sourceImageRect;
 
     CGShadingRef sourceShading;
-    CGPatternRef sourcePattern;
 } cairo_quartz_surface_t;
 
 typedef struct cairo_quartz_image_surface {
