@@ -432,7 +432,7 @@ enabled_cairo_boilerplate_cxx_sources += $(cairo_boilerplate_tee_cxx_sources)
 enabled_cairo_boilerplate_sources += $(cairo_boilerplate_tee_sources)
 endif
 
-supported_cairo_boilerplate_headers += $(cairo_boilerplate_xml_headers)
+unsupported_cairo_boilerplate_headers += $(cairo_boilerplate_xml_headers)
 all_cairo_boilerplate_headers += $(cairo_boilerplate_xml_headers)
 all_cairo_boilerplate_private += $(cairo_boilerplate_xml_private)
 all_cairo_boilerplate_cxx_sources += $(cairo_boilerplate_xml_cxx_sources)

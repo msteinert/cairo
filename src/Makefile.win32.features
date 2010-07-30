@@ -562,7 +562,7 @@ ifeq ($(CAIRO_HAS_TEE_SURFACE),1)
 enabled_cairo_pkgconf += cairo-tee.pc
 endif
 
-supported_cairo_headers += $(cairo_xml_headers)
+unsupported_cairo_headers += $(cairo_xml_headers)
 all_cairo_headers += $(cairo_xml_headers)
 all_cairo_private += $(cairo_xml_private)
 all_cairo_cxx_sources += $(cairo_xml_cxx_sources)
