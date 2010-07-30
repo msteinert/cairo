@@ -420,15 +420,17 @@ enabled_cairo_boilerplate_private += $(cairo_boilerplate_recording_private)
 enabled_cairo_boilerplate_cxx_sources += $(cairo_boilerplate_recording_cxx_sources)
 enabled_cairo_boilerplate_sources += $(cairo_boilerplate_recording_sources)
 
-supported_cairo_boilerplate_headers += $(cairo_boilerplate_tee_headers)
+unsupported_cairo_boilerplate_headers += $(cairo_boilerplate_tee_headers)
 all_cairo_boilerplate_headers += $(cairo_boilerplate_tee_headers)
 all_cairo_boilerplate_private += $(cairo_boilerplate_tee_private)
 all_cairo_boilerplate_cxx_sources += $(cairo_boilerplate_tee_cxx_sources)
 all_cairo_boilerplate_sources += $(cairo_boilerplate_tee_sources)
+ifeq ($(CAIRO_HAS_TEE_SURFACE),1)
 enabled_cairo_boilerplate_headers += $(cairo_boilerplate_tee_headers)
 enabled_cairo_boilerplate_private += $(cairo_boilerplate_tee_private)
 enabled_cairo_boilerplate_cxx_sources += $(cairo_boilerplate_tee_cxx_sources)
 enabled_cairo_boilerplate_sources += $(cairo_boilerplate_tee_sources)
+endif
 
 supported_cairo_boilerplate_headers += $(cairo_boilerplate_xml_headers)
 all_cairo_boilerplate_headers += $(cairo_boilerplate_xml_headers)

@@ -390,6 +390,8 @@ test_cairo_recording_surface_ink_extents (cairo_surface_t *surface)
     return x == 0 && y == 0 && w == 0 && h == 0 ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
 }
 
+#if CAIRO_HAS_TEE_SURFACE
+
 static cairo_test_status_t
 test_cairo_tee_surface_add (cairo_surface_t *surface)
 {
@@ -421,6 +423,8 @@ test_cairo_tee_surface_index (cairo_surface_t *surface)
     cairo_surface_destroy (master);
     return status ? CAIRO_TEST_SUCCESS : CAIRO_TEST_ERROR;
 }
+
+#endif /* CAIRO_HAS_TEE_SURFACE */
 
 #if CAIRO_HAS_GL_SURFACE
 
@@ -667,9 +671,11 @@ struct {
     TEST (cairo_surface_write_to_png_stream, -1, FALSE),
 #endif
     TEST (cairo_recording_surface_ink_extents, CAIRO_SURFACE_TYPE_RECORDING, FALSE),
+#if CAIRO_HAS_TEE_SURFACE
     TEST (cairo_tee_surface_add, CAIRO_SURFACE_TYPE_TEE, TRUE),
     TEST (cairo_tee_surface_remove, CAIRO_SURFACE_TYPE_TEE, TRUE),
     TEST (cairo_tee_surface_index, CAIRO_SURFACE_TYPE_TEE, FALSE),
+#endif
 #if CAIRO_HAS_GL_SURFACE
     TEST (cairo_gl_surface_set_size, CAIRO_SURFACE_TYPE_GL, TRUE),
     TEST (cairo_gl_surface_get_width, CAIRO_SURFACE_TYPE_GL, FALSE),

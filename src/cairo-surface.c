@@ -1666,6 +1666,8 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
     if (unlikely (surface->finished))
 	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
+#if CAIRO_HAS_TEE_SURFACE
+
     if (src->type == CAIRO_SURFACE_TYPE_TEE) {
 	cairo_surface_t *match;
 
@@ -1675,6 +1677,8 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 	if (match != NULL)
 	    src = match;
     }
+
+#endif
 
     if (surface->backend->clone_similar != NULL) {
 	status = surface->backend->clone_similar (surface, src,
