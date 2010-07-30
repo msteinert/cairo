@@ -84,6 +84,9 @@
 #if CAIRO_HAS_SVG_SURFACE
 #include <cairo-svg.h>
 #endif
+#if CAIRO_HAS_TEE_SURFACE
+#include <cairo-tee.h>
+#endif
 #if CAIRO_HAS_XCB_SURFACE
 #include <cairo-xcb.h>
 #endif

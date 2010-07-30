@@ -97,7 +97,6 @@ cairo_private = \
 	cairo-surface-subsurface-private.h \
 	cairo-surface-snapshot-private.h \
 	cairo-surface-wrapper-private.h \
-	cairo-tee-surface-private.h \
 	cairo-types-private.h \
 	cairo-user-font-private.h \
 	cairo-wideint-private.h \
@@ -168,7 +167,6 @@ cairo_sources = \
 	cairo-surface-subsurface.c \
 	cairo-surface-wrapper.c \
 	cairo-system.c \
-	cairo-tee-surface.c \
 	cairo-tor-scan-converter.c \
 	cairo-toy-font-face.c \
 	cairo-traps.c \
@@ -376,6 +374,10 @@ cairo_script_sources = cairo-script-surface.c
 if CAIRO_HAS_SCRIPT_SURFACE
 req_cairo_deflate_stream_sources = $(cairo_deflate_stream_sources)
 endif
+
+cairo_tee_headers = cairo-tee.h
+cairo_tee_private = cairo-tee-surface-private.h \
+cairo_tee_sources = cairo-tee-surface.c
 
 cairo_xml_headers = cairo-xml.h
 cairo_xml_sources = cairo-xml-surface.c
