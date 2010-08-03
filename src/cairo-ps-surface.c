@@ -169,6 +169,7 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
     int i, num_comments;
     int level;
     const char *eps_header = "";
+    cairo_bool_t has_bbox;
 
     if (surface->has_creation_date)
 	now = surface->creation_date;
@@ -187,16 +188,11 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 "%%!PS-Adobe-3.0%s\n"
 				 "%%%%Creator: cairo %s (http://cairographics.org)\n"
 				 "%%%%CreationDate: %s"
-				 "%%%%Pages: %d\n"
-				 "%%%%BoundingBox: %d %d %d %d\n",
+				 "%%%%Pages: %d\n",
 				 eps_header,
 				 cairo_version_string (),
 				 ctime_r (&now, ctime_buf),
-				 surface->num_pages,
-				 surface->bbox_x1,
-				 surface->bbox_y1,
-				 surface->bbox_x2,
-				 surface->bbox_y2);
+				 surface->num_pages);
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "%%%%DocumentData: Clean7Bit\n"
@@ -224,13 +220,26 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 	}
     }
 
+    has_bbox = FALSE;
     num_comments = _cairo_array_num_elements (&surface->dsc_header_comments);
     comments = _cairo_array_index (&surface->dsc_header_comments, 0);
     for (i = 0; i < num_comments; i++) {
 	_cairo_output_stream_printf (surface->final_stream,
 				     "%s\n", comments[i]);
+	if (strncmp (comments[i], "%%BoundingBox:", 14) == 0)
+	    has_bbox = TRUE;
+
 	free (comments[i]);
 	comments[i] = NULL;
+    }
+
+    if (!has_bbox) {
+	_cairo_output_stream_printf (surface->final_stream,
+				     "%%%%BoundingBox: %d %d %d %d\n",
+				     surface->bbox_x1,
+				     surface->bbox_y1,
+				     surface->bbox_x2,
+				     surface->bbox_y2);
     }
 
     _cairo_output_stream_printf (surface->final_stream,
@@ -3795,7 +3804,7 @@ _cairo_ps_surface_set_bounding_box (void		*abstract_surface,
     int i, num_comments;
     char **comments;
     int x1, y1, x2, y2;
-    cairo_bool_t has_page_media;
+    cairo_bool_t has_page_media, has_page_bbox;
     const char *page_media;
 
     if (surface->eps) {
@@ -3824,6 +3833,7 @@ _cairo_ps_surface_set_bounding_box (void		*abstract_surface,
 				 "%%%%BeginPageSetup\n");
 
     has_page_media = FALSE;
+    has_page_bbox = FALSE;
     num_comments = _cairo_array_num_elements (&surface->dsc_page_setup_comments);
     comments = _cairo_array_index (&surface->dsc_page_setup_comments, 0);
     for (i = 0; i < num_comments; i++) {
@@ -3831,6 +3841,10 @@ _cairo_ps_surface_set_bounding_box (void		*abstract_surface,
 				     "%s\n", comments[i]);
 	if (strncmp (comments[i], "%%PageMedia:", 11) == 0)
 	    has_page_media = TRUE;
+
+	if (strncmp (comments[i], "%%PageBoundingBox:", 18) == 0)
+	    has_page_bbox = TRUE;
+
 	free (comments[i]);
 	comments[i] = NULL;
     }
@@ -3846,9 +3860,11 @@ _cairo_ps_surface_set_bounding_box (void		*abstract_surface,
 				     page_media);
     }
 
-    _cairo_output_stream_printf (surface->stream,
-				 "%%%%PageBoundingBox: %d %d %d %d\n",
-				 x1, y1, x2, y2);
+    if (!has_page_bbox) {
+	_cairo_output_stream_printf (surface->stream,
+				     "%%%%PageBoundingBox: %d %d %d %d\n",
+				     x1, y1, x2, y2);
+    }
 
     _cairo_output_stream_printf (surface->stream,
                                  "%%%%EndPageSetup\n"
