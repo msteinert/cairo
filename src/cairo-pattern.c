@@ -1759,6 +1759,20 @@ _extents_to_linear_parameter (const cairo_linear_pattern_t *linear,
 }
 
 static cairo_bool_t
+_linear_pattern_is_degenerate (const cairo_linear_pattern_t *linear)
+{
+    return linear->p1.x == linear->p2.x && linear->p1.y == linear->p2.y;
+}
+
+static cairo_bool_t
+_radial_pattern_is_degenerate (const cairo_radial_pattern_t *radial)
+{
+    return radial->r1 == radial->r2 &&
+	(radial->r1 == 0 /* && radial->r2 == 0 */ ||
+	 (radial->c1.x == radial->c2.x && radial->c1.y == radial->c2.y));
+}
+
+static cairo_bool_t
 _gradient_is_clear (const cairo_gradient_pattern_t *gradient,
 		    const cairo_rectangle_int_t *extents)
 {
@@ -1777,7 +1791,7 @@ _gradient_is_clear (const cairo_gradient_pattern_t *gradient,
 	if (gradient->base.extend == CAIRO_EXTEND_NONE) {
 	    cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) gradient;
 	    /* EXTEND_NONE degenerate linear gradients are clear */
-	    if (linear->p1.x == linear->p2.x && linear->p1.y == linear->p2.y)
+	    if (_linear_pattern_is_degenerate (linear))
 		return TRUE;
 
 	    if (extents != NULL) {
@@ -1790,8 +1804,7 @@ _gradient_is_clear (const cairo_gradient_pattern_t *gradient,
     } else {
 	cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) gradient;
 	/* degenerate radial gradients are clear */
-	if (((radial->c1.x == radial->c2.x && radial->c1.y == radial->c2.y) ||
-	     radial->r1 == 0) && radial->r1 == radial->r2)
+	if (_radial_pattern_is_degenerate (radial))
 	    return TRUE;
 	/* TODO: check actual intersection */
     }
@@ -1944,7 +1957,7 @@ _gradient_is_opaque (const cairo_gradient_pattern_t *gradient,
 	    cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) gradient;
 
 	    /* EXTEND_NONE degenerate radial gradients are clear */
-	    if (linear->p1.x == linear->p2.x && linear->p1.y == linear->p2.y)
+	    if (_linear_pattern_is_degenerate (linear))
 		return FALSE;
 
 	    if (extents == NULL)
