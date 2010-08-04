@@ -874,7 +874,7 @@ _cairo_gstate_copy_pattern (cairo_pattern_t *pattern,
 {
     /* First check if the we can replace the original with a much simpler
      * pattern. For example, gradients that are uniform or just have a single
-     * stop can be replace with a solid.
+     * stop can sometimes be replaced with a solid.
      */
 
     if (_cairo_pattern_is_clear (original)) {
