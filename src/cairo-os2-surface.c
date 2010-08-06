@@ -33,6 +33,7 @@
  *
  * Contributor(s):
  *     Peter Weilbacher <mozilla@Weilbacher.org>
+ *     Rich Walsh <dragtext@e-vertise.com>
  */
 
 #include "cairoint.h"
@@ -852,6 +853,51 @@ cairo_os2_surface_create (HPS hps_client_window,
 }
 
 /**
+ * cairo_os2_surface_create_for_window:
+ * @hwnd_client_window: the window handle to bind the surface to
+ * @width: the width of the surface
+ * @height: the height of the surface
+ *
+ * Create a Cairo surface which is bound to a given window; the caller retains
+ * ownership of the window.  This is a convenience function for use with
+ * windows that will only be updated when cairo_os2_surface_refresh_window()
+ * is called (usually in response to a WM_PAINT message).  It avoids the need
+ * to create a persistent HPS for every window and assumes that one will be
+ * supplied by the caller when a cairo function needs one.  If it isn't, an
+ * HPS will be created on-the-fly and released before the function which needs
+ * it returns.
+ *
+ * Return value: the newly created surface
+ *
+ * Since: 1.10
+ **/
+cairo_surface_t *
+cairo_os2_surface_create_for_window (HWND hwnd_client_window,
+                                     int width,
+                                     int height)
+{
+    cairo_os2_surface_t *local_os2_surface;
+
+    /* A window handle must be provided. */
+    if (!hwnd_client_window) {
+        return _cairo_surface_create_in_error (
+                                _cairo_error (CAIRO_STATUS_NO_MEMORY));
+    }
+
+    /* Create the surface. */
+    local_os2_surface = (cairo_os2_surface_t *)
+        cairo_os2_surface_create (0, width, height);
+
+    /* If successful, save the hwnd & turn off automatic repainting. */
+    if (!local_os2_surface->image_surface->base.status) {
+        local_os2_surface->hwnd_client_window = hwnd_client_window;
+        local_os2_surface->blit_as_changes = FALSE;
+    }
+
+    return (cairo_surface_t *)local_os2_surface;
+}
+
+/**
  * cairo_os2_surface_set_size:
  * @surface: the cairo surface to resize
  * @new_width: the new width of the surface
@@ -1016,6 +1062,7 @@ cairo_os2_surface_refresh_window (cairo_surface_t *surface,
 {
     cairo_os2_surface_t *local_os2_surface;
     RECTL rclTemp;
+    HPS hpsTemp = 0;
 
     local_os2_surface = (cairo_os2_surface_t *) surface;
     if ((!local_os2_surface) ||
@@ -1025,9 +1072,19 @@ cairo_os2_surface_refresh_window (cairo_surface_t *surface,
         return;
     }
 
-    /* Manage defaults (NULLs) */
-    if (!hps_begin_paint)
+    /* If an HPS wasn't provided, see if we can get one. */
+    if (!hps_begin_paint) {
         hps_begin_paint = local_os2_surface->hps_client_window;
+        if (!hps_begin_paint) {
+            if (local_os2_surface->hwnd_client_window) {
+                hpsTemp = WinGetPS(local_os2_surface->hwnd_client_window);
+                hps_begin_paint = hpsTemp;
+            }
+            /* No HPS & no way to get one, so exit */
+            if (!hps_begin_paint)
+                return;
+        }
+    }
 
     if (prcl_begin_paint_rect == NULL) {
         /* Update the whole window! */
@@ -1048,6 +1105,8 @@ cairo_os2_surface_refresh_window (cairo_surface_t *surface,
         != NO_ERROR)
     {
         /* Could not get mutex! */
+        if (hpsTemp)
+            WinReleasePS(hpsTemp);
         return;
     }
 
@@ -1075,6 +1134,9 @@ cairo_os2_surface_refresh_window (cairo_surface_t *surface,
     }
 
     DosReleaseMutexSem (local_os2_surface->hmtx_use_private_fields);
+
+    if (hpsTemp)
+        WinReleasePS(hpsTemp);
 }
 
 static cairo_status_t
@@ -1216,6 +1278,74 @@ cairo_os2_surface_get_manual_window_refresh (cairo_surface_t *surface)
     return !(local_os2_surface->blit_as_changes);
 }
 
+/**
+ * cairo_os2_surface_get_hps:
+ * @surface: the cairo surface to be querued
+ * @hps: HPS currently associated with the surface (if any)
+ *
+ * This API retrieves the HPS associated with the surface.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS if the hps could be retrieved,
+ * %CAIRO_STATUS_SURFACE_TYPE_MISMATCH if the surface is not an OS/2 surface,
+ * %CAIRO_STATUS_NULL_POINTER if the hps argument is null
+ *
+ * Since: 1.10
+ **/
+cairo_status_t
+cairo_os2_surface_get_hps (cairo_surface_t *surface,
+                           HPS             *hps)
+{
+    cairo_os2_surface_t *local_os2_surface;
+
+    local_os2_surface = (cairo_os2_surface_t *) surface;
+    if ((!local_os2_surface) ||
+        (local_os2_surface->base.backend != &cairo_os2_surface_backend))
+    {
+        /* Invalid parameter (wrong surface)! */
+        return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+    }
+    if (!hps)
+    {
+        return _cairo_error (CAIRO_STATUS_NULL_POINTER);
+    }
+    *hps = local_os2_surface->hps_client_window;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * cairo_os2_surface_set_hps:
+ * @surface: the cairo surface to associate with the HPS
+ * @hps: new HPS to be associated with the surface (the HPS may be null)
+ *
+ * This API replaces the HPS associated with the surface with a new one.
+ * The caller retains ownership of the HPS and must dispose of it after
+ * the surface has been destroyed or it has been replaced by another
+ * call to this function.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS if the hps could be replaced,
+ * %CAIRO_STATUS_SURFACE_TYPE_MISMATCH if the surface is not an OS/2 surface,
+ *
+ * Since: 1.10
+ **/
+cairo_status_t
+cairo_os2_surface_set_hps (cairo_surface_t *surface,
+                           HPS              hps)
+{
+    cairo_os2_surface_t *local_os2_surface;
+
+    local_os2_surface = (cairo_os2_surface_t *) surface;
+    if ((!local_os2_surface) ||
+        (local_os2_surface->base.backend != &cairo_os2_surface_backend))
+    {
+        /* Invalid parameter (wrong surface)! */
+        return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+    }
+    local_os2_surface->hps_client_window = hps;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_status_t
 _cairo_os2_surface_mark_dirty_rectangle (void *surface,
                                          int   x,
@@ -1333,5 +1463,11 @@ static const cairo_surface_backend_t cairo_os2_surface_backend = {
     NULL, /* stroke */
     NULL, /* fill */
     NULL, /* show_glyphs */
-    NULL  /* snapshot */
+    NULL, /* snapshot */
+    NULL, /* is_similar */
+    NULL, /* fill_stroke */
+    NULL, /* create_solid_pattern_surface */
+    NULL, /* can_repaint_solid_pattern_surface */
+    NULL, /* has_show_text_glyphs */
+    NULL  /* show_text_glyphs */
 };
