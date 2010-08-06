@@ -125,6 +125,18 @@ _log (cairo_test_context_t *ctx,
     va_end (ap);
 }
 
+static void
+_tests_reverse ()
+{
+    cairo_test_t *list, *next;
+
+    for (list = tests, tests = NULL; list != NULL; list = next) {
+	next = list->next;
+	list->next = tests;
+	tests = list;
+    }
+}
+
 static cairo_test_list_t *
 _list_prepend (cairo_test_list_t *head, const cairo_test_t *test)
 {
@@ -705,6 +717,7 @@ main (int argc, char **argv)
 #endif
 
     _cairo_test_runner_register_tests ();
+    _tests_reverse ();
 
     memset (&runner, 0, sizeof (runner));
     runner.num_device_offsets = 1;
