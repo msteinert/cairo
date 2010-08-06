@@ -366,63 +366,81 @@ _cairo_os2_surface_blit_pixels (cairo_os2_surface_t *surface,
         }
     }
 #endif
-    rc = GpiDrawBits (hps_begin_paint,
-                      surface->pixels,
-                      &(surface->bitmap_info),
-                      4,
-                      aptlPoints,
-                      ROP_SRCCOPY,
-                      BBO_IGNORE);
+    if (!surface->use_24bpp) {
+        rc = GpiDrawBits (hps_begin_paint,
+                          surface->pixels,
+                          &(surface->bitmap_info),
+                          4,
+                          aptlPoints,
+                          ROP_SRCCOPY,
+                          BBO_IGNORE);
+        if (rc != GPI_OK)
+            surface->use_24bpp = TRUE;
+    }
 
-    if (rc != GPI_OK) {
-        /* if GpiDrawBits () failed then this is most likely because the
+    if (surface->use_24bpp) {
+        /* If GpiDrawBits () failed then this is most likely because the
          * display driver could not handle a 32bit bitmap. So we need to
          * - create a buffer that only contains 3 bytes per pixel
          * - change the bitmap info header to contain 24bit
          * - pass the new buffer to GpiDrawBits () again
          * - clean up the new buffer
          */
-        BITMAPINFOHEADER2 bmpheader;
-        unsigned char *pchPixBuf, *pchPixSource;
-        void *pBufStart;
-        ULONG ulPixels;
+        BITMAPINFO2       bmpinfo;
+        unsigned char    *pchPixBuf;
+        unsigned char    *pchTarget;
+        ULONG            *pulSource;
+        ULONG             ulX;
+        ULONG             ulY;
+        ULONG             ulPad;
 
-        /* allocate temporary pixel buffer */
-        pchPixBuf = (unsigned char *) _buffer_alloc (surface->bitmap_info.cy,
-                                                     surface->bitmap_info.cx,
-                                                     3);
-        pchPixSource = surface->pixels; /* start at beginning of pixel buffer */
-        pBufStart = pchPixBuf; /* remember beginning of the new pixel buffer */
+        /* Set up the bitmap header, but this time for 24bit depth. */
+        bmpinfo = surface->bitmap_info;
+        bmpinfo.cBitCount = 24;
 
-        /* copy the first three bytes for each pixel but skip over the fourth */
-        for (ulPixels = 0; ulPixels < surface->bitmap_info.cx * surface->bitmap_info.cy; ulPixels++)
-        {
-            /* copy BGR from source buffer */
-            *pchPixBuf++ = *pchPixSource++;
-            *pchPixBuf++ = *pchPixSource++;
-            *pchPixBuf++ = *pchPixSource++;
-            pchPixSource++; /* jump over alpha channel in source buffer */
+        /* The start of each row has to be DWORD aligned.  Calculate the
+         * of number aligned bytes per row, the total size of the bitmap,
+         * and the number of padding bytes at the end of each row.
+         */
+        ulX = (((bmpinfo.cx * bmpinfo.cBitCount) + 31) / 32) * 4;
+        bmpinfo.cbImage = ulX * bmpinfo.cy;
+        ulPad = ulX - bmpinfo.cx * 3;
+
+        /* Allocate temporary pixel buffer.  If the rows don't need
+         * padding, it has to be 1 byte larger than the size of the
+         * bitmap  or else the high-order byte from the last source
+         * row will end up in unallocated memory.
+         */
+        pchPixBuf = (unsigned char *)_buffer_alloc (1, 1,
+                                        bmpinfo.cbImage + (ulPad ? 0 : 1));
+
+        if (pchPixBuf) {
+            /* Copy 4 bytes from the source but advance the target ptr only
+             * 3 bytes, so the high-order alpha byte will be overwritten by
+             * the next copy. At the end of each row, skip over the padding.
+             */
+            pchTarget = pchPixBuf;
+            pulSource = (ULONG*)surface->pixels;
+            for (ulY = bmpinfo.cy; ulY; ulY--) {
+                for (ulX = bmpinfo.cx; ulX; ulX--) {
+                    *((ULONG*)pchTarget) = *pulSource++;
+                    pchTarget += 3;
+                }
+                pchTarget += ulPad;
+            }
+
+            rc = GpiDrawBits (hps_begin_paint,
+                              pchPixBuf,
+                              &bmpinfo,
+                              4,
+                              aptlPoints,
+                              ROP_SRCCOPY,
+                              BBO_IGNORE);
+            if (rc != GPI_OK)
+                surface->use_24bpp = FALSE;
+
+            _buffer_free (pchPixBuf);
         }
-
-        /* jump back to start of the buffer for display and cleanup */
-        pchPixBuf = pBufStart;
-
-        /* set up the bitmap header, but this time with 24bit depth only */
-        memset (&bmpheader, 0, sizeof (bmpheader));
-        bmpheader.cbFix = sizeof (BITMAPINFOHEADER2);
-        bmpheader.cx = surface->bitmap_info.cx;
-        bmpheader.cy = surface->bitmap_info.cy;
-        bmpheader.cPlanes = surface->bitmap_info.cPlanes;
-        bmpheader.cBitCount = 24;
-        rc = GpiDrawBits (hps_begin_paint,
-                          pchPixBuf,
-                          (PBITMAPINFO2)&bmpheader,
-                          4,
-                          aptlPoints,
-                          ROP_SRCCOPY,
-                          BBO_IGNORE);
-
-        _buffer_free (pchPixBuf);
     }
 
     /* Restore Y inversion */
