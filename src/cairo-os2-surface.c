@@ -739,14 +739,15 @@ _cairo_os2_surface_get_extents (void                    *abstract_surface,
  * @height: the height of the surface
  *
  * Create a Cairo surface which is bound to a given presentation space (HPS).
- * The surface will be created to have the given size.
- * By default every change to the surface will be made visible immediately by
- * blitting it into the window. This can be changed with
+ * The caller retains ownership of the HPS and must dispose of it after the
+ * the surface has been destroyed.  The surface will be created to have the
+ * given size. By default every change to the surface will be made visible
+ * immediately by blitting it into the window. This can be changed with
  * cairo_os2_surface_set_manual_window_refresh().
- * Note that the surface will contain garbage when created, so the pixels have
- * to be initialized by hand first. You can use the Cairo functions to fill it
- * with black, or use cairo_surface_mark_dirty() to fill the surface with pixels
- * from the window/HPS.
+ * Note that the surface will contain garbage when created, so the pixels
+ * have to be initialized by hand first. You can use the Cairo functions to
+ * fill it with black, or use cairo_surface_mark_dirty() to fill the surface
+ * with pixels from the window/HPS.
  *
  * Return value: the newly created surface
  *
@@ -1173,10 +1174,10 @@ _cairo_os2_surface_finish (void *abstract_surface)
  * @surface: the cairo surface to associate with the window handle
  * @hwnd_client_window: the window handle of the client window
  *
- * Sets window handle for surface. If Cairo wants to blit into the window
- * because it is set to blit as the surface changes (see
- * cairo_os2_surface_set_manual_window_refresh()), then there are two ways it
- * can choose:
+ * Sets window handle for surface; the caller retains ownership of the window.
+ * If Cairo wants to blit into the window because it is set to blit as the
+ * surface changes (see cairo_os2_surface_set_manual_window_refresh()), then
+ * there are two ways it can choose:
  * If it knows the HWND of the surface, then it invalidates that area, so the
  * application will get a WM_PAINT message and it can call
  * cairo_os2_surface_refresh_window() to redraw that area. Otherwise cairo itself
