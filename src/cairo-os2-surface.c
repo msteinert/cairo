@@ -171,43 +171,35 @@ cairo_os2_fini (void)
  */
 void *_buffer_alloc (size_t a, size_t b, const unsigned int size)
 {
-    /* check length like in the _cairo_malloc_abc macro, but we can leave
-     * away the unsigned casts as our arguments are unsigned already
-     */
-    size_t nbytes = b &&
-                    a >= INT32_MAX / b ? 0 : size &&
-                    a*b >= INT32_MAX / size ? 0 : a * b * size;
-    void *buffer = NULL;
-#ifdef OS2_USE_PLATFORM_ALLOC
-    APIRET rc = NO_ERROR;
+    size_t nbytes;
+    void  *buffer = NULL;
 
-    rc = DosAllocMem ((PPVOID)&buffer,
-                      nbytes,
-#ifdef OS2_HIGH_MEMORY           /* only if compiled with high-memory support, */
-                      OBJ_ANY |  /* we can allocate anywhere!                  */
-#endif
-                      PAG_READ | PAG_WRITE | PAG_COMMIT);
-    if (rc != NO_ERROR) {
-        /* should there for some reason be another error, let's return
-         * a null surface and free the buffer again, because that's
-         * how a malloc failure would look like
-         */
-        if (rc != ERROR_NOT_ENOUGH_MEMORY && buffer) {
-            DosFreeMem (buffer);
-        }
+    if (!a || !b || !size ||
+        a >= INT32_MAX / b || a*b >= INT32_MAX / size) {
         return NULL;
     }
-#else
-    buffer = malloc (nbytes);
+    nbytes = a * b * size;
+
+#ifdef OS2_USE_PLATFORM_ALLOC
+    /* Using OBJ_ANY on a machine that isn't configured for hi-mem
+     * will cause ERROR_INVALID_PARAMETER.  If this occurs, or this
+     * build doesn't have hi-mem enabled, fall back to using lo-mem.
+     */
+#ifdef OS2_HIGH_MEMORY
+    if (!DosAllocMem (&buffer, nbytes,
+                      OBJ_ANY | PAG_READ | PAG_WRITE | PAG_COMMIT))
+        return buffer;
 #endif
-
-    /* This does not seem to be needed, malloc'd space is usually
-     * already zero'd out!
-     */
-    /*
-     * memset (buffer, 0x00, nbytes);
-     */
-
+    if (DosAllocMem (&buffer, nbytes,
+                     PAG_READ | PAG_WRITE | PAG_COMMIT))
+        return NULL;
+#else
+    /* Clear the malloc'd buffer the way DosAllocMem() does. */
+    buffer = malloc (nbytes);
+    if (buffer) {
+        memset (buffer, 0, nbytes);
+    }
+#endif
     return buffer;
 }
 
