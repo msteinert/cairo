@@ -185,30 +185,13 @@ cairo_bool_t
 _cairo_color_stop_equal (const cairo_color_stop_t *color_a,
 			 const cairo_color_stop_t *color_b)
 {
-    uint16_t a, b;
-
     if (color_a == color_b)
 	return TRUE;
 
-    if (color_a->alpha_short != color_b->alpha_short)
-	return FALSE;
-
-    a   = _cairo_color_double_to_short (color_a->red   * color_a->alpha);
-    b   = _cairo_color_double_to_short (color_b->red   * color_b->alpha);
-    if (a != b)
-	return FALSE;
-
-    a   = _cairo_color_double_to_short (color_a->green   * color_a->alpha);
-    b   = _cairo_color_double_to_short (color_b->green   * color_b->alpha);
-    if (a != b)
-	return FALSE;
-
-    a   = _cairo_color_double_to_short (color_a->blue   * color_a->alpha);
-    b   = _cairo_color_double_to_short (color_b->blue   * color_b->alpha);
-    if (a != b)
-	return FALSE;
-
-    return TRUE;
+    return color_a->alpha_short == color_b->alpha_short &&
+           color_a->red_short   == color_b->red_short   &&
+           color_a->green_short == color_b->green_short &&
+           color_a->blue_short  == color_b->blue_short;
 }
 
 cairo_content_t
