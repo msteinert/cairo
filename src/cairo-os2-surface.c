@@ -297,45 +297,37 @@ _cairo_os2_surface_blit_pixels (cairo_os2_surface_t *surface,
                                 PRECTL               prcl_begin_paint_rect)
 {
     POINTL aptlPoints[4];
-    LONG lOldYInversion, rc = GPI_OK;
+    LONG   lOldYInversion;
+    LONG   rc = GPI_OK;
 
-    /* Enable Y Inversion for the HPS, so the
-     * GpiDrawBits will work with upside-top image, not with upside-down image!
+    /* Check the limits (may not be necessary) */
+    if (prcl_begin_paint_rect->xLeft < 0)
+        prcl_begin_paint_rect->xLeft = 0;
+    if (prcl_begin_paint_rect->yBottom < 0)
+        prcl_begin_paint_rect->yBottom = 0;
+    if (prcl_begin_paint_rect->xRight > (LONG) surface->bitmap_info.cx)
+        prcl_begin_paint_rect->xRight = (LONG) surface->bitmap_info.cx;
+    if (prcl_begin_paint_rect->yTop > (LONG) surface->bitmap_info.cy)
+        prcl_begin_paint_rect->yTop = (LONG) surface->bitmap_info.cy;
+
+    /* Exit if the rectangle is empty */
+    if (prcl_begin_paint_rect->xLeft   >= prcl_begin_paint_rect->xRight ||
+        prcl_begin_paint_rect->yBottom >= prcl_begin_paint_rect->yTop)
+        return;
+
+    /* Set the Target & Source coordinates */
+    *((PRECTL)&aptlPoints[0]) = *prcl_begin_paint_rect;
+    *((PRECTL)&aptlPoints[2]) = *prcl_begin_paint_rect;
+
+    /* Make the Target coordinates non-inclusive */
+    aptlPoints[1].x -= 1;
+    aptlPoints[1].y -= 1;
+
+    /* Enable Y Inversion for the HPS, so  GpiDrawBits will
+     * work with upside-top image, not with upside-down image!
      */
     lOldYInversion = GpiQueryYInversion (hps_begin_paint);
     GpiEnableYInversion (hps_begin_paint, surface->bitmap_info.cy-1);
-
-    /* Target coordinates (Noninclusive) */
-    aptlPoints[0].x = prcl_begin_paint_rect->xLeft;
-    aptlPoints[0].y = prcl_begin_paint_rect->yBottom;
-
-    aptlPoints[1].x = prcl_begin_paint_rect->xRight-1;
-    aptlPoints[1].y = prcl_begin_paint_rect->yTop-1;
-
-    /* Source coordinates (Inclusive) */
-    aptlPoints[2].x = prcl_begin_paint_rect->xLeft;
-    aptlPoints[2].y = prcl_begin_paint_rect->yBottom;
-
-    aptlPoints[3].x = prcl_begin_paint_rect->xRight;
-    aptlPoints[3].y = (prcl_begin_paint_rect->yTop);
-
-    /* Some extra checking for limits
-     * (Dunno if really needed, but had some crashes sometimes without it,
-     *  while developing the code...)
-     */
-    {
-        int i;
-        for (i = 0; i < 4; i++) {
-            if (aptlPoints[i].x < 0)
-                aptlPoints[i].x = 0;
-            if (aptlPoints[i].y < 0)
-                aptlPoints[i].y = 0;
-            if (aptlPoints[i].x > (LONG) surface->bitmap_info.cx)
-                aptlPoints[i].x = (LONG) surface->bitmap_info.cx;
-            if (aptlPoints[i].y > (LONG) surface->bitmap_info.cy)
-                aptlPoints[i].y = (LONG) surface->bitmap_info.cy;
-        }
-    }
 
     /* Debug code to draw rectangle limits */
 #if 0
