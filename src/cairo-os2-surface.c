@@ -446,7 +446,6 @@ _cairo_os2_surface_get_pixels_from_screen (cairo_os2_surface_t *surface,
 {
     HPS hps;
     HDC hdc;
-    HAB hab;
     SIZEL sizlTemp;
     HBITMAP hbmpTemp;
     BITMAPINFO2 bmi2Temp;
@@ -464,19 +463,10 @@ _cairo_os2_surface_get_pixels_from_screen (cairo_os2_surface_t *surface,
      *   -- Blit dirty pixels from screen to HBITMAP
      * - Copy HBITMAP lines (pixels) into our buffer
      * - Free resources
-     *
-     * These steps will require an Anchor Block (HAB). However,
-     * WinQUeryAnchorBlock () documentation says that HAB is not
-     * used in current OS/2 implementations, OS/2 deduces all information
-     * it needs from the TID. Anyway, we'd be in trouble if we'd have to
-     * get a HAB where we only know a HPS...
-     * So, we'll simply use a fake HAB.
      */
 
-    hab = (HAB) 1; /* OS/2 doesn't really use HAB... */
-
     /* Create a memory device context */
-    hdc = DevOpenDC (hab, OD_MEMORY,"*",0L, NULL, NULLHANDLE);
+    hdc = DevOpenDC (0, OD_MEMORY,"*",0L, NULL, NULLHANDLE);
     if (!hdc) {
         return;
     }
@@ -484,7 +474,7 @@ _cairo_os2_surface_get_pixels_from_screen (cairo_os2_surface_t *surface,
     /* Create a memory PS */
     sizlTemp.cx = prcl_begin_paint_rect->xRight - prcl_begin_paint_rect->xLeft;
     sizlTemp.cy = prcl_begin_paint_rect->yTop - prcl_begin_paint_rect->yBottom;
-    hps = GpiCreatePS (hab,
+    hps = GpiCreatePS (0,
                        hdc,
                        &sizlTemp,
                        PU_PELS | GPIT_NORMAL | GPIA_ASSOC);
@@ -549,7 +539,7 @@ _cairo_os2_surface_get_pixels_from_screen (cairo_os2_surface_t *surface,
         GpiQueryBitmapBits (hps,
                             sizlTemp.cy - y - 1, /* lScanStart */
                             1,                   /* lScans */
-                            pchTemp,
+                            (PBYTE)pchTemp,
                             &bmi2Temp);
 
         /* Go for next line */
