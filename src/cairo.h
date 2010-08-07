@@ -2265,9 +2265,9 @@ cairo_surface_has_show_text_glyphs (cairo_surface_t *surface);
  *   endianess of the platform. On a big-endian machine, the
  *   first pixel is in the uppermost bit, on a little-endian
  *   machine the first pixel is in the least-significant bit.
- * @CAIRO_FORMAT_RGB16_565: This format value is deprecated. It has
- *   never been properly implemented in cairo and should not be used
- *   by applications. (since 1.2)
+ * @CAIRO_FORMAT_RGB16_565: each pixel is a 16-bit quantity
+ *   with red in the upper 5 bits, then green in the middle
+ *   6 bits, and blue in the lower 5 bits.
  *
  * #cairo_format_t is used to identify the memory format of
  * image data.
