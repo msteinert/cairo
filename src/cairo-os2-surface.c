@@ -714,7 +714,15 @@ static cairo_bool_t
 _cairo_os2_surface_get_extents (void                    *abstract_surface,
                                 cairo_rectangle_int_t   *rectangle)
 {
-    cairo_os2_surface_t *local_os2_surface = abstract_surface;
+    cairo_os2_surface_t *local_os2_surface;
+
+    local_os2_surface = (cairo_os2_surface_t *) abstract_surface;
+    if ((!local_os2_surface) ||
+        (local_os2_surface->base.backend != &cairo_os2_surface_backend))
+    {
+        /* Invalid parameter (wrong surface)! */
+        return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+    }
 
     rectangle->x = 0;
     rectangle->y = 0;
