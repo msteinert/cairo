@@ -597,6 +597,22 @@ enabled_cairo_cxx_sources += $(cairo_pthread_cxx_sources)
 enabled_cairo_sources += $(cairo_pthread_sources)
 endif
 
+supported_cairo_headers += $(cairo_gobject_headers)
+all_cairo_headers += $(cairo_gobject_headers)
+all_cairo_private += $(cairo_gobject_private)
+all_cairo_cxx_sources += $(cairo_gobject_cxx_sources)
+all_cairo_sources += $(cairo_gobject_sources)
+ifeq ($(CAIRO_HAS_GOBJECT_FUNCTIONS),1)
+enabled_cairo_headers += $(cairo_gobject_headers)
+enabled_cairo_private += $(cairo_gobject_private)
+enabled_cairo_cxx_sources += $(cairo_gobject_cxx_sources)
+enabled_cairo_sources += $(cairo_gobject_sources)
+endif
+all_cairo_pkgconf += cairo-gobject.pc
+ifeq ($(CAIRO_HAS_GOBJECT_FUNCTIONS),1)
+enabled_cairo_pkgconf += cairo-gobject.pc
+endif
+
 all_cairo_private += $(cairo_trace_private) $(cairo_trace_headers)
 all_cairo_cxx_sources += $(cairo_trace_cxx_sources)
 all_cairo_sources += $(cairo_trace_sources)

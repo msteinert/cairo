@@ -113,6 +113,9 @@ endif
 ifeq ($(CAIRO_HAS_PTHREAD),1)
 	@echo "#define CAIRO_HAS_PTHREAD 1" >> src/cairo-features.h
 endif
+ifeq ($(CAIRO_HAS_GOBJECT_FUNCTIONS),1)
+	@echo "#define CAIRO_HAS_GOBJECT_FUNCTIONS 1" >> src/cairo-features.h
+endif
 ifeq ($(CAIRO_HAS_TRACE),1)
 	@echo "#define CAIRO_HAS_TRACE 1" >> src/cairo-features.h
 endif

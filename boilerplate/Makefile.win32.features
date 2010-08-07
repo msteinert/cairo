@@ -463,6 +463,18 @@ enabled_cairo_boilerplate_cxx_sources += $(cairo_boilerplate_pthread_cxx_sources
 enabled_cairo_boilerplate_sources += $(cairo_boilerplate_pthread_sources)
 endif
 
+supported_cairo_boilerplate_headers += $(cairo_boilerplate_gobject_headers)
+all_cairo_boilerplate_headers += $(cairo_boilerplate_gobject_headers)
+all_cairo_boilerplate_private += $(cairo_boilerplate_gobject_private)
+all_cairo_boilerplate_cxx_sources += $(cairo_boilerplate_gobject_cxx_sources)
+all_cairo_boilerplate_sources += $(cairo_boilerplate_gobject_sources)
+ifeq ($(CAIRO_HAS_GOBJECT_FUNCTIONS),1)
+enabled_cairo_boilerplate_headers += $(cairo_boilerplate_gobject_headers)
+enabled_cairo_boilerplate_private += $(cairo_boilerplate_gobject_private)
+enabled_cairo_boilerplate_cxx_sources += $(cairo_boilerplate_gobject_cxx_sources)
+enabled_cairo_boilerplate_sources += $(cairo_boilerplate_gobject_sources)
+endif
+
 all_cairo_boilerplate_private += $(cairo_boilerplate_trace_private) $(cairo_boilerplate_trace_headers)
 all_cairo_boilerplate_cxx_sources += $(cairo_boilerplate_trace_cxx_sources)
 all_cairo_boilerplate_sources += $(cairo_boilerplate_trace_sources)

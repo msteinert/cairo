@@ -652,6 +652,15 @@ AC_SUBST(real_pthread_LIBS)
 
 
 dnl ===========================================================================
+dnl Build gobject integration library
+
+CAIRO_ENABLE_FUNCTIONS(gobject, gobject, yes, [
+  gobject_REQUIRES="gobject-2.0"
+  PKG_CHECK_MODULES(gobject, $gobject_REQUIRES, , [AC_MSG_RESULT(no)
+  use_gobject="no (requires $gobject_REQUIRES http://download.gnome.org/pub/GNOME/sources/glib/)"])
+])
+
+dnl ===========================================================================
 dnl Default to quick testing during development, but force a full test before
 dnl release
 
@@ -791,6 +800,7 @@ test/pdiff/Makefile
 perf/Makefile
 util/Makefile
 util/cairo-fdr/Makefile
+util/cairo-gobject/Makefile
 util/cairo-script/Makefile
 util/cairo-script/examples/Makefile
 util/cairo-sphinx/Makefile

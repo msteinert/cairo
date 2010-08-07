@@ -2,6 +2,10 @@ include $(top_srcdir)/build/Makefile.am.common
 
 SUBDIRS = .
 
+if CAIRO_HAS_GOBJECT_FUNCTIONS
+SUBDIRS += cairo-gobject
+endif
+
 if CAIRO_HAS_INTERPRETER
 SUBDIRS += cairo-script
 endif
