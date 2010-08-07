@@ -68,7 +68,7 @@
 /* Initialization counter: */
 static int cairo_os2_initialization_count = 0;
 
-static void inline
+static inline void
 DisableFPUException (void)
 {
     unsigned short usCW;
