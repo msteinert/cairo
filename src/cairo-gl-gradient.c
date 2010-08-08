@@ -192,6 +192,7 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
 {
     unsigned long hash;
     cairo_gl_gradient_t *gradient;
+    cairo_status_t status;
     int tex_width;
     void *data;
 
@@ -224,9 +225,15 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
     glBufferDataARB (GL_PIXEL_UNPACK_BUFFER_ARB, tex_width * sizeof (uint32_t), 0, GL_STREAM_DRAW);
     data = glMapBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY);
 
-    _cairo_gl_gradient_render (ctx, n_stops, stops, data, tex_width);
+    status = _cairo_gl_gradient_render (ctx, n_stops, stops, data, tex_width);
 
     glUnmapBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB);
+
+    if (unlikely (status)) {
+        glBindBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+        free (gradient);
+        return status;
+    }
 
     glGenTextures (1, &gradient->tex);
     _cairo_gl_context_activate (ctx, CAIRO_GL_TEX_TEMP);
