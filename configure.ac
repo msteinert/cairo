@@ -655,8 +655,8 @@ dnl ===========================================================================
 dnl Build gobject integration library
 
 CAIRO_ENABLE_FUNCTIONS(gobject, gobject, auto, [
-  gobject_REQUIRES="gobject-2.0"
-  PKG_CHECK_MODULES(gobject, $gobject_REQUIRES, , [AC_MSG_RESULT(no)
+  gobject_REQUIRES="gobject-2.0 glib-2.0"
+  PKG_CHECK_MODULES(GOBJECT, $gobject_REQUIRES, , [AC_MSG_RESULT(no)
   use_gobject="no (requires $gobject_REQUIRES http://download.gnome.org/pub/GNOME/sources/glib/)"])
 ])
 
