@@ -128,18 +128,17 @@ static unsigned
 cairo_perf_calibrate (cairo_perf_t	*perf,
 		      cairo_perf_func_t  perf_func)
 {
-    cairo_perf_ticks_t calibration0, calibration;
+    cairo_perf_ticks_t calibration, calibration_max;
     unsigned loops, min_loops;
 
     min_loops = 1;
-    calibration0 = perf_func (perf->cr, perf->size, perf->size, min_loops);
-    if (perf->fast_and_sloppy) {
-	calibration = calibration0;
-    } else {
-	calibration = 0.01 * cairo_perf_ticks_per_second ();
-	while (calibration0 < calibration) {
-	    min_loops *= 10;
-	    calibration0 = perf_func (perf->cr, perf->size, perf->size, min_loops);
+    calibration = perf_func (perf->cr, perf->size, perf->size, min_loops);
+
+    if (!perf->fast_and_sloppy) {
+	calibration_max = perf->ms_per_iteration * 0.0001 / 4 * cairo_perf_ticks_per_second ();
+	while (calibration < calibration_max) {
+	    min_loops *= 2;
+	    calibration = perf_func (perf->cr, perf->size, perf->size, min_loops);
 	}
     }
 
