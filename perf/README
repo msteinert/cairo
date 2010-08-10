@@ -22,19 +22,19 @@ feel as to whether cairo is faster for everyday use.
 Running the micro-benchmarks
 ----------------------------
 The micro-benchmarks are compiled into a single executable called
-cairo-perf, which is what "make perf" executes. Some
+cairo-perf-micro, which is what "make perf" executes. Some
 examples of running it:
 
     # Report on all tests with default number of iterations:
-    ./cairo-perf
+    ./cairo-perf-micro
 
     # Report on 100 iterations of all gradient tests:
-    ./cairo-perf -i 100 gradient
+    ./cairo-perf-micro -i 100 gradient
 
     # Generate raw results for 10 iterations into cairo.perf
-    ./cairo-perf -r -i 10 > cairo.perf
+    ./cairo-perf-micro -r -i 10 > cairo.perf
     # Append 10 more iterations of the paint test
-    ./cairo-perf -r -i 10 paint >> cairo.perf
+    ./cairo-perf-micro -r -i 10 paint >> cairo.perf
 
 Raw results aren't useful for reading directly, but are quite useful
 when using cairo-perf-diff to compare separate runs (see more
@@ -47,7 +47,7 @@ The macro-benchmarks are run by a single program called
 cairo-perf-trace, which is also executed by "make perf".
 cairo-perf-trace loops over the series of traces stored beneath
 cairo-traces/. cairo-perf-trace produces the same output and takes the
-same arguments as cairo-perf.  Some examples of running it:
+same arguments as cairo-perf-micro.  Some examples of running it:
 
     # Report on all tests with default number of iterations:
     ./cairo-perf-trace
