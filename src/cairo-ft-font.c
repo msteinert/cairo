@@ -1065,17 +1065,10 @@ _fill_xrender_bitmap(FT_Bitmap      *target,
 
 		for (x = 0; x < width; x++, src += 1) {
 		    unsigned int pix;
-#if 1
-		    pix = ((unsigned int)src[0]           << 16) |
-			  ((unsigned int)src[src_pitch]   <<  8) |
-			  ((unsigned int)src[src_pitch*2]      ) |
-			  0xFF000000 ;
-#else
 		    pix = ((unsigned int)src[0]           << 16) |
 			  ((unsigned int)src[src_pitch]   <<  8) |
 			  ((unsigned int)src[src_pitch*2]      ) |
 			  ((unsigned int)src[src_pitch]   << 24) ;
-#endif
 		    dst[x] = pix;
 		}
 	    }
