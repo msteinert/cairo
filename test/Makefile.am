@@ -779,13 +779,14 @@ REFERENCE_IMAGES = \
 	linear-gradient.quartz.ref.png \
 	linear-gradient.ref.png \
 	linear-gradient.xlib.ref.png \
+	linear-gradient-large.ref.png \
+	linear-gradient-one-stop.argb32.ref.png \
+	linear-gradient-one-stop.rgb24.ref.png \
 	linear-gradient-subset.image16.ref.png \
 	linear-gradient-subset.quartz.ref.png \
 	linear-gradient-subset.ref.png \
 	linear-gradient-subset.xlib.ref.png \
 	linear-gradient-subset.ps3.ref.png \
-	linear-gradient-one-stop.argb32.ref.png \
-	linear-gradient-one-stop.rgb24.ref.png \
 	linear-step-function.xfail.png \
 	linear-uniform.image16.ref.png \
 	linear-uniform.ref.png \

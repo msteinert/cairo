@@ -147,6 +147,7 @@ test_sources = \
 	line-width-zero.c				\
 	linear-gradient.c				\
 	linear-gradient-extend.c			\
+	linear-gradient-large.c				\
 	linear-gradient-one-stop.c			\
 	linear-gradient-reflect.c			\
 	linear-gradient-subset.c			\
