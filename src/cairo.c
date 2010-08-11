@@ -454,6 +454,9 @@ cairo_destroy (cairo_t *cr)
 
     _cairo_user_data_array_fini (&cr->user_data);
 
+    /* mark the context as invalid to protect against misuse */
+    cr->status = CAIRO_STATUS_NULL_POINTER;
+
     _context_put (cr);
 }
 slim_hidden_def (cairo_destroy);
