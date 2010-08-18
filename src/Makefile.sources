@@ -337,12 +337,13 @@ cairo_drm_headers = cairo-drm.h
 cairo_drm_private = drm/cairo-drm-private.h \
 		    drm/cairo-drm-ioctl-private.h \
 		    drm/cairo-drm-intel-private.h \
-		    drm/cairo-drm-intel-ioctl-private.h \
-		    drm/cairo-drm-i915-private.h \
-		    drm/cairo-drm-i965-private.h \
 		    drm/cairo-drm-intel-brw-defines.h \
 		    drm/cairo-drm-intel-brw-structs.h \
 		    drm/cairo-drm-intel-brw-eu.h \
+		    drm/cairo-drm-intel-command-private.h \
+		    drm/cairo-drm-intel-ioctl-private.h \
+		    drm/cairo-drm-i915-private.h \
+		    drm/cairo-drm-i965-private.h \
 		    drm/cairo-drm-radeon-private.h
 cairo_drm_sources = drm/cairo-drm.c \
 		    drm/cairo-drm-bo.c \
