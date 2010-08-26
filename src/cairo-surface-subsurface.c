@@ -490,8 +490,6 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
 				    double width, double height)
 {
     cairo_surface_subsurface_t *surface;
-    cairo_rectangle_int_t target_extents;
-    cairo_bool_t ret;
 
     if (unlikely (target->status))
 	return _cairo_surface_create_in_error (target->status);
