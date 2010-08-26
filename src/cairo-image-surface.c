@@ -1410,7 +1410,7 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 						     source->stride);
 	    if (unlikely (pixman_image == NULL))
 		return NULL;
-	} else if (type == CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE) {
+	} else if (type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	    cairo_surface_subsurface_t *sub;
 	    cairo_bool_t is_contained = FALSE;
 

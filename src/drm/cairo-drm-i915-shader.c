@@ -1537,7 +1537,7 @@ i915_shader_acquire_surface (i915_shader_t *shader,
     if (surface->type == CAIRO_SURFACE_TYPE_XCB) {
 	cairo_surface_t *xcb = surface;
 
-	if (xcb->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE) {
+	if (xcb->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	    xcb = ((cairo_surface_subsurface_t *) surface)->target;
 	} else if (xcb->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT) {
 	    xcb = ((cairo_surface_snapshot_t *) surface)->target;
@@ -1553,7 +1553,7 @@ i915_shader_acquire_surface (i915_shader_t *shader,
 #endif
 
     if (surface->type == CAIRO_SURFACE_TYPE_DRM) {
-	if (surface->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE) {
+	if (surface->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	    drm = ((cairo_surface_subsurface_t *) surface)->target;
 	} else if (surface->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT) {
 	    drm = ((cairo_surface_snapshot_t *) surface)->target;
@@ -1563,7 +1563,7 @@ i915_shader_acquire_surface (i915_shader_t *shader,
     if (drm->type == CAIRO_SURFACE_TYPE_DRM) {
 	i915_surface_t *s = (i915_surface_t *) drm;
 
-	if (surface->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE) {
+	if (surface->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	    if (s->intel.drm.base.device == shader->target->intel.drm.base.device &&
 		s != shader->target)
 	    {

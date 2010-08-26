@@ -428,7 +428,7 @@ _cairo_surface_subsurface_snapshot (void *abstract_surface)
 }
 
 static const cairo_surface_backend_t _cairo_surface_subsurface_backend = {
-    CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE,
+    CAIRO_SURFACE_TYPE_SUBSURFACE,
     _cairo_surface_subsurface_create_similar,
     _cairo_surface_subsurface_finish,
 
@@ -520,7 +520,7 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
     if (_cairo_surface_get_extents (target, &target_extents))
         ret = _cairo_rectangle_intersect (&surface->extents, &target_extents);
 
-    if (target->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE) {
+    if (target->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	/* Maintain subsurfaces as 1-depth */
 	cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) target;
 	surface->extents.x += sub->extents.x;

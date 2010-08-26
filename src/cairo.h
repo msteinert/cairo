@@ -1963,6 +1963,8 @@ cairo_device_reference (cairo_device_t *device);
  * @CAIRO_DEVICE_TYPE_DRM: The surface is of type Direct Render Manager
  * @CAIRO_DEVICE_TYPE_XML: The surface is of type XML
  * @CAIRO_DEVICE_TYPE_SKIA: The surface is of type Skia
+ * @CAIRO_DEVICE_TYPE_SUBSURFACE: The surface is a subsurface created with
+ *   cairo_surface_create_for_rectangle()
  *
  * #cairo_device_type_t is used to describe the type of a given
  * device. The devices types are also known as "backends" within cairo.
@@ -2100,6 +2102,8 @@ cairo_surface_status (cairo_surface_t *surface);
  * @CAIRO_SURFACE_TYPE_TEE: The surface is of type 'tee' (a multiplexing surface), since 1.10
  * @CAIRO_SURFACE_TYPE_XML: The surface is of type XML (for debugging), since 1.10
  * @CAIRO_SURFACE_TYPE_SKIA: The surface is of type Skia, since 1.10
+ * @CAIRO_SURFACE_TYPE_SUBSURFACE: The surface is a subsurface created with
+ *   cairo_surface_create_for_rectangle(), since 1.10
  *
  * #cairo_surface_type_t is used to describe the type of a given
  * surface. The surface types are also known as "backends" or "surface
@@ -2147,7 +2151,8 @@ typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_DRM,
     CAIRO_SURFACE_TYPE_TEE,
     CAIRO_SURFACE_TYPE_XML,
-    CAIRO_SURFACE_TYPE_SKIA
+    CAIRO_SURFACE_TYPE_SKIA,
+    CAIRO_SURFACE_TYPE_SUBSURFACE
 } cairo_surface_type_t;
 
 cairo_public cairo_surface_type_t

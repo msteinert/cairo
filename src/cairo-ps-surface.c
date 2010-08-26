@@ -2620,7 +2620,7 @@ _cairo_ps_surface_acquire_surface (cairo_ps_surface_t      *surface,
     surface->image = NULL;
 
     if (pattern->surface->type == CAIRO_SURFACE_TYPE_RECORDING) {
-	if (pattern->surface->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE) {
+	if (pattern->surface->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	    cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) pattern->surface;
 
 	    *width  = sub->extents.width;
@@ -2710,7 +2710,7 @@ _cairo_ps_surface_emit_surface (cairo_ps_surface_t      *surface,
     if (pattern->surface->type == CAIRO_SURFACE_TYPE_RECORDING) {
 	cairo_surface_t *source = pattern->surface;
 
-	if (source->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE) {
+	if (source->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	    cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) source;
 	    status = _cairo_ps_surface_emit_recording_subsurface (surface, sub->target, &sub->extents);
 	} else {

@@ -2342,7 +2342,7 @@ _cairo_xlib_surface_upload(cairo_xlib_surface_t *surface,
 	    extents.x = extents.y = 0;
 	    extents.width = image->width;
 	    extents.height = image->height;
-	} else if (image->base.backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE) {
+	} else if (image->base.backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	    cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) image;
 	    image = (cairo_image_surface_t *) sub->target;
 	    src_x += sub->extents.x;

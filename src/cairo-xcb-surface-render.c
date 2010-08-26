@@ -1186,7 +1186,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 		if (unlikely (picture->base.status))
 		    return picture;
 	    }
-	} else if (source->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE) {
+	} else if (source->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	    cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) source;
 	    cairo_xcb_surface_t *xcb = (cairo_xcb_surface_t *) sub->target;
 
@@ -1233,7 +1233,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 		if (unlikely (picture->base.status))
 		    return picture;
 	    }
-	} else if (source->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE) {
+	} else if (source->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	    cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) source;
 	    cairo_xcb_surface_t *xcb = ((cairo_xlib_xcb_surface_t *) sub->target)->xcb;
 

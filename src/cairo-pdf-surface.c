@@ -1080,7 +1080,7 @@ _get_source_surface_size (cairo_surface_t         *source,
     unsigned long mime_data_length;
 
     if (source->type == CAIRO_SURFACE_TYPE_RECORDING) {
-	if (source->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE) {
+	if (source->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	     cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) source;
 
 	    *width  = sub->extents.width;
@@ -2343,7 +2343,7 @@ _cairo_pdf_surface_emit_surface (cairo_pdf_surface_t        *surface,
 				 cairo_pdf_source_surface_t *src_surface)
 {
     if (src_surface->surface->type == CAIRO_SURFACE_TYPE_RECORDING) {
-	if (src_surface->surface->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE) {
+	if (src_surface->surface->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	    cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) src_surface->surface;
 	    return _cairo_pdf_surface_emit_recording_subsurface (surface,
 								 sub->target,

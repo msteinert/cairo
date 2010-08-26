@@ -1429,7 +1429,7 @@ _emit_surface_pattern (cairo_script_surface_t *surface,
     case CAIRO_SURFACE_TYPE_SCRIPT:
 	status = _emit_script_surface_pattern (surface, (cairo_script_surface_t *) source);
 	break;
-    case CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE:
+    case CAIRO_SURFACE_TYPE_SUBSURFACE:
 	status = _emit_subsurface_pattern (surface, (cairo_surface_subsurface_t *) source);
 	break;
     default:
