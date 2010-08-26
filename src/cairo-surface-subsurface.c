@@ -515,6 +515,11 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
     surface->extents.width = floor (x + width) - surface->extents.x;
     surface->extents.height = floor (y + height) - surface->extents.y;
 
+    ret = _cairo_matrix_is_integer_translation (&target->device_transform, &tx, &ty);
+    assert (ret);
+    surface->extents.x += tx;
+    surface->extents.y += ty;
+
     if (_cairo_surface_get_extents (target, &target_extents))
         ret = _cairo_rectangle_intersect (&surface->extents, &target_extents);
 
@@ -524,11 +529,6 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
 	surface->extents.x += sub->extents.x;
 	surface->extents.y += sub->extents.y;
 	target = sub->target;
-    } else {
-	ret = _cairo_matrix_is_integer_translation (&target->device_transform, &tx, &ty);
-	assert (ret);
-	surface->extents.x += tx;
-	surface->extents.y += ty;
     }
 
     surface->target = cairo_surface_reference (target);
