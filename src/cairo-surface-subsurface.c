@@ -281,11 +281,13 @@ _cairo_surface_subsurface_acquire_source_image (void                    *abstrac
 						cairo_image_surface_t  **image_out,
 						void                   **extra_out)
 {
+    cairo_rectangle_int_t target_extents;
     cairo_surface_subsurface_t *surface = abstract_surface;
     cairo_image_surface_t *image;
     cairo_status_t status;
     struct extra *extra;
     uint8_t *data;
+    cairo_bool_t ret;
 
     if (surface->target->type == CAIRO_SURFACE_TYPE_RECORDING) {
 	cairo_recording_surface_t *meta = (cairo_recording_surface_t *) surface->target;
@@ -335,8 +337,16 @@ _cairo_surface_subsurface_acquire_source_image (void                    *abstrac
     if (unlikely (status))
 	goto CLEANUP;
 
+    ret = _cairo_surface_get_extents (extra->image_extra, &target_extents);
+    assert (ret);
+
     /* only copy if we need to perform sub-byte manipulation */
-    if (PIXMAN_FORMAT_BPP (extra->image->pixman_format) >= 8) {
+    if (PIXMAN_FORMAT_BPP (extra->image->pixman_format) >= 8 ||
+	surface->extents.x < target_extents.x ||
+	surface->extents.y < target_extents.y ||
+	surface->extents.x + surface->extents.width > target_extents.x + target_extents.width ||
+	surface->extents.y + surface->extents.height > target_extents.y + target_extents.height) {
+
 	assert ((PIXMAN_FORMAT_BPP (extra->image->pixman_format) % 8) == 0);
 
 	data = extra->image->data + surface->extents.y * extra->image->stride;
