@@ -492,7 +492,6 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
     cairo_surface_subsurface_t *surface;
     cairo_rectangle_int_t target_extents;
     cairo_bool_t ret;
-    int tx, ty;
 
     if (unlikely (target->status))
 	return _cairo_surface_create_in_error (target->status);
@@ -502,6 +501,10 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
     surface = malloc (sizeof (cairo_surface_subsurface_t));
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+
+    assert (_cairo_matrix_is_translation (&target->device_transform));
+    x += target->device_transform.x0;
+    y += target->device_transform.y0;
 
     _cairo_surface_init (&surface->base,
 			 &_cairo_surface_subsurface_backend,
@@ -513,11 +516,6 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
     surface->extents.y = ceil (y);
     surface->extents.width = floor (x + width) - surface->extents.x;
     surface->extents.height = floor (y + height) - surface->extents.y;
-
-    ret = _cairo_matrix_is_integer_translation (&target->device_transform, &tx, &ty);
-    assert (ret);
-    surface->extents.x += tx;
-    surface->extents.y += ty;
 
     if (_cairo_surface_get_extents (target, &target_extents))
         ret = _cairo_rectangle_intersect (&surface->extents, &target_extents);
