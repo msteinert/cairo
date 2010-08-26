@@ -77,6 +77,8 @@ cairo_debug_reset_static_data (void)
 
     _cairo_clip_reset_static_data ();
 
+    _cairo_image_reset_static_data ();
+
 #if CAIRO_HAS_DRM_SURFACE
     _cairo_drm_device_reset_static_data ();
 #endif

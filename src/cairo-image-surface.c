@@ -876,10 +876,13 @@ _nearest_sample (cairo_filter_t filter, double *tx, double *ty)
 }
 
 #if HAS_ATOMIC_OPS
+static pixman_image_t *__pixman_transparent_image;
+static pixman_image_t *__pixman_black_image;
+static pixman_image_t *__pixman_white_image;
+
 static pixman_image_t *
 _pixman_transparent_image (void)
 {
-    static pixman_image_t *__pixman_transparent_image;
     pixman_image_t *image;
 
     image = __pixman_transparent_image;
@@ -910,7 +913,6 @@ _pixman_transparent_image (void)
 static pixman_image_t *
 _pixman_black_image (void)
 {
-    static pixman_image_t *__pixman_black_image;
     pixman_image_t *image;
 
     image = __pixman_black_image;
@@ -941,7 +943,6 @@ _pixman_black_image (void)
 static pixman_image_t *
 _pixman_white_image (void)
 {
-    static pixman_image_t *__pixman_white_image;
     pixman_image_t *image;
 
     image = __pixman_white_image;
@@ -995,14 +996,39 @@ hars_petruska_f54_1_random (void)
 #undef rol
 }
 
+static struct {
+    cairo_color_t color;
+    pixman_image_t *image;
+} cache[16];
+static int n_cached;
+
+void
+_cairo_image_reset_static_data ()
+{
+    while (n_cached)
+	pixman_image_unref (cache[--n_cached].image);
+
+#if HAS_ATOMIC_OPS
+    if (__pixman_transparent_image) {
+	pixman_image_unref (__pixman_transparent_image);
+	__pixman_transparent_image = NULL;
+    }
+
+    if (__pixman_black_image) {
+	pixman_image_unref (__pixman_black_image);
+	__pixman_black_image = NULL;
+    }
+
+    if (__pixman_white_image) {
+	pixman_image_unref (__pixman_white_image);
+	__pixman_white_image = NULL;
+    }
+#endif
+}
+
 static pixman_image_t *
 _pixman_image_for_solid (const cairo_solid_pattern_t *pattern)
 {
-    static struct {
-	cairo_color_t color;
-	pixman_image_t *image;
-    } cache[16];
-    static int n_cached;
     pixman_color_t color;
     pixman_image_t *image;
     int i;
