@@ -517,9 +517,6 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
     surface->extents.width = floor (x + width) - surface->extents.x;
     surface->extents.height = floor (y + height) - surface->extents.y;
 
-    if (_cairo_surface_get_extents (target, &target_extents))
-        ret = _cairo_rectangle_intersect (&surface->extents, &target_extents);
-
     if (target->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	/* Maintain subsurfaces as 1-depth */
 	cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) target;
