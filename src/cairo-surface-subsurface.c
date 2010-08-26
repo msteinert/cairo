@@ -341,11 +341,11 @@ _cairo_surface_subsurface_acquire_source_image (void                    *abstrac
     assert (ret);
 
     /* only copy if we need to perform sub-byte manipulation */
-    if (PIXMAN_FORMAT_BPP (extra->image->pixman_format) >= 8 ||
-	surface->extents.x < target_extents.x ||
-	surface->extents.y < target_extents.y ||
-	surface->extents.x + surface->extents.width > target_extents.x + target_extents.width ||
-	surface->extents.y + surface->extents.height > target_extents.y + target_extents.height) {
+    if (PIXMAN_FORMAT_BPP (extra->image->pixman_format) >= 8 &&
+	target_extents.x <= surface->extents.x &&
+	target_extents.y <= surface->extents.y &&
+	surface->extents.x + surface->extents.width <= target_extents.x + target_extents.width &&
+	surface->extents.y + surface->extents.height <= target_extents.y + target_extents.height) {
 
 	assert ((PIXMAN_FORMAT_BPP (extra->image->pixman_format) % 8) == 0);
 
