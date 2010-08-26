@@ -154,7 +154,8 @@ draw (cairo_t *cr, int width, int height)
     /* Test that push_group doesn't crash */
     cairo_push_group (cr2);
     cairo_stroke (cr2);
-    cairo_pop_group (cr2);
+    pattern = cairo_pop_group (cr2);
+    cairo_pattern_destroy (pattern);
 
     cairo_destroy (cr2);
 

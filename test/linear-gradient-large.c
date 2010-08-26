@@ -51,6 +51,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_pattern_add_color_stop_rgb (gr, 1.0, 1, 1, 1);
 
     cairo_set_source (cr, gr);
+    cairo_pattern_destroy (gr);
     cairo_paint (cr);
 
     mark_point(cr, SIZE - OFFSET, OFFSET);
