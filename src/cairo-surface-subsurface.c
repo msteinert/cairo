@@ -337,7 +337,7 @@ _cairo_surface_subsurface_acquire_source_image (void                    *abstrac
     if (unlikely (status))
 	goto CLEANUP;
 
-    ret = _cairo_surface_get_extents (extra->image_extra, &target_extents);
+    ret = _cairo_surface_get_extents (extra->image, &target_extents);
     assert (ret);
 
     /* only copy if we need to perform sub-byte manipulation */
