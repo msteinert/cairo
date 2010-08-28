@@ -86,6 +86,12 @@
  *   cairo_device_release (device);
  * }
  * </programlisting></informalexample>
+ *
+ * <note><para>Please refer to the documentation of each backend for
+ * additional usage requirements, guarantees provided, and
+ * interactions with existing surface API of the device functions for
+ * surfaces of that type.
+ * </para></note>
  */
 
 static const cairo_device_t _nil_device = {
