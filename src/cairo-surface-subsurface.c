@@ -486,6 +486,11 @@ static const cairo_surface_backend_t _cairo_surface_subsurface_backend = {
  * directly onto the parent surface, i.e. with no further backend allocations,
  * double buffering or copies.
  *
+ * <note><para>The semantics of subsurfaces have not been finalized yet
+ * unless the rectangle is in full device units, is contained within
+ * the extents of the target surface, and the target or subsurface's
+ * device transforms are not changed.</para></note>
+ *
  * Return value: a pointer to the newly allocated surface. The caller
  * owns the surface and should call cairo_surface_destroy() when done
  * with it.
@@ -493,6 +498,8 @@ static const cairo_surface_backend_t _cairo_surface_subsurface_backend = {
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if @other is already in an error state
  * or any other error occurs.
+ *
+ * Since: 1.10
  **/
 cairo_surface_t *
 cairo_surface_create_for_rectangle (cairo_surface_t *target,
