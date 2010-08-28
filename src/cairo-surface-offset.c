@@ -135,7 +135,7 @@ _cairo_surface_offset_mask (cairo_surface_t		*target,
     }
 
     status = _cairo_surface_mask (target, op,
-				  &source_copy.base, &mask_copy.base,
+				  source, mask,
 				  dev_clip);
 
   FINISH:
