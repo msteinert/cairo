@@ -279,7 +279,7 @@ CAIRO_ENABLE_FUNCTIONS(png, PNG, yes, [
   AC_ARG_VAR([png_REQUIRES], [module name for libpng to search for using pkg-config])
   if test "x$png_REQUIRES" = x; then
     # libpng13 is GnuWin32's libpng-1.2.8 :-(
-    for l in libpng12 libpng13 libpng10 libpng; do
+    for l in libpng libpng14 libpng12 libpng13 libpng10; do
       if $PKG_CONFIG --exists $l ; then
         png_REQUIRES=$l
         use_png=yes
