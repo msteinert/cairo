@@ -276,6 +276,24 @@ struct extra {
     void *image_extra;
 };
 
+static void
+cairo_surface_paint_to_target (cairo_surface_t            *target,
+                               cairo_surface_subsurface_t *subsurface)
+{
+    cairo_t *cr;
+    
+    cr = cairo_create (target);
+
+    cairo_set_source_surface (cr,
+                              subsurface->target,
+                              - subsurface->extents.x,
+                              - subsurface->extents.y);
+    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+    cairo_paint (cr);
+    
+    cairo_destroy (cr);
+}
+
 static cairo_status_t
 _cairo_surface_subsurface_acquire_source_image (void                    *abstract_surface,
 						cairo_image_surface_t  **image_out,
@@ -311,15 +329,7 @@ _cairo_surface_subsurface_acquire_source_image (void                    *abstrac
 	    if (unlikely (image->base.status))
 		return image->base.status;
 
-	    cairo_surface_set_device_offset (&image->base,
-					     -surface->extents.x,
-					     -surface->extents.y);
-
-	    status = _cairo_recording_surface_replay (&meta->base, &image->base);
-	    if (unlikely (status)) {
-		cairo_surface_destroy (&image->base);
-		return status;
-	    }
+            cairo_surface_paint_to_target (&image->base, surface);
 
 	    _cairo_surface_attach_snapshot (&surface->base, &image->base, NULL);
 
@@ -337,7 +347,7 @@ _cairo_surface_subsurface_acquire_source_image (void                    *abstrac
     if (unlikely (status))
 	goto CLEANUP;
 
-    ret = _cairo_surface_get_extents (extra->image, &target_extents);
+    ret = _cairo_surface_get_extents (&extra->image->base, &target_extents);
     assert (ret);
 
     /* only copy if we need to perform sub-byte manipulation */
@@ -360,6 +370,8 @@ _cairo_surface_subsurface_acquire_source_image (void                    *abstrac
 							    extra->image->stride);
 	if (unlikely ((status = image->base.status)))
 	    goto CLEANUP_IMAGE;
+
+        image->base.is_clear = FALSE;
     } else {
 	image = (cairo_image_surface_t *)
 	    _cairo_image_surface_create_with_pixman_format (NULL,
@@ -370,15 +382,8 @@ _cairo_surface_subsurface_acquire_source_image (void                    *abstrac
 	if (unlikely ((status = image->base.status)))
 	    goto CLEANUP_IMAGE;
 
-	pixman_image_composite32 (PIXMAN_OP_SRC,
-                                  image->pixman_image, NULL, extra->image->pixman_image,
-                                  surface->extents.x, surface->extents.y,
-                                  0, 0,
-                                  0, 0,
-                                  surface->extents.width, surface->extents.height);
+        cairo_surface_paint_to_target (&image->base, surface);
     }
-
-    image->base.is_clear = FALSE;
 
     *image_out = image;
     *extra_out = extra;
