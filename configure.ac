@@ -660,6 +660,10 @@ CAIRO_ENABLE_FUNCTIONS(gobject, gobject, auto, [
   use_gobject="no (requires $gobject_REQUIRES http://download.gnome.org/pub/GNOME/sources/glib/)"])
   gobject_NONPKGCONFIG_EXTRA_LIBS="-L\${libdir} -lcairo-gobject"
 ])
+dnl I'm too lazy to fix the caching properly
+if test "x$use_gobject" = "xyes"; then
+  PKG_CHECK_MODULES(GOBJECT, $gobject_REQUIRES)
+fi
 
 dnl ===========================================================================
 dnl Default to quick testing during development, but force a full test before
