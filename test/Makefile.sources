@@ -251,6 +251,7 @@ test_sources = \
 	subsurface-pad.c                                \
 	subsurface-modify-child.c                       \
 	subsurface-modify-parent.c                      \
+	subsurface-outside-target.c                     \
 	subsurface-similar-repeat.c                     \
 	surface-finish-twice.c				\
 	surface-pattern.c				\
