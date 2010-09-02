@@ -1941,29 +1941,12 @@ cairo_device_reference (cairo_device_t *device);
 
 /**
  * cairo_device_type_t:
- * @CAIRO_DEVICE_TYPE_IMAGE: The surface is of type image
- * @CAIRO_DEVICE_TYPE_PDF: The surface is of type pdf
- * @CAIRO_DEVICE_TYPE_PS: The surface is of type ps
- * @CAIRO_DEVICE_TYPE_XLIB: The surface is of type xlib
- * @CAIRO_DEVICE_TYPE_XCB: The surface is of type xcb
- * @CAIRO_DEVICE_TYPE_GLITZ: The surface is of type glitz
- * @CAIRO_DEVICE_TYPE_QUARTZ: The surface is of type quartz
- * @CAIRO_DEVICE_TYPE_WIN32: The surface is of type win32
- * @CAIRO_DEVICE_TYPE_BEOS: The surface is of type beos
- * @CAIRO_DEVICE_TYPE_DIRECTFB: The surface is of type directfb
- * @CAIRO_DEVICE_TYPE_SVG: The surface is of type svg
- * @CAIRO_DEVICE_TYPE_OS2: The surface is of type os2
- * @CAIRO_DEVICE_TYPE_WIN32_PRINTING: The surface is a win32 printing surface
- * @CAIRO_DEVICE_TYPE_QUARTZ_IMAGE: The surface is of type quartz_image
- * @CAIRO_DEVICE_TYPE_SCRIPT: The surface is of type script
- * @CAIRO_DEVICE_TYPE_QT: The surface is of type Qt
- * @CAIRO_DEVICE_TYPE_RECORDING: The surface is of type recording
- * @CAIRO_DEVICE_TYPE_VG: The surface is a OpenVG surface
- * @CAIRO_DEVICE_TYPE_GL: The surface is of type OpenGL
  * @CAIRO_DEVICE_TYPE_DRM: The surface is of type Direct Render Manager
+ * @CAIRO_DEVICE_TYPE_GL: The surface is of type OpenGL
+ * @CAIRO_DEVICE_TYPE_SCRIPT: The surface is of type script
+ * @CAIRO_DEVICE_TYPE_XCB: The surface is of type xcb
+ * @CAIRO_DEVICE_TYPE_XLIB: The surface is of type xlib
  * @CAIRO_DEVICE_TYPE_XML: The surface is of type XML
- * @CAIRO_DEVICE_TYPE_SKIA: The surface is of type Skia
- * @CAIRO_DEVICE_TYPE_SUBSURFACE: The surface is a subsurface created with
  *   cairo_surface_create_for_rectangle()
  *
  * #cairo_device_type_t is used to describe the type of a given
@@ -1985,28 +1968,12 @@ cairo_device_reference (cairo_device_t *device);
  * Since: 1.10
  **/
 typedef enum _cairo_device_type {
-    CAIRO_DEVICE_TYPE_IMAGE,
-    CAIRO_DEVICE_TYPE_PDF,
-    CAIRO_DEVICE_TYPE_PS,
-    CAIRO_DEVICE_TYPE_XLIB,
-    CAIRO_DEVICE_TYPE_XCB,
-    CAIRO_DEVICE_TYPE_GLITZ,
-    CAIRO_DEVICE_TYPE_QUARTZ,
-    CAIRO_DEVICE_TYPE_WIN32,
-    CAIRO_DEVICE_TYPE_BEOS,
-    CAIRO_DEVICE_TYPE_DIRECTFB,
-    CAIRO_DEVICE_TYPE_SVG,
-    CAIRO_DEVICE_TYPE_OS2,
-    CAIRO_DEVICE_TYPE_WIN32_PRINTING,
-    CAIRO_DEVICE_TYPE_QUARTZ_IMAGE,
-    CAIRO_DEVICE_TYPE_SCRIPT,
-    CAIRO_DEVICE_TYPE_QT,
-    CAIRO_DEVICE_TYPE_RECORDING,
-    CAIRO_DEVICE_TYPE_VG,
-    CAIRO_DEVICE_TYPE_GL,
     CAIRO_DEVICE_TYPE_DRM,
+    CAIRO_DEVICE_TYPE_GL,
+    CAIRO_DEVICE_TYPE_SCRIPT,
+    CAIRO_DEVICE_TYPE_XCB,
+    CAIRO_DEVICE_TYPE_XLIB,
     CAIRO_DEVICE_TYPE_XML,
-    CAIRO_DEVICE_TYPE_SKIA
 } cairo_device_type_t;
 
 cairo_public cairo_device_type_t

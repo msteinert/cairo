@@ -347,28 +347,12 @@ cairo_gobject_device_type_get_type (void)
    static volatile gsize type_volatile = 0;
    if (g_once_init_enter (&type_volatile)) {
       static const GEnumValue values[] = {
-          { CAIRO_DEVICE_TYPE_IMAGE, "CAIRO_DEVICE_TYPE_IMAGE", "image" },
-          { CAIRO_DEVICE_TYPE_PDF, "CAIRO_DEVICE_TYPE_PDF", "pdf" },
-          { CAIRO_DEVICE_TYPE_PS, "CAIRO_DEVICE_TYPE_PS", "ps" },
-          { CAIRO_DEVICE_TYPE_XLIB, "CAIRO_DEVICE_TYPE_XLIB", "xlib" },
-          { CAIRO_DEVICE_TYPE_XCB, "CAIRO_DEVICE_TYPE_XCB", "xcb" },
-          { CAIRO_DEVICE_TYPE_GLITZ, "CAIRO_DEVICE_TYPE_GLITZ", "glitz" },
-          { CAIRO_DEVICE_TYPE_QUARTZ, "CAIRO_DEVICE_TYPE_QUARTZ", "quartz" },
-          { CAIRO_DEVICE_TYPE_WIN32, "CAIRO_DEVICE_TYPE_WIN32", "win32" },
-          { CAIRO_DEVICE_TYPE_BEOS, "CAIRO_DEVICE_TYPE_BEOS", "beos" },
-          { CAIRO_DEVICE_TYPE_DIRECTFB, "CAIRO_DEVICE_TYPE_DIRECTFB", "directfb" },
-          { CAIRO_DEVICE_TYPE_SVG, "CAIRO_DEVICE_TYPE_SVG", "svg" },
-          { CAIRO_DEVICE_TYPE_OS2, "CAIRO_DEVICE_TYPE_OS2", "os2" },
-          { CAIRO_DEVICE_TYPE_WIN32_PRINTING, "CAIRO_DEVICE_TYPE_WIN32_PRINTING", "win32-printing" },
-          { CAIRO_DEVICE_TYPE_QUARTZ_IMAGE, "CAIRO_DEVICE_TYPE_QUARTZ_IMAGE", "quartz-image" },
-          { CAIRO_DEVICE_TYPE_SCRIPT, "CAIRO_DEVICE_TYPE_SCRIPT", "script" },
-          { CAIRO_DEVICE_TYPE_QT, "CAIRO_DEVICE_TYPE_QT", "qt" },
-          { CAIRO_DEVICE_TYPE_RECORDING, "CAIRO_DEVICE_TYPE_RECORDING", "recording" },
-          { CAIRO_DEVICE_TYPE_VG, "CAIRO_DEVICE_TYPE_VG", "vg" },
-          { CAIRO_DEVICE_TYPE_GL, "CAIRO_DEVICE_TYPE_GL", "gl" },
           { CAIRO_DEVICE_TYPE_DRM, "CAIRO_DEVICE_TYPE_DRM", "drm" },
+          { CAIRO_DEVICE_TYPE_GL, "CAIRO_DEVICE_TYPE_GL", "gl" },
+          { CAIRO_DEVICE_TYPE_SCRIPT, "CAIRO_DEVICE_TYPE_SCRIPT", "script" },
+          { CAIRO_DEVICE_TYPE_XCB, "CAIRO_DEVICE_TYPE_XCB", "xcb" },
+          { CAIRO_DEVICE_TYPE_XLIB, "CAIRO_DEVICE_TYPE_XLIB", "xlib" },
           { CAIRO_DEVICE_TYPE_XML, "CAIRO_DEVICE_TYPE_XML", "xml" },
-          { CAIRO_DEVICE_TYPE_SKIA, "CAIRO_DEVICE_TYPE_SKIA", "skia" },
           { 0, NULL, NULL }
       };
       GType type = g_enum_register_static (g_intern_static_string ("cairo_device_type_t"), values);
