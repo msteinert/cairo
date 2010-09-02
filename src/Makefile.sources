@@ -376,7 +376,7 @@ req_cairo_deflate_stream_sources = $(cairo_deflate_stream_sources)
 endif
 
 cairo_tee_headers = cairo-tee.h
-cairo_tee_private = cairo-tee-surface-private.h \
+cairo_tee_private = cairo-tee-surface-private.h
 cairo_tee_sources = cairo-tee-surface.c
 
 cairo_xml_headers = cairo-xml.h
