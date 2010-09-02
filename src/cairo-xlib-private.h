@@ -42,7 +42,7 @@
 
 #include "cairo-compiler-private.h"
 #include "cairo-device-private.h"
-#include "cairo-freelist-private.h"
+#include "cairo-freelist-type-private.h"
 #include "cairo-list-private.h"
 #include "cairo-reference-count-private.h"
 #include "cairo-types-private.h"
