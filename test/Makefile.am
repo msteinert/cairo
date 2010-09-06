@@ -1234,6 +1234,8 @@ REFERENCE_IMAGES = \
 	subsurface-pad.quartz.xfail.png \
 	subsurface-modify-child.ref.png \
 	subsurface-modify-parent.ref.png \
+	subsurface-outside-target.argb32.ref.png \
+	subsurface-outside-target.rgb24.ref.png \
 	subsurface-similar-repeat.ref.png \
 	surface-pattern-big-scale-down.ref.png \
 	surface-pattern-big-scale-down.ps.ref.png \
