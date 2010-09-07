@@ -116,7 +116,7 @@ CAIRO_ENABLE_FUNCTIONS(xcb_shm, XCB/SHM, auto, [
 			[AC_MSG_RESULT(no)
 			use_xcb_shm="no (requires $xcb_shm http://xcb.freedesktop.org)"])
   else
-    use_xcb_shm="no (requires both --enable-xcb)"
+    use_xcb_shm="no (requires --enable-xcb)"
   fi
 ])
 AM_CONDITIONAL(BUILD_XCB_SHM, test "x$use_xcb_shm" = "xyes")
