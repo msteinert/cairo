@@ -832,7 +832,7 @@ static const CGFunctionCallbacks gradient_callbacks = {
    function into an array of fixed size, so if the input range is larger
    than needed, the resolution of the gradient will be unnecessarily low.
 */
-static const cairo_quartz_float_t nonrepeating_gradient_input_value_range[2] = { -0.001f, 1.f };
+static const cairo_quartz_float_t nonrepeating_gradient_input_value_range[2] = { 0., 1. };
 
 static CGFunctionRef
 CreateGradientFunction (const cairo_gradient_pattern_t *gpat)
@@ -1346,7 +1346,7 @@ _cairo_quartz_setup_linear_source (cairo_quartz_surface_t *surface,
     CGPoint start, end;
     CGFunctionRef gradFunc;
     CGColorSpaceRef rgb;
-    bool extend = abspat->extend == CAIRO_EXTEND_PAD;
+    bool extend = abspat->extend != CAIRO_EXTEND_NONE;
 
     assert (lpat->base.n_stops > 0);
 
@@ -1361,16 +1361,13 @@ _cairo_quartz_setup_linear_source (cairo_quartz_surface_t *surface,
     end = CGPointMake (_cairo_fixed_to_double (lpat->p2.x),
 		       _cairo_fixed_to_double (lpat->p2.y));
 
-    if (abspat->extend == CAIRO_EXTEND_NONE ||
-        abspat->extend == CAIRO_EXTEND_PAD)
-    {
+    if (!extend)
 	gradFunc = CreateGradientFunction (&lpat->base);
-    } else {
+    else
 	gradFunc = CreateRepeatingLinearGradientFunction (surface,
 						          &lpat->base,
 						          &start, &end,
 						          extents);
-    }
 
     surface->sourceShading = CGShadingCreateAxial (rgb,
 						   start, end,
@@ -1393,7 +1390,7 @@ _cairo_quartz_setup_radial_source (cairo_quartz_surface_t *surface,
     CGPoint start, end;
     CGFunctionRef gradFunc;
     CGColorSpaceRef rgb;
-    bool extend = abspat->extend == CAIRO_EXTEND_PAD;
+    bool extend = abspat->extend != CAIRO_EXTEND_NONE;
     double c1x = _cairo_fixed_to_double (rpat->c1.x);
     double c1y = _cairo_fixed_to_double (rpat->c1.y);
     double c2x = _cairo_fixed_to_double (rpat->c2.x);
@@ -1412,17 +1409,14 @@ _cairo_quartz_setup_radial_source (cairo_quartz_surface_t *surface,
     start = CGPointMake (c1x, c1y);
     end = CGPointMake (c2x, c2y);
 
-    if (abspat->extend == CAIRO_EXTEND_NONE ||
-        abspat->extend == CAIRO_EXTEND_PAD)
-    {
+    if (!extend)
 	gradFunc = CreateGradientFunction (&rpat->base);
-    } else {
+    else
 	gradFunc = CreateRepeatingRadialGradientFunction (surface,
 						          &rpat->base,
 						          &start, &r1,
 						          &end, &r2,
 						          extents);
-    }
 
     surface->sourceShading = CGShadingCreateRadial (rgb,
 						    start,
