@@ -75,6 +75,7 @@ check_surface_extents (const cairo_test_context_t *ctx,
 
     cr = cairo_create (surface);
     cairo_clip_extents (cr, &x1, &y1, &x2, &y2);
+    cairo_destroy (cr);
 
     if (x != x1 ||
         y != y1 ||
