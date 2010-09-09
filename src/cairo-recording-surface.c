@@ -90,6 +90,16 @@ typedef enum {
 
 static const cairo_surface_backend_t cairo_recording_surface_backend;
 
+/**
+ * CAIRO_HAS_RECORDING_SURFACE:
+ *
+ * Defined if the recording surface backend is available.
+ * The recording surface backend is always built in.
+ * This macro was added for completeness in cairo 1.10.
+ *
+ * Since: 1.10
+ */
+
 /* Currently all recording surfaces do have a size which should be passed
  * in as the maximum size of any target surface against which the
  * recording-surface will ever be replayed.
