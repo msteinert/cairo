@@ -102,8 +102,8 @@ static const cairo_surface_backend_t cairo_recording_surface_backend;
 /**
  * cairo_recording_surface_create:
  * @content: the content of the recording surface
- * @extents_pixels: the extents to record in pixels, can be %NULL to record
- *                  unbounded operations.
+ * @extents: the extents to record in pixels, can be %NULL to record
+ *           unbounded operations.
  *
  * Creates a recording-surface which can be used to record all drawing operations
  * at the highest level (that is, the level of paint, mask, stroke, fill
@@ -114,7 +114,11 @@ static const cairo_surface_backend_t cairo_recording_surface_backend;
  * necessary objects (paths, patterns, etc.), in order to achieve
  * accurate replay.
  *
- * Since 1.10
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy() when done
+ * with it.
+ *
+ * Since: 1.10
  **/
 cairo_surface_t *
 cairo_recording_surface_create (cairo_content_t		 content,
