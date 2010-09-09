@@ -37,7 +37,13 @@
  *	Adrian Johnson <ajohnson@redneon.com>
  */
 
-/* A recording surface is a surface that records all drawing operations at
+/**
+ * SECTION:cairo-recording
+ * @Title: Recording Surfaces
+ * @Short_Description: Records all drawing operations
+ * @See_Also: #cairo_surface_t
+ *
+ * A recording surface is a surface that records all drawing operations at
  * the highest level of the surface backend interface, (that is, the
  * level of paint, mask, stroke, fill, and show_text_glyphs). The recording
  * surface can then be "replayed" against any target surface by using it
@@ -69,8 +75,6 @@
  * various objects. For example, it would be nice to have a
  * copy-on-write implementation for _cairo_surface_snapshot.
  */
-
-/* XXX Rename to recording surface */
 
 #include "cairoint.h"
 #include "cairo-analysis-surface-private.h"
