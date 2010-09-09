@@ -36,6 +36,7 @@
     <xi:include href="xml/cairo-pdf.xml"/>
     <xi:include href="xml/cairo-png.xml"/>
     <xi:include href="xml/cairo-ps.xml"/>
+    <xi:include href="xml/cairo-recording.xml"/>
     <xi:include href="xml/cairo-win32.xml"/>
     <!--xi:include href="xml/cairo-beos.xml"/-->
     <xi:include href="xml/cairo-svg.xml"/>

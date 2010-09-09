@@ -102,6 +102,13 @@ cairo_ps_surface_dsc_comment
 </SECTION>
 
 <SECTION>
+<FILE>cairo-recording</FILE>
+CAIRO_HAS_RECORDING_SURFACE
+cairo_recording_surface_create
+cairo_recording_surface_ink_extents
+</SECTION>
+
+<SECTION>
 <FILE>cairo-win32</FILE>
 CAIRO_HAS_WIN32_SURFACE
 cairo_win32_surface_create
