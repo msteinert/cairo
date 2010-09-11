@@ -99,7 +99,7 @@ CAIRO_ENABLE_SURFACE_BACKEND(xcb, XCB, no, [
 ])
 
 CAIRO_ENABLE_FUNCTIONS(xlib_xcb, Xlib/XCB, no, [
-  if test "x$use_xcb" == "xyes" -a "x$use_xlib" == "xyes"; then
+  if test "x$use_xcb" = "xyes" -a "x$use_xlib" = "xyes"; then
     xlib_xcb_REQUIRES="x11-xcb"
     PKG_CHECK_MODULES(xlib_xcb, $xlib_xcb_REQUIRES, ,
 		      [use_xlib_xcb="no (requires $xlib_xcb_REQUIRES http://xcb.freedesktop.org)"])
@@ -110,7 +110,7 @@ CAIRO_ENABLE_FUNCTIONS(xlib_xcb, Xlib/XCB, no, [
 AM_CONDITIONAL(BUILD_XLIB_XCB, test "x$use_xlib_xcb" = "xyes")
 
 CAIRO_ENABLE_FUNCTIONS(xcb_shm, XCB/SHM, auto, [
-  if test "x$use_xcb" == "xyes"; then
+  if test "x$use_xcb" = "xyes"; then
       xcb_shm_REQUIRES="xcb-shm"
       PKG_CHECK_MODULES(xcb_shm, $xcb_shm_REQUIRES, ,
 			[AC_MSG_RESULT(no)
@@ -232,7 +232,7 @@ CAIRO_ENABLE_SURFACE_BACKEND(drm, DRM, no, [
 ])
 
 CAIRO_ENABLE_FUNCTIONS(drm_xr, DRM Xr (DDX), no, [
-  if test "x$use_drm" == "xyes"; then
+  if test "x$use_drm" = "xyes"; then
       drm_xr_REQUIRES="xorg-server >= 1.6 xproto xextproto >= 7.0.99.1 renderproto x11"
       PKG_CHECK_MODULES(drm_xr, $drm_xr_REQUIRES, ,
 			[AC_MSG_RESULT(no)
@@ -262,7 +262,7 @@ CAIRO_ENABLE_SURFACE_BACKEND(gallium, Gallium3D, no, [
 ])
 
 CAIRO_ENABLE_FUNCTIONS(xcb_drm, XCB/DRM, no, [
-  if test "x$use_xcb" == "xyes" -a "x$use_drm" == "xyes"; then
+  if test "x$use_xcb" = "xyes" -a "x$use_drm" = "xyes"; then
       xcb_drm_REQUIRES="xcb-dri2"
       PKG_CHECK_MODULES(xcb_drm, $xcb_drm_REQUIRES, ,
 			[AC_MSG_RESULT(no)
