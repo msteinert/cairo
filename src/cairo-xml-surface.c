@@ -428,7 +428,7 @@ _cairo_xml_emit_path (cairo_xml_t *xml,
 					_cairo_xml_close_path,
 					xml);
     assert (status == CAIRO_STATUS_SUCCESS);
-    _cairo_xml_printf_start (xml, "</path>");
+    _cairo_xml_printf_end (xml, "</path>");
 }
 
 static void
