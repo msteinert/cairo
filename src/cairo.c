@@ -989,7 +989,7 @@ cairo_set_source_rgba (cairo_t *cr,
  * The @x and @y parameters give the user-space coordinate at which
  * the surface origin should appear. (The surface origin is its
  * upper-left corner before any transformation has been applied.) The
- * @x and @y patterns are negated and then set as translation values
+ * @x and @y parameters are negated and then set as translation values
  * in the pattern matrix.
  *
  * Other than the initial translation pattern matrix, as described
