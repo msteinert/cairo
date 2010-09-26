@@ -33,20 +33,9 @@ cairo-test-suite.exe: $(OBJECTS) ./pdiff/pdiff.lib ../boilerplate/$(CFG)/boiler.
 ../boilerplate/$(CFG)/boiler.lib:
 	(cd ../boilerplate ; $(MAKE) -f Makefile.win32)
 
-.PHONY: check test html
+.PHONY: check test
 
 check: cairo-test-suite.exe
 	./cairo-test-suite.exe
 
-# define gen-html so that both 'test' and 'html' targets
-# can generate html while having different dependencies
-define gen-html
-@echo Creating index.html...
-@perl make-html.pl > index.html
-endef
-
 test: check
-	$(gen-html)
-
-html:
-	$(gen-html)

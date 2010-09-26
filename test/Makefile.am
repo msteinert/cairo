@@ -1413,14 +1413,15 @@ REFERENCE_IMAGES = \
 
 EXTRA_DIST +=		\
 6x13.pcf		\
-make-html.pl		\
+index.html		\
+jp2.jp2			\
 jpeg.jpg		\
 png.png			\
-jp2.jp2			\
 romedalen.jpg		\
 romedalen.png		\
 scarab.jpg		\
 surface-source.c	\
+testtable.js		\
 $(REFERENCE_IMAGES)
 
 # Any test for which the code committed to CVS is expected to fail
@@ -1655,7 +1656,6 @@ VALGRIND_FLAGS = \
 
 CLEANFILES +=					\
 	valgrind-log				\
-	index.html				\
 	ref.hash				\
 	png-test.png				\
 	png.out.png				\
@@ -1698,24 +1698,16 @@ recheck:
 	@echo Re-checking failed tests
 	@$(MAKE) $(AM_MAKEFLAGS) $(recheck)
 
-# Checks tests and creates index.html.
+# Checks tests.
 # Target doesn't fail if tests fail.
 test:
-	@$(MAKE) $(AM_MAKEFLAGS) check; \
-	$(MAKE) $(AM_MAKEFLAGS) html
+	@$(MAKE) $(AM_MAKEFLAGS) check
 
-# Re-checks tests and creates index.html.
+# Re-checks tests.
 # Target doesn't fail if tests fail.
 retest:
 	@CAIRO_TESTS="$(FAILED_TESTS)"; \
-	$(MAKE) $(AM_MAKEFLAGS) check; \
-	$(MAKE) $(AM_MAKEFLAGS) html
-
-html-local: index.html
-
-# Make index.html with no dependency tracking, containing only the failed tests.
-rehtml:
-	@CAIRO_TESTS="$(FAILED_TESTS)" $(MAKE) $(AM_MAKEFLAGS) html
+	$(MAKE) $(AM_MAKEFLAGS) check
 
 # Run tests under a tool specified by TOOL.  For example, make run TOOL=gdb
 run:
@@ -1732,11 +1724,6 @@ NOLOG_TESTS_LOG = $(NOLOG_TESTS:=.log)
 
 $(NOLOG_TESTS_LOG):
 	@echo dummy > $@
-
-index.html: $(srcdir)/make-html.pl
-	@echo Creating index.html
-	@perl $(srcdir)/make-html.pl > $@
-
 
 # Identify identical reference images
 check-ref-dups:
@@ -1788,6 +1775,6 @@ check-ref-missing:
 
 release-verify-sane-tests: check-ref-missing
 
-.PHONY: check-valgrind test recheck retest rehtml check-ref-dups check-ref-missing release-verify-sane-tests
+.PHONY: check-valgrind test recheck retest check-ref-dups check-ref-missing release-verify-sane-tests
 
 EXTRA_DIST += Makefile.win32
