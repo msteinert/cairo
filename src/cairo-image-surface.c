@@ -1003,7 +1003,7 @@ static struct {
 static int n_cached;
 
 void
-_cairo_image_reset_static_data ()
+_cairo_image_reset_static_data (void)
 {
     while (n_cached)
 	pixman_image_unref (cache[--n_cached].image);
