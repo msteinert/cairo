@@ -1003,7 +1003,7 @@ static struct {
 static int n_cached;
 
 void
-_cairo_image_reset_static_data ()
+_cairo_image_reset_static_data (void)
 {
     while (n_cached)
 	pixman_image_unref (cache[--n_cached].image);
@@ -3447,10 +3447,15 @@ _composite_spans (void                          *closure,
     /* TODO: support rendering to A1 surfaces (or: go add span
      * compositing to pixman.) */
 
-    if (pattern == NULL && dst_format == PIXMAN_a8) {
+    if (pattern == NULL &&
+	dst_format == PIXMAN_a8 &&
+	op == CAIRO_OPERATOR_SOURCE)
+    {
 	mask = dst;
 	dst = NULL;
-    } else {
+    }
+    else
+    {
 	int stride = CAIRO_STRIDE_FOR_WIDTH_BPP (extents->width, 8);
 	uint8_t *data = mask_buf;
 
