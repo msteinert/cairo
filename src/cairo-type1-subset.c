@@ -804,6 +804,98 @@ static const int16_t ps_standard_encoding_offset[256] = {
 
 #define ps_standard_encoding(index) ((index) ? ps_standard_encoding_symbol+ps_standard_encoding_offset[(index)] : NULL)
 
+/* TODO: Merge these names into ps_standard_encoding_symbol (with a
+ * separate winansi_encoding_offset table) as most of the names are
+ * the same. */
+static const char *winansi_encoding[256] = {
+	/*   0 */
+	NULL,		NULL,		NULL,		NULL,
+	NULL,		NULL,		NULL,		NULL,
+	NULL,		NULL,		NULL,		NULL,
+	NULL,		NULL,		NULL,		NULL,
+	/*  16 */
+	NULL,		NULL,		NULL,		NULL,
+	NULL,		NULL,		NULL,		NULL,
+	NULL,		NULL,		NULL,		NULL,
+	NULL,		NULL,		NULL,		NULL,
+	/*  32 */
+	"space",	"exclam",	"quotedbl",	"numbersign",
+	"dollar",	"percent",	"ampersand",	"quoteright",
+	"parenleft",	"parenright",	"asterisk",	"plus",
+	"comma",	"hyphen",	"period",	"slash",
+	/*  48 */
+	"zero",		"one",		"two",		"three",
+	"four",		"five",		"six",		"seven",
+	"eight",	"nine",		"colon",	"semicolon",
+	"less",		"equal",	"greater",	"question",
+	/*  64 */
+	"at",		"A",		"B",		"C",
+	"D",		"E",		"F",		"G",
+	"H",		"I",		"J",		"K",
+	"L",		"M",		"N",		"O",
+	/*  80 */
+	"P",		"Q",		"R",		"S",
+	"T",		"U",		"V",		"W",
+	"X",		"Y",		"Z",		"bracketleft",
+	"backslash",	"bracketright",	"asciicircum",	"underscore",
+	/*  96 */
+	"quoteleft",	"a",		"b",		"c",
+	"d",		"e",		"f",		"g",
+	"h",		"i",		"j",		"k",
+	"l",		"m",		"n",		"o",
+	/* 112 */
+	"p",		"q",		"r",		"s",
+	"t",		"u",		"v",		"w",
+	"x",		"y",		"z",		"braceleft",
+	"bar",		"braceright",	"asciitilde",	NULL,
+	/* 128 */
+	"Euro",		NULL,		"quotesinglbase","florin",
+	"quotedblbase", "ellipsis",	"dagger",	"daggerdbl",
+	"circumflex",	"perthousand",	"Scaron",	"guilsinglleft",
+	"OE",		"bullet",	"Zcaron",	NULL,
+	/* 144 */
+	NULL,		"quoteleft",	"quoteright",	"quotedblleft",
+	"quotedblright","bullet",	"endash",	"emdash",
+	"tilde",	"trademark",	"scaron",	"guilsinglright",
+	"oe",		"bullet",	"zcaron",	"Ydieresis",
+	/* 160 */
+	"space",	"exclamdown",	"cent",		"sterling",
+	"currency",	"yen",		"brokenbar",	"section",
+	"dieresis",	"copyright",	"ordfeminine",	"guillemotleft",
+	"logicalnot",	"hyphen",	"registered",	"macron",
+	/* 176 */
+	"degree",	"plusminus",	"twosuperior",	"threesuperior",
+	"acute",	"mu",		"paragraph",	"periodcentered",
+	"cedilla",	"onesuperior",	"ordmasculine",	"guillemotright",
+	"onequarter",	"onehalf",	"threequarters","questiondown",
+	/* 192 */
+	"Agrave",	"Aacute",	"Acircumflex",	"Atilde",
+	"Adieresis",	"Aring",	"AE",		"Ccedilla",
+	"Egrave",	"Eacute",	"Ecircumflex",	"Edieresis",
+	"Igrave",	"Iacute",	"Icircumflex",	"Idieresis",
+	/* 208 */
+	"Eth",		"Ntilde",	"Ograve",	"Oacute",
+	"Ocircumflex",	"Otilde",	"Odieresis",	"multiply",
+	"Oslash",	"Ugrave",	"Uacute",	"Ucircumflex",
+	"Udieresis",	"Yacute",	"Thorn",	"germandbls",
+	/* 224 */
+	"agrave",	"aacute",	"acircumflex",	"atilde",
+	"adieresis",	"aring",	"ae",		"ccedilla",
+	"egrave",	"eacute",	"ecircumflex",	"edieresis",
+	"igrave",	"iacute",	"icircumflex",	"idieresis",
+	/* 240 */
+	"eth",		"ntilde",	"ograve",	"oacute",
+	"ocircumflex",	"otilde",	"odieresis",	"divide",
+	"oslash",	"ugrave",	"uacute",	"ucircumflex",
+	"udieresis",	"yacute",	"thorn",	"ydieresis"
+};
+
+const char *
+_cairo_winansi_to_glyphname (int glyph)
+{
+    return winansi_encoding[glyph];
+}
+
 static cairo_status_t
 use_standard_encoding_glyph (cairo_type1_font_subset_t *font, int index)
 {
