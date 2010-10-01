@@ -83,6 +83,7 @@ typedef struct _cairo_pdf_operators {
     int hex_width;
     cairo_bool_t is_latin;
     int num_glyphs;
+    double glyph_buf_x_pos;
     cairo_pdf_glyph_t glyphs[PDF_GLYPH_BUFFER_SIZE];
 
     /* PDF line style */
