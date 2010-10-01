@@ -116,6 +116,7 @@ typedef struct _cairo_type1_font_subset {
 static cairo_status_t
 _cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
 			       cairo_unscaled_font_t      *unscaled_font,
+			       cairo_scaled_font_subset_t *scaled_font_subset,
 			       cairo_bool_t                hex_encode)
 {
     cairo_ft_unscaled_font_t *ft_unscaled_font;
@@ -144,6 +145,7 @@ _cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
 #endif
 
     memset (font, 0, sizeof (*font));
+    font->scaled_font_subset = scaled_font_subset;
     font->base.unscaled_font = _cairo_unscaled_font_reference (unscaled_font);
     font->base.num_glyphs = face->num_glyphs;
     font->base.x_min = face->bbox.xMin;
@@ -391,13 +393,27 @@ cairo_type1_font_subset_write_header (cairo_type1_font_subset_t *font,
     _cairo_output_stream_printf (font->output,
 				 "/Encoding 256 array\n"
 				 "0 1 255 {1 index exch /.notdef put} for\n");
-    for (i = 1; i < font->base.num_glyphs; i++) {
-	if (font->glyphs[i].subset_index < 0)
-	    continue;
-	_cairo_output_stream_printf (font->output,
-				     "dup %d /%s put\n",
-				     font->glyphs[i].subset_index,
-				     font->glyphs[i].name);
+    if (font->scaled_font_subset->is_latin) {
+	for (i = 1; i < 256; i++) {
+	    int subset_glyph = font->scaled_font_subset->latin_to_subset_glyph_index[i];
+	    int parent_glyph = font->scaled_font_subset->glyphs[subset_glyph];
+
+	    if (subset_glyph > 0) {
+		_cairo_output_stream_printf (font->output,
+					     "dup %d /%s put\n",
+					     i,
+					     font->glyphs[parent_glyph].name);
+	    }
+	}
+    } else {
+	for (i = 1; i < font->base.num_glyphs; i++) {
+	    if (font->glyphs[i].subset_index < 0)
+		continue;
+	    _cairo_output_stream_printf (font->output,
+					 "dup %d /%s put\n",
+					 font->glyphs[i].subset_index,
+					 font->glyphs[i].name);
+	}
     }
     _cairo_output_stream_printf (font->output, "readonly def");
 
@@ -1415,7 +1431,7 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
 
     unscaled_font = _cairo_ft_scaled_font_get_unscaled_font (scaled_font_subset->scaled_font);
 
-    status = _cairo_type1_font_subset_init (&font, unscaled_font, hex_encode);
+    status = _cairo_type1_font_subset_init (&font, unscaled_font, scaled_font_subset, hex_encode);
     if (unlikely (status))
 	return status;
 
