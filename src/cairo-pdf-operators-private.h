@@ -81,6 +81,7 @@ typedef struct _cairo_pdf_operators {
     double cur_x; /* Current position in PDF text space (Tm in the PDF reference) */
     double cur_y;
     int hex_width;
+    cairo_bool_t is_latin;
     int num_glyphs;
     cairo_pdf_glyph_t glyphs[PDF_GLYPH_BUFFER_SIZE];
 

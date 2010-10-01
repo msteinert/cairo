@@ -880,6 +880,26 @@ _cairo_pdf_operators_fill_stroke (cairo_pdf_operators_t		*pdf_operators,
 					     operator);
 }
 
+static void
+_cairo_pdf_operators_emit_glyph_index (cairo_pdf_operators_t *pdf_operators,
+				       cairo_output_stream_t *stream,
+				       unsigned int 	      glyph)
+{
+    if (pdf_operators->is_latin) {
+	if (glyph == '(' || glyph == ')' || glyph == '\\')
+	    _cairo_output_stream_printf (stream, "\\%c", glyph);
+	else if (glyph >= 0x20 && glyph <= 0x7e)
+	    _cairo_output_stream_printf (stream, "%c", glyph);
+	else
+	    _cairo_output_stream_printf (stream, "\\%03o", glyph);
+    } else {
+	_cairo_output_stream_printf (stream,
+				     "%0*x",
+				     pdf_operators->hex_width,
+				     glyph);
+    }
+}
+
 #define GLYPH_POSITION_TOLERANCE 0.001
 
 /* Emit the string of glyphs using the 'Tj' operator. This requires
@@ -890,15 +910,14 @@ _cairo_pdf_operators_emit_glyph_string (cairo_pdf_operators_t   *pdf_operators,
 {
     int i;
 
-    _cairo_output_stream_printf (stream, "<");
+    _cairo_output_stream_printf (stream, "%s", pdf_operators->is_latin ? "(" : "<");
     for (i = 0; i < pdf_operators->num_glyphs; i++) {
-	_cairo_output_stream_printf (stream,
-				     "%0*x",
-				     pdf_operators->hex_width,
-				     pdf_operators->glyphs[i].glyph_index);
+	_cairo_pdf_operators_emit_glyph_index (pdf_operators,
+					       stream,
+					       pdf_operators->glyphs[i].glyph_index);
 	pdf_operators->cur_x += pdf_operators->glyphs[i].x_advance;
     }
-    _cairo_output_stream_printf (stream, ">Tj\n");
+    _cairo_output_stream_printf (stream, "%sTj\n", pdf_operators->is_latin ? ")" : ">");
 
     return _cairo_output_stream_get_status (stream);
 }
@@ -918,7 +937,7 @@ _cairo_pdf_operators_emit_glyph_string_with_positioning (
 {
     int i;
 
-    _cairo_output_stream_printf (stream, "[<");
+    _cairo_output_stream_printf (stream, "[%s", pdf_operators->is_latin ? "(" : "<");
     for (i = 0; i < pdf_operators->num_glyphs; i++) {
 	if (pdf_operators->glyphs[i].x_position != pdf_operators->cur_x)
 	{
@@ -934,10 +953,18 @@ _cairo_pdf_operators_emit_glyph_string_with_positioning (
 	     * calculating subsequent deltas.
 	     */
 	    rounded_delta = _cairo_lround (delta);
+	    if (abs(rounded_delta) < 3)
+		rounded_delta = 0;
 	    if (rounded_delta != 0) {
-		_cairo_output_stream_printf (stream,
-					     ">%d<",
-					     rounded_delta);
+		if (pdf_operators->is_latin) {
+		    _cairo_output_stream_printf (stream,
+						 ")%d(",
+						 rounded_delta);
+		} else {
+		    _cairo_output_stream_printf (stream,
+						 ">%d<",
+						 rounded_delta);
+		}
 	    }
 
 	    /* Convert the rounded delta back to text
@@ -947,13 +974,12 @@ _cairo_pdf_operators_emit_glyph_string_with_positioning (
 	    pdf_operators->cur_x += delta;
 	}
 
-	_cairo_output_stream_printf (stream,
-				     "%0*x",
-				     pdf_operators->hex_width,
-				     pdf_operators->glyphs[i].glyph_index);
+	_cairo_pdf_operators_emit_glyph_index (pdf_operators,
+					       stream,
+					       pdf_operators->glyphs[i].glyph_index);
 	pdf_operators->cur_x += pdf_operators->glyphs[i].x_advance;
     }
-    _cairo_output_stream_printf (stream, ">]TJ\n");
+    _cairo_output_stream_printf (stream, "%s]TJ\n", pdf_operators->is_latin ? ")" : ">");
 
     return _cairo_output_stream_get_status (stream);
 }
@@ -1124,6 +1150,7 @@ _cairo_pdf_operators_set_font_subset (cairo_pdf_operators_t             *pdf_ope
     }
     pdf_operators->font_id = subset_glyph->font_id;
     pdf_operators->subset_id = subset_glyph->subset_id;
+    pdf_operators->is_latin = subset_glyph->is_latin;
 
     if (subset_glyph->is_composite)
 	pdf_operators->hex_width = 4;
