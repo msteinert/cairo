@@ -514,12 +514,27 @@ cairo_type1_font_write_header (cairo_type1_font_t *font,
                                  "} readonly def\n"
                                  "/Encoding 256 array\n"
 				 "0 1 255 {1 index exch /.notdef put} for\n");
-    for (i = 1; i < font->scaled_font_subset->num_glyphs; i++) {
-	if (font->scaled_font_subset->glyph_names != NULL) {
-	    _cairo_output_stream_printf (font->output, "dup %d /%s put\n",
-					 i, font->scaled_font_subset->glyph_names[i]);
-	} else {
-	    _cairo_output_stream_printf (font->output, "dup %d /g%d put\n", i, i);
+    if (font->scaled_font_subset->is_latin) {
+	for (i = 1; i < 256; i++) {
+	    int subset_glyph = font->scaled_font_subset->latin_to_subset_glyph_index[i];
+
+	    if (subset_glyph > 0) {
+		if (font->scaled_font_subset->glyph_names != NULL) {
+		    _cairo_output_stream_printf (font->output, "dup %d /%s put\n",
+						 i, font->scaled_font_subset->glyph_names[subset_glyph]);
+		} else {
+		    _cairo_output_stream_printf (font->output, "dup %d /g%d put\n", i, subset_glyph);
+		}
+	    }
+	}
+    } else {
+	for (i = 1; i < font->scaled_font_subset->num_glyphs; i++) {
+	    if (font->scaled_font_subset->glyph_names != NULL) {
+		_cairo_output_stream_printf (font->output, "dup %d /%s put\n",
+					     i, font->scaled_font_subset->glyph_names[i]);
+	    } else {
+		_cairo_output_stream_printf (font->output, "dup %d /g%d put\n", i, i);
+	    }
 	}
     }
     _cairo_output_stream_printf (font->output,
