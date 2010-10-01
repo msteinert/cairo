@@ -1356,12 +1356,12 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
 	    font.glyphs[i].width;
     }
 
-    type1_subset->x_min = font.base.x_min;
-    type1_subset->y_min = font.base.y_min;
-    type1_subset->x_max = font.base.x_max;
-    type1_subset->y_max = font.base.y_max;
-    type1_subset->ascent = font.base.ascent;
-    type1_subset->descent = font.base.descent;
+    type1_subset->x_min = font.base.x_min/1000.0;
+    type1_subset->y_min = font.base.y_min/1000.0;
+    type1_subset->x_max = font.base.x_max/1000.0;
+    type1_subset->y_max = font.base.y_max/1000.0;
+    type1_subset->ascent = font.base.ascent/1000.0;
+    type1_subset->descent = font.base.descent/1000.0;
 
     length = font.base.header_size +
 	     font.base.data_size +
