@@ -393,51 +393,98 @@ cairo_truetype_font_check_boundary (cairo_truetype_font_t *font,
     return CAIRO_STATUS_SUCCESS;
 }
 
+typedef struct _cmap_unicode_range {
+    unsigned int start;
+    unsigned int end;
+} cmap_unicode_range_t;
+
+static cmap_unicode_range_t winansi_unicode_ranges[] = {
+    { 0x0020, 0x007f },
+    { 0x00a0, 0x00ff },
+    { 0x0152, 0x0153 },
+    { 0x0178, 0x0178 },
+    { 0x017d, 0x017e },
+    { 0x0192, 0x0192 },
+    { 0x02c6, 0x02c6 },
+    { 0x02dc, 0x02dc },
+    { 0x2013, 0x2026 },
+    { 0x2030, 0x2030 },
+    { 0x2039, 0x203a },
+    { 0x2122, 0x2122 },
+};
+
 static cairo_status_t
 cairo_truetype_font_write_cmap_table (cairo_truetype_font_t *font,
 				      unsigned long          tag)
 {
-    unsigned int i;
+    int i;
+    unsigned int j;
+    int range_offset;
+    int num_ranges;
+    int entry_selector;
+    int length;
+
+    num_ranges = ARRAY_LENGTH (winansi_unicode_ranges);
+
+    length = 16 + (num_ranges + 1)*8;
+    for (i = 0; i < num_ranges; i++)
+	length += (winansi_unicode_ranges[i].end - winansi_unicode_ranges[i].start + 1)*2;
+
+    entry_selector = 0;
+    while ((1 << entry_selector) <= (num_ranges + 1))
+	entry_selector++;
+
+    entry_selector--;
 
     cairo_truetype_font_write_be16 (font, 0);  /* Table version */
-    cairo_truetype_font_write_be16 (font, 2);  /* Num tables */
+    cairo_truetype_font_write_be16 (font, 1);  /* Num tables */
 
     cairo_truetype_font_write_be16 (font, 3);  /* Platform */
-    cairo_truetype_font_write_be16 (font, 0);  /* Encoding */
-    cairo_truetype_font_write_be32 (font, 20); /* Offset to start of table */
+    cairo_truetype_font_write_be16 (font, 1);  /* Encoding */
+    cairo_truetype_font_write_be32 (font, 12); /* Offset to start of table */
 
-    cairo_truetype_font_write_be16 (font, 1);  /* Platform */
-    cairo_truetype_font_write_be16 (font, 0);  /* Encoding */
-    cairo_truetype_font_write_be32 (font, 52); /* Offset to start of table */
-
-    /* Output a format 4 encoding table. */
+    /* Output a format 4 encoding table for the winansi encoding */
 
     cairo_truetype_font_write_be16 (font, 4);  /* Format */
-    cairo_truetype_font_write_be16 (font, 32); /* Length */
+    cairo_truetype_font_write_be16 (font, length); /* Length */
     cairo_truetype_font_write_be16 (font, 0);  /* Version */
-    cairo_truetype_font_write_be16 (font, 4);  /* 2*segcount */
-    cairo_truetype_font_write_be16 (font, 4);  /* searchrange */
-    cairo_truetype_font_write_be16 (font, 1);  /* entry selector */
-    cairo_truetype_font_write_be16 (font, 0);  /* rangeshift */
-    cairo_truetype_font_write_be16 (font, 0xf000 + font->base.num_glyphs - 1); /* end count[0] */
-    cairo_truetype_font_write_be16 (font, 0xffff);  /* end count[1] */
+    cairo_truetype_font_write_be16 (font, num_ranges*2 + 2);  /* 2*segcount */
+    cairo_truetype_font_write_be16 (font, (1 << (entry_selector + 1)));  /* searchrange */
+    cairo_truetype_font_write_be16 (font, entry_selector);  /* entry selector */
+    cairo_truetype_font_write_be16 (font, num_ranges*2 + 2 - (1 << (entry_selector + 1)));  /* rangeshift */
+    for (i = 0; i < num_ranges; i++)
+	cairo_truetype_font_write_be16 (font, winansi_unicode_ranges[i].end); /* end count[] */
+    cairo_truetype_font_write_be16 (font, 0xffff);  /* end count[] */
+
     cairo_truetype_font_write_be16 (font, 0);       /* reserved */
-    cairo_truetype_font_write_be16 (font, 0xf000);  /* startCode[0] */
-    cairo_truetype_font_write_be16 (font, 0xffff);  /* startCode[1] */
-    cairo_truetype_font_write_be16 (font, 0x1000);  /* delta[0] */
-    cairo_truetype_font_write_be16 (font, 1);       /* delta[1] */
-    cairo_truetype_font_write_be16 (font, 0);       /* rangeOffset[0] */
-    cairo_truetype_font_write_be16 (font, 0);       /* rangeOffset[1] */
 
-    /* Output a format 6 encoding table. */
+    for (i = 0; i < num_ranges; i++)
+	cairo_truetype_font_write_be16 (font, winansi_unicode_ranges[i].start);  /* startCode[] */
+    cairo_truetype_font_write_be16 (font, 0xffff);  /* startCode[] */
 
-    cairo_truetype_font_write_be16 (font, 6);
-    cairo_truetype_font_write_be16 (font, 10 + 2 * font->base.num_glyphs);
-    cairo_truetype_font_write_be16 (font, 0);
-    cairo_truetype_font_write_be16 (font, 0); /* First character */
-    cairo_truetype_font_write_be16 (font, font->base.num_glyphs);
-    for (i = 0; i < font->base.num_glyphs; i++)
-	cairo_truetype_font_write_be16 (font, i);
+    for (i = 0; i < num_ranges; i++)
+	cairo_truetype_font_write_be16 (font, 0x0000);  /* delta[] */
+    cairo_truetype_font_write_be16 (font, 1);       /* delta[] */
+
+    range_offset = num_ranges*2 + 2;
+    for (i = 0; i < num_ranges; i++) {
+	cairo_truetype_font_write_be16 (font, range_offset);       /* rangeOffset[] */
+	range_offset += (winansi_unicode_ranges[i].end - winansi_unicode_ranges[i].start + 1)*2 - 2;
+    }
+    cairo_truetype_font_write_be16 (font, 0);       /* rangeOffset[] */
+
+    for (i = 0; i < num_ranges; i++) {
+	for (j = winansi_unicode_ranges[i].start; j < winansi_unicode_ranges[i].end + 1; j++) {
+	    int ch = _cairo_unicode_to_winansi (j);
+	    int glyph;
+
+	    if (ch > 0)
+		glyph = font->scaled_font_subset->latin_to_subset_glyph_index[ch];
+	    else
+		glyph = 0;
+	    cairo_truetype_font_write_be16 (font, glyph);
+	}
+    }
 
     return font->status;
 }
@@ -985,8 +1032,9 @@ cairo_truetype_font_add_truetype_table (cairo_truetype_font_t *font,
  * The tables in the table directory must be listed in alphabetical
  * order.  The "cvt", "fpgm", and "prep" are optional tables. They
  * will only be embedded in the subset if they exist in the source
- * font. The pos parameter of cairo_truetype_font_add_truetype_table()
- * specifies the position of the table in the table directory.
+ * font. "cmap" is only embedded for latin fonts. The pos parameter of
+ * cairo_truetype_font_add_truetype_table() specifies the position of
+ * the table in the table directory.
  */
 static void
 cairo_truetype_font_create_truetype_table_list (cairo_truetype_font_t *font)
@@ -1016,7 +1064,9 @@ cairo_truetype_font_create_truetype_table_list (cairo_truetype_font_t *font)
         has_prep = TRUE;
 
     font->num_tables = 0;
-    pos = 1;
+    pos = 0;
+    if (font->scaled_font_subset->is_latin)
+	pos++;
     if (has_cvt)
         pos++;
     if (has_fpgm)
@@ -1024,7 +1074,8 @@ cairo_truetype_font_create_truetype_table_list (cairo_truetype_font_t *font)
     cairo_truetype_font_add_truetype_table (font, TT_TAG_glyf, cairo_truetype_font_write_glyf_table, pos);
 
     pos = 0;
-    cairo_truetype_font_add_truetype_table (font, TT_TAG_cmap, cairo_truetype_font_write_cmap_table, pos++);
+    if (font->scaled_font_subset->is_latin)
+	cairo_truetype_font_add_truetype_table (font, TT_TAG_cmap, cairo_truetype_font_write_cmap_table, pos++);
     if (has_cvt)
         cairo_truetype_font_add_truetype_table (font, TT_TAG_cvt, cairo_truetype_font_write_generic_table, pos++);
     if (has_fpgm)

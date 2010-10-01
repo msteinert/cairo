@@ -343,7 +343,8 @@ static unsigned int _winansi_0x80_to_0x9f[] = {
     0x02dc, 0x2122, 0x0161, 0x203a, 0x0153, 0x0000, 0x017e, 0x0178
 };
 
-static int _unicode_to_winansi (unsigned long unicode)
+int
+_cairo_unicode_to_winansi (unsigned long unicode)
 {
     int i;
 
@@ -618,7 +619,7 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 	if (sub_font->parent->use_latin_subset &&
 	    (! _cairo_font_face_is_user (sub_font->scaled_font->font_face)))
 	{
-	    latin_character = _unicode_to_winansi (font_unicode);
+	    latin_character = _cairo_unicode_to_winansi (font_unicode);
 	    if (latin_character > 0 ||
 		(latin_character == 0 && sub_font->num_glyphs_in_latin_subset > 0))
 	    {
@@ -1184,7 +1185,7 @@ _cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset
 	}
 
 	if (utf16_len == 1) {
-	    int ch = _unicode_to_winansi (utf16[0]);
+	    int ch = _cairo_unicode_to_winansi (utf16[0]);
 	    if (ch > 0)
 		strncpy (buf, _cairo_winansi_to_glyphname (ch), sizeof (buf));
 	    else
