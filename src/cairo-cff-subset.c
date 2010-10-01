@@ -2011,6 +2011,26 @@ _cairo_cff_subset_fini (cairo_cff_subset_t *subset)
     free (subset->data);
 }
 
+cairo_bool_t
+_cairo_cff_scaled_font_is_cff (cairo_scaled_font_t *scaled_font)
+{
+    const cairo_scaled_font_backend_t *backend;
+    cairo_status_t status;
+    unsigned long data_length;
+
+    backend = scaled_font->backend;
+    if (!backend->load_truetype_table)
+	return FALSE;
+
+    data_length = 0;
+    status = backend->load_truetype_table(scaled_font,
+					  TT_TAG_CFF, 0, NULL, &data_length);
+    if (status)
+        return FALSE;;
+
+    return TRUE;
+}
+
 static cairo_int_status_t
 _cairo_cff_font_fallback_create (cairo_scaled_font_subset_t  *scaled_font_subset,
                                  cairo_cff_font_t           **font_return,

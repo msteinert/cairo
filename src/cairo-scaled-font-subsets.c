@@ -70,6 +70,7 @@ typedef struct _cairo_sub_font {
     cairo_bool_t is_scaled;
     cairo_bool_t is_composite;
     cairo_bool_t is_user;
+    cairo_bool_t use_latin_subset;
     cairo_scaled_font_subsets_t *parent;
     cairo_scaled_font_t *scaled_font;
     unsigned int font_id;
@@ -294,7 +295,11 @@ _cairo_sub_font_create (cairo_scaled_font_subsets_t	*parent,
     sub_font->scaled_font = scaled_font;
     sub_font->font_id = font_id;
 
-    if (parent->use_latin_subset)
+    sub_font->use_latin_subset = parent->use_latin_subset;
+    if (_cairo_cff_scaled_font_is_cff (scaled_font))
+	sub_font->use_latin_subset = FALSE; /* CFF latin subsets are NYI */
+
+    if (sub_font->use_latin_subset)
 	sub_font->current_subset = 1; /* reserve subset 0 for latin glyphs */
     else
 	sub_font->current_subset = 0;
@@ -616,7 +621,7 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 	 * create a separate subset just for the .notdef glyph.
 	 */
 	is_latin = FALSE;
-	if (sub_font->parent->use_latin_subset &&
+	if (sub_font->use_latin_subset &&
 	    (! _cairo_font_face_is_user (sub_font->scaled_font->font_face)))
 	{
 	    latin_character = _cairo_unicode_to_winansi (font_unicode);
@@ -702,7 +707,7 @@ _cairo_sub_font_collect (void *entry, void *closure)
         subset.glyph_names = NULL;
 
 	subset.is_latin = FALSE;
-	if (sub_font->parent->use_latin_subset && i == 0) {
+	if (sub_font->use_latin_subset && i == 0) {
 	    subset.is_latin = TRUE;
 	    subset.latin_to_subset_glyph_index = collection->latin_to_subset_glyph_index;
 	} else {

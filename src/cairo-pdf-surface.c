@@ -357,6 +357,8 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 	goto BAIL1;
     }
 
+    _cairo_scaled_font_subsets_enable_latin_subset (surface->font_subsets, TRUE);
+
     surface->next_available_resource.id = 1;
     surface->pages_resource = _cairo_pdf_surface_new_object (surface);
     if (surface->pages_resource.id == 0) {
@@ -4069,7 +4071,7 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
     cairo_pdf_font_t font;
     cairo_status_t status;
     unsigned long length;
-    unsigned int i;
+    unsigned int i, last_glyph;
     char tag[10];
 
     _create_font_subset_tag (font_subset, subset->base_font, tag);
@@ -4105,6 +4107,15 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
     if (_cairo_status_is_error (status))
 	return status;
 
+    if (font_subset->is_latin) {
+	/* find last glyph used */
+	for (i = 255; i >= 32; i--)
+	    if (font_subset->latin_to_subset_glyph_index[i] > 0)
+		break;
+
+	last_glyph = i;
+    }
+
     descriptor = _cairo_pdf_surface_new_object (surface);
     if (descriptor.id == 0)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -4113,7 +4124,7 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 				 "%d 0 obj\n"
 				 "<< /Type /FontDescriptor\n"
 				 "   /FontName /%s+%s\n"
-				 "   /Flags 4\n"
+				 "   /Flags %d\n"
 				 "   /FontBBox [ %ld %ld %ld %ld ]\n"
 				 "   /ItalicAngle 0\n"
 				 "   /Ascent %ld\n"
@@ -4127,6 +4138,7 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 				 descriptor.id,
 				 tag,
 				 subset->base_font,
+				 font_subset->is_latin ? 32 : 4,
 				 (long)(subset->x_min*PDF_UNITS_PER_EM),
 				 (long)(subset->y_min*PDF_UNITS_PER_EM),
 				 (long)(subset->x_max*PDF_UNITS_PER_EM),
@@ -4142,20 +4154,34 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 				 "<< /Type /Font\n"
 				 "   /Subtype /Type1\n"
 				 "   /BaseFont /%s+%s\n"
-				 "   /FirstChar 0\n"
+				 "   /FirstChar %d\n"
 				 "   /LastChar %d\n"
 				 "   /FontDescriptor %d 0 R\n"
 				 "   /Widths [",
 				 subset_resource.id,
 				 tag,
 				 subset->base_font,
-				 font_subset->num_glyphs - 1,
+				 font_subset->is_latin ? 32 : 0,
+				 font_subset->is_latin ? last_glyph : font_subset->num_glyphs - 1,
 				 descriptor.id);
 
-    for (i = 0; i < font_subset->num_glyphs; i++)
-	_cairo_output_stream_printf (surface->output,
-				     " %ld",
-                                     (long)(subset->widths[i]*PDF_UNITS_PER_EM));
+    if (font_subset->is_latin) {
+	for (i = 32; i < last_glyph + 1; i++) {
+	    int glyph = font_subset->latin_to_subset_glyph_index[i];
+	    if (glyph > 0) {
+		_cairo_output_stream_printf (surface->output,
+					     " %ld",
+					     (long)(subset->widths[glyph]*PDF_UNITS_PER_EM));
+	    } else {
+		_cairo_output_stream_printf (surface->output, " 0");
+	    }
+	}
+    } else {
+	for (i = 0; i < font_subset->num_glyphs; i++)
+	    _cairo_output_stream_printf (surface->output,
+					 " %ld",
+					 (long)(subset->widths[i]*PDF_UNITS_PER_EM));
+    }
 
     _cairo_output_stream_printf (surface->output,
 				 " ]\n");
@@ -4226,7 +4252,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     cairo_status_t status;
     cairo_pdf_font_t font;
     cairo_truetype_subset_t subset;
-    unsigned int i;
+    unsigned int i, last_glyph;
     char tag[10];
 
     subset_resource = _cairo_pdf_surface_get_font_resource (surface,
@@ -4289,7 +4315,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     }
 
     _cairo_output_stream_printf (surface->output,
-				 "   /Flags 4\n"
+				 "   /Flags %d\n"
 				 "   /FontBBox [ %ld %ld %ld %ld ]\n"
 				 "   /ItalicAngle 0\n"
 				 "   /Ascent %ld\n"
@@ -4300,6 +4326,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 "   /FontFile2 %u 0 R\n"
 				 ">>\n"
 				 "endobj\n",
+				 font_subset->is_latin ? 32 : 4,
 				 (long)(subset.x_min*PDF_UNITS_PER_EM),
 				 (long)(subset.y_min*PDF_UNITS_PER_EM),
                                  (long)(subset.x_max*PDF_UNITS_PER_EM),
@@ -4309,60 +4336,108 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 (long)(subset.y_max*PDF_UNITS_PER_EM),
 				 stream.id);
 
-    cidfont_dict = _cairo_pdf_surface_new_object (surface);
-    if (cidfont_dict.id == 0) {
-	_cairo_truetype_subset_fini (&subset);
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    if (font_subset->is_latin) {
+	/* find last glyph used */
+	for (i = 255; i >= 32; i--)
+	    if (font_subset->latin_to_subset_glyph_index[i] > 0)
+		break;
+
+	last_glyph = i;
+	_cairo_pdf_surface_update_object (surface, subset_resource);
+	_cairo_output_stream_printf (surface->output,
+				     "%d 0 obj\r\n"
+				     "<< /Type /Font\n"
+				     "   /Subtype /TrueType\n"
+				     "   /BaseFont /%s+%s\n"
+				     "   /FirstChar 32\n"
+				     "   /LastChar %d\n"
+				     "   /FontDescriptor %d 0 R\n"
+				     "   /Encoding /WinAnsiEncoding\n"
+				     "   /Widths [",
+				     subset_resource.id,
+				     tag,
+				     subset.ps_name,
+				     last_glyph,
+				     descriptor.id);
+
+	for (i = 32; i < last_glyph + 1; i++) {
+	    int glyph = font_subset->latin_to_subset_glyph_index[i];
+	    if (glyph > 0) {
+		_cairo_output_stream_printf (surface->output,
+					     " %ld",
+					     (long)(subset.widths[glyph]*PDF_UNITS_PER_EM));
+	    } else {
+		_cairo_output_stream_printf (surface->output, " 0");
+	    }
+	}
+
+	_cairo_output_stream_printf (surface->output,
+				     " ]\n");
+
+	if (to_unicode_stream.id != 0)
+	    _cairo_output_stream_printf (surface->output,
+					 "    /ToUnicode %d 0 R\n",
+					 to_unicode_stream.id);
+
+	_cairo_output_stream_printf (surface->output,
+				     ">>\n"
+				     "endobj\n");
+    } else {
+	cidfont_dict = _cairo_pdf_surface_new_object (surface);
+	if (cidfont_dict.id == 0) {
+	    _cairo_truetype_subset_fini (&subset);
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	}
+
+	_cairo_output_stream_printf (surface->output,
+				     "%d 0 obj\n"
+				     "<< /Type /Font\n"
+				     "   /Subtype /CIDFontType2\n"
+				     "   /BaseFont /%s+%s\n"
+				     "   /CIDSystemInfo\n"
+				     "   << /Registry (Adobe)\n"
+				     "      /Ordering (Identity)\n"
+				     "      /Supplement 0\n"
+				     "   >>\n"
+				     "   /FontDescriptor %d 0 R\n"
+				     "   /W [0 [",
+				     cidfont_dict.id,
+				     tag,
+				     subset.ps_name,
+				     descriptor.id);
+
+	for (i = 0; i < font_subset->num_glyphs; i++)
+	    _cairo_output_stream_printf (surface->output,
+					 " %ld",
+					 (long)(subset.widths[i]*PDF_UNITS_PER_EM));
+
+	_cairo_output_stream_printf (surface->output,
+				     " ]]\n"
+				     ">>\n"
+				     "endobj\n");
+
+	_cairo_pdf_surface_update_object (surface, subset_resource);
+	_cairo_output_stream_printf (surface->output,
+				     "%d 0 obj\n"
+				     "<< /Type /Font\n"
+				     "   /Subtype /Type0\n"
+				     "   /BaseFont /%s+%s\n"
+				     "   /Encoding /Identity-H\n"
+				     "   /DescendantFonts [ %d 0 R]\n",
+				     subset_resource.id,
+				     tag,
+				     subset.ps_name,
+				     cidfont_dict.id);
+
+	if (to_unicode_stream.id != 0)
+	    _cairo_output_stream_printf (surface->output,
+					 "   /ToUnicode %d 0 R\n",
+					 to_unicode_stream.id);
+
+	_cairo_output_stream_printf (surface->output,
+				     ">>\n"
+				     "endobj\n");
     }
-
-    _cairo_output_stream_printf (surface->output,
-                                 "%d 0 obj\n"
-                                 "<< /Type /Font\n"
-                                 "   /Subtype /CIDFontType2\n"
-                                 "   /BaseFont /%s+%s\n"
-                                 "   /CIDSystemInfo\n"
-                                 "   << /Registry (Adobe)\n"
-                                 "      /Ordering (Identity)\n"
-                                 "      /Supplement 0\n"
-                                 "   >>\n"
-                                 "   /FontDescriptor %d 0 R\n"
-                                 "   /W [0 [",
-                                 cidfont_dict.id,
-				 tag,
-                                 subset.ps_name,
-                                 descriptor.id);
-
-    for (i = 0; i < font_subset->num_glyphs; i++)
-        _cairo_output_stream_printf (surface->output,
-                                     " %ld",
-                                     (long)(subset.widths[i]*PDF_UNITS_PER_EM));
-
-    _cairo_output_stream_printf (surface->output,
-                                 " ]]\n"
-				 ">>\n"
-				 "endobj\n");
-
-    _cairo_pdf_surface_update_object (surface, subset_resource);
-    _cairo_output_stream_printf (surface->output,
-				 "%d 0 obj\n"
-				 "<< /Type /Font\n"
-				 "   /Subtype /Type0\n"
-				 "   /BaseFont /%s+%s\n"
-                                 "   /Encoding /Identity-H\n"
-				 "   /DescendantFonts [ %d 0 R]\n",
-				 subset_resource.id,
-				 tag,
-				 subset.ps_name,
-				 cidfont_dict.id);
-
-    if (to_unicode_stream.id != 0)
-        _cairo_output_stream_printf (surface->output,
-                                     "   /ToUnicode %d 0 R\n",
-                                     to_unicode_stream.id);
-
-    _cairo_output_stream_printf (surface->output,
-				 ">>\n"
-				 "endobj\n");
 
     font.font_id = font_subset->font_id;
     font.subset_id = font_subset->subset_id;

@@ -387,6 +387,15 @@ cairo_private void
 _cairo_cff_subset_fini (cairo_cff_subset_t *cff_subset);
 
 /**
+ * _cairo_cff_scaled_font_is_cff:
+ * @scaled_font: a #cairo_scaled_font_t
+ *
+ * Return %TRUE if @scaled_font is a CFF font, otherwise return %FALSE.
+ **/
+cairo_bool_t
+_cairo_cff_scaled_font_is_cff (cairo_scaled_font_t *scaled_font);
+
+/**
  * _cairo_cff_fallback_init:
  * @cff_subset: a #cairo_cff_subset_t to initialize
  * @font_subset: the #cairo_scaled_font_subset_t to initialize from
