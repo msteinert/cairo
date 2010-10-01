@@ -426,14 +426,29 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
 
     /* FIXME: Figure out how subset->x_max etc maps to the /FontBBox */
 
-    for (i = 1; i < font_subset->num_glyphs; i++) {
-	if (font_subset->glyph_names != NULL) {
-	    _cairo_output_stream_printf (surface->final_stream,
-					 "Encoding %d /%s put\n",
-					 i, font_subset->glyph_names[i]);
-	} else {
-	    _cairo_output_stream_printf (surface->final_stream,
-					 "Encoding %d /g%d put\n", i, i);
+    if (font_subset->is_latin) {
+	for (i = 1; i < 256; i++) {
+	    if (font_subset->latin_to_subset_glyph_index[i] > 0) {
+		if (font_subset->glyph_names != NULL) {
+		    _cairo_output_stream_printf (surface->final_stream,
+						 "Encoding %d /%s put\n",
+						 i, font_subset->glyph_names[font_subset->latin_to_subset_glyph_index[i]]);
+		} else {
+		    _cairo_output_stream_printf (surface->final_stream,
+						 "Encoding %d /g%ld put\n", i, font_subset->latin_to_subset_glyph_index[i]);
+		}
+	    }
+	}
+    } else {
+	for (i = 1; i < font_subset->num_glyphs; i++) {
+	    if (font_subset->glyph_names != NULL) {
+		_cairo_output_stream_printf (surface->final_stream,
+					     "Encoding %d /%s put\n",
+					     i, font_subset->glyph_names[i]);
+	    } else {
+		_cairo_output_stream_printf (surface->final_stream,
+					     "Encoding %d /g%d put\n", i, i);
+	    }
 	}
     }
 
@@ -956,6 +971,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 	goto CLEANUP_OUTPUT_STREAM;
     }
 
+    _cairo_scaled_font_subsets_enable_latin_subset (surface->font_subsets, TRUE);
     surface->has_creation_date = FALSE;
     surface->eps = FALSE;
     surface->ps_level = CAIRO_PS_LEVEL_3;
