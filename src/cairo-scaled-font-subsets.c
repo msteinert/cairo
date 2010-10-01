@@ -120,6 +120,7 @@ typedef struct _cairo_sub_font_collection {
     unsigned long *glyphs; /* scaled_font_glyph_index */
     char       **utf8;
     unsigned int glyphs_size;
+    unsigned long *latin_to_subset_glyph_index;
     unsigned int max_glyph;
     unsigned int num_glyphs;
 
@@ -230,6 +231,9 @@ _cairo_sub_font_glyph_collect (void *entry, void *closure)
 
     collection->glyphs[subset_glyph_index] = scaled_font_glyph_index;
     collection->utf8[subset_glyph_index] = sub_font_glyph->utf8;
+    if (sub_font_glyph->is_latin)
+	collection->latin_to_subset_glyph_index[sub_font_glyph->latin_character] = subset_glyph_index;
+
     if (subset_glyph_index > collection->max_glyph)
 	collection->max_glyph = subset_glyph_index;
 
@@ -674,6 +678,7 @@ _cairo_sub_font_collect (void *entry, void *closure)
 	collection->subset_id = i;
 	collection->num_glyphs = 0;
 	collection->max_glyph = 0;
+	memset (collection->latin_to_subset_glyph_index, 0, 256*sizeof(unsigned long));
 
 	_cairo_hash_table_foreach (sub_font->sub_font_glyphs,
 				   _cairo_sub_font_glyph_collect, collection);
@@ -694,6 +699,15 @@ _cairo_sub_font_collect (void *entry, void *closure)
 	subset.utf8 = collection->utf8;
 	subset.num_glyphs = collection->num_glyphs;
         subset.glyph_names = NULL;
+
+	subset.is_latin = FALSE;
+	if (sub_font->parent->use_latin_subset && i == 0) {
+	    subset.is_latin = TRUE;
+	    subset.latin_to_subset_glyph_index = collection->latin_to_subset_glyph_index;
+	} else {
+	    subset.latin_to_subset_glyph_index = NULL;
+	}
+
         /* No need to check for out of memory here. If to_unicode is NULL, the PDF
          * surface does not emit an ToUnicode stream */
         subset.to_unicode = _cairo_malloc_ab (collection->num_glyphs, sizeof (unsigned long));
@@ -1005,11 +1019,16 @@ _cairo_scaled_font_subsets_foreach_internal (cairo_scaled_font_subsets_t        
 
     collection.glyphs = _cairo_malloc_ab (collection.glyphs_size, sizeof(unsigned long));
     collection.utf8 = _cairo_malloc_ab (collection.glyphs_size, sizeof(char *));
-    if (unlikely (collection.glyphs == NULL || collection.utf8 == NULL)) {
+    collection.latin_to_subset_glyph_index = _cairo_malloc_ab (256, sizeof(unsigned long));
+    if (unlikely (collection.glyphs == NULL ||
+		  collection.utf8 == NULL ||
+		  collection.latin_to_subset_glyph_index == NULL)) {
 	if (collection.glyphs != NULL)
 	    free (collection.glyphs);
 	if (collection.utf8 != NULL)
 	    free (collection.utf8);
+	if (collection.latin_to_subset_glyph_index != NULL)
+	    free (collection.latin_to_subset_glyph_index);
 
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
@@ -1031,6 +1050,7 @@ _cairo_scaled_font_subsets_foreach_internal (cairo_scaled_font_subsets_t        
     }
     free (collection.utf8);
     free (collection.glyphs);
+    free (collection.latin_to_subset_glyph_index);
 
     return collection.status;
 }
