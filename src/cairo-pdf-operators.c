@@ -990,6 +990,7 @@ _cairo_pdf_operators_flush_glyphs (cairo_pdf_operators_t    *pdf_operators)
     }
 
     pdf_operators->num_glyphs = 0;
+    pdf_operators->glyph_buf_x_pos = pdf_operators->cur_x;
     status2 = _cairo_output_stream_destroy (word_wrap_stream);
     if (status == CAIRO_STATUS_SUCCESS)
 	status = status2;
@@ -1012,6 +1013,7 @@ _cairo_pdf_operators_add_glyph (cairo_pdf_operators_t             *pdf_operators
     pdf_operators->glyphs[pdf_operators->num_glyphs].x_position = x_position;
     pdf_operators->glyphs[pdf_operators->num_glyphs].glyph_index = glyph->subset_glyph_index;
     pdf_operators->glyphs[pdf_operators->num_glyphs].x_advance = x;
+    pdf_operators->glyph_buf_x_pos += x;
     pdf_operators->num_glyphs++;
     if (pdf_operators->num_glyphs == PDF_GLYPH_BUFFER_SIZE)
 	return _cairo_pdf_operators_flush_glyphs (pdf_operators);
@@ -1036,6 +1038,7 @@ _cairo_pdf_operators_set_text_matrix (cairo_pdf_operators_t  *pdf_operators,
     pdf_operators->text_matrix = *matrix;
     pdf_operators->cur_x = 0;
     pdf_operators->cur_y = 0;
+    pdf_operators->glyph_buf_x_pos = 0;
     _cairo_output_stream_printf (pdf_operators->stream,
 				 "%f %f %f %f %f %f Tm\n",
 				 pdf_operators->text_matrix.xx,
@@ -1091,6 +1094,7 @@ _cairo_pdf_operators_set_text_position (cairo_pdf_operators_t  *pdf_operators,
 				 translate.y0);
     pdf_operators->cur_x = 0;
     pdf_operators->cur_y = 0;
+    pdf_operators->glyph_buf_x_pos = 0;
 
     pdf_operators->cairo_to_pdftext = pdf_operators->text_matrix;
     status = cairo_matrix_invert (&pdf_operators->cairo_to_pdftext);
@@ -1140,6 +1144,7 @@ _cairo_pdf_operators_begin_text (cairo_pdf_operators_t    *pdf_operators)
 
     pdf_operators->in_text_object = TRUE;
     pdf_operators->num_glyphs = 0;
+    pdf_operators->glyph_buf_x_pos = 0;
 
     return _cairo_output_stream_get_status (pdf_operators->stream);
 }
@@ -1244,7 +1249,7 @@ _cairo_pdf_operators_emit_glyph (cairo_pdf_operators_t             *pdf_operator
      * PDF consumers that do not handle very large position
      * adjustments in TJ.
      */
-    if (fabs(x - pdf_operators->cur_x) > 10 ||
+    if (fabs(x - pdf_operators->glyph_buf_x_pos) > 10 ||
 	fabs(y - pdf_operators->cur_y) > GLYPH_POSITION_TOLERANCE)
     {
 	status = _cairo_pdf_operators_flush_glyphs (pdf_operators);
