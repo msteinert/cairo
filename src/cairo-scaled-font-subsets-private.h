@@ -47,6 +47,7 @@ typedef struct _cairo_scaled_font_subsets_glyph {
     unsigned int subset_glyph_index;
     cairo_bool_t is_scaled;
     cairo_bool_t is_composite;
+    cairo_bool_t is_latin;
     double       x_advance;
     double       y_advance;
     cairo_bool_t utf8_is_mapped;
@@ -123,6 +124,18 @@ _cairo_scaled_font_subsets_create_composite (void);
  **/
 cairo_private void
 _cairo_scaled_font_subsets_destroy (cairo_scaled_font_subsets_t *font_subsets);
+
+/**
+ * _cairo_scaled_font_subsets_enable_latin_subset:
+ * @font_subsets: a #cairo_scaled_font_subsets_t object to be destroyed
+ * @use_latin: a #cairo_bool_t indicating if a latin subset is to be used
+ *
+ * If enabled, all CP1252 characters will be placed in a separate
+ * 8-bit latin subset.
+ **/
+cairo_private void
+_cairo_scaled_font_subsets_enable_latin_subset (cairo_scaled_font_subsets_t *font_subsets,
+						cairo_bool_t                 use_latin);
 
 /**
  * _cairo_scaled_font_subsets_map_glyph:
