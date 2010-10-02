@@ -92,7 +92,7 @@ struct _cairo_truetype_font {
     unsigned long last_boundary;
     int *parent_to_subset;
     cairo_status_t status;
-
+    cairo_bool_t is_pdf;
 };
 
 /*
@@ -132,6 +132,7 @@ _cairo_truetype_font_set_error (cairo_truetype_font_t *font,
 
 static cairo_status_t
 _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
+			     cairo_bool_t is_pdf,
 			     cairo_truetype_font_t      **font_return)
 {
     cairo_status_t status;
@@ -206,6 +207,7 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
 	goto fail2;
     }
 
+    font->is_pdf = is_pdf;
     font->base.num_glyphs = 0;
     font->base.x_min = (int16_t) be16_to_cpu (head.x_min);
     font->base.y_min = (int16_t) be16_to_cpu (head.y_min);
@@ -1065,7 +1067,7 @@ cairo_truetype_font_create_truetype_table_list (cairo_truetype_font_t *font)
 
     font->num_tables = 0;
     pos = 0;
-    if (font->scaled_font_subset->is_latin)
+    if (font->is_pdf && font->scaled_font_subset->is_latin)
 	pos++;
     if (has_cvt)
         pos++;
@@ -1074,7 +1076,7 @@ cairo_truetype_font_create_truetype_table_list (cairo_truetype_font_t *font)
     cairo_truetype_font_add_truetype_table (font, TT_TAG_glyf, cairo_truetype_font_write_glyf_table, pos);
 
     pos = 0;
-    if (font->scaled_font_subset->is_latin)
+    if (font->is_pdf && font->scaled_font_subset->is_latin)
 	cairo_truetype_font_add_truetype_table (font, TT_TAG_cmap, cairo_truetype_font_write_cmap_table, pos++);
     if (has_cvt)
         cairo_truetype_font_add_truetype_table (font, TT_TAG_cvt, cairo_truetype_font_write_generic_table, pos++);
@@ -1090,9 +1092,10 @@ cairo_truetype_font_create_truetype_table_list (cairo_truetype_font_t *font)
         cairo_truetype_font_add_truetype_table (font, TT_TAG_prep, cairo_truetype_font_write_generic_table, pos);
 }
 
-cairo_status_t
-_cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
-			     cairo_scaled_font_subset_t	*font_subset)
+static cairo_status_t
+cairo_truetype_subset_init_internal (cairo_truetype_subset_t     *truetype_subset,
+				      cairo_scaled_font_subset_t *font_subset,
+				      cairo_bool_t                is_pdf)
 {
     cairo_truetype_font_t *font = NULL;
     cairo_status_t status;
@@ -1103,7 +1106,7 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
     const unsigned long *string_offsets = NULL;
     unsigned long num_strings = 0;
 
-    status = _cairo_truetype_font_create (font_subset, &font);
+    status = _cairo_truetype_font_create (font_subset, is_pdf, &font);
     if (unlikely (status))
 	return status;
 
@@ -1199,6 +1202,20 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
     cairo_truetype_font_destroy (font);
 
     return status;
+}
+
+cairo_status_t
+_cairo_truetype_subset_init_ps (cairo_truetype_subset_t    *truetype_subset,
+				cairo_scaled_font_subset_t	*font_subset)
+{
+    return cairo_truetype_subset_init_internal (truetype_subset, font_subset, FALSE);
+}
+
+cairo_status_t
+_cairo_truetype_subset_init_pdf (cairo_truetype_subset_t    *truetype_subset,
+				cairo_scaled_font_subset_t	*font_subset)
+{
+    return cairo_truetype_subset_init_internal (truetype_subset, font_subset, TRUE);
 }
 
 void

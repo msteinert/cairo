@@ -4261,7 +4261,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     if (subset_resource.id == 0)
 	return CAIRO_STATUS_SUCCESS;
 
-    status = _cairo_truetype_subset_init (&subset, font_subset);
+    status = _cairo_truetype_subset_init_pdf (&subset, font_subset);
     if (unlikely (status))
 	return status;
 

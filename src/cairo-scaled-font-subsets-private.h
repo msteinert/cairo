@@ -447,7 +447,8 @@ typedef struct _cairo_truetype_subset {
  * #cairo_scaled_font_t and the font backend in use) generate a
  * truetype file corresponding to @font_subset and initialize
  * @truetype_subset with information about the subset and the truetype
- * data.
+ * data. The generated font will be suitable for embedding in
+ * PostScript.
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful,
  * %CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a
@@ -455,8 +456,29 @@ typedef struct _cairo_truetype_subset {
  * errors include %CAIRO_STATUS_NO_MEMORY.
  **/
 cairo_private cairo_status_t
-_cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
-			     cairo_scaled_font_subset_t	*font_subset);
+_cairo_truetype_subset_init_ps (cairo_truetype_subset_t    *truetype_subset,
+				cairo_scaled_font_subset_t *font_subset);
+
+/**
+ * _cairo_truetype_subset_init:
+ * @truetype_subset: a #cairo_truetype_subset_t to initialize
+ * @font_subset: the #cairo_scaled_font_subset_t to initialize from
+ *
+ * If possible (depending on the format of the underlying
+ * #cairo_scaled_font_t and the font backend in use) generate a
+ * truetype file corresponding to @font_subset and initialize
+ * @truetype_subset with information about the subset and the truetype
+ * data. The generated font will be suitable for embedding in
+ * PDF.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS if successful,
+ * %CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a
+ * truetype file, or an non-zero value indicating an error.  Possible
+ * errors include %CAIRO_STATUS_NO_MEMORY.
+ **/
+cairo_private cairo_status_t
+_cairo_truetype_subset_init_pdf (cairo_truetype_subset_t    *truetype_subset,
+				 cairo_scaled_font_subset_t *font_subset);
 
 /**
  * _cairo_truetype_subset_fini:
