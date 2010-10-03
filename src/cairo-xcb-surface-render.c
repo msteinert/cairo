@@ -1147,7 +1147,6 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
     cairo_surface_t *source = pattern->surface;
     cairo_xcb_picture_t *picture;
     cairo_filter_t filter;
-    cairo_extend_t extend;
     cairo_status_t status;
 
     if (source->is_clear) {
@@ -1412,13 +1411,7 @@ setup_picture:
 				   extents->y + extents->height/2.);
 
 
-    extend = pattern->base.extend;
-    if (extents->x >= 0 && extents->x + extents->width <= picture->width &&
-	extents->y >= 0 && extents->y + extents->height <= picture->height)
-    {
-	extend = CAIRO_EXTEND_NONE;
-    }
-    _cairo_xcb_picture_set_extend (picture, extend);
+    _cairo_xcb_picture_set_extend (picture, pattern->base.extend);
     _cairo_xcb_picture_set_component_alpha (picture, pattern->base.has_component_alpha);
 
     return picture;
