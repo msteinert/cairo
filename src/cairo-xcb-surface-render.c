@@ -2503,7 +2503,8 @@ _core_boxes (cairo_xcb_surface_t *dst,
 	cairo_status_t status;
 
 	status = _cairo_clip_get_region (clip, &clip_region);
-	assert (status == CAIRO_STATUS_SUCCESS || CAIRO_INT_STATUS_UNSUPPORTED);
+	assert (status == CAIRO_STATUS_SUCCESS ||
+		status == CAIRO_INT_STATUS_UNSUPPORTED);
 
 	if (status == CAIRO_INT_STATUS_UNSUPPORTED)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -2549,7 +2550,8 @@ _composite_boxes (cairo_xcb_surface_t *dst,
 
     if (clip != NULL) {
 	status = _cairo_clip_get_region (clip, &clip_region);
-	assert (status == CAIRO_STATUS_SUCCESS || CAIRO_INT_STATUS_UNSUPPORTED);
+	assert (status == CAIRO_STATUS_SUCCESS ||
+		status == CAIRO_INT_STATUS_UNSUPPORTED);
 
 	need_clip_mask = status == CAIRO_INT_STATUS_UNSUPPORTED;
 	if (need_clip_mask &&
