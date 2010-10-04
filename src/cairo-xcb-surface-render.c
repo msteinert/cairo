@@ -2771,7 +2771,10 @@ _clip_and_composite_boxes (cairo_xcb_surface_t *dst,
     }
 
     if (dst->deferred_clear) {
-	_cairo_xcb_surface_clear (dst);
+	status = _cairo_xcb_surface_clear (dst);
+	if (unlikely (status)) {
+	    return status;
+	}
 
 	if (op == CAIRO_OPERATOR_OVER)
 	    op = CAIRO_OPERATOR_SOURCE;
