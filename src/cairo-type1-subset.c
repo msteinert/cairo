@@ -836,7 +836,7 @@ static const char *winansi_encoding[256] = {
 	NULL,		NULL,		NULL,		NULL,
 	/*  32 */
 	"space",	"exclam",	"quotedbl",	"numbersign",
-	"dollar",	"percent",	"ampersand",	"quoteright",
+	"dollar",	"percent",	"ampersand",	"quotesingle",
 	"parenleft",	"parenright",	"asterisk",	"plus",
 	"comma",	"hyphen",	"period",	"slash",
 	/*  48 */
@@ -855,7 +855,7 @@ static const char *winansi_encoding[256] = {
 	"X",		"Y",		"Z",		"bracketleft",
 	"backslash",	"bracketright",	"asciicircum",	"underscore",
 	/*  96 */
-	"quoteleft",	"a",		"b",		"c",
+	"grave",	"a",		"b",		"c",
 	"d",		"e",		"f",		"g",
 	"h",		"i",		"j",		"k",
 	"l",		"m",		"n",		"o",
@@ -868,17 +868,18 @@ static const char *winansi_encoding[256] = {
 	"Euro",		NULL,		"quotesinglbase","florin",
 	"quotedblbase", "ellipsis",	"dagger",	"daggerdbl",
 	"circumflex",	"perthousand",	"Scaron",	"guilsinglleft",
-	"OE",		"bullet",	"Zcaron",	NULL,
+	"OE",		NULL,		"Zcaron",	NULL,
 	/* 144 */
 	NULL,		"quoteleft",	"quoteright",	"quotedblleft",
 	"quotedblright","bullet",	"endash",	"emdash",
 	"tilde",	"trademark",	"scaron",	"guilsinglright",
-	"oe",		"bullet",	"zcaron",	"Ydieresis",
+	"oe",		NULL,		"zcaron",	"Ydieresis",
 	/* 160 */
-	"space",	"exclamdown",	"cent",		"sterling",
+	NULL,		"exclamdown",	"cent",		"sterling",
 	"currency",	"yen",		"brokenbar",	"section",
 	"dieresis",	"copyright",	"ordfeminine",	"guillemotleft",
-	"logicalnot",	"hyphen",	"registered",	"macron",
+	/* 173 is also "hyphen" but we leave this NULL to avoid duplicate names */
+	"logicalnot",	NULL,		"registered",	"macron",
 	/* 176 */
 	"degree",	"plusminus",	"twosuperior",	"threesuperior",
 	"acute",	"mu",		"paragraph",	"periodcentered",

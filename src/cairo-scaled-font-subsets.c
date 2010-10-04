@@ -121,6 +121,7 @@ typedef struct _cairo_sub_font_collection {
     unsigned long *glyphs; /* scaled_font_glyph_index */
     char       **utf8;
     unsigned int glyphs_size;
+    int           *to_latin_char;
     unsigned long *latin_to_subset_glyph_index;
     unsigned int max_glyph;
     unsigned int num_glyphs;
@@ -232,6 +233,7 @@ _cairo_sub_font_glyph_collect (void *entry, void *closure)
 
     collection->glyphs[subset_glyph_index] = scaled_font_glyph_index;
     collection->utf8[subset_glyph_index] = sub_font_glyph->utf8;
+    collection->to_latin_char[subset_glyph_index] = sub_font_glyph->latin_character;
     if (sub_font_glyph->is_latin)
 	collection->latin_to_subset_glyph_index[sub_font_glyph->latin_character] = subset_glyph_index;
 
@@ -296,8 +298,8 @@ _cairo_sub_font_create (cairo_scaled_font_subsets_t	*parent,
     sub_font->font_id = font_id;
 
     sub_font->use_latin_subset = parent->use_latin_subset;
-    if (_cairo_cff_scaled_font_is_cff (scaled_font))
-	sub_font->use_latin_subset = FALSE; /* CFF latin subsets are NYI */
+    if (_cairo_cff_scaled_font_is_cid_cff (scaled_font))
+	sub_font->use_latin_subset = FALSE; /* latin subsets of CID CFF fonts are not supported */
 
     if (sub_font->use_latin_subset)
 	sub_font->current_subset = 1; /* reserve subset 0 for latin glyphs */
@@ -349,16 +351,20 @@ static unsigned int _winansi_0x80_to_0x9f[] = {
 };
 
 int
-_cairo_unicode_to_winansi (unsigned long unicode)
+_cairo_unicode_to_winansi (unsigned long uni)
 {
     int i;
 
-    if (unicode < 0x80 || (unicode >= 0xa0 && unicode <= 0xff))
-        return unicode;
+    /* exclude the extra "hyphen" at 0xad to avoid duplicate glyphnames */
+    if ((uni >= 0x20 && uni <= 0x7e) ||
+	(uni >= 0xa1 && uni <= 0xff && uni != 0xad))
+        return uni;
 
-    for (i = 0; i < 32; i++) {
-       if (_winansi_0x80_to_0x9f[i] == unicode)
-           return i + 0x80;
+    if (uni >= 0x80 && uni <= 0x9f) {
+	for (i = 0; i < 32; i++) {
+	    if (_winansi_0x80_to_0x9f[i] == uni)
+		return i + 0x80;
+	}
     }
 
     return -1;
@@ -709,8 +715,10 @@ _cairo_sub_font_collect (void *entry, void *closure)
 	subset.is_latin = FALSE;
 	if (sub_font->use_latin_subset && i == 0) {
 	    subset.is_latin = TRUE;
+	    subset.to_latin_char = collection->to_latin_char;
 	    subset.latin_to_subset_glyph_index = collection->latin_to_subset_glyph_index;
 	} else {
+	    subset.to_latin_char = NULL;
 	    subset.latin_to_subset_glyph_index = NULL;
 	}
 
@@ -1025,14 +1033,18 @@ _cairo_scaled_font_subsets_foreach_internal (cairo_scaled_font_subsets_t        
 
     collection.glyphs = _cairo_malloc_ab (collection.glyphs_size, sizeof(unsigned long));
     collection.utf8 = _cairo_malloc_ab (collection.glyphs_size, sizeof(char *));
+    collection.to_latin_char = _cairo_malloc_ab (collection.glyphs_size, sizeof(int));
     collection.latin_to_subset_glyph_index = _cairo_malloc_ab (256, sizeof(unsigned long));
     if (unlikely (collection.glyphs == NULL ||
 		  collection.utf8 == NULL ||
+		  collection.to_latin_char == NULL ||
 		  collection.latin_to_subset_glyph_index == NULL)) {
 	if (collection.glyphs != NULL)
 	    free (collection.glyphs);
 	if (collection.utf8 != NULL)
 	    free (collection.utf8);
+	if (collection.to_latin_char != NULL)
+	    free (collection.to_latin_char);
 	if (collection.latin_to_subset_glyph_index != NULL)
 	    free (collection.latin_to_subset_glyph_index);
 
@@ -1056,6 +1068,7 @@ _cairo_scaled_font_subsets_foreach_internal (cairo_scaled_font_subsets_t        
     }
     free (collection.utf8);
     free (collection.glyphs);
+    free (collection.to_latin_char);
     free (collection.latin_to_subset_glyph_index);
 
     return collection.status;
@@ -1191,7 +1204,7 @@ _cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset
 
 	if (utf16_len == 1) {
 	    int ch = _cairo_unicode_to_winansi (utf16[0]);
-	    if (ch > 0)
+	    if (ch > 0 && _cairo_winansi_to_glyphname (ch))
 		strncpy (buf, _cairo_winansi_to_glyphname (ch), sizeof (buf));
 	    else
 		snprintf (buf, sizeof (buf), "uni%04X", (int) utf16[0]);
