@@ -1808,10 +1808,7 @@ _create_composite_mask (cairo_clip_t		*clip,
 						      surface->picture,
 						      clear, 1, &xrect);
     } else {
-	status = _cairo_xcb_surface_render_paint (surface,
-						  CAIRO_OPERATOR_CLEAR,
-						  &_cairo_pattern_clear.base,
-						  NULL);
+	status = _cairo_xcb_surface_clear (surface);
 	if (unlikely (status)) {
 	    cairo_surface_destroy (&surface->base);
 	    return (cairo_xcb_surface_t *) _cairo_surface_create_in_error (status);
