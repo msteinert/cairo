@@ -2586,8 +2586,7 @@ _composite_boxes (cairo_xcb_surface_t *dst,
 	else
 	    color = &((cairo_solid_pattern_t *) src)->color;
 
-	if (! (op == CAIRO_OPERATOR_IN && color->alpha_short >= 0xff00))
-	    status = _render_fill_boxes (dst, op, color, boxes);
+	status = _render_fill_boxes (dst, op, color, boxes);
     }
     else
     {
