@@ -580,12 +580,10 @@ _cairo_xcb_surface_release_source_image (void *abstract_surface,
 {
     cairo_xcb_surface_t *surface = abstract_surface;
 
-    if (surface->drm != NULL && ! surface->marked_dirty) {
-	return _cairo_surface_release_source_image (surface->drm,
-						    image, image_extra);
-    }
-
-    cairo_surface_destroy (&image->base);
+    if (surface->drm != NULL && !surface->marked_dirty)
+	_cairo_surface_release_source_image (surface->drm, image, image_extra);
+    else
+	cairo_surface_destroy (&image->base);
 }
 
 static cairo_bool_t
