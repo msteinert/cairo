@@ -1177,6 +1177,9 @@ cairo_xcb_surface_create (xcb_connection_t  *xcb_connection,
     image_masks.red_mask   = visual->red_mask;
     image_masks.green_mask = visual->green_mask;
     image_masks.blue_mask  = visual->blue_mask;
+    if (depth == 32) /* XXX visuals have no alpha! */
+	image_masks.alpha_mask =
+	    0xffffffff & ~(visual->red_mask | visual->green_mask | visual->blue_mask);
     if (depth > 16)
 	image_masks.bpp = 32;
     else if (depth > 8)
