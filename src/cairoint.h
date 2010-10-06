@@ -433,8 +433,6 @@ typedef struct _cairo_scaled_font_subset {
      * Value of glyphs array is scaled_font_glyph_index.
      */
     unsigned long *glyphs;
-
-    unsigned long *to_unicode;
     char          **utf8;
     char          **glyph_names;
     int           *to_latin_char;
