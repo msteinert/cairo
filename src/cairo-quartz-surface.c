@@ -2772,6 +2772,9 @@ _cairo_quartz_surface_mask_with_generic (cairo_quartz_surface_t *surface,
     gradient_surf = cairo_quartz_surface_create (CAIRO_FORMAT_A8,
 						 width,
 						 height);
+    status = gradient_surf->status;
+    if (unlikely (status))
+	goto BAIL;
 
     status = _cairo_quartz_surface_paint (gradient_surf, CAIRO_OPERATOR_SOURCE, mask, NULL);
     if (unlikely (status))
