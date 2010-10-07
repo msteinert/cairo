@@ -17,7 +17,7 @@ resultToString = {
     "FAIL"     : "",
     "XFAIL"    : "",
     "UNTESTED" : "",
-    "CRASHED"  : "CRAHED!"
+    "CRASHED"  : "CRASHED!"
 };
 
 resultField = "result";
