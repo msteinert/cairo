@@ -357,15 +357,13 @@ _cairo_unicode_to_winansi (unsigned long uni)
 
     /* exclude the extra "hyphen" at 0xad to avoid duplicate glyphnames */
     if ((uni >= 0x20 && uni <= 0x7e) ||
-	(uni >= 0xa1 && uni <= 0xff && uni != 0xad))
+	(uni >= 0xa1 && uni <= 0xff && uni != 0xad) ||
+	uni == 0)
         return uni;
 
-    if (uni >= 0x80 && uni <= 0x9f) {
-	for (i = 0; i < 32; i++) {
-	    if (_winansi_0x80_to_0x9f[i] == uni)
-		return i + 0x80;
-	}
-    }
+    for (i = 0; i < 32; i++)
+	if (_winansi_0x80_to_0x9f[i] == uni)
+	    return i + 0x80;
 
     return -1;
 }
