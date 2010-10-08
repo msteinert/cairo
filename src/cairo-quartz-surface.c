@@ -918,11 +918,6 @@ CreateRepeatingLinearGradientFunction (cairo_quartz_surface_t *surface,
     UpdateLinearParametersToIncludePoint (&t_min, &t_max, start, dx, dy,
 					  bounds_x1, bounds_y2);
 
-    /* Move t_min and t_max to the nearest usable integer to try to avoid
-       subtle variations due to numerical instability, especially accidentally
-       cutting off a pixel. Extending the gradient repetitions is always safe. */
-    t_min = floor (t_min);
-    t_max = ceil (t_max);
     end->x = start->x + dx*t_max;
     end->y = start->y + dy*t_max;
     start->x = start->x + dx*t_min;
@@ -1054,11 +1049,7 @@ CreateRepeatingRadialGradientFunction (cairo_quartz_surface_t *surface,
     UpdateRadialParameterToIncludePoint (&t_temp, inner, dr, dx, dy,
 					 bounds_x1, bounds_y2);
     /* UpdateRadialParameterToIncludePoint assumes t=0 means radius 0.
-       But for the parameter values we use with Quartz, t_min means radius 0.
-       Since the circles are alway expanding and contain the earlier circles,
-       it's safe to extend t_max/t_temp as much as we want, so round t_temp up
-       to the nearest integer. This may help us give stable results. */
-    t_temp = ceil (t_temp);
+       But for the parameter values we use with Quartz, t_min means radius 0. */
     t_max = t_min + t_temp;
     outer->x = inner->x + t_temp*dx;
     outer->y = inner->y + t_temp*dy;
