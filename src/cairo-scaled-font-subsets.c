@@ -298,8 +298,13 @@ _cairo_sub_font_create (cairo_scaled_font_subsets_t	*parent,
     sub_font->font_id = font_id;
 
     sub_font->use_latin_subset = parent->use_latin_subset;
-    if (_cairo_cff_scaled_font_is_cid_cff (scaled_font))
-	sub_font->use_latin_subset = FALSE; /* latin subsets of CID CFF fonts are not supported */
+
+    /* latin subsets of Type 3 and CID CFF fonts are not supported */
+    if (sub_font->is_user || sub_font->is_scaled ||
+	_cairo_cff_scaled_font_is_cid_cff (scaled_font) )
+    {
+	sub_font->use_latin_subset = FALSE;
+    }
 
     if (sub_font->use_latin_subset)
 	sub_font->current_subset = 1; /* reserve subset 0 for latin glyphs */
