@@ -50,6 +50,14 @@ typedef CGFloat cairo_quartz_float_t;
 typedef float cairo_quartz_float_t;
 #endif
 
+typedef enum {
+    DO_SOLID,
+    DO_SHADING,
+    DO_PATTERN,
+    DO_IMAGE,
+    DO_TILED_IMAGE
+} cairo_quartz_action_t;
+
 typedef struct cairo_quartz_surface {
     cairo_surface_t base;
 
@@ -66,6 +74,7 @@ typedef struct cairo_quartz_surface {
     /* These are stored while drawing operations are in place, set up
      * by quartz_setup_source() and quartz_finish_source()
      */
+    cairo_quartz_action_t action;
     CGAffineTransform sourceTransform;
 
     CGImageRef sourceImage;
