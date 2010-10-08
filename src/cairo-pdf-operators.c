@@ -163,83 +163,132 @@ _cairo_pdf_operators_reset (cairo_pdf_operators_t *pdf_operators)
  * exceed max_column. In particular, if a single word is larger than
  * max_column it will not be broken up.
  */
+
+typedef enum _cairo_word_wrap_state {
+    WRAP_STATE_DELIMITER,
+    WRAP_STATE_WORD,
+    WRAP_STATE_STRING,
+    WRAP_STATE_HEXSTRING
+} cairo_word_wrap_state_t;
+
+
 typedef struct _word_wrap_stream {
     cairo_output_stream_t base;
     cairo_output_stream_t *output;
     int max_column;
     int column;
-    cairo_bool_t last_write_was_space;
-    cairo_bool_t in_string;
-    cairo_bool_t in_hexstring;
-    cairo_bool_t empty_string;
+    cairo_word_wrap_state_t state;
     cairo_bool_t in_escape;
+    int		 escape_digits;
 } word_wrap_stream_t;
 
+
+
+/* Emit word bytes up to the next delimiter character */
 static int
-_count_word_up_to (const unsigned char *s, int length)
+_word_wrap_stream_count_word_up_to (word_wrap_stream_t *stream,
+				   const unsigned char *data, int length)
 {
-    int word = 0;
+    const unsigned char *s = data;
+    int count = 0;
 
     while (length--) {
-	if (! (_cairo_isspace (*s) || *s == '<' || *s == '(')) {
-	    s++;
-	    word++;
-	} else {
-	    return word;
+	if (_cairo_isspace (*s) || *s == '<' || *s == '(') {
+	    stream->state = WRAP_STATE_DELIMITER;
+	    break;
 	}
+
+	count++;
+	stream->column++;
+	s++;
     }
 
-    return word;
+    if (count)
+	_cairo_output_stream_write (stream->output, data, count);
+
+    return count;
 }
 
 
-/* Count up to either the end of the ASCII hexstring or the number
+/* Emit hexstring bytes up to either the end of the ASCII hexstring or the number
  * of columns remaining.
  */
 static int
-_count_hexstring_up_to (const unsigned char *s, int length, int columns)
+_word_wrap_stream_count_hexstring_up_to (word_wrap_stream_t *stream,
+					 const unsigned char *data, int length)
 {
-    int word = 0;
+    const unsigned char *s = data;
+    int count = 0;
+    cairo_bool_t newline = FALSE;
 
     while (length--) {
-	if (*s++ != '>')
-	    word++;
-	else
-	    return word;
+	count++;
+	stream->column++;
+	if (*s == '>') {
+	    stream->state = WRAP_STATE_DELIMITER;
+	    break;
+	}
 
-	columns--;
-	if (columns < 0 && word > 1)
-	    return word;
+	if (stream->column > stream->max_column) {
+	    newline = TRUE;
+	    break;
+	}
+	s++;
     }
 
-    return word;
+    if (count)
+	_cairo_output_stream_write (stream->output, data, count);
+
+    if (newline) {
+	_cairo_output_stream_printf (stream->output, "\n");
+	stream->column = 0;
+    }
+
+    return count;
 }
 
 /* Count up to either the end of the string or the number of columns
  * remaining.
  */
 static int
-_count_string_up_to (const unsigned char *s, int length, int columns, cairo_bool_t *in_escape)
+_word_wrap_stream_count_string_up_to (word_wrap_stream_t *stream,
+				      const unsigned char *data, int length)
 {
-    int word = 0;
+    const unsigned char *s = data;
+    int count = 0;
+    cairo_bool_t newline = FALSE;
 
     while (length--) {
-	if (*in_escape || *s != ')') {
-	    word++;
-	    if (!*in_escape && *s++ == '\\')
-		*in_escape = TRUE;
-	    else
-		*in_escape = FALSE;
+	count++;
+	stream->column++;
+	if (!stream->in_escape) {
+	    if (*s == ')') {
+		stream->state = WRAP_STATE_DELIMITER;
+		break;
+	    }
+	    if (*s == '\\') {
+		stream->in_escape = TRUE;
+		stream->escape_digits = 0;
+	    } else if (stream->column > stream->max_column) {
+		newline = TRUE;
+		break;
+	    }
 	} else {
-	    return word;
+	    if (!_cairo_isdigit(*s) || ++stream->escape_digits == 3)
+		stream->in_escape = FALSE;
 	}
-
-	columns--;
-	if (columns < 0 && word > 0)
-	    return word;
+	s++;
     }
 
-    return word;
+    if (count)
+	_cairo_output_stream_write (stream->output, data, count);
+
+    if (newline) {
+	_cairo_output_stream_printf (stream->output, "\\\n");
+	stream->column = 0;
+    }
+
+    return count;
 }
 
 static cairo_status_t
@@ -248,91 +297,39 @@ _word_wrap_stream_write (cairo_output_stream_t  *base,
 			 unsigned int		 length)
 {
     word_wrap_stream_t *stream = (word_wrap_stream_t *) base;
-    cairo_bool_t newline;
-    int word;
+    int count;
 
     while (length) {
-	if (*data == '<') {
-	    stream->in_hexstring = TRUE;
-	    stream->empty_string = TRUE;
-	    stream->last_write_was_space = FALSE;
-	    data++;
-	    length--;
-	    _cairo_output_stream_printf (stream->output, "<");
+	switch (stream->state) {
+	case WRAP_STATE_WORD:
+	    count = _word_wrap_stream_count_word_up_to (stream, data, length);
+	    break;
+	case WRAP_STATE_HEXSTRING:
+	    count = _word_wrap_stream_count_hexstring_up_to (stream, data, length);
+	    break;
+	case WRAP_STATE_STRING:
+	    count = _word_wrap_stream_count_string_up_to (stream, data, length);
+	    break;
+	case WRAP_STATE_DELIMITER:
+	    count = 1;
 	    stream->column++;
-	} else if (*data == '>') {
-	    stream->in_hexstring = FALSE;
-	    stream->last_write_was_space = FALSE;
-	    data++;
-	    length--;
-	    _cairo_output_stream_printf (stream->output, ">");
-	    stream->column++;
-	} else if (*data == '(') {
-	    stream->in_string = TRUE;
-	    stream->in_escape = FALSE;
-	    stream->empty_string = TRUE;
-	    stream->last_write_was_space = FALSE;
-	    data++;
-	    length--;
-	    _cairo_output_stream_printf (stream->output, "(");
-	    stream->column++;
-	} else if (*data == ')') {
-	    stream->in_string = FALSE;
-	    stream->last_write_was_space = FALSE;
-	    data++;
-	    length--;
-	    _cairo_output_stream_printf (stream->output, ")");
-	    stream->column++;
-	    if (stream->column > stream->max_column) {
+	    if (*data == '\n' || stream->column >= stream->max_column) {
 		_cairo_output_stream_printf (stream->output, "\n");
 		stream->column = 0;
+	    } else if (*data == '<') {
+		stream->state = WRAP_STATE_HEXSTRING;
+	    } else if (*data == '(') {
+		stream->state = WRAP_STATE_STRING;
+	    } else if (!_cairo_isspace (*data)) {
+		stream->state = WRAP_STATE_WORD;
 	    }
-	} else if (_cairo_isspace (*data) && !stream->in_string) {
-	    newline =  (*data == '\n' || *data == '\r');
-	    if (! newline && stream->column >= stream->max_column) {
-		_cairo_output_stream_printf (stream->output, "\n");
-		stream->column = 0;
-	    }
-	    _cairo_output_stream_write (stream->output, data, 1);
-	    data++;
-	    length--;
-	    if (newline) {
-		stream->column = 0;
-	    }
-	    else
-		stream->column++;
-	    stream->last_write_was_space = TRUE;
-	} else {
-	    if (stream->in_hexstring) {
-		word = _count_hexstring_up_to (data, length,
-					       MAX (stream->max_column - stream->column, 0));
-	    } else if (stream->in_string) {
-		word = _count_string_up_to (data, length,
-					    MAX (stream->max_column - stream->column, 0), &stream->in_escape);
-	    } else {
-		word = _count_word_up_to (data, length);
-	    }
-	    /* Don't wrap if this word is a continuation of a non hex
-	     * string word from a previous call to write. */
-	    if (stream->column + word >= stream->max_column) {
-		if (stream->last_write_was_space ||
-		    (stream->in_hexstring && !stream->empty_string) ||
-		    (stream->in_string && !stream->empty_string && !stream->in_escape))
-		{
-		    if (stream->in_string)
-			_cairo_output_stream_printf (stream->output, "\\");
-		    _cairo_output_stream_printf (stream->output, "\n");
-		    stream->column = 0;
-		}
-	    }
-	    _cairo_output_stream_write (stream->output, data, word);
-	    data += word;
-	    length -= word;
-	    stream->column += word;
-	    stream->last_write_was_space = FALSE;
-	    if (stream->in_hexstring || stream->in_string)
-		stream->empty_string = FALSE;
+	    if (*data != '\n')
+		_cairo_output_stream_write (stream->output, data, 1);
+
+	    break;
 	}
+	data += count;
+	length -= count;
     }
 
     return _cairo_output_stream_get_status (stream->output);
@@ -367,11 +364,9 @@ _word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
     stream->output = output;
     stream->max_column = max_column;
     stream->column = 0;
-    stream->last_write_was_space = FALSE;
-    stream->in_hexstring = FALSE;
-    stream->in_string = FALSE;
+    stream->state = WRAP_STATE_DELIMITER;
     stream->in_escape = FALSE;
-    stream->empty_string = TRUE;
+    stream->escape_digits = 0;
 
     return &stream->base;
 }
