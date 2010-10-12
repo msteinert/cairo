@@ -1409,16 +1409,6 @@ _cairo_quartz_setup_linear_source (cairo_quartz_surface_t *surface,
 
     assert (lpat->base.n_stops > 0);
 
-    if (lpat->p1.x == lpat->p2.x &&
-        lpat->p1.y == lpat->p2.y) {
-	/* Quartz handles cases where the vector has no length very
-	 * differently from pixman.
-	 * Whatever the correct behaviour is, let's at least have only pixman's
-	 * implementation to worry about.
-	 */
-	return _cairo_quartz_setup_fallback_source (surface, abspat);
-    }
-
     mat = abspat->matrix;
     cairo_matrix_invert (&mat);
     _cairo_quartz_cairo_matrix_to_quartz (&mat, &surface->sourceTransform);
