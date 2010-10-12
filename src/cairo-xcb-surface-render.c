@@ -301,6 +301,7 @@ static void
 _cairo_xcb_surface_ensure_picture (cairo_xcb_surface_t *surface)
 {
     if (surface->picture == XCB_NONE) {
+	assert (surface->fallback == NULL);
 	surface->picture = _cairo_xcb_connection_get_xid (surface->connection);
 	_cairo_xcb_connection_render_create_picture (surface->connection,
 						     surface->picture,
