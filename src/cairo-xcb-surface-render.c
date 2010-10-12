@@ -1178,7 +1178,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	picture = NULL;
     }
 
-    if (source->type == CAIRO_SURFACE_TYPE_XCB)
+    if (source->type == CAIRO_SURFACE_TYPE_XCB && ((cairo_xcb_surface_t *) source)->fallback == NULL)
     {
 	if (source->backend->type == CAIRO_SURFACE_TYPE_XCB) {
 	    if (((cairo_xcb_surface_t *) source)->screen == target->screen) {
@@ -1224,7 +1224,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	}
     }
 #if CAIRO_HAS_XLIB_XCB_FUNCTIONS
-    else if (source->type == CAIRO_SURFACE_TYPE_XLIB)
+    else if (source->type == CAIRO_SURFACE_TYPE_XLIB && ((cairo_xlib_xcb_surface_t *) source)->xcb->fallback == NULL)
     {
 	if (source->backend->type == CAIRO_SURFACE_TYPE_XLIB) {
 	    if (((cairo_xlib_xcb_surface_t *) source)->xcb->screen == target->screen) {
