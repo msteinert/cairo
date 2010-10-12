@@ -149,6 +149,29 @@ _cairo_rectangle_intersect (cairo_rectangle_int_t *dst,
     }
 }
 
+/* Extends the dst rectangle to also contain src.
+ * If one of the rectangles is empty, the result is undefined
+ */
+void
+_cairo_rectangle_union (cairo_rectangle_int_t *dst,
+			const cairo_rectangle_int_t *src)
+{
+    int x1, y1, x2, y2;
+
+    x1 = MIN (dst->x, src->x);
+    y1 = MIN (dst->y, src->y);
+    /* Beware the unsigned promotion, fortunately we have bits to spare
+     * as (CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN) < UINT_MAX
+     */
+    x2 = MAX (dst->x + (int) dst->width,  src->x + (int) src->width);
+    y2 = MAX (dst->y + (int) dst->height, src->y + (int) src->height);
+
+    dst->x = x1;
+    dst->y = y1;
+    dst->width  = x2 - x1;
+    dst->height = y2 - y1;
+}
+
 #define P1x (line->p1.x)
 #define P1y (line->p1.y)
 #define P2x (line->p2.x)

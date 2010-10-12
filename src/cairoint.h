@@ -280,6 +280,13 @@ cairo_private cairo_bool_t
 _cairo_rectangle_intersect (cairo_rectangle_int_t *dst,
 			    const cairo_rectangle_int_t *src);
 
+/* Extends the dst rectangle to also contain src.
+ * If one of the rectangles is empty, the result is undefined
+ */
+cairo_private void
+_cairo_rectangle_union (cairo_rectangle_int_t *dst,
+			const cairo_rectangle_int_t *src);
+
 cairo_private cairo_bool_t
 _cairo_box_intersects_line_segment (cairo_box_t *box,
 	                            cairo_line_t *line) cairo_pure;
