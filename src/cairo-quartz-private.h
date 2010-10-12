@@ -61,6 +61,7 @@ typedef struct cairo_quartz_surface {
 
     cairo_surface_clipper_t clipper;
     cairo_rectangle_int_t extents;
+    cairo_rectangle_int_t virtual_extents;
 
     /* These are stored while drawing operations are in place, set up
      * by quartz_setup_source() and quartz_finish_source()
