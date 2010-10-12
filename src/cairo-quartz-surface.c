@@ -1311,7 +1311,6 @@ typedef struct {
 
     /* Used with DO_IMAGE and DO_TILED_IMAGE */
     CGImageRef image;
-    cairo_surface_t *imageSurface;
     CGRect imageRect;
 
     /* Used with DO_SHADING */
@@ -1438,7 +1437,6 @@ _cairo_quartz_setup_source (cairo_quartz_drawing_state_t *state,
     cairo_status_t status;
 
     state->image = NULL;
-    state->imageSurface = NULL;
     state->shading = NULL;
 
     /* Save before we change the pattern, colorspace, etc. so that
@@ -1595,9 +1593,6 @@ _cairo_quartz_teardown_source (cairo_quartz_drawing_state_t *state,
 
     if (state->image)
 	CGImageRelease (state->image);
-
-    if (state->imageSurface)
-	cairo_surface_destroy (state->imageSurface);
 
     if (state->shading)
 	CGShadingRelease (state->shading);
