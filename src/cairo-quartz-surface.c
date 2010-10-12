@@ -1329,59 +1329,6 @@ typedef enum {
     DO_TILED_IMAGE
 } cairo_quartz_action_t;
 
-static cairo_quartz_action_t
-_cairo_quartz_setup_fallback_source (cairo_quartz_surface_t *surface,
-				     const cairo_pattern_t *source)
-{
-    cairo_pattern_union_t pattern;
-    CGRect clipBox = CGContextGetClipBoundingBox (surface->cgContext);
-    double x0, y0, w, h;
-
-    cairo_surface_t *fallback;
-    CGImageRef img;
-
-    cairo_status_t status;
-
-    if (clipBox.size.width == 0.0f ||
-	clipBox.size.height == 0.0f)
-	return DO_NOTHING;
-
-    x0 = floor (clipBox.origin.x);
-    y0 = floor (clipBox.origin.y);
-    w = ceil (clipBox.origin.x + clipBox.size.width) - x0;
-    h = ceil (clipBox.origin.y + clipBox.size.height) - y0;
-
-    /* Create a temporary the size of the clip surface, and position
-     * it so that the device origin coincides with the original surface */
-    fallback = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, (int) w, (int) h);
-    cairo_surface_set_device_offset (fallback, -x0, -y0);
-
-    _cairo_pattern_init_static_copy (&pattern.base, source);
-    _cairo_pattern_transform (&pattern.base, &fallback->device_transform_inverse);
-    status = _cairo_surface_paint (fallback, CAIRO_OPERATOR_SOURCE, &pattern.base, NULL);
-    if (unlikely (status)) {
-	cairo_surface_destroy (fallback);
-	return DO_UNSUPPORTED;
-    }
-
-    status = _cairo_surface_to_cgimage (fallback, &img);
-    if (unlikely (status)) {
-	cairo_surface_destroy (fallback);
-	return DO_UNSUPPORTED;
-    }
-    if (unlikely (img == NULL)) {
-	cairo_surface_destroy (fallback);
-	return DO_NOTHING;
-    }
-
-    surface->sourceImageRect = CGRectMake (0.0, 0.0, w, h);
-    surface->sourceImage = img;
-    surface->sourceImageSurface = fallback;
-    surface->sourceTransform = CGAffineTransformMakeTranslation (x0, y0);
-
-    return DO_IMAGE;
-}
-
 /*
 Quartz does not support repeating radients. We handle repeating gradients
 by manually extending the gradient and repeating color stops. We need to
