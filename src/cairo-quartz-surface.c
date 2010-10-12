@@ -1459,22 +1459,8 @@ _cairo_quartz_setup_radial_source (cairo_quartz_surface_t *surface,
     double c2y = _cairo_fixed_to_double (rpat->c2.y);
     double r1 = _cairo_fixed_to_double (rpat->r1);
     double r2 = _cairo_fixed_to_double (rpat->r2);
-    double dx = c1x - c2x;
-    double dy = c1y - c2y;
-    double centerDistance = sqrt (dx*dx + dy*dy);
 
     assert (rpat->base.n_stops > 0);
-
-    if (r2 <= centerDistance + r1 + 1e-6 && /* circle 2 doesn't contain circle 1 */
-        r1 <= centerDistance + r2 + 1e-6) { /* circle 1 doesn't contain circle 2 */
-	/* Quartz handles cases where neither circle contains the other very
-	 * differently from pixman.
-	 * Whatever the correct behaviour is, let's at least have only pixman's
-	 * implementation to worry about.
-	 * Note that this also catches the cases where r1 == r2.
-	 */
-	return _cairo_quartz_setup_fallback_source (surface, abspat);
-    }
 
     mat = abspat->matrix;
     cairo_matrix_invert (&mat);
