@@ -887,8 +887,7 @@ UpdateLinearParametersToIncludePoint (double *min_t, double *max_t, CGPoint *sta
 }
 
 static CGFunctionRef
-CreateRepeatingLinearGradientFunction (cairo_quartz_surface_t *surface,
-				       const cairo_gradient_pattern_t *gpat,
+CreateRepeatingLinearGradientFunction (const cairo_gradient_pattern_t *gpat,
 				       CGPoint *start, CGPoint *end,
 				       const cairo_rectangle_int_t *extents)
 {
@@ -987,8 +986,7 @@ UpdateRadialParameterToIncludePoint (double *max_t, CGPoint *center,
 
 /* This must only be called when one of the circles properly contains the other */
 static CGFunctionRef
-CreateRepeatingRadialGradientFunction (cairo_quartz_surface_t *surface,
-                                       const cairo_gradient_pattern_t *gpat,
+CreateRepeatingRadialGradientFunction (const cairo_gradient_pattern_t *gpat,
                                        CGPoint *start, double *start_radius,
                                        CGPoint *end, double *end_radius,
                                        const cairo_rectangle_int_t *extents)
@@ -1336,7 +1334,6 @@ clip region).
 */
 static cairo_int_status_t
 _cairo_quartz_setup_linear_source (cairo_quartz_drawing_state_t *state,
-				   cairo_quartz_surface_t *surface,
 				   const cairo_linear_pattern_t *lpat,
 				   const cairo_rectangle_int_t *extents)
 {
@@ -1363,8 +1360,7 @@ _cairo_quartz_setup_linear_source (cairo_quartz_drawing_state_t *state,
     if (!extend)
 	gradFunc = CreateGradientFunction (&lpat->base);
     else
-	gradFunc = CreateRepeatingLinearGradientFunction (surface,
-						          &lpat->base,
+	gradFunc = CreateRepeatingLinearGradientFunction (&lpat->base,
 						          &start, &end,
 						          extents);
 
@@ -1382,7 +1378,6 @@ _cairo_quartz_setup_linear_source (cairo_quartz_drawing_state_t *state,
 
 static cairo_int_status_t
 _cairo_quartz_setup_radial_source (cairo_quartz_drawing_state_t *state,
-				   cairo_quartz_surface_t *surface,
 				   const cairo_radial_pattern_t *rpat,
 				   const cairo_rectangle_int_t *extents)
 {
@@ -1413,8 +1408,7 @@ _cairo_quartz_setup_radial_source (cairo_quartz_drawing_state_t *state,
     if (!extend)
 	gradFunc = CreateGradientFunction (&rpat->base);
     else
-	gradFunc = CreateRepeatingRadialGradientFunction (surface,
-						          &rpat->base,
+	gradFunc = CreateRepeatingRadialGradientFunction (&rpat->base,
 						          &start, &r1,
 						          &end, &r2,
 						          extents);
@@ -1480,12 +1474,12 @@ _cairo_quartz_setup_source (cairo_quartz_drawing_state_t *state,
 
     if (source->type == CAIRO_PATTERN_TYPE_LINEAR) {
 	const cairo_linear_pattern_t *lpat = (const cairo_linear_pattern_t *)source;
-	return _cairo_quartz_setup_linear_source (state, surface, lpat, extents);
+	return _cairo_quartz_setup_linear_source (state, lpat, extents);
     }
 
     if (source->type == CAIRO_PATTERN_TYPE_RADIAL) {
 	const cairo_radial_pattern_t *rpat = (const cairo_radial_pattern_t *)source;
-	return _cairo_quartz_setup_radial_source (state, surface, rpat, extents);
+	return _cairo_quartz_setup_radial_source (state, rpat, extents);
     }
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
