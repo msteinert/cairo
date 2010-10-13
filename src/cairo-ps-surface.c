@@ -1737,28 +1737,13 @@ _gradient_pattern_supported (cairo_ps_surface_t    *surface,
 
     extend = cairo_pattern_get_extend ((cairo_pattern_t *) pattern);
 
-    /* Radial gradients are currently only supported when one circle
-     * is inside the other. */
+    /* Radial gradients are currently only supported with EXTEND_NONE
+     * and EXTEND_PAD. */
     if (pattern->type == CAIRO_PATTERN_TYPE_RADIAL) {
-        double x1, y1, x2, y2, r1, r2, d;
-        cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) pattern;
-
 	if (extend == CAIRO_EXTEND_REPEAT ||
 	    extend == CAIRO_EXTEND_REFLECT) {
 	    return FALSE;
 	}
-
-        x1 = _cairo_fixed_to_double (radial->c1.x);
-        y1 = _cairo_fixed_to_double (radial->c1.y);
-        r1 = _cairo_fixed_to_double (radial->r1);
-        x2 = _cairo_fixed_to_double (radial->c2.x);
-        y2 = _cairo_fixed_to_double (radial->c2.y);
-        r2 = _cairo_fixed_to_double (radial->r2);
-
-        d = sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));
-        if (d > fabs(r2 - r1)) {
-            return FALSE;
-        }
     }
 
     surface->ps_level_used = CAIRO_PS_LEVEL_3;
