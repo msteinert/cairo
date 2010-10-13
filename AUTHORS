@@ -82,6 +82,7 @@ Calum Robinson <calumr@mac.com> Quartz backend
 Pavel Roskin <proski@gnu.org> Several cleanups to eliminate warnings
 Tim Rowley <tim.rowley@gmail.com> Quartz/ATSUI fixes, X server workarounds, win32 glyph path support, test case to expose gradient regression
 Soeren Sandmann <sandmann@daimi.au.dk> Lots of MMX love for pixman compositing
+Uli Schlachter <psychon@znc.in> Some more XCB fixes
 Torsten Schönfeld <kaffeetisch@gmx.de> Build fixes
 Jamey Sharp <jamey@minilop.net> Surface/font backend virtualization, XCB backend
 Jason Dorje Short <jdorje@users.sf.net> Build fixes and bug fixes
