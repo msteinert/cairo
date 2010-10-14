@@ -2331,7 +2331,7 @@ _cairo_xcb_surface_fixup_unbounded_boxes (cairo_xcb_surface_t *dst,
 	status = _render_fill_boxes (dst,
 				     CAIRO_OPERATOR_CLEAR,
 				     CAIRO_COLOR_TRANSPARENT,
-				     boxes);
+				     &clear);
     }
 
     _cairo_boxes_fini (&clear);
