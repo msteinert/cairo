@@ -2407,9 +2407,6 @@ _clip_and_composite (cairo_xcb_surface_t	*dst,
 	    is_empty = ! _cairo_rectangle_intersect (&extents->bounded, &rect);
 	    if (unlikely (is_empty && extents->is_bounded))
 		return CAIRO_STATUS_SUCCESS;
-
-	    if (cairo_region_num_rectangles (clip_region) == 1)
-		clip_region = NULL;
 	}
     }
 
