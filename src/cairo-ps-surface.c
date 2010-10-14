@@ -1727,9 +1727,6 @@ _gradient_pattern_supported (cairo_ps_surface_t    *surface,
     if (surface->ps_level == CAIRO_PS_LEVEL_2)
 	return FALSE;
 
-    if (gradient->n_stops == 0)
-	return TRUE;
-
     /* Alpha gradients are only supported (by flattening the alpha)
      * if there is no variation in the alpha across the gradient. */
     alpha = gradient->stops[0].color.alpha_short;
