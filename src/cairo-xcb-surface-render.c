@@ -4628,42 +4628,12 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
     if (_cairo_clip_contains_rectangle (clip, &extents.mask))
 	clip = NULL;
 
-    if (clip != NULL) {
+    if (clip != NULL && extents.is_bounded) {
 	clip = _cairo_clip_init_copy (&local_clip, clip);
-	if (extents.is_bounded) {
-	    cairo_region_t *clip_region = NULL;
+	status = _cairo_clip_rectangle (clip, &extents.bounded);
+	if (unlikely (status))
+	    return status;
 
-	    status = _cairo_clip_rectangle (clip, &extents.bounded);
-	    if (unlikely (status)) {
-		_cairo_clip_fini (&local_clip);
-		return status;
-	    }
-
-	    status = _cairo_clip_get_region (clip, &clip_region);
-	    if (unlikely (_cairo_status_is_error (status) ||
-			  status == CAIRO_INT_STATUS_NOTHING_TO_DO))
-	    {
-		_cairo_clip_fini (&local_clip);
-		return status;
-	    }
-
-	    if (clip_region != NULL) {
-		cairo_rectangle_int_t rect;
-		cairo_bool_t is_empty;
-
-		cairo_region_get_extents (clip_region, &rect);
-		is_empty = ! _cairo_rectangle_intersect (&extents.unbounded, &rect);
-		if (unlikely (is_empty))
-		    return CAIRO_STATUS_SUCCESS;
-
-		is_empty = ! _cairo_rectangle_intersect (&extents.bounded, &rect);
-		if (unlikely (is_empty && extents.is_bounded))
-		    return CAIRO_STATUS_SUCCESS;
-
-		if (cairo_region_num_rectangles (clip_region) == 1)
-		    clip = NULL;
-	    }
-	}
 	have_clip = TRUE;
     }
 
