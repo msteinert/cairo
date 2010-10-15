@@ -4665,8 +4665,7 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
 	status =
 	    _cairo_xcb_surface_render_glyphs_via_mask (surface, op, source,
 						       scaled_font, glyphs, num_glyphs,
-						       have_clip ? &local_clip : NULL,
-						       &extents);
+						       clip, &extents);
     }
 
     if (have_clip)
