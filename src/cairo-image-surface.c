@@ -4043,8 +4043,10 @@ _cairo_image_surface_glyphs (void			*abstract_surface,
     if (clip != NULL && extents.is_bounded) {
 	clip = _cairo_clip_init_copy (&local_clip, clip);
 	status = _cairo_clip_rectangle (clip, &extents.bounded);
-	if (unlikely (status))
+	if (unlikely (status)) {
+	    _cairo_clip_fini (&local_clip);
 	    return status;
+	}
 
 	have_clip = TRUE;
     }
