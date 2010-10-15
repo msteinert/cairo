@@ -61,10 +61,6 @@ check_extents (const cairo_test_context_t *ctx,
     if (cairo_status (cr))
 	return 1;
 
-    /* let empty rects match */
-    if ((ext_x1 == ext_x2 || ext_y1 == ext_y2) && (width == 0 || height == 0))
-        return 1;
-
     switch (relation) {
     default:
     case EQUALS:
@@ -159,7 +155,7 @@ draw (cairo_t *cr, int width, int height)
     phase = "Degenerate arc (Θ=0)";
     errors += !check_extents (ctx, phase, cr2, FILL, EQUALS, 0, 0, 0, 0);
     errors += !check_extents (ctx, phase, cr2, STROKE, EQUALS, 0, 0, 0, 0);
-    errors += !check_extents (ctx, phase, cr2, PATH, EQUALS, 200, 400, 0, 0);
+    errors += !check_extents (ctx, phase, cr2, PATH, EQUALS, 210, 400, 0, 0);
 
     cairo_new_path (cr2);
     cairo_restore (cr2);
@@ -199,7 +195,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_line_to (cr2, 750, 180);
     errors += !check_extents (ctx, phase, cr2, FILL, EQUALS, 0, 0, 0, 0);
     errors += !check_extents (ctx, phase, cr2, STROKE, EQUALS, -5, 175, 760, 10);
-    errors += !check_extents (ctx, phase, cr2, PATH, EQUALS, 0, 180, 755, 0);
+    errors += !check_extents (ctx, phase, cr2, PATH, EQUALS, 0, 180, 750, 0);
     cairo_new_path (cr2);
     cairo_restore (cr2);
 
