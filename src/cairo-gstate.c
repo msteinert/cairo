@@ -1454,7 +1454,7 @@ _cairo_gstate_fill_extents (cairo_gstate_t     *gstate,
     cairo_status_t status;
     cairo_traps_t traps;
 
-    if (path->is_empty_fill) {
+    if (_cairo_path_fixed_fill_is_empty (path)) {
 	if (x1)
 	    *x1 = 0.0;
 	if (y1)

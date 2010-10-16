@@ -139,7 +139,7 @@ _cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t *path,
     cairo_polygon_t polygon;
     cairo_status_t status;
 
-    if (path->is_empty_fill)
+    if (_cairo_path_fixed_fill_is_empty (path))
 	return CAIRO_STATUS_SUCCESS;
 
     _cairo_polygon_init (&polygon);
@@ -152,7 +152,7 @@ _cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t *path,
     if (unlikely (status || polygon.num_edges == 0))
 	goto CLEANUP;
 
-    if (path->is_rectilinear) {
+    if (_cairo_path_fixed_fill_is_rectilinear (path)) {
 	status = _cairo_bentley_ottmann_tessellate_rectilinear_polygon (traps,
 									&polygon,
 									fill_rule);
@@ -242,8 +242,8 @@ _cairo_path_fixed_fill_rectilinear_to_region (const cairo_path_fixed_t	*path,
     cairo_box_t box;
     cairo_region_t *region = NULL;
 
-    assert (path->maybe_fill_region);
-    assert (! path->is_empty_fill);
+    assert (_cairo_path_fixed_fill_maybe_region (path));
+    assert (! _cairo_path_fixed_fill_is_empty (path));
 
     if (_cairo_path_fixed_is_box (path, &box)) {
 	rectangle_stack[0].x = _cairo_fixed_integer_part (box.p1.x);

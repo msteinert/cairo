@@ -1073,7 +1073,7 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
     _cairo_traps_init (&traps);
     _cairo_traps_limit (&traps, clip_boxes, num_boxes);
 
-    if (path->is_rectilinear) {
+    if (_cairo_path_fixed_stroke_is_rectilinear (path)) {
 	status = _cairo_path_fixed_stroke_rectilinear_to_traps (path,
 								stroke_style,
 								ctm,
@@ -1166,10 +1166,10 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
     _cairo_polygon_init (&polygon);
     _cairo_polygon_limit (&polygon, clip_boxes, num_boxes);
 
-    if (path->is_empty_fill)
+    if (_cairo_path_fixed_fill_is_empty (path))
 	goto DO_TRAPS;
 
-    is_rectilinear = _cairo_path_fixed_is_rectilinear_fill (path);
+    is_rectilinear = _cairo_path_fixed_fill_is_rectilinear (path);
     if (is_rectilinear) {
 	status = _cairo_path_fixed_fill_rectilinear_to_traps (path,
 							      fill_rule,

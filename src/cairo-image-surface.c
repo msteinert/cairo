@@ -3629,7 +3629,7 @@ _cairo_image_surface_stroke (void			*abstract_surface,
     }
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
-    if (path->is_rectilinear) {
+    if (_cairo_path_fixed_stroke_is_rectilinear (path)) {
 	cairo_boxes_t boxes;
 
 	_cairo_boxes_init (&boxes);
@@ -3729,7 +3729,7 @@ _cairo_image_surface_fill (void				*abstract_surface,
 	return status;
     }
 
-    if (_cairo_path_fixed_is_rectilinear_fill (path)) {
+    if (_cairo_path_fixed_fill_is_rectilinear (path)) {
 	cairo_boxes_t boxes;
 
 	_cairo_boxes_init (&boxes);
@@ -3748,7 +3748,7 @@ _cairo_image_surface_fill (void				*abstract_surface,
     } else {
 	cairo_polygon_t polygon;
 
-	assert (! path->is_empty_fill);
+	assert (! _cairo_path_fixed_fill_is_empty (path));
 
 	_cairo_polygon_init (&polygon);
 	_cairo_polygon_limit (&polygon, clip_boxes, num_boxes);

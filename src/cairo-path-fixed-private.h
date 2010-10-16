@@ -139,7 +139,7 @@ _cairo_path_fixed_fill_is_empty (const cairo_path_fixed_t *path)
 }
 
 static inline cairo_bool_t
-_cairo_path_fixed_is_rectilinear_fill (const cairo_path_fixed_t *path)
+_cairo_path_fixed_fill_is_rectilinear (const cairo_path_fixed_t *path)
 {
     if (! path->is_rectilinear)
 	return 0;
@@ -153,13 +153,25 @@ _cairo_path_fixed_is_rectilinear_fill (const cairo_path_fixed_t *path)
 }
 
 static inline cairo_bool_t
-_cairo_path_fixed_maybe_fill_region (const cairo_path_fixed_t *path)
+_cairo_path_fixed_stroke_is_rectilinear (const cairo_path_fixed_t *path)
 {
-#if WATCH_PATH
-    fprintf (stderr, "_cairo_path_fixed_maybe_fill_region () = %s\n",
-	     path->maybe_fill_region ? "true" : "false");
-#endif
-    return path->maybe_fill_region;
+    return path->is_rectilinear;
+}
+
+static inline cairo_bool_t
+_cairo_path_fixed_fill_maybe_region (const cairo_path_fixed_t *path)
+{
+    if (! path->maybe_fill_region)
+	return FALSE;
+
+    if (! path->has_current_point)
+	return TRUE;
+
+    /* check whether the implicit close preserves the rectilinear property
+     * (the integer point property is automatically preserved)
+     */
+    return path->current_point.x == path->last_move_point.x ||
+	   path->current_point.y == path->last_move_point.y;
 }
 
 #endif /* CAIRO_PATH_FIXED_PRIVATE_H */

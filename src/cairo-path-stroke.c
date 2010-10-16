@@ -1399,7 +1399,7 @@ _cairo_path_fixed_stroke_to_traps (const cairo_path_fixed_t	*path,
      * device-pixel boundaries when possible. Many backends can render
      * those much faster than non-aligned trapezoids, (by using clip
      * regions, etc.) */
-    if (path->is_rectilinear) {
+    if (_cairo_path_fixed_stroke_is_rectilinear (path)) {
 	status = _cairo_path_fixed_stroke_rectilinear_to_traps (path,
 								stroke_style,
 								ctm,
@@ -2037,7 +2037,7 @@ _cairo_path_fixed_stroke_rectilinear_to_traps (const cairo_path_fixed_t	*path,
     cairo_rectilinear_stroker_t rectilinear_stroker;
     cairo_int_status_t status;
 
-    assert (path->is_rectilinear);
+    assert (_cairo_path_fixed_stroke_is_rectilinear (path));
 
     if (! _cairo_rectilinear_stroker_init (&rectilinear_stroker,
 					   stroke_style, ctm,
@@ -2091,7 +2091,7 @@ _cairo_path_fixed_stroke_rectilinear_to_boxes (const cairo_path_fixed_t	*path,
     cairo_rectilinear_stroker_t rectilinear_stroker;
     cairo_int_status_t status;
 
-    assert (path->is_rectilinear);
+    assert (_cairo_path_fixed_stroke_is_rectilinear (path));
 
     if (! _cairo_rectilinear_stroker_init (&rectilinear_stroker,
 					   stroke_style, ctm,

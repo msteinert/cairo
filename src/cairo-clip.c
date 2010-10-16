@@ -229,7 +229,7 @@ _cairo_clip_intersect_path (cairo_clip_t       *clip,
 
     if (clip->path != NULL) {
 	if (clip->path->fill_rule == fill_rule &&
-	    (path->is_rectilinear || tolerance == clip->path->tolerance) &&
+	    (_cairo_path_fixed_fill_is_rectilinear (path) || tolerance == clip->path->tolerance) &&
 	    antialias == clip->path->antialias &&
 	    _cairo_path_fixed_equal (&clip->path->path, path))
 	{
@@ -553,7 +553,7 @@ static inline cairo_bool_t
 _clip_paths_are_rectilinear (cairo_clip_path_t *clip_path)
 {
     while (clip_path != NULL) {
-	if (! clip_path->path.is_rectilinear)
+	if (! _cairo_path_fixed_fill_is_rectilinear (&clip_path->path))
 	    return FALSE;
 
 	clip_path = clip_path->prev;
@@ -578,7 +578,7 @@ _cairo_clip_path_to_region_geometric (cairo_clip_path_t *clip_path)
 	goto UNSUPPORTED;
 
     /* Start simple... Intersect some boxes with an arbitrary path. */
-    if (! clip_path->path.is_rectilinear)
+    if (! _cairo_path_fixed_fill_is_rectilinear (&clip_path->path))
 	goto UNSUPPORTED;
     if (clip_path->prev->prev != NULL)
 	goto UNSUPPORTED;
@@ -651,7 +651,7 @@ _cairo_clip_path_to_region (cairo_clip_path_t *clip_path)
 	    CAIRO_STATUS_SUCCESS;
     }
 
-    if (! clip_path->path.maybe_fill_region)
+    if (! _cairo_path_fixed_fill_maybe_region (&clip_path->path))
 	return _cairo_clip_path_to_region_geometric (clip_path);
 
     /* first retrieve the region for our antecedents */
@@ -961,7 +961,7 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
 
     while (clip_path->prev != NULL &&
 	   clip_path->flags & CAIRO_CLIP_PATH_IS_BOX &&
-	   clip_path->path.maybe_fill_region)
+	   _cairo_path_fixed_fill_maybe_region (&clip_path->path))
     {
 	clip_path = clip_path->prev;
     }
@@ -989,7 +989,7 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
 
     need_translate = clip_extents->x | clip_extents->y;
     if (clip_path->flags & CAIRO_CLIP_PATH_IS_BOX &&
-	clip_path->path.maybe_fill_region)
+	_cairo_path_fixed_fill_maybe_region (&clip_path->path))
     {
 	status = _cairo_surface_paint (surface,
 				       CAIRO_OPERATOR_SOURCE,
@@ -1033,11 +1033,11 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
     prev = clip_path->prev;
     while (prev != NULL) {
 	if (prev->flags & CAIRO_CLIP_PATH_IS_BOX &&
-	    prev->path.maybe_fill_region)
+	    _cairo_path_fixed_fill_maybe_region (&prev->path))
 	{
 	    /* a simple box only affects the extents */
 	}
-	else if (prev->path.is_rectilinear ||
+	else if (_cairo_path_fixed_fill_is_rectilinear (&prev->path) ||
 		prev->surface == NULL ||
 		prev->surface->backend != target->backend)
 	{
@@ -1233,7 +1233,7 @@ _cairo_clip_combine_with_surface (cairo_clip_t *clip,
 	}
 
 	if (clip_path->flags & CAIRO_CLIP_PATH_IS_BOX &&
-	    clip_path->path.maybe_fill_region)
+	    _cairo_path_fixed_fill_maybe_region (&clip_path->path))
 	{
 	    continue;
 	}

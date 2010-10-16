@@ -254,7 +254,7 @@ _cairo_path_fixed_in_fill (const cairo_path_fixed_t	*path,
     cairo_status_t status;
     cairo_bool_t is_inside;
 
-    if (path->is_empty_fill)
+    if (_cairo_path_fixed_fill_is_empty (path))
 	return FALSE;
 
     _cairo_in_fill_init (&in_fill, tolerance, x, y);
