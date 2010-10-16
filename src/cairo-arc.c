@@ -231,6 +231,10 @@ _cairo_arc_in_direction (cairo_t	  *cr,
 				angle,
 				angle + angle_step);
 	}
+    } else {
+	cairo_line_to (cr,
+		       xc + radius * cos (angle_min),
+		       yc + radius * sin (angle_min));
     }
 }
 
