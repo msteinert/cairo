@@ -1852,6 +1852,7 @@ cairo_arc (cairo_t *cr,
 
     /* Do nothing, successfully, if radius is <= 0 */
     if (radius <= 0.0) {
+	cairo_line_to (cr, xc, yc); /* might become a move_to */
 	cairo_line_to (cr, xc, yc);
 	return;
     }
