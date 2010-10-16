@@ -1130,10 +1130,6 @@ cairo_private cairo_status_t
 _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
 			     const cairo_path_fixed_t *other);
 
-cairo_private cairo_bool_t
-_cairo_path_fixed_is_equal (const cairo_path_fixed_t *path,
-			    const cairo_path_fixed_t *other);
-
 cairo_private void
 _cairo_path_fixed_fini (cairo_path_fixed_t *path);
 

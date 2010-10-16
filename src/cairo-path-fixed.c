@@ -1044,41 +1044,6 @@ _cairo_path_fixed_transform (cairo_path_fixed_t	*path,
     } cairo_path_foreach_buf_end (buf, path);
 }
 
-cairo_bool_t
-_cairo_path_fixed_is_equal (const cairo_path_fixed_t *path,
-			    const cairo_path_fixed_t *other)
-{
-    const cairo_path_buf_t *path_buf, *other_buf;
-
-    if (path->current_point.x != other->current_point.x ||
-	path->current_point.y != other->current_point.y ||
-	path->has_current_point != other->has_current_point ||
-	path->has_curve_to != other->has_curve_to ||
-	path->is_rectilinear != other->is_rectilinear ||
-	path->maybe_fill_region != other->maybe_fill_region ||
-	path->last_move_point.x != other->last_move_point.x ||
-	path->last_move_point.y != other->last_move_point.y)
-    {
-	return FALSE;
-    }
-
-    other_buf = cairo_path_head (other);
-    cairo_path_foreach_buf_start (path_buf, path) {
-	if (path_buf->num_ops != other_buf->num_ops ||
-	    path_buf->num_points != other_buf->num_points ||
-	    memcmp (path_buf->op, other_buf->op,
-		    sizeof (cairo_path_op_t) * path_buf->num_ops) != 0 ||
-	    memcmp (path_buf->points, other_buf->points,
-		    sizeof (cairo_point_t) * path_buf->num_points) != 0)
-	{
-	    return FALSE;
-	}
-	other_buf = cairo_path_buf_next (other_buf);
-    } cairo_path_foreach_buf_end (path_buf, path);
-
-    return TRUE;
-}
-
 /* Closure for path flattening */
 typedef struct cairo_path_flattener {
     double tolerance;
