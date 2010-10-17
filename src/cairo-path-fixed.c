@@ -374,6 +374,34 @@ _cairo_path_fixed_last_op (cairo_path_fixed_t *path)
     return buf->op[buf->num_ops - 1];
 }
 
+static inline const cairo_point_t *
+_cairo_path_fixed_penultimate_point (cairo_path_fixed_t *path)
+{
+    cairo_path_buf_t *buf;
+
+    buf = cairo_path_tail (path);
+    if (likely (buf->num_points >= 2)) {
+	return &buf->points[buf->num_points - 2];
+    } else {
+	cairo_path_buf_t *prev_buf = cairo_path_buf_prev (buf);
+
+	assert (prev_buf->num_points >= 2 - buf->num_points);
+	return &prev_buf->points[prev_buf->num_points - (2 - buf->num_points)];
+    }
+}
+
+static inline void
+_cairo_path_fixed_drop_line_to (cairo_path_fixed_t *path)
+{
+    cairo_path_buf_t *buf;
+
+    assert (_cairo_path_fixed_last_op (path) == CAIRO_PATH_OP_LINE_TO);
+
+    buf = cairo_path_tail (path);
+    buf->num_points--;
+    buf->num_ops--;
+}
+
 static inline void
 _cairo_path_fixed_extents_add (cairo_path_fixed_t *path,
 			       const cairo_point_t *point)
