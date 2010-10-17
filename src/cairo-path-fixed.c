@@ -233,10 +233,7 @@ _cairo_path_fixed_equal (const cairo_path_fixed_t *a,
 	return TRUE;
 
     /* use the flags to quickly differentiate based on contents */
-    if (a->is_empty_fill != b->is_empty_fill ||
-	a->has_curve_to != b->has_curve_to ||
-	a->maybe_fill_region != b->maybe_fill_region ||
-	a->is_rectilinear != b->is_rectilinear)
+    if (a->has_curve_to != b->has_curve_to)
     {
 	return FALSE;
     }
