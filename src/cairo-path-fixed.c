@@ -375,8 +375,7 @@ _cairo_path_fixed_last_op (cairo_path_fixed_t *path)
     cairo_path_buf_t *buf;
 
     buf = cairo_path_tail (path);
-    if (buf->num_ops == 0)
-	return -1;
+    assert (buf->num_ops != 0);
 
     return buf->op[buf->num_ops - 1];
 }
