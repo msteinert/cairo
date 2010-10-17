@@ -514,21 +514,12 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
      * then just change its end-point rather than adding a new op.
      */
     if (_cairo_path_fixed_last_op (path) == CAIRO_PATH_OP_LINE_TO) {
-	cairo_path_buf_t *buf;
 	const cairo_point_t *p;
 
-	buf = cairo_path_tail (path);
-	if (likely (buf->num_points >= 2)) {
-	    p = &buf->points[buf->num_points-2];
-	} else {
-	    cairo_path_buf_t *prev_buf = cairo_path_buf_prev (buf);
-	    p = &prev_buf->points[prev_buf->num_points - (2 - buf->num_points)];
-	}
-
+	p = _cairo_path_fixed_penultimate_point (path);
 	if (p->x == path->current_point.x && p->y == path->current_point.y) {
 	    /* previous line element was degenerate, replace */
-	    buf->points[buf->num_points - 1] = point;
-	    goto FLAGS;
+	    _cairo_path_fixed_drop_line_to (path);
 	} else {
 	    cairo_slope_t prev, self;
 
@@ -538,8 +529,12 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
 		/* cannot trim anti-parallel segments whilst stroking */
 		! _cairo_slope_backwards (&prev, &self))
 	    {
-		buf->points[buf->num_points - 1] = point;
-		goto FLAGS;
+		_cairo_path_fixed_drop_line_to (path);
+		/* In this case the flags might be more restrictive than
+		 * what we actually need.
+		 * When changing the flags definition we should check if
+		 * changing the line_to point can affect them.
+		*/
 	    }
 	}
     }
@@ -548,7 +543,6 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
     if (unlikely (status))
 	return status;
 
-  FLAGS:
     if (path->is_rectilinear) {
 	path->is_rectilinear = path->current_point.x == x ||
 			       path->current_point.y == y;
