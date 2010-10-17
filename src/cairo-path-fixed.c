@@ -182,23 +182,23 @@ _cairo_path_fixed_hash (const cairo_path_fixed_t *path)
 {
     unsigned long hash = _CAIRO_HASH_INIT_VALUE;
     const cairo_path_buf_t *buf;
-    int num_points, num_ops;
+    unsigned int count;
 
-    hash = _cairo_hash_bytes (hash, &path->extents, sizeof (path->extents));
-
-    num_ops = num_points = 0;
+    count = 0;
     cairo_path_foreach_buf_start (buf, path) {
 	hash = _cairo_hash_bytes (hash, buf->op,
 			          buf->num_ops * sizeof (buf->op[0]));
+	count += buf->num_ops;
+    } cairo_path_foreach_buf_end (buf, path);
+    hash = _cairo_hash_bytes (hash, &count, sizeof (count));
+
+    count = 0;
+    cairo_path_foreach_buf_start (buf, path) {
 	hash = _cairo_hash_bytes (hash, buf->points,
 			          buf->num_points * sizeof (buf->points[0]));
-
-	num_ops    += buf->num_ops;
-	num_points += buf->num_points;
+	count += buf->num_points;
     } cairo_path_foreach_buf_end (buf, path);
-
-    hash = _cairo_hash_bytes (hash, &num_ops, sizeof (num_ops));
-    hash = _cairo_hash_bytes (hash, &num_points, sizeof (num_points));
+    hash = _cairo_hash_bytes (hash, &count, sizeof (count));
 
     return hash;
 }
