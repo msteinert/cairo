@@ -540,9 +540,6 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
 	}
     }
 
-    status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_LINE_TO, &point, 1);
-    if (unlikely (status))
-	return status;
 
     if (path->is_rectilinear) {
 	path->is_rectilinear = path->current_point.x == x ||
@@ -564,7 +561,8 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
 	path->has_last_move_point = FALSE;
     }
     _cairo_path_fixed_extents_add (path, &point);
-    return CAIRO_STATUS_SUCCESS;
+
+    return _cairo_path_fixed_add (path, CAIRO_PATH_OP_LINE_TO, &point, 1);
 }
 
 cairo_status_t
@@ -599,9 +597,6 @@ _cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
     point[0].x = x0; point[0].y = y0;
     point[1].x = x1; point[1].y = y1;
     point[2].x = x2; point[2].y = y2;
-    status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_CURVE_TO, point, 3);
-    if (unlikely (status))
-	return status;
 
     path->current_point = point[2];
     path->has_current_point = TRUE;
@@ -619,7 +614,7 @@ _cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
     _cairo_path_fixed_extents_add (path, &point[1]);
     _cairo_path_fixed_extents_add (path, &point[2]);
 
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_path_fixed_add (path, CAIRO_PATH_OP_CURVE_TO, point, 3);
 }
 
 cairo_status_t
