@@ -594,6 +594,17 @@ _cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
 	    return status;
     }
 
+    /* If the previous op was a degenerate LINE_TO, drop it. */
+    if (_cairo_path_fixed_last_op (path) == CAIRO_PATH_OP_LINE_TO) {
+	const cairo_point_t *p;
+
+	p = _cairo_path_fixed_penultimate_point (path);
+	if (p->x == path->current_point.x && p->y == path->current_point.y) {
+	    /* previous line element was degenerate, replace */
+	    _cairo_path_fixed_drop_line_to (path);
+	}
+    }
+
     point[0].x = x0; point[0].y = y0;
     point[1].x = x1; point[1].y = y1;
     point[2].x = x2; point[2].y = y2;
