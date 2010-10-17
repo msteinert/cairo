@@ -362,8 +362,8 @@ _cairo_path_fixed_destroy (cairo_path_fixed_t *path)
     free (path);
 }
 
-static cairo_path_op_t
-_cairo_path_last_op (cairo_path_fixed_t *path)
+static inline cairo_path_op_t
+_cairo_path_fixed_last_op (cairo_path_fixed_t *path)
 {
     cairo_path_buf_t *buf;
 
@@ -402,7 +402,7 @@ _cairo_path_fixed_move_to (cairo_path_fixed_t  *path,
 
     /* If the previous op was also a MOVE_TO, then just change its
      * point rather than adding a new op. */
-    if (_cairo_path_last_op (path) == CAIRO_PATH_OP_MOVE_TO) {
+    if (_cairo_path_fixed_last_op (path) == CAIRO_PATH_OP_MOVE_TO) {
 	cairo_path_buf_t *buf;
 
 	buf = cairo_path_tail (path);
@@ -477,7 +477,7 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
      * a move-to followed by a degenerate line-to is a valid path for
      * stroking, but at all other times is simply a degenerate segment.
      */
-    if (_cairo_path_last_op (path) != CAIRO_PATH_OP_MOVE_TO) {
+    if (_cairo_path_fixed_last_op (path) != CAIRO_PATH_OP_MOVE_TO) {
 	if (x == path->current_point.x && y == path->current_point.y)
 	    return CAIRO_STATUS_SUCCESS;
     }
@@ -485,7 +485,7 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
     /* If the previous op was also a LINE_TO with the same gradient,
      * then just change its end-point rather than adding a new op.
      */
-    if (_cairo_path_last_op (path) == CAIRO_PATH_OP_LINE_TO) {
+    if (_cairo_path_fixed_last_op (path) == CAIRO_PATH_OP_LINE_TO) {
 	cairo_path_buf_t *buf;
 	const cairo_point_t *p;
 
@@ -628,7 +628,7 @@ _cairo_path_fixed_close_path (cairo_path_fixed_t *path)
 	return CAIRO_STATUS_SUCCESS;
 
     /* If the previous op was also a LINE_TO back to the start, discard it */
-    if (_cairo_path_last_op (path) == CAIRO_PATH_OP_LINE_TO) {
+    if (_cairo_path_fixed_last_op (path) == CAIRO_PATH_OP_LINE_TO) {
 	if (path->current_point.x == path->last_move_point.x &&
 	    path->current_point.y == path->last_move_point.y)
 	{
