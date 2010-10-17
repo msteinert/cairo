@@ -686,13 +686,9 @@ _cairo_path_fixed_close_path (cairo_path_fixed_t *path)
     if (_cairo_path_fixed_last_op (path) == CAIRO_PATH_OP_LINE_TO)
 	    _cairo_path_fixed_drop_line_to (path);
 
-    status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_CLOSE_PATH, NULL, 0);
-    if (unlikely (status))
-	return status;
+    path->needs_move_to = TRUE; /* After close_path, add an implicit move_to */
 
-    return _cairo_path_fixed_move_to (path,
-				      path->last_move_point.x,
-				      path->last_move_point.y);
+    return _cairo_path_fixed_add (path, CAIRO_PATH_OP_CLOSE_PATH, NULL, 0);
 }
 
 cairo_bool_t
