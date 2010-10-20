@@ -278,6 +278,10 @@ describe (cairo_perf_t *perf,
 {
     char *description = NULL;
 
+    if (perf->has_described_backend)
+	    return;
+    perf->has_described_backend = TRUE;
+
     if (perf->target->describe)
         description = perf->target->describe (closure);
 
@@ -827,6 +831,7 @@ main (int   argc,
 
 	perf.target = target;
 	perf.test_number = 0;
+	perf.has_described_backend = FALSE;
 
 	if (perf.exact_names) {
 	    for (n = 0; n < perf.num_names; n++) {

@@ -91,6 +91,7 @@ typedef struct _cairo_perf {
     const cairo_boilerplate_target_t **targets;
     int num_targets;
     const cairo_boilerplate_target_t *target;
+    cairo_bool_t has_described_backend;
     unsigned int test_number;
     unsigned int size;
     cairo_t *cr;
