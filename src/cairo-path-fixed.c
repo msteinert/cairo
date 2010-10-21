@@ -1426,14 +1426,5 @@ _cairo_path_fixed_iter_at_end (const cairo_path_fixed_iter_t *iter)
     if (iter->buf == NULL)
 	return TRUE;
 
-    if (iter->n_op == iter->buf->num_ops)
-	return TRUE;
-
-    if (iter->buf->op[iter->n_op] == CAIRO_PATH_OP_MOVE_TO &&
-	iter->buf->num_ops == iter->n_op + 1)
-    {
-	return TRUE;
-    }
-
-    return FALSE;
+    return iter->n_op == iter->buf->num_ops;
 }
