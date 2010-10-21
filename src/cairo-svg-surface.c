@@ -2574,6 +2574,7 @@ _cairo_svg_surface_get_font_options (void                  *abstract_surface,
     cairo_font_options_set_hint_style (options, CAIRO_HINT_STYLE_NONE);
     cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_OFF);
     cairo_font_options_set_antialias (options, CAIRO_ANTIALIAS_GRAY);
+    _cairo_font_options_set_round_glyph_positions (options, CAIRO_ROUND_GLYPH_POS_OFF);
 }
 
 static const cairo_surface_backend_t cairo_svg_surface_backend = {

@@ -1301,6 +1301,7 @@ _vg_surface_get_font_options (void                  *abstract_surface,
     _cairo_font_options_init_default (options);
 
     cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_ON);
+    _cairo_font_options_set_round_glyph_positions (options, CAIRO_ROUND_GLYPH_POS_OFF);
 }
 
 static cairo_int_status_t
