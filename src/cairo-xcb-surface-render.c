@@ -462,6 +462,7 @@ _cairo_xcb_picture_set_matrix (cairo_xcb_picture_t *picture,
 			       cairo_filter_t filter,
 			       double xc, double yc)
 {
+    xcb_render_transform_t transform;
     cairo_matrix_t m;
     double tx, ty;
 
@@ -472,7 +473,6 @@ _cairo_xcb_picture_set_matrix (cairo_xcb_picture_t *picture,
 	tx = ty = 0;
 
     if (! _cairo_matrix_is_identity (&m)) {
-	xcb_render_transform_t transform;
 	cairo_matrix_t inv;
 	cairo_status_t status;
 
@@ -496,20 +496,20 @@ _cairo_xcb_picture_set_matrix (cairo_xcb_picture_t *picture,
 	    if (tx != 0. || ty != 0.)
 		cairo_matrix_transform_point (&inv, &tx, &ty);
 	}
+    }
 
-	/* Casting between pixman_transform_t and XTransform is safe because
-	 * they happen to be the exact same type.
-	 */
-	_cairo_matrix_to_pixman_matrix (&m,
-					(pixman_transform_t *) &transform, xc, yc);
+    /* Casting between pixman_transform_t and xcb_render_transform_t is safe
+     * because they happen to be the exact same type.
+     */
+    _cairo_matrix_to_pixman_matrix (&m,
+				    (pixman_transform_t *) &transform, xc, yc);
 
-	if (memcmp (&picture->transform, &transform, sizeof (xcb_render_transform_t))) {
-	    _cairo_xcb_connection_render_set_picture_transform (_picture_to_connection(picture),
-								picture->picture,
-								&transform);
+    if (memcmp (&picture->transform, &transform, sizeof (xcb_render_transform_t))) {
+	_cairo_xcb_connection_render_set_picture_transform (_picture_to_connection (picture),
+							    picture->picture,
+							    &transform);
 
-	    picture->transform = transform;
-	}
+	picture->transform = transform;
     }
 
     picture->x = picture->x0 + tx;
