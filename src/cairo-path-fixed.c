@@ -749,9 +749,20 @@ _cairo_path_fixed_add (cairo_path_fixed_t   *path,
 	}
 	len += snprintf (buf + len, sizeof (buf), "]");
 
+#define STRINGIFYFLAG(x)  (path->x ? #x " " : "")
 	fprintf (stderr,
-		 "_cairo_path_fixed_add (%s, %s)\n",
-		 op_str[(int) op], buf);
+		 "_cairo_path_fixed_add (%s, %s) [%s%s%s%s%s%s%s%s]\n",
+		 op_str[(int) op], buf,
+		 STRINGIFYFLAG(has_current_point),
+		 STRINGIFYFLAG(needs_move_to),
+		 STRINGIFYFLAG(has_extents),
+		 STRINGIFYFLAG(has_curve_to),
+		 STRINGIFYFLAG(stroke_is_rectilinear),
+		 STRINGIFYFLAG(fill_is_rectilinear),
+		 STRINGIFYFLAG(fill_is_empty),
+		 STRINGIFYFLAG(fill_maybe_region)
+		 );
+#undef STRINGIFYFLAG
     }
 
     _cairo_path_buf_add_op (buf, op);
