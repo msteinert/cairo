@@ -1045,6 +1045,20 @@ _cairo_path_fixed_translate (cairo_path_fixed_t *path,
     path->extents.p2.y += offy;
 }
 
+
+static inline void
+_cairo_path_fixed_transform_point (cairo_point_t *p,
+				   const cairo_matrix_t *matrix)
+{
+    double dx, dy;
+
+    dx = _cairo_fixed_to_double (p->x);
+    dy = _cairo_fixed_to_double (p->y);
+    cairo_matrix_transform_point (matrix, &dx, &dy);
+    p->x = _cairo_fixed_from_double (dx);
+    p->y = _cairo_fixed_from_double (dy);
+}
+
 /**
  * _cairo_path_fixed_transform:
  * @path: a #cairo_path_fixed_t to be transformed
@@ -1058,11 +1072,9 @@ void
 _cairo_path_fixed_transform (cairo_path_fixed_t	*path,
 			     const cairo_matrix_t     *matrix)
 {
+    cairo_point_t point;
     cairo_path_buf_t *buf;
     unsigned int i;
-    double dx, dy;
-
-    /* XXX current_point, last_move_to */
 
     if (matrix->yx == 0.0 && matrix->xy == 0.0) {
 	/* Fast path for the common case of scale+transform */
@@ -1074,23 +1086,29 @@ _cairo_path_fixed_transform (cairo_path_fixed_t	*path,
 	return;
     }
 
-    path->extents.p1.x = path->extents.p1.y = INT_MAX;
-    path->extents.p2.x = path->extents.p2.y = INT_MIN;
-    path->fill_maybe_region = FALSE;
+    _cairo_path_fixed_transform_point (&path->last_move_point, matrix);
+    _cairo_path_fixed_transform_point (&path->current_point, matrix);
+
+    buf = cairo_path_head (path);
+    if (buf->num_points == 0)
+	return;
+
+    point = buf->points[0];
+    _cairo_path_fixed_transform_point (&point, matrix);
+    _cairo_box_set (&path->extents, &point, &point);
+
     cairo_path_foreach_buf_start (buf, path) {
-	 for (i = 0; i < buf->num_points; i++) {
-	    dx = _cairo_fixed_to_double (buf->points[i].x);
-	    dy = _cairo_fixed_to_double (buf->points[i].y);
-
-	    cairo_matrix_transform_point (matrix, &dx, &dy);
-
-	    buf->points[i].x = _cairo_fixed_from_double (dx);
-	    buf->points[i].y = _cairo_fixed_from_double (dy);
-
-	    /* XXX need to eliminate surplus move-to's? */
-	    _cairo_path_fixed_extents_add (path, &buf->points[i]);
-	 }
+	for (i = 0; i < buf->num_points; i++) {
+	    _cairo_path_fixed_transform_point (&buf->points[i], matrix);
+	    _cairo_box_add_point (&path->extents, &buf->points[i]);
+	}
     } cairo_path_foreach_buf_end (buf, path);
+
+    /* flags might become more strict than needed */
+    path->stroke_is_rectilinear = FALSE;
+    path->fill_is_rectilinear = FALSE;
+    path->fill_is_empty = FALSE;
+    path->fill_maybe_region = FALSE;
 }
 
 /* Closure for path flattening */
