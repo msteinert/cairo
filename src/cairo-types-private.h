@@ -161,12 +161,19 @@ typedef enum _cairo_lcd_filter {
     CAIRO_LCD_FILTER_FIR5
 } cairo_lcd_filter_t;
 
+typedef enum _cairo_round_glyph_positions {
+    CAIRO_ROUND_GLYPH_POS_DEFAULT,
+    CAIRO_ROUND_GLYPH_POS_ON,
+    CAIRO_ROUND_GLYPH_POS_OFF
+} cairo_round_glyph_positions_t;
+
 struct _cairo_font_options {
     cairo_antialias_t antialias;
     cairo_subpixel_order_t subpixel_order;
     cairo_lcd_filter_t lcd_filter;
     cairo_hint_style_t hint_style;
     cairo_hint_metrics_t hint_metrics;
+    cairo_round_glyph_positions_t round_glyph_positions;
 };
 
 /* XXX: Right now, the _cairo_color structure puts unpremultiplied

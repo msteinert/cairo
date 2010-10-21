@@ -54,7 +54,8 @@ static const cairo_font_options_t _cairo_font_options_nil = {
     CAIRO_SUBPIXEL_ORDER_DEFAULT,
     CAIRO_LCD_FILTER_DEFAULT,
     CAIRO_HINT_STYLE_DEFAULT,
-    CAIRO_HINT_METRICS_DEFAULT
+    CAIRO_HINT_METRICS_DEFAULT,
+    CAIRO_ROUND_GLYPH_POS_DEFAULT
 };
 
 /**
@@ -71,6 +72,7 @@ _cairo_font_options_init_default (cairo_font_options_t *options)
     options->lcd_filter = CAIRO_LCD_FILTER_DEFAULT;
     options->hint_style = CAIRO_HINT_STYLE_DEFAULT;
     options->hint_metrics = CAIRO_HINT_METRICS_DEFAULT;
+    options->round_glyph_positions = CAIRO_ROUND_GLYPH_POS_DEFAULT;
 }
 
 void
@@ -82,6 +84,7 @@ _cairo_font_options_init_copy (cairo_font_options_t		*options,
     options->lcd_filter = other->lcd_filter;
     options->hint_style = other->hint_style;
     options->hint_metrics = other->hint_metrics;
+    options->round_glyph_positions = other->round_glyph_positions;
 }
 
 /**
@@ -211,6 +214,8 @@ cairo_font_options_merge (cairo_font_options_t       *options,
 	options->hint_style = other->hint_style;
     if (other->hint_metrics != CAIRO_HINT_METRICS_DEFAULT)
 	options->hint_metrics = other->hint_metrics;
+    if (other->round_glyph_positions != CAIRO_ROUND_GLYPH_POS_DEFAULT)
+	options->round_glyph_positions = other->round_glyph_positions;
 }
 slim_hidden_def (cairo_font_options_merge);
 
@@ -241,7 +246,8 @@ cairo_font_options_equal (const cairo_font_options_t *options,
 	    options->subpixel_order == other->subpixel_order &&
 	    options->lcd_filter == other->lcd_filter &&
 	    options->hint_style == other->hint_style &&
-	    options->hint_metrics == other->hint_metrics);
+	    options->hint_metrics == other->hint_metrics &&
+	    options->round_glyph_positions == other->round_glyph_positions);
 }
 slim_hidden_def (cairo_font_options_equal);
 
@@ -387,6 +393,45 @@ _cairo_font_options_get_lcd_filter (const cairo_font_options_t *options)
 	return CAIRO_LCD_FILTER_DEFAULT;
 
     return options->lcd_filter;
+}
+
+/**
+ * _cairo_font_options_set_round_glyph_positions:
+ * @options: a #cairo_font_options_t
+ * @round: the new rounding value
+ *
+ * Sets the rounding options for the font options object. If rounding is set, a
+ * glyph's position will be rounded to integer values.
+ *
+ * Since: 1.12
+ **/
+void
+_cairo_font_options_set_round_glyph_positions (cairo_font_options_t *options,
+					       cairo_round_glyph_positions_t  round)
+{
+    if (cairo_font_options_status (options))
+	return;
+
+    options->round_glyph_positions = round;
+}
+
+/**
+ * _cairo_font_options_get_round_glyph_positions:
+ * @options: a #cairo_font_options_t
+ *
+ * Gets the glyph position rounding option for the font options object.
+ *
+ * Return value: The round glyph posistions flag for the font options object.
+ *
+ * Since: 1.12
+ **/
+cairo_round_glyph_positions_t
+_cairo_font_options_get_round_glyph_positions (const cairo_font_options_t *options)
+{
+    if (cairo_font_options_status ((cairo_font_options_t *) options))
+	return CAIRO_ROUND_GLYPH_POS_DEFAULT;
+
+    return options->round_glyph_positions;
 }
 
 /**

@@ -123,7 +123,8 @@ const cairo_surface_t name = {					\
       CAIRO_SUBPIXEL_ORDER_DEFAULT,	/* subpixel_order */	\
       CAIRO_LCD_FILTER_DEFAULT,		/* lcd_filter */	\
       CAIRO_HINT_STYLE_DEFAULT,		/* hint_style */	\
-      CAIRO_HINT_METRICS_DEFAULT	/* hint_metrics */	\
+      CAIRO_HINT_METRICS_DEFAULT,	/* hint_metrics */	\
+      CAIRO_ROUND_GLYPH_POS_DEFAULT	/* round_glyph_positions */	\
     }					/* font_options */	\
 }
 
