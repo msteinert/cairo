@@ -2071,6 +2071,7 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
     cairo_box_t box = { { INT_MAX, INT_MAX }, { INT_MIN, INT_MIN }};
     cairo_scaled_glyph_t *glyph_cache[64];
     cairo_bool_t overlap = overlap_out ? FALSE : TRUE;
+    cairo_round_glyph_positions_t round_glyph_positions = _cairo_font_options_get_round_glyph_positions (&scaled_font->options);
     int i;
 
     if (unlikely (scaled_font->status))
@@ -2099,11 +2100,17 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 	    glyph_cache[cache_index] = scaled_glyph;
 	}
 
-	x = _cairo_fixed_from_double (glyphs[i].x);
+	if (round_glyph_positions == CAIRO_ROUND_GLYPH_POS_ON)
+	    x = _cairo_fixed_from_double (_cairo_lround (glyphs[i].x));
+	else
+	    x = _cairo_fixed_from_double (glyphs[i].x);
 	x1 = x + scaled_glyph->bbox.p1.x;
 	x2 = x + scaled_glyph->bbox.p2.x;
 
-	y = _cairo_fixed_from_double (glyphs[i].y);
+	if (round_glyph_positions == CAIRO_ROUND_GLYPH_POS_ON)
+	    y = _cairo_fixed_from_double (_cairo_lround (glyphs[i].y));
+	else
+	    y = _cairo_fixed_from_double (glyphs[i].y);
 	y1 = y + scaled_glyph->bbox.p1.y;
 	y2 = y + scaled_glyph->bbox.p2.y;
 
