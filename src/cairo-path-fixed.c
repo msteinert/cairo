@@ -975,6 +975,11 @@ _cairo_path_fixed_offset_and_scale (cairo_path_fixed_t *path,
     cairo_path_buf_t *buf;
     unsigned int i;
 
+    if (scalex == CAIRO_FIXED_ONE && scaley == CAIRO_FIXED_ONE) {
+	_cairo_path_fixed_translate (path, offx, offy);
+	return;
+    }
+
     /* Recompute an approximation of the flags.
      * It might be more strict than what is actually needed.
      */
@@ -1062,17 +1067,11 @@ _cairo_path_fixed_transform (cairo_path_fixed_t	*path,
 
     if (matrix->yx == 0.0 && matrix->xy == 0.0) {
 	/* Fast path for the common case of scale+transform */
-	 if (matrix->xx == 1. && matrix->yy == 1.) {
-	     _cairo_path_fixed_translate (path,
-					  _cairo_fixed_from_double (matrix->x0),
-					  _cairo_fixed_from_double (matrix->y0));
-	 } else {
-	     _cairo_path_fixed_offset_and_scale (path,
-						 _cairo_fixed_from_double (matrix->x0),
-						 _cairo_fixed_from_double (matrix->y0),
-						 _cairo_fixed_from_double (matrix->xx),
-						 _cairo_fixed_from_double (matrix->yy));
-	 }
+	_cairo_path_fixed_offset_and_scale (path,
+					    _cairo_fixed_from_double (matrix->x0),
+					    _cairo_fixed_from_double (matrix->y0),
+					    _cairo_fixed_from_double (matrix->xx),
+					    _cairo_fixed_from_double (matrix->yy));
 	return;
     }
 
