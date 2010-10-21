@@ -4088,6 +4088,7 @@ _cairo_image_surface_get_font_options (void                  *abstract_surface,
     _cairo_font_options_init_default (options);
 
     cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_ON);
+    _cairo_font_options_set_round_glyph_positions (options, CAIRO_ROUND_GLYPH_POS_ON);
 }
 
 /* legacy interface kept for compatibility until surface-fallback is removed */

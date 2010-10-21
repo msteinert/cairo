@@ -1157,6 +1157,7 @@ _cairo_win32_printing_surface_get_font_options (void                  *abstract_
     cairo_font_options_set_hint_style (options, CAIRO_HINT_STYLE_NONE);
     cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_OFF);
     cairo_font_options_set_antialias (options, CAIRO_ANTIALIAS_GRAY);
+    _cairo_font_options_set_round_glyph_positions (options, CAIRO_ROUND_GLYPH_POS_ON);
 }
 
 static cairo_int_status_t

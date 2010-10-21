@@ -447,6 +447,7 @@ _cairo_xlib_screen_get_font_options (cairo_xlib_screen_t *info)
 {
     if (! info->has_font_options) {
 	_cairo_font_options_init_default (&info->font_options);
+	_cairo_font_options_set_round_glyph_positions (&info->font_options, CAIRO_ROUND_GLYPH_POS_ON);
 
 	if (info->screen != NULL) {
             cairo_xlib_display_t *display;

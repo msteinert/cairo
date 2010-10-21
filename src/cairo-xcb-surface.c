@@ -604,6 +604,7 @@ _cairo_xcb_surface_get_font_options (void *abstract_surface,
 {
     /* XXX  copy from xlib */
     _cairo_font_options_init_default (options);
+    _cairo_font_options_set_round_glyph_positions (options, CAIRO_ROUND_GLYPH_POS_ON);
 }
 
 static cairo_status_t
