@@ -117,7 +117,8 @@ static const cairo_t _cairo_nil = {
     { 0, 0 },			/* last_move_point */
     { 0, 0 },			/* current point */
     FALSE,			/* has_current_point */
-    FALSE,			/* has_last_move_point */
+    TRUE,			/* needs_move_to */
+    FALSE,			/* has_extents */
     FALSE,			/* has_curve_to */
     FALSE,			/* is_box */
     FALSE,			/* maybe_fill_region */
@@ -138,7 +139,8 @@ static const cairo_t _cairo_nil__null_pointer = {
     { 0, 0 },			/* last_move_point */
     { 0, 0 },			/* current point */
     FALSE,			/* has_current_point */
-    FALSE,			/* has_last_move_point */
+    TRUE,			/* needs_move_to */
+    FALSE,			/* has_extents */
     FALSE,			/* has_curve_to */
     FALSE,			/* is_box */
     FALSE,			/* maybe_fill_region */

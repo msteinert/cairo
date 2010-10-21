@@ -81,7 +81,8 @@ struct _cairo_path_fixed {
     cairo_point_t last_move_point;
     cairo_point_t current_point;
     unsigned int has_current_point	: 1;
-    unsigned int has_last_move_point	: 1;
+    unsigned int needs_move_to		: 1;
+    unsigned int has_extents		: 1;
     unsigned int has_curve_to		: 1;
     unsigned int is_rectilinear		: 1;
     unsigned int maybe_fill_region	: 1;
@@ -144,8 +145,8 @@ _cairo_path_fixed_fill_is_rectilinear (const cairo_path_fixed_t *path)
     if (! path->is_rectilinear)
 	return 0;
 
-    if (! path->has_current_point)
-	return 1;
+    if (! path->has_current_point || path->needs_move_to)
+	return TRUE;
 
     /* check whether the implicit close preserves the rectilinear property */
     return path->current_point.x == path->last_move_point.x ||
@@ -164,7 +165,7 @@ _cairo_path_fixed_fill_maybe_region (const cairo_path_fixed_t *path)
     if (! path->maybe_fill_region)
 	return FALSE;
 
-    if (! path->has_current_point)
+    if (! path->has_current_point || path->needs_move_to)
 	return TRUE;
 
     /* check whether the implicit close preserves the rectilinear property

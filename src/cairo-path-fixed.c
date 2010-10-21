@@ -98,15 +98,17 @@ _cairo_path_fixed_init (cairo_path_fixed_t *path)
     path->current_point.x = 0;
     path->current_point.y = 0;
     path->last_move_point = path->current_point;
-    path->has_last_move_point = FALSE;
+
     path->has_current_point = FALSE;
+    path->needs_move_to = TRUE;
+    path->has_extents = FALSE;
     path->has_curve_to = FALSE;
     path->is_rectilinear = TRUE;
     path->maybe_fill_region = TRUE;
     path->is_empty_fill = TRUE;
 
-    path->extents.p1.x = path->extents.p1.y = INT_MAX;
-    path->extents.p2.x = path->extents.p2.y = INT_MIN;
+    path->extents.p1.x = path->extents.p1.y = 0;
+    path->extents.p2.x = path->extents.p2.y = 0;
 }
 
 cairo_status_t
@@ -127,8 +129,10 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
 
     path->current_point = other->current_point;
     path->last_move_point = other->last_move_point;
-    path->has_last_move_point = other->has_last_move_point;
+
     path->has_current_point = other->has_current_point;
+    path->needs_move_to = other->needs_move_to;
+    path->has_extents = other->has_extents;
     path->has_curve_to = other->has_curve_to;
     path->is_rectilinear = other->is_rectilinear;
     path->maybe_fill_region = other->maybe_fill_region;
@@ -423,48 +427,54 @@ _cairo_path_fixed_move_to (cairo_path_fixed_t  *path,
 			   cairo_fixed_t	x,
 			   cairo_fixed_t	y)
 {
-    cairo_status_t status;
-    cairo_point_t point;
+    _cairo_path_fixed_new_sub_path (path);
 
-    point.x = x;
-    point.y = y;
-
-    /* If the previous op was also a MOVE_TO, then just change its
-     * point rather than adding a new op. */
-    if (_cairo_path_fixed_last_op (path) == CAIRO_PATH_OP_MOVE_TO) {
-	cairo_path_buf_t *buf;
-
-	buf = cairo_path_tail (path);
-	buf->points[buf->num_points - 1] = point;
-    } else {
-	status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_MOVE_TO, &point, 1);
-	if (unlikely (status))
-	    return status;
-
-	if (path->has_current_point && path->is_rectilinear) {
-	    /* a move-to is first an implicit close */
-	    path->is_rectilinear = path->current_point.x == path->last_move_point.x ||
-				   path->current_point.y == path->last_move_point.y;
-	    path->maybe_fill_region &= path->is_rectilinear;
-	}
-	if (path->maybe_fill_region) {
-	    path->maybe_fill_region =
-		_cairo_fixed_is_integer (path->last_move_point.x) &&
-		_cairo_fixed_is_integer (path->last_move_point.y);
-	}
-    }
-
-    path->current_point = point;
-    path->last_move_point = point;
-    path->has_last_move_point = TRUE;
     path->has_current_point = TRUE;
+    path->current_point.x = x;
+    path->current_point.y = y;
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_path_fixed_move_to_apply (cairo_path_fixed_t  *path)
+{
+    if (likely (! path->needs_move_to))
+	return CAIRO_STATUS_SUCCESS;
+
+    path->needs_move_to = FALSE;
+
+    if (path->has_extents) {
+	_cairo_box_add_point (&path->extents, &path->current_point);
+    } else {
+	_cairo_box_set (&path->extents, &path->current_point, &path->current_point);
+	path->has_extents = TRUE;
+    }
+
+    if (path->maybe_fill_region) {
+	path->maybe_fill_region = _cairo_fixed_is_integer (path->current_point.x) &&
+				  _cairo_fixed_is_integer (path->current_point.y);
+    }
+
+    path->last_move_point = path->current_point;
+
+    return _cairo_path_fixed_add (path, CAIRO_PATH_OP_MOVE_TO, &path->current_point, 1);
 }
 
 void
 _cairo_path_fixed_new_sub_path (cairo_path_fixed_t *path)
 {
+    if (! path->needs_move_to) {
+	/* If the current subpath doesn't need_move_to, it contains at least one command */
+	if (path->is_rectilinear) {
+	    /* Implicitly close for fill */
+	    path->is_rectilinear = path->current_point.x == path->last_move_point.x ||
+				   path->current_point.y == path->last_move_point.y;
+	    path->maybe_fill_region &= path->is_rectilinear;
+	}
+	path->needs_move_to = TRUE;
+    }
+
     path->has_current_point = FALSE;
 }
 
@@ -500,6 +510,10 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
      */
     if (! path->has_current_point)
 	return _cairo_path_fixed_move_to (path, point.x, point.y);
+
+    status = _cairo_path_fixed_move_to_apply (path);
+    if (unlikely (status))
+	return status;
 
     /* If the previous op was but the initial MOVE_TO and this segment
      * is degenerate, then we can simply skip this point. Note that
@@ -556,11 +570,8 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
     }
 
     path->current_point = point;
-    if (path->has_last_move_point) {
-	_cairo_path_fixed_extents_add (path, &path->last_move_point);
-	path->has_last_move_point = FALSE;
-    }
-    _cairo_path_fixed_extents_add (path, &point);
+
+    _cairo_box_add_point (&path->extents, &point);
 
     return _cairo_path_fixed_add (path, CAIRO_PATH_OP_LINE_TO, &point, 1);
 }
@@ -590,9 +601,12 @@ _cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
     /* make sure subpaths are started properly */
     if (! path->has_current_point) {
 	status = _cairo_path_fixed_move_to (path, x0, y0);
-	if (unlikely (status))
-	    return status;
+	assert (status == CAIRO_STATUS_SUCCESS);
     }
+
+    status = _cairo_path_fixed_move_to_apply (path);
+    if (unlikely (status))
+	return status;
 
     /* If the previous op was a degenerate LINE_TO, drop it. */
     if (_cairo_path_fixed_last_op (path) == CAIRO_PATH_OP_LINE_TO) {
@@ -609,21 +623,16 @@ _cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
     point[1].x = x1; point[1].y = y1;
     point[2].x = x2; point[2].y = y2;
 
-    path->current_point = point[2];
-    path->has_current_point = TRUE;
-    path->is_empty_fill = FALSE;
-    path->has_curve_to = TRUE;
-    path->is_rectilinear = FALSE;
-    path->maybe_fill_region = FALSE;
-
     /* coarse bounds */
-    if (path->has_last_move_point) {
-	_cairo_path_fixed_extents_add (path, &path->last_move_point);
-	path->has_last_move_point = FALSE;
-    }
     _cairo_path_fixed_extents_add (path, &point[0]);
     _cairo_path_fixed_extents_add (path, &point[1]);
     _cairo_path_fixed_extents_add (path, &point[2]);
+
+    path->current_point = point[2];
+    path->has_curve_to = TRUE;
+    path->is_rectilinear = FALSE;
+    path->maybe_fill_region = FALSE;
+    path->is_empty_fill = FALSE;
 
     return _cairo_path_fixed_add (path, CAIRO_PATH_OP_CURVE_TO, point, 3);
 }

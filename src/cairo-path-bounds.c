@@ -235,8 +235,8 @@ _cairo_path_fixed_approximate_stroke_extents (const cairo_path_fixed_t *path,
 	bounder.extents = path->extents;
 
 	/* include trailing move-to for degenerate segments */
-	if (path->has_last_move_point) {
-	    const cairo_point_t *point = &path->last_move_point;
+	if (path->needs_move_to) {
+	    const cairo_point_t *point = &path->current_point;
 
 	    if (point->x < bounder.extents.p1.x)
 		bounder.extents.p1.x = point->x;
@@ -331,7 +331,7 @@ _cairo_path_fixed_extents (const cairo_path_fixed_t *path,
 
     if (! path->has_curve_to) {
 	*box = path->extents;
-	return path->extents.p1.x < path->extents.p2.x;
+	return path->has_extents;
     }
 
     _cairo_path_bounder_init (&bounder);
