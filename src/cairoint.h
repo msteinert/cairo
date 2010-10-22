@@ -291,10 +291,6 @@ cairo_private cairo_bool_t
 _cairo_box_intersects_line_segment (cairo_box_t *box,
 	                            cairo_line_t *line) cairo_pure;
 
-cairo_private cairo_bool_t
-_cairo_box_contains_point (cairo_box_t *box,
-	                   const cairo_point_t *point) cairo_pure;
-
 /* cairo-array.c structures and functions */
 
 cairo_private void

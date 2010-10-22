@@ -39,6 +39,8 @@
 
 #include "cairoint.h"
 
+#include "cairo-box-private.h"
+
 cairo_private void
 _cairo_box_from_doubles (cairo_box_t *box,
 			 double *x1, double *y1,
@@ -259,13 +261,4 @@ _cairo_box_intersects_line_segment (cairo_box_t *box, cairo_line_t *line)
 	return TRUE;
 
     return FALSE;
-}
-
-cairo_bool_t
-_cairo_box_contains_point (cairo_box_t *box, const cairo_point_t *point)
-{
-    if (point->x < box->p1.x || point->x > box->p2.x ||
-	point->y < box->p1.y || point->y > box->p2.y)
-	return FALSE;
-    return TRUE;
 }
