@@ -1055,6 +1055,7 @@ void
 _cairo_path_fixed_transform (cairo_path_fixed_t	*path,
 			     const cairo_matrix_t     *matrix)
 {
+    cairo_box_t extents;
     cairo_point_t point;
     cairo_path_buf_t *buf;
     unsigned int i;
@@ -1076,6 +1077,7 @@ _cairo_path_fixed_transform (cairo_path_fixed_t	*path,
     if (buf->num_points == 0)
 	return;
 
+    extents = path->extents;
     point = buf->points[0];
     _cairo_path_fixed_transform_point (&point, matrix);
     _cairo_box_set (&path->extents, &point, &point);
@@ -1086,6 +1088,19 @@ _cairo_path_fixed_transform (cairo_path_fixed_t	*path,
 	    _cairo_box_add_point (&path->extents, &buf->points[i]);
 	}
     } cairo_path_foreach_buf_end (buf, path);
+
+    if (path->has_curve_to) {
+	cairo_bool_t is_tight;
+
+	_cairo_matrix_transform_bounding_box_fixed (matrix, &extents, &is_tight);
+	if (!is_tight) {
+	    cairo_bool_t has_extents;
+
+	    has_extents = _cairo_path_bounder_extents (path, &extents);
+	    assert (has_extents);
+	}
+	path->extents = extents;
+    }
 
     /* flags might become more strict than needed */
     path->stroke_is_rectilinear = FALSE;
