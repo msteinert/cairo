@@ -1015,25 +1015,26 @@ _cairo_path_fixed_translate (cairo_path_fixed_t *path,
     if (offx == 0 && offy == 0)
 	return;
 
-    /* Recompute an approximation of the flags.
-     * It might be more strict than what is actually needed.
-     */
-    if (path->fill_maybe_region) {
-	path->fill_maybe_region = _cairo_fixed_is_integer (offx) &&
-				  _cairo_fixed_is_integer (offy);
-    }
-
     path->last_move_point.x += offx;
     path->last_move_point.y += offy;
     path->current_point.x += offx;
     path->current_point.y += offy;
 
+    path->fill_maybe_region = TRUE;
+
     cairo_path_foreach_buf_start (buf, path) {
-	 for (i = 0; i < buf->num_points; i++) {
-	     buf->points[i].x += offx;
-	     buf->points[i].y += offy;
+	for (i = 0; i < buf->num_points; i++) {
+	    buf->points[i].x += offx;
+	    buf->points[i].y += offy;
+
+	    if (path->fill_maybe_region) {
+		path->fill_maybe_region = _cairo_fixed_is_integer (buf->points[i].x) &&
+					  _cairo_fixed_is_integer (buf->points[i].y);
+	    }
 	 }
     } cairo_path_foreach_buf_end (buf, path);
+
+    path->fill_maybe_region &= path->fill_is_rectilinear;
 
     path->extents.p1.x += offx;
     path->extents.p1.y += offy;
