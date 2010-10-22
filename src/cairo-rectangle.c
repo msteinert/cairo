@@ -262,3 +262,32 @@ _cairo_box_intersects_line_segment (cairo_box_t *box, cairo_line_t *line)
 
     return FALSE;
 }
+
+static cairo_status_t
+_cairo_box_add_spline_point (void *closure,
+			     const cairo_point_t *point)
+{
+    _cairo_box_add_point (closure, point);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/* assumes a has been previously added */
+void
+_cairo_box_add_curve_to (cairo_box_t *extents,
+			 const cairo_point_t *a,
+			 const cairo_point_t *b,
+			 const cairo_point_t *c,
+			 const cairo_point_t *d)
+{
+    _cairo_box_add_point (extents, d);
+    if (!_cairo_box_contains_point (extents, b) ||
+	!_cairo_box_contains_point (extents, c))
+    {
+	cairo_status_t status;
+
+	status = _cairo_spline_bound (_cairo_box_add_spline_point,
+				      extents, a, b, c, d);
+	assert (status == CAIRO_STATUS_SUCCESS);
+    }
+}
