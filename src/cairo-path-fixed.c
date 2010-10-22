@@ -408,21 +408,6 @@ _cairo_path_fixed_drop_line_to (cairo_path_fixed_t *path)
     buf->num_ops--;
 }
 
-static inline void
-_cairo_path_fixed_extents_add (cairo_path_fixed_t *path,
-			       const cairo_point_t *point)
-{
-    if (point->x < path->extents.p1.x)
-	path->extents.p1.x = point->x;
-    if (point->y < path->extents.p1.y)
-	path->extents.p1.y = point->y;
-
-    if (point->x > path->extents.p2.x)
-	path->extents.p2.x = point->x;
-    if (point->y > path->extents.p2.y)
-	path->extents.p2.y = point->y;
-}
-
 cairo_status_t
 _cairo_path_fixed_move_to (cairo_path_fixed_t  *path,
 			   cairo_fixed_t	x,
@@ -625,9 +610,9 @@ _cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
     point[2].x = x2; point[2].y = y2;
 
     /* coarse bounds */
-    _cairo_path_fixed_extents_add (path, &point[0]);
-    _cairo_path_fixed_extents_add (path, &point[1]);
-    _cairo_path_fixed_extents_add (path, &point[2]);
+    _cairo_box_add_point (&path->extents, &point[0]);
+    _cairo_box_add_point (&path->extents, &point[1]);
+    _cairo_box_add_point (&path->extents, &point[2]);
 
     path->current_point = point[2];
     path->has_curve_to = TRUE;
