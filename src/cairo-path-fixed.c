@@ -609,10 +609,8 @@ _cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
     point[1].x = x1; point[1].y = y1;
     point[2].x = x2; point[2].y = y2;
 
-    /* coarse bounds */
-    _cairo_box_add_point (&path->extents, &point[0]);
-    _cairo_box_add_point (&path->extents, &point[1]);
-    _cairo_box_add_point (&path->extents, &point[2]);
+    _cairo_box_add_curve_to (&path->extents, &path->current_point,
+			     &point[0], &point[1], &point[2]);
 
     path->current_point = point[2];
     path->has_curve_to = TRUE;
