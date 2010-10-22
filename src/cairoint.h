@@ -968,7 +968,11 @@ _cairo_round (double r)
 cairo_private int
 _cairo_lround (double d) cairo_const;
 #else
-#define _cairo_lround lround
+static inline int cairo_const
+_cairo_lround (double r)
+{
+    return _cairo_round (r);
+}
 #endif
 
 cairo_private uint16_t
