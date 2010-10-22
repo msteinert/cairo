@@ -1217,6 +1217,11 @@ _cairo_path_fixed_interpret_flat (const cairo_path_fixed_t *path,
 		       void				  *closure,
 		       double				  tolerance);
 
+
+cairo_private cairo_bool_t
+_cairo_path_bounder_extents (const cairo_path_fixed_t *path,
+			     cairo_box_t *box);
+
 cairo_private cairo_bool_t
 _cairo_path_fixed_extents (const cairo_path_fixed_t *path,
 			   cairo_box_t *box);
