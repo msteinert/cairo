@@ -956,7 +956,7 @@ _cairo_restrict_value (double value, double min, double max)
 }
 
 /* C99 round() rounds to the nearest integral value with halfway cases rounded
- * away from 0. _cairo_round rounds halfway cases toward negative infinity.
+ * away from 0. _cairo_round rounds halfway cases toward positive infinity.
  * This matches the rounding behaviour of _cairo_lround. */
 static inline double cairo_const
 _cairo_round (double r)
