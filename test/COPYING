@@ -11,3 +11,16 @@ are as follows:
 	Font		License		Distinguishing feature
 	--------	-------------	----------------------
 	6x13.pcf	Public Domain	Bitmap font
+
+
+The test suite also bundles some images for use by the test suite. The
+images included, their licenses, and why we use them in the test suite
+are as follows:
+
+	Image		License		Distinguishing feature
+	-------------	-------------	-------------------------
+	romedalen.jpg	Public Domain	Bitmap image (image/jpeg)
+	romedalen.png	Public Domain	Bitmap image (image/png)
+
+The kind contributors of the bundled files are (in alphabetical order):
+Øyvind Kolås <pippin@freedesktop.org> Author of the original romedalen shot.
