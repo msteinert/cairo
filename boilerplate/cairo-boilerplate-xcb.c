@@ -248,6 +248,12 @@ _cairo_boilerplate_xcb_create_window (const char		*name,
     xtc->surface = NULL;
 
     s = xcb_setup_roots_iterator (xcb_get_setup (c)).data;
+    if (width > s->width_in_pixels || height > s->height_in_pixels) {
+	xcb_disconnect (c);
+	free (xtc);
+	return NULL;
+    }
+
     xtc->is_pixmap = FALSE;
     xtc->drawable = xcb_generate_id (c);
     cookie = xcb_create_window_checked (c,
@@ -319,6 +325,12 @@ _cairo_boilerplate_xcb_create_window_db (const char		   *name,
     xtc->surface = NULL;
 
     s = xcb_setup_roots_iterator (xcb_get_setup (c)).data;
+    if (width > s->width_in_pixels || height > s->height_in_pixels) {
+	xcb_disconnect (c);
+	free (xtc);
+	return NULL;
+    }
+
     xtc->is_pixmap = FALSE;
     xtc->drawable = xcb_generate_id (c);
     cookie = xcb_create_window_checked (c,
