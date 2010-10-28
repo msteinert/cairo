@@ -84,7 +84,8 @@ struct _cairo_path_fixed {
     unsigned int needs_move_to		: 1;
     unsigned int has_extents		: 1;
     unsigned int has_curve_to		: 1;
-    unsigned int is_rectilinear		: 1;
+    unsigned int stroke_is_rectilinear	: 1;
+    unsigned int fill_is_rectilinear	: 1;
     unsigned int maybe_fill_region	: 1;
     unsigned int is_empty_fill		: 1;
 
@@ -142,8 +143,8 @@ _cairo_path_fixed_fill_is_empty (const cairo_path_fixed_t *path)
 static inline cairo_bool_t
 _cairo_path_fixed_fill_is_rectilinear (const cairo_path_fixed_t *path)
 {
-    if (! path->is_rectilinear)
-	return 0;
+    if (! path->fill_is_rectilinear)
+	return FALSE;
 
     if (! path->has_current_point || path->needs_move_to)
 	return TRUE;
@@ -156,7 +157,7 @@ _cairo_path_fixed_fill_is_rectilinear (const cairo_path_fixed_t *path)
 static inline cairo_bool_t
 _cairo_path_fixed_stroke_is_rectilinear (const cairo_path_fixed_t *path)
 {
-    return path->is_rectilinear;
+    return path->stroke_is_rectilinear;
 }
 
 static inline cairo_bool_t

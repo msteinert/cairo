@@ -120,7 +120,8 @@ static const cairo_t _cairo_nil = {
     TRUE,			/* needs_move_to */
     FALSE,			/* has_extents */
     FALSE,			/* has_curve_to */
-    FALSE,			/* is_box */
+    TRUE,			/* stroke_is_rectilinear */
+    TRUE,			/* fill_is_rectilinear */
     FALSE,			/* maybe_fill_region */
     TRUE,			/* is_empty_fill */
     { {0, 0}, {0, 0}},		/* extents */
@@ -142,7 +143,8 @@ static const cairo_t _cairo_nil__null_pointer = {
     TRUE,			/* needs_move_to */
     FALSE,			/* has_extents */
     FALSE,			/* has_curve_to */
-    FALSE,			/* is_box */
+    TRUE,			/* stroke_is_rectilinear */
+    TRUE,			/* fill_is_rectilinear */
     FALSE,			/* maybe_fill_region */
     TRUE,			/* is_empty_fill */
     { {0, 0}, {0, 0}},		/* extents */

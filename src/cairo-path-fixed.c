@@ -103,7 +103,8 @@ _cairo_path_fixed_init (cairo_path_fixed_t *path)
     path->needs_move_to = TRUE;
     path->has_extents = FALSE;
     path->has_curve_to = FALSE;
-    path->is_rectilinear = TRUE;
+    path->stroke_is_rectilinear = TRUE;
+    path->fill_is_rectilinear = TRUE;
     path->maybe_fill_region = TRUE;
     path->is_empty_fill = TRUE;
 
@@ -134,7 +135,8 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
     path->needs_move_to = other->needs_move_to;
     path->has_extents = other->has_extents;
     path->has_curve_to = other->has_curve_to;
-    path->is_rectilinear = other->is_rectilinear;
+    path->stroke_is_rectilinear = other->stroke_is_rectilinear;
+    path->fill_is_rectilinear = other->fill_is_rectilinear;
     path->maybe_fill_region = other->maybe_fill_region;
     path->is_empty_fill = other->is_empty_fill;
 
@@ -466,11 +468,11 @@ _cairo_path_fixed_new_sub_path (cairo_path_fixed_t *path)
 {
     if (! path->needs_move_to) {
 	/* If the current subpath doesn't need_move_to, it contains at least one command */
-	if (path->is_rectilinear) {
+	if (path->fill_is_rectilinear) {
 	    /* Implicitly close for fill */
-	    path->is_rectilinear = path->current_point.x == path->last_move_point.x ||
-				   path->current_point.y == path->last_move_point.y;
-	    path->maybe_fill_region &= path->is_rectilinear;
+	    path->fill_is_rectilinear = path->current_point.x == path->last_move_point.x ||
+					path->current_point.y == path->last_move_point.y;
+	    path->maybe_fill_region &= path->fill_is_rectilinear;
 	}
 	path->needs_move_to = TRUE;
     }
@@ -554,19 +556,19 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
 	}
     }
 
-
-    if (path->is_rectilinear) {
-	path->is_rectilinear = path->current_point.x == x ||
-			       path->current_point.y == y;
-	path->maybe_fill_region &= path->is_rectilinear;
-    }
-    if (path->maybe_fill_region) {
-	path->maybe_fill_region = _cairo_fixed_is_integer (x) &&
-				  _cairo_fixed_is_integer (y);
-    }
-    if (path->is_empty_fill) {
-	path->is_empty_fill = path->current_point.x == x &&
-			      path->current_point.y == y;
+    if (path->stroke_is_rectilinear) {
+	path->stroke_is_rectilinear = path->current_point.x == x ||
+				      path->current_point.y == y;
+	path->fill_is_rectilinear &= path->stroke_is_rectilinear;
+	path->maybe_fill_region &= path->fill_is_rectilinear;
+	if (path->maybe_fill_region) {
+	    path->maybe_fill_region = _cairo_fixed_is_integer (x) &&
+				      _cairo_fixed_is_integer (y);
+	}
+	if (path->is_empty_fill) {
+	    path->is_empty_fill = path->current_point.x == x &&
+				  path->current_point.y == y;
+	}
     }
 
     path->current_point = point;
@@ -630,7 +632,8 @@ _cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
 
     path->current_point = point[2];
     path->has_curve_to = TRUE;
-    path->is_rectilinear = FALSE;
+    path->stroke_is_rectilinear = FALSE;
+    path->fill_is_rectilinear = FALSE;
     path->maybe_fill_region = FALSE;
     path->is_empty_fill = FALSE;
 
@@ -1204,7 +1207,7 @@ _cairo_path_fixed_is_box (const cairo_path_fixed_t *path,
 {
     const cairo_path_buf_t *buf = cairo_path_head (path);
 
-    if (! path->is_rectilinear)
+    if (! path->fill_is_rectilinear)
 	return FALSE;
 
     /* Do we have the right number of ops? */
