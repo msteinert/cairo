@@ -105,8 +105,8 @@ _cairo_path_fixed_init (cairo_path_fixed_t *path)
     path->has_curve_to = FALSE;
     path->stroke_is_rectilinear = TRUE;
     path->fill_is_rectilinear = TRUE;
-    path->maybe_fill_region = TRUE;
-    path->is_empty_fill = TRUE;
+    path->fill_maybe_region = TRUE;
+    path->fill_is_empty = TRUE;
 
     path->extents.p1.x = path->extents.p1.y = 0;
     path->extents.p2.x = path->extents.p2.y = 0;
@@ -137,8 +137,8 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
     path->has_curve_to = other->has_curve_to;
     path->stroke_is_rectilinear = other->stroke_is_rectilinear;
     path->fill_is_rectilinear = other->fill_is_rectilinear;
-    path->maybe_fill_region = other->maybe_fill_region;
-    path->is_empty_fill = other->is_empty_fill;
+    path->fill_maybe_region = other->fill_maybe_region;
+    path->fill_is_empty = other->fill_is_empty;
 
     path->extents = other->extents;
 
@@ -453,8 +453,8 @@ _cairo_path_fixed_move_to_apply (cairo_path_fixed_t  *path)
 	path->has_extents = TRUE;
     }
 
-    if (path->maybe_fill_region) {
-	path->maybe_fill_region = _cairo_fixed_is_integer (path->current_point.x) &&
+    if (path->fill_maybe_region) {
+	path->fill_maybe_region = _cairo_fixed_is_integer (path->current_point.x) &&
 				  _cairo_fixed_is_integer (path->current_point.y);
     }
 
@@ -472,7 +472,7 @@ _cairo_path_fixed_new_sub_path (cairo_path_fixed_t *path)
 	    /* Implicitly close for fill */
 	    path->fill_is_rectilinear = path->current_point.x == path->last_move_point.x ||
 					path->current_point.y == path->last_move_point.y;
-	    path->maybe_fill_region &= path->fill_is_rectilinear;
+	    path->fill_maybe_region &= path->fill_is_rectilinear;
 	}
 	path->needs_move_to = TRUE;
     }
@@ -560,13 +560,13 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
 	path->stroke_is_rectilinear = path->current_point.x == x ||
 				      path->current_point.y == y;
 	path->fill_is_rectilinear &= path->stroke_is_rectilinear;
-	path->maybe_fill_region &= path->fill_is_rectilinear;
-	if (path->maybe_fill_region) {
-	    path->maybe_fill_region = _cairo_fixed_is_integer (x) &&
+	path->fill_maybe_region &= path->fill_is_rectilinear;
+	if (path->fill_maybe_region) {
+	    path->fill_maybe_region = _cairo_fixed_is_integer (x) &&
 				      _cairo_fixed_is_integer (y);
 	}
-	if (path->is_empty_fill) {
-	    path->is_empty_fill = path->current_point.x == x &&
+	if (path->fill_is_empty) {
+	    path->fill_is_empty = path->current_point.x == x &&
 				  path->current_point.y == y;
 	}
     }
@@ -634,8 +634,8 @@ _cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
     path->has_curve_to = TRUE;
     path->stroke_is_rectilinear = FALSE;
     path->fill_is_rectilinear = FALSE;
-    path->maybe_fill_region = FALSE;
-    path->is_empty_fill = FALSE;
+    path->fill_maybe_region = FALSE;
+    path->fill_is_empty = FALSE;
 
     return _cairo_path_fixed_add (path, CAIRO_PATH_OP_CURVE_TO, point, 3);
 }
@@ -964,8 +964,11 @@ _cairo_path_fixed_offset_and_scale (cairo_path_fixed_t *path,
     cairo_path_buf_t *buf;
     unsigned int i;
 
-    if (path->maybe_fill_region) {
-	path->maybe_fill_region = _cairo_fixed_is_integer (offx) &&
+    /* Recompute an approximation of the flags.
+     * It might be more strict than what is actually needed.
+     */
+    if (path->fill_maybe_region) {
+	path->fill_maybe_region = _cairo_fixed_is_integer (offx) &&
 	                          _cairo_fixed_is_integer (offy) &&
 			          _cairo_fixed_is_integer (scalex) &&
 			          _cairo_fixed_is_integer (scaley);
@@ -1001,10 +1004,12 @@ _cairo_path_fixed_translate (cairo_path_fixed_t *path,
     if (offx == 0 && offy == 0)
 	return;
 
-    if (path->maybe_fill_region &&
-	! (_cairo_fixed_is_integer (offx) && _cairo_fixed_is_integer (offy)))
-    {
-	path->maybe_fill_region = FALSE;
+    /* Recompute an approximation of the flags.
+     * It might be more strict than what is actually needed.
+     */
+    if (path->fill_maybe_region) {
+	path->fill_maybe_region = _cairo_fixed_is_integer (offx) &&
+				  _cairo_fixed_is_integer (offy);
     }
 
     path->last_move_point.x += offx;
@@ -1062,7 +1067,7 @@ _cairo_path_fixed_transform (cairo_path_fixed_t	*path,
 
     path->extents.p1.x = path->extents.p1.y = INT_MAX;
     path->extents.p2.x = path->extents.p2.y = INT_MIN;
-    path->maybe_fill_region = FALSE;
+    path->fill_maybe_region = FALSE;
     cairo_path_foreach_buf_start (buf, path) {
 	 for (i = 0; i < buf->num_points; i++) {
 	    dx = _cairo_fixed_to_double (buf->points[i].x);

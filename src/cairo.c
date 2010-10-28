@@ -122,8 +122,8 @@ static const cairo_t _cairo_nil = {
     FALSE,			/* has_curve_to */
     TRUE,			/* stroke_is_rectilinear */
     TRUE,			/* fill_is_rectilinear */
-    FALSE,			/* maybe_fill_region */
-    TRUE,			/* is_empty_fill */
+    TRUE,			/* fill_maybe_region */
+    TRUE,			/* fill_is_empty */
     { {0, 0}, {0, 0}},		/* extents */
     {{{NULL,NULL}}}		/* link */
   }}
@@ -145,8 +145,8 @@ static const cairo_t _cairo_nil__null_pointer = {
     FALSE,			/* has_curve_to */
     TRUE,			/* stroke_is_rectilinear */
     TRUE,			/* fill_is_rectilinear */
-    FALSE,			/* maybe_fill_region */
-    TRUE,			/* is_empty_fill */
+    TRUE,			/* fill_maybe_region */
+    TRUE,			/* fill_is_empty */
     { {0, 0}, {0, 0}},		/* extents */
     {{{NULL,NULL}}}		/* link */
   }}

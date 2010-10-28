@@ -77,6 +77,13 @@ typedef struct _cairo_path_buf_fixed {
     cairo_point_t points[2 * CAIRO_PATH_BUF_SIZE];
 } cairo_path_buf_fixed_t;
 
+/*
+  NOTES:
+  has_curve_to => !stroke_is_rectilinear
+  fill_is_rectilinear => stroke_is_rectilinear
+  fill_is_empty => fill_is_rectilinear
+  fill_maybe_region => fill_is_rectilinear
+*/
 struct _cairo_path_fixed {
     cairo_point_t last_move_point;
     cairo_point_t current_point;
@@ -86,8 +93,8 @@ struct _cairo_path_fixed {
     unsigned int has_curve_to		: 1;
     unsigned int stroke_is_rectilinear	: 1;
     unsigned int fill_is_rectilinear	: 1;
-    unsigned int maybe_fill_region	: 1;
-    unsigned int is_empty_fill		: 1;
+    unsigned int fill_maybe_region	: 1;
+    unsigned int fill_is_empty		: 1;
 
     cairo_box_t extents;
 
@@ -137,7 +144,7 @@ _cairo_path_fixed_iter_at_end (const cairo_path_fixed_iter_t *iter);
 static inline cairo_bool_t
 _cairo_path_fixed_fill_is_empty (const cairo_path_fixed_t *path)
 {
-    return path->is_empty_fill;
+    return path->fill_is_empty;
 }
 
 static inline cairo_bool_t
@@ -163,7 +170,7 @@ _cairo_path_fixed_stroke_is_rectilinear (const cairo_path_fixed_t *path)
 static inline cairo_bool_t
 _cairo_path_fixed_fill_maybe_region (const cairo_path_fixed_t *path)
 {
-    if (! path->maybe_fill_region)
+    if (! path->fill_maybe_region)
 	return FALSE;
 
     if (! path->has_current_point || path->needs_move_to)
