@@ -975,6 +975,10 @@ _cairo_path_fixed_offset_and_scale (cairo_path_fixed_t *path,
 	return;
     }
 
+    path->last_move_point.x = _cairo_fixed_mul (scalex, path->last_move_point.x) + offx;
+    path->last_move_point.y = _cairo_fixed_mul (scaley, path->last_move_point.y) + offy;
+    path->current_point.x   = _cairo_fixed_mul (scalex, path->current_point.x) + offx;
+    path->current_point.y   = _cairo_fixed_mul (scaley, path->current_point.y) + offy;
     /* Recompute an approximation of the flags.
      * It might be more strict than what is actually needed.
      */
