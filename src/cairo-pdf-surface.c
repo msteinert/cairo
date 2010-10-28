@@ -3554,6 +3554,7 @@ _cairo_pdf_surface_unselect_pattern (cairo_pdf_surface_t *surface)
 
 	_cairo_output_stream_printf (surface->output, "Q\n");
 	_cairo_pdf_operators_reset (&surface->pdf_operators);
+	surface->current_pattern_is_solid_color = FALSE;
     }
     surface->select_pattern_gstate_saved = FALSE;
 
