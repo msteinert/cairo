@@ -13,7 +13,9 @@ endif
 if CAIRO_HAS_TRACE
 SUBDIRS += cairo-trace
 if CAIRO_HAS_SCRIPT_SURFACE
+if CAIRO_HAS_TEE_SURFACE
 SUBDIRS += cairo-fdr
+endif
 endif
 endif
 
