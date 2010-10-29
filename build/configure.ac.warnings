@@ -8,6 +8,8 @@ dnl MAYBE_WARN in an ignorable way (like adding whitespace)
 # -Wcast-align generates lots of false positive reports we need to
 # cast image data from uint8_t to uin32_t.
 
+# -Wlogical-op causes too much noise from strcmp("literal", str)
+
 MAYBE_WARN="-Wall -Wextra \
 -Wold-style-definition -Wdeclaration-after-statement \
 -Wmissing-declarations -Werror-implicit-function-declaration \
@@ -17,7 +19,7 @@ MAYBE_WARN="-Wall -Wextra \
 -Wbad-function-cast -Wvolatile-register-var \
 -Wstrict-aliasing=2 -Winit-self -Wunsafe-loop-optimizations \
 -Wno-missing-field-initializers -Wno-unused-parameter \
--Wno-attributes -Wno-long-long -Winline -Wlogical-op"
+-Wno-attributes -Wno-long-long -Winline"
 
 dnl Sun Studio 12 likes to rag at us for abusing enums like
 dnl having cairo_status_t variables hold cairo_int_status_t
