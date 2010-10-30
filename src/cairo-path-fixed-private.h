@@ -151,10 +151,10 @@ static inline cairo_bool_t
 _cairo_path_fixed_fill_is_rectilinear (const cairo_path_fixed_t *path)
 {
     if (! path->fill_is_rectilinear)
-	return FALSE;
+	return 0;
 
     if (! path->has_current_point || path->needs_move_to)
-	return TRUE;
+	return 1;
 
     /* check whether the implicit close preserves the rectilinear property */
     return path->current_point.x == path->last_move_point.x ||
@@ -171,10 +171,10 @@ static inline cairo_bool_t
 _cairo_path_fixed_fill_maybe_region (const cairo_path_fixed_t *path)
 {
     if (! path->fill_maybe_region)
-	return FALSE;
+	return 0;
 
     if (! path->has_current_point || path->needs_move_to)
-	return TRUE;
+	return 1;
 
     /* check whether the implicit close preserves the rectilinear property
      * (the integer point property is automatically preserved)
