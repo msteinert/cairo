@@ -3512,7 +3512,7 @@ _cairo_xcb_surface_render_stroke (cairo_xcb_surface_t	*surface,
     }
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
-    if (path->is_rectilinear) {
+    if (_cairo_path_fixed_stroke_is_rectilinear (path)) {
 	cairo_boxes_t boxes;
 
 	_cairo_boxes_init (&boxes);
@@ -3695,7 +3695,7 @@ _cairo_xcb_surface_render_fill (cairo_xcb_surface_t	*surface,
     }
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
-    if (_cairo_path_fixed_is_rectilinear_fill (path)) {
+    if (_cairo_path_fixed_fill_is_rectilinear (path)) {
 	cairo_boxes_t boxes;
 
 	_cairo_boxes_init (&boxes);
