@@ -1473,7 +1473,7 @@ cairo_cff_font_write_fdselect (cairo_cff_font_t  *font)
 }
 
 /* Winansi to CFF standard strings mapping for characters 128 to 255 */
-const int winansi_to_cff_std_string[] = {
+static const int winansi_to_cff_std_string[] = {
 	/* 128 */
       0,   0, 117, 101, 118, 121, 112, 113,
     126, 122, 192, 107, 142,   0, 199,   0,
