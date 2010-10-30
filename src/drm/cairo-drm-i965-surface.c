@@ -1322,7 +1322,7 @@ i965_surface_stroke (void			*abstract_dst,
 	return status;
     }
 
-    if (path->is_rectilinear) {
+    if (_cairo_path_fixed_stroke_is_rectilinear (path)) {
 	cairo_boxes_t boxes;
 
 	_cairo_boxes_init (&boxes);
@@ -1429,9 +1429,9 @@ i965_surface_fill (void			*abstract_dst,
 	return status;
     }
 
-    assert (! path->is_empty_fill);
+    assert (! _cairo_path_fixed_fill_is_empty (path));
 
-    if (_cairo_path_fixed_is_rectilinear_fill (path)) {
+    if (_cairo_path_fixed_fill_is_rectilinear (path)) {
 	cairo_boxes_t boxes;
 
 	_cairo_boxes_init (&boxes);
