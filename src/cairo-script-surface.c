@@ -2054,13 +2054,13 @@ _cairo_script_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clip
     if (unlikely (status))
 	return status;
 
-    if (! path->is_rectilinear) {
+    if (path->has_curve_to) {
 	status = _emit_tolerance (surface, tolerance, matrix_updated);
 	if (unlikely (status))
 	    return status;
     }
 
-    if (! path->maybe_fill_region) {
+    if (! _cairo_path_fixed_fill_maybe_region (path)) {
 	status = _emit_antialias (surface, antialias);
 	if (unlikely (status))
 	    return status;
@@ -2343,11 +2343,9 @@ _cairo_script_surface_stroke (void				*abstract_surface,
     if (unlikely (status))
 	goto BAIL;
 
-    if (! path->is_rectilinear) {
-	status = _emit_tolerance (surface, tolerance, matrix_updated);
-	if (unlikely (status))
-	    goto BAIL;
-    }
+    status = _emit_tolerance (surface, tolerance, matrix_updated);
+    if (unlikely (status))
+	goto BAIL;
 
     status = _emit_antialias (surface, antialias);
     if (unlikely (status))
@@ -2414,13 +2412,13 @@ _cairo_script_surface_fill (void			*abstract_surface,
 	    goto BAIL;
     }
 
-    if (! path->is_rectilinear) {
+    if (path->has_curve_to) {
 	status = _emit_tolerance (surface, tolerance, matrix_updated);
 	if (unlikely (status))
 	    goto BAIL;
     }
 
-    if (! path->maybe_fill_region) {
+    if (! _cairo_path_fixed_fill_maybe_region (path)) {
 	status = _emit_antialias (surface, antialias);
 	if (unlikely (status))
 	    goto BAIL;
