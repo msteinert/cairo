@@ -1113,6 +1113,12 @@ _copy_to_picture (cairo_xcb_surface_t *source,
     cairo_xcb_picture_t *picture;
     uint32_t values[] = { 0, 1 };
 
+    if (source->deferred_clear) {
+	cairo_status_t status = _cairo_xcb_surface_clear (source);
+	if (unlikely (status))
+	    return (cairo_xcb_picture_t *) _cairo_surface_create_in_error (status);
+    }
+
     /* XXX two level device locking, ensure we release the xcb device mutex? */
     if (source->drm != NULL)
 	cairo_surface_flush (source->drm);
