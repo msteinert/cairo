@@ -61,6 +61,8 @@
  * This macro can be used to conditionally compile backend-specific code.
  */
 
+static CFDataRef (*CGFontCopyTableForTagPtr) (CGFontRef font, uint32_t tag) = NULL;
+
 /* CreateWithFontName exists in 10.5, but not in 10.4; CreateWithName isn't public in 10.4 */
 static CGFontRef (*CGFontCreateWithFontNamePtr) (CFStringRef) = NULL;
 static CGFontRef (*CGFontCreateWithNamePtr) (const char *) = NULL;
@@ -98,6 +100,8 @@ quartz_font_ensure_symbols(void)
 {
     if (_cairo_quartz_font_symbol_lookup_done)
 	return;
+
+    CGFontCopyTableForTagPtr = dlsym(RTLD_DEFAULT, "CGFontCopyTableForTag");
 
     /* Look for the 10.5 versions first */
     CGFontGetGlyphBBoxesPtr = dlsym(RTLD_DEFAULT, "CGFontGetGlyphBBoxes");
@@ -754,6 +758,39 @@ _cairo_quartz_ucs4_to_index (void *abstract_font,
     return glyph;
 }
 
+static cairo_int_status_t
+_cairo_quartz_load_truetype_table (void	            *abstract_font,
+				   unsigned long     tag,
+				   long              offset,
+				   unsigned char    *buffer,
+				   unsigned long    *length)
+{
+    cairo_quartz_font_face_t *font_face = _cairo_quartz_scaled_to_face (abstract_font);
+    CFDataRef data = NULL;
+    CFIndex len;
+
+    if (likely (CGFontCopyTableForTagPtr))
+	data = CGFontCopyTableForTagPtr (font_face->cgFont, tag);
+
+    if (!data)
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (length) {
+	if (*length == 0) {
+	    *length = CFDataGetLength (data);
+	    return CAIRO_STATUS_SUCCESS;
+	}
+
+	len = *length;
+    } else
+	len = CFDataGetLength (data);
+
+    if (buffer)
+	CFDataGetBytes (data, CFRangeMake (offset, len), buffer);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static const cairo_scaled_font_backend_t _cairo_quartz_scaled_font_backend = {
     CAIRO_FONT_TYPE_QUARTZ,
     _cairo_quartz_scaled_font_fini,
@@ -761,7 +798,7 @@ static const cairo_scaled_font_backend_t _cairo_quartz_scaled_font_backend = {
     NULL, /* text_to_glyphs */
     _cairo_quartz_ucs4_to_index,
     NULL, /* show_glyphs */
-    NULL, /* load_truetype_table */
+    _cairo_quartz_load_truetype_table,
     NULL, /* map_glyphs_to_unicode */
 };
 
