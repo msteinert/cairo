@@ -778,6 +778,7 @@ _cairo_quartz_load_truetype_table (void	            *abstract_font,
     if (length) {
 	if (*length == 0) {
 	    *length = CFDataGetLength (data);
+	    CFRelease (data);
 	    return CAIRO_STATUS_SUCCESS;
 	}
 
@@ -787,6 +788,8 @@ _cairo_quartz_load_truetype_table (void	            *abstract_font,
 
     if (buffer)
 	CFDataGetBytes (data, CFRangeMake (offset, len), buffer);
+
+    CFRelease (data);
 
     return CAIRO_STATUS_SUCCESS;
 }
