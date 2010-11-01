@@ -4252,7 +4252,7 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
     cairo_image_surface_t *surface = abstract_surface;
 
     pixman_color_t pixman_color;
-    pixman_box32_t stack_boxes[CAIRO_STACK_ARRAY_LENGTH (pixman_rectangle16_t)];
+    pixman_box32_t stack_boxes[CAIRO_STACK_ARRAY_LENGTH (pixman_box32_t)];
     pixman_box32_t *pixman_boxes = stack_boxes;
     int i;
 
@@ -4267,7 +4267,7 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
     pixman_color.alpha = color->alpha_short;
 
     if (num_rects > ARRAY_LENGTH (stack_boxes)) {
-	pixman_boxes = _cairo_malloc_ab (num_rects, sizeof (pixman_rectangle16_t));
+	pixman_boxes = _cairo_malloc_ab (num_rects, sizeof (pixman_box32_t));
 	if (unlikely (pixman_boxes == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
