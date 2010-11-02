@@ -2165,12 +2165,6 @@ _cairo_cff_subset_init (cairo_cff_subset_t          *cff_subset,
     memcpy (cff_subset->data, data, length);
     cff_subset->data_length = length;
 
-    {
-	FILE *f;
-	f=fopen("font.cff", "wb");
-	fwrite(data, length, 1, f);
-	fclose(f);
-    }
     cairo_cff_font_destroy (font);
 
     return CAIRO_STATUS_SUCCESS;
@@ -2559,13 +2553,6 @@ _cairo_cff_fallback_init (cairo_cff_subset_t          *cff_subset,
 
     memcpy (cff_subset->data, data, length);
     cff_subset->data_length = length;
-
-    {
-	FILE *f;
-	f=fopen("font.cff", "wb");
-	fwrite(data, length, 1, f);
-	fclose(f);
-    }
 
     _cairo_type2_charstrings_fini (&type2_subset);
     cairo_cff_font_destroy (font);
