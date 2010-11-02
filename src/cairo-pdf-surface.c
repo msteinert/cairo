@@ -1039,13 +1039,24 @@ _cairo_pdf_source_surface_equal (const void *key_a, const void *key_b)
     const cairo_pdf_source_surface_entry_t *a = key_a;
     const cairo_pdf_source_surface_entry_t *b = key_b;
 
-    return (a->id == b->id) && (a->interpolate == b->interpolate);
+    if (a->interpolate != b->interpolate)
+	return FALSE;
+
+    if (a->unique_id && b->unique_id && a->unique_id_length == b->unique_id_length)
+	return (memcmp (a->unique_id, b->unique_id, a->unique_id_length) == 0);
+
+    return (a->id == b->id);
 }
 
 static void
 _cairo_pdf_source_surface_init_key (cairo_pdf_source_surface_entry_t *key)
 {
-    key->base.hash = key->id;
+    if (key->unique_id && key->unique_id_length > 0) {
+	key->base.hash = _cairo_hash_bytes (_CAIRO_HASH_INIT_VALUE,
+					    key->unique_id, key->unique_id_length);
+    } else {
+	key->base.hash = key->id;
+    }
 }
 
 static cairo_int_status_t
@@ -1146,6 +1157,8 @@ _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	*surface,
     cairo_pdf_source_surface_entry_t *surface_entry;
     cairo_status_t status;
     cairo_bool_t interpolate;
+    const unsigned char *unique_id;
+    unsigned long unique_id_length;
 
     switch (filter) {
     default:
@@ -1163,6 +1176,8 @@ _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	*surface,
 
     surface_key.id  = source->unique_id;
     surface_key.interpolate = interpolate;
+    cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_UNIQUE_ID,
+				 &surface_key.unique_id, &surface_key.unique_id_length);
     _cairo_pdf_source_surface_init_key (&surface_key);
     surface_entry = _cairo_hash_table_lookup (surface->all_surfaces, &surface_key.base);
     if (surface_entry) {
@@ -1179,6 +1194,22 @@ _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	*surface,
 
     surface_entry->id = surface_key.id;
     surface_entry->interpolate = interpolate;
+    cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_UNIQUE_ID,
+				 &unique_id, &unique_id_length);
+    if (unique_id && unique_id_length > 0) {
+	surface_entry->unique_id = malloc (unique_id_length);
+	if (surface_entry->unique_id == NULL) {
+	    cairo_surface_destroy (source);
+	    free (surface_entry);
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	}
+
+	surface_entry->unique_id_length = unique_id_length;
+	memcpy (surface_entry->unique_id, unique_id, unique_id_length);
+    } else {
+	surface_entry->unique_id = NULL;
+	surface_entry->unique_id_length = 0;
+    }
     _cairo_pdf_source_surface_init_key (surface_entry);
 
     src_surface.hash_entry = surface_entry;
@@ -1631,6 +1662,9 @@ _cairo_pdf_source_surface_entry_pluck (void *entry, void *closure)
     cairo_hash_table_t *patterns = closure;
 
     _cairo_hash_table_remove (patterns, &surface_entry->base);
+    if (surface_entry->unique_id)
+	free (surface_entry->unique_id);
+
     free (surface_entry);
 }
 

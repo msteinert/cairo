@@ -892,6 +892,14 @@ _cairo_mime_data_destroy (void *ptr)
  */
 
 /**
+ * CAIRO_MIME_TYPE_UNIQUE_ID:
+ *
+ * Unique identifier for a surface (cairo specific MIME type).
+ *
+ * @Since: 1.12
+ */
+
+/**
  * cairo_surface_set_mime_data:
  * @surface: a #cairo_surface_t
  * @mime_type: the MIME type of the image data
