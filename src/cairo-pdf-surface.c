@@ -3785,7 +3785,6 @@ _create_font_subset_tag (cairo_scaled_font_subset_t	*font_subset,
 static cairo_int_status_t
 _cairo_pdf_surface_emit_to_unicode_stream (cairo_pdf_surface_t		*surface,
 					   cairo_scaled_font_subset_t	*font_subset,
-                                           cairo_bool_t                  is_composite,
 					   cairo_pdf_resource_t         *stream)
 {
     unsigned int i, num_bfchar;
@@ -3813,7 +3812,7 @@ _cairo_pdf_surface_emit_to_unicode_stream (cairo_pdf_surface_t		*surface,
                                  "/CMapType 2 def\n"
                                  "1 begincodespacerange\n");
 
-    if (is_composite) {
+    if (font_subset->is_composite) {
         _cairo_output_stream_printf (surface->output,
                                      "<0000> <ffff>\n");
     } else {
@@ -3865,7 +3864,7 @@ _cairo_pdf_surface_emit_to_unicode_stream (cairo_pdf_surface_t		*surface,
 					     "%d beginbfchar\n",
 					     num_bfchar - i > 100 ? 100 : num_bfchar - i);
 	    }
-	    if (is_composite)
+	    if (font_subset->is_composite)
 		_cairo_output_stream_printf (surface->output, "<%04x> ", i + 1);
 	    else
 		_cairo_output_stream_printf (surface->output, "<%02x> ", i + 1);
@@ -3932,7 +3931,7 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
 	return status;
 
     status = _cairo_pdf_surface_emit_to_unicode_stream (surface,
-	                                                font_subset, TRUE,
+	                                                font_subset,
 							&to_unicode_stream);
     if (_cairo_status_is_error (status))
 	return status;
@@ -4167,7 +4166,7 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 	return status;
 
     status = _cairo_pdf_surface_emit_to_unicode_stream (surface,
-	                                                font_subset, FALSE,
+	                                                font_subset,
 							&to_unicode_stream);
     if (_cairo_status_is_error (status))
 	return status;
@@ -4352,7 +4351,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     }
 
     status = _cairo_pdf_surface_emit_to_unicode_stream (surface,
-	                                                font_subset, TRUE,
+	                                                font_subset,
 							&to_unicode_stream);
     if (_cairo_status_is_error (status)) {
 	_cairo_truetype_subset_fini (&subset);
@@ -4725,7 +4724,7 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     free (glyphs);
 
     status = _cairo_pdf_surface_emit_to_unicode_stream (surface,
-	                                                font_subset, FALSE,
+	                                                font_subset,
 							&to_unicode_stream);
     if (_cairo_status_is_error (status)) {
 	free (widths);
@@ -4786,15 +4785,15 @@ _cairo_pdf_surface_emit_unscaled_font_subset (cairo_scaled_font_subset_t *font_s
     cairo_pdf_surface_t *surface = closure;
     cairo_status_t status;
 
+    status = _cairo_pdf_surface_emit_cff_font_subset (surface, font_subset);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
+
+    status = _cairo_pdf_surface_emit_truetype_font_subset (surface, font_subset);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
+
     if (font_subset->is_composite) {
-        status = _cairo_pdf_surface_emit_cff_font_subset (surface, font_subset);
-        if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-            return status;
-
-        status = _cairo_pdf_surface_emit_truetype_font_subset (surface, font_subset);
-        if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-            return status;
-
         status = _cairo_pdf_surface_emit_cff_fallback_font (surface, font_subset);
         if (status != CAIRO_INT_STATUS_UNSUPPORTED)
             return status;
