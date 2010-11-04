@@ -3,12 +3,12 @@ CAIRO_PARSE_VERSION
 AC_INIT([cairo],
 	[cairo_version_major.cairo_version_minor.cairo_version_micro],
 	[http://bugs.freedesktop.org/enter_bug.cgi?product=cairo])
+AC_CONFIG_AUX_DIR(build)
+AC_CONFIG_MACRO_DIR(build)
 AC_GNU_SOURCE
 AC_USE_SYSTEM_EXTENSIONS
 AC_CONFIG_SRCDIR(src/cairo.h)
 AC_CONFIG_HEADERS(config.h)
-AC_CONFIG_AUX_DIR(build)
-AC_CONFIG_MACRO_DIR(build)
 AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_LIBTOOL_WIN32_DLL dnl Must be called before AC_PROG_LIBTOOL
