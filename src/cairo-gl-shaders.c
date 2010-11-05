@@ -632,7 +632,7 @@ cairo_gl_shader_get_vertex_source (cairo_gl_var_type_t src,
 {
     cairo_output_stream_t *stream = _cairo_memory_stream_create ();
     unsigned char *source;
-    unsigned int length;
+    unsigned long length;
     cairo_status_t status;
 
     cairo_gl_shader_emit_variable (stream, src, CAIRO_GL_TEX_SOURCE);
@@ -768,7 +768,7 @@ cairo_gl_shader_get_fragment_source (GLuint tex_target,
 {
     cairo_output_stream_t *stream = _cairo_memory_stream_create ();
     unsigned char *source;
-    unsigned int length;
+    unsigned long length;
     cairo_status_t status;
 
     cairo_gl_shader_emit_color (stream, tex_target, src, CAIRO_GL_TEX_SOURCE);
