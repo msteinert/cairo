@@ -188,6 +188,7 @@ _cairo_font_subset_sources = \
 	cairo-scaled-font-subsets.c \
 	cairo-truetype-subset.c \
 	cairo-type1-fallback.c \
+	cairo-type1-glyph-names.c \
 	cairo-type1-subset.c \
         cairo-type3-glyph-surface.c \
 	$(NULL)

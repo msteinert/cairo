@@ -491,6 +491,9 @@ _cairo_truetype_subset_init_pdf (cairo_truetype_subset_t    *truetype_subset,
 cairo_private void
 _cairo_truetype_subset_fini (cairo_truetype_subset_t *truetype_subset);
 
+cairo_private const char *
+_cairo_ps_standard_encoding_to_glyphname (int glyph);
+
 cairo_private int
 _cairo_unicode_to_winansi (unsigned long unicode);
 
