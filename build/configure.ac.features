@@ -365,7 +365,7 @@ AC_DEFUN([CAIRO_REPORT],
 	echo "The following surface backends:"
 	echo "  Image:         yes (always builtin)"
 	echo "  Recording:     yes (always builtin)"
-	echo "  Tee:           yes (always builtin)"
+	echo "  Tee:           $use_tee"
 	echo "  XML:           $use_xml"
 	echo "  Skia:          $use_skia"
 	echo "  Xlib:          $use_xlib"
