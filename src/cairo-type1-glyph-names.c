@@ -42,128 +42,227 @@
 
 #if 0
 /*
- * The two tables that follow are generated using this perl code:
+ * The three tables that follow are generated using this perl code:
  */
 
-@encoding = (
-	/*   0 */
+@ps_standard_encoding = (
+	#   0
 	NULL,		NULL,		NULL,		NULL,
 	NULL,		NULL,		NULL,		NULL,
 	NULL,		NULL,		NULL,		NULL,
 	NULL,		NULL,		NULL,		NULL,
-	/*  16 */
+	#  16
 	NULL,		NULL,		NULL,		NULL,
 	NULL,		NULL,		NULL,		NULL,
 	NULL,		NULL,		NULL,		NULL,
 	NULL,		NULL,		NULL,		NULL,
-	/*  32 */
+	#  32
 	"space",	"exclam",	"quotedbl",	"numbersign",
 	"dollar",	"percent",	"ampersand",	"quoteright",
 	"parenleft",	"parenright",	"asterisk",	"plus",
 	"comma",	"hyphen",	"period",	"slash",
-	/*  48 */
+	#  48
 	"zero",		"one",		"two",		"three",
 	"four",		"five",		"six",		"seven",
 	"eight",	"nine",		"colon",	"semicolon",
 	"less",		"equal",	"greater",	"question",
-	/*  64 */
+	#  64
 	"at",		"A",		"B",		"C",
 	"D",		"E",		"F",		"G",
 	"H",		"I",		"J",		"K",
 	"L",		"M",		"N",		"O",
-	/*  80 */
+	#  80
 	"P",		"Q",		"R",		"S",
 	"T",		"U",		"V",		"W",
 	"X",		"Y",		"Z",		"bracketleft",
 	"backslash",	"bracketright",	"asciicircum",	"underscore",
-	/*  96 */
+	#  96
 	"quoteleft",	"a",		"b",		"c",
 	"d",		"e",		"f",		"g",
 	"h",		"i",		"j",		"k",
 	"l",		"m",		"n",		"o",
-	/* 112 */
+	# 112
 	"p",		"q",		"r",		"s",
 	"t",		"u",		"v",		"w",
 	"x",		"y",		"z",		"braceleft",
 	"bar",		"braceright",	"asciitilde",	NULL,
-	/* 128 */
+	# 128
 	NULL,		NULL,		NULL,		NULL,
 	NULL,		NULL,		NULL,		NULL,
 	NULL,		NULL,		NULL,		NULL,
 	NULL,		NULL,		NULL,		NULL,
-	/* 144 */
+	# 144
 	NULL,		NULL,		NULL,		NULL,
 	NULL,		NULL,		NULL,		NULL,
 	NULL,		NULL,		NULL,		NULL,
 	NULL,		NULL,		NULL,		NULL,
-	/* 160 */
+	# 160
 	NULL,		"exclamdown",	"cent",		"sterling",
 	"fraction",	"yen",		"florin",	"section",
 	"currency",	"quotesingle",	"quotedblleft",	"guillemotleft",
 	"guilsinglleft","guilsinglright","fi",		"fl",
-	/* 176 */
+	# 176
 	NULL,		"endash",	"dagger",	"daggerdbl",
 	"periodcentered",NULL,		"paragraph",	"bullet",
 	"quotesinglbase","quotedblbase","quotedblright","guillemotright",
 	"ellipsis",	"perthousand",	NULL,		"questiondown",
-	/* 192 */
+	# 192
 	NULL,		"grave",	"acute",	"circumflex",
 	"tilde",	"macron",	"breve",	"dotaccent",
 	"dieresis",	NULL,		"ring",		"cedilla",
 	NULL,		"hungarumlaut",	"ogonek",	"caron",
-	/* 208 */
+	# 208
 	"emdash",	NULL,		NULL,		NULL,
 	NULL,		NULL,		NULL,		NULL,
 	NULL,		NULL,		NULL,		NULL,
 	NULL,		NULL,		NULL,		NULL,
-	/* 224 */
+	# 224
 	NULL,		"AE",		NULL,		"ordfeminine",
 	NULL,		NULL,		NULL,		NULL,
 	"Lslash",	"Oslash",	"OE",		"ordmasculine",
 	NULL,		NULL,		NULL,		NULL,
-	/* 240 */
+	# 240
 	NULL,		"ae",		NULL,		NULL,
 	NULL,		"dotlessi",	NULL,		NULL,
 	"lslash",	"oslash",	"oe",		"germandbls",
 	NULL,		NULL,		NULL,		NULL
 	);
 
-print "static const char ps_standard_encoding_symbol[] = {\n";
-$s = qq( "\\0");
-for $sym (@encoding) {
-    if (! ($sym eq NULL)) {
-        $ss = qq( "$sym\\0");
+@winansi_encoding = (
+	#   0
+	NULL,		NULL,		NULL,		NULL,
+	NULL,		NULL,		NULL,		NULL,
+	NULL,		NULL,		NULL,		NULL,
+	NULL,		NULL,		NULL,		NULL,
+	#  16
+	NULL,		NULL,		NULL,		NULL,
+	NULL,		NULL,		NULL,		NULL,
+	NULL,		NULL,		NULL,		NULL,
+	NULL,		NULL,		NULL,		NULL,
+	#  32
+	"space",	"exclam",	"quotedbl",	"numbersign",
+	"dollar",	"percent",	"ampersand",	"quotesingle",
+	"parenleft",	"parenright",	"asterisk",	"plus",
+	"comma",	"hyphen",	"period",	"slash",
+	#  48
+	"zero",		"one",		"two",		"three",
+	"four",		"five",		"six",		"seven",
+	"eight",	"nine",		"colon",	"semicolon",
+	"less",		"equal",	"greater",	"question",
+	#  64
+	"at",		"A",		"B",		"C",
+	"D",		"E",		"F",		"G",
+	"H",		"I",		"J",		"K",
+	"L",		"M",		"N",		"O",
+	#  80
+	"P",		"Q",		"R",		"S",
+	"T",		"U",		"V",		"W",
+	"X",		"Y",		"Z",		"bracketleft",
+	"backslash",	"bracketright",	"asciicircum",	"underscore",
+	#  96
+	"grave",	"a",		"b",		"c",
+	"d",		"e",		"f",		"g",
+	"h",		"i",		"j",		"k",
+	"l",		"m",		"n",		"o",
+	# 112
+	"p",		"q",		"r",		"s",
+	"t",		"u",		"v",		"w",
+	"x",		"y",		"z",		"braceleft",
+	"bar",		"braceright",	"asciitilde",	NULL,
+	# 128
+	"Euro",		NULL,		"quotesinglbase","florin",
+	"quotedblbase", "ellipsis",	"dagger",	"daggerdbl",
+	"circumflex",	"perthousand",	"Scaron",	"guilsinglleft",
+	"OE",		NULL,		"Zcaron",	NULL,
+	# 144
+	NULL,		"quoteleft",	"quoteright",	"quotedblleft",
+	"quotedblright","bullet",	"endash",	"emdash",
+	"tilde",	"trademark",	"scaron",	"guilsinglright",
+	"oe",		NULL,		"zcaron",	"Ydieresis",
+	# 160
+	NULL,		"exclamdown",	"cent",		"sterling",
+	"currency",	"yen",		"brokenbar",	"section",
+	"dieresis",	"copyright",	"ordfeminine",	"guillemotleft",
+	# 173 is also "hyphen" but we leave this NULL to avoid duplicate names
+	"logicalnot",	NULL,		"registered",	"macron",
+	# 176
+	"degree",	"plusminus",	"twosuperior",	"threesuperior",
+	"acute",	"mu",		"paragraph",	"periodcentered",
+	"cedilla",	"onesuperior",	"ordmasculine",	"guillemotright",
+	"onequarter",	"onehalf",	"threequarters","questiondown",
+	# 192
+	"Agrave",	"Aacute",	"Acircumflex",	"Atilde",
+	"Adieresis",	"Aring",	"AE",		"Ccedilla",
+	"Egrave",	"Eacute",	"Ecircumflex",	"Edieresis",
+	"Igrave",	"Iacute",	"Icircumflex",	"Idieresis",
+	# 208
+	"Eth",		"Ntilde",	"Ograve",	"Oacute",
+	"Ocircumflex",	"Otilde",	"Odieresis",	"multiply",
+	"Oslash",	"Ugrave",	"Uacute",	"Ucircumflex",
+	"Udieresis",	"Yacute",	"Thorn",	"germandbls",
+	# 224
+	"agrave",	"aacute",	"acircumflex",	"atilde",
+	"adieresis",	"aring",	"ae",		"ccedilla",
+	"egrave",	"eacute",	"ecircumflex",	"edieresis",
+	"igrave",	"iacute",	"icircumflex",	"idieresis",
+	# 240
+	"eth",		"ntilde",	"ograve",	"oacute",
+	"ocircumflex",	"otilde",	"odieresis",	"divide",
+	"oslash",	"ugrave",	"uacute",	"ucircumflex",
+	"udieresis",	"yacute",	"thorn",	"ydieresis"
+);
+
+sub print_offsets {
+    $s = qq();
+    for $sym (@_) {
+        if (! ($sym eq NULL)) {
+	    $ss = qq( $hash{$sym}/*$sym*/,);
+	} else {
+	    $ss = qq( 0,);
+	}
 	if (length($s) + length($ss) > 78) {
-	  print qq( $s\n);
-	  $s = "";
+	    print qq( $s\n);
+	    $s = "";
 	}
 	$s .= $ss;
+    }
+    print qq( $s\n);
+}
+
+@combined = (@ps_standard_encoding, @winansi_encoding);
+print "static const char glyph_name_symbol[] = {\n";
+%hash = ();
+$s = qq( "\\0");
+$offset = 1;
+for $sym (@combined) {
+    if (! ($sym eq NULL)) {
+        if (! exists $hash{$sym}) {
+	    $hash{$sym} = $offset;
+	    $offset += length($sym) + 1;
+	    $ss = qq( "$sym\\0");
+	    if (length($s) + length($ss) > 78) {
+	        print qq( $s\n);
+	        $s = "";
+	    }
+	    $s .= $ss;
+	}
     }
 }
 print qq( $s\n);
 print "};\n\n";
+
 print "static const int16_t ps_standard_encoding_offset[256] = {\n";
-$offset = 1;
-$s = qq();
-for $sym (@encoding) {
-    if (! ($sym eq NULL)) {
-	$ss = qq( $offset/*$sym*/,);
-	$offset += length($sym) + 1;
-    } else {
-	$ss = qq( 0,);
-    }
-    if (length($s) + length($ss) > 78) {
-      print qq( $s\n);
-      $s = "";
-    }
-    $s .= $ss;
-}
-print qq( $s\n);
+print_offsets(@ps_standard_encoding);
 print "};\n";
+
+print "static const int16_t winansi_encoding_offset[256] = {\n";
+print_offsets(@winansi_encoding);
+print "};\n";
+
 exit;
 #endif
 
-static const char ps_standard_encoding_symbol[] = {
+static const char glyph_name_symbol[] = {
   "\0" "space\0" "exclam\0" "quotedbl\0" "numbersign\0" "dollar\0" "percent\0"
   "ampersand\0" "quoteright\0" "parenleft\0" "parenright\0" "asterisk\0"
   "plus\0" "comma\0" "hyphen\0" "period\0" "slash\0" "zero\0" "one\0" "two\0"
@@ -184,7 +283,21 @@ static const char ps_standard_encoding_symbol[] = {
   "macron\0" "breve\0" "dotaccent\0" "dieresis\0" "ring\0" "cedilla\0"
   "hungarumlaut\0" "ogonek\0" "caron\0" "emdash\0" "AE\0" "ordfeminine\0"
   "Lslash\0" "Oslash\0" "OE\0" "ordmasculine\0" "ae\0" "dotlessi\0" "lslash\0"
-  "oslash\0" "oe\0" "germandbls\0"
+  "oslash\0" "oe\0" "germandbls\0" "Euro\0" "Scaron\0" "Zcaron\0" "trademark\0"
+  "scaron\0" "zcaron\0" "Ydieresis\0" "brokenbar\0" "copyright\0"
+  "logicalnot\0" "registered\0" "degree\0" "plusminus\0" "twosuperior\0"
+  "threesuperior\0" "mu\0" "onesuperior\0" "onequarter\0" "onehalf\0"
+  "threequarters\0" "Agrave\0" "Aacute\0" "Acircumflex\0" "Atilde\0"
+  "Adieresis\0" "Aring\0" "Ccedilla\0" "Egrave\0" "Eacute\0" "Ecircumflex\0"
+  "Edieresis\0" "Igrave\0" "Iacute\0" "Icircumflex\0" "Idieresis\0" "Eth\0"
+  "Ntilde\0" "Ograve\0" "Oacute\0" "Ocircumflex\0" "Otilde\0" "Odieresis\0"
+  "multiply\0" "Ugrave\0" "Uacute\0" "Ucircumflex\0" "Udieresis\0" "Yacute\0"
+  "Thorn\0" "agrave\0" "aacute\0" "acircumflex\0" "atilde\0" "adieresis\0"
+  "aring\0" "ccedilla\0" "egrave\0" "eacute\0" "ecircumflex\0" "edieresis\0"
+  "igrave\0" "iacute\0" "icircumflex\0" "idieresis\0" "eth\0" "ntilde\0"
+  "ograve\0" "oacute\0" "ocircumflex\0" "otilde\0" "odieresis\0" "divide\0"
+  "ugrave\0" "uacute\0" "ucircumflex\0" "udieresis\0" "yacute\0" "thorn\0"
+  "ydieresis\0"
 };
 
 static const int16_t ps_standard_encoding_offset[256] = {
@@ -224,107 +337,74 @@ static const int16_t ps_standard_encoding_offset[256] = {
   900/*germandbls*/, 0, 0, 0, 0,
 };
 
+static const int16_t winansi_encoding_offset[256] = {
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 1/*space*/, 7/*exclam*/, 14/*quotedbl*/, 23/*numbersign*/,
+  34/*dollar*/, 41/*percent*/, 49/*ampersand*/, 498/*quotesingle*/,
+  70/*parenleft*/, 80/*parenright*/, 91/*asterisk*/, 100/*plus*/, 105/*comma*/,
+  111/*hyphen*/, 118/*period*/, 125/*slash*/, 131/*zero*/, 136/*one*/,
+  140/*two*/, 144/*three*/, 150/*four*/, 155/*five*/, 160/*six*/, 164/*seven*/,
+  170/*eight*/, 176/*nine*/, 181/*colon*/, 187/*semicolon*/, 197/*less*/,
+  202/*equal*/, 208/*greater*/, 216/*question*/, 225/*at*/, 228/*A*/, 230/*B*/,
+  232/*C*/, 234/*D*/, 236/*E*/, 238/*F*/, 240/*G*/, 242/*H*/, 244/*I*/,
+  246/*J*/, 248/*K*/, 250/*L*/, 252/*M*/, 254/*N*/, 256/*O*/, 258/*P*/,
+  260/*Q*/, 262/*R*/, 264/*S*/, 266/*T*/, 268/*U*/, 270/*V*/, 272/*W*/,
+  274/*X*/, 276/*Y*/, 278/*Z*/, 280/*bracketleft*/, 292/*backslash*/,
+  302/*bracketright*/, 315/*asciicircum*/, 327/*underscore*/, 719/*grave*/,
+  348/*a*/, 350/*b*/, 352/*c*/, 354/*d*/, 356/*e*/, 358/*f*/, 360/*g*/,
+  362/*h*/, 364/*i*/, 366/*j*/, 368/*k*/, 370/*l*/, 372/*m*/, 374/*n*/,
+  376/*o*/, 378/*p*/, 380/*q*/, 382/*r*/, 384/*s*/, 386/*t*/, 388/*u*/,
+  390/*v*/, 392/*w*/, 394/*x*/, 396/*y*/, 398/*z*/, 400/*braceleft*/,
+  410/*bar*/, 414/*braceright*/, 425/*asciitilde*/, 0, 911/*Euro*/, 0,
+  628/*quotesinglbase*/, 474/*florin*/, 643/*quotedblbase*/, 685/*ellipsis*/,
+  579/*dagger*/, 586/*daggerdbl*/, 731/*circumflex*/, 694/*perthousand*/,
+  916/*Scaron*/, 537/*guilsinglleft*/, 855/*OE*/, 0, 923/*Zcaron*/, 0, 0,
+  338/*quoteleft*/, 59/*quoteright*/, 510/*quotedblleft*/,
+  656/*quotedblright*/, 621/*bullet*/, 572/*endash*/, 819/*emdash*/,
+  742/*tilde*/, 930/*trademark*/, 940/*scaron*/, 551/*guilsinglright*/,
+  897/*oe*/, 0, 947/*zcaron*/, 954/*Ydieresis*/, 0, 436/*exclamdown*/,
+  447/*cent*/, 452/*sterling*/, 489/*currency*/, 470/*yen*/, 964/*brokenbar*/,
+  481/*section*/, 771/*dieresis*/, 974/*copyright*/, 829/*ordfeminine*/,
+  523/*guillemotleft*/, 984/*logicalnot*/, 0, 995/*registered*/, 748/*macron*/,
+  1006/*degree*/, 1013/*plusminus*/, 1023/*twosuperior*/,
+  1035/*threesuperior*/, 725/*acute*/, 1049/*mu*/, 611/*paragraph*/,
+  596/*periodcentered*/, 785/*cedilla*/, 1052/*onesuperior*/,
+  858/*ordmasculine*/, 670/*guillemotright*/, 1064/*onequarter*/,
+  1075/*onehalf*/, 1083/*threequarters*/, 706/*questiondown*/, 1097/*Agrave*/,
+  1104/*Aacute*/, 1111/*Acircumflex*/, 1123/*Atilde*/, 1130/*Adieresis*/,
+  1140/*Aring*/, 826/*AE*/, 1146/*Ccedilla*/, 1155/*Egrave*/, 1162/*Eacute*/,
+  1169/*Ecircumflex*/, 1181/*Edieresis*/, 1191/*Igrave*/, 1198/*Iacute*/,
+  1205/*Icircumflex*/, 1217/*Idieresis*/, 1227/*Eth*/, 1231/*Ntilde*/,
+  1238/*Ograve*/, 1245/*Oacute*/, 1252/*Ocircumflex*/, 1264/*Otilde*/,
+  1271/*Odieresis*/, 1281/*multiply*/, 848/*Oslash*/, 1290/*Ugrave*/,
+  1297/*Uacute*/, 1304/*Ucircumflex*/, 1316/*Udieresis*/, 1326/*Yacute*/,
+  1333/*Thorn*/, 900/*germandbls*/, 1339/*agrave*/, 1346/*aacute*/,
+  1353/*acircumflex*/, 1365/*atilde*/, 1372/*adieresis*/, 1382/*aring*/,
+  871/*ae*/, 1388/*ccedilla*/, 1397/*egrave*/, 1404/*eacute*/,
+  1411/*ecircumflex*/, 1423/*edieresis*/, 1433/*igrave*/, 1440/*iacute*/,
+  1447/*icircumflex*/, 1459/*idieresis*/, 1469/*eth*/, 1473/*ntilde*/,
+  1480/*ograve*/, 1487/*oacute*/, 1494/*ocircumflex*/, 1506/*otilde*/,
+  1513/*odieresis*/, 1523/*divide*/, 890/*oslash*/, 1530/*ugrave*/,
+  1537/*uacute*/, 1544/*ucircumflex*/, 1556/*udieresis*/, 1566/*yacute*/,
+  1573/*thorn*/, 1579/*ydieresis*/,
+};
+
 const char *
 _cairo_ps_standard_encoding_to_glyphname (int glyph)
 {
     if (ps_standard_encoding_offset[glyph])
-	return ps_standard_encoding_symbol + ps_standard_encoding_offset[glyph];
+	return glyph_name_symbol + ps_standard_encoding_offset[glyph];
     else
 	return NULL;
 }
 
-
-/* TODO: Merge these names into ps_standard_encoding_symbol (with a
- * separate winansi_encoding_offset table) as most of the names are
- * the same. */
-static const char *winansi_encoding[256] = {
-	/*   0 */
-	NULL,		NULL,		NULL,		NULL,
-	NULL,		NULL,		NULL,		NULL,
-	NULL,		NULL,		NULL,		NULL,
-	NULL,		NULL,		NULL,		NULL,
-	/*  16 */
-	NULL,		NULL,		NULL,		NULL,
-	NULL,		NULL,		NULL,		NULL,
-	NULL,		NULL,		NULL,		NULL,
-	NULL,		NULL,		NULL,		NULL,
-	/*  32 */
-	"space",	"exclam",	"quotedbl",	"numbersign",
-	"dollar",	"percent",	"ampersand",	"quotesingle",
-	"parenleft",	"parenright",	"asterisk",	"plus",
-	"comma",	"hyphen",	"period",	"slash",
-	/*  48 */
-	"zero",		"one",		"two",		"three",
-	"four",		"five",		"six",		"seven",
-	"eight",	"nine",		"colon",	"semicolon",
-	"less",		"equal",	"greater",	"question",
-	/*  64 */
-	"at",		"A",		"B",		"C",
-	"D",		"E",		"F",		"G",
-	"H",		"I",		"J",		"K",
-	"L",		"M",		"N",		"O",
-	/*  80 */
-	"P",		"Q",		"R",		"S",
-	"T",		"U",		"V",		"W",
-	"X",		"Y",		"Z",		"bracketleft",
-	"backslash",	"bracketright",	"asciicircum",	"underscore",
-	/*  96 */
-	"grave",	"a",		"b",		"c",
-	"d",		"e",		"f",		"g",
-	"h",		"i",		"j",		"k",
-	"l",		"m",		"n",		"o",
-	/* 112 */
-	"p",		"q",		"r",		"s",
-	"t",		"u",		"v",		"w",
-	"x",		"y",		"z",		"braceleft",
-	"bar",		"braceright",	"asciitilde",	NULL,
-	/* 128 */
-	"Euro",		NULL,		"quotesinglbase","florin",
-	"quotedblbase", "ellipsis",	"dagger",	"daggerdbl",
-	"circumflex",	"perthousand",	"Scaron",	"guilsinglleft",
-	"OE",		NULL,		"Zcaron",	NULL,
-	/* 144 */
-	NULL,		"quoteleft",	"quoteright",	"quotedblleft",
-	"quotedblright","bullet",	"endash",	"emdash",
-	"tilde",	"trademark",	"scaron",	"guilsinglright",
-	"oe",		NULL,		"zcaron",	"Ydieresis",
-	/* 160 */
-	NULL,		"exclamdown",	"cent",		"sterling",
-	"currency",	"yen",		"brokenbar",	"section",
-	"dieresis",	"copyright",	"ordfeminine",	"guillemotleft",
-	/* 173 is also "hyphen" but we leave this NULL to avoid duplicate names */
-	"logicalnot",	NULL,		"registered",	"macron",
-	/* 176 */
-	"degree",	"plusminus",	"twosuperior",	"threesuperior",
-	"acute",	"mu",		"paragraph",	"periodcentered",
-	"cedilla",	"onesuperior",	"ordmasculine",	"guillemotright",
-	"onequarter",	"onehalf",	"threequarters","questiondown",
-	/* 192 */
-	"Agrave",	"Aacute",	"Acircumflex",	"Atilde",
-	"Adieresis",	"Aring",	"AE",		"Ccedilla",
-	"Egrave",	"Eacute",	"Ecircumflex",	"Edieresis",
-	"Igrave",	"Iacute",	"Icircumflex",	"Idieresis",
-	/* 208 */
-	"Eth",		"Ntilde",	"Ograve",	"Oacute",
-	"Ocircumflex",	"Otilde",	"Odieresis",	"multiply",
-	"Oslash",	"Ugrave",	"Uacute",	"Ucircumflex",
-	"Udieresis",	"Yacute",	"Thorn",	"germandbls",
-	/* 224 */
-	"agrave",	"aacute",	"acircumflex",	"atilde",
-	"adieresis",	"aring",	"ae",		"ccedilla",
-	"egrave",	"eacute",	"ecircumflex",	"edieresis",
-	"igrave",	"iacute",	"icircumflex",	"idieresis",
-	/* 240 */
-	"eth",		"ntilde",	"ograve",	"oacute",
-	"ocircumflex",	"otilde",	"odieresis",	"divide",
-	"oslash",	"ugrave",	"uacute",	"ucircumflex",
-	"udieresis",	"yacute",	"thorn",	"ydieresis"
-};
-
 const char *
 _cairo_winansi_to_glyphname (int glyph)
 {
-    return winansi_encoding[glyph];
+    if (winansi_encoding_offset[glyph])
+	return glyph_name_symbol + winansi_encoding_offset[glyph];
+    else
+	return NULL;
 }
 
 #endif /* CAIRO_HAS_FONT_SUBSET */
