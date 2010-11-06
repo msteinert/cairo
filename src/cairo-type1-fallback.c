@@ -755,10 +755,10 @@ _cairo_type1_fallback_init_internal (cairo_type1_subset_t	*type1_subset,
     len = snprintf(type1_subset->data + font->bbox_position,
                    font->bbox_max_chars,
                    "%d %d %d %d",
-                   (int)type1_subset->x_min,
-                   (int)type1_subset->y_min,
-                   (int)type1_subset->x_max,
-                   (int)type1_subset->y_max);
+                   (int)font->x_min,
+                   (int)font->y_min,
+                   (int)font->x_max,
+                   (int)font->y_max);
     type1_subset->data[font->bbox_position + len] = ' ';
 
     type1_subset->header_length = font->header_size;
