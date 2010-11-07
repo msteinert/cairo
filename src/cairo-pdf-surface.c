@@ -3812,7 +3812,7 @@ _cairo_pdf_surface_emit_to_unicode_stream (cairo_pdf_surface_t		*surface,
                                  "/CMapType 2 def\n"
                                  "1 begincodespacerange\n");
 
-    if (font_subset->is_composite) {
+    if (font_subset->is_composite && !font_subset->is_latin) {
         _cairo_output_stream_printf (surface->output,
                                      "<0000> <ffff>\n");
     } else {
@@ -3864,7 +3864,7 @@ _cairo_pdf_surface_emit_to_unicode_stream (cairo_pdf_surface_t		*surface,
 					     "%d beginbfchar\n",
 					     num_bfchar - i > 100 ? 100 : num_bfchar - i);
 	    }
-	    if (font_subset->is_composite)
+	    if (font_subset->is_composite && !font_subset->is_latin)
 		_cairo_output_stream_printf (surface->output, "<%04x> ", i + 1);
 	    else
 		_cairo_output_stream_printf (surface->output, "<%02x> ", i + 1);
@@ -4113,6 +4113,11 @@ _cairo_pdf_surface_emit_cff_fallback_font (cairo_pdf_surface_t	       *surface,
     cairo_cff_subset_t subset;
     char name[64];
 
+    /* CFF fallback subsetting does not work with 8-bit glyphs unless
+     * they are a latin subset */
+    if (!font_subset->is_composite && !font_subset->is_latin)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     snprintf (name, sizeof name, "CairoFont-%d-%d",
               font_subset->font_id, font_subset->subset_id);
     status = _cairo_cff_fallback_init (&subset, name, font_subset);
@@ -4274,6 +4279,10 @@ _cairo_pdf_surface_emit_type1_font_subset (cairo_pdf_surface_t		*surface,
     cairo_type1_subset_t subset;
     char name[64];
 
+    /* 16-bit glyphs not compatible with Type 1 fonts */
+    if (font_subset->is_composite && !font_subset->is_latin)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     snprintf (name, sizeof name, "CairoFont-%d-%d",
 	      font_subset->font_id, font_subset->subset_id);
     status = _cairo_type1_subset_init (&subset, name, font_subset, FALSE);
@@ -4294,6 +4303,10 @@ _cairo_pdf_surface_emit_type1_fallback_font (cairo_pdf_surface_t	*surface,
     cairo_status_t status;
     cairo_type1_subset_t subset;
     char name[64];
+
+    /* 16-bit glyphs not compatible with Type 1 fonts */
+    if (font_subset->is_composite && !font_subset->is_latin)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     snprintf (name, sizeof name, "CairoFont-%d-%d",
 	      font_subset->font_id, font_subset->subset_id);
@@ -4793,22 +4806,19 @@ _cairo_pdf_surface_emit_unscaled_font_subset (cairo_scaled_font_subset_t *font_s
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
-    if (font_subset->is_composite) {
-        status = _cairo_pdf_surface_emit_cff_fallback_font (surface, font_subset);
-        if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-            return status;
-    } else {
 #if CAIRO_HAS_FT_FONT
-        status = _cairo_pdf_surface_emit_type1_font_subset (surface, font_subset);
-        if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-            return status;
+    status = _cairo_pdf_surface_emit_type1_font_subset (surface, font_subset);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
 #endif
 
-        status = _cairo_pdf_surface_emit_type1_fallback_font (surface, font_subset);
-        if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-            return status;
+    status = _cairo_pdf_surface_emit_cff_fallback_font (surface, font_subset);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
 
-    }
+    status = _cairo_pdf_surface_emit_type1_fallback_font (surface, font_subset);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
 
     ASSERT_NOT_REACHED;
     return CAIRO_STATUS_SUCCESS;

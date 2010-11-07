@@ -638,7 +638,6 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 		(latin_character == 0 && sub_font->num_glyphs_in_latin_subset > 0))
 	    {
 		is_latin = TRUE;
-                sub_font->is_composite = FALSE;
 	    }
 	}
 
