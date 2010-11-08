@@ -3371,7 +3371,7 @@ cairo_xlib_surface_create (Display     *dpy,
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX) {
 	/* you're lying, and you know it! */
-	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_SIZE);
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
     }
 
     scr = _cairo_xlib_screen_from_visual (dpy, visual);
@@ -3413,7 +3413,7 @@ cairo_xlib_surface_create_for_bitmap (Display  *dpy,
     cairo_status_t status;
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
-	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_SIZE);
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
 
     status = _cairo_xlib_screen_get (dpy, scr, &screen);
     if (unlikely (status))
@@ -3459,7 +3459,7 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
     cairo_status_t status;
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
-	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_SIZE);
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
 
     status = _cairo_xlib_screen_get (dpy, scr, &screen);
     if (unlikely (status))
