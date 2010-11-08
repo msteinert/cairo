@@ -1165,14 +1165,14 @@ cairo_xcb_surface_create (xcb_connection_t  *xcb_connection,
     int depth;
 
     if (xcb_connection_has_error (xcb_connection))
-	return _cairo_surface_create_in_error (CAIRO_STATUS_WRITE_ERROR);
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_WRITE_ERROR));
 
     if (unlikely (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX))
-	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_SIZE);
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
 
     xcb_screen = _cairo_xcb_screen_from_visual (xcb_connection, visual, &depth);
     if (unlikely (xcb_screen == NULL))
-	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_VISUAL);
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_VISUAL));
 
     image_masks.alpha_mask = 0;
     image_masks.red_mask   = visual->red_mask;
@@ -1220,10 +1220,10 @@ cairo_xcb_surface_create_for_bitmap (xcb_connection_t	*xcb_connection,
     cairo_xcb_screen_t *screen;
 
     if (xcb_connection_has_error (xcb_connection))
-	return _cairo_surface_create_in_error (CAIRO_STATUS_WRITE_ERROR);
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_WRITE_ERROR));
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
-	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_SIZE);
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
 
     screen = _cairo_xcb_screen_get (xcb_connection, xcb_screen);
     if (unlikely (screen == NULL))
@@ -1271,10 +1271,10 @@ cairo_xcb_surface_create_with_xrender_format (xcb_connection_t	    *xcb_connecti
     pixman_format_code_t pixman_format;
 
     if (xcb_connection_has_error (xcb_connection))
-	return _cairo_surface_create_in_error (CAIRO_STATUS_WRITE_ERROR);
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_WRITE_ERROR));
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
-	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_SIZE);
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
 
     image_masks.alpha_mask =
 	(unsigned long) format->direct.alpha_mask << format->direct.alpha_shift;
