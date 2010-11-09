@@ -68,7 +68,7 @@ Henning Noren <henning.noren.402@student.lu.se> Fix memory leak
 Geoff Norton <gnorton@customerdna.com> Build fixes
 Robert O'Callahan <rocallahan@novell.com> Const-correctness fixes, several new API functions for completeness (and to help mozilla)
 Ian Osgood <iano@quirkster.com> XCB backend maintenance
-Benjamin Otte <in7y118@public.uni-hamburg.de> Refinements to cairo/perf timing
+Benjamin Otte <otte@gnome.org> Refinements to cairo/perf timing, OpenGL backend fixups, random fixes
 Mike Owens <etc@filespanker.com> Bug fixes
 Emmanuel Pacaud <emmanuel.pacaud@lapp.in2p3.fr> SVG backend
 Keith Packard <keithp@keithp.com> Original concept, polygon tessellation, dashing, font metrics rewrite
