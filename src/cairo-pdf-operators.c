@@ -1287,7 +1287,7 @@ _cairo_pdf_operators_emit_cluster (cairo_pdf_operators_t      *pdf_operators,
 {
     cairo_scaled_font_subsets_glyph_t subset_glyph;
     cairo_glyph_t *cur_glyph;
-    cairo_status_t status;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
     int i;
 
     /* If the cluster maps 1 glyph to 1 or more unicode characters, we
@@ -1322,15 +1322,17 @@ _cairo_pdf_operators_emit_cluster (cairo_pdf_operators_t      *pdf_operators,
 	}
     }
 
-    /* Fallback to using ActualText to map zero or more glyphs to a
-     * unicode string. */
-    status = _cairo_pdf_operators_flush_glyphs (pdf_operators);
-    if (unlikely (status))
-	return status;
+    if (pdf_operators->use_actual_text) {
+	/* Fallback to using ActualText to map zero or more glyphs to a
+	 * unicode string. */
+	status = _cairo_pdf_operators_flush_glyphs (pdf_operators);
+	if (unlikely (status))
+	    return status;
 
-    status = _cairo_pdf_operators_begin_actualtext (pdf_operators, utf8, utf8_len);
-    if (unlikely (status))
-	return status;
+	status = _cairo_pdf_operators_begin_actualtext (pdf_operators, utf8, utf8_len);
+	if (unlikely (status))
+	    return status;
+    }
 
     cur_glyph = glyphs;
     /* XXX
@@ -1355,11 +1357,14 @@ _cairo_pdf_operators_emit_cluster (cairo_pdf_operators_t      *pdf_operators,
 	else
 	    cur_glyph++;
     }
-    status = _cairo_pdf_operators_flush_glyphs (pdf_operators);
-    if (unlikely (status))
-	return status;
 
-    status = _cairo_pdf_operators_end_actualtext (pdf_operators);
+    if (pdf_operators->use_actual_text) {
+	status = _cairo_pdf_operators_flush_glyphs (pdf_operators);
+	if (unlikely (status))
+	    return status;
+
+	status = _cairo_pdf_operators_end_actualtext (pdf_operators);
+    }
 
     return status;
 }
