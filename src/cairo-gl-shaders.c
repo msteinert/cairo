@@ -568,9 +568,9 @@ cairo_gl_operand_get_var_type (cairo_gl_operand_type_t type)
         ASSERT_NOT_REACHED;
     case CAIRO_GL_OPERAND_NONE:
     case CAIRO_GL_OPERAND_CONSTANT:
-    case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
         return CAIRO_GL_VAR_NONE;
+    case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
     case CAIRO_GL_OPERAND_TEXTURE:
         return CAIRO_GL_VAR_TEXCOORDS;
     case CAIRO_GL_OPERAND_SPANS:
@@ -700,18 +700,14 @@ cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
         break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
         _cairo_output_stream_printf (stream, 
+            "varying vec2 %s_texcoords;\n"
             "uniform sampler1D %s_sampler;\n"
-            "uniform mat3 %s_matrix;\n"
-            "uniform vec2 %s_segment;\n"
             "\n"
             "vec4 get_%s()\n"
             "{\n"
-            "    vec2 pos = (%s_matrix * vec3 (gl_FragCoord.xy, 1.0)).xy;\n"
-            "    float t = dot (pos, %s_segment) / dot (%s_segment, %s_segment);\n"
-            "    return texture1D (%s_sampler, t);\n"
+            "    return texture1D (%s_sampler, %s_texcoords.x);\n"
             "}\n",
-            namestr, namestr, namestr, namestr, namestr, 
-            namestr, namestr, namestr, namestr);
+	     namestr, namestr, namestr, namestr, namestr);
         break;
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
         _cairo_output_stream_printf (stream, 

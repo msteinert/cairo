@@ -154,8 +154,8 @@ typedef struct cairo_gl_operand {
 	struct {
 	    cairo_gl_gradient_t *gradient;
 	    cairo_matrix_t m;
-	    float segment_x;
-	    float segment_y;
+	    float x0, y0, dx, dy;
+	    float scale;
             cairo_extend_t extend;
 	} linear;
 	struct {
