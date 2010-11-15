@@ -1857,45 +1857,6 @@ _cairo_surface_composite (cairo_operator_t	op,
 }
 
 /**
- * _cairo_surface_fill_rectangle:
- * @surface: a #cairo_surface_t
- * @op: the operator to apply to the rectangle
- * @color: the source color
- * @x: X coordinate of rectangle, in backend coordinates
- * @y: Y coordinate of rectangle, in backend coordinates
- * @width: width of rectangle, in backend coordinates
- * @height: height of rectangle, in backend coordinates
- *
- * Applies an operator to a rectangle using a solid color as the source.
- * See _cairo_surface_fill_rectangles() for full details.
- *
- * Return value: %CAIRO_STATUS_SUCCESS or the error that occurred
- **/
-cairo_status_t
-_cairo_surface_fill_rectangle (cairo_surface_t	   *surface,
-			       cairo_operator_t	    op,
-			       const cairo_color_t *color,
-			       int		    x,
-			       int		    y,
-			       int		    width,
-			       int		    height)
-{
-    cairo_rectangle_int_t rect;
-
-    if (surface->status)
-	return surface->status;
-
-    assert (_cairo_surface_is_writable (surface));
-
-    rect.x = x;
-    rect.y = y;
-    rect.width = width;
-    rect.height = height;
-
-    return _cairo_surface_fill_rectangles (surface, op, color, &rect, 1);
-}
-
-/**
  * _cairo_surface_fill_region:
  * @surface: a #cairo_surface_t
  * @op: the operator to apply to the region

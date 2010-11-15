@@ -1596,15 +1596,6 @@ _cairo_surface_composite (cairo_operator_t	op,
 			  cairo_region_t	*clip_region);
 
 cairo_private cairo_status_t
-_cairo_surface_fill_rectangle (cairo_surface_t	   *surface,
-			       cairo_operator_t	    op,
-			       const cairo_color_t *color,
-			       int		    x,
-			       int		    y,
-			       int		    width,
-			       int		    height);
-
-cairo_private cairo_status_t
 _cairo_surface_fill_region (cairo_surface_t	   *surface,
 			    cairo_operator_t	    op,
 			    const cairo_color_t    *color,
