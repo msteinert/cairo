@@ -2376,11 +2376,12 @@ _cairo_ps_surface_emit_jpeg_image (cairo_ps_surface_t    *surface,
 				 "  /Width %d def\n"
 				 "  /Height %d def\n"
 				 "  /BitsPerComponent %d def\n"
-				 "  /Decode [ 0 1 0 1 0 1 ] def\n",
+				 "  /Decode [ %s ] def\n",
 				 info.num_components == 1 ? "DeviceGray" : "DeviceRGB",
 				 info.width,
 				 info.height,
-				 info.bits_per_component);
+				 info.bits_per_component,
+                                 info.num_components == 1 ? "0 1" : "0 1 0 1 0 1");
 
     if (surface->use_string_datasource) {
 	_cairo_output_stream_printf (surface->stream,
