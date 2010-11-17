@@ -1,7 +1,16 @@
-# Modified for cairo minimally:
+# BEFORE MODIFYING THIS FILE:
+#
+# This file is a descendant of an old copy of gtk-doc.make, modified for cairo minimally:
+#
 #   - Moved to build/
 #   - Made it append to EXTRA_DIST and CLEANFILES
 #   - Instead of all-local, make "doc" build docs, and err if gtk-doc not enabled
+#   - Some other changed introduced in 7f114b781f5c530d57530e5f76402e41cdabac6b
+#
+# Before changing it, check to see if a newer gtk-doc.make has fixed the issue you are facing.
+# From time to time, it would be nice to udpate this to the latest copy of gtk-doc.make, but
+# please do review all the differences and port our modifications forward.
+#
 
 # -*- mode: makefile -*-
 
