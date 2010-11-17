@@ -2024,7 +2024,8 @@ _cairo_surface_paint (cairo_surface_t	*surface,
     status = _cairo_surface_fallback_paint (surface, op, source, clip);
 
  FINISH:
-    surface->is_clear = op == CAIRO_OPERATOR_CLEAR && clip == NULL;
+    if (status != CAIRO_INT_STATUS_NOTHING_TO_DO)
+	surface->is_clear = op == CAIRO_OPERATOR_CLEAR && clip == NULL;
 
     return _cairo_surface_set_error (surface, status);
 }
@@ -2079,7 +2080,8 @@ _cairo_surface_mask (cairo_surface_t		*surface,
     status = _cairo_surface_fallback_mask (surface, op, source, mask, clip);
 
  FINISH:
-    surface->is_clear = FALSE;
+    if (status != CAIRO_INT_STATUS_NOTHING_TO_DO)
+	surface->is_clear = FALSE;
 
     return _cairo_surface_set_error (surface, status);
 }
@@ -2158,7 +2160,8 @@ _cairo_surface_fill_stroke (cairo_surface_t	    *surface,
 	goto FINISH;
 
   FINISH:
-    surface->is_clear = FALSE;
+    if (status != CAIRO_INT_STATUS_NOTHING_TO_DO)
+	surface->is_clear = FALSE;
 
     return _cairo_surface_set_error (surface, status);
 }
@@ -2216,7 +2219,8 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
 					     clip);
 
  FINISH:
-    surface->is_clear = FALSE;
+    if (status != CAIRO_INT_STATUS_NOTHING_TO_DO)
+	surface->is_clear = FALSE;
 
     return _cairo_surface_set_error (surface, status);
 }
@@ -2270,7 +2274,8 @@ _cairo_surface_fill (cairo_surface_t	*surface,
 					   clip);
 
  FINISH:
-    surface->is_clear = FALSE;
+    if (status != CAIRO_INT_STATUS_NOTHING_TO_DO)
+	surface->is_clear = FALSE;
 
     return _cairo_surface_set_error (surface, status);
 }
@@ -2674,7 +2679,8 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
     if (dev_scaled_font != scaled_font)
 	cairo_scaled_font_destroy (dev_scaled_font);
 
-    surface->is_clear = FALSE;
+    if (status != CAIRO_INT_STATUS_NOTHING_TO_DO)
+	surface->is_clear = FALSE;
 
     return _cairo_surface_set_error (surface, status);
 }
