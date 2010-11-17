@@ -44,6 +44,7 @@
 #include "cairo-pdf.h"
 #include "cairo-pdf-surface-private.h"
 #include "cairo-pdf-operators-private.h"
+#include "cairo-pdf-shading-private.h"
 #include "cairo-analysis-surface-private.h"
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-error-private.h"
@@ -1275,7 +1276,8 @@ _cairo_pdf_surface_add_pdf_pattern (cairo_pdf_surface_t		*surface,
 
     /* gradient patterns require an smask object to implement transparency */
     if (pattern->type == CAIRO_PATTERN_TYPE_LINEAR ||
-        pattern->type == CAIRO_PATTERN_TYPE_RADIAL)
+	pattern->type == CAIRO_PATTERN_TYPE_RADIAL ||
+	pattern->type == CAIRO_PATTERN_TYPE_MESH)
     {
 	double min_alpha;
 
@@ -3340,6 +3342,150 @@ _cairo_pdf_surface_emit_gradient (cairo_pdf_surface_t    *surface,
 }
 
 static cairo_status_t
+_cairo_pdf_surface_emit_mesh_pattern (cairo_pdf_surface_t    *surface,
+				      cairo_pdf_pattern_t    *pdf_pattern)
+{
+    cairo_matrix_t pat_to_pdf;
+    cairo_status_t status;
+    cairo_pattern_t *pattern = pdf_pattern->pattern;
+    cairo_pdf_shading_t shading;
+    int i;
+    cairo_pdf_resource_t res;
+
+    pat_to_pdf = pattern->matrix;
+    status = cairo_matrix_invert (&pat_to_pdf);
+    /* cairo_pattern_set_matrix ensures the matrix is invertible */
+    assert (status == CAIRO_STATUS_SUCCESS);
+
+    cairo_matrix_multiply (&pat_to_pdf, &pat_to_pdf, &surface->cairo_to_pdf);
+
+    status = _cairo_pdf_shading_init_color (&shading, (cairo_mesh_pattern_t *) pattern);
+    if (unlikely (status))
+	return status;
+
+    res = _cairo_pdf_surface_new_object (surface);
+    if (unlikely (res.id == 0))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    _cairo_output_stream_printf (surface->output,
+				 "%d 0 obj\n"
+                                 "<< /ShadingType %d\n"
+                                 "   /ColorSpace /DeviceRGB\n"
+				 "   /BitsPerCoordinate %d\n"
+				 "   /BitsPerComponent %d\n"
+				 "   /BitsPerFlag %d\n"
+				 "   /Decode [",
+				 res.id,
+				 shading.shading_type,
+				 shading.bits_per_coordinate,
+				 shading.bits_per_component,
+				 shading.bits_per_flag);
+
+    for (i = 0; i < shading.decode_array_length; i++)
+	_cairo_output_stream_printf (surface->output, "%f ", shading.decode_array[i]);
+
+    _cairo_output_stream_printf (surface->output,
+				 "]\n"
+				 "   /Length %ld\n"
+				 ">>\n"
+				 "stream\n",
+				 shading.data_length);
+
+    _cairo_output_stream_write (surface->output, shading.data, shading.data_length);
+
+    _cairo_output_stream_printf (surface->output,
+				 "\nendstream\n"
+				 "endobj\n");
+
+    _cairo_pdf_shading_fini (&shading);
+
+    _cairo_pdf_surface_update_object (surface, pdf_pattern->pattern_res);
+    _cairo_output_stream_printf (surface->output,
+                                 "%d 0 obj\n"
+                                 "<< /Type /Pattern\n"
+                                 "   /PatternType 2\n"
+                                 "   /Matrix [ %f %f %f %f %f %f ]\n"
+                                 "   /Shading %d 0 R\n"
+				 ">>\n"
+				 "endobj\n",
+				 pdf_pattern->pattern_res.id,
+                                 pat_to_pdf.xx, pat_to_pdf.yx,
+                                 pat_to_pdf.xy, pat_to_pdf.yy,
+                                 pat_to_pdf.x0, pat_to_pdf.y0,
+				 res.id);
+
+    if (pdf_pattern->gstate_res.id != 0) {
+	cairo_pdf_resource_t mask_resource;
+
+	/* Create pattern for SMask. */
+        res = _cairo_pdf_surface_new_object (surface);
+	if (unlikely (res.id == 0))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+	status = _cairo_pdf_shading_init_alpha (&shading, (cairo_mesh_pattern_t *) pattern);
+	if (unlikely (status))
+	    return status;
+
+	_cairo_output_stream_printf (surface->output,
+				 "%d 0 obj\n"
+                                 "<< /ShadingType %d\n"
+                                 "   /ColorSpace /DeviceGray\n"
+				 "   /BitsPerCoordinate %d\n"
+				 "   /BitsPerComponent %d\n"
+				 "   /BitsPerFlag %d\n"
+				 "   /Decode [",
+				 res.id,
+				 shading.shading_type,
+				 shading.bits_per_coordinate,
+				 shading.bits_per_component,
+				 shading.bits_per_flag);
+
+	for (i = 0; i < shading.decode_array_length; i++)
+	    _cairo_output_stream_printf (surface->output, "%f ", shading.decode_array[i]);
+
+	_cairo_output_stream_printf (surface->output,
+				     "]\n"
+				     "   /Length %ld\n"
+				     ">>\n"
+				     "stream\n",
+				     shading.data_length);
+
+	_cairo_output_stream_write (surface->output, shading.data, shading.data_length);
+
+	_cairo_output_stream_printf (surface->output,
+				     "\nendstream\n"
+				     "endobj\n");
+	_cairo_pdf_shading_fini (&shading);
+
+        mask_resource = _cairo_pdf_surface_new_object (surface);
+	if (unlikely (mask_resource.id == 0))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+	_cairo_output_stream_printf (surface->output,
+				     "%d 0 obj\n"
+				     "<< /Type /Pattern\n"
+				     "   /PatternType 2\n"
+				     "   /Matrix [ %f %f %f %f %f %f ]\n"
+				     "   /Shading %d 0 R\n"
+				     ">>\n"
+				     "endobj\n",
+				     mask_resource.id,
+				     pat_to_pdf.xx, pat_to_pdf.yx,
+				     pat_to_pdf.xy, pat_to_pdf.yy,
+				     pat_to_pdf.x0, pat_to_pdf.y0,
+				     res.id);
+
+	status = cairo_pdf_surface_emit_transparency_group (surface,
+						            pdf_pattern->gstate_res,
+							    mask_resource);
+	if (unlikely (status))
+	    return status;
+    }
+
+    return _cairo_output_stream_get_status (surface->output);
+}
+
+static cairo_status_t
 _cairo_pdf_surface_emit_pattern (cairo_pdf_surface_t *surface, cairo_pdf_pattern_t *pdf_pattern)
 {
     double old_width, old_height;
@@ -3364,6 +3510,10 @@ _cairo_pdf_surface_emit_pattern (cairo_pdf_surface_t *surface, cairo_pdf_pattern
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
 	status = _cairo_pdf_surface_emit_gradient (surface, pdf_pattern);
+	break;
+
+    case CAIRO_PATTERN_TYPE_MESH:
+	status = _cairo_pdf_surface_emit_mesh_pattern (surface, pdf_pattern);
 	break;
 
     default:
@@ -5379,6 +5529,7 @@ _pattern_supported (const cairo_pattern_t *pattern)
     case CAIRO_PATTERN_TYPE_SOLID:
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
+    case CAIRO_PATTERN_TYPE_MESH:	
 	return TRUE;
 
     case CAIRO_PATTERN_TYPE_SURFACE:

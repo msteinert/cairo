@@ -58,6 +58,7 @@
 #include "cairo-ps.h"
 #include "cairo-ps-surface-private.h"
 #include "cairo-pdf-operators-private.h"
+#include "cairo-pdf-shading-private.h"
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-error-private.h"
 #include "cairo-scaled-font-subsets-private.h"
@@ -1750,6 +1751,7 @@ pattern_supported (cairo_ps_surface_t *surface, const cairo_pattern_t *pattern)
 
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
+    case CAIRO_PATTERN_TYPE_MESH:
 	return _gradient_pattern_supported (surface, pattern);
 
     case CAIRO_PATTERN_TYPE_SURFACE:
@@ -3373,6 +3375,81 @@ _cairo_ps_surface_emit_gradient (cairo_ps_surface_t       *surface,
 }
 
 static cairo_status_t
+_cairo_ps_surface_emit_mesh_pattern (cairo_ps_surface_t     *surface,
+				     cairo_mesh_pattern_t   *pattern)
+{
+    cairo_matrix_t pat_to_ps;
+    cairo_status_t status;
+    cairo_pdf_shading_t shading;
+    unsigned char *data_compressed;
+    unsigned long data_compressed_size;
+    int i;
+
+    if (_cairo_array_num_elements (&pattern->patches) == 0)
+        return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
+    pat_to_ps = pattern->base.matrix;
+    status = cairo_matrix_invert (&pat_to_ps);
+    /* cairo_pattern_set_matrix ensures the matrix is invertible */
+    assert (status == CAIRO_STATUS_SUCCESS);
+
+    cairo_matrix_multiply (&pat_to_ps, &pat_to_ps, &surface->cairo_to_ps);
+
+    status = _cairo_pdf_shading_init_color (&shading, pattern);
+    if (unlikely (status))
+	return status;
+
+    _cairo_output_stream_printf (surface->stream,
+				 "<< /PatternType 2\n"
+				 "   /Shading\n"
+				 "   << /ShadingType %d\n"
+				 "      /ColorSpace /DeviceRGB\n"
+				 "      /DataSource currentfile /ASCII85Decode filter /LZWDecode filter\n"
+				 "      /BitsPerCoordinate %d\n"
+				 "      /BitsPerComponent %d\n"
+				 "      /BitsPerFlag %d\n"
+				 "      /Decode [",
+				 shading.shading_type,
+				 shading.bits_per_coordinate,
+				 shading.bits_per_component,
+				 shading.bits_per_flag);
+
+    for (i = 0; i < shading.decode_array_length; i++)
+	_cairo_output_stream_printf (surface->stream, "%f ", shading.decode_array[i]);
+
+    _cairo_output_stream_printf (surface->stream,
+				 "]\n"
+				 "   >>\n"
+				 ">>\n");
+
+    _cairo_output_stream_printf (surface->stream,
+				 "[ %f %f %f %f %f %f ]\n",
+				 pat_to_ps.xx, pat_to_ps.yx,
+                                 pat_to_ps.xy, pat_to_ps.yy,
+                                 pat_to_ps.x0, pat_to_ps.y0);
+    _cairo_output_stream_printf (surface->stream,
+				 "makepattern\n");
+
+    data_compressed_size = shading.data_length;
+    data_compressed = _cairo_lzw_compress (shading.data, &data_compressed_size);
+    if (unlikely (data_compressed == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    status = _cairo_ps_surface_emit_base85_string (surface,
+						   data_compressed,
+						   data_compressed_size,
+						   FALSE);
+    _cairo_output_stream_printf (surface->stream,
+				 "\n"
+				 "setpattern\n");
+
+    free (data_compressed);
+    _cairo_pdf_shading_fini (&shading);
+
+    return status;
+}
+
+static cairo_status_t
 _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface,
 				const cairo_pattern_t *pattern,
 				cairo_rectangle_int_t *extents,
@@ -3427,6 +3504,13 @@ _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface,
     case CAIRO_PATTERN_TYPE_RADIAL:
 	status = _cairo_ps_surface_emit_gradient (surface,
 					  (cairo_gradient_pattern_t *) pattern);
+	if (unlikely (status))
+	    return status;
+	break;
+
+    case CAIRO_PATTERN_TYPE_MESH:
+	status = _cairo_ps_surface_emit_mesh_pattern (surface,
+					  (cairo_mesh_pattern_t *) pattern);
 	if (unlikely (status))
 	    return status;
 	break;

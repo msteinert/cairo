@@ -200,8 +200,8 @@ cairo_egl_sources =
 cairo_glx_sources =
 cairo_wgl_sources =
 
-_cairo_pdf_operators_private = cairo-pdf-operators-private.h
-_cairo_pdf_operators_sources = cairo-pdf-operators.c
+_cairo_pdf_operators_private = cairo-pdf-operators-private.h cairo-pdf-shading-private.h
+_cairo_pdf_operators_sources = cairo-pdf-operators.c cairo-pdf-shading.c
 cairo_private += $(_cairo_pdf_operators_private)
 cairo_sources += $(_cairo_pdf_operators_sources)
 
