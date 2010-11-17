@@ -74,7 +74,6 @@ cairo_private = \
 	cairo-image-info-private.h \
 	cairo-list-private.h \
 	cairo-malloc-private.h \
-	cairo-recording-surface-private.h \
 	cairo-mutex-impl-private.h \
 	cairo-mutex-list-private.h \
 	cairo-mutex-private.h \
@@ -85,6 +84,7 @@ cairo_private = \
 	cairo-path-fixed-private.h \
 	cairo-path-private.h \
 	cairo-private.h \
+	cairo-recording-surface-private.h \
 	cairo-reference-count-private.h \
 	cairo-region-private.h \
 	cairo-rtree-private.h \
@@ -136,7 +136,6 @@ cairo_sources = \
 	cairo-image-surface.c \
 	cairo-lzw.c \
 	cairo-matrix.c \
-	cairo-recording-surface.c \
 	cairo-misc.c \
 	cairo-mutex.c \
 	cairo-observer.c \
@@ -151,6 +150,7 @@ cairo_sources = \
 	cairo-pattern.c \
 	cairo-pen.c \
 	cairo-polygon.c \
+	cairo-recording-surface.c \
 	cairo-rectangle.c \
 	cairo-rectangular-scan-converter.c \
 	cairo-region.c \

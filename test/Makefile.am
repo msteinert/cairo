@@ -853,20 +853,6 @@ REFERENCE_IMAGES = \
 	mask.svg.rgb24.xfail.png \
 	mask.xlib.ref.png \
 	mask.xlib.rgb24.ref.png \
-	recording-surface-pattern.image16.ref.png \
-	recording-surface-pattern.gl.argb32.ref.png \
-	recording-surface-pattern.pdf.argb32.ref.png \
-	recording-surface-pattern.pdf.rgb24.ref.png \
-	recording-surface-pattern.ps.argb32.ref.png \
-	recording-surface-pattern.ps.rgb24.ref.png \
-	recording-surface-pattern.quartz.argb32.ref.png \
-	recording-surface-pattern.quartz.rgb24.ref.png \
-	recording-surface-pattern.ref.png \
-	recording-surface-pattern.rgb24.ref.png \
-	recording-surface-pattern.svg.argb32.ref.png \
-	recording-surface-pattern.svg.rgb24.ref.png \
-	recording-surface-pattern.xlib.argb32.ref.png \
-	recording-surface-pattern.xlib.rgb24.ref.png \
 	mime-data.pdf.ref.png \
 	mime-data.ps.ref.png \
 	mime-data.ref.png \
@@ -1100,6 +1086,20 @@ REFERENCE_IMAGES = \
 	random-intersections-curves-nz.ref.png \
 	random-intersections-curves-nz.xlib.ref.png \
 	random-intersections-curves-nz.xlib-fallback.ref.png \
+	recording-surface-pattern.image16.ref.png \
+	recording-surface-pattern.gl.argb32.ref.png \
+	recording-surface-pattern.pdf.argb32.ref.png \
+	recording-surface-pattern.pdf.rgb24.ref.png \
+	recording-surface-pattern.ps.argb32.ref.png \
+	recording-surface-pattern.ps.rgb24.ref.png \
+	recording-surface-pattern.quartz.argb32.ref.png \
+	recording-surface-pattern.quartz.rgb24.ref.png \
+	recording-surface-pattern.ref.png \
+	recording-surface-pattern.rgb24.ref.png \
+	recording-surface-pattern.svg.argb32.ref.png \
+	recording-surface-pattern.svg.rgb24.ref.png \
+	recording-surface-pattern.xlib.argb32.ref.png \
+	recording-surface-pattern.xlib.rgb24.ref.png \
 	rectangle-rounding-error.ref.png \
 	rectilinear-dash.quartz.xfail.png \
 	rectilinear-dash.ref.png \
