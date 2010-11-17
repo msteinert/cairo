@@ -1760,17 +1760,21 @@ _gradient_pattern_supported (cairo_ps_surface_t    *surface,
 static cairo_bool_t
 pattern_supported (cairo_ps_surface_t *surface, const cairo_pattern_t *pattern)
 {
-    if (pattern->type == CAIRO_PATTERN_TYPE_SOLID)
+    switch (pattern->type) {
+    case CAIRO_PATTERN_TYPE_SOLID:
 	return TRUE;
 
-    if (pattern->type == CAIRO_PATTERN_TYPE_LINEAR ||
-	pattern->type == CAIRO_PATTERN_TYPE_RADIAL)
+    case CAIRO_PATTERN_TYPE_LINEAR:
+    case CAIRO_PATTERN_TYPE_RADIAL:
 	return _gradient_pattern_supported (surface, pattern);
 
-    if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE)
+    case CAIRO_PATTERN_TYPE_SURFACE:
 	return surface_pattern_supported ((cairo_surface_pattern_t *) pattern);
 
-    return FALSE;
+    default:
+	ASSERT_NOT_REACHED;
+	return FALSE;
+    }
 }
 
 static cairo_int_status_t
