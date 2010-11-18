@@ -2695,40 +2695,32 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 		(const cairo_radial_pattern_t *) pattern;
 	    double cx1, cy1;
 	    double cx2, cy2;
-	    double r, D;
+	    double r1, r2;
 
-	    if (radial->r1 == 0 && radial->r2 == 0)
+	    if (_radial_pattern_is_degenerate (radial)) {
+		/* cairo-gstate should have optimised degenerate
+		 * patterns to solid clear patterns, so we can ignore
+		 * them here. */
 		goto EMPTY;
+	    }
 
-	    cx1 = _cairo_fixed_to_double (radial->c1.x);
-	    cy1 = _cairo_fixed_to_double (radial->c1.y);
-	    r = _cairo_fixed_to_double (radial->r1);
-	    x1 = cx1 - r; x2 = cx1 + r;
-	    y1 = cy1 - r; y2 = cy1 + r;
-
-	    cx2 = _cairo_fixed_to_double (radial->c2.x);
-	    cy2 = _cairo_fixed_to_double (radial->c2.y);
-	    r = fabs (_cairo_fixed_to_double (radial->r2));
-
+	    /* TODO: in some cases (focus outside/on the circle) it is
+	     * half-bounded. */
 	    if (pattern->extend != CAIRO_EXTEND_NONE)
 		goto UNBOUNDED;
 
-	    /* We need to be careful, as if the circles are not
-	     * self-contained, then the solution is actually unbounded.
-	     */
-	    D = (cx1-cx2)*(cx1-cx2) + (cy1-cy2)*(cy1-cy2);
-	    if (D > r*r - 1e-5)
-		goto UNBOUNDED;
+	    cx1 = _cairo_fixed_to_double (radial->c1.x);
+	    cy1 = _cairo_fixed_to_double (radial->c1.y);
+	    r1 = _cairo_fixed_to_double (radial->r1);
 
-	    if (cx2 - r < x1)
-		x1 = cx2 - r;
-	    if (cx2 + r > x2)
-		x2 = cx2 + r;
+	    cx2 = _cairo_fixed_to_double (radial->c2.x);
+	    cy2 = _cairo_fixed_to_double (radial->c2.y);
+	    r2 = _cairo_fixed_to_double (radial->r2);
 
-	    if (cy2 - r < y1)
-		y1 = cy2 - r;
-	    if (cy2 + r > y2)
-		y2 = cy2 + r;
+	    x1 = MIN (cx1 - r1, cx2 - r2);
+	    y1 = MIN (cy1 - r1, cy2 - r2);
+	    x2 = MAX (cx1 + r1, cx2 + r2);
+	    y2 = MAX (cy1 + r1, cy2 + r2);
 	}
 	break;
 
@@ -2740,9 +2732,15 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 	    if (pattern->extend != CAIRO_EXTEND_NONE)
 		goto UNBOUNDED;
 
-	    if (linear->p1.x == linear->p2.x && linear->p1.y == linear->p2.y)
+	    if (_linear_pattern_is_degenerate (linear)) {
+		/* cairo-gstate should have optimised degenerate
+		 * patterns to solid ones, so we can again ignore
+		 * them here. */
 		goto EMPTY;
+	    }
 
+	    /* TODO: to get tight extents, use the matrix to transform
+	     * the pattern instead of transforming the extents later. */
 	    if (pattern->matrix.xy != 0. || pattern->matrix.yx != 0.)
 		goto UNBOUNDED;
 
