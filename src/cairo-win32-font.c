@@ -2020,10 +2020,9 @@ _cairo_win32_font_face_init_key (cairo_win32_font_face_t *key,
     key->logfont = *logfont;
     key->hfont = font;
 
-    hash = _cairo_hash_bytes (0, logfont->lfFaceName, wcslen(logfont->lfFaceName));
+    hash = _cairo_hash_bytes (0, logfont->lfFaceName, 2*wcslen(logfont->lfFaceName));
     hash = _cairo_hash_bytes (hash, &logfont->lfWeight, sizeof(logfont->lfWeight));
     hash = _cairo_hash_bytes (hash, &logfont->lfItalic, sizeof(logfont->lfItalic));
-    hash = _cairo_hash_bytes (hash, &font, sizeof(font));
 
     key->base.hash_entry.hash = hash;
 }
@@ -2043,8 +2042,7 @@ _cairo_win32_font_face_keys_equal (const void *key_a,
 	face_a->logfont.lfOutPrecision   == face_b->logfont.lfOutPrecision &&
 	face_a->logfont.lfClipPrecision  == face_b->logfont.lfClipPrecision &&
 	face_a->logfont.lfPitchAndFamily == face_b->logfont.lfPitchAndFamily &&
-	(wcscmp (face_a->logfont.lfFaceName, face_a->logfont.lfFaceName) == 0) &&
-	face_a->hfont                    == face_b->hfont)
+	(wcscmp (face_a->logfont.lfFaceName, face_b->logfont.lfFaceName) == 0))
 	return TRUE;
     else
 	return FALSE;
