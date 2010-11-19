@@ -1726,7 +1726,6 @@ _gradient_pattern_supported (cairo_ps_surface_t    *surface,
 			     const cairo_pattern_t *pattern)
 {
     double min_alpha, max_alpha;
-    cairo_extend_t extend;
 
     if (surface->ps_level == CAIRO_PS_LEVEL_2)
 	return FALSE;
@@ -1736,17 +1735,6 @@ _gradient_pattern_supported (cairo_ps_surface_t    *surface,
     _cairo_pattern_alpha_range (pattern, &min_alpha, &max_alpha);
     if (min_alpha != max_alpha)
 	return FALSE;
-
-    extend = cairo_pattern_get_extend ((cairo_pattern_t *) pattern);
-
-    /* Radial gradients are currently only supported with EXTEND_NONE
-     * and EXTEND_PAD. */
-    if (pattern->type == CAIRO_PATTERN_TYPE_RADIAL) {
-	if (extend == CAIRO_EXTEND_REPEAT ||
-	    extend == CAIRO_EXTEND_REFLECT) {
-	    return FALSE;
-	}
-    }
 
     surface->ps_level_used = CAIRO_PS_LEVEL_3;
 
@@ -3219,112 +3207,111 @@ _cairo_ps_surface_emit_repeating_function (cairo_ps_surface_t       *surface,
 }
 
 static cairo_status_t
-_cairo_ps_surface_emit_linear_pattern (cairo_ps_surface_t     *surface,
-				       cairo_linear_pattern_t *pattern)
+_cairo_ps_surface_emit_gradient (cairo_ps_surface_t       *surface,
+				 cairo_gradient_pattern_t *pattern)
 {
-    double x1, y1, x2, y2;
-    double _x1, _y1, _x2, _y2;
     cairo_matrix_t pat_to_ps;
-    cairo_extend_t extend;
+    cairo_circle_double_t start, end;
+    double domain[2];
     cairo_status_t status;
-    cairo_gradient_pattern_t *gradient = &pattern->base;
-    double first_stop, last_stop;
-    int repeat_begin = 0, repeat_end = 1;
 
-    extend = cairo_pattern_get_extend (&pattern->base.base);
+    assert (pattern->n_stops != 0);
 
-    pat_to_ps = pattern->base.base.matrix;
-    status = cairo_matrix_invert (&pat_to_ps);
-    /* cairo_pattern_set_matrix ensures the matrix is invertible */
-    assert (status == CAIRO_STATUS_SUCCESS);
-
-    cairo_matrix_multiply (&pat_to_ps, &pat_to_ps, &surface->cairo_to_ps);
-    first_stop = gradient->stops[0].offset;
-    last_stop = gradient->stops[gradient->n_stops - 1].offset;
-
-    if (pattern->base.base.extend == CAIRO_EXTEND_REPEAT ||
-	pattern->base.base.extend == CAIRO_EXTEND_REFLECT) {
-	double dx, dy;
-	int x_rep = 0, y_rep = 0;
-
-	x1 = _cairo_fixed_to_double (pattern->p1.x);
-	y1 = _cairo_fixed_to_double (pattern->p1.y);
-	cairo_matrix_transform_point (&pat_to_ps, &x1, &y1);
-
-	x2 = _cairo_fixed_to_double (pattern->p2.x);
-	y2 = _cairo_fixed_to_double (pattern->p2.y);
-	cairo_matrix_transform_point (&pat_to_ps, &x2, &y2);
-
-	dx = fabs (x2 - x1);
-	dy = fabs (y2 - y1);
-	if (dx > 1e-6)
-	    x_rep = ceil (surface->width/dx);
-	if (dy > 1e-6)
-	    y_rep = ceil (surface->height/dy);
-
-	repeat_end = MAX (x_rep, y_rep);
-	repeat_begin = -repeat_end;
-	first_stop = repeat_begin;
-	last_stop = repeat_end;
-    }
-
-    /* PS requires the first and last stop to be the same as the line
-     * coordinates. For repeating patterns this moves the line
-     * coordinates out to the begin/end of the repeating function. For
-     * non repeating patterns this may move the line coordinates in if
-     * there are not stops at offset 0 and 1. */
-    x1 = _cairo_fixed_to_double (pattern->p1.x);
-    y1 = _cairo_fixed_to_double (pattern->p1.y);
-    x2 = _cairo_fixed_to_double (pattern->p2.x);
-    y2 = _cairo_fixed_to_double (pattern->p2.y);
-
-    _x1 = x1 + (x2 - x1)*first_stop;
-    _y1 = y1 + (y2 - y1)*first_stop;
-    _x2 = x1 + (x2 - x1)*last_stop;
-    _y2 = y1 + (y2 - y1)*last_stop;
-
-    x1 = _x1;
-    x2 = _x2;
-    y1 = _y1;
-    y2 = _y2;
-
-    /* For EXTEND_NONE and EXTEND_PAD if there are only two stops a
-     * Type 2 function is used by itself without a stitching
-     * function. Type 2 functions always have the domain [0 1] */
-    if ((pattern->base.base.extend == CAIRO_EXTEND_NONE ||
-	 pattern->base.base.extend == CAIRO_EXTEND_PAD) &&
-	gradient->n_stops == 2) {
-	first_stop = 0.0;
-	last_stop = 1.0;
-    }
-
-    status = _cairo_ps_surface_emit_pattern_stops (surface,
-						   &pattern->base);
+    status = _cairo_ps_surface_emit_pattern_stops (surface, pattern);
     if (unlikely (status))
 	return status;
 
-    if (pattern->base.base.extend == CAIRO_EXTEND_REPEAT ||
-	pattern->base.base.extend == CAIRO_EXTEND_REFLECT) {
+    pat_to_ps = pattern->base.matrix;
+    status = cairo_matrix_invert (&pat_to_ps);
+    /* cairo_pattern_set_matrix ensures the matrix is invertible */
+    assert (status == CAIRO_STATUS_SUCCESS);
+    cairo_matrix_multiply (&pat_to_ps, &pat_to_ps, &surface->cairo_to_ps);
+
+    if (pattern->base.extend == CAIRO_EXTEND_REPEAT ||
+	pattern->base.extend == CAIRO_EXTEND_REFLECT)
+    {
+	double bounds_x1, bounds_x2, bounds_y1, bounds_y2;
+	double tolerance;
+
+	/* TODO: use tighter extents */
+	bounds_x1 = 0;
+	bounds_y1 = 0;
+	bounds_x2 = surface->width;
+	bounds_y2 = surface->height;
+	_cairo_matrix_transform_bounding_box (&pattern->base.matrix,
+					      &bounds_x1, &bounds_y1,
+					      &bounds_x2, &bounds_y2,
+					      NULL);
+
+	tolerance = 1. / MAX (surface->base.x_fallback_resolution,
+			      surface->base.y_fallback_resolution);
+
+	_cairo_gradient_pattern_box_to_parameter (pattern,
+						  bounds_x1, bounds_y1,
+						  bounds_x2, bounds_y2,
+						  tolerance, domain);
+    } else {
+	domain[0] = pattern->stops[0].offset;
+	domain[1] = pattern->stops[pattern->n_stops - 1].offset;
+    }
+
+    /* PS requires the first and last stop to be the same as the
+     * extreme coordinates. For repeating patterns this moves the
+     * extreme coordinates out to the begin/end of the repeating
+     * function. For non repeating patterns this may move the extreme
+     * coordinates in if there are not stops at offset 0 and 1. */
+    _cairo_gradient_pattern_interpolate (pattern, domain[0], &start);
+    _cairo_gradient_pattern_interpolate (pattern, domain[1], &end);
+
+    if (pattern->base.extend == CAIRO_EXTEND_REPEAT ||
+	pattern->base.extend == CAIRO_EXTEND_REFLECT)
+    {
+	int repeat_begin, repeat_end;
+
+	repeat_begin = floor (domain[0]);
+	repeat_end = ceil (domain[1]);
+
 	status = _cairo_ps_surface_emit_repeating_function (surface,
-							    &pattern->base,
+							    pattern,
 							    repeat_begin,
 							    repeat_end);
 	if (unlikely (status))
 	    return status;
+    } else if (pattern->n_stops <= 2) {
+	/* For EXTEND_NONE and EXTEND_PAD if there are only two stops a
+	 * Type 2 function is used by itself without a stitching
+	 * function. Type 2 functions always have the domain [0 1] */
+	domain[0] = 0.0;
+	domain[1] = 1.0;
+    }
+
+    if (pattern->base.type == CAIRO_PATTERN_TYPE_LINEAR) {
+	_cairo_output_stream_printf (surface->stream,
+				     "<< /PatternType 2\n"
+				     "   /Shading\n"
+				     "   << /ShadingType 2\n"
+				     "      /ColorSpace /DeviceRGB\n"
+				     "      /Coords [ %f %f %f %f ]\n",
+				     start.center.x, start.center.y,
+				     end.center.x, end.center.y);
+    } else {
+	_cairo_output_stream_printf (surface->stream,
+				     "<< /PatternType 2\n"
+				     "   /Shading\n"
+				     "   << /ShadingType 3\n"
+				     "      /ColorSpace /DeviceRGB\n"
+				     "      /Coords [ %f %f %f %f %f %f ]\n",
+				     start.center.x, start.center.y,
+				     MAX (start.radius, 0),
+				     end.center.x, end.center.y,
+				     MAX (end.radius, 0));
     }
 
     _cairo_output_stream_printf (surface->stream,
-				 "<< /PatternType 2\n"
-				 "   /Shading\n"
-				 "   << /ShadingType 2\n"
-				 "      /ColorSpace /DeviceRGB\n"
-				 "      /Coords [ %f %f %f %f ]\n"
-                                 "      /Domain [ %f %f ]\n"
-				 "      /Function CairoFunction\n",
-				 x1, y1, x2, y2,
-				 first_stop, last_stop);
+				 "      /Domain [ %f %f ]\n",
+				 domain[0], domain[1]);
 
-    if (extend == CAIRO_EXTEND_PAD) {
+    if (pattern->base.extend != CAIRO_EXTEND_NONE) {
 	_cairo_output_stream_printf (surface->stream,
                                      "      /Extend [ true true ]\n");
     } else {
@@ -3333,75 +3320,14 @@ _cairo_ps_surface_emit_linear_pattern (cairo_ps_surface_t     *surface,
     }
 
     _cairo_output_stream_printf (surface->stream,
+				 "      /Function CairoFunction\n"
 				 "   >>\n"
-				 ">>\n");
-    _cairo_output_stream_printf (surface->stream,
-				 "[ %f %f %f %f %f %f ]\n",
+				 ">>\n"
+				 "[ %f %f %f %f %f %f ]\n"
+				 "makepattern setpattern\n",
                                  pat_to_ps.xx, pat_to_ps.yx,
                                  pat_to_ps.xy, pat_to_ps.yy,
                                  pat_to_ps.x0, pat_to_ps.y0);
-    _cairo_output_stream_printf (surface->stream,
-				 "makepattern setpattern\n");
-
-    return status;
-}
-
-static cairo_status_t
-_cairo_ps_surface_emit_radial_pattern (cairo_ps_surface_t     *surface,
-				       cairo_radial_pattern_t *pattern)
-{
-    double x1, y1, x2, y2, r1, r2;
-    cairo_matrix_t pat_to_ps;
-    cairo_extend_t extend;
-    cairo_status_t status;
-
-    extend = cairo_pattern_get_extend (&pattern->base.base);
-
-    pat_to_ps = pattern->base.base.matrix;
-    status = cairo_matrix_invert (&pat_to_ps);
-    /* cairo_pattern_set_matrix ensures the matrix is invertible */
-    assert (status == CAIRO_STATUS_SUCCESS);
-
-    cairo_matrix_multiply (&pat_to_ps, &pat_to_ps, &surface->cairo_to_ps);
-    x1 = _cairo_fixed_to_double (pattern->c1.x);
-    y1 = _cairo_fixed_to_double (pattern->c1.y);
-    r1 = _cairo_fixed_to_double (pattern->r1);
-    x2 = _cairo_fixed_to_double (pattern->c2.x);
-    y2 = _cairo_fixed_to_double (pattern->c2.y);
-    r2 = _cairo_fixed_to_double (pattern->r2);
-
-   status = _cairo_ps_surface_emit_pattern_stops (surface, &pattern->base);
-   if (unlikely (status))
-      return status;
-
-   _cairo_output_stream_printf (surface->stream,
-				 "<< /PatternType 2\n"
-				 "   /Shading\n"
-				 "   << /ShadingType 3\n"
-				 "      /ColorSpace /DeviceRGB\n"
-				 "      /Coords [ %f %f %f %f %f %f ]\n"
-				 "      /Function CairoFunction\n",
-				 x1, y1, r1, x2, y2, r2);
-
-    if (extend == CAIRO_EXTEND_PAD) {
-	_cairo_output_stream_printf (surface->stream,
-                                     "      /Extend [ true true ]\n");
-    } else {
-	_cairo_output_stream_printf (surface->stream,
-                                     "      /Extend [ false false ]\n");
-    }
-
-    _cairo_output_stream_printf (surface->stream,
-				 "   >>\n"
-				 ">>\n");
-
-    _cairo_output_stream_printf (surface->stream,
-				 "[ %f %f %f %f %f %f ]\n",
-				 pat_to_ps.xx, pat_to_ps.yx,
-                                 pat_to_ps.xy, pat_to_ps.yy,
-                                 pat_to_ps.x0, pat_to_ps.y0);
-    _cairo_output_stream_printf (surface->stream,
-				 "makepattern setpattern\n");
 
     return status;
 }
@@ -3458,15 +3384,9 @@ _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface,
 	break;
 
     case CAIRO_PATTERN_TYPE_LINEAR:
-	status = _cairo_ps_surface_emit_linear_pattern (surface,
-					  (cairo_linear_pattern_t *) pattern);
-	if (unlikely (status))
-	    return status;
-	break;
-
     case CAIRO_PATTERN_TYPE_RADIAL:
-	status = _cairo_ps_surface_emit_radial_pattern (surface,
-					  (cairo_radial_pattern_t *) pattern);
+	status = _cairo_ps_surface_emit_gradient (surface,
+					  (cairo_gradient_pattern_t *) pattern);
 	if (unlikely (status))
 	    return status;
 	break;
