@@ -3089,139 +3089,53 @@ cairo_pdf_surface_emit_transparency_group (cairo_pdf_surface_t  *surface,
     return _cairo_output_stream_get_status (surface->output);
 }
 
-static cairo_status_t
-_cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
-					cairo_pdf_pattern_t    *pdf_pattern)
+static void
+_cairo_pdf_surface_output_gradient (cairo_pdf_surface_t        *surface,
+				    const cairo_pdf_pattern_t  *pdf_pattern,
+				    cairo_pdf_resource_t        pattern_resource,
+				    const cairo_matrix_t       *pat_to_pdf,
+				    const cairo_circle_double_t*start,
+				    const cairo_circle_double_t*end,
+				    const double               *domain,
+				    const char                 *colorspace,
+				    cairo_pdf_resource_t        color_function)
 {
-    cairo_linear_pattern_t *pattern = (cairo_linear_pattern_t *) pdf_pattern->pattern;
-    cairo_pdf_resource_t color_function, alpha_function;
-    double x1, y1, x2, y2;
-    double _x1, _y1, _x2, _y2;
-    cairo_matrix_t pat_to_pdf;
-    cairo_extend_t extend;
-    cairo_status_t status;
-    cairo_gradient_pattern_t *gradient = &pattern->base;
-    double first_stop, last_stop;
-    int repeat_begin = 0, repeat_end = 1;
-
-    assert (pattern->base.n_stops != 0);
-
-    extend = cairo_pattern_get_extend (pdf_pattern->pattern);
-
-    pat_to_pdf = pattern->base.base.matrix;
-    status = cairo_matrix_invert (&pat_to_pdf);
-    /* cairo_pattern_set_matrix ensures the matrix is invertible */
-    assert (status == CAIRO_STATUS_SUCCESS);
-
-    cairo_matrix_multiply (&pat_to_pdf, &pat_to_pdf, &surface->cairo_to_pdf);
-    first_stop = gradient->stops[0].offset;
-    last_stop = gradient->stops[gradient->n_stops - 1].offset;
-
-    if (pattern->base.base.extend == CAIRO_EXTEND_REPEAT ||
-	pattern->base.base.extend == CAIRO_EXTEND_REFLECT) {
-	double dx, dy;
-	int x_rep = 0, y_rep = 0;
-
-	x1 = _cairo_fixed_to_double (pattern->p1.x);
-	y1 = _cairo_fixed_to_double (pattern->p1.y);
-	cairo_matrix_transform_point (&pat_to_pdf, &x1, &y1);
-
-	x2 = _cairo_fixed_to_double (pattern->p2.x);
-	y2 = _cairo_fixed_to_double (pattern->p2.y);
-	cairo_matrix_transform_point (&pat_to_pdf, &x2, &y2);
-
-	dx = fabs (x2 - x1);
-	dy = fabs (y2 - y1);
-	if (dx > 1e-6)
-	    x_rep = ceil (surface->width/dx);
-	if (dy > 1e-6)
-	    y_rep = ceil (surface->height/dy);
-
-	repeat_end = MAX (x_rep, y_rep);
-	repeat_begin = -repeat_end;
-	first_stop = repeat_begin;
-	last_stop = repeat_end;
-    }
-
-    /* PDF requires the first and last stop to be the same as the line
-     * coordinates. For repeating patterns this moves the line
-     * coordinates out to the begin/end of the repeating function. For
-     * non repeating patterns this may move the line coordinates in if
-     * there are not stops at offset 0 and 1. */
-    x1 = _cairo_fixed_to_double (pattern->p1.x);
-    y1 = _cairo_fixed_to_double (pattern->p1.y);
-    x2 = _cairo_fixed_to_double (pattern->p2.x);
-    y2 = _cairo_fixed_to_double (pattern->p2.y);
-
-    _x1 = x1 + (x2 - x1)*first_stop;
-    _y1 = y1 + (y2 - y1)*first_stop;
-    _x2 = x1 + (x2 - x1)*last_stop;
-    _y2 = y1 + (y2 - y1)*last_stop;
-
-    x1 = _x1;
-    x2 = _x2;
-    y1 = _y1;
-    y2 = _y2;
-
-    /* For EXTEND_NONE and EXTEND_PAD if there are only two stops a
-     * Type 2 function is used by itself without a stitching
-     * function. Type 2 functions always have the domain [0 1] */
-    if ((pattern->base.base.extend == CAIRO_EXTEND_NONE ||
-	 pattern->base.base.extend == CAIRO_EXTEND_PAD) &&
-	gradient->n_stops == 2) {
-	first_stop = 0.0;
-	last_stop = 1.0;
-    }
-
-    status = _cairo_pdf_surface_emit_pattern_stops (surface,
-                                                    &pattern->base,
-                                                    &color_function,
-                                                    &alpha_function);
-    if (unlikely (status))
-	return status;
-
-    if (pattern->base.base.extend == CAIRO_EXTEND_REPEAT ||
-	pattern->base.base.extend == CAIRO_EXTEND_REFLECT) {
-	status = _cairo_pdf_surface_emit_repeating_function (surface,
-							     &pattern->base,
-							     &color_function,
-							     repeat_begin,
-							     repeat_end);
-	if (unlikely (status))
-	    return status;
-
-	if (alpha_function.id != 0) {
-	    status = _cairo_pdf_surface_emit_repeating_function (surface,
-								 &pattern->base,
-								 &alpha_function,
-								 repeat_begin,
-								 repeat_end);
-	    if (unlikely (status))
-		return status;
-	}
-    }
-
-    _cairo_pdf_surface_update_object (surface, pdf_pattern->pattern_res);
     _cairo_output_stream_printf (surface->output,
                                  "%d 0 obj\n"
                                  "<< /Type /Pattern\n"
                                  "   /PatternType 2\n"
                                  "   /Matrix [ %f %f %f %f %f %f ]\n"
-                                 "   /Shading\n"
-                                 "      << /ShadingType 2\n"
-                                 "         /ColorSpace /DeviceRGB\n"
-                                 "         /Coords [ %f %f %f %f ]\n"
-                                 "         /Domain [ %f %f ]\n"
-                                 "         /Function %d 0 R\n",
-				 pdf_pattern->pattern_res.id,
-                                 pat_to_pdf.xx, pat_to_pdf.yx,
-                                 pat_to_pdf.xy, pat_to_pdf.yy,
-                                 pat_to_pdf.x0, pat_to_pdf.y0,
-                                 x1, y1, x2, y2,
-                                 first_stop, last_stop,
-                                 color_function.id);
+                                 "   /Shading\n",
+				 pattern_resource.id,
+                                 pat_to_pdf->xx, pat_to_pdf->yx,
+                                 pat_to_pdf->xy, pat_to_pdf->yy,
+                                 pat_to_pdf->x0, pat_to_pdf->y0);
 
-    if (extend == CAIRO_EXTEND_PAD) {
+    if (pdf_pattern->pattern->type == CAIRO_PATTERN_TYPE_LINEAR) {
+	_cairo_output_stream_printf (surface->output,
+				     "      << /ShadingType 2\n"
+				     "         /ColorSpace %s\n"
+				     "         /Coords [ %f %f %f %f ]\n",
+				     colorspace,
+				     start->center.x, start->center.y,
+				     end->center.x, end->center.y);
+    } else {
+	_cairo_output_stream_printf (surface->output,
+				     "      << /ShadingType 3\n"
+				     "         /ColorSpace %s\n"
+				     "         /Coords [ %f %f %f %f %f %f ]\n",
+				     colorspace,
+				     start->center.x, start->center.y,
+				     MAX (start->radius, 0),
+				     end->center.x, end->center.y,
+				     MAX (end->radius, 0));
+    }
+
+    _cairo_output_stream_printf (surface->output,
+				 "         /Domain [ %f %f ]\n",
+				 domain[0], domain[1]);
+
+    if (pdf_pattern->pattern->extend != CAIRO_EXTEND_NONE) {
         _cairo_output_stream_printf (surface->output,
                                      "         /Extend [ true true ]\n");
     } else {
@@ -3230,9 +3144,113 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
     }
 
     _cairo_output_stream_printf (surface->output,
+				 "         /Function %d 0 R\n"
                                  "      >>\n"
                                  ">>\n"
-                                 "endobj\n");
+                                 "endobj\n",
+				 color_function.id);
+}
+
+static cairo_status_t
+_cairo_pdf_surface_emit_gradient (cairo_pdf_surface_t    *surface,
+				  cairo_pdf_pattern_t    *pdf_pattern)
+{
+    cairo_gradient_pattern_t *pattern = (cairo_gradient_pattern_t *) pdf_pattern->pattern;
+    cairo_pdf_resource_t color_function, alpha_function;
+    cairo_matrix_t pat_to_pdf;
+    cairo_circle_double_t start, end;
+    double domain[2];
+    cairo_status_t status;
+
+    assert (pattern->n_stops != 0);
+
+    status = _cairo_pdf_surface_emit_pattern_stops (surface,
+                                                    pattern,
+                                                    &color_function,
+                                                    &alpha_function);
+    if (unlikely (status))
+	return status;
+
+    pat_to_pdf = pattern->base.matrix;
+    status = cairo_matrix_invert (&pat_to_pdf);
+    /* cairo_pattern_set_matrix ensures the matrix is invertible */
+    assert (status == CAIRO_STATUS_SUCCESS);
+    cairo_matrix_multiply (&pat_to_pdf, &pat_to_pdf, &surface->cairo_to_pdf);
+
+    if (pattern->base.extend == CAIRO_EXTEND_REPEAT ||
+	pattern->base.extend == CAIRO_EXTEND_REFLECT)
+    {
+	double bounds_x1, bounds_x2, bounds_y1, bounds_y2;
+	double tolerance;
+
+	/* TODO: use tighter extents */
+	bounds_x1 = 0;
+	bounds_y1 = 0;
+	bounds_x2 = surface->width;
+	bounds_y2 = surface->height;
+	_cairo_matrix_transform_bounding_box (&pattern->base.matrix,
+					      &bounds_x1, &bounds_y1,
+					      &bounds_x2, &bounds_y2,
+					      NULL);
+
+	tolerance = 1. / MAX (surface->base.x_fallback_resolution,
+			      surface->base.y_fallback_resolution);
+
+	_cairo_gradient_pattern_box_to_parameter (pattern,
+						  bounds_x1, bounds_y1,
+						  bounds_x2, bounds_y2,
+						  tolerance, domain);
+    } else {
+	domain[0] = pattern->stops[0].offset;
+	domain[1] = pattern->stops[pattern->n_stops - 1].offset;
+    }
+
+    /* PDF requires the first and last stop to be the same as the
+     * extreme coordinates. For repeating patterns this moves the
+     * extreme coordinates out to the begin/end of the repeating
+     * function. For non repeating patterns this may move the extreme
+     * coordinates in if there are not stops at offset 0 and 1. */
+    _cairo_gradient_pattern_interpolate (pattern, domain[0], &start);
+    _cairo_gradient_pattern_interpolate (pattern, domain[1], &end);
+
+    if (pattern->base.extend == CAIRO_EXTEND_REPEAT ||
+	pattern->base.extend == CAIRO_EXTEND_REFLECT)
+    {
+	int repeat_begin, repeat_end;
+
+	repeat_begin = floor (domain[0]);
+	repeat_end = ceil (domain[1]);
+
+	status = _cairo_pdf_surface_emit_repeating_function (surface,
+							     pattern,
+							     &color_function,
+							     repeat_begin,
+							     repeat_end);
+	if (unlikely (status))
+	    return status;
+
+	if (alpha_function.id != 0) {
+	    status = _cairo_pdf_surface_emit_repeating_function (surface,
+								 pattern,
+								 &alpha_function,
+								 repeat_begin,
+								 repeat_end);
+	    if (unlikely (status))
+		return status;
+	}
+    } else if (pattern->n_stops <= 2) {
+	/* For EXTEND_NONE and EXTEND_PAD if there are only two stops a
+	 * Type 2 function is used by itself without a stitching
+	 * function. Type 2 functions always have the domain [0 1] */
+	domain[0] = 0.0;
+	domain[1] = 1.0;
+    }
+
+    _cairo_pdf_surface_update_object (surface, pdf_pattern->pattern_res);
+    _cairo_pdf_surface_output_gradient (surface, pdf_pattern,
+					pdf_pattern->pattern_res,
+					&pat_to_pdf, &start, &end, domain,
+					"/DeviceRGB", color_function);
 
     if (alpha_function.id != 0) {
 	cairo_pdf_resource_t mask_resource;
@@ -3244,157 +3262,14 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
 	if (mask_resource.id == 0)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-        _cairo_output_stream_printf (surface->output,
-                                     "%d 0 obj\n"
-                                     "<< /Type /Pattern\n"
-                                     "   /PatternType 2\n"
-                                     "   /Matrix [ %f %f %f %f %f %f ]\n"
-                                     "   /Shading\n"
-                                     "      << /ShadingType 2\n"
-                                     "         /ColorSpace /DeviceGray\n"
-                                     "         /Coords [ %f %f %f %f ]\n"
-				     "         /Domain [ %f %f ]\n"
-                                     "         /Function %d 0 R\n",
-                                     mask_resource.id,
-                                     pat_to_pdf.xx, pat_to_pdf.yx,
-                                     pat_to_pdf.xy, pat_to_pdf.yy,
-                                     pat_to_pdf.x0, pat_to_pdf.y0,
-                                     x1, y1, x2, y2,
-				     first_stop, last_stop,
-                                     alpha_function.id);
+	_cairo_pdf_surface_output_gradient (surface, pdf_pattern,
+					    mask_resource,
+					    &pat_to_pdf, &start, &end, domain,
+					    "/DeviceGray", alpha_function);
 
-        if (extend == CAIRO_EXTEND_PAD) {
-            _cairo_output_stream_printf (surface->output,
-                                         "         /Extend [ true true ]\n");
-        } else {
-            _cairo_output_stream_printf (surface->output,
-                                         "         /Extend [ false false ]\n");
-        }
-
-        _cairo_output_stream_printf (surface->output,
-                                     "      >>\n"
-                                     ">>\n"
-                                     "endobj\n");
         status = _cairo_pdf_surface_add_pattern (surface, mask_resource);
         if (unlikely (status))
             return status;
-
-	status = cairo_pdf_surface_emit_transparency_group (surface,
-						            pdf_pattern->gstate_res,
-							    mask_resource);
-	if (unlikely (status))
-	    return status;
-    }
-
-    return _cairo_output_stream_get_status (surface->output);
-}
-
-static cairo_status_t
-_cairo_pdf_surface_emit_radial_pattern (cairo_pdf_surface_t    *surface,
-					cairo_pdf_pattern_t    *pdf_pattern)
-{
-    cairo_pdf_resource_t color_function, alpha_function;
-    double x1, y1, x2, y2, r1, r2;
-    cairo_matrix_t pat_to_pdf;
-    cairo_extend_t extend;
-    cairo_status_t status;
-    cairo_radial_pattern_t *pattern = (cairo_radial_pattern_t *) pdf_pattern->pattern;
-
-    assert (pattern->base.n_stops != 0);
-
-    extend = cairo_pattern_get_extend (pdf_pattern->pattern);
-
-    status = _cairo_pdf_surface_emit_pattern_stops (surface,
-                                                    &pattern->base,
-                                                    &color_function,
-                                                    &alpha_function);
-    if (unlikely (status))
-	return status;
-
-    pat_to_pdf = pattern->base.base.matrix;
-    status = cairo_matrix_invert (&pat_to_pdf);
-    /* cairo_pattern_set_matrix ensures the matrix is invertible */
-    assert (status == CAIRO_STATUS_SUCCESS);
-
-    cairo_matrix_multiply (&pat_to_pdf, &pat_to_pdf, &surface->cairo_to_pdf);
-    x1 = _cairo_fixed_to_double (pattern->c1.x);
-    y1 = _cairo_fixed_to_double (pattern->c1.y);
-    r1 = _cairo_fixed_to_double (pattern->r1);
-    x2 = _cairo_fixed_to_double (pattern->c2.x);
-    y2 = _cairo_fixed_to_double (pattern->c2.y);
-    r2 = _cairo_fixed_to_double (pattern->r2);
-
-    _cairo_pdf_surface_update_object (surface, pdf_pattern->pattern_res);
-
-    _cairo_output_stream_printf (surface->output,
-                                 "%d 0 obj\n"
-                                 "<< /Type /Pattern\n"
-                                 "   /PatternType 2\n"
-                                 "   /Matrix [ %f %f %f %f %f %f ]\n"
-                                 "   /Shading\n"
-                                 "      << /ShadingType 3\n"
-                                 "         /ColorSpace /DeviceRGB\n"
-                                 "         /Coords [ %f %f %f %f %f %f ]\n"
-                                 "         /Function %d 0 R\n",
-				 pdf_pattern->pattern_res.id,
-                                 pat_to_pdf.xx, pat_to_pdf.yx,
-                                 pat_to_pdf.xy, pat_to_pdf.yy,
-                                 pat_to_pdf.x0, pat_to_pdf.y0,
-                                 x1, y1, r1, x2, y2, r2,
-                                 color_function.id);
-
-    if (extend == CAIRO_EXTEND_PAD) {
-        _cairo_output_stream_printf (surface->output,
-                                     "         /Extend [ true true ]\n");
-    } else {
-        _cairo_output_stream_printf (surface->output,
-                                     "         /Extend [ false false ]\n");
-    }
-
-    _cairo_output_stream_printf (surface->output,
-                                 "      >>\n"
-                                 ">>\n"
-                                 "endobj\n");
-
-    if (alpha_function.id != 0) {
-	cairo_pdf_resource_t mask_resource;
-
-	assert (pdf_pattern->gstate_res.id != 0);
-
-	/* Create pattern for SMask. */
-        mask_resource = _cairo_pdf_surface_new_object (surface);
-	if (mask_resource.id == 0)
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-        _cairo_output_stream_printf (surface->output,
-                                     "%d 0 obj\n"
-                                     "<< /Type /Pattern\n"
-                                     "   /PatternType 2\n"
-                                     "   /Matrix [ %f %f %f %f %f %f ]\n"
-                                     "   /Shading\n"
-                                     "      << /ShadingType 3\n"
-                                     "         /ColorSpace /DeviceGray\n"
-                                     "         /Coords [ %f %f %f %f %f %f ]\n"
-                                     "         /Function %d 0 R\n",
-                                     mask_resource.id,
-                                     pat_to_pdf.xx, pat_to_pdf.yx,
-                                     pat_to_pdf.xy, pat_to_pdf.yy,
-                                     pat_to_pdf.x0, pat_to_pdf.y0,
-                                     x1, y1, r1, x2, y2, r2,
-                                     alpha_function.id);
-
-        if (extend == CAIRO_EXTEND_PAD) {
-            _cairo_output_stream_printf (surface->output,
-                                         "         /Extend [ true true ]\n");
-        } else {
-            _cairo_output_stream_printf (surface->output,
-                                         "         /Extend [ false false ]\n");
-        }
-
-        _cairo_output_stream_printf (surface->output,
-                                     "      >>\n"
-                                     ">>\n"
-                                     "endobj\n");
 
 	status = cairo_pdf_surface_emit_transparency_group (surface,
 						            pdf_pattern->gstate_res,
@@ -3429,11 +3304,8 @@ _cairo_pdf_surface_emit_pattern (cairo_pdf_surface_t *surface, cairo_pdf_pattern
 	break;
 
     case CAIRO_PATTERN_TYPE_LINEAR:
-	status = _cairo_pdf_surface_emit_linear_pattern (surface, pdf_pattern);
-	break;
-
     case CAIRO_PATTERN_TYPE_RADIAL:
-	status = _cairo_pdf_surface_emit_radial_pattern (surface, pdf_pattern);
+	status = _cairo_pdf_surface_emit_gradient (surface, pdf_pattern);
 	break;
 
     default:
@@ -5443,35 +5315,13 @@ _surface_pattern_supported (cairo_surface_pattern_t *pattern)
 }
 
 static cairo_bool_t
-_gradient_pattern_supported (const cairo_pattern_t *pattern)
-{
-    cairo_extend_t extend;
-
-    extend = cairo_pattern_get_extend ((cairo_pattern_t *) pattern);
-
-
-    /* Radial gradients are currently only supported with EXTEND_NONE
-     * and EXTEND_PAD. */
-    if (pattern->type == CAIRO_PATTERN_TYPE_RADIAL) {
-	if (extend == CAIRO_EXTEND_REPEAT ||
-	    extend == CAIRO_EXTEND_REFLECT) {
-	    return FALSE;
-	}
-    }
-
-    return TRUE;
-}
-
-static cairo_bool_t
 _pattern_supported (const cairo_pattern_t *pattern)
 {
     switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
-	return TRUE;
-
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
-	return _gradient_pattern_supported (pattern);
+	return TRUE;
 
     case CAIRO_PATTERN_TYPE_SURFACE:
 	return _surface_pattern_supported ((cairo_surface_pattern_t *) pattern);
