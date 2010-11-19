@@ -1328,6 +1328,7 @@ cairo_ps_surface_set_size (cairo_surface_t	*surface,
 			   double		 height_in_points)
 {
     cairo_ps_surface_t *ps_surface = NULL;
+    cairo_status_t status;
 
     if (! _extract_ps_surface (surface, TRUE, &ps_surface))
 	return;
@@ -1337,6 +1338,11 @@ cairo_ps_surface_set_size (cairo_surface_t	*surface,
     cairo_matrix_init (&ps_surface->cairo_to_ps, 1, 0, 0, -1, 0, height_in_points);
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&ps_surface->pdf_operators,
 						  &ps_surface->cairo_to_ps);
+    status = _cairo_paginated_surface_set_size (ps_surface->paginated_surface,
+						width_in_points,
+						height_in_points);
+    if (status)
+	status = _cairo_surface_set_error (surface, status);
 }
 
 /**

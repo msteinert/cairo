@@ -647,6 +647,7 @@ cairo_pdf_surface_set_size (cairo_surface_t	*surface,
 			    double		 height_in_points)
 {
     cairo_pdf_surface_t *pdf_surface = NULL; /* hide compiler warning */
+    cairo_status_t status;
 
     if (! _extract_pdf_surface (surface, &pdf_surface))
 	return;
@@ -654,6 +655,11 @@ cairo_pdf_surface_set_size (cairo_surface_t	*surface,
     _cairo_pdf_surface_set_size_internal (pdf_surface,
 					  width_in_points,
 					  height_in_points);
+    status = _cairo_paginated_surface_set_size (pdf_surface->paginated_surface,
+						width_in_points,
+						height_in_points);
+    if (status)
+	status = _cairo_surface_set_error (surface, status);
 }
 
 static void
@@ -1721,8 +1727,6 @@ _cairo_pdf_surface_finish (void *abstract_surface)
 	_cairo_scaled_font_subsets_destroy (surface->font_subsets);
 	surface->font_subsets = NULL;
     }
-
-    _cairo_surface_clipper_reset (&surface->clipper);
 
     return status;
 }
@@ -3572,6 +3576,8 @@ _cairo_pdf_surface_show_page (void *abstract_surface)
     status = _cairo_pdf_surface_close_content_stream (surface);
     if (unlikely (status))
 	return status;
+
+    _cairo_surface_clipper_reset (&surface->clipper);
 
     status = _cairo_pdf_surface_write_page (surface);
     if (unlikely (status))
