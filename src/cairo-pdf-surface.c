@@ -1244,18 +1244,6 @@ _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	*surface,
     return status;
 }
 
-static cairo_bool_t
-_gradient_stops_are_opaque (const cairo_gradient_pattern_t *gradient)
-{
-    unsigned int i;
-
-    for (i = 0; i < gradient->n_stops; i++)
-	if (! CAIRO_COLOR_IS_OPAQUE (&gradient->stops[i].color))
-	    return FALSE;
-
-    return TRUE;
-}
-
 static cairo_status_t
 _cairo_pdf_surface_add_pdf_pattern (cairo_pdf_surface_t		*surface,
 				    const cairo_pattern_t	*pattern,
@@ -1289,8 +1277,10 @@ _cairo_pdf_surface_add_pdf_pattern (cairo_pdf_surface_t		*surface,
     if (pattern->type == CAIRO_PATTERN_TYPE_LINEAR ||
         pattern->type == CAIRO_PATTERN_TYPE_RADIAL)
     {
-	cairo_gradient_pattern_t *gradient = (cairo_gradient_pattern_t *) pattern;
-	if (! _gradient_stops_are_opaque (gradient)) {
+	double min_alpha;
+
+	_cairo_pattern_alpha_range (pattern, &min_alpha, NULL);
+	if (! CAIRO_ALPHA_IS_OPAQUE (min_alpha)) {
             pdf_pattern.gstate_res = _cairo_pdf_surface_new_object (surface);
 	    if (pdf_pattern.gstate_res.id == 0) {
 		cairo_pattern_destroy (pdf_pattern.pattern);

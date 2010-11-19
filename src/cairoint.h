@@ -2213,6 +2213,10 @@ cairo_private void
 _cairo_pattern_transform (cairo_pattern_t      *pattern,
 			  const cairo_matrix_t *ctm_inverse);
 
+cairo_private void
+_cairo_pattern_alpha_range (const cairo_pattern_t *gradient,
+			    double *out_min, double *out_max);
+
 cairo_private cairo_bool_t
 _cairo_gradient_pattern_is_solid (const cairo_gradient_pattern_t *gradient,
 				  const cairo_rectangle_int_t *extents,

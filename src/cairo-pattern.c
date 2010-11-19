@@ -1927,6 +1927,64 @@ _gradient_color_average (const cairo_gradient_pattern_t *gradient,
 }
 
 /**
+ * _cairo_pattern_alpha_range
+ *
+ * Convenience function to determine the minimum and maximum alpha in
+ * the drawn part of a pattern (i.e. ignoring clear parts caused by
+ * extend modes and/or pattern shape).
+ *
+ * If not NULL, out_min and out_max will be set respectively to the
+ * minimum and maximum alpha value of the pattern.
+ **/
+void
+_cairo_pattern_alpha_range (const cairo_pattern_t *pattern,
+			    double                *out_min,
+			    double                *out_max)
+{
+    double alpha_min, alpha_max;
+
+    switch (pattern->type) {
+    case CAIRO_PATTERN_TYPE_SOLID: {
+	const cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) pattern;
+	alpha_min = alpha_max = solid->color.alpha;
+	break;
+    }
+
+    case CAIRO_PATTERN_TYPE_LINEAR:
+    case CAIRO_PATTERN_TYPE_RADIAL: {
+	const cairo_gradient_pattern_t *gradient = (cairo_gradient_pattern_t *) pattern;
+	unsigned int i;
+
+	assert (gradient->n_stops >= 1);
+
+	alpha_min = alpha_max = gradient->stops[0].color.alpha;
+	for (i = 1; i < gradient->n_stops; i++) {
+	    if (alpha_min > gradient->stops[i].color.alpha)
+		alpha_min = gradient->stops[i].color.alpha;
+	    else if (alpha_max < gradient->stops[i].color.alpha)
+		alpha_max = gradient->stops[i].color.alpha;
+	}
+
+	break;
+    }
+
+    default:
+	ASSERT_NOT_REACHED;
+	/* fall through */
+
+    case CAIRO_PATTERN_TYPE_SURFACE:
+	alpha_min = 0;
+	alpha_max = 1;
+	break;
+    }
+
+    if (out_min)
+	*out_min = alpha_min;
+    if (out_max)
+	*out_max = alpha_max;
+}
+
+/**
  * _cairo_gradient_pattern_is_solid
  *
  * Convenience function to determine whether a gradient pattern is

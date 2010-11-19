@@ -1725,21 +1725,17 @@ static cairo_bool_t
 _gradient_pattern_supported (cairo_ps_surface_t    *surface,
 			     const cairo_pattern_t *pattern)
 {
-    const cairo_gradient_pattern_t *gradient = (const cairo_gradient_pattern_t *) pattern;
-    uint16_t alpha;
+    double min_alpha, max_alpha;
     cairo_extend_t extend;
-    unsigned int i;
 
     if (surface->ps_level == CAIRO_PS_LEVEL_2)
 	return FALSE;
 
     /* Alpha gradients are only supported (by flattening the alpha)
      * if there is no variation in the alpha across the gradient. */
-    alpha = gradient->stops[0].color.alpha_short;
-    for (i = 0; i < gradient->n_stops; i++) {
-	if (gradient->stops[i].color.alpha_short != alpha)
-	    return FALSE;
-    }
+    _cairo_pattern_alpha_range (pattern, &min_alpha, &max_alpha);
+    if (min_alpha != max_alpha)
+	return FALSE;
 
     extend = cairo_pattern_get_extend ((cairo_pattern_t *) pattern);
 
