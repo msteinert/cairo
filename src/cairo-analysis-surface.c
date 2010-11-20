@@ -438,27 +438,14 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
 
     if (_cairo_operator_bounded_by_mask (op)) {
 	cairo_rectangle_int_t mask_extents;
+	cairo_status_t status;
 
-	/* If the backend can handle the stroke, then mark the approximate
-	 * extents of the operation. However, if we need to fallback in order
-	 * to draw the stroke, then ensure that the fallback is as tight as
-	 * possible -- both to minimise output file size and to ensure good
-	 * quality printed output for neighbouring regions.
-	 */
-	if (backend_status == CAIRO_STATUS_SUCCESS) {
-	    _cairo_path_fixed_approximate_stroke_extents (path,
-							  style, ctm,
-							  &mask_extents);
-	} else {
-	    cairo_status_t status;
-
-	    status = _cairo_path_fixed_stroke_extents (path, style,
-						       ctm, ctm_inverse,
-						       tolerance,
-						       &mask_extents);
-	    if (unlikely (status))
-		return status;
-	}
+	status = _cairo_path_fixed_stroke_extents (path, style,
+						   ctm, ctm_inverse,
+						   tolerance,
+						   &mask_extents);
+	if (unlikely (status))
+	    return status;
 
 	is_empty = _cairo_rectangle_intersect (&extents, &mask_extents);
     }
@@ -503,16 +490,9 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
     if (_cairo_operator_bounded_by_mask (op)) {
 	cairo_rectangle_int_t mask_extents;
 
-	/* We want speed for the likely case where the operation can be
-	 * performed natively, but accuracy if we have to resort to
-	 * using images.
-	 */
-	if (backend_status == CAIRO_STATUS_SUCCESS) {
-	    _cairo_path_fixed_approximate_fill_extents (path, &mask_extents);
-	} else {
-	     _cairo_path_fixed_fill_extents (path, fill_rule, tolerance,
-					     &mask_extents);
-	}
+	_cairo_path_fixed_fill_extents (path, fill_rule, tolerance,
+					&mask_extents);
+
 	is_empty = _cairo_rectangle_intersect (&extents, &mask_extents);
     }
 
