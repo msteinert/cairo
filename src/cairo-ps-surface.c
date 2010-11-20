@@ -3517,9 +3517,6 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     if (unlikely (status))
 	return status;
 
-    if (! _cairo_rectangle_intersect (&extents.bounded, &surface->page_bbox))
-	return CAIRO_STATUS_SUCCESS;
-
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_ps_surface_analyze_operation (surface, op, source, &extents.bounded);
 
@@ -3588,9 +3585,6 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
     if (unlikely (status))
 	return status;
 
-    if (! _cairo_rectangle_intersect (&extents.bounded, &surface->page_bbox))
-	return CAIRO_STATUS_SUCCESS;
-
     /* use the more accurate extents */
     if (extents.is_bounded) {
 	status = _cairo_path_fixed_stroke_extents (path, style,
@@ -3651,9 +3645,6 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 							clip);
     if (unlikely (status))
 	return status;
-
-    if (! _cairo_rectangle_intersect (&extents.bounded, &surface->page_bbox))
-	return CAIRO_STATUS_SUCCESS;
 
     /* use the more accurate extents */
     if (extents.is_bounded) {
