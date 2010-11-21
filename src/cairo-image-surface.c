@@ -1368,6 +1368,7 @@ static pixman_image_t *
 _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 			   cairo_bool_t is_mask,
 			   const cairo_rectangle_int_t *extents,
+			   cairo_matrix_t *dst_device_transform,
 			   int *ix, int *iy)
 {
     pixman_image_t *pixman_image;
@@ -1375,6 +1376,7 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
     cairo_extend_t extend;
     cairo_filter_t filter;
     double tx, ty;
+    cairo_bool_t undo_src_transform = FALSE;
 
     tx = pattern->base.matrix.x0;
     ty = pattern->base.matrix.y0;
@@ -1490,7 +1492,7 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 	void *extra;
 	cairo_status_t status;
 
-	status = _cairo_surface_acquire_source_image (pattern->surface, &image, &extra);
+	status = _cairo_surface_acquire_source_image_transformed (pattern->surface, dst_device_transform, &image, &extra);
 	if (unlikely (status))
 	    return NULL;
 
@@ -1536,6 +1538,7 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 	cleanup->image_extra = extra;
 	pixman_image_set_destroy_function (pixman_image,
 					   _acquire_source_cleanup, cleanup);
+	undo_src_transform = TRUE;
     }
 
     if (! _cairo_matrix_is_translation (&pattern->base.matrix) ||
@@ -1545,6 +1548,15 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 	cairo_matrix_t m;
 
 	m = pattern->base.matrix;
+	if (undo_src_transform) {
+	    cairo_matrix_t sm;
+
+	    cairo_matrix_init_scale (&sm,
+				     dst_device_transform->xx,
+				     dst_device_transform->yy);
+	    cairo_matrix_multiply (&m, &m, &sm);
+	}
+
 	if (m.x0 != 0. || m.y0 != 0.) {
 	    cairo_matrix_t inv;
 	    cairo_status_t status;
@@ -1649,6 +1661,7 @@ static pixman_image_t *
 _pixman_image_for_pattern (const cairo_pattern_t *pattern,
 			   cairo_bool_t is_mask,
 			   const cairo_rectangle_int_t *extents,
+			   cairo_matrix_t *dst_device_transform,
 			   int *tx, int *ty)
 {
     *tx = *ty = 0;
@@ -1669,7 +1682,7 @@ _pixman_image_for_pattern (const cairo_pattern_t *pattern,
 
     case CAIRO_PATTERN_TYPE_SURFACE:
 	return _pixman_image_for_surface ((const cairo_surface_pattern_t *) pattern,
-					  is_mask, extents, tx, ty);
+					  is_mask, extents, dst_device_transform, tx, ty);
     }
 }
 
@@ -1907,6 +1920,7 @@ typedef cairo_status_t
 		      const cairo_pattern_t		*src,
 		      int				 dst_x,
 		      int				 dst_y,
+		      cairo_matrix_t 			*dst_device_transform,
 		      const cairo_rectangle_int_t	*extents,
 		      cairo_region_t			*clip_region);
 
@@ -1958,6 +1972,7 @@ _create_composite_mask_pattern (cairo_clip_t                  *clip,
 			mask, PIXMAN_a8,
 			CAIRO_OPERATOR_ADD, NULL,
 			extents->x, extents->y,
+			&dst->base.device_transform,
 			extents, NULL);
     if (unlikely (status)) {
 	pixman_image_unref (mask);
@@ -2034,7 +2049,7 @@ _clip_and_composite_with_mask (cairo_clip_t                  *clip,
 	pixman_image_t *src;
 	int src_x, src_y;
 
-	src = _pixman_image_for_pattern (pattern, FALSE, extents, &src_x, &src_y);
+	src = _pixman_image_for_pattern (pattern, FALSE, extents, &dst->base.device_transform, &src_x, &src_y);
 	if (unlikely (src == NULL)) {
 	    pixman_image_unref (mask);
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -2082,6 +2097,7 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
 			       tmp, dst->pixman_format,
 			       CAIRO_OPERATOR_ADD, NULL,
 			       extents->x, extents->y,
+			       &dst->base.device_transform,
 			       extents, NULL);
     } else {
 	/* Initialize the temporary surface from the destination surface */
@@ -2098,6 +2114,7 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
 			       tmp, dst->pixman_format,
 			       op, src,
 			       extents->x, extents->y,
+			       &dst->base.device_transform,
 			       extents, NULL);
     }
     if (unlikely (status))
@@ -2181,6 +2198,7 @@ _clip_and_composite_source (cairo_clip_t                  *clip,
 			    dst->pixman_image, dst->pixman_format,
 			    CAIRO_OPERATOR_SOURCE, NULL,
 			    extents->x, extents->y,
+			    &dst->base.device_transform,
 			    extents, NULL);
 	if (unlikely (status))
 	    return status;
@@ -2196,7 +2214,7 @@ _clip_and_composite_source (cairo_clip_t                  *clip,
     if (unlikely (mask == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    src = _pixman_image_for_pattern (pattern, FALSE, extents, &src_x, &src_y);
+    src = _pixman_image_for_pattern (pattern, FALSE, extents, &dst->base.device_transform, &src_x, &src_y);
     if (unlikely (src == NULL)) {
 	pixman_image_unref (mask);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -2317,6 +2335,7 @@ _clip_and_composite (cairo_image_surface_t	*dst,
 				dst->pixman_image, dst->pixman_format,
 				op, src,
 				0, 0,
+				&dst->base.device_transform,
 				&extents->bounded,
 				clip_region);
 	}
@@ -2434,6 +2453,7 @@ _composite_traps (void                          *closure,
 		  const cairo_pattern_t         *pattern,
 		  int                            dst_x,
 		  int                            dst_y,
+		  cairo_matrix_t 		*dst_device_transform,
 		  const cairo_rectangle_int_t   *extents,
 		  cairo_region_t		*clip_region)
 {
@@ -2459,7 +2479,7 @@ _composite_traps (void                          *closure,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    src = _pixman_image_for_pattern (pattern, FALSE, extents, &src_x, &src_y);
+    src = _pixman_image_for_pattern (pattern, FALSE, extents, dst_device_transform, &src_x, &src_y);
     if (unlikely (src == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -2860,7 +2880,7 @@ _composite_unaligned_boxes (cairo_image_surface_t *dst,
     if (unlikely (status))
 	goto CLEANUP;
 
-    src = _pixman_image_for_pattern (pattern, FALSE, &extents->bounded, &src_x, &src_y);
+    src = _pixman_image_for_pattern (pattern, FALSE, &extents->bounded, &dst->base.device_transform, &src_x, &src_y);
     if (unlikely (src == NULL)) {
 	status =  _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP;
@@ -2977,7 +2997,7 @@ _composite_boxes (cairo_image_surface_t *dst,
 	}
 
 	if (pattern != NULL) {
-	    src = _pixman_image_for_pattern (pattern, FALSE, &extents->bounded, &src_x, &src_y);
+	    src = _pixman_image_for_pattern (pattern, FALSE, &extents->bounded, &dst->base.device_transform, &src_x, &src_y);
 	    if (unlikely (src == NULL))
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	} else {
@@ -3314,6 +3334,7 @@ _composite_mask (void				*closure,
 		 const cairo_pattern_t		*src_pattern,
 		 int				 dst_x,
 		 int				 dst_y,
+		 cairo_matrix_t 		*dst_device_transform,
 		 const cairo_rectangle_int_t	*extents,
 		 cairo_region_t			*clip_region)
 {
@@ -3323,11 +3344,11 @@ _composite_mask (void				*closure,
     int mask_x = 0, mask_y = 0;
 
     if (src_pattern != NULL) {
-	src = _pixman_image_for_pattern (src_pattern, FALSE, extents, &src_x, &src_y);
+	src = _pixman_image_for_pattern (src_pattern, FALSE, extents, dst_device_transform, &src_x, &src_y);
 	if (unlikely (src == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-	mask = _pixman_image_for_pattern (mask_pattern, TRUE, extents, &mask_x, &mask_y);
+	mask = _pixman_image_for_pattern (mask_pattern, TRUE, extents, dst_device_transform, &mask_x, &mask_y);
 	if (unlikely (mask == NULL)) {
 	    pixman_image_unref (src);
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -3336,7 +3357,7 @@ _composite_mask (void				*closure,
 	if (mask_pattern->has_component_alpha)
 	    pixman_image_set_component_alpha (mask, TRUE);
     } else {
-	src = _pixman_image_for_pattern (mask_pattern, FALSE, extents, &src_x, &src_y);
+	src = _pixman_image_for_pattern (mask_pattern, FALSE, extents, dst_device_transform, &src_x, &src_y);
 	if (unlikely (src == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
@@ -3412,6 +3433,7 @@ _composite_spans (void                          *closure,
 		  const cairo_pattern_t         *pattern,
 		  int                            dst_x,
 		  int                            dst_y,
+		  cairo_matrix_t 		*dst_device_transform,
 		  const cairo_rectangle_int_t   *extents,
 		  cairo_region_t		*clip_region)
 {
@@ -3495,7 +3517,7 @@ _composite_spans (void                          *closure,
 	pixman_image_t *src;
 	int src_x, src_y;
 
-	src = _pixman_image_for_pattern (pattern, FALSE, extents, &src_x, &src_y);
+	src = _pixman_image_for_pattern (pattern, FALSE, extents, dst_device_transform, &src_x, &src_y);
 	if (unlikely (src == NULL)) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto CLEANUP_RENDERER;
@@ -3786,6 +3808,7 @@ _composite_glyphs_via_mask (void			*closure,
 			    const cairo_pattern_t	*pattern,
 			    int				 dst_x,
 			    int				 dst_y,
+			    cairo_matrix_t 		*dst_device_transform,
 			    const cairo_rectangle_int_t	*extents,
 			    cairo_region_t		*clip_region)
 {
@@ -3801,7 +3824,7 @@ _composite_glyphs_via_mask (void			*closure,
     int src_x, src_y;
     int i;
 
-    src = _pixman_image_for_pattern (pattern, FALSE, extents, &src_x, &src_y);
+    src = _pixman_image_for_pattern (pattern, FALSE, extents, dst_device_transform, &src_x, &src_y);
     if (unlikely (src == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -3922,6 +3945,7 @@ _composite_glyphs (void				*closure,
 		   const cairo_pattern_t	*pattern,
 		   int				 dst_x,
 		   int				 dst_y,
+		   cairo_matrix_t 		*dst_device_transform,
 		   const cairo_rectangle_int_t	*extents,
 		   cairo_region_t		*clip_region)
 {
@@ -3934,7 +3958,7 @@ _composite_glyphs (void				*closure,
     int i;
 
     if (pattern != NULL) {
-	src = _pixman_image_for_pattern (pattern, FALSE, extents, &src_x, &src_y);
+	src = _pixman_image_for_pattern (pattern, FALSE, extents, dst_device_transform, &src_x, &src_y);
 	src_x -= dst_x;
 	src_y -= dst_y;
     } else {
@@ -4201,7 +4225,7 @@ _cairo_image_surface_composite (cairo_operator_t	 op,
 
     extents.is_bounded = _cairo_operator_bounded_by_either (op);
 
-    src = _pixman_image_for_pattern (src_pattern, FALSE, &extents.source, &src_offset_x, &src_offset_y);
+    src = _pixman_image_for_pattern (src_pattern, FALSE, &extents.source, &dst->base.device_transform, &src_offset_x, &src_offset_y);
     if (unlikely (src == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -4210,7 +4234,7 @@ _cairo_image_surface_composite (cairo_operator_t	 op,
 	pixman_image_t *mask;
 	int mask_offset_x, mask_offset_y;
 
-	mask = _pixman_image_for_pattern (mask_pattern, TRUE, &extents.mask, &mask_offset_x, &mask_offset_y);
+	mask = _pixman_image_for_pattern (mask_pattern, TRUE, &extents.mask, &dst->base.device_transform, &mask_offset_x, &mask_offset_y);
 	if (unlikely (mask == NULL)) {
 	    pixman_image_unref (src);
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -4375,6 +4399,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 			       op,
 			       &source_pattern.base,
 			       0, 0,
+			       &dst->base.device_transform,
 			       &extents.bounded,
 			       clip_region);
 
@@ -4479,7 +4504,7 @@ _cairo_image_surface_span_renderer_finish (void *abstract_renderer)
 	    return status;
     }
 
-    src = _pixman_image_for_pattern (renderer->pattern, FALSE, &rects->bounded, &src_x, &src_y);
+    src = _pixman_image_for_pattern (renderer->pattern, FALSE, &rects->bounded, &renderer->dst->base.device_transform, &src_x, &src_y);
     if (src == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 

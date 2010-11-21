@@ -249,13 +249,16 @@ _cairo_recording_surface_finish (void *abstract_surface)
 }
 
 static cairo_status_t
-_cairo_recording_surface_acquire_source_image (void			 *abstract_surface,
-					       cairo_image_surface_t	**image_out,
-					       void			**image_extra)
+_cairo_recording_surface_acquire_source_image_transformed (void			   *abstract_surface,
+							   cairo_matrix_t	   *device_transform,
+							   cairo_image_surface_t  **image_out,
+							   void			  **image_extra)
 {
     cairo_status_t status;
     cairo_recording_surface_t *surface = abstract_surface;
     cairo_surface_t *image;
+    double width;
+    double height;
 
     image = _cairo_surface_has_snapshot (&surface->base,
 					 &_cairo_image_surface_backend);
@@ -265,9 +268,10 @@ _cairo_recording_surface_acquire_source_image (void			 *abstract_surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
+    width = surface->extents.width * device_transform->xx;
+    height = surface->extents.height * device_transform->yy;
     image = _cairo_image_surface_create_with_content (surface->content,
-						      surface->extents.width,
-						      surface->extents.height);
+						      width, height);
     if (unlikely (image->status))
 	return image->status;
 
@@ -275,6 +279,8 @@ _cairo_recording_surface_acquire_source_image (void			 *abstract_surface,
 				     -surface->extents.x,
 				     -surface->extents.y);
 
+    _cairo_surface_set_device_scale (image,
+				     device_transform->xx, device_transform->yy);
     status = _cairo_recording_surface_replay (&surface->base, image);
     if (unlikely (status)) {
 	cairo_surface_destroy (image);
@@ -286,6 +292,19 @@ _cairo_recording_surface_acquire_source_image (void			 *abstract_surface,
     *image_out = (cairo_image_surface_t *) image;
     *image_extra = NULL;
     return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_recording_surface_acquire_source_image (void			 *abstract_surface,
+					       cairo_image_surface_t	**image_out,
+					       void			**image_extra)
+{
+    cairo_matrix_t identity;
+
+    cairo_matrix_init_identity (&identity);
+
+    return _cairo_recording_surface_acquire_source_image_transformed (
+	abstract_surface, &identity, image_out, image_extra);
 }
 
 static void
@@ -729,7 +748,8 @@ static const cairo_surface_backend_t cairo_recording_surface_backend = {
     NULL, /* can_repaint_solid_pattern_surface */
 
     _cairo_recording_surface_has_show_text_glyphs,
-    _cairo_recording_surface_show_text_glyphs
+    _cairo_recording_surface_show_text_glyphs,
+    _cairo_recording_surface_acquire_source_image_transformed
 };
 
 cairo_int_status_t

@@ -856,6 +856,12 @@ struct _cairo_surface_backend {
 				 cairo_text_cluster_flags_t  cluster_flags,
 				 cairo_scaled_font_t	    *scaled_font,
 				 cairo_clip_t               *clip);
+
+    cairo_warn cairo_status_t
+    (*acquire_source_image_transformed)	(void                    *abstract_surface,
+					 cairo_matrix_t		 *device_transform,
+					 cairo_image_surface_t  **image_out,
+					 void                   **image_extra);
 };
 
 #include "cairo-surface-private.h"
@@ -1759,6 +1765,12 @@ cairo_private cairo_status_t
 _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
 				     cairo_image_surface_t  **image_out,
 				     void                   **image_extra);
+
+cairo_private cairo_status_t
+_cairo_surface_acquire_source_image_transformed (cairo_surface_t         *surface,
+						 cairo_matrix_t		 *device_trasnform,
+						 cairo_image_surface_t  **image_out,
+						 void                   **image_extra);
 
 cairo_private void
 _cairo_surface_release_source_image (cairo_surface_t        *surface,
