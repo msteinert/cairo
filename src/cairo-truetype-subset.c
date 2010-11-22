@@ -1502,4 +1502,36 @@ fail:
     return status;
 }
 
+cairo_int_status_t
+_cairo_truetype_get_style (cairo_scaled_font_t  	 *scaled_font,
+			   int				 *weight,
+			   cairo_bool_t			 *bold,
+			   cairo_bool_t			 *italic)
+{
+    cairo_status_t status;
+    const cairo_scaled_font_backend_t *backend;
+    tt_os2_t os2;
+    unsigned long size;
+    uint16_t selection;
+
+    backend = scaled_font->backend;
+    if (!backend->load_truetype_table)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    size = sizeof (os2);
+    status = backend->load_truetype_table (scaled_font,
+					   TT_TAG_OS2, 0,
+					   (unsigned char *) &os2,
+					   &size);
+    if (status)
+	return status;
+
+    *weight = be16_to_cpu (os2.usWeightClass);
+    selection = be16_to_cpu (os2.fsSelection);
+    *bold = (selection & TT_FS_SELECTION_BOLD) ? TRUE : FALSE;
+    *italic = (selection & TT_FS_SELECTION_ITALIC) ? TRUE : FALSE;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 #endif /* CAIRO_HAS_FONT_SUBSET */

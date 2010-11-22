@@ -714,6 +714,29 @@ _cairo_truetype_read_font_name (cairo_scaled_font_t   *scaled_font,
 				char		     **ps_name,
 				char		     **font_name);
 
+/**
+ * _cairo_truetype_get_style:
+ * @scaled_font: the #cairo_scaled_font_t
+ * @weight: returns the font weight from the OS/2 table
+ * @bold: returns true if font is bold
+ * @italic: returns true if font is italic
+ *
+ * If the font is a truetype/opentype font with an OS/2 table, get the
+ * weight, bold, and italic data from the OS/2 table.  The weight
+ * values have the same meaning as the lfWeight field of the Windows
+ * LOGFONT structure.  Refer to the TrueType Specification for
+ * definition of the weight values.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS if successful,
+ * %CAIRO_INT_STATUS_UNSUPPORTED if the font is not TrueType/OpenType
+ * or the OS/2 table is not present.
+ **/
+cairo_private cairo_int_status_t
+_cairo_truetype_get_style (cairo_scaled_font_t  	 *scaled_font,
+			   int				 *weight,
+			   cairo_bool_t			 *bold,
+			   cairo_bool_t			 *italic);
+
 #endif /* CAIRO_HAS_FONT_SUBSET */
 
 #endif /* CAIRO_SCALED_FONT_SUBSETS_PRIVATE_H */

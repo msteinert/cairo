@@ -46,6 +46,7 @@
 
 #include "cairo-win32-private.h"
 #include "cairo-error-private.h"
+#include "cairo-scaled-font-subsets-private.h"
 
 #include <wchar.h>
 
@@ -1623,6 +1624,31 @@ exit1:
     return status;
 }
 
+static cairo_bool_t
+_cairo_win32_scaled_font_is_synthetic (void	       *abstract_font)
+{
+    cairo_win32_scaled_font_t *scaled_font = abstract_font;
+    cairo_status_t status;
+    int	weight;
+    cairo_bool_t bold;
+    cairo_bool_t italic;
+
+    status = _cairo_truetype_get_style (&scaled_font->base,
+					&weight,
+					&bold,
+					&italic);
+    /* If this doesn't work assume it is not synthetic to avoid
+     * unneccessary subsetting fallbacks. */
+    if (status != CAIRO_STATUS_SUCCESS)
+	return FALSE;
+
+    if (scaled_font->logfont.lfWeight != weight ||
+	scaled_font->logfont.lfItalic != italic)
+	return TRUE;
+
+    return FALSE;
+}
+
 static cairo_status_t
 _cairo_win32_scaled_font_init_glyph_surface (cairo_win32_scaled_font_t *scaled_font,
                                              cairo_scaled_glyph_t      *scaled_glyph)
@@ -1871,6 +1897,7 @@ const cairo_scaled_font_backend_t _cairo_win32_scaled_font_backend = {
     _cairo_win32_scaled_font_show_glyphs,
     _cairo_win32_scaled_font_load_truetype_table,
     _cairo_win32_scaled_font_index_to_ucs4,
+    _cairo_win32_scaled_font_is_synthetic
 };
 
 /* #cairo_win32_font_face_t */
