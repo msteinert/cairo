@@ -325,7 +325,11 @@ _word_wrap_stream_write (cairo_output_stream_t  *base,
 	    }
 	    if (*data != '\n')
 		_cairo_output_stream_write (stream->output, data, 1);
+	    break;
 
+	default:
+	    ASSERT_NOT_REACHED;
+	    count = length;
 	    break;
 	}
 	data += count;
