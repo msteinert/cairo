@@ -1667,7 +1667,6 @@ CLEANFILES +=					\
 	ps-surface-source.out.ps		\
 	pdf-features.pdf			\
 	pdf-mime-data.out*			\
-	ps-eps.eps				\
 	ps-features.ps				\
 	svg-clip.svg				\
 	svg-surface.svg				\
