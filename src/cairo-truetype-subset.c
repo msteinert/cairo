@@ -156,6 +156,10 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
      *   return CAIRO_INT_STATUS_UNSUPPORTED;
      */
 
+    /* We need to use a fallback font generated from the synthesized outlines. */
+    if (backend->is_synthetic (scaled_font_subset->scaled_font))
+       return CAIRO_INT_STATUS_UNSUPPORTED;
+
     size = sizeof (tt_head_t);
     status = backend->load_truetype_table (scaled_font_subset->scaled_font,
                                           TT_TAG_head, 0,

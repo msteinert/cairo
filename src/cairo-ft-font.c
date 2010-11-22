@@ -2418,6 +2418,17 @@ _cairo_ft_index_to_ucs4(void	        *abstract_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_bool_t
+_cairo_ft_is_synthetic (void	        *abstract_font)
+{
+    cairo_ft_scaled_font_t *scaled_font = abstract_font;
+
+    if (scaled_font->ft_options.extra_flags & CAIRO_FT_OPTIONS_EMBOLDEN)
+	return TRUE;
+    else
+	return FALSE;
+}
+
 static const cairo_scaled_font_backend_t _cairo_ft_scaled_font_backend = {
     CAIRO_FONT_TYPE_FT,
     _cairo_ft_scaled_font_fini,
@@ -2426,7 +2437,8 @@ static const cairo_scaled_font_backend_t _cairo_ft_scaled_font_backend = {
     _cairo_ft_ucs4_to_index,
     NULL,			/* show_glyphs */
     _cairo_ft_load_truetype_table,
-    _cairo_ft_index_to_ucs4
+    _cairo_ft_index_to_ucs4,
+    _cairo_ft_is_synthetic
 };
 
 /* #cairo_ft_font_face_t */

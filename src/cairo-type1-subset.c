@@ -1151,6 +1151,11 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
     if (_cairo_ft_scaled_font_is_vertical (scaled_font_subset->scaled_font))
         return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    /* We need to use a fallback font generated from the synthesized outlines. */
+    if (scaled_font_subset->scaled_font->backend->is_synthetic &&
+	scaled_font_subset->scaled_font->backend->is_synthetic (scaled_font_subset->scaled_font))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     unscaled_font = _cairo_ft_scaled_font_get_unscaled_font (scaled_font_subset->scaled_font);
 
     status = _cairo_type1_font_subset_init (&font, unscaled_font, scaled_font_subset, hex_encode);

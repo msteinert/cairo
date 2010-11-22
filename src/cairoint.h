@@ -515,6 +515,9 @@ struct _cairo_scaled_font_backend {
     (*index_to_ucs4)(void                       *scaled_font,
 		     unsigned long               index,
                      uint32_t                   *ucs4);
+
+    cairo_warn cairo_bool_t
+    (*is_synthetic)(void                       *scaled_font);
 };
 
 struct _cairo_font_face_backend {
