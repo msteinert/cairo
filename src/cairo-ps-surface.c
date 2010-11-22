@@ -3543,9 +3543,8 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 	if (unlikely (status))
 	    return status;
 
-	_cairo_output_stream_printf (stream, "%d %d %d %d rectfill\n",
-				     extents.bounded.x, extents.bounded.y,
-				     extents.bounded.width, extents.bounded.height);
+	_cairo_output_stream_printf (stream, "0 0 %f %f rectfill\n",
+				     surface->width, surface->height);
     }
 
     return CAIRO_STATUS_SUCCESS;
