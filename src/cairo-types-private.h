@@ -252,6 +252,11 @@ typedef struct _cairo_point_double {
     double y;
 } cairo_point_double_t;
 
+typedef struct _cairo_circle_double {
+    cairo_point_double_t center;
+    double               radius;
+} cairo_circle_double_t;
+
 typedef struct _cairo_distance_double {
     double dx;
     double dy;

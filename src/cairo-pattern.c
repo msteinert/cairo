@@ -2203,6 +2203,38 @@ _cairo_gradient_pattern_box_to_parameter (const cairo_gradient_pattern_t *gradie
     }
 }
 
+/**
+ * _cairo_gradient_pattern_interpolate
+ *
+ * Interpolate between the start and end objects of linear or radial
+ * gradients.  The interpolated object is stored in out_circle, with
+ * the radius being zero in the linear gradient case.
+ **/
+void
+_cairo_gradient_pattern_interpolate (const cairo_gradient_pattern_t *gradient,
+				     double			     t,
+				     cairo_circle_double_t	    *out_circle)
+{
+    assert (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR ||
+	    gradient->base.type == CAIRO_PATTERN_TYPE_RADIAL);
+
+#define lerp(a,b) _cairo_fixed_to_double(a)*(1-t) + _cairo_fixed_to_double(b)*t
+
+    if (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR) {
+	cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) gradient;
+	out_circle->center.x = lerp(linear->p1.x, linear->p2.x);
+	out_circle->center.y = lerp(linear->p1.y, linear->p2.y);
+	out_circle->radius = 0;
+    } else {
+	cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) gradient;
+	out_circle->center.x = lerp(radial->c1.x, radial->c2.x);
+	out_circle->center.y = lerp(radial->c1.y, radial->c2.y);
+	out_circle->radius   = lerp(radial->r1, radial->r2);
+    }
+
+#undef lerp
+}
+
 static cairo_bool_t
 _gradient_is_clear (const cairo_gradient_pattern_t *gradient,
 		    const cairo_rectangle_int_t *extents)
