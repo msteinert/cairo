@@ -2222,6 +2222,13 @@ _cairo_gradient_pattern_is_solid (const cairo_gradient_pattern_t *gradient,
 				  const cairo_rectangle_int_t *extents,
 				  cairo_color_t *color);
 
+cairo_private void
+_cairo_gradient_pattern_box_to_parameter (const cairo_gradient_pattern_t *gradient,
+					  double x0, double y0,
+					  double x1, double y1,
+					  double tolerance,
+					  double out_range[2]);
+
 cairo_private cairo_bool_t
 _cairo_pattern_is_opaque_solid (const cairo_pattern_t *pattern);
 

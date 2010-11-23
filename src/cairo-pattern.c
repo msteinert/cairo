@@ -32,6 +32,8 @@
 #include "cairo-error-private.h"
 #include "cairo-freed-pool-private.h"
 
+#include <float.h>
+
 /**
  * SECTION:cairo-pattern
  * @Title: cairo_pattern_t
@@ -1767,9 +1769,470 @@ _linear_pattern_is_degenerate (const cairo_linear_pattern_t *linear)
 static cairo_bool_t
 _radial_pattern_is_degenerate (const cairo_radial_pattern_t *radial)
 {
+    /* A radial pattern is considered degenerate if it can be
+     * represented as a solid or clear pattern.  This corresponds to
+     * one of the two cases:
+     *
+     * 1) The radii are both zero.
+     *
+     * 2) The two circles have same radius and are at the same point.
+     *    (Cylinder gradient that doesn't move with the parameter.)
+     *
+     * These checks are made in fixed point, so they're implicitly
+     * using an epsilon that is larger than the epsilons we're using
+     * in the floating point tests.
+     */
     return radial->r1 == radial->r2 &&
 	(radial->r1 == 0 /* && radial->r2 == 0 */ ||
 	 (radial->c1.x == radial->c2.x && radial->c1.y == radial->c2.y));
+}
+
+static void
+_cairo_linear_pattern_box_to_parameter (const cairo_linear_pattern_t *linear,
+					double x0, double y0,
+					double x1, double y1,
+					double range[2])
+{
+    double t0, tdx, tdy;
+    double p1x, p1y, pdx, pdy, invsqnorm;
+
+    assert (! _linear_pattern_is_degenerate (linear));
+
+    /*
+     * Linear gradients are othrogonal to the line passing through
+     * their extremes. Because of convexity, the parameter range can
+     * be computed as the convex hull (one the real line) of the
+     * parameter values of the 4 corners of the box.
+     *
+     * The parameter value t for a point (x,y) can be computed as:
+     *
+     *   t = (p2 - p1) . (x,y) / |p2 - p1|^2
+     *
+     * t0  is the t value for the top left corner
+     * tdx is the difference between left and right corners
+     * tdy is the difference between top and bottom corners
+     */
+
+    p1x = _cairo_fixed_to_double (linear->p1.x);
+    p1y = _cairo_fixed_to_double (linear->p1.y);
+    pdx = _cairo_fixed_to_double (linear->p2.x) - p1x;
+    pdy = _cairo_fixed_to_double (linear->p2.y) - p1y;
+    invsqnorm = 1.0 / (pdx * pdx + pdy * pdy);
+    pdx *= invsqnorm;
+    pdy *= invsqnorm;
+
+    t0 = (x0 - p1x) * pdx + (y0 - p1y) * pdy;
+    tdx = (x1 - x0) * pdx;
+    tdy = (y1 - y0) * pdy;
+
+    /*
+     * Because of the linearity of the t value, tdx can simply be
+     * added the t0 to move along the top edge. After this, range[0]
+     * and range[1] represent the parameter range for the top edge, so
+     * extending it to include the whole box simply requires adding
+     * tdy to the correct extreme.
+     */
+
+    range[0] = range[1] = t0;
+    if (tdx < 0)
+	range[0] += tdx;
+    else
+	range[1] += tdx;
+
+    if (tdy < 0)
+	range[0] += tdy;
+    else
+	range[1] += tdy;
+}
+
+static cairo_bool_t
+_extend_range (double range[2], double value, cairo_bool_t valid)
+{
+    if (!valid)
+	range[0] = range[1] = value;
+    else if (value < range[0])
+	range[0] = value;
+    else if (value > range[1])
+	range[1] = value;
+
+    return TRUE;
+}
+
+static void
+_cairo_radial_pattern_box_to_parameter (const cairo_radial_pattern_t *radial,
+					double x0, double y0,
+					double x1, double y1,
+					double tolerance,
+					double range[2])
+{
+    double cx, cy, cr, dx, dy, dr;
+    double a, x_focus, y_focus;
+    double mindr, minx, miny, maxx, maxy;
+    cairo_bool_t valid;
+
+    assert (! _radial_pattern_is_degenerate (radial));
+    assert (tolerance > 0);
+    assert (x0 < x1);
+    assert (y0 < y1);
+
+    range[0] = range[1] = 0;
+    valid = FALSE;
+
+    x_focus = y_focus = 0; /* silence gcc */
+
+    cx = _cairo_fixed_to_double (radial->c1.x);
+    cy = _cairo_fixed_to_double (radial->c1.y);
+    cr = _cairo_fixed_to_double (radial->r1);
+    dx = _cairo_fixed_to_double (radial->c2.x) - cx;
+    dy = _cairo_fixed_to_double (radial->c2.y) - cy;
+    dr = _cairo_fixed_to_double (radial->r2)   - cr;
+
+    /* translate by -(cx, cy) to simplify computations */
+    x0 -= cx;
+    y0 -= cy;
+    x1 -= cx;
+    y1 -= cy;
+
+    /* enlarge boundaries slightly to avoid rounding problems in the
+     * parameter range computation */
+    x0 -= DBL_EPSILON;
+    y0 -= DBL_EPSILON;
+    x1 += DBL_EPSILON;
+    y1 += DBL_EPSILON;
+
+    /* enlarge boundaries even more to avoid rounding problems when
+     * testing if a point belongs to the box */
+    minx = x0 - DBL_EPSILON;
+    miny = y0 - DBL_EPSILON;
+    maxx = x1 + DBL_EPSILON;
+    maxy = y1 + DBL_EPSILON;
+
+    /* we dont' allow negative radiuses, so we will be checking that
+     * t*dr >= mindr to consider t valid */
+    mindr = -(cr + DBL_EPSILON);
+
+    /*
+     * After the previous transformations, the start circle is
+     * centered in the origin and has radius cr. A 1-unit change in
+     * the t parameter corresponds to dx,dy,dr changes in the x,y,r of
+     * the circle (center coordinates, radius).
+     *
+     * To compute the minimum range needed to correctly draw the
+     * pattern, we start with an empty range and extend it to include
+     * the circles touching the bounding box or within it.
+     */
+
+    /*
+     * Focus, the point where the circle has radius == 0.
+     *
+     * r = cr + t * dr = 0
+     * t = -cr / dr
+     *
+     * If the radius is constant (dr == 0) there is no focus (the
+     * gradient represents a cylinder instead of a cone).
+     */
+    if (fabs (dr) >= DBL_EPSILON) {
+	double t_focus;
+
+	t_focus = -cr / dr;
+	x_focus = t_focus * dx;
+	y_focus = t_focus * dy;
+	if (minx <= x_focus && x_focus <= maxx &&
+	    miny <= y_focus && y_focus <= maxy)
+	{
+	    valid = _extend_range (range, t_focus, valid);
+	}
+    }
+
+    /*
+     * Circles externally tangent to box edges.
+     *
+     * All circles have center in (dx, dy) * t
+     *
+     * If the circle is tangent to the line defined by the edge of the
+     * box, then at least one of the following holds true:
+     *
+     *   (dx*t) + (cr + dr*t) == x0 (left   edge)
+     *   (dx*t) - (cr + dr*t) == x1 (right  edge)
+     *   (dy*t) + (cr + dr*t) == y0 (top    edge)
+     *   (dy*t) - (cr + dr*t) == y1 (bottom edge)
+     *
+     * The solution is only valid if the tangent point is actually on
+     * the edge, i.e. if its y coordinate is in [y0,y1] for left/right
+     * edges and if its x coordinate is in [x0,x1] for top/bottom
+     * edges.
+     *
+     * For the first equation:
+     *
+     *   (dx + dr) * t = x0 - cr
+     *   t = (x0 - cr) / (dx + dr)
+     *   y = dy * t
+     *
+     * in the code this becomes:
+     *
+     *   t_edge = (num) / (den)
+     *   v = (delta) * t_edge
+     *
+     * If the denominator in t is 0, the pattern is tangent to a line
+     * parallel to the edge under examination. The corner-case where
+     * the boundary line is the same as the edge is handled by the
+     * focus point case and/or by the a==0 case.
+     */
+#define T_EDGE(num,den,delta,lower,upper)				\
+    if (fabs (den) >= DBL_EPSILON) {					\
+	double t_edge, v;						\
+									\
+	t_edge = (num) / (den);						\
+	v = t_edge * (delta);						\
+	if (t_edge * dr >= mindr && (lower) <= v && v <= (upper))	\
+	    valid = _extend_range (range, t_edge, valid);		\
+    }
+
+    /* circles tangent (externally) to left/right/top/bottom edge */
+    T_EDGE (x0 - cr, dx + dr, dy, miny, maxy);
+    T_EDGE (x1 + cr, dx - dr, dy, miny, maxy);
+    T_EDGE (y0 - cr, dy + dr, dx, minx, maxx);
+    T_EDGE (y1 + cr, dy - dr, dx, minx, maxx);
+
+#undef T_EDGE
+
+    /*
+     * Circles passing through a corner.
+     *
+     * A circle passing through the point (x,y) satisfies:
+     *
+     * (x-t*dx)^2 + (y-t*dy)^2 == (cr + t*dr)^2
+     *
+     * If we set:
+     *   a = dx^2 + dy^2 - dr^2
+     *   b = x*dx + y*dy + cr*dr
+     *   c = x^2 + y^2 - cr^2
+     * we have:
+     *   a*t^2 - 2*b*t + c == 0
+     */
+    a = dx * dx + dy * dy - dr * dr;
+    if (fabs (a) < DBL_EPSILON * DBL_EPSILON) {
+	double b, maxd2;
+
+	/* Ensure that gradients with both a and dr small are
+	 * considered degenerate.
+	 * The floating point version of the degeneracy test implemented
+	 * in _radial_pattern_is_degenerate() is:
+	 *
+	 *  1) The circles are practically the same size:
+	 *     |dr| < DBL_EPSILON
+	 *  AND
+	 *  2a) The circles are both very small:
+	 *      min (r0, r1) < DBL_EPSILON
+	 *   OR
+	 *  2b) The circles are very close to each other:
+	 *      max (|dx|, |dy|) < 2 * DBL_EPSILON
+	 *
+	 * Assuming that the gradient is not degenerate, we want to
+	 * show that |a| < DBL_EPSILON^2 implies |dr| >= DBL_EPSILON.
+	 *
+	 * If the gradient is not degenerate yet it has |dr| <
+	 * DBL_EPSILON, (2b) is false, thus:
+	 *
+	 *   max (|dx|, |dy|) >= 2*DBL_EPSILON
+	 * which implies:
+	 *   4*DBL_EPSILON^2 <= max (|dx|, |dy|)^2 <= dx^2 + dy^2
+	 *
+	 * From the definition of a, we get:
+	 *   a = dx^2 + dy^2 - dr^2 < DBL_EPSILON^2
+	 *   dx^2 + dy^2 - DBL_EPSILON^2 < dr^2
+	 *   3*DBL_EPSILON^2 < dr^2
+	 *
+	 * which is inconsistent with the hypotheses, thus |dr| <
+	 * DBL_EPSILON is false or the gradient is degenerate.
+	 */
+	assert (fabs (dr) >= DBL_EPSILON);
+
+	/*
+	 * If a == 0, all the circles are tangent to a line in the
+	 * focus point. If this line is within the box extents, we
+	 * should add the circle with infinite radius, but this would
+	 * make the range unbounded, so we add the smallest circle whose
+	 * distance to the desired (degenerate) circle within the
+	 * bounding box does not exceed tolerance.
+	 *
+	 * The equation of the line is b==0, i.e.:
+	 *   x*dx + y*dy + cr*dr == 0
+	 *
+	 * We compute the intersection of the line with the box and
+	 * keep the intersection with maximum square distance (maxd2)
+	 * from the focus point.
+	 *
+	 * In the code the intersection is represented in another
+	 * coordinate system, whose origin is the focus point and
+	 * which has a u,v axes, which are respectively orthogonal and
+	 * parallel to the edge being intersected.
+	 *
+	 * The intersection is valid only if it belongs to the box,
+	 * otherwise it is ignored.
+	 *
+	 * For example:
+	 *
+	 *   y = y0
+	 *   x*dx + y0*dy + cr*dr == 0
+	 *   x = -(y0*dy + cr*dr) / dx
+	 *
+	 * which in (u,v) is:
+	 *   u = y0 - y_focus
+	 *   v = -(y0*dy + cr*dr) / dx - x_focus
+	 *
+	 * In the code:
+	 *   u = (edge) - (u_origin)
+	 *   v = -((edge) * (delta) + cr*dr) / (den) - v_focus
+	 */
+#define T_EDGE(edge,delta,den,lower,upper,u_origin,v_origin)	\
+	if (fabs (den) >= DBL_EPSILON) {			\
+	    double v;						\
+								\
+	    v = -((edge) * (delta) + cr * dr) / (den);		\
+	    if ((lower) <= v && v <= (upper)) {			\
+		double u, d2;					\
+								\
+		u = (edge) - (u_origin);			\
+		v -= (v_origin);				\
+		d2 = u*u + v*v;					\
+		if (maxd2 < d2)					\
+		    maxd2 = d2;					\
+	    }							\
+	}
+
+	maxd2 = 0;
+
+	/* degenerate circles (lines) passing through each edge */
+	T_EDGE (y0, dy, dx, minx, maxx, y_focus, x_focus);
+	T_EDGE (y1, dy, dx, minx, maxx, y_focus, x_focus);
+	T_EDGE (x0, dx, dy, miny, maxy, x_focus, y_focus);
+	T_EDGE (x1, dx, dy, miny, maxy, x_focus, y_focus);
+
+#undef T_EDGE
+
+	/*
+	 * The limit circle can be transformed rigidly to the y=0 line
+	 * and the circles tangent to it in (0,0) are:
+	 *
+	 *   x^2 + (y-r)^2 = r^2  <=>  x^2 + y^2 - 2*y*r = 0
+	 *
+	 * y is the distance from the line, in our case tolerance;
+	 * x is the distance along the line, i.e. sqrt(maxd2),
+	 * so:
+	 *
+	 *   r = cr + dr * t = (maxd2 + tolerance^2) / (2*tolerance)
+	 *   t = (r - cr) / dr =
+	 *       (maxd2 + tolerance^2 - 2*tolerance*cr) / (2*tolerance*dr)
+	 */
+	if (maxd2 > 0) {
+	    double t_limit = maxd2 + tolerance*tolerance - 2*tolerance*cr;
+	    t_limit /= 2 * tolerance * dr;
+	    valid = _extend_range (range, t_limit, valid);
+	}
+
+	/*
+	 * Nondegenerate, nonlimit circles passing through the corners.
+	 *
+	 * a == 0 && a*t^2 - 2*b*t + c == 0
+	 *
+	 * t = c / (2*b)
+	 *
+	 * The b == 0 case has just been handled, so we only have to
+	 * compute this if b != 0.
+	 */
+#define T_CORNER(x,y)							\
+	b = (x) * dx + (y) * dy + cr * dr;				\
+	if (fabs (b) >= DBL_EPSILON) {					\
+	    double t_corner;						\
+	    double x2 = (x) * (x);					\
+	    double y2 = (y) * (y);					\
+	    double cr2 = (cr) * (cr);					\
+	    double c = x2 + y2 - cr2;					\
+	    								\
+	    t_corner = 0.5 * c / b;					\
+	    if (t_corner * dr >= mindr)					\
+		valid = _extend_range (range, t_corner, valid);		\
+	}
+
+	/* circles touching each corner */
+	T_CORNER (x0, y0);
+	T_CORNER (x0, y1);
+	T_CORNER (x1, y0);
+	T_CORNER (x1, y1);
+
+#undef T_CORNER
+    } else {
+	double inva, b, c, d;
+
+	inva = 1 / a;
+
+	/*
+	 * Nondegenerate, nonlimit circles passing through the corners.
+	 *
+	 * a != 0 && a*t^2 - 2*b*t + c == 0
+	 *
+	 * t = (b +- sqrt (b*b - a*c)) / a
+	 *
+	 * If the argument of sqrt() is negative, then no circle
+	 * passes through the corner.
+	 */
+#define T_CORNER(x,y)							\
+	b = (x) * dx + (y) * dy + cr * dr;				\
+	c = (x) * (x) + (y) * (y) - cr * cr;				\
+	d = b * b - a * c;						\
+	if (d >= 0) {							\
+	    double t_corner;						\
+									\
+	    d = sqrt (d);						\
+	    t_corner = (b + d) * inva;					\
+	    if (t_corner * dr >= mindr)					\
+		valid = _extend_range (range, t_corner, valid);		\
+	    t_corner = (b - d) * inva;					\
+	    if (t_corner * dr >= mindr)					\
+		valid = _extend_range (range, t_corner, valid);		\
+	}
+
+	/* circles touching each corner */
+	T_CORNER (x0, y0);
+	T_CORNER (x0, y1);
+	T_CORNER (x1, y0);
+	T_CORNER (x1, y1);
+
+#undef T_CORNER
+    }
+}
+
+/**
+ * _cairo_gradient_pattern_box_to_parameter
+ *
+ * Compute a interpolation range sufficient to draw (within the given
+ * tolerance) the gradient in the given box getting the same result as
+ * using the (-inf, +inf) range.
+ *
+ * Assumes that the pattern is not degenerate. This can be guaranteed
+ * by simplifying it to a solid clear if _cairo_pattern_is_clear or to
+ * a solid color if _cairo_gradient_pattern_is_solid.
+ *
+ * The range isn't guaranteed to be minimal, but it tries to.
+ **/
+void
+_cairo_gradient_pattern_box_to_parameter (const cairo_gradient_pattern_t *gradient,
+					  double x0, double y0,
+					  double x1, double y1,
+					  double tolerance,
+					  double out_range[2])
+{
+    assert (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR ||
+	    gradient->base.type == CAIRO_PATTERN_TYPE_RADIAL);
+
+    if (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR) {
+	_cairo_linear_pattern_box_to_parameter ((cairo_linear_pattern_t *) gradient,
+						x0, y0, x1, y1, out_range);
+    } else {
+	_cairo_radial_pattern_box_to_parameter ((cairo_radial_pattern_t *) gradient,
+						x0, y0, x1, y1, tolerance, out_range);
+    }
 }
 
 static cairo_bool_t
