@@ -872,7 +872,7 @@ _cairo_xml_emit_type42_font (cairo_xml_t *xml,
     if (unlikely (buf == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    status = backend->load_truetype_table (scaled_font, 0, 0, buf, NULL);
+    status = backend->load_truetype_table (scaled_font, 0, 0, buf, &size);
     if (unlikely (status)) {
 	free (buf);
 	return status;
