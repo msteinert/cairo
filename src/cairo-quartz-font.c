@@ -767,7 +767,6 @@ _cairo_quartz_load_truetype_table (void	            *abstract_font,
 {
     cairo_quartz_font_face_t *font_face = _cairo_quartz_scaled_to_face (abstract_font);
     CFDataRef data = NULL;
-    CFIndex len;
 
     if (likely (CGFontCopyTableForTagPtr))
 	data = CGFontCopyTableForTagPtr (font_face->cgFont, tag);
@@ -775,20 +774,18 @@ _cairo_quartz_load_truetype_table (void	            *abstract_font,
     if (!data)
         return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (length) {
-	if (*length == 0) {
-	    *length = CFDataGetLength (data);
-	    CFRelease (data);
-	    return CAIRO_STATUS_SUCCESS;
-	}
+    if (buffer == NULL) {
+	*length = CFDataGetLength (data);
+	CFRelease (data);
+	return CAIRO_STATUS_SUCCESS;
+    }
 
-	len = *length;
-    } else
-	len = CFDataGetLength (data);
+    if (CFDataGetLength (data) < offset + (long) *length) {
+	CFRelease (data);
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
-    if (buffer)
-	CFDataGetBytes (data, CFRangeMake (offset, len), buffer);
-
+    CFDataGetBytes (data, CFRangeMake (offset, *length), buffer);
     CFRelease (data);
 
     return CAIRO_STATUS_SUCCESS;
