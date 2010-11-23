@@ -1728,38 +1728,6 @@ _cairo_pattern_reset_solid_surface_cache (void)
     CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_surface_cache_lock);
 }
 
-static void
-_extents_to_linear_parameter (const cairo_linear_pattern_t *linear,
-			      const cairo_rectangle_int_t *extents,
-			      double t[2])
-{
-    double t0, tdx, tdy;
-    double p1x, p1y, pdx, pdy, invsqnorm;
-
-    p1x = _cairo_fixed_to_double (linear->p1.x);
-    p1y = _cairo_fixed_to_double (linear->p1.y);
-    pdx = _cairo_fixed_to_double (linear->p2.x) - p1x;
-    pdy = _cairo_fixed_to_double (linear->p2.y) - p1y;
-    invsqnorm = 1.0 / (pdx * pdx + pdy * pdy);
-    pdx *= invsqnorm;
-    pdy *= invsqnorm;
-
-    t0 = (extents->x - p1x) * pdx + (extents->y - p1y) * pdy;
-    tdx = extents->width * pdx;
-    tdy = extents->height * pdy;
-
-    t[0] = t[1] = t0;
-    if (tdx < 0)
-	t[0] += tdx;
-    else
-	t[1] += tdx;
-
-    if (tdy < 0)
-	t[0] += tdy;
-    else
-	t[1] += tdy;
-}
-
 static cairo_bool_t
 _linear_pattern_is_degenerate (const cairo_linear_pattern_t *linear)
 {
@@ -2249,27 +2217,40 @@ _gradient_is_clear (const cairo_gradient_pattern_t *gradient,
 	 gradient->stops[0].offset == gradient->stops[gradient->n_stops - 1].offset))
 	return TRUE;
 
-    /* Check if the extents intersect the drawn part of the pattern. */
-    if (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR) {
-	if (gradient->base.extend == CAIRO_EXTEND_NONE) {
-	    cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) gradient;
-	    /* EXTEND_NONE degenerate linear gradients are clear */
-	    if (_linear_pattern_is_degenerate (linear))
-		return TRUE;
-
-	    if (extents != NULL) {
-		double t[2];
-		_extents_to_linear_parameter (linear, extents, t);
-		if ((t[0] <= 0.0 && t[1] <= 0.0) || (t[0] >= 1.0 && t[1] >= 1.0))
-		    return TRUE;
-	    }
-	}
-    } else {
-	cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) gradient;
+    if (gradient->base.type == CAIRO_PATTERN_TYPE_RADIAL) {
 	/* degenerate radial gradients are clear */
-	if (_radial_pattern_is_degenerate (radial))
+	if (_radial_pattern_is_degenerate ((cairo_radial_pattern_t *) gradient))
 	    return TRUE;
-	/* TODO: check actual intersection */
+    } else if (gradient->base.extend == CAIRO_EXTEND_NONE) {
+	/* EXTEND_NONE degenerate linear gradients are clear */
+	if (_linear_pattern_is_degenerate ((cairo_linear_pattern_t *) gradient))
+	    return TRUE;
+    }
+
+    /* Check if the extents intersect the drawn part of the pattern. */
+    if (extents != NULL &&
+	(gradient->base.extend == CAIRO_EXTEND_NONE ||
+	 gradient->base.type == CAIRO_PATTERN_TYPE_RADIAL))
+    {
+	double t[2];
+
+	_cairo_gradient_pattern_box_to_parameter (gradient,
+						  extents->x,
+						  extents->y,
+						  extents->x + extents->width,
+						  extents->y + extents->height,
+						  DBL_EPSILON,
+						  t);
+
+	if (gradient->base.extend == CAIRO_EXTEND_NONE &&
+	    (t[0] >= gradient->stops[gradient->n_stops - 1].offset ||
+	     t[1] <= gradient->stops[0].offset))
+	{
+		return TRUE;
+	}
+
+	if (t[0] == t[1])
+	    return TRUE;
     }
 
     for (i = 0; i < gradient->n_stops; i++)
@@ -2487,7 +2468,13 @@ _cairo_gradient_pattern_is_solid (const cairo_gradient_pattern_t *gradient,
 	    if (extents == NULL)
 		return FALSE;
 
-	    _extents_to_linear_parameter (linear, extents, t);
+	    _cairo_linear_pattern_box_to_parameter (linear,
+						    extents->x,
+						    extents->y,
+						    extents->x + extents->width,
+						    extents->y + extents->height,
+						    t);
+
 	    if (t[0] < 0.0 || t[1] > 1.0)
 		return FALSE;
 	}
@@ -2599,7 +2586,13 @@ _gradient_is_opaque (const cairo_gradient_pattern_t *gradient,
 	    if (extents == NULL)
 		return FALSE;
 
-	    _extents_to_linear_parameter (linear, extents, t);
+	    _cairo_linear_pattern_box_to_parameter (linear,
+						    extents->x,
+						    extents->y,
+						    extents->x + extents->width,
+						    extents->y + extents->height,
+						    t);
+
 	    if (t[0] < 0.0 || t[1] > 1.0)
 		return FALSE;
 	}
