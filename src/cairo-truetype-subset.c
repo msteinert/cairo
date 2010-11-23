@@ -1518,6 +1518,17 @@ _cairo_truetype_get_style (cairo_scaled_font_t  	 *scaled_font,
     if (!backend->load_truetype_table)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    size = 0;
+    status = backend->load_truetype_table (scaled_font,
+					   TT_TAG_OS2, 0,
+					   NULL,
+					   &size);
+    if (status)
+	return status;
+
+    if (size < sizeof(os2))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     size = sizeof (os2);
     status = backend->load_truetype_table (scaled_font,
 					   TT_TAG_OS2, 0,
