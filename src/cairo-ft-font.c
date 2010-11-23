@@ -2370,6 +2370,11 @@ _cairo_ft_load_truetype_table (void	       *abstract_font,
     FT_Face face;
     cairo_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
 
+    /* We don't support the FreeType feature of loading a table
+     * without specifying the size since this may overflow our
+     * buffer. */
+    assert (length != NULL);
+
     if (_cairo_ft_scaled_font_is_vertical (&scaled_font->base))
         return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -2378,9 +2383,13 @@ _cairo_ft_load_truetype_table (void	       *abstract_font,
     if (!face)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    if (FT_IS_SFNT (face) &&
-	FT_Load_Sfnt_Table (face, tag, offset, buffer, length) == 0)
-        status = CAIRO_STATUS_SUCCESS;
+    if (FT_IS_SFNT (face)) {
+	if (buffer == NULL)
+	    *length = 0;
+
+	if (FT_Load_Sfnt_Table (face, tag, offset, buffer, length) == 0)
+	    status = CAIRO_STATUS_SUCCESS;
+    }
 
     _cairo_ft_unscaled_font_unlock_face (unscaled);
 #endif

@@ -1514,6 +1514,7 @@ _cairo_win32_scaled_font_load_truetype_table (void	       *abstract_font,
     cairo_win32_scaled_font_t *scaled_font = abstract_font;
     HDC hdc;
     cairo_status_t status;
+    DWORD ret;
 
     hdc = _get_global_font_dc ();
     assert (hdc != NULL);
@@ -1523,9 +1524,11 @@ _cairo_win32_scaled_font_load_truetype_table (void	       *abstract_font,
     if (status)
 	return status;
 
-    *length = GetFontData (hdc, tag, offset, buffer, *length);
-    if (*length == GDI_ERROR)
+    ret = GetFontData (hdc, tag, offset, buffer, *length);
+    if (ret == GDI_ERROR || (buffer && ret != *length))
         status = CAIRO_INT_STATUS_UNSUPPORTED;
+    else
+	*length = ret;
 
     cairo_win32_scaled_font_done_font (&scaled_font->base);
 

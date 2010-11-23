@@ -502,6 +502,24 @@ struct _cairo_scaled_font_backend {
 			 cairo_region_t		*clip_region,
 			 int			*remaining_glyphs);
 
+    /* Read data from a sfnt font table.
+     * @scaled_font: font
+     * @tag: 4 byte table name specifying the table to read.
+     * @offset: offset into the table
+     * @buffer: buffer to write data into. Caller must ensure there is sufficient space.
+     *          If NULL, return the size of the table in @length.
+     * @length: If @buffer is NULL, the size of the table will be returned in @length.
+     *          If @buffer is not null, @length specifies the number of bytes to read.
+     *
+     * If less than @length bytes are available to read this function
+     * returns CAIRO_INT_STATUS_UNSUPPORTED. Note that requesting more
+     * bytes than are available in the table may continue reading data
+     * from the following table and return success. If this is
+     * undesirable the caller should first query the table size. If an
+     * error occurs the output value of @length is undefined.
+     *
+     * Returns CAIRO_INT_STATUS_UNSUPPORTED if not a sfnt style font or table not found.
+     */
     cairo_warn cairo_int_status_t
     (*load_truetype_table)(void		        *scaled_font,
                            unsigned long         tag,
