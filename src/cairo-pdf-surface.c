@@ -6208,7 +6208,7 @@ _cairo_pdf_surface_fill_stroke (void			*abstract_surface,
     cairo_pdf_surface_t *surface = abstract_surface;
     cairo_status_t status;
     cairo_pdf_resource_t fill_pattern_res, stroke_pattern_res, gstate_res;
-    cairo_rectangle_int_t extents;
+    cairo_composite_rectangles_t extents;
 
     /* During analysis we return unsupported and let the _fill and
      * _stroke functions that are on the fallback path do the analysis
@@ -6240,18 +6240,32 @@ _cairo_pdf_surface_fill_stroke (void			*abstract_surface,
     if (unlikely (status))
 	return status;
 
-    status = _cairo_surface_fill_extents (&surface->base,
-					  fill_op, fill_source, path, fill_rule,
-					  fill_tolerance, fill_antialias,
-					  clip, &extents);
-    if (unlikely (status))
-	return status;
+    status = _cairo_composite_rectangles_init_for_fill (&extents,
+							surface->width,
+							surface->height,
+							fill_op, fill_source, path,
+							clip);
+    if (unlikely (status)) {
+	if (status != CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    return status;
+    }
 
+    /* use the more accurate extents */
+    if (extents.is_bounded) {
+	cairo_bool_t is_empty;
+
+	_cairo_path_fixed_fill_extents (path,
+					fill_rule,
+					fill_tolerance,
+					&extents.mask);
+
+	is_empty = ! _cairo_rectangle_intersect (&extents.bounded, &extents.mask);
+    }
 
     fill_pattern_res.id = 0;
     gstate_res.id = 0;
     status = _cairo_pdf_surface_add_pdf_pattern (surface, fill_source,
-						 &extents,
+						 &extents.bounded,
 						 &fill_pattern_res,
 						 &gstate_res);
     if (unlikely (status))
@@ -6259,19 +6273,36 @@ _cairo_pdf_surface_fill_stroke (void			*abstract_surface,
 
     assert (gstate_res.id == 0);
 
-    status = _cairo_surface_stroke_extents (&surface->base,
-					    stroke_op, stroke_source, path,
-					    stroke_style, stroke_ctm, stroke_ctm_inverse,
-					    stroke_tolerance, stroke_antialias,
-					    clip, &extents);
-    if (unlikely (status))
-	return status;
+    status = _cairo_composite_rectangles_init_for_stroke (&extents,
+							  surface->width,
+							  surface->height,
+							  stroke_op, stroke_source,
+							  path, stroke_style, stroke_ctm,
+							  clip);
+    if (unlikely (status)) {
+	if (status != CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    return status;
+    }
+
+    /* use the more accurate extents */
+    if (extents.is_bounded) {
+	cairo_bool_t is_empty;
+
+	status = _cairo_path_fixed_stroke_extents (path, stroke_style,
+						   stroke_ctm, stroke_ctm_inverse,
+						   stroke_tolerance,
+						   &extents.mask);
+	if (unlikely (status))
+	    return status;
+
+	is_empty = ! _cairo_rectangle_intersect (&extents.bounded, &extents.mask);
+    }
 
     stroke_pattern_res.id = 0;
     gstate_res.id = 0;
     status = _cairo_pdf_surface_add_pdf_pattern (surface,
 						 stroke_source,
-						 &extents,
+						 &extents.bounded,
 						 &stroke_pattern_res,
 						 &gstate_res);
     if (unlikely (status))
