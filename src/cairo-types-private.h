@@ -132,9 +132,7 @@ struct _cairo_array {
     unsigned int size;
     unsigned int num_elements;
     unsigned int element_size;
-    char **elements;
-
-    cairo_bool_t is_snapshot;
+    char *elements;
 };
 
 /**

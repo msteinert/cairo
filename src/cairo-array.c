@@ -59,29 +59,6 @@ _cairo_array_init (cairo_array_t *array, int element_size)
     array->num_elements = 0;
     array->element_size = element_size;
     array->elements = NULL;
-
-    array->is_snapshot = FALSE;
-}
-
-/**
- * _cairo_array_init_snapshot:
- * @array: A #cairo_array_t to be initialized as a snapshot
- * @other: The #cairo_array_t from which to create the snapshot
- *
- * Initialize @array as an immutable copy of @other. It is an error to
- * call an array-modifying function (other than _cairo_array_fini) on
- * @array after calling this function.
- **/
-void
-_cairo_array_init_snapshot (cairo_array_t	*array,
-			    const cairo_array_t *other)
-{
-    array->size = other->size;
-    array->num_elements = other->num_elements;
-    array->element_size = other->element_size;
-    array->elements = other->elements;
-
-    array->is_snapshot = TRUE;
 }
 
 /**
@@ -95,13 +72,7 @@ _cairo_array_init_snapshot (cairo_array_t	*array,
 void
 _cairo_array_fini (cairo_array_t *array)
 {
-    if (array->is_snapshot)
-	return;
-
-    if (array->elements) {
-	free (* array->elements);
-	free (array->elements);
-    }
+    free (array->elements);
 }
 
 /**
@@ -119,8 +90,6 @@ _cairo_array_grow_by (cairo_array_t *array, unsigned int additional)
     unsigned int old_size = array->size;
     unsigned int required_size = array->num_elements + additional;
     unsigned int new_size;
-
-    assert (! array->is_snapshot);
 
     /* check for integer overflow */
     if (required_size > INT_MAX || required_size < array->num_elements)
@@ -140,16 +109,8 @@ _cairo_array_grow_by (cairo_array_t *array, unsigned int additional)
     while (new_size < required_size)
 	new_size = new_size * 2;
 
-    if (array->elements == NULL) {
-	array->elements = malloc (sizeof (char *));
-	if (unlikely (array->elements == NULL))
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-	*array->elements = NULL;
-    }
-
     array->size = new_size;
-    new_elements = _cairo_realloc_ab (*array->elements,
+    new_elements = _cairo_realloc_ab (array->elements,
 			              array->size, array->element_size);
 
     if (unlikely (new_elements == NULL)) {
@@ -157,7 +118,7 @@ _cairo_array_grow_by (cairo_array_t *array, unsigned int additional)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
-    *array->elements = new_elements;
+    array->elements = new_elements;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -173,8 +134,6 @@ _cairo_array_grow_by (cairo_array_t *array, unsigned int additional)
 void
 _cairo_array_truncate (cairo_array_t *array, unsigned int num_elements)
 {
-    assert (! array->is_snapshot);
-
     if (num_elements < array->num_elements)
 	array->num_elements = num_elements;
 }
@@ -220,7 +179,7 @@ _cairo_array_index (cairo_array_t *array, unsigned int index)
 
     assert (index < array->num_elements);
 
-    return (void *) &(*array->elements)[index * array->element_size];
+    return array->elements + index * array->element_size;
 }
 
 /**
@@ -255,8 +214,6 @@ cairo_status_t
 _cairo_array_append (cairo_array_t	*array,
 		     const void		*element)
 {
-    assert (! array->is_snapshot);
-
     return _cairo_array_append_multiple (array, element, 1);
 }
 
@@ -279,8 +236,6 @@ _cairo_array_append_multiple (cairo_array_t	*array,
 {
     cairo_status_t status;
     void *dest;
-
-    assert (! array->is_snapshot);
 
     status = _cairo_array_allocate (array, num_elements, &dest);
     if (unlikely (status))
@@ -311,15 +266,13 @@ _cairo_array_allocate (cairo_array_t	 *array,
 {
     cairo_status_t status;
 
-    assert (! array->is_snapshot);
-
     status = _cairo_array_grow_by (array, num_elements);
     if (unlikely (status))
 	return status;
 
     assert (array->num_elements + num_elements <= array->size);
 
-    *elements = &(*array->elements)[array->num_elements * array->element_size];
+    *elements = array->elements + array->num_elements * array->element_size;
 
     array->num_elements += num_elements;
 

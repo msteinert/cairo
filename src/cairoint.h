@@ -304,10 +304,6 @@ cairo_private void
 _cairo_array_init (cairo_array_t *array, int element_size);
 
 cairo_private void
-_cairo_array_init_snapshot (cairo_array_t	*array,
-			    const cairo_array_t *other);
-
-cairo_private void
 _cairo_array_fini (cairo_array_t *array);
 
 cairo_private cairo_status_t
