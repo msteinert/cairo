@@ -1,3 +1,4 @@
+/* -*- Mode: c; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 8; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2004 Red Hat, Inc
@@ -53,7 +54,7 @@
  * called to free resources allocated during use of the array.
  **/
 void
-_cairo_array_init (cairo_array_t *array, int element_size)
+_cairo_array_init (cairo_array_t *array, unsigned int element_size)
 {
     array->size = 0;
     array->num_elements = 0;
@@ -234,7 +235,9 @@ _cairo_array_index_const (const cairo_array_t *array, unsigned int index)
  * location pointed to by @dst.
  **/
 void
-_cairo_array_copy_element (cairo_array_t *array, int index, void *dst)
+_cairo_array_copy_element (const cairo_array_t *array,
+			   unsigned int         index,
+			   void                *dst)
 {
     memcpy (dst, _cairo_array_index_const (array, index), array->element_size);
 }
@@ -276,7 +279,7 @@ _cairo_array_append (cairo_array_t	*array,
 cairo_status_t
 _cairo_array_append_multiple (cairo_array_t	*array,
 			      const void	*elements,
-			      int		 num_elements)
+			      unsigned int	 num_elements)
 {
     cairo_status_t status;
     void *dest;
@@ -330,8 +333,8 @@ _cairo_array_allocate (cairo_array_t	 *array,
  *
  * This space was left intentionally blank, but gtk-doc filled it.
  **/
-int
-_cairo_array_num_elements (cairo_array_t *array)
+unsigned int
+_cairo_array_num_elements (const cairo_array_t *array)
 {
     return array->num_elements;
 }
@@ -344,8 +347,8 @@ _cairo_array_num_elements (cairo_array_t *array)
  *
  * This space was left intentionally blank, but gtk-doc filled it.
  **/
-int
-_cairo_array_size (cairo_array_t *array)
+unsigned int
+_cairo_array_size (const cairo_array_t *array)
 {
     return array->size;
 }
@@ -490,7 +493,7 @@ _cairo_user_data_array_set_data (cairo_user_data_array_t     *array,
 
 cairo_status_t
 _cairo_user_data_array_copy (cairo_user_data_array_t	*dst,
-			     cairo_user_data_array_t	*src)
+			     const cairo_user_data_array_t	*src)
 {
     /* discard any existing user-data */
     if (dst->num_elements != 0) {

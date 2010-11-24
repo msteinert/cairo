@@ -301,7 +301,7 @@ _cairo_box_intersects_line_segment (cairo_box_t *box,
 /* cairo-array.c structures and functions */
 
 cairo_private void
-_cairo_array_init (cairo_array_t *array, int element_size);
+_cairo_array_init (cairo_array_t *array, unsigned int element_size);
 
 cairo_private void
 _cairo_array_fini (cairo_array_t *array);
@@ -318,7 +318,7 @@ _cairo_array_append (cairo_array_t *array, const void *element);
 cairo_private cairo_status_t
 _cairo_array_append_multiple (cairo_array_t	*array,
 			      const void	*elements,
-			      int		 num_elements);
+			      unsigned int	 num_elements);
 
 cairo_private cairo_status_t
 _cairo_array_allocate (cairo_array_t	 *array,
@@ -332,13 +332,13 @@ cairo_private const void *
 _cairo_array_index_const (const cairo_array_t *array, unsigned int index);
 
 cairo_private void
-_cairo_array_copy_element (cairo_array_t *array, int index, void *dst);
+_cairo_array_copy_element (const cairo_array_t *array, unsigned int index, void *dst);
 
-cairo_private int
-_cairo_array_num_elements (cairo_array_t *array);
+cairo_private unsigned int
+_cairo_array_num_elements (const cairo_array_t *array);
 
-cairo_private int
-_cairo_array_size (cairo_array_t *array);
+cairo_private unsigned int
+_cairo_array_size (const cairo_array_t *array);
 
 typedef struct {
     const cairo_user_data_key_t *key;
@@ -363,8 +363,8 @@ _cairo_user_data_array_set_data (cairo_user_data_array_t     *array,
 				 cairo_destroy_func_t	      destroy);
 
 cairo_private cairo_status_t
-_cairo_user_data_array_copy (cairo_user_data_array_t	*dst,
-			     cairo_user_data_array_t	*src);
+_cairo_user_data_array_copy (cairo_user_data_array_t		*dst,
+			     const cairo_user_data_array_t	*src);
 
 cairo_private void
 _cairo_user_data_array_foreach (cairo_user_data_array_t     *array,
