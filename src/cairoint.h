@@ -328,6 +328,9 @@ _cairo_array_allocate (cairo_array_t	 *array,
 cairo_private void *
 _cairo_array_index (cairo_array_t *array, unsigned int index);
 
+cairo_private const void *
+_cairo_array_index_const (const cairo_array_t *array, unsigned int index);
+
 cairo_private void
 _cairo_array_copy_element (cairo_array_t *array, int index, void *dst);
 

@@ -183,6 +183,50 @@ _cairo_array_index (cairo_array_t *array, unsigned int index)
 }
 
 /**
+ * _cairo_array_index_const:
+ * @array: a #cairo_array_t
+ * Returns: A pointer to the object stored at @index.
+ *
+ * If the resulting value is assigned to a pointer to an object of the same
+ * element_size as initially passed to _cairo_array_init() then that
+ * pointer may be used for further direct indexing with []. For
+ * example:
+ *
+ * <informalexample><programlisting>
+ *	cairo_array_t array;
+ *	const double *values;
+ *
+ *	_cairo_array_init (&array, sizeof(double));
+ *	... calls to _cairo_array_append() here ...
+ *
+ *	values = _cairo_array_index_const (&array, 0);
+ *      for (i = 0; i < _cairo_array_num_elements (&array); i++)
+ *	    ... read values[i] here ...
+ * </programlisting></informalexample>
+ **/
+const void *
+_cairo_array_index_const (const cairo_array_t *array, unsigned int index)
+{
+    /* We allow an index of 0 for the no-elements case.
+     * This makes for cleaner calling code which will often look like:
+     *
+     *    elements = _cairo_array_index_const (array, num_elements);
+     *	  for (i=0; i < num_elements; i++) {
+     *        ... read elements[i] here ...
+     *    }
+     *
+     * which in the num_elements==0 case gets the NULL pointer here,
+     * but never dereferences it.
+     */
+    if (index == 0 && array->num_elements == 0)
+	return NULL;
+
+    assert (index < array->num_elements);
+
+    return array->elements + index * array->element_size;
+}
+
+/**
  * _cairo_array_copy_element:
  * @array: a #cairo_array_t
  *
@@ -192,7 +236,7 @@ _cairo_array_index (cairo_array_t *array, unsigned int index)
 void
 _cairo_array_copy_element (cairo_array_t *array, int index, void *dst)
 {
-    memcpy (dst, _cairo_array_index (array, index), array->element_size);
+    memcpy (dst, _cairo_array_index_const (array, index), array->element_size);
 }
 
 /**
@@ -454,11 +498,8 @@ _cairo_user_data_array_copy (cairo_user_data_array_t	*dst,
 	_cairo_user_data_array_init (dst);
     }
 
-    if (src->num_elements == 0)
-	return CAIRO_STATUS_SUCCESS;
-
     return _cairo_array_append_multiple (dst,
-					 _cairo_array_index (src, 0),
+					 _cairo_array_index_const (src, 0),
 					 src->num_elements);
 }
 
