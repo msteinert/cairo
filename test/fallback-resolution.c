@@ -444,15 +444,13 @@ preamble (cairo_test_context_t *ctx)
 	    fflush (stdout);
 
 	    if (target->force_fallbacks != NULL)
-		target->force_fallbacks (surface, ~0U);
+		target->force_fallbacks (surface, ppi[n].x, ppi[n].y);
 	    cr = cairo_create (surface);
 #if SET_TOLERANCE
 	    cairo_set_tolerance (cr, 3.0);
 #endif
 
 	    cairo_surface_set_device_offset (surface, 25, 25);
-	    cairo_surface_set_fallback_resolution (surface,
-						   ppi[n].x, ppi[n].y);
 
 	    cairo_save (cr); {
 		cairo_set_source_rgb (cr, 1, 1, 1);

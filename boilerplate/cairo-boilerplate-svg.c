@@ -253,7 +253,8 @@ _cairo_boilerplate_svg_cleanup (void *closure)
 
 static void
 _cairo_boilerplate_svg_force_fallbacks (cairo_surface_t *abstract_surface,
-					unsigned int	 flags)
+				       double		 x_pixels_per_inch,
+				       double		 y_pixels_per_inch)
 {
     svg_target_closure_t *ptc = cairo_surface_get_user_data (abstract_surface,
 							     &svg_closure_key);
@@ -267,6 +268,9 @@ _cairo_boilerplate_svg_force_fallbacks (cairo_surface_t *abstract_surface,
     paginated = (cairo_paginated_surface_t*) abstract_surface;
     surface = (cairo_svg_surface_t*) paginated->target;
     surface->force_fallbacks = TRUE;
+    cairo_surface_set_fallback_resolution (&paginated->base,
+					   x_pixels_per_inch,
+					   y_pixels_per_inch);
 }
 
 static const cairo_boilerplate_target_t targets[] = {

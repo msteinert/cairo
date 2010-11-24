@@ -128,7 +128,8 @@ typedef cairo_surface_t *
 
 typedef void
 (*cairo_boilerplate_force_fallbacks_t) (cairo_surface_t *surface,
-					unsigned int flags);
+				       double		 x_pixels_per_inch,
+				       double		 y_pixels_per_inch);
 
 typedef cairo_status_t
 (*cairo_boilerplate_finish_surface_t) (cairo_surface_t *surface);

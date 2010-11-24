@@ -219,7 +219,8 @@ _cairo_boilerplate_pdf_cleanup (void *closure)
 
 static void
 _cairo_boilerplate_pdf_force_fallbacks (cairo_surface_t *abstract_surface,
-					unsigned int	 flags)
+				       double		 x_pixels_per_inch,
+				       double		 y_pixels_per_inch)
 {
     pdf_target_closure_t *ptc = cairo_surface_get_user_data (abstract_surface,
 							     &pdf_closure_key);
@@ -233,6 +234,9 @@ _cairo_boilerplate_pdf_force_fallbacks (cairo_surface_t *abstract_surface,
     paginated = (cairo_paginated_surface_t*) abstract_surface;
     surface = (cairo_pdf_surface_t*) paginated->target;
     surface->force_fallbacks = TRUE;
+    cairo_surface_set_fallback_resolution (&paginated->base,
+					   x_pixels_per_inch,
+					   y_pixels_per_inch);
 }
 #endif
 
