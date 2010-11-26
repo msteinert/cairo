@@ -1726,6 +1726,8 @@ _cairo_pdf_surface_finish (void *abstract_surface)
 	surface->font_subsets = NULL;
     }
 
+    _cairo_surface_clipper_reset (&surface->clipper);
+
     return status;
 }
 
