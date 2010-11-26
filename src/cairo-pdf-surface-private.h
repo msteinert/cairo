@@ -67,7 +67,7 @@ typedef struct _cairo_pdf_group_resources {
 typedef struct _cairo_pdf_source_surface_entry {
     cairo_hash_entry_t base;
     unsigned int id;
-    const unsigned char *unique_id;
+    unsigned char *unique_id;
     unsigned long unique_id_length;
     cairo_bool_t interpolate;
     cairo_pdf_resource_t surface_res;

@@ -1177,7 +1177,8 @@ _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	*surface,
     surface_key.id  = source->unique_id;
     surface_key.interpolate = interpolate;
     cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_UNIQUE_ID,
-				 &surface_key.unique_id, &surface_key.unique_id_length);
+				 (const unsigned char **) &surface_key.unique_id,
+				 &surface_key.unique_id_length);
     _cairo_pdf_source_surface_init_key (&surface_key);
     surface_entry = _cairo_hash_table_lookup (surface->all_surfaces, &surface_key.base);
     if (surface_entry) {
