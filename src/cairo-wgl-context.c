@@ -153,7 +153,7 @@ _wgl_dummy_ctx (cairo_wgl_context_t *ctx)
 
     RegisterClassExA (&wincl);
 
-    ctx->dummy_wnd = CreateWindow ("cairo_wgl_context_dummy", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    ctx->dummy_wnd = CreateWindowA ("cairo_wgl_context_dummy", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     ctx->dummy_dc = GetDC (ctx->dummy_wnd);
 
     ZeroMemory (&pfd, sizeof (PIXELFORMATDESCRIPTOR));
