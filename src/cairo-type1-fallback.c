@@ -146,7 +146,7 @@ static void
 charstring_encode_command (cairo_array_t *data, int command)
 {
     cairo_status_t status;
-    int orig_size;
+    unsigned int orig_size;
     unsigned char buf[5];
     unsigned char *p = buf;
 
@@ -173,7 +173,7 @@ charstring_encode_integer (cairo_array_t *data,
                            cairo_charstring_type_t type)
 {
     cairo_status_t status;
-    int orig_size;
+    unsigned int orig_size;
     unsigned char buf[10];
     unsigned char *p = buf;
 

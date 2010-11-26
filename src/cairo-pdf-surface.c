@@ -5201,7 +5201,7 @@ _cairo_pdf_surface_write_patterns_and_smask_groups (cairo_pdf_surface_t *surface
     cairo_pdf_pattern_t pattern;
     cairo_pdf_smask_group_t *group;
     cairo_pdf_source_surface_t src_surface;
-    int pattern_index, group_index, surface_index;
+    unsigned int pattern_index, group_index, surface_index;
     cairo_status_t status;
 
     /* Writing out PDF_MASK groups will cause additional smask groups
@@ -5248,7 +5248,7 @@ _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface)
 {
     cairo_pdf_resource_t page, knockout, res;
     cairo_status_t status;
-    int i, len;
+    unsigned int i, len;
 
     _cairo_pdf_group_resources_clear (&surface->resources);
     if (surface->has_fallback_images) {

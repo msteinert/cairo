@@ -420,7 +420,7 @@ static void
 cff_index_fini (cairo_array_t *index)
 {
     cff_index_element_t *element;
-    int i;
+    unsigned int i;
 
     for (i = 0; i < _cairo_array_num_elements (index); i++) {
         element = _cairo_array_index (index, i);
