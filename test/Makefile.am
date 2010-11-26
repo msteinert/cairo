@@ -1066,6 +1066,8 @@ REFERENCE_IMAGES = \
 	rectilinear-dash.quartz.xfail.png \
 	rectilinear-dash.ref.png \
 	rectilinear-fill.ref.png \
+	rectilinear-grid.image16.ref.png \
+	rectilinear-grid.ref.png \
 	rectilinear-miter-limit.ps2.ref.png \
 	rectilinear-miter-limit.ps3.ref.png \
 	rectilinear-miter-limit.ref.png \
