@@ -207,6 +207,7 @@ test_sources = \
 	random-intersections-curves-nz.c		\
 	rectangle-rounding-error.c			\
 	rectilinear-fill.c				\
+	rectilinear-grid.c				\
 	rectilinear-miter-limit.c			\
 	rectilinear-dash.c				\
 	rectilinear-stroke.c				\
