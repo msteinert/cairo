@@ -131,6 +131,7 @@ typedef struct _cairo_cff_font {
     char                *subset_font_name;
     cairo_array_t        charstrings_subset_index;
     cairo_array_t        strings_subset_index;
+    int			 euro_sid;
     int                 *fdselect_subset;
     unsigned int         num_subset_fontdicts;
     int                 *fd_subset_map;
@@ -1247,6 +1248,33 @@ cairo_cff_font_subset_strings (cairo_cff_font_t *font)
     return status;
 }
 
+/* The Euro is the only the only character in the winansi encoding
+ * with a glyph name that is not a CFF standard string. As the strings
+ * are written before the charset, we need to check during the
+ * subsetting phase if the Euro glyph is required and add the
+ * glyphname to the list of strings to write out.
+ */
+static cairo_status_t
+cairo_cff_font_subset_charset_strings (cairo_cff_font_t *font)
+{
+    cairo_status_t status;
+    unsigned int i;
+    int ch;
+    const char *euro = "Euro";
+
+    for (i = 1; i < font->scaled_font_subset->num_glyphs; i++) {
+	ch = font->scaled_font_subset->to_latin_char[i];
+	if (ch == 128) {
+	    font->euro_sid = NUM_STD_STRINGS + _cairo_array_num_elements (&font->strings_subset_index);
+	    status = cff_index_append_copy (&font->strings_subset_index,
+					    (unsigned char *)euro, strlen(euro));
+	    return status;
+	}
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_status_t
 cairo_cff_font_subset_font (cairo_cff_font_t  *font)
 {
@@ -1278,6 +1306,9 @@ cairo_cff_font_subset_font (cairo_cff_font_t  *font)
     status = cairo_cff_font_subset_strings (font);
     if (unlikely (status))
         return status;
+
+    if (font->scaled_font_subset->is_latin)
+	status = cairo_cff_font_subset_charset_strings (font);
 
     return status;
 }
@@ -1500,12 +1531,10 @@ static const int winansi_to_cff_std_string[] = {
     147, 225, 222, 223, 224, 226, 162, 227,
 };
 
-static cairo_status_t
-cairo_cff_font_get_sid_for_winansi_char (cairo_cff_font_t  *font, int ch, int *sid_out)
+static int
+cairo_cff_font_get_sid_for_winansi_char (cairo_cff_font_t  *font, int ch)
 {
     int sid;
-    cairo_status_t status;
-    const char *euro = "Euro";
 
     if (ch == 39) {
 	sid = 104;
@@ -1517,11 +1546,8 @@ cairo_cff_font_get_sid_for_winansi_char (cairo_cff_font_t  *font, int ch, int *s
 	sid = ch - 31;
 
     } else if (ch == 128) {
-	sid = NUM_STD_STRINGS + _cairo_array_num_elements (&font->strings_subset_index);
-	status = cff_index_append_copy (&font->strings_subset_index,
-					(unsigned char *)euro, strlen(euro));
-	if (unlikely (status))
-	    return status;
+	assert (font->euro_sid >= NUM_STD_STRINGS);
+	sid = font->euro_sid;
 
     } else if (ch >= 128 && ch <= 255) {
 	sid = winansi_to_cff_std_string[ch - 128];
@@ -1530,9 +1556,7 @@ cairo_cff_font_get_sid_for_winansi_char (cairo_cff_font_t  *font, int ch, int *s
 	sid = 0;
     }
 
-    *sid_out = sid;
-
-    return CAIRO_STATUS_SUCCESS;
+    return sid;
 }
 
 static cairo_status_t
@@ -1551,7 +1575,7 @@ cairo_cff_font_write_type1_charset (cairo_cff_font_t  *font)
 
     for (i = 1; i < font->scaled_font_subset->num_glyphs; i++) {
 	ch = font->scaled_font_subset->to_latin_char[i];
-	status = cairo_cff_font_get_sid_for_winansi_char (font, ch, &sid);
+	sid = cairo_cff_font_get_sid_for_winansi_char (font, ch);
         if (unlikely (status))
 	    return status;
 
@@ -2021,6 +2045,7 @@ _cairo_cff_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     cff_index_init (&font->local_sub_index);
     cff_index_init (&font->charstrings_subset_index);
     cff_index_init (&font->strings_subset_index);
+    font->euro_sid = 0;
     font->fdselect = NULL;
     font->fd_dict = NULL;
     font->fd_private_dict = NULL;
