@@ -2391,6 +2391,7 @@ _clip_and_composite (cairo_xcb_surface_t	*dst,
 {
     cairo_status_t status;
     cairo_region_t *clip_region = NULL;
+    cairo_region_t extents_region;
     cairo_bool_t need_clip_surface = FALSE;
 
     if (clip != NULL) {
@@ -2414,6 +2415,14 @@ _clip_and_composite (cairo_xcb_surface_t	*dst,
 	    if (unlikely (is_empty && extents->is_bounded))
 		return CAIRO_STATUS_SUCCESS;
 	}
+    } else if (!extents->is_bounded) {
+	/* The X server will estimate the affected region of the unbounded
+	 * operation and will apply the operation to that rectangle.
+	 * However, there are cases where this estimate is too high (e.g.
+	 * the test suite's clip-fill-{eo,nz}-unbounded tests).
+	 */
+	_cairo_region_init_rectangle (&extents_region, &extents->unbounded);
+	clip_region = &extents_region;
     }
 
     status = _cairo_xcb_connection_acquire (dst->connection);
@@ -2482,6 +2491,8 @@ _clip_and_composite (cairo_xcb_surface_t	*dst,
 
     if (clip_region != NULL)
 	_cairo_xcb_surface_clear_clip_region (dst);
+    if (clip_region == &extents_region)
+	_cairo_region_fini (&extents_region);
 
     _cairo_xcb_connection_release (dst->connection);
 
