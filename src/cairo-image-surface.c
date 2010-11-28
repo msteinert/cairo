@@ -1322,13 +1322,15 @@ _pixel_to_solid (cairo_image_surface_t *image, int x, int y)
 
     case CAIRO_FORMAT_A1:
 	pixel = *(uint8_t *) (image->data + y * image->stride + x/8);
-	return pixel & (1 << (x&7)) ? _pixman_white_image () : _pixman_transparent_image ();
+	return pixel & (1 << (x&7)) ? _pixman_black_image () : _pixman_transparent_image ();
 
     case CAIRO_FORMAT_A8:
 	color.alpha = *(uint8_t *) (image->data + y * image->stride + x);
 	color.alpha |= color.alpha << 8;
 	if (color.alpha == 0)
 	    return _pixman_transparent_image ();
+	if (color.alpha == 0xffff)
+	    return _pixman_black_image ();
 
 	color.red = color.green = color.blue = 0;
 	return pixman_image_create_solid_fill (&color);
