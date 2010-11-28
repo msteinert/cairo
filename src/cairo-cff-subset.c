@@ -1255,7 +1255,7 @@ cairo_cff_font_subset_strings (cairo_cff_font_t *font)
  * glyphname to the list of strings to write out.
  */
 static cairo_status_t
-cairo_cff_font_subset_charset_strings (cairo_cff_font_t *font)
+cairo_cff_font_add_euro_charset_string (cairo_cff_font_t *font)
 {
     cairo_status_t status;
     unsigned int i;
@@ -1308,7 +1308,7 @@ cairo_cff_font_subset_font (cairo_cff_font_t  *font)
         return status;
 
     if (font->scaled_font_subset->is_latin)
-	status = cairo_cff_font_subset_charset_strings (font);
+	status = cairo_cff_font_add_euro_charset_string (font);
 
     return status;
 }
@@ -2516,6 +2516,9 @@ cairo_cff_font_fallback_generate (cairo_cff_font_t           *font,
         if (unlikely (status))
             return status;
     }
+
+    if (font->scaled_font_subset->is_latin)
+	status = cairo_cff_font_add_euro_charset_string (font);
 
     status = cairo_cff_font_write_subset (font);
     if (unlikely (status))
