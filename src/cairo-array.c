@@ -167,7 +167,7 @@ _cairo_array_index (cairo_array_t *array, unsigned int index)
     /* We allow an index of 0 for the no-elements case.
      * This makes for cleaner calling code which will often look like:
      *
-     *    elements = _cairo_array_index (array, num_elements);
+     *    elements = _cairo_array_index (array, 0);
      *	  for (i=0; i < num_elements; i++) {
      *        ... use elements[i] here ...
      *    }
@@ -211,7 +211,7 @@ _cairo_array_index_const (const cairo_array_t *array, unsigned int index)
     /* We allow an index of 0 for the no-elements case.
      * This makes for cleaner calling code which will often look like:
      *
-     *    elements = _cairo_array_index_const (array, num_elements);
+     *    elements = _cairo_array_index_const (array, 0);
      *	  for (i=0; i < num_elements; i++) {
      *        ... read elements[i] here ...
      *    }
