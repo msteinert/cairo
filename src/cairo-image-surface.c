@@ -2692,7 +2692,13 @@ _fill_unaligned_boxes (cairo_image_surface_t *dst,
 			     x1, y1, x2 - x1, y2 - y1,
 			     pixel);
 
-		/* top */
+		/*
+		 * Corners have to be included only once if the rects
+		 * are passed to the rectangular scan converter
+		 * because it can only handle disjoint rectangles.
+		*/
+
+		/* top (including top-left and top-right corners) */
 		if (! _cairo_fixed_is_integer (box[i].p1.y)) {
 		    b.p1.x = box[i].p1.x;
 		    b.p1.y = box[i].p1.y;
@@ -2704,31 +2710,31 @@ _fill_unaligned_boxes (cairo_image_surface_t *dst,
 			goto CLEANUP_CONVERTER;
 		}
 
-		/* left */
+		/* left (no corners) */
 		if (! _cairo_fixed_is_integer (box[i].p1.x)) {
 		    b.p1.x = box[i].p1.x;
-		    b.p1.y = box[i].p1.y;
+		    b.p1.y = _cairo_fixed_from_int (y1);
 		    b.p2.x = _cairo_fixed_from_int (x1);
-		    b.p2.y = box[i].p2.y;
+		    b.p2.y = _cairo_fixed_from_int (y2);
 
 		    status = _cairo_rectangular_scan_converter_add_box (&converter, &b, 1);
 		    if (unlikely (status))
 			goto CLEANUP_CONVERTER;
 		}
 
-		/* right */
+		/* right (no corners) */
 		if (! _cairo_fixed_is_integer (box[i].p2.x)) {
 		    b.p1.x = _cairo_fixed_from_int (x2);
-		    b.p1.y = box[i].p1.y;
+		    b.p1.y = _cairo_fixed_from_int (y1);
 		    b.p2.x = box[i].p2.x;
-		    b.p2.y = box[i].p2.y;
+		    b.p2.y = _cairo_fixed_from_int (y2);
 
 		    status = _cairo_rectangular_scan_converter_add_box (&converter, &b, 1);
 		    if (unlikely (status))
 			goto CLEANUP_CONVERTER;
 		}
 
-		/* bottom */
+		/* bottom (including bottom-left and bottom-right corners) */
 		if (! _cairo_fixed_is_integer (box[i].p2.y)) {
 		    b.p1.x = box[i].p1.x;
 		    b.p1.y = _cairo_fixed_from_int (y2);
