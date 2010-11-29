@@ -1156,13 +1156,6 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
     cairo_filter_t filter;
     cairo_status_t status;
 
-    if (source->is_clear) {
-        if (source->content & CAIRO_CONTENT_ALPHA)
-	    return _cairo_xcb_transparent_picture (target);
-        else
-            return _cairo_xcb_black_picture (target);
-    }
-
     {
 	cairo_xcb_surface_t *snapshot;
 
