@@ -154,6 +154,7 @@ REFERENCE_IMAGES = \
 	alpha-similar.svg.argb32.xfail.png \
 	alpha-similar.svg.rgb24.xfail.png \
 	api-special-cases.ref.png \
+	arc-infinite-loop.ref.png \
 	arc-looping-dash.image16.ref.png \
 	arc-looping-dash.ps.ref.png \
 	arc-looping-dash.ref.png \
