@@ -313,12 +313,14 @@ cairo_beos_cxx_sources = cairo-beos-surface.cpp
 
 cairo_gl_headers = cairo-gl.h
 cairo_gl_private = cairo-gl-private.h \
+		   cairo-gl-dispatch-private.h \
 		   cairo-gl-gradient-private.h \
 		   glew/GL/glew.h \
 		   glew/GL/glxew.h
 
 cairo_gl_sources = cairo-gl-composite.c \
 		   cairo-gl-device.c \
+		   cairo-gl-dispatch.c \
 		   cairo-gl-glyphs.c \
 		   cairo-gl-gradient.c \
 		   cairo-gl-info.c \

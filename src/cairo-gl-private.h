@@ -175,6 +175,59 @@ typedef struct cairo_gl_operand {
     unsigned int vertex_offset;
 } cairo_gl_operand_t;
 
+typedef void (*cairo_gl_generic_func_t)(void);
+typedef cairo_gl_generic_func_t (*cairo_gl_get_proc_addr_func_t)(const char *procname);
+
+typedef struct _cairo_gl_dispatch {
+    /* Buffers */
+    void (*GenBuffers) (GLsizei n, GLuint *buffers);
+    void (*BindBuffer) (GLenum target, GLuint buffer);
+    void (*BufferData) (GLenum target, GLsizeiptr size,
+			  const GLvoid* data, GLenum usage);
+    GLvoid *(*MapBuffer) (GLenum target, GLenum access);
+    GLboolean (*UnmapBuffer) (GLenum target);
+
+    /* Shaders */
+    GLuint (*CreateShader) (GLenum type);
+    void (*ShaderSource) (GLuint shader, GLsizei count,
+			    const GLchar** string, const GLint* length);
+    void (*CompileShader) (GLuint shader);
+    void (*GetShaderiv) (GLuint shader, GLenum pname, GLint *params);
+    void (*GetShaderInfoLog) (GLuint shader, GLsizei bufSize,
+				GLsizei *length, GLchar *infoLog);
+    void (*DeleteShader) (GLuint shader);
+
+    /* Programs */
+    GLuint (*CreateProgram) (void);
+    void (*AttachShader) (GLuint program, GLuint shader);
+    void (*DeleteProgram) (GLuint program);
+    void (*LinkProgram) (GLuint program);
+    void (*UseProgram) (GLuint program);
+    void (*GetProgramiv) (GLuint program, GLenum pname, GLint *params);
+    void (*GetProgramInfoLog) (GLuint program, GLsizei bufSize,
+				 GLsizei *length, GLchar *infoLog);
+
+    /* Uniforms */
+    GLint (*GetUniformLocation) (GLuint program, const GLchar* name);
+    void (*Uniform1f) (GLint location, GLfloat x);
+    void (*Uniform2f) (GLint location, GLfloat x, GLfloat y);
+    void (*Uniform3f) (GLint location, GLfloat x, GLfloat y, GLfloat z);
+    void (*Uniform4f) (GLint location, GLfloat x, GLfloat y, GLfloat z,
+			 GLfloat w);
+    void (*UniformMatrix3fv) (GLint location, GLsizei count,
+				GLboolean transpose, const GLfloat *value);
+    void (*Uniform1i) (GLint location, GLint x);
+
+    /* Framebuffer objects */
+    void (*GenFramebuffers) (GLsizei n, GLuint* framebuffers);
+    void (*BindFramebuffer) (GLenum target, GLuint framebuffer);
+    void (*FramebufferTexture2D) (GLenum target, GLenum attachment,
+				    GLenum textarget, GLuint texture,
+				    GLint level);
+    GLenum (*CheckFramebufferStatus) (GLenum target);
+    void (*DeleteFramebuffers) (GLsizei n, const GLuint* framebuffers);
+} cairo_gl_dispatch_t;
+
 struct _cairo_gl_context {
     cairo_device_t base;
 
@@ -488,6 +541,11 @@ _cairo_gl_get_version (void);
 
 cairo_private cairo_bool_t
 _cairo_gl_has_extension (const char *ext);
+
+cairo_private cairo_status_t
+_cairo_gl_dispatch_init(cairo_gl_dispatch_t *dispatch,
+			cairo_gl_get_proc_addr_func_t get_proc_addr);
+
 
 slim_hidden_proto (cairo_gl_surface_create);
 slim_hidden_proto (cairo_gl_surface_create_for_texture);
