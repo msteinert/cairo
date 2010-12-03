@@ -262,6 +262,8 @@ struct _cairo_gl_context {
     unsigned int vertex_size;
     cairo_region_t *clip_region;
 
+    cairo_gl_dispatch_t dispatch;
+
     void (*acquire) (void *ctx);
     void (*release) (void *ctx);
 

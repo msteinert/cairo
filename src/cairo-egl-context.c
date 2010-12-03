@@ -179,6 +179,12 @@ cairo_egl_device_create (EGLDisplay dpy, EGLContext egl)
 	}
     }
 
+    status = _cairo_gl_dispatch_init (&ctx->base.dispatch, eglGetProcAddress);
+    if (unlikely (status)) {
+	free (ctx);
+	return _cairo_gl_context_create_in_error (status);
+    }
+
     status = _cairo_gl_context_init (&ctx->base);
     if (unlikely (status)) {
 	if (ctx->dummy_surface != EGL_NO_SURFACE)

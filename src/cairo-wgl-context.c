@@ -199,6 +199,13 @@ cairo_wgl_device_create (HGLRC rc)
     ctx->base.swap_buffers = _wgl_swap_buffers;
     ctx->base.destroy = _wgl_destroy;
 
+    status = _cairo_gl_dispatch_init (&ctx->base.dispatch,
+				      (cairo_gl_get_proc_addr_func_t) wglGetProcAddress);
+    if (unlikely (status)) {
+	free (ctx);
+	return _cairo_gl_context_create_in_error (status);
+    }
+
     status = _cairo_gl_context_init (&ctx->base);
     if (unlikely (status)) {
         free (ctx);
