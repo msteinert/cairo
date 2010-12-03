@@ -321,6 +321,7 @@ cairo_gl_sources = cairo-gl-composite.c \
 		   cairo-gl-device.c \
 		   cairo-gl-glyphs.c \
 		   cairo-gl-gradient.c \
+		   cairo-gl-info.c \
 		   cairo-gl-shaders.c \
 		   cairo-gl-surface.c
 if BUILD_PRIVATE_GLEW

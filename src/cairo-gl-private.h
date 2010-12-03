@@ -73,6 +73,10 @@
 #define UNSUPPORTED(reason) CAIRO_INT_STATUS_UNSUPPORTED
 #endif
 
+#define CAIRO_GL_VERSION_ENCODE(major, minor) (	\
+	  ((major) * 256)			\
+	+ ((minor) *   1))
+
 /* maximal number of shaders we keep in the cache.
  * Random number that is hopefully big enough to not cause many cache evictions. */
 #define CAIRO_GL_MAX_SHADERS_PER_CONTEXT 64
@@ -478,6 +482,12 @@ _cairo_gl_set_shader (cairo_gl_context_t *ctx,
 
 cairo_private void
 _cairo_gl_shader_fini (cairo_gl_context_t *ctx, cairo_gl_shader_t *shader);
+
+cairo_private int
+_cairo_gl_get_version (void);
+
+cairo_private cairo_bool_t
+_cairo_gl_has_extension (const char *ext);
 
 slim_hidden_proto (cairo_gl_surface_create);
 slim_hidden_proto (cairo_gl_surface_create_for_texture);
