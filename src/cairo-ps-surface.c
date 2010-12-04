@@ -1779,6 +1779,8 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
 				     const cairo_pattern_t       *pattern,
 				     const cairo_rectangle_int_t *extents)
 {
+    double min_alpha;
+
     if (surface->force_fallbacks &&
 	surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
     {
@@ -1823,7 +1825,11 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
 								       surface_pattern);
     }
 
-    if (_cairo_pattern_is_opaque (pattern, extents))
+    /* Patterns whose drawn part is opaque are directly supported;
+       those whose drawn part is partially transparent can be
+       supported by flattening the alpha. */
+    _cairo_pattern_alpha_range (pattern, &min_alpha, NULL);
+    if (CAIRO_ALPHA_IS_OPAQUE (min_alpha))
 	return CAIRO_STATUS_SUCCESS;
 
     return CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
