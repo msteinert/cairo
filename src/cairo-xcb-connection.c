@@ -540,13 +540,6 @@ _device_finish (void *device)
 	_cairo_xcb_screen_finish (screen);
     }
 
-    if (connection->has_socket) {
-	/* Send a request so that xcb takes the socket from us, preventing
-	 * a later use-after-free on shutdown of the connection.
-	 */
-	xcb_no_operation (connection->xcb_connection);
-    }
-
     if (was_cached)
 	cairo_device_destroy (device);
 }
@@ -624,7 +617,6 @@ _cairo_xcb_connection_get (xcb_connection_t *xcb_connection)
     _cairo_device_init (&connection->device, &_cairo_xcb_device_backend);
 
     connection->xcb_connection = xcb_connection;
-    connection->has_socket = FALSE;
 
     cairo_list_init (&connection->fonts);
     cairo_list_init (&connection->screens);
@@ -785,39 +777,6 @@ _cairo_xcb_connection_get_xid (cairo_xcb_connection_t *connection)
     }
 
     return xid;
-}
-
-static void
-_cairo_xcb_return_socket (void *closure)
-{
-    cairo_xcb_connection_t *connection = closure;
-
-    CAIRO_MUTEX_LOCK (connection->device.mutex);
-    connection->has_socket = FALSE;
-    CAIRO_MUTEX_UNLOCK (connection->device.mutex);
-}
-
-cairo_status_t
-_cairo_xcb_connection_take_socket (cairo_xcb_connection_t *connection)
-{
-    assert (CAIRO_MUTEX_IS_LOCKED (connection->device.mutex));
-
-    if (unlikely (connection->device.status))
-	return connection->device.status;
-
-    if (! connection->has_socket) {
-	if (! xcb_take_socket (connection->xcb_connection,
-			       _cairo_xcb_return_socket,
-			       connection,
-			       0, &connection->seqno))
-	{
-	    return connection->device.status = _cairo_error (CAIRO_STATUS_WRITE_ERROR);
-	}
-
-	connection->has_socket = TRUE;
-    }
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 /* public (debug) interface */

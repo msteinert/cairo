@@ -66,7 +66,7 @@ struct _cairo_xcb_shm_info {
     cairo_xcb_connection_t *connection;
     uint32_t shm;
     uint32_t offset;
-    uint64_t seqno;
+    unsigned int seqno;
     void *mem;
     cairo_xcb_shm_mem_pool_t *pool;
 };
@@ -170,7 +170,6 @@ struct _cairo_xcb_connection {
     cairo_device_t device;
 
     xcb_connection_t *xcb_connection;
-    cairo_bool_t has_socket;
 
     xcb_render_pictformat_t standard_formats[5];
     cairo_hash_table_t *xrender_formats;
@@ -183,7 +182,6 @@ struct _cairo_xcb_connection {
     const xcb_query_extension_reply_t *render;
     const xcb_query_extension_reply_t *shm;
     const xcb_query_extension_reply_t *dri2;
-    uint64_t seqno;
 
     cairo_list_t free_xids;
     cairo_freepool_t xid_pool;
@@ -245,9 +243,6 @@ _cairo_xcb_connection_acquire (cairo_xcb_connection_t *connection)
 {
     return cairo_device_acquire (&connection->device);
 }
-
-cairo_private cairo_status_t
-_cairo_xcb_connection_take_socket (cairo_xcb_connection_t *connection);
 
 cairo_private uint32_t
 _cairo_xcb_connection_get_xid (cairo_xcb_connection_t *connection);
@@ -451,19 +446,6 @@ _cairo_xcb_surface_core_fill_boxes (cairo_xcb_surface_t *dst,
 				    const cairo_color_t	*color,
 				    cairo_boxes_t *boxes);
 
-static inline void
-_cairo_xcb_connection_write (cairo_xcb_connection_t *connection,
-			     struct iovec *vec,
-			     int count)
-{
-    if (unlikely (connection->device.status))
-	return;
-
-    connection->seqno++;
-    if (unlikely (! xcb_writev (connection->xcb_connection, vec, count, 1)))
-	connection->device.status = _cairo_error (CAIRO_STATUS_WRITE_ERROR);
-}
-
 cairo_private xcb_pixmap_t
 _cairo_xcb_connection_create_pixmap (cairo_xcb_connection_t *connection,
 				     uint8_t depth,
@@ -552,7 +534,7 @@ _cairo_xcb_connection_shm_attach (cairo_xcb_connection_t *connection,
 				  uint32_t id,
 				  cairo_bool_t readonly);
 
-cairo_private uint64_t
+cairo_private unsigned int
 _cairo_xcb_connection_shm_put_image (cairo_xcb_connection_t *connection,
 				     xcb_drawable_t dst,
 				     xcb_gcontext_t gc,

@@ -541,8 +541,7 @@ _cairo_xcb_shm_info_destroy (cairo_xcb_shm_info_t *shm_info)
     _cairo_freepool_free (&connection->shm_info_freelist, shm_info);
 
     /* scan for old, unused pools - hold at least one in reserve */
-    if (! cairo_list_is_singular (&connection->shm_pools) &&
-	_cairo_xcb_connection_take_socket (connection) == CAIRO_STATUS_SUCCESS)
+    if (! cairo_list_is_singular (&connection->shm_pools))
     {
 	cairo_xcb_shm_mem_pool_t *pool, *next;
 	cairo_list_t head;

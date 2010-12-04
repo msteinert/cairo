@@ -41,35 +41,12 @@ _cairo_xcb_connection_shm_attach (cairo_xcb_connection_t *connection,
 				  uint32_t id,
 				  cairo_bool_t readonly)
 {
-    struct {
-	uint8_t req;
-	uint8_t shm_req;
-	uint16_t length;
-	uint32_t segment;
-	uint32_t id;
-	uint8_t readonly;
-	uint8_t pad1;
-	uint16_t pad2;
-    } req;
-    struct iovec vec[1];
-
-    COMPILE_TIME_ASSERT (sizeof (req) == 16);
-
-    req.req = connection->shm->major_opcode;
-    req.shm_req = 1;
-    req.length = sizeof (req) >> 2;
-    req.segment = _cairo_xcb_connection_get_xid (connection);
-    req.id = id;
-    req.readonly = readonly;
-
-    vec[0].iov_base = &req;
-    vec[0].iov_len = sizeof (req);
-
-    _cairo_xcb_connection_write (connection, vec, 1);
-    return req.segment;
+    uint32_t segment = _cairo_xcb_connection_get_xid (connection);
+    xcb_shm_attach (connection->xcb_connection, segment, id, readonly);
+    return segment;
 }
 
-uint64_t
+unsigned int
 _cairo_xcb_connection_shm_put_image (cairo_xcb_connection_t *connection,
 				     xcb_drawable_t dst,
 				     xcb_gcontext_t gc,
@@ -85,53 +62,11 @@ _cairo_xcb_connection_shm_put_image (cairo_xcb_connection_t *connection,
 				     uint32_t shm,
 				     uint32_t offset)
 {
-    struct {
-	uint8_t req;
-	uint8_t shm_req;
-	uint16_t len;
-	uint32_t dst;
-	uint32_t gc;
-	uint16_t total_width;
-	uint16_t total_height;
-	int16_t src_x;
-	int16_t src_y;
-	uint16_t src_width;
-	uint16_t src_height;
-	int16_t dst_x;
-	int16_t dst_y;
-	uint8_t depth;
-	uint8_t format;
-	uint8_t send_event;
-	uint8_t pad;
-	uint32_t shm;
-	uint32_t offset;
-    } req;
-    struct iovec vec[2];
-
-    req.req = connection->shm->major_opcode;
-    req.shm_req = 3;
-    req.len = sizeof (req) >> 2;
-    req.dst = dst;
-    req.gc = gc;
-    req.total_width = total_width;
-    req.total_height = total_height;
-    req.src_x = src_x;
-    req.src_y = src_y;
-    req.src_width = width;
-    req.src_height = height;
-    req.dst_x = dst_x;
-    req.dst_y = dst_y;
-    req.depth = depth;
-    req.format = XCB_IMAGE_FORMAT_Z_PIXMAP;
-    req.send_event = 0;
-    req.shm = shm;
-    req.offset = offset;
-
-    vec[0].iov_base = &req;
-    vec[0].iov_len = sizeof (req);
-
-    _cairo_xcb_connection_write (connection, vec, 1);
-    return connection->seqno;
+    xcb_void_cookie_t cookie;
+    cookie = xcb_shm_put_image (connection->xcb_connection, dst, gc, total_width, total_height,
+				src_x, src_y, width, height, dst_x, dst_y, depth,
+				XCB_IMAGE_FORMAT_Z_PIXMAP, 0, shm, offset);
+    return cookie.sequence;
 }
 
 cairo_status_t
@@ -164,31 +99,13 @@ _cairo_xcb_connection_shm_get_image (cairo_xcb_connection_t *connection,
 	return _cairo_error (CAIRO_STATUS_READ_ERROR);
     }
 
-    return _cairo_xcb_connection_take_socket (connection);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 void
 _cairo_xcb_connection_shm_detach (cairo_xcb_connection_t *connection,
 				  uint32_t segment)
 {
-    struct {
-	uint8_t req;
-	uint8_t shm_req;
-	uint16_t length;
-	uint32_t segment;
-    } req;
-    struct iovec vec[1];
-
-    COMPILE_TIME_ASSERT (sizeof (req) == 8);
-
-    req.req = connection->shm->major_opcode;
-    req.shm_req = 2;
-    req.length = sizeof (req) >> 2;
-    req.segment = segment;
-
-    vec[0].iov_base = &req;
-    vec[0].iov_len = sizeof (req);
-
-    _cairo_xcb_connection_write (connection, vec, 1);
+    xcb_shm_detach (connection->xcb_connection, segment);
     _cairo_xcb_connection_put_xid (connection, segment);
 }

@@ -115,8 +115,7 @@ _cairo_xcb_picture_finish (void *abstract_surface)
     _cairo_xcb_screen_remove_surface_picture (surface->screen, &surface->base);
 
     if (surface->owner == NULL) {
-	if (_cairo_xcb_connection_take_socket (connection) == CAIRO_STATUS_SUCCESS)
-	    _cairo_xcb_connection_render_free_picture (connection, surface->picture);
+	_cairo_xcb_connection_render_free_picture (connection, surface->picture);
     }
 
     _cairo_xcb_connection_release (connection);
@@ -2349,12 +2348,6 @@ _cairo_xcb_surface_clear (cairo_xcb_surface_t *dst)
     if (unlikely (status))
 	return status;
 
-    status = _cairo_xcb_connection_take_socket (dst->connection);
-    if (unlikely (status)) {
-	_cairo_xcb_connection_release (dst->connection);
-	return status;
-    }
-
     gc = _cairo_xcb_screen_get_gc (dst->screen, dst->drawable, dst->depth);
 
     rect.x = rect.y = 0;
@@ -2421,12 +2414,6 @@ _clip_and_composite (cairo_xcb_surface_t	*dst,
     status = _cairo_xcb_connection_acquire (dst->connection);
     if (unlikely (status))
 	return status;
-
-    status = _cairo_xcb_connection_take_socket (dst->connection);
-    if (unlikely (status)) {
-	_cairo_xcb_connection_release (dst->connection);
-	return status;
-    }
 
     if (dst->deferred_clear) {
 	status = _cairo_xcb_surface_clear (dst);
@@ -2576,12 +2563,6 @@ _composite_boxes (cairo_xcb_surface_t *dst,
     if (unlikely (status))
 	return status;
 
-    status = _cairo_xcb_connection_take_socket (dst->connection);
-    if (unlikely (status)) {
-	_cairo_xcb_connection_release (dst->connection);
-	return status;
-    }
-
     _cairo_xcb_surface_ensure_picture (dst);
     if (dst->flags & CAIRO_XCB_RENDER_HAS_FILL_RECTANGLES && ! need_clip_mask &&
 	(op == CAIRO_OPERATOR_CLEAR || src->type == CAIRO_PATTERN_TYPE_SOLID))
@@ -2703,11 +2684,6 @@ _upload_image_inplace (cairo_xcb_surface_t *surface,
     if (unlikely (status))
 	return status;
 
-    status = _cairo_xcb_connection_take_socket (surface->connection);
-    if (unlikely (status)) {
-	_cairo_xcb_connection_release (surface->connection);
-	return status;
-    }
     gc = _cairo_xcb_screen_get_gc (surface->screen, surface->drawable, image->depth);
 
     /* Do we need to trim the image? */
@@ -3993,8 +3969,6 @@ _cairo_xcb_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font)
 
     status = _cairo_xcb_connection_acquire (connection);
     have_connection = status == CAIRO_STATUS_SUCCESS;
-    if (likely (have_connection))
-	status = _cairo_xcb_connection_take_socket (connection);
 
     for (i = 0; i < NUM_GLYPHSETS; i++) {
 	cairo_xcb_font_glyphset_info_t *glyphset_info;

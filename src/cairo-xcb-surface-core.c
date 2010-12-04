@@ -64,10 +64,8 @@ _cairo_xcb_pixmap_finish (void *abstract_surface)
 	if (unlikely (status))
 	    return status;
 
-	if (_cairo_xcb_connection_take_socket (surface->connection) == CAIRO_STATUS_SUCCESS) {
-	    _cairo_xcb_connection_free_pixmap (surface->connection,
-					       surface->pixmap);
-	}
+	_cairo_xcb_connection_free_pixmap (surface->connection,
+					   surface->pixmap);
 	_cairo_xcb_connection_release (surface->connection);
     }
 
@@ -472,10 +470,6 @@ _cairo_xcb_surface_core_copy_boxes (cairo_xcb_surface_t		*dst,
     if (unlikely (status))
 	return status;
 
-    status = _cairo_xcb_connection_take_socket (dst->connection);
-    if (unlikely (status))
-	goto CLEANUP_CONNECTION;
-
     src = _cairo_xcb_pixmap_for_pattern (dst, src_pattern, extents);
     status = src->base.status;
     if (unlikely (status))
@@ -565,12 +559,6 @@ _cairo_xcb_surface_core_fill_boxes (cairo_xcb_surface_t *dst,
     status = _cairo_xcb_connection_acquire (dst->connection);
     if (unlikely (status))
 	return status;
-
-    status = _cairo_xcb_connection_take_socket (dst->connection);
-    if (unlikely (status)) {
-	_cairo_xcb_connection_release (dst->connection);
-	return status;
-    }
 
     gc = _cairo_xcb_screen_get_gc (dst->screen, dst->drawable, dst->depth);
 

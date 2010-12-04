@@ -203,12 +203,6 @@ _cairo_xcb_surface_create_similar (void			*abstract_other,
     if (unlikely (status))
 	return _cairo_surface_create_in_error (status);
 
-    status =_cairo_xcb_connection_take_socket (connection);
-    if (unlikely (status)) {
-	_cairo_xcb_connection_release (connection);
-	return _cairo_surface_create_in_error (status);
-    }
-
     if (content == other->base.content) {
 	pixmap = _cairo_xcb_connection_create_pixmap (connection,
 						      other->depth,
@@ -289,15 +283,13 @@ _cairo_xcb_surface_finish (void *abstract_surface)
 
     status = _cairo_xcb_connection_acquire (surface->connection);
     if (status == CAIRO_STATUS_SUCCESS) {
-	if (_cairo_xcb_connection_take_socket (surface->connection) == CAIRO_STATUS_SUCCESS) {
-	    if (surface->picture != XCB_NONE) {
-		_cairo_xcb_connection_render_free_picture (surface->connection,
-							   surface->picture);
-	    }
-
-	    if (surface->owns_pixmap)
-		_cairo_xcb_connection_free_pixmap (surface->connection, surface->drawable);
+	if (surface->picture != XCB_NONE) {
+	    _cairo_xcb_connection_render_free_picture (surface->connection,
+						       surface->picture);
 	}
+
+	if (surface->owns_pixmap)
+	    _cairo_xcb_connection_free_pixmap (surface->connection, surface->drawable);
 	_cairo_xcb_connection_release (surface->connection);
     }
 
@@ -427,10 +419,6 @@ _get_image (cairo_xcb_surface_t		 *surface,
     status = _cairo_xcb_connection_acquire (connection);
     if (unlikely (status))
 	return status;
-
-    status = _cairo_xcb_connection_take_socket (connection);
-    if (unlikely (status))
-	goto FAIL;
 
     if (use_shm) {
 	status = _get_shm_image (surface, image_out);
@@ -649,12 +637,6 @@ _put_image (cairo_xcb_surface_t    *surface,
     status = _cairo_xcb_connection_acquire (surface->connection);
     if (unlikely (status))
 	return status;
-
-    status = _cairo_xcb_connection_take_socket (surface->connection);
-    if (unlikely (status)) {
-	_cairo_xcb_connection_release (surface->connection);
-	return status;
-    }
 
     if (image->pixman_format == surface->pixman_format) {
 	xcb_gcontext_t gc;
