@@ -70,6 +70,7 @@ typedef struct _cairo_pdf_source_surface_entry {
     unsigned char *unique_id;
     unsigned long unique_id_length;
     cairo_bool_t interpolate;
+    cairo_bool_t mask;
     cairo_pdf_resource_t surface_res;
     int width;
     int height;
