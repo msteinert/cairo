@@ -59,6 +59,7 @@
 #include <GL/gl.h>
 #define GL_GLEXT_PROTOTYPES
 #include <GL/glext.h>
+#include "cairo-gl-ext-def-private.h"
 
 #define DEBUG_GL 0
 
