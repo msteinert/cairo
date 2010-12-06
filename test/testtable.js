@@ -1,7 +1,7 @@
 /* configuration */
 /* TODO: UNTESTED count can't be shown because it's not tracked explicitly */
 headerResults = [ "PASS", "NEW", "FAIL", "XFAIL", "CRASHED" ];
-logResults    = [ "PASS", "NEW", "FAIL", "XFAIL", "CRASHED" ];
+logResults    = [ "PASS", "NEW", "FAIL", "XFAIL", "CRASH!" ];
 resultToImgs = {
     "PASS"     : [],
     "NEW"      : [ "output" ],
