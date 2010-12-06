@@ -195,6 +195,7 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
     cairo_status_t status;
     int tex_width;
     void *data;
+    cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
 
     if ((unsigned int) ctx->max_texture_size / 2 <= n_stops)
         return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -221,16 +222,17 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
     gradient->stops = gradient->stops_embedded;
     memcpy (gradient->stops_embedded, stops, n_stops * sizeof (cairo_gradient_stop_t));
 
-    glBindBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, ctx->texture_load_pbo);
-    glBufferDataARB (GL_PIXEL_UNPACK_BUFFER_ARB, tex_width * sizeof (uint32_t), 0, GL_STREAM_DRAW);
-    data = glMapBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY);
+    dispatch->BindBuffer (GL_PIXEL_UNPACK_BUFFER, ctx->texture_load_pbo);
+    dispatch->BufferData (GL_PIXEL_UNPACK_BUFFER,
+			  tex_width * sizeof (uint32_t), 0, GL_STREAM_DRAW);
+    data = dispatch->MapBuffer (GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
 
     status = _cairo_gl_gradient_render (ctx, n_stops, stops, data, tex_width);
 
-    glUnmapBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB);
+    dispatch->UnmapBuffer (GL_PIXEL_UNPACK_BUFFER);
 
     if (unlikely (status)) {
-        glBindBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+        dispatch->BindBuffer (GL_PIXEL_UNPACK_BUFFER, 0);
         free (gradient);
         return status;
     }
@@ -241,7 +243,7 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
     glTexImage1D (GL_TEXTURE_1D, 0, GL_RGBA8, tex_width, 0,
                   GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, 0);
 
-    glBindBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+    dispatch->BindBuffer (GL_PIXEL_UNPACK_BUFFER, 0);
 
     /* we ignore errors here and just return an uncached gradient */
     if (likely (! _cairo_cache_insert (&ctx->gradients, &gradient->cache_entry)))

@@ -785,9 +785,9 @@ _cairo_gl_surface_finish (void *abstract_surface)
 	ctx->current_target = NULL;
 
     if (surface->depth)
-        glDeleteFramebuffersEXT (1, &surface->depth);
+        ctx->dispatch.DeleteFramebuffers (1, &surface->depth);
     if (surface->fb)
-        glDeleteFramebuffersEXT (1, &surface->fb);
+        ctx->dispatch.DeleteFramebuffers (1, &surface->fb);
     if (surface->owns_tex)
 	glDeleteTextures (1, &surface->tex);
 

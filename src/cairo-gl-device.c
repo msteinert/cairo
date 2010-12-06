@@ -85,7 +85,7 @@ _gl_flush (void *device)
     ctx->pre_shader = NULL;
     _cairo_gl_set_shader (ctx, NULL);
 
-    glBindBufferARB (GL_ARRAY_BUFFER_ARB, 0);
+    ctx->dispatch.BindBuffer (GL_ARRAY_BUFFER, 0);
 
     glDisableClientState (GL_VERTEX_ARRAY);
 
@@ -152,6 +152,7 @@ cairo_status_t
 _cairo_gl_context_init (cairo_gl_context_t *ctx)
 {
     cairo_status_t status;
+    cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
     int n;
 
     _cairo_device_init (&ctx->base, &_cairo_gl_device_backend);
@@ -193,7 +194,7 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     }
 
     if (! GLEW_ARB_texture_non_power_of_two)
-	ctx->tex_target = GL_TEXTURE_RECTANGLE_EXT;
+	ctx->tex_target = GL_TEXTURE_RECTANGLE;
     else
 	ctx->tex_target = GL_TEXTURE_2D;
 
@@ -218,8 +219,8 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 		  GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
     /* PBO for any sort of texture upload */
-    glGenBuffersARB (1, &ctx->texture_load_pbo);
-    glGenBuffersARB (1, &ctx->vbo);
+    dispatch->GenBuffers (1, &ctx->texture_load_pbo);
+    dispatch->GenBuffers (1, &ctx->vbo);
 
     ctx->max_framebuffer_size = 0;
     glGetIntegerv (GL_MAX_RENDERBUFFER_SIZE, &ctx->max_framebuffer_size);
@@ -254,6 +255,7 @@ _cairo_gl_ensure_framebuffer (cairo_gl_context_t *ctx,
                               cairo_gl_surface_t *surface)
 {
     GLenum status;
+    cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
 
     if (likely (surface->fb))
         return;
@@ -261,25 +263,25 @@ _cairo_gl_ensure_framebuffer (cairo_gl_context_t *ctx,
     /* Create a framebuffer object wrapping the texture so that we can render
      * to it.
      */
-    glGenFramebuffersEXT (1, &surface->fb);
-    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, surface->fb);
-    glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
-			       GL_COLOR_ATTACHMENT0_EXT,
-			       ctx->tex_target,
-			       surface->tex,
-			       0);
+    dispatch->GenFramebuffers (1, &surface->fb);
+    dispatch->BindFramebuffer (GL_FRAMEBUFFER, surface->fb);
+    dispatch->FramebufferTexture2D (GL_FRAMEBUFFER,
+				    GL_COLOR_ATTACHMENT0,
+				    ctx->tex_target,
+				    surface->tex,
+				    0);
 
-    status = glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT);
-    if (status != GL_FRAMEBUFFER_COMPLETE_EXT) {
+    status = dispatch->CheckFramebufferStatus (GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
 	const char *str;
 	switch (status) {
-	//case GL_FRAMEBUFFER_UNDEFINED_EXT: str= "undefined"; break;
-	case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT: str= "incomplete attachment"; break;
-	case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT: str= "incomplete/missing attachment"; break;
-	case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT: str= "incomplete draw buffer"; break;
-	case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT: str= "incomplete read buffer"; break;
-	case GL_FRAMEBUFFER_UNSUPPORTED_EXT: str= "unsupported"; break;
-	case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE_EXT: str= "incomplete multiple"; break;
+	//case GL_FRAMEBUFFER_UNDEFINED: str= "undefined"; break;
+	case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: str= "incomplete attachment"; break;
+	case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: str= "incomplete/missing attachment"; break;
+	case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER: str= "incomplete draw buffer"; break;
+	case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER: str= "incomplete read buffer"; break;
+	case GL_FRAMEBUFFER_UNSUPPORTED: str= "unsupported"; break;
+	case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE: str= "incomplete multiple"; break;
 	default: str = "unknown error"; break;
 	}
 
@@ -302,12 +304,12 @@ _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
 
     if (_cairo_gl_surface_is_texture (surface)) {
         _cairo_gl_ensure_framebuffer (ctx, surface);
-        glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, surface->fb);
-        glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
-        glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
+        ctx->dispatch.BindFramebuffer (GL_FRAMEBUFFER, surface->fb);
+        glDrawBuffer (GL_COLOR_ATTACHMENT0);
+        glReadBuffer (GL_COLOR_ATTACHMENT0);
     } else {
         ctx->make_current (ctx, surface);
-        glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+        ctx->dispatch.BindFramebuffer (GL_FRAMEBUFFER, 0);
         glDrawBuffer (GL_BACK_LEFT);
         glReadBuffer (GL_BACK_LEFT);
     }

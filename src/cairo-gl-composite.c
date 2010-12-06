@@ -960,7 +960,7 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     _cairo_gl_context_set_destination (ctx, setup->dst);
 
     if (_cairo_gl_context_is_flushed (ctx)) {
-        glBindBufferARB (GL_ARRAY_BUFFER_ARB, ctx->vbo);
+        ctx->dispatch.BindBuffer (GL_ARRAY_BUFFER, ctx->vbo);
 
         glVertexPointer (2, GL_FLOAT, vertex_size, NULL);
         glEnableClientState (GL_VERTEX_ARRAY);
@@ -1034,7 +1034,7 @@ _cairo_gl_composite_flush (cairo_gl_context_t *ctx)
 
     count = ctx->vb_offset / ctx->vertex_size;
 
-    glUnmapBufferARB (GL_ARRAY_BUFFER_ARB);
+    ctx->dispatch.UnmapBuffer (GL_ARRAY_BUFFER);
     ctx->vb = NULL;
     ctx->vb_offset = 0;
 
@@ -1058,13 +1058,15 @@ static void
 _cairo_gl_composite_prepare_buffer (cairo_gl_context_t *ctx,
                                     unsigned int n_vertices)
 {
+    cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
+
     if (ctx->vb_offset + n_vertices * ctx->vertex_size > CAIRO_GL_VBO_SIZE)
 	_cairo_gl_composite_flush (ctx);
 
     if (ctx->vb == NULL) {
-	glBufferDataARB (GL_ARRAY_BUFFER_ARB, CAIRO_GL_VBO_SIZE,
-			 NULL, GL_STREAM_DRAW_ARB);
-	ctx->vb = glMapBufferARB (GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
+	dispatch->BufferData (GL_ARRAY_BUFFER, CAIRO_GL_VBO_SIZE,
+			      NULL, GL_STREAM_DRAW);
+	ctx->vb = dispatch->MapBuffer (GL_ARRAY_BUFFER, GL_WRITE_ONLY);
     }
 }
 
