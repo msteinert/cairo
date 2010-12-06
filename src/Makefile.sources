@@ -315,9 +315,7 @@ cairo_gl_headers = cairo-gl.h
 cairo_gl_private = cairo-gl-private.h \
 		   cairo-gl-dispatch-private.h \
 		   cairo-gl-ext-def-private.h \
-		   cairo-gl-gradient-private.h \
-		   glew/GL/glew.h \
-		   glew/GL/glxew.h
+		   cairo-gl-gradient-private.h
 
 cairo_gl_sources = cairo-gl-composite.c \
 		   cairo-gl-device.c \
@@ -327,9 +325,6 @@ cairo_gl_sources = cairo-gl-composite.c \
 		   cairo-gl-info.c \
 		   cairo-gl-shaders.c \
 		   cairo-gl-surface.c
-if BUILD_PRIVATE_GLEW
-cairo_gl_sources += glew/glew.c
-endif
 
 cairo_egl_sources += cairo-egl-context.c
 cairo_glx_sources += cairo-glx-context.c

@@ -298,7 +298,6 @@ CAIRO_ENABLE_FUNCTIONS(png, PNG, yes, [
 ])
 
 dnl ===========================================================================
-use_glew="no (not required by any backend)"
 CAIRO_ENABLE_SURFACE_BACKEND(gl, OpenGL, no, [
   gl_REQUIRES="gl"
   PKG_CHECK_MODULES(gl, $gl_REQUIRES,, [
@@ -309,30 +308,10 @@ CAIRO_ENABLE_SURFACE_BACKEND(gl, OpenGL, no, [
 	      gl_NONPKGCONFIG_LIBS="-lGL"
 	  fi])
 
-  # Disable system GLEW on UNIX since it assumes X and crashes with EGL
-  have_glew="no"
-  case "$host" in
-    *-linux*|*-*bsd*|*-solaris*)
-      ;;
-    *)
-      AC_CHECK_HEADER(GL/glew.h,
-		      [AC_CHECK_LIB(GLEW, glewInit, [have_glew="GLEW"],
-				    [AC_CHECK_LIB(glew32, glewInit, [have_glew="glew32"],
-						  [])])])
-      ;;
-  esac
-  AS_IF([test "x$have_glew" != "xno"],[
-    gl_NONPKGCONFIG_LIBS="-l$have_glew $gl_NONPKGCONFIG_LIBS"
-    use_glew="yes (system library)"
-  ], [
-    use_glew="yes (private copy)"
-    CAIRO_CFLAGS="$CAIRO_CFLAGS -I\$(top_srcdir)/src/glew"
-  ])
   need_glx_functions=yes
   need_wgl_functions=yes
   need_egl_functions=yes
 ])
-AM_CONDITIONAL(BUILD_PRIVATE_GLEW, test "x$use_glew" = "xyes (private copy)")
 
 dnl ===========================================================================
 
