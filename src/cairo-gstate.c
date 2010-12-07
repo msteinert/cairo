@@ -1020,6 +1020,20 @@ _reduce_op (cairo_gstate_t *gstate)
     return op;
 }
 
+static cairo_status_t
+_cairo_gstate_get_pattern_status (const cairo_pattern_t *pattern)
+{
+    if (unlikely (pattern->type == CAIRO_PATTERN_TYPE_MESH &&
+		  ((const cairo_mesh_pattern_t *) pattern)->current_patch))
+    {
+	/* If current patch != NULL, the pattern is under construction
+	 * and cannot be used as a source */
+	return CAIRO_STATUS_INVALID_MESH_CONSTRUCTION;
+    }
+
+    return pattern->status;
+}
+
 cairo_status_t
 _cairo_gstate_paint (cairo_gstate_t *gstate)
 {
@@ -1029,8 +1043,9 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
     cairo_status_t status;
     cairo_operator_t op;
 
-    if (unlikely (gstate->source->status))
-	return gstate->source->status;
+    status = _cairo_gstate_get_pattern_status (gstate->source);
+    if (unlikely (status))
+	return status;
 
     if (gstate->op == CAIRO_OPERATOR_DEST)
 	return CAIRO_STATUS_SUCCESS;
@@ -1064,11 +1079,13 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
     cairo_clip_t clip;
     cairo_status_t status;
 
-    if (unlikely (mask->status))
-	return mask->status;
+    status = _cairo_gstate_get_pattern_status (mask);
+    if (unlikely (status))
+	return status;
 
-    if (unlikely (gstate->source->status))
-	return gstate->source->status;
+    status = _cairo_gstate_get_pattern_status (gstate->source);
+    if (unlikely (status))
+	return status;
 
     if (gstate->op == CAIRO_OPERATOR_DEST)
 	return CAIRO_STATUS_SUCCESS;
@@ -1140,8 +1157,9 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     cairo_clip_t clip;
     cairo_status_t status;
 
-    if (unlikely (gstate->source->status))
-	return gstate->source->status;
+    status = _cairo_gstate_get_pattern_status (gstate->source);
+    if (unlikely (status))
+	return status;
 
     if (gstate->op == CAIRO_OPERATOR_DEST)
 	return CAIRO_STATUS_SUCCESS;
@@ -1242,8 +1260,9 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     cairo_clip_t clip;
     cairo_status_t status;
 
-    if (unlikely (gstate->source->status))
-	return gstate->source->status;
+    status = _cairo_gstate_get_pattern_status (gstate->source);
+    if (unlikely (status))
+	return status;
 
     if (gstate->op == CAIRO_OPERATOR_DEST)
 	return CAIRO_STATUS_SUCCESS;
@@ -1909,8 +1928,9 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
     cairo_status_t status;
     cairo_clip_t clip;
 
-    if (unlikely (gstate->source->status))
-	return gstate->source->status;
+    status = _cairo_gstate_get_pattern_status (gstate->source);
+    if (unlikely (status))
+	return status;
 
     if (gstate->op == CAIRO_OPERATOR_DEST)
 	return CAIRO_STATUS_SUCCESS;
