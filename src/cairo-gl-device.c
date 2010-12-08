@@ -3,6 +3,7 @@
  * Copyright © 2009 Eric Anholt
  * Copyright © 2009 Chris Wilson
  * Copyright © 2005,2010 Red Hat, Inc
+ * Copyright © 2010 Linaro Limited
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -36,6 +37,7 @@
  *	Carl Worth <cworth@cworth.org>
  *	Chris Wilson <chris@chris-wilson.co.uk>
  *	Eric Anholt <eric@anholt.net>
+ *	Alexandros Frantzis <alexandros.frantzis@linaro.org>
  */
 
 #include "cairoint.h"
@@ -153,6 +155,7 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 {
     cairo_status_t status;
     cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
+    int gl_version = _cairo_gl_get_version ();
     int n;
 
     _cairo_device_init (&ctx->base, &_cairo_gl_device_backend);
@@ -160,43 +163,24 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     memset (ctx->glyph_cache, 0, sizeof (ctx->glyph_cache));
     cairo_list_init (&ctx->fonts);
 
-    if (glewInit () != GLEW_OK)
-	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT); /* XXX */
+    /* Support only GL version >= 1.3 */
+    if (gl_version < CAIRO_GL_VERSION_ENCODE (1, 3))
+	return _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
 
-    if (! GLEW_EXT_framebuffer_object ||
-	! GLEW_ARB_texture_env_combine ||
-	! GLEW_EXT_bgra)
-    {
-	fprintf (stderr,
-		 "Required GL extensions not available:\n");
-	if (! GLEW_EXT_framebuffer_object)
-	    fprintf (stderr, "    GL_EXT_framebuffer_object\n");
-	if (! GLEW_ARB_texture_env_combine)
-	    fprintf (stderr, "    GL_ARB_texture_env_combine\n");
-        if (! GLEW_ARB_vertex_buffer_object)
-	    fprintf (stderr, "    GL_ARB_vertex_buffer_object\n");
-
-	/* EXT_bgra is used in two places:
-	 * - draw_image to upload common pixman formats without hand-swizzling.
-	 * - get_image to download common pixman formats without hand-swizzling.
-	 */
-	if (! GLEW_EXT_bgra)
-	    fprintf (stderr, "    GL_EXT_bgra\n");
-
-	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT); /* XXX */
-    }
-
-    if (! GLEW_ARB_texture_non_power_of_two &&
-	! GLEW_ARB_texture_rectangle ) {
-	fprintf (stderr,
-		 "Required GL extensions not available:\n");
-	fprintf (stderr, "    GL_ARB_texture_non_power_of_two, GL_ARB_texture_rectangle\n");
-    }
-
-    if (! GLEW_ARB_texture_non_power_of_two)
+    /* Check for required extensions */
+    if (_cairo_gl_has_extension ("GL_ARB_texture_non_power_of_two"))
+	ctx->tex_target = GL_TEXTURE_2D;
+    else if (_cairo_gl_has_extension ("GL_ARB_texture_rectangle"))
 	ctx->tex_target = GL_TEXTURE_RECTANGLE;
     else
-	ctx->tex_target = GL_TEXTURE_2D;
+	return _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
+
+    if (gl_version < CAIRO_GL_VERSION_ENCODE (2, 1) &&
+	! _cairo_gl_has_extension ("GL_ARB_pixel_buffer_object"))
+	return _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
+
+    ctx->has_mesa_pack_invert =
+	_cairo_gl_has_extension ("GL_MESA_pack_invert");
 
     ctx->current_operator = -1;
 

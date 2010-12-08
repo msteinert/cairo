@@ -42,6 +42,8 @@
 #ifndef CAIRO_GL_PRIVATE_H
 #define CAIRO_GL_PRIVATE_H
 
+#define GL_GLEXT_PROTOTYPES
+
 #include "cairoint.h"
 
 #include "cairo-gl-gradient-private.h"
@@ -52,12 +54,9 @@
 
 #include <assert.h>
 
-#include <GL/glew.h>
-
 #include "cairo-gl.h"
 
 #include <GL/gl.h>
-#define GL_GLEXT_PROTOTYPES
 #include <GL/glext.h>
 #include "cairo-gl-ext-def-private.h"
 
@@ -263,6 +262,7 @@ struct _cairo_gl_context {
     unsigned int vertex_size;
     cairo_region_t *clip_region;
 
+    cairo_bool_t has_mesa_pack_invert;
     cairo_gl_dispatch_t dispatch;
 
     void (*acquire) (void *ctx);

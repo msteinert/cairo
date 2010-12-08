@@ -743,12 +743,14 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
 
     glPixelStorei (GL_PACK_ALIGNMENT, 1);
     glPixelStorei (GL_PACK_ROW_LENGTH, image->stride / cpp);
-    if (! _cairo_gl_surface_is_texture (surface) && GLEW_MESA_pack_invert)
+    if (! _cairo_gl_surface_is_texture (surface) &&
+	ctx->has_mesa_pack_invert)
 	glPixelStorei (GL_PACK_INVERT_MESA, 1);
     glReadPixels (interest->x, interest->y,
 		  interest->width, interest->height,
 		  format, type, image->data);
-    if (! _cairo_gl_surface_is_texture (surface) && GLEW_MESA_pack_invert)
+    if (! _cairo_gl_surface_is_texture (surface) &&
+	ctx->has_mesa_pack_invert)
 	glPixelStorei (GL_PACK_INVERT_MESA, 0);
 
     status = _cairo_gl_context_release (ctx, status);

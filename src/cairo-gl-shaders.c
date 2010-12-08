@@ -355,15 +355,13 @@ _cairo_gl_context_init_shaders (cairo_gl_context_t *ctx)
 	"}\n";
     cairo_status_t status;
 
-    /* XXX multiple device support? */
-    if (GLEW_VERSION_2_0 ||
-	(GLEW_ARB_shader_objects &&
-	 GLEW_ARB_fragment_shader &&
-	 GLEW_ARB_vertex_program)) {
-        ctx->shader_impl = &shader_impl_core_2_0;
-    } else {
-        ctx->shader_impl = NULL;
-    }
+    if (_cairo_gl_get_version () >= CAIRO_GL_VERSION_ENCODE (2, 0) ||
+	(_cairo_gl_has_extension ("GL_ARB_shader_objects") &&
+	 _cairo_gl_has_extension ("GL_ARB_fragment_shader") &&
+	 _cairo_gl_has_extension ("GL_ARB_vertex_shader")))
+	ctx->shader_impl = &shader_impl_core_2_0;
+    else
+	ctx->shader_impl = NULL;
 
     memset (ctx->vertex_shaders, 0, sizeof (ctx->vertex_shaders));
 

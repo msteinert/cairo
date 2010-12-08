@@ -41,17 +41,16 @@
 #ifndef CAIRO_GL_GRADIENT_PRIVATE_H
 #define CAIRO_GL_GRADIENT_PRIVATE_H
 
+#define GL_GLEXT_PROTOTYPES
+
 #include "cairo-cache-private.h"
 #include "cairo-device-private.h"
 #include "cairo-reference-count-private.h"
 #include "cairo-types-private.h"
 
-#include <GL/glew.h>
-
 #include "cairo-gl.h"
 
 #include <GL/gl.h>
-#define GL_GLEXT_PROTOTYPES
 #include <GL/glext.h>
 
 #define CAIRO_GL_GRADIENT_CACHE_SIZE 4096
