@@ -543,12 +543,11 @@ _cairo_gl_context_init_shaders (cairo_gl_context_t *ctx)
     cairo_status_t status;
 
     /* XXX multiple device support? */
-    if (GLEW_VERSION_2_0) {
+    if (GLEW_VERSION_2_0 ||
+	(GLEW_ARB_shader_objects &&
+	 GLEW_ARB_fragment_shader &&
+	 GLEW_ARB_vertex_program)) {
         ctx->shader_impl = &shader_impl_core_2_0;
-    } else if (GLEW_ARB_shader_objects &&
-               GLEW_ARB_fragment_shader &&
-               GLEW_ARB_vertex_program) {
-        ctx->shader_impl = &shader_impl_arb;
     } else {
         ctx->shader_impl = NULL;
     }
