@@ -38,6 +38,8 @@
 
 #include "cairo-arc-private.h"
 
+#define MAX_FULL_CIRCLES 65536
+
 /* Spline deviation from the circle in radius would be given by:
 
 	error = sqrt (x**2 + y**2) - 1
@@ -184,8 +186,13 @@ _cairo_arc_in_direction (cairo_t	  *cr,
     if (cairo_status (cr))
         return;
 
-    while (angle_max - angle_min > 4 * M_PI)
-	angle_max -= 2 * M_PI;
+    assert (angle_max >= angle_min);
+
+    if (angle_max - angle_min > 2 * M_PI * MAX_FULL_CIRCLES) {
+	angle_max = fmod (angle_max - angle_min, 2 * M_PI);
+	angle_min = fmod (angle_min, 2 * M_PI);
+	angle_max += angle_min + 2 * M_PI * MAX_FULL_CIRCLES;
+    }
 
     /* Recurse if drawing arc larger than pi */
     if (angle_max - angle_min > M_PI) {
