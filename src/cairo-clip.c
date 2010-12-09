@@ -786,8 +786,7 @@ _rectilinear_clip_to_boxes (const cairo_path_fixed_t *path,
     _cairo_traps_init (&traps);
     _cairo_traps_limit (&traps, *boxes, *num_boxes);
 
-    _cairo_polygon_init (&polygon);
-    _cairo_polygon_limit (&polygon, *boxes, *num_boxes);
+    _cairo_polygon_init (&polygon, *boxes, *num_boxes);
 
     status = _cairo_path_fixed_fill_rectilinear_to_traps (path,
 							  fill_rule,

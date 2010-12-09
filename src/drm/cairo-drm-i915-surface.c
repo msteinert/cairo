@@ -1938,8 +1938,7 @@ i915_surface_fill_with_alpha (void			*abstract_dst,
 	    goto CLEANUP_BOXES;
     }
 
-    _cairo_polygon_init (&info.polygon);
-    _cairo_polygon_limit (&info.polygon, clip_boxes, num_boxes);
+    _cairo_polygon_init (&info.polygon, clip_boxes, num_boxes);
 
     status = _cairo_path_fixed_fill_to_polygon (path, tolerance, &info.polygon);
     if (unlikely (status))
@@ -2280,8 +2279,7 @@ i915_surface_stroke (void			*abstract_dst,
 	    goto CLEANUP_BOXES;
     }
 
-    _cairo_polygon_init (&info.polygon);
-    _cairo_polygon_limit (&info.polygon, clip_boxes, num_boxes);
+    _cairo_polygon_init (&info.polygon, clip_boxes, num_boxes);
 
     status = _cairo_path_fixed_stroke_to_polygon (path,
 						  stroke_style,

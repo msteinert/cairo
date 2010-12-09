@@ -1799,8 +1799,7 @@ _cairo_bentley_ottmann_tessellate_traps (cairo_traps_t *traps,
     dump_traps (traps, "bo-traps-in.txt");
 #endif
 
-    _cairo_polygon_init (&polygon);
-    _cairo_polygon_limit (&polygon, traps->limits, traps->num_limits);
+    _cairo_polygon_init (&polygon, traps->limits, traps->num_limits);
 
     for (i = 0; i < traps->num_traps; i++) {
 	status = _cairo_polygon_add_line (&polygon,

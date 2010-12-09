@@ -1982,12 +1982,9 @@ _cairo_pen_find_active_ccw_vertex_index (const cairo_pen_t *pen,
 
 /* cairo-polygon.c */
 cairo_private void
-_cairo_polygon_init (cairo_polygon_t *polygon);
-
-cairo_private void
-_cairo_polygon_limit (cairo_polygon_t	*polygon,
-		      const cairo_box_t *boxes,
-		      int		 num_boxes);
+_cairo_polygon_init (cairo_polygon_t   *polygon,
+		     const cairo_box_t *boxes,
+		     int		num_boxes);
 
 cairo_private void
 _cairo_polygon_fini (cairo_polygon_t *polygon);

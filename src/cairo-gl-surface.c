@@ -1504,8 +1504,7 @@ _cairo_gl_surface_stroke (void			        *abstract_surface,
 	return status;
     }
 
-    _cairo_polygon_init (&polygon);
-    _cairo_polygon_limit (&polygon, clip_boxes, num_boxes);
+    _cairo_polygon_init (&polygon, clip_boxes, num_boxes);
 
     status = _cairo_path_fixed_stroke_to_polygon (path,
                                                   style,
@@ -1581,8 +1580,7 @@ _cairo_gl_surface_fill (void			*abstract_surface,
 	return status;
     }
 
-    _cairo_polygon_init (&polygon);
-    _cairo_polygon_limit (&polygon, clip_boxes, num_boxes);
+    _cairo_polygon_init (&polygon, clip_boxes, num_boxes);
 
     status = _cairo_path_fixed_fill_to_polygon (path, tolerance, &polygon);
     if (likely (status == CAIRO_STATUS_SUCCESS)) {

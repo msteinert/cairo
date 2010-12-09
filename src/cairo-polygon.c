@@ -1,3 +1,4 @@
+/* -*- Mode: c; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 8; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
@@ -39,8 +40,12 @@
 #include "cairo-error-private.h"
 
 void
-_cairo_polygon_init (cairo_polygon_t *polygon)
+_cairo_polygon_init (cairo_polygon_t *polygon,
+		     const cairo_box_t *limits,
+		     int num_limits)
 {
+    int n;
+
     VG (VALGRIND_MAKE_MEM_UNDEFINED (polygon, sizeof (cairo_polygon_t)));
 
     polygon->status = CAIRO_STATUS_SUCCESS;
@@ -50,18 +55,8 @@ _cairo_polygon_init (cairo_polygon_t *polygon)
     polygon->edges = polygon->edges_embedded;
     polygon->edges_size = ARRAY_LENGTH (polygon->edges_embedded);
 
-    polygon->num_limits = 0;
-
     polygon->extents.p1.x = polygon->extents.p1.y = INT32_MAX;
     polygon->extents.p2.x = polygon->extents.p2.y = INT32_MIN;
-}
-
-void
-_cairo_polygon_limit (cairo_polygon_t	*polygon,
-		      const cairo_box_t *limits,
-		      int num_limits)
-{
-    int n;
 
     polygon->limits = limits;
     polygon->num_limits = num_limits;

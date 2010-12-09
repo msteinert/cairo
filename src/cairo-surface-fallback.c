@@ -1067,8 +1067,7 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
     if (unlikely (status))
 	return status;
 
-    _cairo_polygon_init (&polygon);
-    _cairo_polygon_limit (&polygon, clip_boxes, num_boxes);
+    _cairo_polygon_init (&polygon, clip_boxes, num_boxes);
 
     _cairo_traps_init (&traps);
     _cairo_traps_limit (&traps, clip_boxes, num_boxes);
@@ -1163,8 +1162,7 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
     _cairo_traps_init (&traps);
     _cairo_traps_limit (&traps, clip_boxes, num_boxes);
 
-    _cairo_polygon_init (&polygon);
-    _cairo_polygon_limit (&polygon, clip_boxes, num_boxes);
+    _cairo_polygon_init (&polygon, clip_boxes, num_boxes);
 
     if (_cairo_path_fixed_fill_is_empty (path))
 	goto DO_TRAPS;

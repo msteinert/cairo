@@ -3382,8 +3382,7 @@ _cairo_xcb_surface_render_stroke_as_polygon (cairo_xcb_surface_t	*dst,
     cairo_polygon_t polygon;
     cairo_status_t status;
 
-    _cairo_polygon_init (&polygon);
-    _cairo_polygon_limit (&polygon, clip_boxes, num_boxes);
+    _cairo_polygon_init (&polygon, clip_boxes, num_boxes);
 
     status = _cairo_path_fixed_stroke_to_polygon (path,
 						  stroke_style,
@@ -3582,8 +3581,7 @@ _cairo_xcb_surface_render_fill_as_polygon (cairo_xcb_surface_t	*dst,
     cairo_polygon_t polygon;
     cairo_status_t status;
 
-    _cairo_polygon_init (&polygon);
-    _cairo_polygon_limit (&polygon, clip_boxes, num_boxes);
+    _cairo_polygon_init (&polygon, clip_boxes, num_boxes);
 
     status = _cairo_path_fixed_fill_to_polygon (path, tolerance, &polygon);
     if (likely (status == CAIRO_STATUS_SUCCESS)) {

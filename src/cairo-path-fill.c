@@ -132,9 +132,7 @@ _cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t *path,
     if (_cairo_path_fixed_fill_is_empty (path))
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_polygon_init (&polygon);
-    if (traps->num_limits)
-	_cairo_polygon_limit (&polygon, traps->limits, traps->num_limits);
+    _cairo_polygon_init (&polygon, traps->limits, traps->num_limits);
 
     status = _cairo_path_fixed_fill_to_polygon (path,
 						tolerance,
@@ -182,10 +180,11 @@ _cairo_path_fixed_fill_rectilinear_tessellate_to_region (const cairo_path_fixed_
     }
 
     /* path is not rectangular, try extracting clipped rectilinear edges */
-    _cairo_polygon_init (&polygon);
     if (extents != NULL) {
 	_cairo_box_from_rectangle (&box, extents);
-	_cairo_polygon_limit (&polygon, &box, 1);
+	_cairo_polygon_init (&polygon, &box, 1);
+    } else {
+	_cairo_polygon_init (&polygon, NULL, 0);
     }
 
     /* tolerance will be ignored as the path is rectilinear */
@@ -390,11 +389,8 @@ _cairo_path_fixed_fill_rectilinear_tessellate_to_boxes (const cairo_path_fixed_t
     cairo_polygon_t polygon;
     cairo_status_t status;
 
-    _cairo_polygon_init (&polygon);
-    if (boxes->num_limits) {
-	_cairo_polygon_limit (&polygon, boxes->limits, boxes->num_limits);
-	boxes->num_limits = 0;
-    }
+    _cairo_polygon_init (&polygon, boxes->limits, boxes->num_limits);
+    boxes->num_limits = 0;
 
     /* tolerance will be ignored as the path is rectilinear */
     status = _cairo_path_fixed_fill_to_polygon (path, 0., &polygon);

@@ -1407,9 +1407,7 @@ _cairo_path_fixed_stroke_to_traps (const cairo_path_fixed_t	*path,
 	    return status;
     }
 
-    _cairo_polygon_init (&polygon);
-    if (traps->num_limits)
-	_cairo_polygon_limit (&polygon, traps->limits, traps->num_limits);
+    _cairo_polygon_init (&polygon, traps->limits, traps->num_limits);
 
     status = _cairo_path_fixed_stroke_to_polygon (path,
 						  stroke_style,
