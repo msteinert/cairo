@@ -810,47 +810,26 @@ _cairo_path_fixed_interpret (const cairo_path_fixed_t		*path,
 			     cairo_path_fixed_close_path_func_t	*close_path,
 			     void				*closure)
 {
-    const uint8_t num_args[] = {
-	1, /* cairo_path_move_to */
-	1, /* cairo_path_op_line_to */
-	3, /* cairo_path_op_curve_to */
-	0, /* cairo_path_op_close_path */
-    };
+    const cairo_path_buf_t *buf;
     cairo_status_t status;
-    const cairo_path_buf_t *buf, *first;
-    cairo_bool_t forward = TRUE;
-    int step = forward ? 1 : -1;
 
-    buf = first = forward ? cairo_path_head (path) : cairo_path_tail (path);
-    do {
-	cairo_point_t *points;
-	int start, stop, i;
+    cairo_path_foreach_buf_start (buf, path) {
+	const cairo_point_t *points = buf->points;
+	unsigned int i;
 
-	if (forward) {
-	    start = 0;
-	    stop = buf->num_ops;
-	    points = buf->points;
-	} else {
-	    start = buf->num_ops - 1;
-	    stop = -1;
-	    points = buf->points + buf->num_points;
-	}
-
-	for (i = start; i != stop; i += step) {
-	    cairo_path_op_t op = buf->op[i];
-
-	    if (! forward)
-		points -= num_args[(int) op];
-
-	    switch (op) {
+	for (i = 0; i < buf->num_ops; i++) {
+	    switch (buf->op[i]) {
 	    case CAIRO_PATH_OP_MOVE_TO:
 		status = (*move_to) (closure, &points[0]);
+		points += 1;
 		break;
 	    case CAIRO_PATH_OP_LINE_TO:
 		status = (*line_to) (closure, &points[0]);
+		points += 1;
 		break;
 	    case CAIRO_PATH_OP_CURVE_TO:
 		status = (*curve_to) (closure, &points[0], &points[1], &points[2]);
+		points += 3;
 		break;
 	    default:
 		ASSERT_NOT_REACHED;
@@ -858,13 +837,11 @@ _cairo_path_fixed_interpret (const cairo_path_fixed_t		*path,
 		status = (*close_path) (closure);
 		break;
 	    }
+
 	    if (unlikely (status))
 		return status;
-
-	    if (forward)
-		points += num_args[(int) op];
 	}
-    } while ((buf = forward ? cairo_path_buf_next (buf) : cairo_path_buf_prev (buf)) != first);
+    } cairo_path_foreach_buf_end (buf, path);
 
     return CAIRO_STATUS_SUCCESS;
 }
