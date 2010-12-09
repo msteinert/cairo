@@ -2337,6 +2337,9 @@ cairo_pattern_create_radial (double cx0, double cy0, double radius0,
 			     double cx1, double cy1, double radius1);
 
 cairo_public cairo_pattern_t *
+cairo_pattern_create_mesh (void);
+
+cairo_public cairo_pattern_t *
 cairo_pattern_reference (cairo_pattern_t *pattern);
 
 cairo_public void
@@ -2412,6 +2415,42 @@ cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern,
 				   double alpha);
 
 cairo_public void
+cairo_pattern_mesh_begin_patch (cairo_pattern_t *pattern);
+
+cairo_public void
+cairo_pattern_mesh_end_patch (cairo_pattern_t *pattern);
+
+cairo_public void
+cairo_pattern_mesh_curve_to (cairo_pattern_t *pattern,
+			     double x1, double y1,
+			     double x2, double y2,
+			     double x3, double y3);
+
+cairo_public void
+cairo_pattern_mesh_line_to (cairo_pattern_t *pattern,
+			    double x, double y);
+
+cairo_public void
+cairo_pattern_mesh_move_to (cairo_pattern_t *pattern,
+			    double x, double y);
+
+cairo_public void
+cairo_pattern_mesh_set_control_point (cairo_pattern_t *pattern,
+				      unsigned int point_num,
+				      double x, double y);
+
+cairo_public void
+cairo_pattern_mesh_set_corner_color_rgb (cairo_pattern_t *pattern,
+					 unsigned int corner_num,
+					 double red, double green, double blue);
+
+cairo_public void
+cairo_pattern_mesh_set_corner_color_rgba (cairo_pattern_t *pattern,
+					  unsigned int corner_num,
+					  double red, double green, double blue,
+					  double alpha);
+
+cairo_public void
 cairo_pattern_set_matrix (cairo_pattern_t      *pattern,
 			  const cairo_matrix_t *matrix);
 
@@ -2434,6 +2473,8 @@ cairo_pattern_get_matrix (cairo_pattern_t *pattern,
  * determined for areas "outside" the pattern's natural area, (for
  * example, outside the surface bounds or outside the gradient
  * geometry).
+ *
+ * Mesh patterns are not affected by the extend mode.
  *
  * The default extend mode is %CAIRO_EXTEND_NONE for surface patterns
  * and %CAIRO_EXTEND_PAD for gradient patterns.
@@ -2515,6 +2556,27 @@ cairo_public cairo_status_t
 cairo_pattern_get_radial_circles (cairo_pattern_t *pattern,
 				  double *x0, double *y0, double *r0,
 				  double *x1, double *y1, double *r1);
+
+cairo_public cairo_status_t
+cairo_pattern_mesh_get_patch_count (cairo_pattern_t *pattern,
+				    unsigned int *count);
+
+cairo_public cairo_path_t *
+cairo_pattern_mesh_get_path (cairo_pattern_t *pattern,
+			     unsigned int patch_num);
+
+cairo_public cairo_status_t
+cairo_pattern_mesh_get_corner_color_rgba (cairo_pattern_t *pattern,
+					  unsigned int patch_num,
+					  unsigned int corner_num,
+					  double *red, double *green,
+					  double *blue, double *alpha);
+
+cairo_public cairo_status_t
+cairo_pattern_mesh_get_control_point (cairo_pattern_t *pattern,
+				      unsigned int patch_num,
+				      unsigned int point_num,
+				      double *x, double *y);
 
 /* Matrix functions */
 
