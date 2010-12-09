@@ -270,6 +270,10 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED: user-font method not implemented (Since 1.10)
  * @CAIRO_STATUS_DEVICE_TYPE_MISMATCH: the device type is not appropriate for the operation (Since 1.10)
  * @CAIRO_STATUS_DEVICE_ERROR: an operation to the device caused an unspecified error (Since 1.10)
+ * @CAIRO_STATUS_INVALID_MESH_CONSTRUCTION: a mesh pattern
+ *   construction operation was used outside of a
+ *   cairo_pattern_mesh_begin_patch()/cairo_pattern_mesh_end_patch()
+ *   pair (Since 1.12)
  * @CAIRO_STATUS_LAST_STATUS: this is a special value indicating the number of
  *   status values defined in this enumeration.  When using this value, note
  *   that the version of cairo at run-time may have additional status values
@@ -321,6 +325,7 @@ typedef enum _cairo_status {
     CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED,
     CAIRO_STATUS_DEVICE_TYPE_MISMATCH,
     CAIRO_STATUS_DEVICE_ERROR,
+    CAIRO_STATUS_INVALID_MESH_CONSTRUCTION,
 
     CAIRO_STATUS_LAST_STATUS
 } cairo_status_t;
@@ -2360,6 +2365,7 @@ cairo_pattern_set_user_data (cairo_pattern_t		 *pattern,
  * @CAIRO_PATTERN_TYPE_SURFACE: The pattern is a based on a surface (an image).
  * @CAIRO_PATTERN_TYPE_LINEAR: The pattern is a linear gradient.
  * @CAIRO_PATTERN_TYPE_RADIAL: The pattern is a radial gradient.
+ * @CAIRO_PATTERN_TYPE_MESH: The pattern is a mesh.
  *
  * #cairo_pattern_type_t is used to describe the type of a given pattern.
  *
@@ -2387,7 +2393,8 @@ typedef enum _cairo_pattern_type {
     CAIRO_PATTERN_TYPE_SOLID,
     CAIRO_PATTERN_TYPE_SURFACE,
     CAIRO_PATTERN_TYPE_LINEAR,
-    CAIRO_PATTERN_TYPE_RADIAL
+    CAIRO_PATTERN_TYPE_RADIAL,
+    CAIRO_PATTERN_TYPE_MESH
 } cairo_pattern_type_t;
 
 cairo_public cairo_pattern_type_t

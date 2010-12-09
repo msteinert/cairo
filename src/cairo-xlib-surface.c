@@ -2230,6 +2230,7 @@ _cairo_xlib_surface_acquire_pattern_surface (cairo_xlib_display_t *display,
 	ASSERT_NOT_REACHED;
     case CAIRO_PATTERN_TYPE_SOLID:
     case CAIRO_PATTERN_TYPE_SURFACE:
+    case CAIRO_PATTERN_TYPE_MESH:
 	break;
     }
 

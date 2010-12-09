@@ -1501,6 +1501,7 @@ _status_to_string (cairo_status_t status)
 	f(USER_FONT_NOT_IMPLEMENTED);
 	f(DEVICE_TYPE_MISMATCH);
 	f(DEVICE_ERROR);
+	f(INVALID_MESH_CONSTRUCTION);
     case CAIRO_STATUS_LAST_STATUS:
 	break;
     }

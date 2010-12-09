@@ -104,6 +104,7 @@ _cairo_region_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_INVALID_SLANT:
     case CAIRO_STATUS_INVALID_WEIGHT:
     case CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED:
+    case CAIRO_STATUS_INVALID_MESH_CONSTRUCTION:
     default:
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_region_t *) &_cairo_region_nil;

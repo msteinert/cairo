@@ -446,6 +446,7 @@ _cairo_xcb_pixmap_for_pattern (cairo_xcb_surface_t *target,
 	/* fallthrough */
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
+    case CAIRO_PATTERN_TYPE_MESH:
 	return _render_to_pixmap (target, pattern, extents);
 
     default:

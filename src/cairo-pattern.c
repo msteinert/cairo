@@ -52,7 +52,7 @@
  */
 
 #if HAS_FREED_POOL
-static freed_pool_t freed_pattern_pool[4];
+static freed_pool_t freed_pattern_pool[5];
 #endif
 
 static const cairo_solid_pattern_t _cairo_pattern_nil = {
@@ -156,6 +156,9 @@ _cairo_pattern_init (cairo_pattern_t *pattern, cairo_pattern_type_t type)
     case CAIRO_PATTERN_TYPE_RADIAL:
 	VALGRIND_MAKE_MEM_UNDEFINED (pattern, sizeof (cairo_radial_pattern_t));
 	break;
+    case CAIRO_PATTERN_TYPE_MESH:
+	VALGRIND_MAKE_MEM_UNDEFINED (pattern, sizeof (cairo_mesh_pattern_t));
+	break;
     }
 #endif
 
@@ -221,6 +224,19 @@ _cairo_gradient_pattern_init_copy (cairo_gradient_pattern_t	  *pattern,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_status_t
+_cairo_mesh_pattern_init_copy (cairo_mesh_pattern_t       *pattern,
+			       const cairo_mesh_pattern_t *other)
+{
+    *pattern = *other;
+
+    _cairo_array_init (&pattern->patches,  sizeof (cairo_mesh_patch_t));
+
+    return _cairo_array_append_multiple (&pattern->patches,
+					 _cairo_array_index_const (&other->patches, 0),
+					 _cairo_array_num_elements (&other->patches));
+}
+
 cairo_status_t
 _cairo_pattern_init_copy (cairo_pattern_t	*pattern,
 			  const cairo_pattern_t *other)
@@ -263,6 +279,18 @@ _cairo_pattern_init_copy (cairo_pattern_t	*pattern,
 	    return status;
 
     } break;
+    case CAIRO_PATTERN_TYPE_MESH: {
+	cairo_mesh_pattern_t *dst = (cairo_mesh_pattern_t *) pattern;
+	cairo_mesh_pattern_t *src = (cairo_mesh_pattern_t *) other;
+	cairo_status_t status;
+
+	VG (VALGRIND_MAKE_MEM_UNDEFINED (pattern, sizeof (cairo_mesh_pattern_t)));
+
+	status = _cairo_mesh_pattern_init_copy (dst, src);
+	if (unlikely (status))
+	    return status;
+
+    } break;
     }
 
     /* The reference count and user_data array are unique to the copy. */
@@ -294,6 +322,9 @@ _cairo_pattern_init_static_copy (cairo_pattern_t	*pattern,
 	break;
     case CAIRO_PATTERN_TYPE_RADIAL:
 	size = sizeof (cairo_radial_pattern_t);
+	break;
+    case CAIRO_PATTERN_TYPE_MESH:
+	size = sizeof (cairo_mesh_pattern_t);
 	break;
     }
 
@@ -355,6 +386,12 @@ _cairo_pattern_fini (cairo_pattern_t *pattern)
 	if (gradient->stops && gradient->stops != gradient->stops_embedded)
 	    free (gradient->stops);
     } break;
+    case CAIRO_PATTERN_TYPE_MESH: {
+	cairo_mesh_pattern_t *mesh =
+	    (cairo_mesh_pattern_t *) pattern;
+
+	_cairo_array_fini (&mesh->patches);
+    } break;
     }
 
 #if HAVE_VALGRIND
@@ -370,6 +407,9 @@ _cairo_pattern_fini (cairo_pattern_t *pattern)
 	break;
     case CAIRO_PATTERN_TYPE_RADIAL:
 	VALGRIND_MAKE_MEM_NOACCESS (pattern, sizeof (cairo_radial_pattern_t));
+	break;
+    case CAIRO_PATTERN_TYPE_MESH:
+	VALGRIND_MAKE_MEM_NOACCESS (pattern, sizeof (cairo_mesh_pattern_t));
 	break;
     }
 #endif
@@ -397,6 +437,9 @@ _cairo_pattern_create_copy (cairo_pattern_t	  **pattern_out,
 	break;
     case CAIRO_PATTERN_TYPE_RADIAL:
 	pattern = malloc (sizeof (cairo_radial_pattern_t));
+	break;
+    case CAIRO_PATTERN_TYPE_MESH:
+	pattern = malloc (sizeof (cairo_mesh_pattern_t));
 	break;
     default:
 	ASSERT_NOT_REACHED;
@@ -2444,6 +2487,26 @@ _cairo_pattern_alpha_range (const cairo_pattern_t *pattern,
 	break;
     }
 
+    case CAIRO_PATTERN_TYPE_MESH: {
+	const cairo_mesh_pattern_t *mesh = (const cairo_mesh_pattern_t *) pattern;
+	const cairo_mesh_patch_t *patch = _cairo_array_index_const (&mesh->patches, 0);
+	unsigned int i, j, n = _cairo_array_num_elements (&mesh->patches);
+
+	assert (n >= 1);
+
+	alpha_min = alpha_max = patch[0].colors[0].alpha;
+	for (i = 0; i < n; i++) {
+	    for (j = 0; j < 4; j++) {
+		if (patch[i].colors[j].alpha < alpha_min)
+		    alpha_min = patch[i].colors[j].alpha;
+		else if (patch[i].colors[j].alpha > alpha_max)
+		    alpha_max = patch[i].colors[j].alpha;
+	    }
+	}
+
+	break;
+    }
+
     default:
 	ASSERT_NOT_REACHED;
 	/* fall through */
@@ -2458,6 +2521,63 @@ _cairo_pattern_alpha_range (const cairo_pattern_t *pattern,
 	*out_min = alpha_min;
     if (out_max)
 	*out_max = alpha_max;
+}
+
+/**
+ * _cairo_mesh_pattern_coord_box
+ *
+ * Convenience function to determine the range of the coordinates of
+ * the points used to define the patches of the mesh.
+ *
+ * This is guaranteed to contain the pattern extents, but might not be
+ * tight, just like a Bezier curve is always inside the convex hull of
+ * the control points.
+ *
+ * This function cannot be used while the mesh is being constructed.
+ *
+ * The function returns TRUE and sets the output parametes to define
+ * the coodrinate range if the mesh pattern contains at least one
+ * patch, otherwise it returns FALSE.
+ **/
+cairo_bool_t
+_cairo_mesh_pattern_coord_box (const cairo_mesh_pattern_t *mesh,
+			       double                     *out_xmin,
+			       double                     *out_ymin,
+			       double                     *out_xmax,
+			       double                     *out_ymax)
+{
+    const cairo_mesh_patch_t *patch;
+    unsigned int num_patches, i, j, k;
+    double x0, y0, x1, y1;
+
+    assert (mesh->current_patch == NULL);
+
+    num_patches = _cairo_array_num_elements (&mesh->patches);
+
+    if (num_patches == 0)
+	return FALSE;
+
+    patch = _cairo_array_index_const (&mesh->patches, 0);
+    x0 = x1 = patch->points[0][0].x;
+    y0 = y1 = patch->points[0][0].y;
+
+    for (i = 0; i < num_patches; i++) {
+	for (j = 0; j < 4; j++) {
+	    for (k = 0; k < 4; k++) {
+		x0 = MIN (x0, patch[i].points[j][k].x);
+		y0 = MIN (y0, patch[i].points[j][k].y);
+		x1 = MAX (x1, patch[i].points[j][k].x);
+		y1 = MAX (y1, patch[i].points[j][k].y);
+	    }
+	}
+    }
+
+    *out_xmin = x0;
+    *out_ymin = y0;
+    *out_xmax = x1;
+    *out_ymax = y1;
+
+    return TRUE;
 }
 
 /**
@@ -2525,6 +2645,22 @@ _cairo_gradient_pattern_is_solid (const cairo_gradient_pattern_t *gradient,
 			    gradient->stops[0].color.alpha);
 
     return TRUE;
+}
+
+static cairo_bool_t
+_mesh_is_clear (const cairo_mesh_pattern_t *mesh)
+{
+    double x1, y1, x2, y2;
+    cairo_bool_t is_valid;
+
+    is_valid = _cairo_mesh_pattern_coord_box (mesh, &x1, &y1, &x2, &y2);
+    if (!is_valid)
+	return TRUE;
+
+    if (x2 - x1 < DBL_EPSILON || y2 - y1 < DBL_EPSILON)
+	return TRUE;
+
+    return FALSE;
 }
 
 /**
@@ -2665,6 +2801,8 @@ _cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern,
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
 	return _gradient_is_opaque (&pattern->gradient.base, extents);
+    case CAIRO_PATTERN_TYPE_MESH:
+	return FALSE;
     }
 
     ASSERT_NOT_REACHED;
@@ -2688,6 +2826,8 @@ _cairo_pattern_is_clear (const cairo_pattern_t *abstract_pattern)
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
 	return _gradient_is_clear (&pattern->gradient.base, NULL);
+    case CAIRO_PATTERN_TYPE_MESH:
+	return _mesh_is_clear (&pattern->mesh);
     }
 
     ASSERT_NOT_REACHED;
@@ -3306,6 +3446,29 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 	}
 	break;
 
+    case CAIRO_PATTERN_TYPE_MESH:
+	{
+	    const cairo_mesh_pattern_t *mesh =
+		(const cairo_mesh_pattern_t *) pattern;
+	    double padx, pady;
+	    cairo_bool_t is_valid;
+
+	    is_valid = _cairo_mesh_pattern_coord_box (mesh, &x1, &y1, &x2, &y2);
+	    if (!is_valid)
+		goto EMPTY;
+
+	    padx = pady = 1.;
+	    cairo_matrix_transform_distance (&pattern->matrix, &padx, &pady);
+	    padx = fabs (padx);
+	    pady = fabs (pady);
+
+	    x1 -= padx;
+	    y1 -= pady;
+	    x2 += padx;
+	    y2 += pady;
+	}
+	break;
+
     default:
 	ASSERT_NOT_REACHED;
     }
@@ -3410,6 +3573,18 @@ _cairo_radial_pattern_hash (unsigned long hash,
 }
 
 static unsigned long
+_cairo_mesh_pattern_hash (unsigned long hash, const cairo_mesh_pattern_t *mesh)
+{
+    const cairo_mesh_patch_t *patch = _cairo_array_index_const (&mesh->patches, 0);
+    unsigned int i, n = _cairo_array_num_elements (&mesh->patches);
+
+    for (i = 0; i < n; i++)
+       hash = _cairo_hash_bytes (hash, patch + i, sizeof (cairo_mesh_patch_t));
+
+    return hash;
+}
+
+static unsigned long
 _cairo_surface_pattern_hash (unsigned long hash,
 			     const cairo_surface_pattern_t *surface)
 {
@@ -3446,6 +3621,8 @@ _cairo_pattern_hash (const cairo_pattern_t *pattern)
 	return _cairo_linear_pattern_hash (hash, (cairo_linear_pattern_t *) pattern);
     case CAIRO_PATTERN_TYPE_RADIAL:
 	return _cairo_radial_pattern_hash (hash, (cairo_radial_pattern_t *) pattern);
+    case CAIRO_PATTERN_TYPE_MESH:
+	return _cairo_mesh_pattern_hash (hash, (cairo_mesh_pattern_t *) pattern);
     case CAIRO_PATTERN_TYPE_SURFACE:
 	return _cairo_surface_pattern_hash (hash, (cairo_surface_pattern_t *) pattern);
     default:
@@ -3482,6 +3659,9 @@ _cairo_pattern_size (const cairo_pattern_t *pattern)
 	break;
     case CAIRO_PATTERN_TYPE_RADIAL:
 	return sizeof (cairo_radial_pattern_t) +
+	    _cairo_gradient_pattern_color_stops_size (pattern);
+    case CAIRO_PATTERN_TYPE_MESH:
+	return sizeof (cairo_mesh_pattern_t) +
 	    _cairo_gradient_pattern_color_stops_size (pattern);
     default:
 	ASSERT_NOT_REACHED;
@@ -3561,6 +3741,29 @@ _cairo_radial_pattern_equal (const cairo_radial_pattern_t *a,
 }
 
 static cairo_bool_t
+_cairo_mesh_pattern_equal (const cairo_mesh_pattern_t *a,
+			   const cairo_mesh_pattern_t *b)
+{
+    const cairo_mesh_patch_t *patch_a, *patch_b;
+    unsigned int i, num_patches_a, num_patches_b;
+
+    num_patches_a = _cairo_array_num_elements (&a->patches);
+    num_patches_b = _cairo_array_num_elements (&b->patches);
+
+    if (num_patches_a != num_patches_b)
+	return FALSE;
+
+    for (i = 0; i < num_patches_a; i++) {
+	patch_a = _cairo_array_index_const (&a->patches, i);
+	patch_b = _cairo_array_index_const (&a->patches, i);
+	if (memcmp (patch_a, patch_b, sizeof(cairo_mesh_patch_t)) != 0)
+	    return FALSE;
+    }
+
+    return TRUE;
+}
+
+static cairo_bool_t
 _cairo_surface_pattern_equal (const cairo_surface_pattern_t *a,
 			      const cairo_surface_pattern_t *b)
 {
@@ -3603,6 +3806,9 @@ _cairo_pattern_equal (const cairo_pattern_t *a, const cairo_pattern_t *b)
     case CAIRO_PATTERN_TYPE_RADIAL:
 	return _cairo_radial_pattern_equal ((cairo_radial_pattern_t *) a,
 					    (cairo_radial_pattern_t *) b);
+    case CAIRO_PATTERN_TYPE_MESH:
+	return _cairo_mesh_pattern_equal ((cairo_mesh_pattern_t *) a,
+					  (cairo_mesh_pattern_t *) b);
     case CAIRO_PATTERN_TYPE_SURFACE:
 	return _cairo_surface_pattern_equal ((cairo_surface_pattern_t *) a,
 					     (cairo_surface_pattern_t *) b);

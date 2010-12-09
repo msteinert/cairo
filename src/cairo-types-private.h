@@ -442,6 +442,51 @@ typedef union {
     cairo_radial_pattern_t radial;
 } cairo_gradient_pattern_union_t;
 
+/*
+ * A mesh patch is a tensor-product patch (bicubic Bezier surface
+ * patch). It has 16 control points. Each set of 4 points along the
+ * sides of the 4x4 grid of control points is a Bezier curve that
+ * defines one side of the patch. A color is assigned to each
+ * corner. The inner 4 points provide additional control over the
+ * shape and the color mapping.
+ *
+ * Cairo uses the same convention as the PDF Reference for numbering
+ * the points and side of the patch.
+ *
+ *
+ *                      Side 1
+ *
+ *          p[0][3] p[1][3] p[2][3] p[3][3]
+ * Side 0   p[0][2] p[1][2] p[2][2] p[3][2]  Side 2
+ *          p[0][1] p[1][1] p[2][1] p[3][1]
+ *          p[0][0] p[1][0] p[2][0] p[3][0]
+ *
+ *                      Side 3
+ *
+ *
+ *   Point            Color
+ *  -------------------------
+ *  points[0][0]    colors[0]
+ *  points[0][3]    colors[1]
+ *  points[3][3]    colors[2]
+ *  points[3][0]    colors[3]
+ */
+
+typedef struct _cairo_mesh_patch {
+    cairo_point_double_t points[4][4];
+    cairo_color_t colors[4];
+} cairo_mesh_patch_t;
+
+typedef struct _cairo_mesh_pattern {
+    cairo_pattern_t base;
+
+    cairo_array_t patches;
+    cairo_mesh_patch_t *current_patch;
+    int current_side;
+    cairo_bool_t has_control_point[4];
+    cairo_bool_t has_color[4];
+} cairo_mesh_pattern_t;
+
 typedef union {
     cairo_pattern_type_t	    type;
     cairo_pattern_t		    base;
@@ -449,6 +494,7 @@ typedef union {
     cairo_solid_pattern_t	    solid;
     cairo_surface_pattern_t	    surface;
     cairo_gradient_pattern_union_t  gradient;
+    cairo_mesh_pattern_t	    mesh;
 } cairo_pattern_union_t;
 
 /*

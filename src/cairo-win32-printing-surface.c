@@ -971,6 +971,9 @@ _cairo_win32_printing_surface_paint_pattern (cairo_win32_surface_t *surface,
     case CAIRO_PATTERN_TYPE_RADIAL:
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 	break;
+
+    case CAIRO_PATTERN_TYPE_MESH:
+	ASSERT_NOT_REACHED;
     }
 
     return CAIRO_STATUS_SUCCESS;

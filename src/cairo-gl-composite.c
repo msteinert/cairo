@@ -291,6 +291,7 @@ _cairo_gl_operand_init (cairo_gl_operand_t *operand,
 	/* fall through */
 
     default:
+    case CAIRO_PATTERN_TYPE_MESH:
     case CAIRO_PATTERN_TYPE_SURFACE:
 	return _cairo_gl_pattern_texture_setup (operand,
 						pattern, dst,

@@ -934,6 +934,9 @@ _cairo_svg_surface_analyze_operation (cairo_svg_surface_t   *surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
+    if (pattern->type == CAIRO_PATTERN_TYPE_MESH)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     /* SVG doesn't support extend reflect for image pattern */
     if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE &&
 	pattern->extend == CAIRO_EXTEND_REFLECT)
@@ -2035,6 +2038,9 @@ _cairo_svg_surface_emit_pattern (cairo_svg_surface_t   *surface,
     case CAIRO_PATTERN_TYPE_RADIAL:
 	return _cairo_svg_surface_emit_radial_pattern (surface, (cairo_radial_pattern_t *) pattern,
 						       output, is_stroke, parent_matrix);
+
+    case CAIRO_PATTERN_TYPE_MESH:
+	ASSERT_NOT_REACHED;
     }
     return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
 }

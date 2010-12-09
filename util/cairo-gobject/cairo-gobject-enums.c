@@ -49,6 +49,7 @@ cairo_gobject_status_get_type (void)
           { CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED, "CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED", "user-font-not-implemented" },
           { CAIRO_STATUS_DEVICE_TYPE_MISMATCH, "CAIRO_STATUS_DEVICE_TYPE_MISMATCH", "device-type-mismatch" },
           { CAIRO_STATUS_DEVICE_ERROR, "CAIRO_STATUS_DEVICE_ERROR", "device-error" },
+          { CAIRO_STATUS_INVALID_MESH_CONSTRUCTION, "CAIRO_STATUS_INVALID_MESH_CONSTRUCTION", "invalid-mesh-construction" },
           { CAIRO_STATUS_LAST_STATUS, "CAIRO_STATUS_LAST_STATUS", "last-status" },
           { 0, NULL, NULL }
       };
@@ -431,6 +432,7 @@ cairo_gobject_pattern_type_get_type (void)
           { CAIRO_PATTERN_TYPE_SURFACE, "CAIRO_PATTERN_TYPE_SURFACE", "surface" },
           { CAIRO_PATTERN_TYPE_LINEAR, "CAIRO_PATTERN_TYPE_LINEAR", "linear" },
           { CAIRO_PATTERN_TYPE_RADIAL, "CAIRO_PATTERN_TYPE_RADIAL", "radial" },
+          { CAIRO_PATTERN_TYPE_MESH, "CAIRO_PATTERN_TYPE_MESH", "mesh" },
           { 0, NULL, NULL }
       };
       GType type = g_enum_register_static (g_intern_static_string ("cairo_pattern_type_t"), values);
