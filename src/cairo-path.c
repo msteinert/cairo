@@ -55,7 +55,6 @@ static const cairo_path_t _cairo_path_nil = { CAIRO_STATUS_NO_MEMORY, NULL, 0 };
 /* Closure for path interpretation. */
 typedef struct cairo_path_count {
     int count;
-    cairo_point_t current_point;
 } cpc_t;
 
 static cairo_status_t
@@ -65,8 +64,6 @@ _cpc_move_to (void *closure,
     cpc_t *cpc = closure;
 
     cpc->count += 2;
-
-    cpc->current_point = *point;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -78,8 +75,6 @@ _cpc_line_to (void *closure,
     cpc_t *cpc = closure;
 
     cpc->count += 2;
-
-    cpc->current_point = *point;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -93,8 +88,6 @@ _cpc_curve_to (void		*closure,
     cpc_t *cpc = closure;
 
     cpc->count += 4;
-
-    cpc->current_point = *p3;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -119,8 +112,6 @@ _cairo_path_count (cairo_path_t		*path,
     cpc_t cpc;
 
     cpc.count = 0;
-    cpc.current_point.x = 0;
-    cpc.current_point.y = 0;
 
     if (flatten) {
 	status = _cairo_path_fixed_interpret_flat (path_fixed,
@@ -150,7 +141,6 @@ _cairo_path_count (cairo_path_t		*path,
 typedef struct cairo_path_populate {
     cairo_path_data_t *data;
     cairo_gstate_t    *gstate;
-    cairo_point_t      current_point;
 } cpp_t;
 
 static cairo_status_t
@@ -174,8 +164,6 @@ _cpp_move_to (void *closure,
     data[1].point.y = y;
 
     cpp->data += data->header.length;
-
-    cpp->current_point = *point;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -201,8 +189,6 @@ _cpp_line_to (void *closure,
     data[1].point.y = y;
 
     cpp->data += data->header.length;
-
-    cpp->current_point = *point;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -246,8 +232,6 @@ _cpp_curve_to (void			*closure,
 
     cpp->data += data->header.length;
 
-    cpp->current_point = *p3;
-
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -276,8 +260,6 @@ _cairo_path_populate (cairo_path_t		*path,
 
     cpp.data = path->data;
     cpp.gstate = gstate;
-    cpp.current_point.x = 0;
-    cpp.current_point.y = 0;
 
     if (flatten) {
 	double tolerance = _cairo_gstate_get_tolerance (gstate);
