@@ -1861,8 +1861,14 @@ cairo_arc (cairo_t *cr,
 	return;
     }
 
-    while (angle2 < angle1)
-	angle2 += 2 * M_PI;
+    if (angle2 < angle1) {
+	/* increase angle2 by multiples of full circle until it
+	 * satisfies angle2 >= angle1 */
+	angle2 = fmod (angle2 - angle1, 2 * M_PI);
+	if (angle2 < 0)
+	    angle2 += 2 * M_PI;
+	angle2 += angle1;
+    }
 
     cairo_line_to (cr,
 		   xc + radius * cos (angle1),
@@ -1903,8 +1909,14 @@ cairo_arc_negative (cairo_t *cr,
     if (radius <= 0.0)
 	return;
 
-    while (angle2 > angle1)
-	angle2 -= 2 * M_PI;
+    if (angle2 > angle1) {
+	/* decrease angle2 by multiples of full circle until it
+	 * satisfies angle2 <= angle1 */
+	angle2 = fmod (angle2 - angle1, 2 * M_PI);
+	if (angle2 > 0)
+	    angle2 -= 2 * M_PI;
+	angle2 += angle1;
+    }
 
     cairo_line_to (cr,
 		   xc + radius * cos (angle1),
