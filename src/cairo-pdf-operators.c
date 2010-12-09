@@ -514,7 +514,6 @@ _cairo_pdf_operators_emit_path (cairo_pdf_operators_t	*pdf_operators,
 	status = _cairo_pdf_path_rectangle (&info, &box);
     } else {
 	status = _cairo_path_fixed_interpret (path,
-					      CAIRO_DIRECTION_FORWARD,
 					      _cairo_pdf_path_move_to,
 					      _cairo_pdf_path_line_to,
 					      _cairo_pdf_path_curve_to,

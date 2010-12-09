@@ -1666,7 +1666,6 @@ _emit_path (cairo_script_surface_t *surface,
 	    return status;
 
 	status = _cairo_path_fixed_interpret (path,
-					      CAIRO_DIRECTION_FORWARD,
 					      _path_move_to,
 					      _path_line_to,
 					      _path_curve_to,

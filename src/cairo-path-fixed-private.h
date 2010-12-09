@@ -109,7 +109,6 @@ _cairo_path_fixed_translate (cairo_path_fixed_t *path,
 cairo_private cairo_status_t
 _cairo_path_fixed_append (cairo_path_fixed_t		    *path,
 			  const cairo_path_fixed_t	    *other,
-			  cairo_direction_t		     dir,
 			  cairo_fixed_t			     tx,
 			  cairo_fixed_t			     ty);
 

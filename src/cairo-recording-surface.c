@@ -801,7 +801,7 @@ _cairo_recording_surface_get_path (cairo_surface_t    *surface,
 	case CAIRO_COMMAND_FILL:
 	{
 	    status = _cairo_path_fixed_append (path,
-					       &command->fill.path, CAIRO_DIRECTION_FORWARD,
+					       &command->fill.path,
 					       0, 0);
 	    break;
 	}

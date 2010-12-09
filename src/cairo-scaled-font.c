@@ -2494,7 +2494,7 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 					     &scaled_glyph);
 	if (status == CAIRO_STATUS_SUCCESS) {
 	    status = _cairo_path_fixed_append (path,
-					       scaled_glyph->path, CAIRO_DIRECTION_FORWARD,
+					       scaled_glyph->path,
 					       _cairo_fixed_from_double (glyphs[i].x),
 					       _cairo_fixed_from_double (glyphs[i].y));
 

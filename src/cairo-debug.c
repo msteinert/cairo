@@ -240,7 +240,6 @@ _cairo_debug_print_path (FILE *stream, cairo_path_fixed_t *path)
 	    _cairo_fixed_to_double (path->extents.p2.y));
 
     status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
 					  _print_move_to,
 					  _print_line_to,
 					  _print_curve_to,

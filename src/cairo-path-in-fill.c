@@ -260,7 +260,6 @@ _cairo_path_fixed_in_fill (const cairo_path_fixed_t	*path,
     _cairo_in_fill_init (&in_fill, tolerance, x, y);
 
     status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
 					  _cairo_in_fill_move_to,
 					  _cairo_in_fill_line_to,
 					  _cairo_in_fill_curve_to,

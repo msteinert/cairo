@@ -106,7 +106,7 @@ _cairo_path_bounder_extents (const cairo_path_fixed_t *path,
     cairo_status_t status;
 
     bounder.has_extents = FALSE;
-    status = _cairo_path_fixed_interpret (path, CAIRO_DIRECTION_FORWARD,
+    status = _cairo_path_fixed_interpret (path,
 					  _cairo_path_bounder_move_to,
 					  _cairo_path_bounder_line_to,
 					  _cairo_path_bounder_curve_to,

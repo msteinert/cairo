@@ -391,7 +391,6 @@ path_to_qt (cairo_path_fixed_t *path,
     data.ctm_inverse = ctm_inverse;
 
     status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
 					  _cairo_path_to_qpainterpath_move_to,
 					  _cairo_path_to_qpainterpath_line_to,
 					  _cairo_path_to_qpainterpath_curve_to,

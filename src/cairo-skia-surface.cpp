@@ -500,7 +500,6 @@ path_to_sk (cairo_path_fixed_t *path,
     data.matrix = mat;
 
     status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
 					  cpc_move_to,
 					  cpc_line_to,
 					  cpc_curve_to,

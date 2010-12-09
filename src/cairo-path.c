@@ -115,7 +115,6 @@ _cairo_path_count (cairo_path_t		*path,
 
     if (flatten) {
 	status = _cairo_path_fixed_interpret_flat (path_fixed,
-						   CAIRO_DIRECTION_FORWARD,
 						   _cpc_move_to,
 						   _cpc_line_to,
 						   _cpc_close_path,
@@ -123,7 +122,6 @@ _cairo_path_count (cairo_path_t		*path,
 						   tolerance);
     } else {
 	status = _cairo_path_fixed_interpret (path_fixed,
-					      CAIRO_DIRECTION_FORWARD,
 					      _cpc_move_to,
 					      _cpc_line_to,
 					      _cpc_curve_to,
@@ -264,7 +262,6 @@ _cairo_path_populate (cairo_path_t		*path,
     if (flatten) {
 	double tolerance = _cairo_gstate_get_tolerance (gstate);
 	status = _cairo_path_fixed_interpret_flat (path_fixed,
-						   CAIRO_DIRECTION_FORWARD,
 						   _cpp_move_to,
 						   _cpp_line_to,
 						   _cpp_close_path,
@@ -272,7 +269,6 @@ _cairo_path_populate (cairo_path_t		*path,
 						   tolerance);
     } else {
 	status = _cairo_path_fixed_interpret (path_fixed,
-				          CAIRO_DIRECTION_FORWARD,
 					  _cpp_move_to,
 					  _cpp_line_to,
 					  _cpp_curve_to,

@@ -1087,7 +1087,6 @@ _cairo_win32_printing_surface_emit_path (cairo_win32_surface_t *surface,
 
     path_info.surface = surface;
     return _cairo_path_fixed_interpret (path,
-					CAIRO_DIRECTION_FORWARD,
 					_cairo_win32_printing_surface_path_move_to,
 					_cairo_win32_printing_surface_path_line_to,
 					_cairo_win32_printing_surface_path_curve_to,

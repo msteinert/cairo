@@ -588,7 +588,6 @@ _vg_path_from_cairo (vg_path_t    *vg_path,
     vg_path->dcount = 0;
 
     status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
 					  _vg_move_to,
 					  _vg_line_to,
 					  _vg_curve_to,

@@ -359,7 +359,6 @@ _cairo_quartz_cairo_path_to_quartz_context (cairo_path_fixed_t *path,
 
     CGContextBeginPath (closure);
     status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
 					  _cairo_path_to_quartz_context_move_to,
 					  _cairo_path_to_quartz_context_line_to,
 					  _cairo_path_to_quartz_context_curve_to,

@@ -804,7 +804,6 @@ _cairo_path_buf_add_points (cairo_path_buf_t       *buf,
 
 cairo_status_t
 _cairo_path_fixed_interpret (const cairo_path_fixed_t		*path,
-			     cairo_direction_t			 dir,
 			     cairo_path_fixed_move_to_func_t	*move_to,
 			     cairo_path_fixed_line_to_func_t	*line_to,
 			     cairo_path_fixed_curve_to_func_t	*curve_to,
@@ -819,7 +818,7 @@ _cairo_path_fixed_interpret (const cairo_path_fixed_t		*path,
     };
     cairo_status_t status;
     const cairo_path_buf_t *buf, *first;
-    cairo_bool_t forward = (dir == CAIRO_DIRECTION_FORWARD);
+    cairo_bool_t forward = TRUE;
     int step = forward ? 1 : -1;
 
     buf = first = forward ? cairo_path_head (path) : cairo_path_tail (path);
@@ -925,7 +924,6 @@ _append_close_path (void *abstract_closure)
 cairo_status_t
 _cairo_path_fixed_append (cairo_path_fixed_t		    *path,
 			  const cairo_path_fixed_t	    *other,
-			  cairo_direction_t		     dir,
 			  cairo_fixed_t			     tx,
 			  cairo_fixed_t			     ty)
 {
@@ -935,7 +933,7 @@ _cairo_path_fixed_append (cairo_path_fixed_t		    *path,
     closure.offset.x = tx;
     closure.offset.y = ty;
 
-    return _cairo_path_fixed_interpret (other, dir,
+    return _cairo_path_fixed_interpret (other,
 					_append_move_to,
 					_append_line_to,
 					_append_curve_to,
@@ -1175,7 +1173,6 @@ _cpf_close_path (void *closure)
 
 cairo_status_t
 _cairo_path_fixed_interpret_flat (const cairo_path_fixed_t		*path,
-				  cairo_direction_t			dir,
 				  cairo_path_fixed_move_to_func_t	*move_to,
 				  cairo_path_fixed_line_to_func_t	*line_to,
 				  cairo_path_fixed_close_path_func_t	*close_path,
@@ -1185,7 +1182,7 @@ _cairo_path_fixed_interpret_flat (const cairo_path_fixed_t		*path,
     cpf_t flattener;
 
     if (! path->has_curve_to) {
-	return _cairo_path_fixed_interpret (path, dir,
+	return _cairo_path_fixed_interpret (path,
 					    move_to,
 					    line_to,
 					    NULL,
@@ -1198,7 +1195,7 @@ _cairo_path_fixed_interpret_flat (const cairo_path_fixed_t		*path,
     flattener.line_to = line_to;
     flattener.close_path = close_path;
     flattener.closure = closure;
-    return _cairo_path_fixed_interpret (path, dir,
+    return _cairo_path_fixed_interpret (path,
 					_cpf_move_to,
 					_cpf_line_to,
 					_cpf_curve_to,

@@ -1319,7 +1319,6 @@ _cairo_path_fixed_stroke_to_shaper (cairo_path_fixed_t	*path,
     stroker.closure = closure;
 
     status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
 					  _cairo_stroker_move_to,
 					  stroker.dash.dashed ?
 					  _cairo_stroker_line_to_dashed :
@@ -1363,7 +1362,6 @@ _cairo_path_fixed_stroke_to_polygon (const cairo_path_fixed_t	*path,
 	_cairo_stroker_limit (&stroker, polygon->limits, polygon->num_limits);
 
     status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
 					  _cairo_stroker_move_to,
 					  stroker.dash.dashed ?
 					  _cairo_stroker_line_to_dashed :
@@ -2054,7 +2052,6 @@ _cairo_path_fixed_stroke_rectilinear_to_traps (const cairo_path_fixed_t	*path,
     }
 
     status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
 					  _cairo_rectilinear_stroker_move_to,
 					  rectilinear_stroker.dash.dashed ?
 					  _cairo_rectilinear_stroker_line_to_dashed :
@@ -2108,7 +2105,6 @@ _cairo_path_fixed_stroke_rectilinear_to_boxes (const cairo_path_fixed_t	*path,
     }
 
     status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
 					  _cairo_rectilinear_stroker_move_to,
 					  rectilinear_stroker.dash.dashed ?
 					  _cairo_rectilinear_stroker_line_to_dashed :

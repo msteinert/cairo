@@ -407,7 +407,6 @@ cairo_type1_font_create_charstring (cairo_type1_font_t      *font,
     path_info.type = type;
     if (emit_path) {
 	status = _cairo_path_fixed_interpret (scaled_glyph->path,
-					      CAIRO_DIRECTION_FORWARD,
 					      _charstring_move_to,
 					      _charstring_line_to,
 					      _charstring_curve_to,

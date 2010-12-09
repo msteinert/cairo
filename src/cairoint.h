@@ -1234,7 +1234,6 @@ typedef cairo_status_t
 
 cairo_private cairo_status_t
 _cairo_path_fixed_interpret (const cairo_path_fixed_t	  *path,
-		       cairo_direction_t		   dir,
 		       cairo_path_fixed_move_to_func_t	  *move_to,
 		       cairo_path_fixed_line_to_func_t	  *line_to,
 		       cairo_path_fixed_curve_to_func_t	  *curve_to,
@@ -1243,7 +1242,6 @@ _cairo_path_fixed_interpret (const cairo_path_fixed_t	  *path,
 
 cairo_private cairo_status_t
 _cairo_path_fixed_interpret_flat (const cairo_path_fixed_t *path,
-		       cairo_direction_t		   dir,
 		       cairo_path_fixed_move_to_func_t	  *move_to,
 		       cairo_path_fixed_line_to_func_t	  *line_to,
 		       cairo_path_fixed_close_path_func_t *close_path,

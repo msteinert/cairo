@@ -115,7 +115,6 @@ _cairo_path_fixed_fill_to_polygon (const cairo_path_fixed_t *path,
     _cairo_filler_init (&filler, tolerance, polygon);
 
     status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
 					  _cairo_filler_move_to,
 					  _cairo_filler_line_to,
 					  _cairo_filler_curve_to,
