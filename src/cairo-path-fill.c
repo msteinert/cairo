@@ -1,3 +1,4 @@
+/* -*- Mode: c; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 8; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
@@ -41,22 +42,36 @@
 #include "cairo-region-private.h"
 
 typedef struct cairo_filler {
-    double tolerance;
     cairo_polygon_t *polygon;
+
+    cairo_point_t current_point;
+    cairo_point_t last_move_to;
 } cairo_filler_t;
 
-static void
-_cairo_filler_init (cairo_filler_t *filler,
-		    double tolerance,
-		    cairo_polygon_t *polygon)
+
+static cairo_status_t
+_cairo_filler_line_to (void *closure,
+		       const cairo_point_t *point)
 {
-    filler->tolerance = tolerance;
-    filler->polygon = polygon;
+    cairo_filler_t *filler = closure;
+    cairo_status_t status;
+
+    status = _cairo_polygon_add_external_edge (filler->polygon,
+					       &filler->current_point,
+					       point);
+
+    filler->current_point = *point;
+
+    return status;
 }
 
-static void
-_cairo_filler_fini (cairo_filler_t *filler)
+static cairo_status_t
+_cairo_filler_close (void *closure)
 {
+    cairo_filler_t *filler = closure;
+
+    /* close the subpath */
+    return _cairo_filler_line_to (closure, &filler->last_move_to);
 }
 
 static cairo_status_t
@@ -64,44 +79,18 @@ _cairo_filler_move_to (void *closure,
 		       const cairo_point_t *point)
 {
     cairo_filler_t *filler = closure;
-    cairo_polygon_t *polygon = filler->polygon;
+    cairo_status_t status;
 
-    return _cairo_polygon_close (polygon) ||
-           _cairo_polygon_move_to (polygon, point);
-}
+    /* close current subpath */
+    status = _cairo_filler_close (closure);
+    if (unlikely (status))
+	return status;
 
-static cairo_status_t
-_cairo_filler_line_to (void *closure,
-		       const cairo_point_t *point)
-{
-    cairo_filler_t *filler = closure;
-    return _cairo_polygon_line_to (filler->polygon, point);
-}
+    /* make sure that the closure represents a degenerate path */
+    filler->current_point = *point;
+    filler->last_move_to = *point;
 
-static cairo_status_t
-_cairo_filler_curve_to (void *closure,
-			const cairo_point_t *b,
-			const cairo_point_t *c,
-			const cairo_point_t *d)
-{
-    cairo_filler_t *filler = closure;
-    cairo_spline_t spline;
-
-    if (! _cairo_spline_init (&spline,
-			      _cairo_filler_line_to, filler,
-			      &filler->polygon->current_point, b, c, d))
-    {
-	return _cairo_filler_line_to (closure, d);
-    }
-
-    return _cairo_spline_decompose (&spline, filler->tolerance);
-}
-
-static cairo_status_t
-_cairo_filler_close_path (void *closure)
-{
-    cairo_filler_t *filler = closure;
-    return _cairo_polygon_close (filler->polygon);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
@@ -112,21 +101,23 @@ _cairo_path_fixed_fill_to_polygon (const cairo_path_fixed_t *path,
     cairo_filler_t filler;
     cairo_status_t status;
 
-    _cairo_filler_init (&filler, tolerance, polygon);
+    filler.polygon = polygon;
 
-    status = _cairo_path_fixed_interpret (path,
-					  _cairo_filler_move_to,
-					  _cairo_filler_line_to,
-					  _cairo_filler_curve_to,
-					  _cairo_filler_close_path,
-					  &filler);
+    /* make sure that the closure represents a degenerate path */
+    filler.current_point.x = 0;
+    filler.current_point.y = 0;
+    filler.last_move_to = filler.current_point;
+
+    status = _cairo_path_fixed_interpret_flat (path,
+					       _cairo_filler_move_to,
+					       _cairo_filler_line_to,
+					       _cairo_filler_close,
+					       &filler,
+					       tolerance);
     if (unlikely (status))
 	return status;
 
-    status = _cairo_polygon_close (polygon);
-    _cairo_filler_fini (&filler);
-
-    return status;
+    return _cairo_filler_close (&filler);
 }
 
 cairo_status_t

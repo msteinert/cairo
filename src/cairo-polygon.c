@@ -37,7 +37,6 @@
 #include "cairoint.h"
 
 #include "cairo-error-private.h"
-#include "cairo-slope-private.h"
 
 void
 _cairo_polygon_init (cairo_polygon_t *polygon)
@@ -51,8 +50,6 @@ _cairo_polygon_init (cairo_polygon_t *polygon)
     polygon->edges = polygon->edges_embedded;
     polygon->edges_size = ARRAY_LENGTH (polygon->edges_embedded);
 
-    polygon->has_current_point = FALSE;
-    polygon->has_current_edge = FALSE;
     polygon->num_limits = 0;
 
     polygon->extents.p1.x = polygon->extents.p1.y = INT32_MAX;
@@ -405,91 +402,6 @@ _cairo_polygon_add_line (cairo_polygon_t *polygon,
 	_add_clipped_edge (polygon, &line->p1, &line->p2, top, bottom, dir);
     } else
 	_add_edge (polygon, &line->p1, &line->p2, top, bottom, dir);
-
-    return polygon->status;
-}
-
-/* flattened path operations */
-
-cairo_status_t
-_cairo_polygon_move_to (cairo_polygon_t *polygon,
-			const cairo_point_t *point)
-{
-    if (polygon->has_current_edge) {
-	_cairo_polygon_add_edge (polygon,
-				 &polygon->last_point,
-				 &polygon->current_point);
-	polygon->has_current_edge = FALSE;
-    }
-
-    if (! polygon->has_current_point) {
-	polygon->first_point = *point;
-	polygon->has_current_point = TRUE;
-    }
-
-    polygon->current_point = *point;
-    return polygon->status;
-}
-
-cairo_status_t
-_cairo_polygon_line_to (cairo_polygon_t *polygon,
-			const cairo_point_t *point)
-{
-    /* squash collinear edges */
-    if (polygon->has_current_edge) {
-	if (polygon->current_point.x != point->x ||
-	    polygon->current_point.y != point->y)
-	{
-	    cairo_slope_t this;
-
-	    _cairo_slope_init (&this, &polygon->current_point, point);
-	    if (_cairo_slope_equal (&polygon->current_edge, &this)) {
-		polygon->current_point = *point;
-		return CAIRO_STATUS_SUCCESS;
-	    }
-
-	    _cairo_polygon_add_edge (polygon,
-				     &polygon->last_point,
-				     &polygon->current_point);
-
-	    polygon->last_point = polygon->current_point;
-	    polygon->current_edge = this;
-	}
-    } else if (polygon->has_current_point) {
-	if (polygon->current_point.x != point->x ||
-	    polygon->current_point.y != point->y)
-	{
-	    polygon->last_point = polygon->current_point;
-	    _cairo_slope_init (&polygon->current_edge,
-			       &polygon->last_point,
-			       point);
-	    polygon->has_current_edge = TRUE;
-	}
-    } else {
-	polygon->first_point = *point;
-	polygon->has_current_point = TRUE;
-    }
-
-    polygon->current_point = *point;
-    return polygon->status;
-}
-
-cairo_status_t
-_cairo_polygon_close (cairo_polygon_t *polygon)
-{
-    cairo_status_t status;
-
-    if (polygon->has_current_point) {
-	status = _cairo_polygon_line_to (polygon, &polygon->first_point);
-	polygon->has_current_point = FALSE;
-    }
-
-    if (polygon->has_current_edge) {
-	_cairo_polygon_add_edge (polygon,
-				 &polygon->last_point,
-				 &polygon->current_point);
-	polygon->has_current_edge = FALSE;
-    }
 
     return polygon->status;
 }
