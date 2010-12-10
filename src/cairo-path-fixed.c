@@ -396,7 +396,7 @@ _cairo_path_fixed_penultimate_point (cairo_path_fixed_t *path)
     }
 }
 
-static inline void
+static void
 _cairo_path_fixed_drop_line_to (cairo_path_fixed_t *path)
 {
     cairo_path_buf_t *buf;
