@@ -3112,7 +3112,8 @@ _cairo_ps_surface_emit_pattern_stops (cairo_ps_surface_t       *surface,
     }
 
     if (pattern->base.extend == CAIRO_EXTEND_REPEAT ||
-	pattern->base.extend == CAIRO_EXTEND_REFLECT) {
+	pattern->base.extend == CAIRO_EXTEND_REFLECT)
+    {
 	if (stops[0].offset > COLOR_STOP_EPSILON) {
 	    if (pattern->base.extend == CAIRO_EXTEND_REFLECT)
 		memcpy (allstops, stops, sizeof (cairo_ps_color_stop_t));
@@ -3154,16 +3155,40 @@ _cairo_ps_surface_emit_pattern_stops (cairo_ps_surface_t       *surface,
 
     _cairo_output_stream_printf (surface->stream,
 				 "/CairoFunction\n");
-    if (n_stops == 1) {
-	/* work around single stop gradients */
-	_cairo_ps_surface_emit_linear_colorgradient (surface, &stops[0], &stops[0]);
+    if (stops[0].offset == stops[n_stops - 1].offset) {
+	/*
+	 * The first and the last stops have the same offset, but we
+	 * don't want a function with an empty domain, because that
+	 * would provoke underdefined behaviour from rasterisers.
+	 * This can only happen with EXTEND_PAD, because EXTEND_NONE
+	 * is optimised into a clear pattern in cairo-gstate, and
+	 * REFLECT/REPEAT are always transformed to have the first
+	 * stop at t=0 and the last stop at t=1.  Thus we want a step
+	 * function going from the first color to the last one.
+	 *
+	 * This can be accomplished by stitching three functions:
+	 *  - a constant first color function,
+	 *  - a step from the first color to the last color (with empty domain)
+	 *  - a constant last color function
+	 */
+	cairo_ps_color_stop_t pad_stops[4];
+
+	assert (pattern->base.extend == CAIRO_EXTEND_PAD);
+
+	pad_stops[0] = pad_stops[1] = stops[0];
+	pad_stops[2] = pad_stops[3] = stops[n_stops - 1];
+
+	pad_stops[0].offset = 0;
+	pad_stops[3].offset = 1;
+
+	_cairo_ps_surface_emit_stitched_colorgradient (surface, 4, pad_stops);
     } else if (n_stops == 2) {
 	/* no need for stitched function */
 	_cairo_ps_surface_emit_linear_colorgradient (surface, &stops[0], &stops[1]);
     } else {
 	/* multiple stops: stitch. XXX possible optimization: regulary spaced
 	 * stops do not require stitching. XXX */
-	_cairo_ps_surface_emit_stitched_colorgradient (surface, n_stops,stops);
+	_cairo_ps_surface_emit_stitched_colorgradient (surface, n_stops, stops);
     }
     _cairo_output_stream_printf (surface->stream,
 				 "def\n");
@@ -3250,6 +3275,21 @@ _cairo_ps_surface_emit_gradient (cairo_ps_surface_t       *surface,
 						  bounds_x1, bounds_y1,
 						  bounds_x2, bounds_y2,
 						  tolerance, domain);
+    } else if (pattern->stops[0].offset == pattern->stops[pattern->n_stops - 1].offset) {
+	/*
+	 * If the first and the last stop offset are the same, then
+	 * the color function is a step function.
+	 * _cairo_ps_surface_emit_pattern_stops emits it as a stitched
+	 * function no matter how many stops the pattern has.  The
+	 * domain of the stitched function will be [0 1] in this case.
+	 *
+	 * This is done to avoid emitting degenerate gradients for
+	 * EXTEND_PAD patterns having a step color function.
+	 */
+	domain[0] = 0.0;
+	domain[1] = 1.0;
+
+	assert (pattern->base.extend == CAIRO_EXTEND_PAD);
     } else {
 	domain[0] = pattern->stops[0].offset;
 	domain[1] = pattern->stops[pattern->n_stops - 1].offset;
