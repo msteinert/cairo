@@ -157,6 +157,7 @@ REFERENCE_IMAGES = \
 	arc-infinite-loop.ref.png \
 	arc-looping-dash.image16.ref.png \
 	arc-looping-dash.ps.ref.png \
+	arc-looping-dash.quartz.ref.png \
 	arc-looping-dash.ref.png \
 	big-line.ref.png \
 	big-line.image16.ref.png \
@@ -512,22 +513,27 @@ REFERENCE_IMAGES = \
 	extend-repeat.ps2.ref.png \
 	extend-repeat.ps3.ref.png \
 	extend-repeat.ref.png \
-	fallback-resolution.ppi150x150.ref.png \
-	fallback-resolution.ppi150x72.ref.png \
-	fallback-resolution.ppi300x300.ref.png \
-	fallback-resolution.ppi300x72.ref.png \
-	fallback-resolution.ppi37.5x37.5.ref.png \
-	fallback-resolution.ppi37.5x72.ref.png \
-	fallback-resolution.ppi600x600.ref.png \
-	fallback-resolution.ppi600x72.ref.png \
-	fallback-resolution.ppi72x150.ref.png \
-	fallback-resolution.ppi72x300.ref.png \
-	fallback-resolution.ppi72x37.5.ref.png \
-	fallback-resolution.ppi72x600.ref.png \
+	fallback-resolution.ppi144x144.ps.ref.png \
+	fallback-resolution.ppi144x144.ref.png \
+	fallback-resolution.ppi144x72.ps.ref.png \
+	fallback-resolution.ppi144x72.ref.png \
+	fallback-resolution.ppi288x288.pdf.ref.png \
+	fallback-resolution.ppi288x288.ps.ref.png \
+	fallback-resolution.ppi288x288.svg.ref.png \
+	fallback-resolution.ppi288x72.ps.ref.png \
+	fallback-resolution.ppi288x72.ref.png \
+	fallback-resolution.ppi576x576.pdf.ref.png \
+	fallback-resolution.ppi576x576.ps.ref.png \
+	fallback-resolution.ppi576x576.svg.ref.png \
+	fallback-resolution.ppi576x72.ps.ref.png \
+	fallback-resolution.ppi576x72.ref.png \
+	fallback-resolution.ppi72x144.ps.ref.png \
+	fallback-resolution.ppi72x144.ref.png \
+	fallback-resolution.ppi72x288.ps.ref.png \
+	fallback-resolution.ppi72x288.ref.png \
+	fallback-resolution.ppi72x576.ps.ref.png \
+	fallback-resolution.ppi72x576.ref.png \
 	fallback-resolution.ppi72x72.ref.png \
-	fallback-resolution.ppi72x75.ref.png \
-	fallback-resolution.ppi75x72.ref.png \
-	fallback-resolution.ppi75x75.ref.png \
 	fill-alpha-pattern.image16.ref.png \
 	fill-alpha-pattern.ps3.argb32.ref.png \
 	fill-alpha-pattern.ps3.ref.png \
@@ -993,6 +999,7 @@ REFERENCE_IMAGES = \
 	pixman-rotate.ref.png \
 	pixman-rotate.rgb24.ref.png \
 	pixman-rotate.ps.argb32.ref.png \
+	ps-eps.ref.png \
 	pthread-same-source.image16.ref.png \
 	pthread-same-source.quartz.xfail.png \
 	pthread-same-source.ref.png \
