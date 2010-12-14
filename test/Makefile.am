@@ -167,6 +167,11 @@ REFERENCE_IMAGES = \
 	bug-bo-rectangular.ref.png \
 	bug-bo-rectangular.image16.ref.png \
 	bug-bo-rectangular.ps.xfail.png \
+	bug-extents.image16.ref.png \
+	bug-extents.quartz.ref.png \
+	bug-extents.ps.ref.png \
+	bug-extents.ref.png \
+	bug-extents.xlib.ref.png \
 	bug-seams.ref.png \
 	bug-seams.xlib.ref.png \
 	bug-seams.xlib-fallback.ref.png \
