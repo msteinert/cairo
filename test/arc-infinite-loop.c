@@ -49,6 +49,8 @@ draw (cairo_t *cr, int width, int height)
 
     /* Check if the code that handles huge angles hangs */
     cairo_arc (cr, 0, 0, 1, 0, 1024 / DBL_EPSILON * M_PI);
+
+    return CAIRO_TEST_SUCCESS;
 }
 
 CAIRO_TEST (arc_infinite_loop,
