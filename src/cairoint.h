@@ -2195,15 +2195,6 @@ _cairo_pattern_init_for_surface (cairo_surface_pattern_t *pattern,
 				 cairo_surface_t *surface);
 
 cairo_private void
-_cairo_pattern_init_linear (cairo_linear_pattern_t *pattern,
-			    double x0, double y0, double x1, double y1);
-
-cairo_private void
-_cairo_pattern_init_radial (cairo_radial_pattern_t *pattern,
-			    double cx0, double cy0, double radius0,
-			    double cx1, double cy1, double radius1);
-
-cairo_private void
 _cairo_pattern_fini (cairo_pattern_t *pattern);
 
 cairo_private cairo_pattern_t *

@@ -496,7 +496,7 @@ _cairo_pattern_init_gradient (cairo_gradient_pattern_t *pattern,
     pattern->stops      = NULL;
 }
 
-void
+static void
 _cairo_pattern_init_linear (cairo_linear_pattern_t *pattern,
 			    double x0, double y0, double x1, double y1)
 {
@@ -508,7 +508,7 @@ _cairo_pattern_init_linear (cairo_linear_pattern_t *pattern,
     pattern->p2.y = _cairo_fixed_from_double (y1);
 }
 
-void
+static void
 _cairo_pattern_init_radial (cairo_radial_pattern_t *pattern,
 			    double cx0, double cy0, double radius0,
 			    double cx1, double cy1, double radius1)
