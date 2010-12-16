@@ -29,7 +29,7 @@
 #include "cairo-test.h"
 
 /* set this to 0.1 to make this test work */
-#define FACTOR 10
+#define FACTOR 1.e6
 
 /* XXX poppler-cairo doesn't handle gradients very well... */
 
