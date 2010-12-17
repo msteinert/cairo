@@ -1623,17 +1623,28 @@ static cairo_status_t
 _cairo_xlib_surface_set_matrix (cairo_xlib_display_t *display,
                                 cairo_xlib_surface_t *surface,
 				const cairo_matrix_t *matrix,
+				cairo_filter_t        filter,
 				double                xc,
-				double                yc)
+				double                yc,
+				int                  *x_offset,
+				int                  *y_offset)
 {
     XTransform xtransform;
+    pixman_transform_t *pixman_transform;
+    cairo_status_t status;
 
     /* Casting between pixman_transform_t and XTransform is safe because
      * they happen to be the exact same type.
      */
-    _cairo_matrix_to_pixman_matrix (matrix,
-				    (pixman_transform_t *) &xtransform,
-				    xc, yc);
+    pixman_transform = (pixman_transform_t *) &xtransform;
+
+    status = _cairo_matrix_to_pixman_matrix_offset (matrix, filter, xc, yc,
+						    pixman_transform,
+						    x_offset, y_offset);
+    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	status = CAIRO_STATUS_SUCCESS;
+    if (unlikely (status != CAIRO_STATUS_SUCCESS))
+	return status;
 
     if (memcmp (&xtransform, &surface->xtransform, sizeof (XTransform)) == 0)
 	return CAIRO_STATUS_SUCCESS;
@@ -1757,11 +1768,11 @@ _cairo_xlib_surface_set_component_alpha (cairo_xlib_surface_t *surface,
 }
 
 static cairo_int_status_t
-_cairo_xlib_surface_set_attributes (cairo_xlib_display_t             *display,
-                                    cairo_xlib_surface_t	     *surface,
-				    const cairo_surface_attributes_t *attributes,
-				    double			      xc,
-				    double			      yc)
+_cairo_xlib_surface_set_attributes (cairo_xlib_display_t       *display,
+                                    cairo_xlib_surface_t       *surface,
+				    cairo_surface_attributes_t *attributes,
+				    double			xc,
+				    double			yc)
 {
     cairo_int_status_t status;
     XRenderPictureAttributes pa;
@@ -1770,7 +1781,11 @@ _cairo_xlib_surface_set_attributes (cairo_xlib_display_t             *display,
     _cairo_xlib_surface_ensure_src_picture (display, surface);
 
     status = _cairo_xlib_surface_set_matrix (display, surface,
-                                             &attributes->matrix, xc, yc);
+					     &attributes->matrix,
+					     attributes->filter,
+					     xc, yc,
+					     &attributes->x_offset,
+					     &attributes->y_offset);
     if (unlikely (status))
 	return status;
 

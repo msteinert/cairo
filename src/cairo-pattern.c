@@ -2126,7 +2126,7 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
     pixman_transform_t	  pixman_transform;
     cairo_status_t	  status;
     cairo_bool_t	  repeat = FALSE;
-
+    int                   ix, iy;
     pixman_gradient_stop_t pixman_stops_static[2];
     pixman_gradient_stop_t *pixman_stops = pixman_stops_static;
     unsigned int i;
@@ -2286,12 +2286,21 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
 	return image->base.status;
     }
 
-    _cairo_matrix_to_pixman_matrix (&matrix, &pixman_transform,
-				    width/2., height/2.);
-    if (!pixman_image_set_transform (pixman_image, &pixman_transform)) {
-	cairo_surface_destroy (&image->base);
-	pixman_image_unref (pixman_image);
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    ix = x;
+    iy = y;
+    status = _cairo_matrix_to_pixman_matrix_offset (&matrix,
+						    pattern->base.filter,
+						    width/2., height/2.,
+						    &pixman_transform,
+						    &ix, &iy);
+    if (status != CAIRO_INT_STATUS_NOTHING_TO_DO) {
+	if (unlikely (status != CAIRO_STATUS_SUCCESS) ||
+	    ! pixman_image_set_transform (pixman_image, &pixman_transform))
+	{
+	    cairo_surface_destroy (&image->base);
+	    pixman_image_unref (pixman_image);
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	}
     }
 
     switch (pattern->base.extend) {
@@ -2313,7 +2322,7 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
                               pixman_image,
                               NULL,
                               image->pixman_image,
-                              x, y,
+			      ix, iy,
                               0, 0,
                               0, 0,
                               width, height);

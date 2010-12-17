@@ -856,25 +856,6 @@ _cairo_image_surface_unset_clip_region (cairo_image_surface_t *surface)
     pixman_image_set_clip_region32 (surface->pixman_image, NULL);
 }
 
-static double
-_pixman_nearest_sample (double d)
-{
-    return ceil (d - .5);
-}
-
-static cairo_bool_t
-_nearest_sample (cairo_filter_t filter, double *tx, double *ty)
-{
-    if (filter == CAIRO_FILTER_FAST || filter == CAIRO_FILTER_NEAREST) {
-	*tx = _pixman_nearest_sample (*tx);
-	*ty = _pixman_nearest_sample (*ty);
-    } else {
-	if (*tx != floor (*tx) || *ty != floor (*ty))
-	    return FALSE;
-    }
-    return fabs (*tx) < PIXMAN_MAX_INT && fabs (*ty) < PIXMAN_MAX_INT;
-}
-
 #if HAS_ATOMIC_OPS
 static pixman_image_t *__pixman_transparent_image;
 static pixman_image_t *__pixman_black_image;
@@ -1093,9 +1074,10 @@ _pixman_image_for_gradient (const cairo_gradient_pattern_t *pattern,
     pixman_image_t	  *pixman_image;
     pixman_gradient_stop_t pixman_stops_static[2];
     pixman_gradient_stop_t *pixman_stops = pixman_stops_static;
+    pixman_transform_t      pixman_transform;
     cairo_matrix_t matrix = pattern->base.matrix;
-    double tx, ty;
     unsigned int i;
+    cairo_status_t status;
 
     if (pattern->n_stops > ARRAY_LENGTH(pixman_stops_static)) {
 	pixman_stops = _cairo_malloc_ab (pattern->n_stops,
@@ -1182,49 +1164,19 @@ _pixman_image_for_gradient (const cairo_gradient_pattern_t *pattern,
     if (unlikely (pixman_image == NULL))
 	return NULL;
 
-    tx = pattern->base.matrix.x0;
-    ty = pattern->base.matrix.y0;
-    if (! _cairo_matrix_is_translation (&pattern->base.matrix) ||
-	! _nearest_sample (pattern->base.filter, &tx, &ty))
-    {
-	pixman_transform_t pixman_transform;
-
-	if (tx != 0. || ty != 0.) {
-	    cairo_matrix_t m, inv;
-	    cairo_status_t status;
-	    double x, y;
-
-	    /* pixman also limits the [xy]_offset to 16 bits so evenly
-	     * spread the bits between the two.
-	     */
-	    inv = pattern->base.matrix;
-	    status = cairo_matrix_invert (&inv);
-	    assert (status == CAIRO_STATUS_SUCCESS);
-
-	    x = floor (inv.x0 / 2);
-	    y = floor (inv.y0 / 2);
-	    tx = -x;
-	    ty = -y;
-	    cairo_matrix_init_translate (&inv, x, y);
-	    cairo_matrix_multiply (&m, &inv, &pattern->base.matrix);
-	    _cairo_matrix_to_pixman_matrix (&m, &pixman_transform,
-					    extents->x + extents->width/2.,
-					    extents->y + extents->height/2.);
-	} else {
-	    tx = ty = 0;
-	    _cairo_matrix_to_pixman_matrix (&pattern->base.matrix,
-					    &pixman_transform,
-					    extents->x + extents->width/2.,
-					    extents->y + extents->height/2.);
-	}
-
-	if (! pixman_image_set_transform (pixman_image, &pixman_transform)) {
+    *ix = *iy = 0;
+    status = _cairo_matrix_to_pixman_matrix_offset (&matrix, pattern->base.filter,
+						    extents->x + extents->width/2.,
+						    extents->y + extents->height/2.,
+						    &pixman_transform, ix, iy);
+    if (status != CAIRO_INT_STATUS_NOTHING_TO_DO) {
+	if (unlikely (status != CAIRO_STATUS_SUCCESS) ||
+	    ! pixman_image_set_transform (pixman_image, &pixman_transform))
+	{
 	    pixman_image_unref (pixman_image);
 	    return NULL;
 	}
     }
-    *ix = tx;
-    *iy = ty;
 
     {
 	pixman_repeat_t pixman_repeat;
@@ -1373,15 +1325,14 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 			   cairo_matrix_t *dst_device_transform,
 			   int *ix, int *iy)
 {
+    pixman_transform_t pixman_transform;
     pixman_image_t *pixman_image;
+    cairo_matrix_t m;
     cairo_rectangle_int_t sample;
     cairo_extend_t extend;
     cairo_filter_t filter;
-    double tx, ty;
+    cairo_status_t status;
     cairo_bool_t undo_src_transform = FALSE;
-
-    tx = pattern->base.matrix.x0;
-    ty = pattern->base.matrix.y0;
 
     extend = pattern->base.extend;
     filter = sampled_area (pattern, extents, &sample);
@@ -1424,12 +1375,11 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 	    }
 
 	    /* avoid allocating a 'pattern' image if we can reuse the original */
+	    *ix = *iy = 0;
 	    if (extend == CAIRO_EXTEND_NONE &&
-		_cairo_matrix_is_translation (&pattern->base.matrix) &&
-		_nearest_sample (filter, &tx, &ty))
+		_cairo_matrix_is_pixman_translation (&pattern->base.matrix,
+						     filter, ix, iy))
 	    {
-		*ix = tx;
-		*iy = ty;
 		return pixman_image_ref (source->pixman_image);
 	    }
 
@@ -1466,12 +1416,12 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 		}
 	    }
 
+	    *ix = sub->extents.x;
+	    *iy = sub->extents.y;
 	    if (is_contained &&
-		_cairo_matrix_is_translation (&pattern->base.matrix) &&
-		_nearest_sample (filter, &tx, &ty))
+		_cairo_matrix_is_pixman_translation (&pattern->base.matrix,
+						     filter, ix, iy))
 	    {
-		*ix = tx + sub->extents.x;
-		*iy = ty + sub->extents.y;
 		return pixman_image_ref (source->pixman_image);
 	    }
 
@@ -1487,6 +1437,8 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 	    }
 	}
     }
+
+    *ix = *iy = 0;
 
     if (pixman_image == NULL) {
 	struct acquire_source_cleanup *cleanup;
@@ -1543,60 +1495,32 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 	undo_src_transform = TRUE;
     }
 
-    if (! _cairo_matrix_is_translation (&pattern->base.matrix) ||
-	! _nearest_sample (filter, &tx, &ty))
-    {
-	pixman_transform_t pixman_transform;
-	cairo_matrix_t m;
+    m = pattern->base.matrix;
+    if (undo_src_transform) {
+	cairo_matrix_t sm;
 
-	m = pattern->base.matrix;
-	if (undo_src_transform) {
-	    cairo_matrix_t sm;
-
-	    cairo_matrix_init_scale (&sm,
-				     dst_device_transform->xx,
-				     dst_device_transform->yy);
-	    cairo_matrix_multiply (&m, &m, &sm);
-	}
-
-	if (m.x0 != 0. || m.y0 != 0.) {
-	    cairo_matrix_t inv;
-	    cairo_status_t status;
-	    double x, y;
-
-	    /* pixman also limits the [xy]_offset to 16 bits so evenly
-	     * spread the bits between the two.
-	     */
-	    inv = m;
-	    status = cairo_matrix_invert (&inv);
-	    assert (status == CAIRO_STATUS_SUCCESS);
-
-	    x = floor (inv.x0 / 2);
-	    y = floor (inv.y0 / 2);
-	    tx = -x;
-	    ty = -y;
-	    cairo_matrix_init_translate (&inv, x, y);
-	    cairo_matrix_multiply (&m, &inv, &m);
-	} else {
-	    tx = ty = 0;
-	}
-
-	_cairo_matrix_to_pixman_matrix (&m, &pixman_transform,
-					extents->x + extents->width/2.,
-					extents->y + extents->height/2.);
-	if (! pixman_image_set_transform (pixman_image, &pixman_transform)) {
-	    pixman_image_unref (pixman_image);
-	    return NULL;
-	}
+	cairo_matrix_init_scale (&sm,
+				 dst_device_transform->xx,
+				 dst_device_transform->yy);
+	cairo_matrix_multiply (&m, &m, &sm);
     }
-    *ix = tx;
-    *iy = ty;
 
-    if (_cairo_matrix_has_unity_scale (&pattern->base.matrix) &&
-	tx == pattern->base.matrix.x0 &&
-	ty == pattern->base.matrix.y0)
+    status = _cairo_matrix_to_pixman_matrix_offset (&m, filter,
+						    extents->x + extents->width/2.,
+						    extents->y + extents->height/2.,
+						    &pixman_transform, ix, iy);
+    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
     {
+	/* If the transform is an identity, we don't need to set it
+	 * and we can use any filtering, so choose the fastest one. */
 	pixman_image_set_filter (pixman_image, PIXMAN_FILTER_NEAREST, NULL, 0);
+    }
+    else if (unlikely (status != CAIRO_STATUS_SUCCESS ||
+		       ! pixman_image_set_transform (pixman_image,
+						     &pixman_transform)))
+    {
+	pixman_image_unref (pixman_image);
+	return NULL;
     }
     else
     {

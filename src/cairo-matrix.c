@@ -36,6 +36,9 @@
 
 #include "cairoint.h"
 #include "cairo-error-private.h"
+#include <float.h>
+
+#define PIXMAN_MAX_INT ((pixman_fixed_1 >> 1) - pixman_fixed_e) /* need to ensure deltas also fit */
 
 #if _XOPEN_SOURCE >= 600 || defined (_ISOC99_SOURCE)
 #define ISFINITE(x) isfinite (x)
@@ -906,87 +909,265 @@ _cairo_matrix_transformed_circle_major_axis (const cairo_matrix_t *matrix,
      */
 }
 
-void
-_cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
-				pixman_transform_t	*pixman_transform,
-				double xc,
-				double yc)
-{
-    static const pixman_transform_t pixman_identity_transform = {{
+static const pixman_transform_t pixman_identity_transform = {{
         {1 << 16,        0,       0},
         {       0, 1 << 16,       0},
         {       0,       0, 1 << 16}
     }};
 
-    if (_cairo_matrix_is_identity (matrix)) {
-        *pixman_transform = pixman_identity_transform;
-    } else {
-        cairo_matrix_t inv;
-	unsigned max_iterations;
+static cairo_status_t
+_cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
+				pixman_transform_t	*pixman_transform,
+				double xc,
+				double yc)
+{
+    cairo_matrix_t inv;
+    unsigned max_iterations;
 
-        pixman_transform->matrix[0][0] = _cairo_fixed_16_16_from_double (matrix->xx);
-        pixman_transform->matrix[0][1] = _cairo_fixed_16_16_from_double (matrix->xy);
-        pixman_transform->matrix[0][2] = _cairo_fixed_16_16_from_double (matrix->x0);
+    pixman_transform->matrix[0][0] = _cairo_fixed_16_16_from_double (matrix->xx);
+    pixman_transform->matrix[0][1] = _cairo_fixed_16_16_from_double (matrix->xy);
+    pixman_transform->matrix[0][2] = _cairo_fixed_16_16_from_double (matrix->x0);
 
-        pixman_transform->matrix[1][0] = _cairo_fixed_16_16_from_double (matrix->yx);
-        pixman_transform->matrix[1][1] = _cairo_fixed_16_16_from_double (matrix->yy);
-        pixman_transform->matrix[1][2] = _cairo_fixed_16_16_from_double (matrix->y0);
+    pixman_transform->matrix[1][0] = _cairo_fixed_16_16_from_double (matrix->yx);
+    pixman_transform->matrix[1][1] = _cairo_fixed_16_16_from_double (matrix->yy);
+    pixman_transform->matrix[1][2] = _cairo_fixed_16_16_from_double (matrix->y0);
 
-        pixman_transform->matrix[2][0] = 0;
-        pixman_transform->matrix[2][1] = 0;
-        pixman_transform->matrix[2][2] = 1 << 16;
+    pixman_transform->matrix[2][0] = 0;
+    pixman_transform->matrix[2][1] = 0;
+    pixman_transform->matrix[2][2] = 1 << 16;
 
-        /* The conversion above breaks cairo's translation invariance:
-         * a translation of (a, b) in device space translates to
-         * a translation of (xx * a + xy * b, yx * a + yy * b)
-         * for cairo, while pixman uses rounded versions of xx ... yy.
-         * This error increases as a and b get larger.
-         *
-         * To compensate for this, we fix the point (xc, yc) in pattern
-         * space and adjust pixman's transform to agree with cairo's at
-         * that point.
+    /* The conversion above breaks cairo's translation invariance:
+     * a translation of (a, b) in device space translates to
+     * a translation of (xx * a + xy * b, yx * a + yy * b)
+     * for cairo, while pixman uses rounded versions of xx ... yy.
+     * This error increases as a and b get larger.
+     *
+     * To compensate for this, we fix the point (xc, yc) in pattern
+     * space and adjust pixman's transform to agree with cairo's at
+     * that point.
+     */
+
+    if (_cairo_matrix_has_unity_scale (matrix))
+	return CAIRO_STATUS_SUCCESS;
+
+    if (unlikely (fabs (matrix->xx) > PIXMAN_MAX_INT ||
+		  fabs (matrix->xy) > PIXMAN_MAX_INT ||
+		  fabs (matrix->x0) > PIXMAN_MAX_INT ||
+		  fabs (matrix->yx) > PIXMAN_MAX_INT ||
+		  fabs (matrix->yy) > PIXMAN_MAX_INT ||
+		  fabs (matrix->y0) > PIXMAN_MAX_INT))
+    {
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
+    }
+
+    /* Note: If we can't invert the transformation, skip the adjustment. */
+    inv = *matrix;
+    if (cairo_matrix_invert (&inv) != CAIRO_STATUS_SUCCESS)
+	return CAIRO_STATUS_SUCCESS;
+
+    /* find the pattern space coordinate that maps to (xc, yc) */
+    max_iterations = 5;
+    do {
+	double x,y;
+	pixman_vector_t vector;
+	cairo_fixed_16_16_t dx, dy;
+
+	vector.vector[0] = _cairo_fixed_16_16_from_double (xc);
+	vector.vector[1] = _cairo_fixed_16_16_from_double (yc);
+	vector.vector[2] = 1 << 16;
+
+	/* If we can't transform the reference point, skip the adjustment. */
+	if (! pixman_transform_point_3d (pixman_transform, &vector))
+	    return CAIRO_STATUS_SUCCESS;
+
+	x = pixman_fixed_to_double (vector.vector[0]);
+	y = pixman_fixed_to_double (vector.vector[1]);
+	cairo_matrix_transform_point (&inv, &x, &y);
+
+	/* Ideally, the vector should now be (xc, yc).
+	 * We can now compensate for the resulting error.
 	 */
+	x -= xc;
+	y -= yc;
+	cairo_matrix_transform_distance (matrix, &x, &y);
+	dx = _cairo_fixed_16_16_from_double (x);
+	dy = _cairo_fixed_16_16_from_double (y);
+	pixman_transform->matrix[0][2] -= dx;
+	pixman_transform->matrix[1][2] -= dy;
 
-	if (_cairo_matrix_has_unity_scale (matrix))
-	    return;
+	if (dx == 0 && dy == 0)
+	    return CAIRO_STATUS_SUCCESS;
+    } while (--max_iterations);
 
-        /* Note: If we can't invert the transformation, skip the adjustment. */
-        inv = *matrix;
-        if (cairo_matrix_invert (&inv) != CAIRO_STATUS_SUCCESS)
-            return;
+    /* We didn't find an exact match between cairo and pixman, but
+     * the matrix should be mostly correct */
+    return CAIRO_STATUS_SUCCESS;
+}
 
-        /* find the pattern space coordinate that maps to (xc, yc) */
-	xc += .5; yc += .5; /* offset for the pixel centre */
-	max_iterations = 5;
-	do {
-	    double x,y;
-	    pixman_vector_t vector;
-	    cairo_fixed_16_16_t dx, dy;
+static inline double
+_pixman_nearest_sample (double d)
+{
+    return ceil (d - .5);
+}
 
-	    vector.vector[0] = _cairo_fixed_16_16_from_double (xc);
-	    vector.vector[1] = _cairo_fixed_16_16_from_double (yc);
-	    vector.vector[2] = 1 << 16;
+/**
+ * _cairo_matrix_is_pixman_translation:
+ * @matrix: a matrix
+ * @filter: the filter to be used on the pattern transformed by @matrix
+ * @x_offset: the translation in the X direction
+ * @y_offset: the translation in the Y direction
+ *
+ * Checks if @matrix translated by (x_offset, y_offset) can be
+ * represented using just an offset (within the range pixman can
+ * accept) and an identity matrix.
+ *
+ * Passing a non-zero value in x_offset/y_offset has the same effect
+ * as applying cairo_matrix_translate (matrix, x_offset, y_offset) and
+ * setting x_offset and y_offset to 0.
+ *
+ * Upon return x_offset and y_offset contain the translation vector if
+ * the return value is %TRUE. If the return value is %FALSE, they will
+ * not be modified.
+ *
+ * Return value: %TRUE if @matrix can be represented as a pixman
+ * translation, %FALSE otherwise.
+ **/
+cairo_bool_t
+_cairo_matrix_is_pixman_translation (const cairo_matrix_t     *matrix,
+				     cairo_filter_t            filter,
+				     int                      *x_offset,
+				     int                      *y_offset)
+{
+    double tx, ty;
 
-	    if (! pixman_transform_point_3d (pixman_transform, &vector))
-		return;
+    if (!_cairo_matrix_is_translation (matrix))
+	return FALSE;
 
-	    x = pixman_fixed_to_double (vector.vector[0]);
-	    y = pixman_fixed_to_double (vector.vector[1]);
-	    cairo_matrix_transform_point (&inv, &x, &y);
+    tx = matrix->x0 + *x_offset;
+    ty = matrix->y0 + *y_offset;
 
-	    /* Ideally, the vector should now be (xc, yc).
-	     * We can now compensate for the resulting error.
+    if (filter == CAIRO_FILTER_FAST || filter == CAIRO_FILTER_NEAREST) {
+	tx = _pixman_nearest_sample (tx);
+	ty = _pixman_nearest_sample (ty);
+    } else if (tx != floor (tx) || ty != floor (ty)) {
+	return FALSE;
+    }
+
+    if (fabs (tx) > PIXMAN_MAX_INT || fabs (ty) > PIXMAN_MAX_INT)
+	return FALSE;
+
+    *x_offset = _cairo_lround (tx);
+    *y_offset = _cairo_lround (ty);
+    return TRUE;
+}
+
+/**
+ * _cairo_matrix_to_pixman_matrix_offset:
+ * @matrix: a matrix
+ * @filter: the filter to be used on the pattern transformed by @matrix
+ * @xc: the X coordinate of the point to fix in pattern space
+ * @yc: the Y coordinate of the point to fix in pattern space
+ * @out_transform: the transformation which best approximates @matrix
+ * @x_offset: the translation in the X direction
+ * @y_offset: the translation in the Y direction
+ *
+ * This function tries to represent @matrix translated by (x_offset,
+ * y_offset) as a %pixman_transform_t and an translation.
+ *
+ * Passing a non-zero value in x_offset/y_offset has the same effect
+ * as applying cairo_matrix_translate (matrix, x_offset, y_offset) and
+ * setting x_offset and y_offset to 0.
+ *
+ * If it is possible to represent the matrix with an identity
+ * %pixman_transform_t and a translation within the valid range for
+ * pixman, this function will set @out_transform to be the identity,
+ * @x_offset and @y_offset to be the translation vector and will
+ * return %CAIRO_INT_STATUS_NOTHING_TO_DO. Otherwise it will try to
+ * evenly divide the translational component of @matrix between
+ * @out_transform and (@x_offset, @y_offset).
+ *
+ * Upon return x_offset and y_offset contain the translation vector.
+ *
+ * Return value: %CAIRO_INT_STATUS_NOTHING_TO_DO if the out_transform
+ * is the identity, %CAIRO_STATUS_INVALID_MATRIX if it was not
+ * possible to represent @matrix as a pixman_transform_t without
+ * overflows, %CAIRO_STATUS_SUCCESS otherwise.
+ **/
+cairo_status_t
+_cairo_matrix_to_pixman_matrix_offset (const cairo_matrix_t	*matrix,
+				       cairo_filter_t            filter,
+				       double                    xc,
+				       double                    yc,
+				       pixman_transform_t	*out_transform,
+				       int                      *x_offset,
+				       int                      *y_offset)
+{
+    cairo_bool_t is_pixman_translation;
+
+    is_pixman_translation = _cairo_matrix_is_pixman_translation (matrix,
+								 filter,
+								 x_offset,
+								 y_offset);
+
+    if (is_pixman_translation) {
+	*out_transform = pixman_identity_transform;
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+    } else {
+	cairo_matrix_t m;
+
+	m = *matrix;
+	cairo_matrix_translate (&m, *x_offset, *y_offset);
+	if (m.x0 != 0.0 || m.y0 != 0.0) {
+	    double tx, ty, norm;
+	    int i, j;
+
+	    /* pixman also limits the [xy]_offset to 16 bits so evenly
+	     * spread the bits between the two.
+	     *
+	     * To do this, find the solutions of:
+	     *   |x| = |x*m.xx + y*m.xy + m.x0|
+	     *   |y| = |x*m.yx + y*m.yy + m.y0|
+	     *
+	     * and select the one whose maximum norm is smallest.
 	     */
-	    x -= xc;
-	    y -= yc;
-	    cairo_matrix_transform_distance (matrix, &x, &y);
-	    dx = _cairo_fixed_16_16_from_double (x);
-	    dy = _cairo_fixed_16_16_from_double (y);
-	    pixman_transform->matrix[0][2] -= dx;
-	    pixman_transform->matrix[1][2] -= dy;
+	    tx = m.x0;
+	    ty = m.y0;
+	    norm = fmax (fabs (tx), fabs (ty));
 
-	    if (dx == 0 && dy == 0)
-		break;
-	} while (--max_iterations);
+	    for (i = -1; i < 2; i+=2) {
+		for (j = -1; j < 2; j+=2) {
+		    double x, y, den, new_norm;
+
+		    den = (m.xx + i) * (m.yy + j) - m.xy * m.yx;
+		    if (fabs (den) < DBL_EPSILON)
+			continue;
+
+		    x = m.y0 * m.xy - m.x0 * (m.yy + j);
+		    y = m.x0 * m.yx - m.y0 * (m.xx + i);
+
+		    den = 1 / den;
+		    x *= den;
+		    y *= den;
+
+		    new_norm = fmax (fabs (x), fabs (y));
+		    if (norm > new_norm) {
+			norm = new_norm;
+			tx = x;
+			ty = y;
+		    }
+		}
+	    }
+
+	    tx = floor (tx);
+	    ty = floor (ty);
+	    *x_offset = -tx;
+	    *y_offset = -ty;
+	    cairo_matrix_translate (&m, tx, ty);
+	} else {
+	    *x_offset = 0;
+	    *y_offset = 0;
+	}
+
+	return _cairo_matrix_to_pixman_matrix (&m, out_transform, xc, yc);
     }
 }

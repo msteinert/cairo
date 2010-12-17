@@ -2070,11 +2070,20 @@ cairo_private double
 _cairo_matrix_transformed_circle_major_axis (const cairo_matrix_t *matrix,
 					     double radius) cairo_pure;
 
-cairo_private void
-_cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
-				pixman_transform_t	*pixman_transform,
-				double                   xc,
-				double                   yc);
+cairo_private cairo_bool_t
+_cairo_matrix_is_pixman_translation (const cairo_matrix_t     *matrix,
+				     cairo_filter_t            filter,
+				     int                      *out_x_offset,
+				     int                      *out_y_offset);
+
+cairo_private cairo_status_t
+_cairo_matrix_to_pixman_matrix_offset (const cairo_matrix_t	*matrix,
+				       cairo_filter_t            filter,
+				       double                    xc,
+				       double                    yc,
+				       pixman_transform_t	*out_transform,
+				       int                      *out_x_offset,
+				       int                      *out_y_offset);
 
 /* cairo-traps.c */
 cairo_private void

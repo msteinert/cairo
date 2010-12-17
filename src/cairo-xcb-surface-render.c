@@ -428,33 +428,6 @@ _pattern_is_supported (uint32_t flags,
     return pattern->type != CAIRO_PATTERN_TYPE_MESH;
 }
 
-static double
-_pixman_nearest_sample (double d)
-{
-    return ceil (d - .5);
-}
-
-static cairo_bool_t
-_nearest_sample (const cairo_matrix_t *m,
-		 cairo_filter_t filter,
-		 double *tx, double *ty)
-{
-    *tx = m->x0;
-    *ty = m->y0;
-    if ((filter == CAIRO_FILTER_FAST || filter == CAIRO_FILTER_NEAREST)
-       && _cairo_matrix_has_unity_scale (m))
-    {
-	*tx = _pixman_nearest_sample (*tx);
-	*ty = _pixman_nearest_sample (*ty);
-    }
-    else
-    {
-	if (*tx != floor (*tx) || *ty != floor (*ty))
-	    return FALSE;
-    }
-    return fabs (*tx) < PIXMAN_MAX_INT && fabs (*ty) < PIXMAN_MAX_INT;
-}
-
 static void
 _cairo_xcb_picture_set_matrix (cairo_xcb_picture_t *picture,
 			       const cairo_matrix_t *matrix,
@@ -462,46 +435,19 @@ _cairo_xcb_picture_set_matrix (cairo_xcb_picture_t *picture,
 			       double xc, double yc)
 {
     xcb_render_transform_t transform;
-    cairo_matrix_t m;
-    double tx, ty;
-
-    m = *matrix;
-    if (_nearest_sample (&m, filter, &tx, &ty))
-	m.x0 = m.y0 = 0;
-    else
-	tx = ty = 0;
-
-    if (! _cairo_matrix_is_identity (&m)) {
-	cairo_matrix_t inv;
-	cairo_status_t status;
-
-	inv = m;
-	status = cairo_matrix_invert (&inv);
-	assert (status == CAIRO_STATUS_SUCCESS);
-
-	if (m.x0 != 0. || m.y0 != 0.) {
-	    double x, y;
-
-	    /* pixman also limits the [xy]_offset to 16 bits so evenly
-	     * spread the bits between the two.
-	     */
-	    x = floor (inv.x0 / 2);
-	    y = floor (inv.y0 / 2);
-	    tx = -x;
-	    ty = -y;
-	    cairo_matrix_init_translate (&inv, x, y);
-	    cairo_matrix_multiply (&m, &inv, &m);
-	} else {
-	    if (tx != 0. || ty != 0.)
-		cairo_matrix_transform_point (&inv, &tx, &ty);
-	}
-    }
+    pixman_transform_t *pixman_transform;
+    cairo_status_t ignored;
 
     /* Casting between pixman_transform_t and xcb_render_transform_t is safe
      * because they happen to be the exact same type.
      */
-    _cairo_matrix_to_pixman_matrix (&m,
-				    (pixman_transform_t *) &transform, xc, yc);
+    pixman_transform = (pixman_transform_t *) &transform;
+
+    picture->x = picture->x0;
+    picture->y = picture->y0;
+    ignored = _cairo_matrix_to_pixman_matrix_offset (matrix, filter, xc, yc,
+						     pixman_transform,
+						     &picture->x, &picture->y);
 
     if (memcmp (&picture->transform, &transform, sizeof (xcb_render_transform_t))) {
 	_cairo_xcb_connection_render_set_picture_transform (_picture_to_connection (picture),
@@ -510,9 +456,6 @@ _cairo_xcb_picture_set_matrix (cairo_xcb_picture_t *picture,
 
 	picture->transform = transform;
     }
-
-    picture->x = picture->x0 + tx;
-    picture->y = picture->y0 + ty;
 }
 
 static void
