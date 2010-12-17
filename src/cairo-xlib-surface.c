@@ -59,6 +59,7 @@
 #include <X11/Xutil.h> /* for XDestroyImage */
 
 #define XLIB_COORD_MAX 32767
+#define PIXMAN_MAX_INT ((pixman_fixed_1 >> 1) - pixman_fixed_e) /* need to ensure deltas also fit */
 
 #define DEBUG 0
 
@@ -2094,6 +2095,7 @@ _cairo_xlib_surface_acquire_pattern_surface (cairo_xlib_display_t *display,
 	    cairo_matrix_t matrix = pattern->matrix;
 	    cairo_xlib_surface_t *surface;
 	    char buf[CAIRO_STACK_BUFFER_SIZE];
+	    cairo_circle_double_t extremes[2];
 	    XFixed *stops;
 	    XRenderColor *colors;
 	    XRenderPictFormat *format;
@@ -2143,70 +2145,32 @@ _cairo_xlib_surface_acquire_pattern_surface (cairo_xlib_display_t *display,
 	    XSync (display->display, False);
 #endif
 
+	    _cairo_gradient_pattern_fit_to_range (gradient, PIXMAN_MAX_INT >> 1, &matrix, extremes);
+
 	    if (pattern->type == CAIRO_PATTERN_TYPE_LINEAR) {
-		cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) pattern;
 		XLinearGradient grad;
 
-		cairo_fixed_t xdim, ydim;
-
-		xdim = linear->p2.x - linear->p1.x;
-		ydim = linear->p2.y - linear->p1.y;
-
-		/*
-		 * Transform the matrix to avoid overflow when converting between
-		 * cairo_fixed_t and pixman_fixed_t (without incurring performance
-		 * loss when the transformation is unnecessary).
-		 *
-		 * XXX: Consider converting out-of-range co-ordinates and transforms.
-		 * Having a function to compute the required transformation to
-		 * "normalize" a given bounding box would be generally useful -
-		 * cf linear patterns, gradient patterns, surface patterns...
-		 */
-#define PIXMAN_MAX_INT ((pixman_fixed_1 >> 1) - pixman_fixed_e) /* need to ensure deltas also fit */
-		if (_cairo_fixed_integer_ceil (xdim) > PIXMAN_MAX_INT ||
-		    _cairo_fixed_integer_ceil (ydim) > PIXMAN_MAX_INT)
-		{
-		    double sf;
-
-		    if (xdim > ydim)
-			sf = PIXMAN_MAX_INT / _cairo_fixed_to_double (xdim);
-		    else
-			sf = PIXMAN_MAX_INT / _cairo_fixed_to_double (ydim);
-
-		    grad.p1.x = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p1.x) * sf);
-		    grad.p1.y = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p1.y) * sf);
-		    grad.p2.x = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p2.x) * sf);
-		    grad.p2.y = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p2.y) * sf);
-
-		    cairo_matrix_scale (&matrix, sf, sf);
-		}
-		else
-		{
-		    grad.p1.x = _cairo_fixed_to_16_16 (linear->p1.x);
-		    grad.p1.y = _cairo_fixed_to_16_16 (linear->p1.y);
-		    grad.p2.x = _cairo_fixed_to_16_16 (linear->p2.x);
-		    grad.p2.y = _cairo_fixed_to_16_16 (linear->p2.y);
-		}
+		grad.p1.x = _cairo_fixed_16_16_from_double (extremes[0].center.x);
+		grad.p1.y = _cairo_fixed_16_16_from_double (extremes[0].center.y);
+		grad.p2.x = _cairo_fixed_16_16_from_double (extremes[1].center.x);
+		grad.p2.y = _cairo_fixed_16_16_from_double (extremes[1].center.y);
 
 		picture = XRenderCreateLinearGradient (display->display, &grad,
 						       stops, colors,
 						       gradient->n_stops);
 	    } else {
-		cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) pattern;
 		XRadialGradient grad;
 
-		grad.inner.x = _cairo_fixed_to_16_16 (radial->c1.x);
-		grad.inner.y = _cairo_fixed_to_16_16 (radial->c1.y);
-		grad.inner.radius = _cairo_fixed_to_16_16 (radial->r1);
-
-		grad.outer.x = _cairo_fixed_to_16_16 (radial->c2.x);
-		grad.outer.y = _cairo_fixed_to_16_16 (radial->c2.y);
-		grad.outer.radius = _cairo_fixed_to_16_16 (radial->r2);
+		grad.inner.x      = _cairo_fixed_16_16_from_double (extremes[0].center.x);
+		grad.inner.y      = _cairo_fixed_16_16_from_double (extremes[0].center.y);
+		grad.inner.radius = _cairo_fixed_16_16_from_double (extremes[0].radius);
+		grad.outer.x      = _cairo_fixed_16_16_from_double (extremes[1].center.x);
+		grad.outer.y      = _cairo_fixed_16_16_from_double (extremes[1].center.y);
+		grad.outer.radius = _cairo_fixed_16_16_from_double (extremes[1].radius);
 
 		picture = XRenderCreateRadialGradient (display->display, &grad,
 						       stops, colors,
 						       gradient->n_stops);
-
 	    }
 
 	    if (stops != (XFixed *) buf)

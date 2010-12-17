@@ -35,6 +35,8 @@
 
 #include <float.h>
 
+#define PIXMAN_MAX_INT ((pixman_fixed_1 >> 1) - pixman_fixed_e) /* need to ensure deltas also fit */
+
 /**
  * SECTION:cairo-pattern
  * @Title: cairo_pattern_t
@@ -2124,6 +2126,8 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
     cairo_image_surface_t *image;
     pixman_image_t	  *pixman_image;
     pixman_transform_t	  pixman_transform;
+    cairo_circle_double_t extremes[2];
+    pixman_point_fixed_t  p1, p2;
     cairo_status_t	  status;
     cairo_bool_t	  repeat = FALSE;
     int                   ix, iy;
@@ -2151,71 +2155,24 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
 	pixman_stops[i].color.alpha = pattern->stops[i].color.alpha_short;
     }
 
-    if (pattern->base.type == CAIRO_PATTERN_TYPE_LINEAR)
-    {
-	cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) pattern;
-	pixman_point_fixed_t p1, p2;
-	cairo_fixed_t xdim, ydim;
+    _cairo_gradient_pattern_fit_to_range (pattern, PIXMAN_MAX_INT >> 1, &matrix, extremes);
 
-	xdim = linear->p2.x - linear->p1.x;
-	ydim = linear->p2.y - linear->p1.y;
+    p1.x = _cairo_fixed_16_16_from_double (extremes[0].center.x);
+    p1.y = _cairo_fixed_16_16_from_double (extremes[0].center.y);
+    p2.x = _cairo_fixed_16_16_from_double (extremes[1].center.x);
+    p2.y = _cairo_fixed_16_16_from_double (extremes[1].center.y);
 
-	/*
-	 * Transform the matrix to avoid overflow when converting between
-	 * cairo_fixed_t and pixman_fixed_t (without incurring performance
-	 * loss when the transformation is unnecessary).
-	 *
-	 * XXX: Consider converting out-of-range co-ordinates and transforms.
-	 * Having a function to compute the required transformation to
-	 * "normalize" a given bounding box would be generally useful -
-	 * cf linear patterns, gradient patterns, surface patterns...
-	 */
-#define PIXMAN_MAX_INT ((pixman_fixed_1 >> 1) - pixman_fixed_e) /* need to ensure deltas also fit */
-	if (_cairo_fixed_integer_ceil (xdim) > PIXMAN_MAX_INT ||
-	    _cairo_fixed_integer_ceil (ydim) > PIXMAN_MAX_INT)
-	{
-	    double sf;
-
-	    if (xdim > ydim)
-		sf = PIXMAN_MAX_INT / _cairo_fixed_to_double (xdim);
-	    else
-		sf = PIXMAN_MAX_INT / _cairo_fixed_to_double (ydim);
-
-	    p1.x = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p1.x) * sf);
-	    p1.y = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p1.y) * sf);
-	    p2.x = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p2.x) * sf);
-	    p2.y = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p2.y) * sf);
-
-	    cairo_matrix_scale (&matrix, sf, sf);
-	}
-	else
-	{
-	    p1.x = _cairo_fixed_to_16_16 (linear->p1.x);
-	    p1.y = _cairo_fixed_to_16_16 (linear->p1.y);
-	    p2.x = _cairo_fixed_to_16_16 (linear->p2.x);
-	    p2.y = _cairo_fixed_to_16_16 (linear->p2.y);
-	}
-
+    if (pattern->base.type == CAIRO_PATTERN_TYPE_LINEAR) {
 	pixman_image = pixman_image_create_linear_gradient (&p1, &p2,
 							    pixman_stops,
 							    pattern->n_stops);
-    }
-    else
-    {
-	cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) pattern;
-	pixman_point_fixed_t c1, c2;
+    } else {
 	pixman_fixed_t r1, r2;
 
-	c1.x = _cairo_fixed_to_16_16 (radial->c1.x);
-	c1.y = _cairo_fixed_to_16_16 (radial->c1.y);
-	r1   = _cairo_fixed_to_16_16 (radial->r1);
+	r1   = _cairo_fixed_16_16_from_double (extremes[0].radius);
+	r2   = _cairo_fixed_16_16_from_double (extremes[1].radius);
 
-	c2.x = _cairo_fixed_to_16_16 (radial->c2.x);
-	c2.y = _cairo_fixed_to_16_16 (radial->c2.y);
-	r2   = _cairo_fixed_to_16_16 (radial->r2);
-
-	pixman_image = pixman_image_create_radial_gradient (&c1, &c2,
-							    r1, r2,
+	pixman_image = pixman_image_create_radial_gradient (&p1, &p2, r1, r2,
 							    pixman_stops,
 							    pattern->n_stops);
     }
@@ -3076,6 +3033,91 @@ _cairo_gradient_pattern_interpolate (const cairo_gradient_pattern_t *gradient,
     }
 
 #undef lerp
+}
+
+
+/**
+ * _cairo_gradient_pattern_fit_to_range
+ *
+ * Scale the extremes of a gradient to guarantee that the coordinates
+ * and their deltas are within the range (-max_value, max_value). The
+ * new extremes are stored in out_circle.
+ *
+ * The pattern matrix is scaled to guarantee that the aspect of the
+ * gradient is the same and the result is stored in out_matrix.
+ *
+ **/
+void
+_cairo_gradient_pattern_fit_to_range (const cairo_gradient_pattern_t *gradient,
+				      double			      max_value,
+				      cairo_matrix_t                 *out_matrix,
+				      cairo_circle_double_t	      out_circle[2])
+{
+    double dim;
+
+    assert (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR ||
+	    gradient->base.type == CAIRO_PATTERN_TYPE_RADIAL);
+
+    if (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR) {
+	cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) gradient;
+
+	out_circle[0].center.x = _cairo_fixed_to_double (linear->p1.x);
+	out_circle[0].center.y = _cairo_fixed_to_double (linear->p1.y);
+	out_circle[0].radius = 0;
+	out_circle[1].center.x = _cairo_fixed_to_double (linear->p2.x);
+	out_circle[1].center.y = _cairo_fixed_to_double (linear->p2.y);
+	out_circle[1].radius = 0;
+
+	dim = fabs (_cairo_fixed_to_double (linear->p1.x));
+	dim = MAX (dim, fabs (_cairo_fixed_to_double (linear->p1.y)));
+	dim = MAX (dim, fabs (_cairo_fixed_to_double (linear->p2.x)));
+	dim = MAX (dim, fabs (_cairo_fixed_to_double (linear->p2.y)));
+	dim = MAX (dim, fabs (_cairo_fixed_to_double (linear->p1.x) -
+			      _cairo_fixed_to_double (linear->p2.x)));
+	dim = MAX (dim, fabs (_cairo_fixed_to_double (linear->p1.y) -
+			      _cairo_fixed_to_double (linear->p2.y)));
+    } else {
+	cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) gradient;
+
+	out_circle[0].center.x = _cairo_fixed_to_double (radial->c1.x);
+	out_circle[0].center.y = _cairo_fixed_to_double (radial->c1.y);
+	out_circle[0].radius = _cairo_fixed_to_double (radial->r1);
+
+	out_circle[1].center.x = _cairo_fixed_to_double (radial->c2.x);
+	out_circle[1].center.y = _cairo_fixed_to_double (radial->c2.y);
+	out_circle[1].radius = _cairo_fixed_to_double (radial->r2);
+
+	dim = fabs (_cairo_fixed_to_double (radial->c1.x));
+	dim = MAX (dim, fabs (_cairo_fixed_to_double (radial->c1.y)));
+	dim = MAX (dim, fabs (_cairo_fixed_to_double (radial->r1)));
+	dim = MAX (dim, fabs (_cairo_fixed_to_double (radial->c2.x)));
+	dim = MAX (dim, fabs (_cairo_fixed_to_double (radial->c2.y)));
+	dim = MAX (dim, fabs (_cairo_fixed_to_double (radial->r2)));
+	dim = MAX (dim, fabs (_cairo_fixed_to_double (radial->c1.x) -
+			      _cairo_fixed_to_double (radial->c2.x)));
+	dim = MAX (dim, fabs (_cairo_fixed_to_double (radial->c1.y) -
+			      _cairo_fixed_to_double (radial->c2.y)));
+	dim = MAX (dim, fabs (_cairo_fixed_to_double (radial->r1) -
+			      _cairo_fixed_to_double (radial->r2)));
+    }
+
+    if (unlikely (dim > max_value)) {
+	cairo_matrix_t scale;
+
+	dim = max_value / dim;
+
+	out_circle[0].center.x *= dim;
+	out_circle[0].center.y *= dim;
+	out_circle[0].radius   *= dim;
+	out_circle[1].center.x *= dim;
+	out_circle[1].center.y *= dim;
+	out_circle[1].radius   *= dim;
+
+	cairo_matrix_init_scale (&scale, dim, dim);
+	cairo_matrix_multiply (out_matrix, &gradient->base.matrix, &scale);
+    } else {
+	*out_matrix = gradient->base.matrix;
+    }
 }
 
 static cairo_bool_t

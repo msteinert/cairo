@@ -2241,6 +2241,12 @@ _cairo_gradient_pattern_interpolate (const cairo_gradient_pattern_t *gradient,
                                      double			     t,
                                      cairo_circle_double_t	    *out_circle);
 
+cairo_private void
+_cairo_gradient_pattern_fit_to_range (const cairo_gradient_pattern_t *gradient,
+				      double			      max_value,
+				      cairo_matrix_t                 *out_matrix,
+				      cairo_circle_double_t	      out_circle[2]);
+
 cairo_private cairo_bool_t
 _cairo_pattern_is_opaque_solid (const cairo_pattern_t *pattern);
 

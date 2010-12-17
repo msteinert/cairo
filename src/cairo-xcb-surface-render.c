@@ -879,13 +879,15 @@ _cairo_xcb_linear_picture (cairo_xcb_surface_t *target,
 			   const cairo_rectangle_int_t *extents)
 {
     char buf[CAIRO_STACK_BUFFER_SIZE];
-    cairo_fixed_t xdim, ydim;
     xcb_render_fixed_t *stops;
     xcb_render_color_t *colors;
     xcb_render_pointfix_t p1, p2;
-    cairo_matrix_t matrix = pattern->base.base.matrix;
+    cairo_matrix_t matrix;
+    cairo_circle_double_t extremes[2];
     cairo_xcb_picture_t *picture;
     cairo_status_t status;
+
+    _cairo_gradient_pattern_fit_to_range (&pattern->base, PIXMAN_MAX_INT >> 1, &matrix, extremes);
 
     picture = (cairo_xcb_picture_t *)
 	_cairo_xcb_screen_lookup_linear_picture (target->screen, pattern);
@@ -907,46 +909,13 @@ _cairo_xcb_linear_picture (cairo_xcb_surface_t *target,
     }
     picture->filter = CAIRO_FILTER_DEFAULT;
 
-    xdim = pattern->p2.x - pattern->p1.x;
-    ydim = pattern->p2.y - pattern->p1.y;
-
-    /*
-     * Transform the matrix to avoid overflow when converting between
-     * cairo_fixed_t and pixman_fixed_t (without incurring performance
-     * loss when the transformation is unnecessary).
-     *
-     * XXX: Consider converting out-of-range co-ordinates and transforms.
-     * Having a function to compute the required transformation to
-     * "normalize" a given bounding box would be generally useful -
-     * cf linear patterns, gradient patterns, surface patterns...
-     */
-#define PIXMAN_MAX_INT ((pixman_fixed_1 >> 1) - pixman_fixed_e) /* need to ensure deltas also fit */
-    if (unlikely (_cairo_fixed_integer_ceil (xdim) > PIXMAN_MAX_INT ||
-		  _cairo_fixed_integer_ceil (ydim) > PIXMAN_MAX_INT))
-    {
-	double sf;
-
-	if (xdim > ydim)
-	    sf = PIXMAN_MAX_INT / _cairo_fixed_to_double (xdim);
-	else
-	    sf = PIXMAN_MAX_INT / _cairo_fixed_to_double (ydim);
-
-	p1.x = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (pattern->p1.x) * sf);
-	p1.y = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (pattern->p1.y) * sf);
-	p2.x = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (pattern->p2.x) * sf);
-	p2.y = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (pattern->p2.y) * sf);
-
-	cairo_matrix_scale (&matrix, sf, sf);
-    }
-    else
-    {
-	p1.x = _cairo_fixed_to_16_16 (pattern->p1.x);
-	p1.y = _cairo_fixed_to_16_16 (pattern->p1.y);
-	p2.x = _cairo_fixed_to_16_16 (pattern->p2.x);
-	p2.y = _cairo_fixed_to_16_16 (pattern->p2.y);
-    }
-
     colors = (xcb_render_color_t *) (stops + pattern->base.n_stops);
+
+    p1.x = _cairo_fixed_16_16_from_double (extremes[0].center.x);
+    p1.y = _cairo_fixed_16_16_from_double (extremes[0].center.y);
+    p2.x = _cairo_fixed_16_16_from_double (extremes[1].center.x);
+    p2.y = _cairo_fixed_16_16_from_double (extremes[1].center.y);
+
     _cairo_xcb_connection_render_create_linear_gradient (target->connection,
 							 picture->picture,
 							 p1, p2,
@@ -985,10 +954,14 @@ _cairo_xcb_radial_picture (cairo_xcb_surface_t *target,
     char buf[CAIRO_STACK_BUFFER_SIZE];
     xcb_render_fixed_t *stops;
     xcb_render_color_t *colors;
-    xcb_render_pointfix_t c1, c2;
+    xcb_render_pointfix_t p1, p2;
     xcb_render_fixed_t r1, r2;
+    cairo_matrix_t matrix;
+    cairo_circle_double_t extremes[2];
     cairo_xcb_picture_t *picture;
     cairo_status_t status;
+
+    _cairo_gradient_pattern_fit_to_range (&pattern->base, PIXMAN_MAX_INT >> 1, &matrix, extremes);
 
     picture = (cairo_xcb_picture_t *)
 	_cairo_xcb_screen_lookup_radial_picture (target->screen, pattern);
@@ -1010,17 +983,19 @@ _cairo_xcb_radial_picture (cairo_xcb_surface_t *target,
     }
     picture->filter = CAIRO_FILTER_DEFAULT;
 
-    c1.x = _cairo_fixed_to_16_16 (pattern->c1.x);
-    c1.y = _cairo_fixed_to_16_16 (pattern->c1.y);
-    r1 = _cairo_fixed_to_16_16 (pattern->r1);
-    c2.x = _cairo_fixed_to_16_16 (pattern->c2.x);
-    c2.y = _cairo_fixed_to_16_16 (pattern->c2.y);
-    r2 = _cairo_fixed_to_16_16 (pattern->r2);
-
     colors = (xcb_render_color_t *) (stops + pattern->base.n_stops);
+
+    p1.x = _cairo_fixed_16_16_from_double (extremes[0].center.x);
+    p1.y = _cairo_fixed_16_16_from_double (extremes[0].center.y);
+    p2.x = _cairo_fixed_16_16_from_double (extremes[1].center.x);
+    p2.y = _cairo_fixed_16_16_from_double (extremes[1].center.y);
+
+    r1 = _cairo_fixed_16_16_from_double (extremes[0].radius);
+    r2 = _cairo_fixed_16_16_from_double (extremes[1].radius);
+
     _cairo_xcb_connection_render_create_radial_gradient (target->connection,
 							 picture->picture,
-							 c1, c2, r1, r2,
+							 p1, p2, r1, r2,
 							 pattern->base.n_stops,
 							 stops, colors);
 
@@ -1036,7 +1011,7 @@ _cairo_xcb_radial_picture (cairo_xcb_surface_t *target,
     }
 
 setup_picture:
-    _cairo_xcb_picture_set_matrix (picture, &pattern->base.base.matrix,
+    _cairo_xcb_picture_set_matrix (picture, &matrix,
 				   pattern->base.base.filter,
 				   extents->x + extents->width/2.,
 				   extents->y + extents->height/2.);
