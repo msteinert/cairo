@@ -504,10 +504,10 @@ _cairo_pattern_init_linear (cairo_linear_pattern_t *pattern,
 {
     _cairo_pattern_init_gradient (&pattern->base, CAIRO_PATTERN_TYPE_LINEAR);
 
-    pattern->p1.x = _cairo_fixed_from_double (x0);
-    pattern->p1.y = _cairo_fixed_from_double (y0);
-    pattern->p2.x = _cairo_fixed_from_double (x1);
-    pattern->p2.y = _cairo_fixed_from_double (y1);
+    pattern->pd1.x = x0;
+    pattern->pd1.y = y0;
+    pattern->pd2.x = x1;
+    pattern->pd2.y = y1;
 }
 
 static void
@@ -517,12 +517,12 @@ _cairo_pattern_init_radial (cairo_radial_pattern_t *pattern,
 {
     _cairo_pattern_init_gradient (&pattern->base, CAIRO_PATTERN_TYPE_RADIAL);
 
-    pattern->c1.x = _cairo_fixed_from_double (cx0);
-    pattern->c1.y = _cairo_fixed_from_double (cy0);
-    pattern->r1   = _cairo_fixed_from_double (fabs (radius0));
-    pattern->c2.x = _cairo_fixed_from_double (cx1);
-    pattern->c2.y = _cairo_fixed_from_double (cy1);
-    pattern->r2   = _cairo_fixed_from_double (fabs (radius1));
+    pattern->cd1.center.x = cx0;
+    pattern->cd1.center.y = cy0;
+    pattern->cd1.radius   = fabs (radius0);
+    pattern->cd2.center.x = cx1;
+    pattern->cd2.center.y = cy1;
+    pattern->cd2.radius   = fabs (radius1);
 }
 
 cairo_pattern_t *
@@ -2075,10 +2075,8 @@ _cairo_linear_pattern_classify (cairo_linear_pattern_t *pattern,
      * pattern. We actually only need 3/4 corners, so we skip the
      * fourth.
      */
-    point0.x = _cairo_fixed_to_double (pattern->p1.x);
-    point0.y = _cairo_fixed_to_double (pattern->p1.y);
-    point1.x = _cairo_fixed_to_double (pattern->p2.x);
-    point1.y = _cairo_fixed_to_double (pattern->p2.y);
+    point0 = pattern->pd1;
+    point1 = pattern->pd2;
 
     _cairo_matrix_get_affine (&pattern->base.base.matrix,
 			      &a, &b, &c, &d, &tx, &ty);
@@ -2531,7 +2529,8 @@ _cairo_pattern_reset_solid_surface_cache (void)
 static cairo_bool_t
 _linear_pattern_is_degenerate (const cairo_linear_pattern_t *linear)
 {
-    return linear->p1.x == linear->p2.x && linear->p1.y == linear->p2.y;
+    return fabs (linear->pd1.x - linear->pd2.x) < DBL_EPSILON &&
+	   fabs (linear->pd1.y - linear->pd2.y) < DBL_EPSILON;
 }
 
 static cairo_bool_t
@@ -2541,18 +2540,22 @@ _radial_pattern_is_degenerate (const cairo_radial_pattern_t *radial)
      * represented as a solid or clear pattern.  This corresponds to
      * one of the two cases:
      *
-     * 1) The radii are both zero.
+     * 1) The radii are both very small:
+     *      |dr| < DBL_EPSILON && min (r0, r1) < DBL_EPSILON
      *
-     * 2) The two circles have same radius and are at the same point.
-     *    (Cylinder gradient that doesn't move with the parameter.)
+     * 2) The two circles have about the same radius and are very
+     *    close to each other (approximately a cylinder gradient that
+     *    doesn't move with the parameter):
+     *      |dr| < DBL_EPSILON && max (|dx|, |dy|) < 2 * DBL_EPSILON
      *
-     * These checks are made in fixed point, so they're implicitly
-     * using an epsilon that is larger than the epsilons we're using
-     * in the floating point tests.
+     * These checks are consistent with the assumptions used in
+     * _cairo_radial_pattern_box_to_parameter ().
      */
-    return radial->r1 == radial->r2 &&
-	(radial->r1 == 0 /* && radial->r2 == 0 */ ||
-	 (radial->c1.x == radial->c2.x && radial->c1.y == radial->c2.y));
+
+    return fabs (radial->cd1.radius - radial->cd2.radius) < DBL_EPSILON &&
+	(MIN (radial->cd1.radius, radial->cd2.radius) < DBL_EPSILON ||
+	 MAX (fabs (radial->cd1.center.x - radial->cd2.center.x),
+	      fabs (radial->cd1.center.y - radial->cd2.center.y)) < 2 * DBL_EPSILON);
 }
 
 static void
@@ -2581,10 +2584,10 @@ _cairo_linear_pattern_box_to_parameter (const cairo_linear_pattern_t *linear,
      * tdy is the difference between top and bottom corners
      */
 
-    p1x = _cairo_fixed_to_double (linear->p1.x);
-    p1y = _cairo_fixed_to_double (linear->p1.y);
-    pdx = _cairo_fixed_to_double (linear->p2.x) - p1x;
-    pdy = _cairo_fixed_to_double (linear->p2.y) - p1y;
+    p1x = linear->pd1.x;
+    p1y = linear->pd1.y;
+    pdx = linear->pd2.x - p1x;
+    pdy = linear->pd2.y - p1y;
     invsqnorm = 1.0 / (pdx * pdx + pdy * pdy);
     pdx *= invsqnorm;
     pdy *= invsqnorm;
@@ -2648,12 +2651,12 @@ _cairo_radial_pattern_box_to_parameter (const cairo_radial_pattern_t *radial,
 
     x_focus = y_focus = 0; /* silence gcc */
 
-    cx = _cairo_fixed_to_double (radial->c1.x);
-    cy = _cairo_fixed_to_double (radial->c1.y);
-    cr = _cairo_fixed_to_double (radial->r1);
-    dx = _cairo_fixed_to_double (radial->c2.x) - cx;
-    dy = _cairo_fixed_to_double (radial->c2.y) - cy;
-    dr = _cairo_fixed_to_double (radial->r2)   - cr;
+    cx = radial->cd1.center.x;
+    cy = radial->cd1.center.y;
+    cr = radial->cd1.radius;
+    dx = radial->cd2.center.x - cx;
+    dy = radial->cd2.center.y - cy;
+    dr = radial->cd2.radius   - cr;
 
     /* translate by -(cx, cy) to simplify computations */
     x0 -= cx;
@@ -3018,18 +3021,18 @@ _cairo_gradient_pattern_interpolate (const cairo_gradient_pattern_t *gradient,
     assert (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR ||
 	    gradient->base.type == CAIRO_PATTERN_TYPE_RADIAL);
 
-#define lerp(a,b) _cairo_fixed_to_double(a)*(1-t) + _cairo_fixed_to_double(b)*t
+#define lerp(a,b) (a)*(1-t) + (b)*t
 
     if (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR) {
 	cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) gradient;
-	out_circle->center.x = lerp(linear->p1.x, linear->p2.x);
-	out_circle->center.y = lerp(linear->p1.y, linear->p2.y);
+	out_circle->center.x = lerp (linear->pd1.x, linear->pd2.x);
+	out_circle->center.y = lerp (linear->pd1.y, linear->pd2.y);
 	out_circle->radius = 0;
     } else {
 	cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) gradient;
-	out_circle->center.x = lerp(radial->c1.x, radial->c2.x);
-	out_circle->center.y = lerp(radial->c1.y, radial->c2.y);
-	out_circle->radius   = lerp(radial->r1, radial->r2);
+	out_circle->center.x = lerp (radial->cd1.center.x, radial->cd2.center.x);
+	out_circle->center.y = lerp (radial->cd1.center.y, radial->cd2.center.y);
+	out_circle->radius   = lerp (radial->cd1.radius  , radial->cd2.radius);
     }
 
 #undef lerp
@@ -3061,44 +3064,32 @@ _cairo_gradient_pattern_fit_to_range (const cairo_gradient_pattern_t *gradient,
     if (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR) {
 	cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) gradient;
 
-	out_circle[0].center.x = _cairo_fixed_to_double (linear->p1.x);
-	out_circle[0].center.y = _cairo_fixed_to_double (linear->p1.y);
+	out_circle[0].center = linear->pd1;
 	out_circle[0].radius = 0;
-	out_circle[1].center.x = _cairo_fixed_to_double (linear->p2.x);
-	out_circle[1].center.y = _cairo_fixed_to_double (linear->p2.y);
+	out_circle[1].center = linear->pd2;
 	out_circle[1].radius = 0;
 
-	dim = fabs (_cairo_fixed_to_double (linear->p1.x));
-	dim = MAX (dim, fabs (_cairo_fixed_to_double (linear->p1.y)));
-	dim = MAX (dim, fabs (_cairo_fixed_to_double (linear->p2.x)));
-	dim = MAX (dim, fabs (_cairo_fixed_to_double (linear->p2.y)));
-	dim = MAX (dim, fabs (_cairo_fixed_to_double (linear->p1.x) -
-			      _cairo_fixed_to_double (linear->p2.x)));
-	dim = MAX (dim, fabs (_cairo_fixed_to_double (linear->p1.y) -
-			      _cairo_fixed_to_double (linear->p2.y)));
+	dim = fabs (linear->pd1.x);
+	dim = MAX (dim, fabs (linear->pd1.y));
+	dim = MAX (dim, fabs (linear->pd2.x));
+	dim = MAX (dim, fabs (linear->pd2.y));
+	dim = MAX (dim, fabs (linear->pd1.x - linear->pd2.x));
+	dim = MAX (dim, fabs (linear->pd1.y - linear->pd2.y));
     } else {
 	cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) gradient;
 
-	out_circle[0].center.x = _cairo_fixed_to_double (radial->c1.x);
-	out_circle[0].center.y = _cairo_fixed_to_double (radial->c1.y);
-	out_circle[0].radius = _cairo_fixed_to_double (radial->r1);
+	out_circle[0] = radial->cd1;
+	out_circle[1] = radial->cd2;
 
-	out_circle[1].center.x = _cairo_fixed_to_double (radial->c2.x);
-	out_circle[1].center.y = _cairo_fixed_to_double (radial->c2.y);
-	out_circle[1].radius = _cairo_fixed_to_double (radial->r2);
-
-	dim = fabs (_cairo_fixed_to_double (radial->c1.x));
-	dim = MAX (dim, fabs (_cairo_fixed_to_double (radial->c1.y)));
-	dim = MAX (dim, fabs (_cairo_fixed_to_double (radial->r1)));
-	dim = MAX (dim, fabs (_cairo_fixed_to_double (radial->c2.x)));
-	dim = MAX (dim, fabs (_cairo_fixed_to_double (radial->c2.y)));
-	dim = MAX (dim, fabs (_cairo_fixed_to_double (radial->r2)));
-	dim = MAX (dim, fabs (_cairo_fixed_to_double (radial->c1.x) -
-			      _cairo_fixed_to_double (radial->c2.x)));
-	dim = MAX (dim, fabs (_cairo_fixed_to_double (radial->c1.y) -
-			      _cairo_fixed_to_double (radial->c2.y)));
-	dim = MAX (dim, fabs (_cairo_fixed_to_double (radial->r1) -
-			      _cairo_fixed_to_double (radial->r2)));
+	dim = fabs (radial->cd1.center.x);
+	dim = MAX (dim, fabs (radial->cd1.center.y));
+	dim = MAX (dim, fabs (radial->cd1.radius));
+	dim = MAX (dim, fabs (radial->cd2.center.x));
+	dim = MAX (dim, fabs (radial->cd2.center.y));
+	dim = MAX (dim, fabs (radial->cd2.radius));
+	dim = MAX (dim, fabs (radial->cd1.center.x - radial->cd2.center.x));
+	dim = MAX (dim, fabs (radial->cd1.center.y - radial->cd2.center.y));
+	dim = MAX (dim, fabs (radial->cd1.radius   - radial->cd2.radius));
     }
 
     if (unlikely (dim > max_value)) {
@@ -4243,13 +4234,13 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 	    if (pattern->extend != CAIRO_EXTEND_NONE)
 		goto UNBOUNDED;
 
-	    cx1 = _cairo_fixed_to_double (radial->c1.x);
-	    cy1 = _cairo_fixed_to_double (radial->c1.y);
-	    r1 = _cairo_fixed_to_double (radial->r1);
+	    cx1 = radial->cd1.center.x;
+	    cy1 = radial->cd1.center.y;
+	    r1  = radial->cd1.radius;
 
-	    cx2 = _cairo_fixed_to_double (radial->c2.x);
-	    cy2 = _cairo_fixed_to_double (radial->c2.y);
-	    r2 = _cairo_fixed_to_double (radial->r2);
+	    cx2 = radial->cd2.center.x;
+	    cy2 = radial->cd2.center.y;
+	    r2  = radial->cd2.radius;
 
 	    x1 = MIN (cx1 - r1, cx2 - r2);
 	    y1 = MIN (cy1 - r1, cy2 - r2);
@@ -4278,14 +4269,14 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 	    if (pattern->matrix.xy != 0. || pattern->matrix.yx != 0.)
 		goto UNBOUNDED;
 
-	    if (linear->p1.x == linear->p2.x) {
+	    if (linear->pd1.x == linear->pd2.x) {
 		x1 = -HUGE_VAL;
 		x2 = HUGE_VAL;
-		y1 = _cairo_fixed_to_double (MIN (linear->p1.y, linear->p2.y));
-		y2 = _cairo_fixed_to_double (MAX (linear->p1.y, linear->p2.y));
-	    } else if (linear->p1.y == linear->p2.y) {
-		x1 = _cairo_fixed_to_double (MIN (linear->p1.x, linear->p2.x));
-		x2 = _cairo_fixed_to_double (MAX (linear->p1.x, linear->p2.x));
+		y1 = MIN (linear->pd1.y, linear->pd2.y);
+		y2 = MAX (linear->pd1.y, linear->pd2.y);
+	    } else if (linear->pd1.y == linear->pd2.y) {
+		x1 = MIN (linear->pd1.x, linear->pd2.x);
+		x2 = MAX (linear->pd1.x, linear->pd2.x);
 		y1 = -HUGE_VAL;
 		y2 = HUGE_VAL;
 	    } else {
@@ -4402,8 +4393,8 @@ unsigned long
 _cairo_linear_pattern_hash (unsigned long hash,
 			    const cairo_linear_pattern_t *linear)
 {
-    hash = _cairo_hash_bytes (hash, &linear->p1, sizeof (linear->p1));
-    hash = _cairo_hash_bytes (hash, &linear->p2, sizeof (linear->p2));
+    hash = _cairo_hash_bytes (hash, &linear->pd1, sizeof (linear->pd1));
+    hash = _cairo_hash_bytes (hash, &linear->pd2, sizeof (linear->pd2));
 
     return _cairo_gradient_color_stops_hash (hash, &linear->base);
 }
@@ -4412,10 +4403,10 @@ unsigned long
 _cairo_radial_pattern_hash (unsigned long hash,
 			    const cairo_radial_pattern_t *radial)
 {
-    hash = _cairo_hash_bytes (hash, &radial->c1, sizeof (radial->c1));
-    hash = _cairo_hash_bytes (hash, &radial->r1, sizeof (radial->r1));
-    hash = _cairo_hash_bytes (hash, &radial->c2, sizeof (radial->c2));
-    hash = _cairo_hash_bytes (hash, &radial->r2, sizeof (radial->r2));
+    hash = _cairo_hash_bytes (hash, &radial->cd1.center, sizeof (radial->cd1.center));
+    hash = _cairo_hash_bytes (hash, &radial->cd1.radius, sizeof (radial->cd1.radius));
+    hash = _cairo_hash_bytes (hash, &radial->cd2.center, sizeof (radial->cd2.center));
+    hash = _cairo_hash_bytes (hash, &radial->cd2.radius, sizeof (radial->cd2.radius));
 
     return _cairo_gradient_color_stops_hash (hash, &radial->base);
 }
@@ -4548,16 +4539,16 @@ cairo_bool_t
 _cairo_linear_pattern_equal (const cairo_linear_pattern_t *a,
 			     const cairo_linear_pattern_t *b)
 {
-    if (a->p1.x != b->p1.x)
+    if (a->pd1.x != b->pd1.x)
 	return FALSE;
 
-    if (a->p1.y != b->p1.y)
+    if (a->pd1.y != b->pd1.y)
 	return FALSE;
 
-    if (a->p2.x != b->p2.x)
+    if (a->pd2.x != b->pd2.x)
 	return FALSE;
 
-    if (a->p2.y != b->p2.y)
+    if (a->pd2.y != b->pd2.y)
 	return FALSE;
 
     return _cairo_gradient_color_stops_equal (&a->base, &b->base);
@@ -4567,22 +4558,22 @@ cairo_bool_t
 _cairo_radial_pattern_equal (const cairo_radial_pattern_t *a,
 			     const cairo_radial_pattern_t *b)
 {
-    if (a->c1.x != b->c1.x)
+    if (a->cd1.center.x != b->cd1.center.x)
 	return FALSE;
 
-    if (a->c1.y != b->c1.y)
+    if (a->cd1.center.y != b->cd1.center.y)
 	return FALSE;
 
-    if (a->r1 != b->r1)
+    if (a->cd1.radius != b->cd1.radius)
 	return FALSE;
 
-    if (a->c2.x != b->c2.x)
+    if (a->cd2.center.x != b->cd2.center.x)
 	return FALSE;
 
-    if (a->c2.y != b->c2.y)
+    if (a->cd2.center.y != b->cd2.center.y)
 	return FALSE;
 
-    if (a->r2 != b->r2)
+    if (a->cd2.radius != b->cd2.radius)
 	return FALSE;
 
     return _cairo_gradient_color_stops_equal (&a->base, &b->base);
@@ -4859,13 +4850,13 @@ cairo_pattern_get_linear_points (cairo_pattern_t *pattern,
 	return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
 
     if (x0)
-	*x0 = _cairo_fixed_to_double (linear->p1.x);
+	*x0 = linear->pd1.x;
     if (y0)
-	*y0 = _cairo_fixed_to_double (linear->p1.y);
+	*y0 = linear->pd1.y;
     if (x1)
-	*x1 = _cairo_fixed_to_double (linear->p2.x);
+	*x1 = linear->pd2.x;
     if (y1)
-	*y1 = _cairo_fixed_to_double (linear->p2.y);
+	*y1 = linear->pd2.y;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -4903,17 +4894,17 @@ cairo_pattern_get_radial_circles (cairo_pattern_t *pattern,
 	return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
 
     if (x0)
-	*x0 = _cairo_fixed_to_double (radial->c1.x);
+	*x0 = radial->cd1.center.x;
     if (y0)
-	*y0 = _cairo_fixed_to_double (radial->c1.y);
+	*y0 = radial->cd1.center.y;
     if (r0)
-	*r0 = _cairo_fixed_to_double (radial->r1);
+	*r0 = radial->cd1.radius;
     if (x1)
-	*x1 = _cairo_fixed_to_double (radial->c2.x);
+	*x1 = radial->cd2.center.x;
     if (y1)
-	*y1 = _cairo_fixed_to_double (radial->c2.y);
+	*y1 = radial->cd2.center.y;
     if (r1)
-	*r1 = _cairo_fixed_to_double (radial->r2);
+	*r1 = radial->cd2.radius;
 
     return CAIRO_STATUS_SUCCESS;
 }

@@ -824,10 +824,10 @@ _cairo_win32_printing_surface_paint_linear_pattern (cairo_win32_surface_t *surfa
 
     cairo_matrix_multiply (&mat, &surface->ctm, &mat);
 
-    p1x = _cairo_fixed_to_double (pattern->p1.x);
-    p1y = _cairo_fixed_to_double (pattern->p1.y);
-    p2x = _cairo_fixed_to_double (pattern->p2.x);
-    p2y = _cairo_fixed_to_double (pattern->p2.y);
+    p1x = pattern->pd1.x;
+    p1y = pattern->pd1.y;
+    p2x = pattern->pd2.x;
+    p2y = pattern->pd2.y;
     cairo_matrix_translate (&mat, p1x, p1y);
 
     xd = p2x - p1x;

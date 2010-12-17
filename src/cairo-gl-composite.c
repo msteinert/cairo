@@ -170,14 +170,14 @@ _cairo_gl_gradient_operand_init (cairo_gl_operand_t *operand,
         if (unlikely (status))
             return status;
 
-	dx = _cairo_fixed_to_double (linear->p2.x - linear->p1.x);
-	dy = _cairo_fixed_to_double (linear->p2.y - linear->p1.y);
+	dx = linear->pd2.x - linear->pd1.x;
+	dy = linear->pd2.y - linear->pd1.y;
 	sf = 1.0 / (dx * dx + dy * dy);
 	dx *= sf;
 	dy *= sf;
 
-	x0 = _cairo_fixed_to_double (linear->p1.x);
-	y0 = _cairo_fixed_to_double (linear->p1.y);
+	x0 = linear->pd1.x;
+	y0 = linear->pd1.y;
 	offset = dx * x0 + dy * y0;
 
 	if (_cairo_matrix_is_identity (&linear->base.base.matrix)) {
@@ -203,12 +203,12 @@ _cairo_gl_gradient_operand_init (cairo_gl_operand_t *operand,
 	cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) gradient;
         double x0, y0, r0, x1, y1, r1;
 
-	x0 = _cairo_fixed_to_double (radial->c1.x);
-	x1 = _cairo_fixed_to_double (radial->c2.x);
-	y0 = _cairo_fixed_to_double (radial->c1.y);
-	y1 = _cairo_fixed_to_double (radial->c2.y);
-	r0 = _cairo_fixed_to_double (radial->r1);
-	r1 = _cairo_fixed_to_double (radial->r2);
+	x0 = radial->cd1.center.x;
+	x1 = radial->cd2.center.x;
+	y0 = radial->cd1.center.y;
+	y1 = radial->cd2.center.y;
+	r0 = radial->cd1.radius;
+	r1 = radial->cd2.radius;
 
         status = _cairo_gl_create_gradient_texture (dst,
                                                     gradient,

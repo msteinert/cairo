@@ -870,40 +870,34 @@ struct PatternToBrushConverter {
 
 	    if (pattern->type == CAIRO_PATTERN_TYPE_LINEAR) {
 		cairo_linear_pattern_t *lpat = (cairo_linear_pattern_t *) pattern;
-		grad = new QLinearGradient (_cairo_fixed_to_double (lpat->p1.x),
-					    _cairo_fixed_to_double (lpat->p1.y),
-					    _cairo_fixed_to_double (lpat->p2.x),
-					    _cairo_fixed_to_double (lpat->p2.y));
+		grad = new QLinearGradient (lpat->pd1.x, lpat->pd1.y,
+					    lpat->pd2.x, lpat->pd2.y);
 	    } else if (pattern->type == CAIRO_PATTERN_TYPE_RADIAL) {
 		cairo_radial_pattern_t *rpat = (cairo_radial_pattern_t *) pattern;
 
 		/* Based on the SVG surface code */
 
-		cairo_point_t *c0, *c1;
-		cairo_fixed_t radius0, radius1;
+		cairo_circle_double_t *c0, *c1;
+		double x0, y0, r0, x1, y1, r1;
 
-		if (rpat->r1 < rpat->r2) {
-		    c0 = &rpat->c1;
-		    c1 = &rpat->c2;
-		    radius0 = rpat->r1;
-		    radius1 = rpat->r2;
+		if (rpat->cd1.radius < rpat->cd2.radius) {
+		    c0 = &rpat->cd1;
+		    c1 = &rpat->cd2;
 		    reverse_stops = FALSE;
 		} else {
-		    c0 = &rpat->c2;
-		    c1 = &rpat->c1;
-		    radius0 = rpat->r2;
-		    radius1 = rpat->r1;
+		    c0 = &rpat->cd2;
+		    c1 = &rpat->cd1;
 		    reverse_stops = TRUE;
 		}
 
-		double x0 = _cairo_fixed_to_double (c0->x);
-		double y0 = _cairo_fixed_to_double (c0->y);
-		double r0 = _cairo_fixed_to_double (radius0);
-		double x1 = _cairo_fixed_to_double (c1->x);
-		double y1 = _cairo_fixed_to_double (c1->y);
-		double r1 = _cairo_fixed_to_double (radius1);
+		x0 = c0->center.x;
+		y0 = c0->center.y;
+		r0 = c0->radius;
+		x1 = c1->center.x;
+		y1 = c1->center.y;
+		r1 = c1->radius;
 
-		if (rpat->r1 == rpat->r2) {
+		if (r0 == r1) {
 		    grad = new QRadialGradient (x1, y1, r1, x1, y1);
 		} else {
 		    double fx = (r1 * x0 - r0 * x1) / (r1 - r0);

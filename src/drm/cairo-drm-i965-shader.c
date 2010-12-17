@@ -161,14 +161,14 @@ i965_shader_acquire_linear (i965_shader_t *shader,
     src->base.filter = i965_filter (CAIRO_FILTER_BILINEAR);
     src->base.extend = i965_extend (linear->base.base.extend);
 
-    dx = _cairo_fixed_to_double (linear->p2.x - linear->p1.x);
-    dy = _cairo_fixed_to_double (linear->p2.y - linear->p1.y);
+    dx = linear->pd2.x - linear->pd1.x;
+    dy = linear->pd2.y - linear->pd1.y;
     sf = 1. / (dx * dx + dy * dy);
     dx *= sf;
     dy *= sf;
 
-    x0 = _cairo_fixed_to_double (linear->p1.x);
-    y0 = _cairo_fixed_to_double (linear->p1.y);
+    x0 = linear->pd1.x;
+    y0 = linear->pd1.y;
     offset = dx*x0 + dy*y0;
 
     if (_cairo_matrix_is_identity (&linear->base.base.matrix)) {
@@ -215,24 +215,26 @@ i965_shader_acquire_radial (i965_shader_t *shader,
     src->base.filter = i965_filter (CAIRO_FILTER_BILINEAR);
     src->base.extend = i965_extend (radial->base.base.extend);
 
-    dx = _cairo_fixed_to_double (radial->c2.x - radial->c1.x);
-    dy = _cairo_fixed_to_double (radial->c2.y - radial->c1.y);
-    dr = _cairo_fixed_to_double (radial->r2 - radial->r1);
+    dx = radial->cd2.center.x - radial->cd1.center.x;
+    dy = radial->cd2.center.y - radial->cd1.center.y;
+    dr = radial->cd2.radius   - radial->cd1.radius;
 
-    r1 = _cairo_fixed_to_double (radial->r1);
+    r1 = radial->cd1.radius;
 
-    if (FALSE && radial->c2.x == radial->c1.x && radial->c2.y == radial->c1.y) {
+    if (FALSE && (radial->cd2.center.x == radial->cd1.center.x &&
+		  radial->cd2.center.y == radial->cd1.center.y))
+    {
 	/* XXX dr == 0, meaningless with anything other than PAD */
-	src->base.constants[0] = _cairo_fixed_to_double (radial->c1.x) / dr;
-	src->base.constants[1] = _cairo_fixed_to_double (radial->c1.y) / dr;
+	src->base.constants[0] = radial->cd1.center.x / dr;
+	src->base.constants[1] = radial->cd1.center.y / dr;
 	src->base.constants[2] = 1. / dr;
 	src->base.constants[3] = -r1 / dr;
 
 	src->base.constants_size = 4;
 	src->base.mode = RADIAL_ONE;
     } else {
-	src->base.constants[0] = -_cairo_fixed_to_double (radial->c1.x);
-	src->base.constants[1] = -_cairo_fixed_to_double (radial->c1.y);
+	src->base.constants[0] = -radial->cd1.center.x;
+	src->base.constants[1] = -radial->cd1.center.y;
 	src->base.constants[2] = r1;
 	src->base.constants[3] = -4 * (dx*dx + dy*dy - dr*dr);
 

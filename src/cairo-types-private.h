@@ -422,17 +422,15 @@ typedef struct _cairo_gradient_pattern {
 typedef struct _cairo_linear_pattern {
     cairo_gradient_pattern_t base;
 
-    cairo_point_t p1;
-    cairo_point_t p2;
+    cairo_point_double_t pd1;
+    cairo_point_double_t pd2;
 } cairo_linear_pattern_t;
 
 typedef struct _cairo_radial_pattern {
     cairo_gradient_pattern_t base;
 
-    cairo_point_t c1;
-    cairo_fixed_t r1;
-    cairo_point_t c2;
-    cairo_fixed_t r2;
+    cairo_circle_double_t cd1;
+    cairo_circle_double_t cd2;
 } cairo_radial_pattern_t;
 
 typedef union {

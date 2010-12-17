@@ -772,10 +772,10 @@ _vg_setup_linear_source (cairo_vg_context_t *context,
 {
     VGfloat linear[4];
 
-    linear[0] = _cairo_fixed_to_double (lpat->p1.x);
-    linear[1] = _cairo_fixed_to_double (lpat->p1.y);
-    linear[2] = _cairo_fixed_to_double (lpat->p2.x);
-    linear[3] = _cairo_fixed_to_double (lpat->p2.y);
+    linear[0] = lpat->pd1.x;
+    linear[1] = lpat->pd1.y;
+    linear[2] = lpat->pd2.x;
+    linear[3] = lpat->pd2.y;
 
     vgSetParameteri (context->paint,
 		     VG_PAINT_COLOR_RAMP_SPREAD_MODE,
@@ -799,11 +799,11 @@ _vg_setup_radial_source (cairo_vg_context_t *context,
 {
     VGfloat radial[5];
 
-    radial[0] = _cairo_fixed_to_double (rpat->c1.x);
-    radial[1] = _cairo_fixed_to_double (rpat->c1.y);
-    radial[2] = _cairo_fixed_to_double (rpat->c2.x);
-    radial[3] = _cairo_fixed_to_double (rpat->c2.y);
-    radial[4] = _cairo_fixed_to_double (rpat->r2);
+    radial[0] = rpat->cd1.center.x;
+    radial[1] = rpat->cd1.center.y;
+    radial[2] = rpat->cd2.center.x;
+    radial[3] = rpat->cd2.center.y;
+    radial[4] = rpat->cd2.radius;
 
     vgSetParameteri (context->paint,
 		     VG_PAINT_COLOR_RAMP_SPREAD_MODE, VG_COLOR_RAMP_SPREAD_PAD);

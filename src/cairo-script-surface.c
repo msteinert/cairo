@@ -929,10 +929,8 @@ _emit_linear_pattern (cairo_script_surface_t *surface,
 
     _cairo_output_stream_printf (ctx->stream,
 				 "%f %f %f %f linear",
-				 _cairo_fixed_to_double (linear->p1.x),
-				 _cairo_fixed_to_double (linear->p1.y),
-				 _cairo_fixed_to_double (linear->p2.x),
-				 _cairo_fixed_to_double (linear->p2.y));
+				 linear->pd1.x, linear->pd1.y,
+				 linear->pd2.x, linear->pd2.y);
     return _emit_gradient_color_stops (&linear->base, ctx->stream);
 }
 
@@ -947,12 +945,12 @@ _emit_radial_pattern (cairo_script_surface_t *surface,
 
     _cairo_output_stream_printf (ctx->stream,
 				 "%f %f %f %f %f %f radial",
-				 _cairo_fixed_to_double (radial->c1.x),
-				 _cairo_fixed_to_double (radial->c1.y),
-				 _cairo_fixed_to_double (radial->r1),
-				 _cairo_fixed_to_double (radial->c2.x),
-				 _cairo_fixed_to_double (radial->c2.y),
-				 _cairo_fixed_to_double (radial->r2));
+				 radial->cd1.center.x,
+				 radial->cd1.center.y,
+				 radial->cd1.radius,
+				 radial->cd2.center.x,
+				 radial->cd2.center.y,
+				 radial->cd2.radius);
     return _emit_gradient_color_stops (&radial->base, ctx->stream);
 }
 

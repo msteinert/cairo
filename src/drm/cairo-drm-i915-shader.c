@@ -332,16 +332,18 @@ i915_shader_radial_init (struct i915_shader_radial *r,
 {
     double dx, dy, dr, r1;
 
-    dx = _cairo_fixed_to_double (radial->c2.x - radial->c1.x);
-    dy = _cairo_fixed_to_double (radial->c2.y - radial->c1.y);
-    dr = _cairo_fixed_to_double (radial->r2 - radial->r1);
+    dx = radial->cd2.center.x - radial->cd1.center.x;
+    dy = radial->cd2.center.y - radial->cd1.center.y;
+    dr = radial->cd2.radius   - radial->cd1.radius;
 
-    r1 = _cairo_fixed_to_double (radial->r1);
+    r1 = radial->cd1.radius;
 
-    if (radial->c2.x == radial->c1.x && radial->c2.y == radial->c1.y) {
+    if (radial->cd2.center.x == radial->cd1.center.x &&
+	radial->cd2.center.y == radial->cd1.center.y)
+    {
 	/* XXX dr == 0, meaningless with anything other than PAD */
-	r->constants[0] = _cairo_fixed_to_double (radial->c1.x) / dr;
-	r->constants[1] = _cairo_fixed_to_double (radial->c1.y) / dr;
+	r->constants[0] = radial->cd1.center.x / dr;
+	r->constants[1] = radial->cd1.center.y / dr;
 	r->constants[2] = 1. / dr;
 	r->constants[3] = -r1 / dr;
 
@@ -352,8 +354,8 @@ i915_shader_radial_init (struct i915_shader_radial *r,
 
 	r->base.mode = RADIAL_ONE;
     } else {
-	r->constants[0] = -_cairo_fixed_to_double (radial->c1.x);
-	r->constants[1] = -_cairo_fixed_to_double (radial->c1.y);
+	r->constants[0] = -radial->cd1.center.x;
+	r->constants[1] = -radial->cd1.center.y;
 	r->constants[2] = r1;
 	r->constants[3] = -4 * (dx*dx + dy*dy - dr*dr);
 
@@ -1028,8 +1030,8 @@ i915_shader_linear_init (struct i915_shader_linear *l,
     double x0, y0, sf;
     double dx, dy, offset;
 
-    dx = _cairo_fixed_to_double (linear->p2.x - linear->p1.x);
-    dy = _cairo_fixed_to_double (linear->p2.y - linear->p1.y);
+    dx = linear->pd2.x - linear->pd1.x;
+    dy = linear->pd2.y - linear->pd1.y;
     sf = dx * dx + dy * dy;
     if (sf <= 1e-5)
 	return FALSE;
@@ -1037,8 +1039,8 @@ i915_shader_linear_init (struct i915_shader_linear *l,
     dx /= sf;
     dy /= sf;
 
-    x0 = _cairo_fixed_to_double (linear->p1.x);
-    y0 = _cairo_fixed_to_double (linear->p1.y);
+    x0 = linear->pd1.x;
+    y0 = linear->pd1.y;
     offset = dx*x0 + dy*y0;
 
     if (_cairo_matrix_is_identity (&linear->base.base.matrix)) {

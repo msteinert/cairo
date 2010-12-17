@@ -1784,7 +1784,6 @@ _cairo_svg_surface_emit_linear_pattern (cairo_svg_surface_t    *surface,
 					const cairo_matrix_t   *parent_matrix)
 {
     cairo_svg_document_t *document = surface->document;
-    double x0, y0, x1, y1;
     cairo_matrix_t p2u;
     cairo_status_t status;
 
@@ -1793,17 +1792,13 @@ _cairo_svg_surface_emit_linear_pattern (cairo_svg_surface_t    *surface,
     /* cairo_pattern_set_matrix ensures the matrix is invertible */
     assert (status == CAIRO_STATUS_SUCCESS);
 
-    x0 = _cairo_fixed_to_double (pattern->p1.x);
-    y0 = _cairo_fixed_to_double (pattern->p1.y);
-    x1 = _cairo_fixed_to_double (pattern->p2.x);
-    y1 = _cairo_fixed_to_double (pattern->p2.y);
-
     _cairo_output_stream_printf (document->xml_node_defs,
 				 "<linearGradient id=\"linear%d\" "
 				 "gradientUnits=\"userSpaceOnUse\" "
 				 "x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" ",
 				 document->linear_pattern_id,
-				 x0, y0, x1, y1);
+				 pattern->pd1.x, pattern->pd1.y,
+				 pattern->pd2.x, pattern->pd2.y);
 
     _cairo_svg_surface_emit_pattern_extend (document->xml_node_defs, &pattern->base.base),
     _cairo_svg_surface_emit_transform (document->xml_node_defs, "gradientTransform", &p2u, parent_matrix);
@@ -1842,38 +1837,33 @@ _cairo_svg_surface_emit_radial_pattern (cairo_svg_surface_t    *surface,
     double fx, fy;
     cairo_bool_t reverse_stops;
     cairo_status_t status;
-    cairo_point_t *c0, *c1;
-    cairo_fixed_t radius0, radius1;
+    cairo_circle_double_t *c0, *c1;
 
     extend = pattern->base.base.extend;
 
-    if (pattern->r1 < pattern->r2) {
-	c0 = &pattern->c1;
-	c1 = &pattern->c2;
-	radius0 = pattern->r1;
-	radius1 = pattern->r2;
+    if (pattern->cd1.radius < pattern->cd2.radius) {
+	c0 = &pattern->cd1;
+	c1 = &pattern->cd2;
 	reverse_stops = FALSE;
     } else {
-	c0 = &pattern->c2;
-	c1 = &pattern->c1;
-	radius0 = pattern->r2;
-	radius1 = pattern->r1;
+	c0 = &pattern->cd2;
+	c1 = &pattern->cd1;
 	reverse_stops = TRUE;
     }
 
-    x0 = _cairo_fixed_to_double (c0->x);
-    y0 = _cairo_fixed_to_double (c0->y);
-    r0 = _cairo_fixed_to_double (radius0);
-    x1 = _cairo_fixed_to_double (c1->x);
-    y1 = _cairo_fixed_to_double (c1->y);
-    r1 = _cairo_fixed_to_double (radius1);
+    x0 = c0->center.x;
+    y0 = c0->center.y;
+    r0 = c0->radius;
+    x1 = c1->center.x;
+    y1 = c1->center.y;
+    r1 = c1->radius;
 
     p2u = pattern->base.base.matrix;
     status = cairo_matrix_invert (&p2u);
     /* cairo_pattern_set_matrix ensures the matrix is invertible */
     assert (status == CAIRO_STATUS_SUCCESS);
 
-    if (pattern->r1 == pattern->r2) {
+    if (r0 == r1) {
 	unsigned int n_stops = pattern->base.n_stops;
 
 	_cairo_output_stream_printf (document->xml_node_defs,

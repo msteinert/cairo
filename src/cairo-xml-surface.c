@@ -554,10 +554,8 @@ _cairo_xml_emit_linear (cairo_xml_t *xml,
 {
     _cairo_xml_printf (xml,
 		       "<linear x1='%f' y1='%f' x2='%f' y2='%f'>",
-		       _cairo_fixed_to_double (linear->p1.x),
-		       _cairo_fixed_to_double (linear->p1.y),
-		       _cairo_fixed_to_double (linear->p2.x),
-		       _cairo_fixed_to_double (linear->p2.y));
+		       linear->pd1.x, linear->pd1.y,
+		       linear->pd2.x, linear->pd2.y);
     _cairo_xml_indent (xml, 2);
     _cairo_xml_emit_gradient (xml, &linear->base);
     _cairo_xml_indent (xml, -2);
@@ -571,12 +569,8 @@ _cairo_xml_emit_radial (cairo_xml_t *xml,
 {
     _cairo_xml_printf (xml,
 		       "<radial x1='%f' y1='%f' r1='%f' x2='%f' y2='%f' r2='%f'>",
-		       _cairo_fixed_to_double (radial->c1.x),
-		       _cairo_fixed_to_double (radial->c1.y),
-		       _cairo_fixed_to_double (radial->r1),
-		       _cairo_fixed_to_double (radial->c2.x),
-		       _cairo_fixed_to_double (radial->c2.y),
-		       _cairo_fixed_to_double (radial->r2));
+		       radial->cd1.center.x, radial->cd1.center.y, radial->cd1.radius,
+		       radial->cd2.center.x, radial->cd2.center.y, radial->cd2.radius);
     _cairo_xml_indent (xml, 2);
     _cairo_xml_emit_gradient (xml, &radial->base);
     _cairo_xml_indent (xml, -2);
