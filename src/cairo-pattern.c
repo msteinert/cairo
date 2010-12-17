@@ -2126,7 +2126,6 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
     pixman_transform_t	  pixman_transform;
     cairo_status_t	  status;
     cairo_bool_t	  repeat = FALSE;
-    cairo_bool_t          opaque = TRUE;
 
     pixman_gradient_stop_t pixman_stops_static[2];
     pixman_gradient_stop_t *pixman_stops = pixman_stops_static;
@@ -2150,8 +2149,6 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
 	pixman_stops[i].color.green = pattern->stops[i].color.green_short;
 	pixman_stops[i].color.blue = pattern->stops[i].color.blue_short;
 	pixman_stops[i].color.alpha = pattern->stops[i].color.alpha_short;
-	if (! CAIRO_ALPHA_SHORT_IS_OPAQUE (pixman_stops[i].color.alpha))
-	    opaque = FALSE;
     }
 
     if (pattern->base.type == CAIRO_PATTERN_TYPE_LINEAR)
