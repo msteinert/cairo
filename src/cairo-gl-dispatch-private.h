@@ -32,8 +32,8 @@
 #ifndef CAIRO_GL_DISPATCH_PRIVATE_H
 #define CAIRO_GL_DISPATCH_PRIVATE_H
 
-#include <stddef.h>
 #include "cairo-gl-private.h"
+#include <stddef.h>
 
 typedef struct _cairo_gl_dispatch_entry {
     const char *name_core;
