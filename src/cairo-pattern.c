@@ -4341,7 +4341,7 @@ _cairo_gradient_color_stops_hash (unsigned long hash,
 				  sizeof (double));
 	hash = _cairo_hash_bytes (hash,
 				  &gradient->stops[n].color,
-				  sizeof (cairo_color_t));
+				  sizeof (cairo_color_stop_t));
     }
 
     return hash;
