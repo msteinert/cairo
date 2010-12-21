@@ -3730,7 +3730,14 @@ _can_composite_glyphs (cairo_xcb_surface_t *dst,
     const int max_glyph_size = dst->connection->maximum_request_length - 64;
     int i;
 
+    /* We must initialize the cache with values that cannot match the
+     * "hash" to guarantee that when compared for the first time they
+     * will result in a mismatch. The hash function is simply modulus,
+     * so we cannot use 0 in glyph_cache[0], but we can use it in all
+     * other array cells.
+     */
     memset (glyph_cache, 0, sizeof (glyph_cache));
+    glyph_cache[0] = 1;
 
     /* first scan for oversized glyphs, and fallback in that case */
     for (i = 0; i < num_glyphs; i++) {
