@@ -3592,6 +3592,199 @@ _matrix (csi_t *ctx)
 }
 
 static csi_status_t
+_mesh (csi_t *ctx)
+{
+    csi_object_t obj;
+
+    obj.type = CSI_OBJECT_TYPE_PATTERN;
+    obj.datum.pattern = cairo_pattern_create_mesh ();
+    return push (&obj);
+}
+
+static csi_status_t
+_mesh_begin_patch (csi_t *ctx)
+{
+    csi_status_t status;
+    cairo_pattern_t *pattern = NULL; /* silence the compiler */
+
+    check (1);
+
+    status = _csi_ostack_get_pattern (ctx, 0, &pattern);
+    if (_csi_unlikely (status))
+	return status;
+
+    cairo_pattern_mesh_begin_patch (pattern);
+    return CSI_STATUS_SUCCESS;
+}
+
+static csi_status_t
+_mesh_curve_to (csi_t *ctx)
+{
+    csi_status_t status;
+    double x1, y1, x2, y2, x3, y3;
+    cairo_pattern_t *pattern = NULL; /* silence the compiler */
+
+    check (7);
+
+    status = _csi_ostack_get_number (ctx, 0, &y3);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_number (ctx, 1, &x3);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_number (ctx, 2, &y2);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_number (ctx, 3, &x2);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_number (ctx, 4, &y1);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_number (ctx, 5, &x1);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_pattern (ctx, 6, &pattern);
+    if (_csi_unlikely (status))
+	return status;
+
+    cairo_pattern_mesh_curve_to (pattern, x1, y1, x2, y2, x3, y3);
+
+    pop (6);
+    return CSI_STATUS_SUCCESS;
+}
+
+static csi_status_t
+_mesh_end_patch (csi_t *ctx)
+{
+    csi_status_t status;
+    cairo_pattern_t *pattern = NULL; /* silence the compiler */
+
+    check (1);
+
+    status = _csi_ostack_get_pattern (ctx, 0, &pattern);
+    if (_csi_unlikely (status))
+	return status;
+
+    cairo_pattern_mesh_end_patch (pattern);
+    return CSI_STATUS_SUCCESS;
+}
+
+static csi_status_t
+_mesh_line_to (csi_t *ctx)
+{
+    csi_status_t status;
+    double x, y;
+    cairo_pattern_t *pattern = NULL; /* silence the compiler */
+
+    check (3);
+
+    status = _csi_ostack_get_number (ctx, 0, &y);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_number (ctx, 1, &x);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_pattern (ctx, 2, &pattern);
+    if (_csi_unlikely (status))
+	return status;
+
+    cairo_pattern_mesh_line_to (pattern, x, y);
+
+    pop (2);
+    return CSI_STATUS_SUCCESS;
+}
+
+static csi_status_t
+_mesh_move_to (csi_t *ctx)
+{
+    csi_status_t status;
+    double x, y;
+    cairo_pattern_t *pattern = NULL; /* silence the compiler */
+
+    check (3);
+
+    status = _csi_ostack_get_number (ctx, 0, &y);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_number (ctx, 1, &x);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_pattern (ctx, 2, &pattern);
+    if (_csi_unlikely (status))
+	return status;
+
+    cairo_pattern_mesh_move_to (pattern, x, y);
+
+    pop (2);
+    return CSI_STATUS_SUCCESS;
+}
+
+static csi_status_t
+_mesh_set_control_point (csi_t *ctx)
+{
+    csi_status_t status;
+    double x, y;
+    csi_integer_t point;
+    cairo_pattern_t *pattern = NULL; /* silence the compiler */
+
+    check (4);
+
+    status = _csi_ostack_get_number (ctx, 0, &y);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_number (ctx, 1, &x);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_integer (ctx, 2, &point);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_pattern (ctx, 3, &pattern);
+    if (_csi_unlikely (status))
+	return status;
+
+    cairo_pattern_mesh_set_control_point (pattern, point, x, y);
+
+    pop (3);
+    return CSI_STATUS_SUCCESS;
+}
+
+static csi_status_t
+_mesh_set_corner_color (csi_t *ctx)
+{
+    csi_status_t status;
+    double r, g, b, a;
+    csi_integer_t corner;
+    cairo_pattern_t *pattern = NULL; /* silence the compiler */
+
+    check (6);
+
+    status = _csi_ostack_get_number (ctx, 0, &a);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_number (ctx, 1, &b);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_number (ctx, 2, &g);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_number (ctx, 3, &r);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_integer (ctx, 4, &corner);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_pattern (ctx, 5, &pattern);
+    if (_csi_unlikely (status))
+	return status;
+
+    cairo_pattern_mesh_set_corner_color_rgba (pattern, corner, r, g, b, a);
+
+    pop (5);
+    return CSI_STATUS_SUCCESS;
+}
+
+static csi_status_t
 _mod (csi_t *ctx)
 {
     csi_integer_t x, y;
@@ -6038,6 +6231,14 @@ _defs[] = {
     { "mark", _mark },
     { "mask", _mask },
     { "matrix", _matrix },
+    { "mesh", _mesh },
+    { "mesh-begin-patch", _mesh_begin_patch },
+    { "mesh-curve-to", _mesh_curve_to },
+    { "mesh-end-patch", _mesh_end_patch },
+    { "mesh-line-to", _mesh_line_to },
+    { "mesh-move-to", _mesh_move_to },
+    { "mesh-set-control-point", _mesh_set_control_point },
+    { "mesh-set-corner-color", _mesh_set_corner_color },
     { "mod", _mod },
     { "move-to", _move_to },
     { "mul", _mul },

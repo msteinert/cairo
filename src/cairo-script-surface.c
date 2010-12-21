@@ -957,6 +957,87 @@ _emit_radial_pattern (cairo_script_surface_t *surface,
 }
 
 static cairo_status_t
+_emit_mesh_pattern (cairo_script_surface_t *surface,
+		    const cairo_pattern_t *pattern)
+{
+    cairo_script_context_t *ctx = to_context (surface);
+    cairo_pattern_t *mesh;
+    cairo_status_t status;
+    unsigned int i, n;
+
+    mesh = (cairo_pattern_t *) pattern;
+    status = cairo_pattern_mesh_get_patch_count (mesh, &n);
+    if (unlikely (status))
+	return status;
+
+    _cairo_output_stream_printf (ctx->stream, "mesh");
+    for (i = 0; i < n; i++) {
+	cairo_path_t *path;
+	cairo_path_data_t *data;
+	int j;
+
+	_cairo_output_stream_printf (ctx->stream, "\n  mesh-begin-patch");
+
+	path = cairo_pattern_mesh_get_path (mesh, i);
+	if (unlikely (path->status))
+	    return path->status;
+
+	for (j = 0; j < path->num_data; j+=data[0].header.length) {
+	    data = &path->data[j];
+	    switch (data->header.type) {
+	    case CAIRO_PATH_MOVE_TO:
+		_cairo_output_stream_printf (ctx->stream,
+					     "\n  %f %f mesh-move-to",
+					     data[1].point.x, data[1].point.y);
+		break;
+	    case CAIRO_PATH_LINE_TO:
+		_cairo_output_stream_printf (ctx->stream,
+					     "\n  %f %f mesh-line-to",
+					     data[1].point.x, data[1].point.y);
+		break;
+	    case CAIRO_PATH_CURVE_TO:
+		_cairo_output_stream_printf (ctx->stream,
+					     "\n  %f %f %f %f %f %f mesh-curve-to",
+					     data[1].point.x, data[1].point.y,
+					     data[2].point.x, data[2].point.y,
+					     data[3].point.x, data[3].point.y);
+		break;
+	    case CAIRO_PATH_CLOSE_PATH:
+		break;
+	    }
+	}
+	cairo_path_destroy (path);
+
+	for (j = 0; j < 4; j++) {
+	    double x, y;
+
+	    status = cairo_pattern_mesh_get_control_point (mesh, i, j, &x, &y);
+	    if (unlikely (status))
+		return status;
+	    _cairo_output_stream_printf (ctx->stream,
+					 "\n  %d %f %f mesh-set-control-point",
+					 j, x, y);
+	}
+
+	for (j = 0; j < 4; j++) {
+	    double r, g, b, a;
+
+	    status = cairo_pattern_mesh_get_corner_color_rgba (mesh, i, j, &r, &g, &b, &a);
+	    if (unlikely (status))
+		return status;
+
+	    _cairo_output_stream_printf (ctx->stream,
+					 "\n  %d %f %f %f %f mesh-set-corner-color",
+					 j, r, g, b, a);
+	}
+
+	_cairo_output_stream_printf (ctx->stream, "\n  mesh-end-patch");
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
 _emit_recording_surface_pattern (cairo_script_surface_t *surface,
 				 cairo_recording_surface_t *source)
 {
@@ -1464,6 +1545,10 @@ _emit_pattern (cairo_script_surface_t *surface,
     case CAIRO_PATTERN_TYPE_RADIAL:
 	status = _emit_radial_pattern (surface, pattern);
 	is_default_extend = pattern->extend == CAIRO_EXTEND_GRADIENT_DEFAULT;
+	break;
+    case CAIRO_PATTERN_TYPE_MESH:
+	status = _emit_mesh_pattern (surface, pattern);
+	is_default_extend = TRUE;
 	break;
     case CAIRO_PATTERN_TYPE_SURFACE:
 	status = _emit_surface_pattern (surface, pattern);
