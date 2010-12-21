@@ -3721,14 +3721,18 @@ typedef struct {
 
 static cairo_status_t
 _can_composite_glyphs (cairo_xcb_surface_t *dst,
+		       cairo_rectangle_int_t *extents,
 		       cairo_scaled_font_t *scaled_font,
 		       cairo_glyph_t *glyphs,
-		       int num_glyphs)
+		       int *num_glyphs)
 {
-    unsigned long glyph_cache[64];
-    cairo_status_t status;
+#define GLYPH_CACHE_SIZE 64
+    cairo_box_t bbox_cache[GLYPH_CACHE_SIZE];
+    unsigned long glyph_cache[GLYPH_CACHE_SIZE];
+#undef GLYPH_CACHE_SIZE
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_glyph_t *glyphs_end, *valid_glyphs;
     const int max_glyph_size = dst->connection->maximum_request_length - 64;
-    int i;
 
     /* We must initialize the cache with values that cannot match the
      * "hash" to guarantee that when compared for the first time they
@@ -3739,38 +3743,86 @@ _can_composite_glyphs (cairo_xcb_surface_t *dst,
     memset (glyph_cache, 0, sizeof (glyph_cache));
     glyph_cache[0] = 1;
 
-    /* first scan for oversized glyphs, and fallback in that case */
-    for (i = 0; i < num_glyphs; i++) {
+    /* Scan for oversized glyphs or glyphs outside the representable
+     * range and fallback in that case, discard glyphs outside of the
+     * image.
+     */
+    valid_glyphs = glyphs;
+    for (glyphs_end = glyphs + *num_glyphs; glyphs != glyphs_end; glyphs++) {
+	double x1, y1, x2, y2;
 	cairo_scaled_glyph_t *scaled_glyph;
+	cairo_box_t *bbox;
 	int width, height, len;
 	int g;
 
-	g = glyphs[i].index % ARRAY_LENGTH (glyph_cache);
-	if (glyph_cache[g] == glyphs[i].index)
-	    continue;
+	g = glyphs->index % ARRAY_LENGTH (glyph_cache);
+	if (glyph_cache[g] != glyphs->index) {
+	    status = _cairo_scaled_glyph_lookup (scaled_font,
+						 glyphs->index,
+						 CAIRO_SCALED_GLYPH_INFO_METRICS,
+						 &scaled_glyph);
+	    if (unlikely (status))
+		break;
 
-	status = _cairo_scaled_glyph_lookup (scaled_font,
-					     glyphs[i].index,
-					     CAIRO_SCALED_GLYPH_INFO_METRICS,
-					     &scaled_glyph);
-	if (unlikely (status))
-	    return status;
+	    glyph_cache[g] = glyphs->index;
+	    bbox_cache[g] = scaled_glyph->bbox;
+	}
+	bbox = &bbox_cache[g];
+
+	/* Drop glyphs outside the clipping */
+	x1 = _cairo_fixed_to_double (bbox->p1.x);
+	y1 = _cairo_fixed_to_double (bbox->p1.y);
+	y2 = _cairo_fixed_to_double (bbox->p2.y);
+	x2 = _cairo_fixed_to_double (bbox->p2.x);
+	if (unlikely (glyphs->x + x2 <= extents->x ||
+		      glyphs->y + y2 <= extents->y ||
+		      glyphs->x + x1 >= extents->x + extents->width ||
+		      glyphs->y + y1 >= extents->y + extents->height))
+	{
+	    (*num_glyphs)--;
+	    continue;
+	}
 
 	/* XRenderAddGlyph does not handle a glyph surface larger than
 	 * the extended maximum XRequest size.
 	 */
-	width  =
-	    _cairo_fixed_integer_ceil (scaled_glyph->bbox.p2.x - scaled_glyph->bbox.p1.x);
-	height =
-	    _cairo_fixed_integer_ceil (scaled_glyph->bbox.p2.y - scaled_glyph->bbox.p1.y);
+	width  = _cairo_fixed_integer_ceil (bbox->p2.x - bbox->p1.x);
+	height = _cairo_fixed_integer_ceil (bbox->p2.y - bbox->p1.y);
 	len = CAIRO_STRIDE_FOR_WIDTH_BPP (width, 32) * height;
-	if (len >= max_glyph_size)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	if (unlikely (len >= max_glyph_size)) {
+	    status = CAIRO_INT_STATUS_UNSUPPORTED;
+	    break;
+	}
 
-	glyph_cache[g] = glyphs[i].index;
+	/* The glyph coordinates must be representable in an int16_t.
+	 * When possible, they will be expressed as an offset from the
+	 * previous glyph, otherwise they will be an offset from the
+	 * operation extents or from the surface origin. If the last
+	 * two options are not valid, fallback.
+	 */
+	if (unlikely (glyphs->x > INT16_MAX ||
+		      glyphs->y > INT16_MAX ||
+		      glyphs->x - extents->x < INT16_MIN ||
+		      glyphs->y - extents->y < INT16_MIN))
+	{
+	    status = CAIRO_INT_STATUS_UNSUPPORTED;
+	    break;
+	}
+
+
+	if (unlikely (valid_glyphs != glyphs))
+	    *valid_glyphs = *glyphs;
+	valid_glyphs++;
     }
 
-    return CAIRO_STATUS_SUCCESS;
+    if (unlikely (valid_glyphs != glyphs)) {
+	for (; glyphs != glyphs_end; glyphs++) {
+	    *valid_glyphs = *glyphs;
+	    valid_glyphs++;
+	}
+    }
+
+    return status;
 }
 
 /* Start a new element for the first glyph,
@@ -4568,8 +4620,8 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
 	_cairo_scaled_font_freeze_cache (scaled_font);
 
 	if (_surface_owns_font (surface, scaled_font)) {
-	    status = _can_composite_glyphs (surface,
-					    scaled_font, glyphs, num_glyphs);
+	    status = _can_composite_glyphs (surface, &extents.bounded,
+					    scaled_font, glyphs, &num_glyphs);
 	    if (likely (status == CAIRO_STATUS_SUCCESS)) {
 		composite_glyphs_info_t info;
 
