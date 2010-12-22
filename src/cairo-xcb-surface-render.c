@@ -4447,25 +4447,8 @@ _composite_glyphs (void				*closure,
 	    glyph_cache[cache_index] = scaled_glyph;
 	}
 
-	/* Glyph skipping:
-	 *
-	 * We skip any glyphs that have troublesome coordinates.  We want
-	 * to make sure that (glyph2.x - (glyph1.x + glyph1.width)) fits in
-	 * a signed 16bit integer, otherwise it will overflow in the render
-	 * protocol.
-	 * To ensure this, we'll make sure that (glyph2.x - glyph1.x) fits in
-	 * a signed 15bit integer.  The trivial option would be to allow
-	 * coordinates -8192..8192, but that's kinda dull.  It probably will
-	 * take a decade or so to get monitors 8192x4096 or something.  A
-	 * negative value of -8192 on the other hand, is absolutely useless.
-	 * Note that we do want to allow some negative positions.  The glyph
-	 * may start off the screen but part of it make it to the screen.
-	 * Anyway, we will allow positions in the range -4096..122887.  That
-	 * will buy us a few more years before this stops working.
-	 */
 	this_x = _cairo_lround (info->glyphs[i].d.x) - dst_x;
 	this_y = _cairo_lround (info->glyphs[i].d.y) - dst_y;
-	assert (! (((this_x+4096) | (this_y+4096)) & ~0x3fffu));
 
 	this_glyphset_info = _cairo_xcb_scaled_glyph_get_glyphset_info (scaled_glyph);
 	if (glyphset_info == NULL)
@@ -4492,8 +4475,17 @@ _composite_glyphs (void				*closure,
 	 * prefer the latter is the fact that Xserver ADDs all glyphs
 	 * to the mask first, and then composes that to final surface,
 	 * though it's not a big deal.
+	 *
+	 * If the glyph has a coordinate which cannot be represented
+	 * as a 16-bit offset from the previous glyph, flush the
+	 * current chunk. The current glyph will be the first one in
+	 * the next chunk, thus its coordinates will be an offset from
+	 * the destination origin. This offset is guaranteed to be
+	 * representable as 16-bit offset in _can_composite_glyphs().
 	 */
 	if (request_size + width > max_request_size - _cairo_sz_x_glyph_elt_t ||
+	    this_x - x > INT16_MAX || this_x - x < INT16_MIN ||
+	    this_y - y > INT16_MAX || this_y - y < INT16_MIN ||
 	    this_glyphset_info != glyphset_info)
 	{
 	    status = _emit_glyphs_chunk (dst, op, src,
