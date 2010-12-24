@@ -29,7 +29,7 @@ static cairo_test_status_t
 preamble (cairo_test_context_t *Ctx)
 {
     cairo_surface_t *surface;
-    cairo_pattern_t *solid_rgb, *solid_rgba, *surface_pattern, *linear, *radial;
+    cairo_pattern_t *solid_rgb, *solid_rgba, *surface_pattern, *linear, *radial, *mesh;
     cairo_test_status_t result = CAIRO_TEST_SUCCESS;
 
     solid_rgb = cairo_pattern_create_rgb (0.0, 0.1, 0.2);
@@ -40,6 +40,7 @@ preamble (cairo_test_context_t *Ctx)
     linear = cairo_pattern_create_linear (0.0, 0.0, 10.0, 10.0);
     radial = cairo_pattern_create_radial (10.0, 10.0, 0.1,
 					  10.0, 10.0, 1.0);
+    mesh = cairo_pattern_create_mesh ();
 
     if (cairo_pattern_get_type (solid_rgb) != CAIRO_PATTERN_TYPE_SOLID)
 	result = CAIRO_TEST_FAILURE;
@@ -56,12 +57,16 @@ preamble (cairo_test_context_t *Ctx)
     if (cairo_pattern_get_type (radial) != CAIRO_PATTERN_TYPE_RADIAL)
 	result = CAIRO_TEST_FAILURE;
 
+    if (cairo_pattern_get_type (mesh) != CAIRO_PATTERN_TYPE_MESH)
+	result = CAIRO_TEST_FAILURE;
+
     cairo_pattern_destroy (solid_rgb);
     cairo_pattern_destroy (solid_rgba);
     cairo_pattern_destroy (surface_pattern);
     cairo_surface_destroy (surface);
     cairo_pattern_destroy (linear);
     cairo_pattern_destroy (radial);
+    cairo_pattern_destroy (mesh);
 
     return result;
 }
