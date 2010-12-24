@@ -2361,6 +2361,18 @@ _cairo_utf8_to_utf16 (const char *str,
 		      int	 *items_written);
 #endif
 
+/* cairo-mesh-pattern-rasterizer.c */
+
+cairo_private void
+_cairo_mesh_pattern_rasterize (const cairo_mesh_pattern_t *mesh,
+			       void                       *data,
+			       int                         width,
+			       int                         height,
+			       int                         stride,
+			       double                      x_offset,
+			       double                      y_offset);
+
+
 /* cairo-observer.c */
 
 cairo_private void

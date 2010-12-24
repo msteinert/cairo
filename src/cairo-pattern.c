@@ -1597,6 +1597,54 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
     return status;
 }
 
+static cairo_int_status_t
+_cairo_pattern_acquire_surface_for_mesh (const cairo_mesh_pattern_t *pattern,
+					 cairo_surface_t            *dst,
+					 int   	                     x,
+					 int                         y,
+					 unsigned int                width,
+					 unsigned int                height,
+					 cairo_surface_t           **out,
+					 cairo_surface_attributes_t *attr)
+{
+    cairo_surface_t *image;
+    void *data;
+    cairo_status_t status;
+    int clone_offset_x, clone_offset_y;
+    int stride;
+
+    image = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+    if (unlikely (image->status))
+	return image->status;
+
+    stride = cairo_image_surface_get_stride (image);
+    data = cairo_image_surface_get_data (image);
+
+    _cairo_mesh_pattern_rasterize (pattern, data, width, height, stride, -x, -y);
+
+    attr->x_offset = -x;
+    attr->y_offset = -y;
+    attr->filter = CAIRO_FILTER_NEAREST;
+    attr->extend = pattern->base.extend;
+    cairo_matrix_init_identity (&attr->matrix);
+    attr->has_component_alpha = pattern->base.has_component_alpha;
+
+    if (_cairo_surface_is_image (dst)) {
+	*out = image;
+
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    status = _cairo_surface_clone_similar (dst, image,
+					   0, 0, width, height,
+					   &clone_offset_x,
+					   &clone_offset_y, out);
+
+    cairo_surface_destroy (image);
+
+    return status;
+}
+
 /* We maintain a small cache here, because we don't want to constantly
  * recreate surfaces for simple solid colors. */
 #define MAX_SURFACE_CACHE_SIZE 16
@@ -3228,6 +3276,12 @@ _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 							   flags,
 							   surface_out,
 							   attributes);
+
+    case CAIRO_PATTERN_TYPE_MESH:
+	return _cairo_pattern_acquire_surface_for_mesh ((cairo_mesh_pattern_t *) pattern,
+							dst, x, y, width, height,
+							surface_out,
+							attributes);
 
     default:
 	ASSERT_NOT_REACHED;

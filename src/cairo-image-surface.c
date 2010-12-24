@@ -1685,6 +1685,31 @@ _pixman_image_for_pattern (const cairo_pattern_t *pattern,
     case CAIRO_PATTERN_TYPE_SURFACE:
 	return _pixman_image_for_surface ((const cairo_surface_pattern_t *) pattern,
 					  is_mask, extents, dst_device_transform, tx, ty);
+
+    case CAIRO_PATTERN_TYPE_MESH: {
+	cairo_surface_t *image;
+	pixman_image_t *r;
+	void * data;
+	int width, height, stride;
+
+	*tx = -extents->x;
+	*ty = -extents->y;
+	width = extents->width;
+	height = extents->height;
+
+	image = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+	if (unlikely (image->status))
+	    return NULL;
+
+	stride = cairo_image_surface_get_stride (image);
+	data = cairo_image_surface_get_data (image);
+
+	_cairo_mesh_pattern_rasterize ((cairo_mesh_pattern_t *) pattern,
+				       data, width, height, stride, *tx, *ty);
+	r = pixman_image_ref (((cairo_image_surface_t *)image)->pixman_image);
+	cairo_surface_destroy (image);
+	return r;
+    }
     }
 }
 
