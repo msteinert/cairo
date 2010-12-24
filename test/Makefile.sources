@@ -166,6 +166,13 @@ test_sources = \
 	mask-surface-ctm.c				\
 	mask-transformed-image.c			\
 	mask-transformed-similar.c			\
+	mesh-pattern.c				        \
+	mesh-pattern-accuracy.c				\
+	mesh-pattern-conical.c				\
+	mesh-pattern-control-points.c			\
+	mesh-pattern-fold.c		        	\
+	mesh-pattern-overlap.c		        	\
+	mesh-pattern-transformed.c		        \
 	mime-data.c					\
 	miter-precision.c				\
 	move-to-show-surface.c				\

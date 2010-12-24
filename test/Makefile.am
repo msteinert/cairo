@@ -853,6 +853,20 @@ REFERENCE_IMAGES = \
 	mask.svg.rgb24.xfail.png \
 	mask.xlib.ref.png \
 	mask.xlib.rgb24.ref.png \
+	mesh-pattern.image16.ref.png \
+	mesh-pattern.ref.png \
+	mesh-pattern-accuracy.image16.ref.png \
+	mesh-pattern-accuracy.ref.png \
+	mesh-pattern-conical.image16.ref.png \
+	mesh-pattern-conical.ref.png \
+	mesh-pattern-control-points.image16.ref.png \
+	mesh-pattern-control-points.ref.png \
+	mesh-pattern-fold.image16.ref.png \
+	mesh-pattern-fold.ref.png \
+	mesh-pattern-overlap.image16.ref.png \
+	mesh-pattern-overlap.ref.png \
+	mesh-pattern-transformed.image16.ref.png \
+	mesh-pattern-transformed.ref.png \
 	mime-data.pdf.ref.png \
 	mime-data.ps.ref.png \
 	mime-data.ref.png \
