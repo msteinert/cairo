@@ -328,16 +328,15 @@ _picture_from_image (cairo_xcb_surface_t *target,
     gc = _cairo_xcb_screen_get_gc (target->screen, pixmap, image->depth);
 
     if (shm_info != NULL) {
-	shm_info->seqno =
-	    _cairo_xcb_connection_shm_put_image (target->connection,
-						 pixmap, gc,
-						 image->width, image->height,
-						 0, 0,
-						 image->width, image->height,
-						 0, 0,
-						 image->depth,
-						 shm_info->shm,
-						 shm_info->offset);
+	_cairo_xcb_connection_shm_put_image (target->connection,
+					     pixmap, gc,
+					     image->width, image->height,
+					     0, 0,
+					     image->width, image->height,
+					     0, 0,
+					     image->depth,
+					     shm_info->shm,
+					     shm_info->offset);
     } else {
 	int len;
 

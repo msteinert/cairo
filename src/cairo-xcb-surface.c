@@ -608,17 +608,16 @@ _put_shm_image (cairo_xcb_surface_t    *surface,
     if (shm_info == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    shm_info->seqno =
-	_cairo_xcb_connection_shm_put_image (surface->connection,
-					     surface->drawable,
-					     gc,
-					     surface->width, surface->height,
-					     0, 0,
-					     image->width, image->height,
-					     0, 0,
-					     image->depth,
-					     shm_info->shm,
-					     shm_info->offset);
+    _cairo_xcb_connection_shm_put_image (surface->connection,
+					 surface->drawable,
+					 gc,
+					 surface->width, surface->height,
+					 0, 0,
+					 image->width, image->height,
+					 0, 0,
+					 image->depth,
+					 shm_info->shm,
+					 shm_info->offset);
 
     return CAIRO_STATUS_SUCCESS;
 #else

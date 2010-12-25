@@ -46,7 +46,7 @@ _cairo_xcb_connection_shm_attach (cairo_xcb_connection_t *connection,
     return segment;
 }
 
-unsigned int
+void
 _cairo_xcb_connection_shm_put_image (cairo_xcb_connection_t *connection,
 				     xcb_drawable_t dst,
 				     xcb_gcontext_t gc,
@@ -62,11 +62,9 @@ _cairo_xcb_connection_shm_put_image (cairo_xcb_connection_t *connection,
 				     uint32_t shm,
 				     uint32_t offset)
 {
-    xcb_void_cookie_t cookie;
-    cookie = xcb_shm_put_image (connection->xcb_connection, dst, gc, total_width, total_height,
-				src_x, src_y, width, height, dst_x, dst_y, depth,
-				XCB_IMAGE_FORMAT_Z_PIXMAP, 0, shm, offset);
-    return cookie.sequence;
+    xcb_shm_put_image (connection->xcb_connection, dst, gc, total_width, total_height,
+		       src_x, src_y, width, height, dst_x, dst_y, depth,
+		       XCB_IMAGE_FORMAT_Z_PIXMAP, 0, shm, offset);
 }
 
 cairo_status_t

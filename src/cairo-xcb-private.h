@@ -66,7 +66,6 @@ struct _cairo_xcb_shm_info {
     cairo_xcb_connection_t *connection;
     uint32_t shm;
     uint32_t offset;
-    unsigned int seqno;
     void *mem;
     cairo_xcb_shm_mem_pool_t *pool;
 };
@@ -534,7 +533,7 @@ _cairo_xcb_connection_shm_attach (cairo_xcb_connection_t *connection,
 				  uint32_t id,
 				  cairo_bool_t readonly);
 
-cairo_private unsigned int
+cairo_private void
 _cairo_xcb_connection_shm_put_image (cairo_xcb_connection_t *connection,
 				     xcb_drawable_t dst,
 				     xcb_gcontext_t gc,
