@@ -1,6 +1,7 @@
 include $(top_srcdir)/build/Makefile.am.common
 
 EXTRA_DIST += \
+	KNOWN_ISSUES \
 	README.win32 \
 	Makefile.win32 \
 	build/Makefile.win32.common \
