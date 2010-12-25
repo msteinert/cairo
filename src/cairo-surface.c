@@ -654,6 +654,9 @@ cairo_surface_destroy (cairo_surface_t *surface)
     if (surface->owns_device)
         cairo_device_destroy (surface->device);
 
+    assert (surface->snapshot_of == NULL);
+    assert (!_cairo_surface_has_snapshots (surface));
+
     free (surface);
 }
 slim_hidden_def(cairo_surface_destroy);
@@ -726,6 +729,9 @@ cairo_surface_finish (cairo_surface_t *surface)
 	if (unlikely (status))
 	    status = _cairo_surface_set_error (surface, status);
     }
+
+    assert (surface->snapshot_of == NULL);
+    assert (!_cairo_surface_has_snapshots (surface));
 }
 slim_hidden_def (cairo_surface_finish);
 
