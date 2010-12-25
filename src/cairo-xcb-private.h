@@ -68,6 +68,8 @@ struct _cairo_xcb_shm_info {
     uint32_t offset;
     void *mem;
     cairo_xcb_shm_mem_pool_t *pool;
+    xcb_get_input_focus_cookie_t sync;
+    cairo_list_t pending;
 };
 
 struct _cairo_xcb_surface {
@@ -187,6 +189,7 @@ struct _cairo_xcb_connection {
 
     cairo_mutex_t shm_mutex;
     cairo_list_t shm_pools;
+    cairo_list_t shm_pending;
     cairo_freepool_t shm_info_freelist;
 
     cairo_mutex_t screens_mutex;
@@ -269,6 +272,9 @@ _cairo_xcb_connection_allocate_shm_info (cairo_xcb_connection_t *display,
 
 cairo_private void
 _cairo_xcb_shm_info_destroy (cairo_xcb_shm_info_t *shm_info);
+
+cairo_private void
+_cairo_xcb_connection_shm_mem_pools_flush (cairo_xcb_connection_t *connection);
 
 cairo_private void
 _cairo_xcb_connection_shm_mem_pools_fini (cairo_xcb_connection_t *connection);

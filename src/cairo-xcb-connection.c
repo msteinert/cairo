@@ -479,6 +479,10 @@ _device_flush (void *device)
     if (unlikely (status))
 	return status;
 
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
+    _cairo_xcb_connection_shm_mem_pools_flush (connection);
+#endif
+
     CAIRO_MUTEX_LOCK (connection->screens_mutex);
     cairo_list_foreach_entry (screen, cairo_xcb_screen_t,
 			      &connection->screens, link)
@@ -539,6 +543,12 @@ _device_finish (void *device)
 					 link);
 	_cairo_xcb_screen_finish (screen);
     }
+
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
+    /* _cairo_xcb_screen_finish finishes surfaces. If any of those surfaces had
+     * a fallback image, we might have done a SHM PutImage. */
+    _cairo_xcb_connection_shm_mem_pools_flush (connection);
+#endif
 
     if (was_cached)
 	cairo_device_destroy (device);
@@ -643,6 +653,7 @@ _cairo_xcb_connection_get (xcb_connection_t *xcb_connection)
 			  sizeof (cairo_xcb_xid_t));
 
     cairo_list_init (&connection->shm_pools);
+    cairo_list_init (&connection->shm_pending);
     _cairo_freepool_init (&connection->shm_info_freelist,
 			  sizeof (cairo_xcb_shm_info_t));
 
