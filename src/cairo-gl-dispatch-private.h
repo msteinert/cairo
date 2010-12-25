@@ -49,7 +49,7 @@ typedef struct _cairo_gl_dispatch_entry {
 			                     offsetof(cairo_gl_dispatch_t, name)}
 #define DISPATCH_ENTRY_LAST { NULL, NULL, 0 }
 
-cairo_gl_dispatch_entry_t dispatch_buffers_entries[] = {
+cairo_private cairo_gl_dispatch_entry_t dispatch_buffers_entries[] = {
     DISPATCH_ENTRY_ARB (GenBuffers),
     DISPATCH_ENTRY_ARB (BindBuffer),
     DISPATCH_ENTRY_ARB (BufferData),
@@ -58,7 +58,7 @@ cairo_gl_dispatch_entry_t dispatch_buffers_entries[] = {
     DISPATCH_ENTRY_LAST
 };
 
-cairo_gl_dispatch_entry_t dispatch_shaders_entries[] = {
+cairo_private cairo_gl_dispatch_entry_t dispatch_shaders_entries[] = {
     /* Shaders */
     DISPATCH_ENTRY_CUSTOM (CreateShader, CreateShaderObjectARB),
     DISPATCH_ENTRY_ARB    (ShaderSource),
@@ -87,7 +87,7 @@ cairo_gl_dispatch_entry_t dispatch_shaders_entries[] = {
     DISPATCH_ENTRY_LAST
 };
 
-cairo_gl_dispatch_entry_t dispatch_fbo_entries[] = {
+cairo_private cairo_gl_dispatch_entry_t dispatch_fbo_entries[] = {
     DISPATCH_ENTRY_EXT (GenFramebuffers),
     DISPATCH_ENTRY_EXT (BindFramebuffer),
     DISPATCH_ENTRY_EXT (FramebufferTexture2D),
