@@ -412,6 +412,40 @@ _cairo_xcb_shm_mem_pool_destroy (cairo_xcb_shm_mem_pool_t *pool)
     free (pool);
 }
 
+void
+_cairo_xcb_shm_info_destroy (cairo_xcb_shm_info_t *shm_info)
+{
+    cairo_xcb_connection_t *connection = shm_info->connection;
+
+    CAIRO_MUTEX_LOCK (connection->shm_mutex);
+
+    _cairo_xcb_shm_mem_pool_free (shm_info->pool, shm_info->mem);
+    _cairo_freepool_free (&connection->shm_info_freelist, shm_info);
+
+    /* scan for old, unused pools - hold at least one in reserve */
+    if (! cairo_list_is_singular (&connection->shm_pools))
+    {
+	cairo_xcb_shm_mem_pool_t *pool, *next;
+	cairo_list_t head;
+
+	cairo_list_init (&head);
+	cairo_list_move (connection->shm_pools.next, &head);
+
+	cairo_list_foreach_entry_safe (pool, next, cairo_xcb_shm_mem_pool_t,
+				       &connection->shm_pools, link)
+	{
+	    if (pool->free_bytes == pool->max_bytes) {
+		_cairo_xcb_connection_shm_detach (connection, pool->shmseg);
+		_cairo_xcb_shm_mem_pool_destroy (pool);
+	    }
+	}
+
+	cairo_list_move (head.next, &connection->shm_pools);
+    }
+
+    CAIRO_MUTEX_UNLOCK (connection->shm_mutex);
+}
+
 cairo_int_status_t
 _cairo_xcb_connection_allocate_shm_info (cairo_xcb_connection_t *connection,
 					 size_t size,
@@ -528,40 +562,6 @@ _cairo_xcb_connection_allocate_shm_info (cairo_xcb_connection_t *connection,
 
     *shm_info_out = shm_info;
     return CAIRO_STATUS_SUCCESS;
-}
-
-void
-_cairo_xcb_shm_info_destroy (cairo_xcb_shm_info_t *shm_info)
-{
-    cairo_xcb_connection_t *connection = shm_info->connection;
-
-    CAIRO_MUTEX_LOCK (connection->shm_mutex);
-
-    _cairo_xcb_shm_mem_pool_free (shm_info->pool, shm_info->mem);
-    _cairo_freepool_free (&connection->shm_info_freelist, shm_info);
-
-    /* scan for old, unused pools - hold at least one in reserve */
-    if (! cairo_list_is_singular (&connection->shm_pools))
-    {
-	cairo_xcb_shm_mem_pool_t *pool, *next;
-	cairo_list_t head;
-
-	cairo_list_init (&head);
-	cairo_list_move (connection->shm_pools.next, &head);
-
-	cairo_list_foreach_entry_safe (pool, next, cairo_xcb_shm_mem_pool_t,
-				       &connection->shm_pools, link)
-	{
-	    if (pool->free_bytes == pool->max_bytes) {
-		_cairo_xcb_connection_shm_detach (connection, pool->shmseg);
-		_cairo_xcb_shm_mem_pool_destroy (pool);
-	    }
-	}
-
-	cairo_list_move (head.next, &connection->shm_pools);
-    }
-
-    CAIRO_MUTEX_UNLOCK (connection->shm_mutex);
 }
 
 void
