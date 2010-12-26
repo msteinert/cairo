@@ -715,12 +715,13 @@ cairo_surface_finish (cairo_surface_t *surface)
     if (surface->finished)
 	return;
 
+    cairo_surface_flush (surface);
+
     /* update the snapshots *before* we declare the surface as finished */
     _cairo_surface_detach_snapshots (surface);
     if (surface->snapshot_of != NULL)
 	_cairo_surface_detach_snapshot (surface);
 
-    cairo_surface_flush (surface);
     surface->finished = TRUE;
 
     /* call finish even if in error mode */
