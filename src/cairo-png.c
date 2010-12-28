@@ -53,6 +53,14 @@
  *
  * The PNG functions allow reading PNG images into image surfaces, and writing
  * any surface to a PNG file.
+ *
+ * It is a toy API. It only offers very simple support for reading and
+ * writing PNG files, which is sufficient for testing and
+ * demonstration purposes. Applications which need more control over
+ * the generated PNG file should access the pixel data directly, using
+ * cairo_image_surface_get_data() or a backend-specific access
+ * function, and process it with another library, e.g. gdk-pixbuf or
+ * libpng.
  */
 
 /**
