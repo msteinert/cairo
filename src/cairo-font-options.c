@@ -192,7 +192,7 @@ slim_hidden_def (cairo_font_options_status);
  * Merges non-default options from @other into @options, replacing
  * existing values. This operation can be thought of as somewhat
  * similar to compositing @other onto @options with the operation
- * of %CAIRO_OPERATION_OVER.
+ * of %CAIRO_OPERATOR_OVER.
  **/
 void
 cairo_font_options_merge (cairo_font_options_t       *options,

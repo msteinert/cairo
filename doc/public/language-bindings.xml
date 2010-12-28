@@ -395,7 +395,7 @@ public void writeToPNG (OutputStream stream) throws IOException;
     <remark>
       I'm not sure how to handle this for
       <link
-      linkend="cairo-pdf-surface-create-for-callback"><function>cairo_pdf_surface_create_for_callback()</function></link>.
+      linkend="cairo-pdf-surface-create-for-stream"><function>cairo_pdf_surface_create_for_stream()</function></link>.
       Other than keep a “exception to rethrow” thread-specific
       variable
       that is checked after <emphasis>every</emphasis> call to a Cairo

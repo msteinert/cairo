@@ -1557,7 +1557,7 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 
 /**
  * cairo_rectangle_list_destroy:
- * @rectangle_list: a rectangle list, as obtained from cairo_copy_clip_rectangles()
+ * @rectangle_list: a rectangle list, as obtained from cairo_copy_clip_rectangle_list()
  *
  * Unconditionally frees @rectangle_list and all associated
  * references. After this call, the @rectangle_list pointer must not

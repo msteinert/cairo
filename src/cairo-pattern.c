@@ -49,9 +49,11 @@
  * brush too.
  *
  * A cairo pattern is created by using one of the many constructors,
- * of the form cairo_pattern_create_<emphasis>type</emphasis>()
+ * of the form
+ * <function>cairo_pattern_create_<emphasis>type</emphasis>()</function>
  * or implicitly through
- * cairo_set_source_<emphasis>type</emphasis>() functions.
+ * <function>cairo_set_source_<emphasis>type</emphasis>()</function>
+ * functions.
  */
 
 #if HAS_FREED_POOL

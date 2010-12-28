@@ -345,7 +345,8 @@ _cairo_reset_static_data (void)
  * default values and with @target as a target surface. The target
  * surface should be constructed with a backend-specific function such
  * as cairo_image_surface_create() (or any other
- * cairo_<emphasis>backend</emphasis>_surface_create() variant).
+ * <function>cairo_<emphasis>backend</emphasis>_surface_create(<!-- -->)</function>
+ * variant).
  *
  * This function references @target, so you can immediately
  * call cairo_surface_destroy() on it if you don't need to
@@ -828,7 +829,7 @@ slim_hidden_def(cairo_pop_group);
  * operations:
  *
  * <informalexample><programlisting>
- * #cairo_pattern_t *group = cairo_pop_group (cr);
+ * cairo_pattern_t *group = cairo_pop_group (cr);
  * cairo_set_source (cr, group);
  * cairo_pattern_destroy (group);
  * </programlisting></informalexample>
@@ -1810,8 +1811,8 @@ slim_hidden_def (cairo_curve_to);
  * Adds a circular arc of the given @radius to the current path.  The
  * arc is centered at (@xc, @yc), begins at @angle1 and proceeds in
  * the direction of increasing angles to end at @angle2. If @angle2 is
- * less than @angle1 it will be progressively increased by 2*M_PI
- * until it is greater than @angle1.
+ * less than @angle1 it will be progressively increased by
+ * <literal>2*M_PI</literal> until it is greater than @angle1.
  *
  * If there is a current point, an initial line segment will be added
  * to the path to connect the current point to the beginning of the
@@ -1819,11 +1820,12 @@ slim_hidden_def (cairo_curve_to);
  * calling cairo_new_sub_path() before calling cairo_arc().
  *
  * Angles are measured in radians. An angle of 0.0 is in the direction
- * of the positive X axis (in user space). An angle of %M_PI/2.0 radians
- * (90 degrees) is in the direction of the positive Y axis (in
- * user space). Angles increase in the direction from the positive X
- * axis toward the positive Y axis. So with the default transformation
- * matrix, angles increase in a clockwise direction.
+ * of the positive X axis (in user space). An angle of
+ * <literal>M_PI/2.0</literal> radians (90 degrees) is in the
+ * direction of the positive Y axis (in user space). Angles increase
+ * in the direction from the positive X axis toward the positive Y
+ * axis. So with the default transformation matrix, angles increase in
+ * a clockwise direction.
  *
  * (To convert from degrees to radians, use <literal>degrees * (M_PI /
  * 180.)</literal>.)
@@ -1890,8 +1892,8 @@ cairo_arc (cairo_t *cr,
  * Adds a circular arc of the given @radius to the current path.  The
  * arc is centered at (@xc, @yc), begins at @angle1 and proceeds in
  * the direction of decreasing angles to end at @angle2. If @angle2 is
- * greater than @angle1 it will be progressively decreased by 2*M_PI
- * until it is less than @angle1.
+ * greater than @angle1 it will be progressively decreased by
+ * <literal>2*M_PI</literal> until it is less than @angle1.
  *
  * See cairo_arc() for more details. This function differs only in the
  * direction of the arc between the two angles.
@@ -3796,7 +3798,8 @@ slim_hidden_def (cairo_get_tolerance);
  * cairo_get_antialias:
  * @cr: a cairo context
  *
- * Gets the current shape antialiasing mode, as set by cairo_set_shape_antialias().
+ * Gets the current shape antialiasing mode, as set by
+ * cairo_set_antialias().
  *
  * Return value: the current shape antialiasing mode.
  **/

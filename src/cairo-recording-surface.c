@@ -54,12 +54,12 @@
  * operations applied to the recording surface had instead been applied to the
  * target surface, you can use code like this:
  * <informalexample><programlisting>
- *      cairo_t *cr;
+ * cairo_t *cr;
  *
- *	cr = cairo_create (target);
- *	cairo_set_source_surface (cr, recording_surface, 0.0, 0.0);
- *	cairo_paint (cr);
- *	cairo_destroy (cr);
+ * cr = cairo_create (target);
+ * cairo_set_source_surface (cr, recording_surface, 0.0, 0.0);
+ * cairo_paint (cr);
+ * cairo_destroy (cr);
  * </programlisting></informalexample>
  *
  * A recording surface is logically unbounded, i.e. it has no implicit constraint

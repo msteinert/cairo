@@ -58,7 +58,7 @@
  *
  * A cairo surface is created by using <firstterm>backend</firstterm>-specific
  * constructors, typically of the form
- * cairo_<emphasis>backend</emphasis>_surface_create().
+ * <function>cairo_<emphasis>backend</emphasis>_surface_create(<!-- -->)</function>.
  *
  * Most surface types allow accessing the surface without using Cairo
  * functions. If you do this, keep in mind that it is mandatory that you call

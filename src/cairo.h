@@ -152,8 +152,8 @@ typedef struct _cairo_surface cairo_surface_t;
  * A #cairo_device_t represents the driver interface for drawing
  * operations to a #cairo_surface_t.  There are different subtypes of
  * #cairo_device_t for different drawing backends; for example,
- * cairo_xcb_device_create() creates a device that wraps the connection
- * to an X Windows System using the XCB library.
+ * cairo_egl_device_create() creates a device that wraps an EGL display and
+ * context.
  *
  * The type of a device can be queried with cairo_device_get_type().
  *
@@ -196,9 +196,10 @@ typedef struct _cairo_matrix {
  * cairo_pattern_create_rgb() creates a pattern for a solid
  * opaque color.
  *
- * Other than various cairo_pattern_create_<emphasis>type</emphasis>()
- * functions, some of the pattern types can be implicitly created
- * using various cairo_set_source_<emphasis>type</emphasis>() functions;
+ * Other than various
+ * <function>cairo_pattern_create_<emphasis>type</emphasis>()</function>
+ * functions, some of the pattern types can be implicitly created using various
+ * <function>cairo_set_source_<emphasis>type</emphasis>()</function> functions;
  * for example cairo_set_source_rgb().
  *
  * The type of a pattern can be queried with cairo_pattern_get_type().
@@ -1202,8 +1203,8 @@ typedef enum _cairo_hint_metrics {
  *
  * Individual features of a #cairo_font_options_t can be set or
  * accessed using functions named
- * cairo_font_options_set_<emphasis>feature_name</emphasis> and
- * cairo_font_options_get_<emphasis>feature_name</emphasis>, like
+ * <function>cairo_font_options_set_<emphasis>feature_name</emphasis>()</function> and
+ * <function>cairo_font_options_get_<emphasis>feature_name</emphasis>()</function>, like
  * cairo_font_options_set_antialias() and
  * cairo_font_options_get_antialias().
  *
@@ -1369,8 +1370,8 @@ cairo_font_face_status (cairo_font_face_t *font_face);
  *
  * The type of a font face is determined by the function used to
  * create it, which will generally be of the form
- * cairo_<emphasis>type</emphasis>_font_face_create(). The font face type can be queried
- * with cairo_font_face_get_type()
+ * <function>cairo_<emphasis>type</emphasis>_font_face_create(<!-- -->)</function>.
+ * The font face type can be queried with cairo_font_face_get_type()
  *
  * The various #cairo_font_face_t functions can be used with a font face
  * of any type.
@@ -1383,7 +1384,8 @@ cairo_font_face_status (cairo_font_face_t *font_face);
  * fonts of any type, but some font backends also provide
  * type-specific functions that must only be called with a scaled font
  * of the appropriate type. These functions have names that begin with
- * cairo_<emphasis>type</emphasis>_scaled_font() such as cairo_ft_scaled_font_lock_face().
+ * <function>cairo_<emphasis>type</emphasis>_scaled_font(<!-- -->)</function>
+ * such as cairo_ft_scaled_font_lock_face().
  *
  * The behavior of calling a type-specific function with a scaled font
  * of the wrong type is undefined.
@@ -1952,7 +1954,6 @@ cairo_device_reference (cairo_device_t *device);
  * @CAIRO_DEVICE_TYPE_XCB: The surface is of type xcb
  * @CAIRO_DEVICE_TYPE_XLIB: The surface is of type xlib
  * @CAIRO_DEVICE_TYPE_XML: The surface is of type XML
- *   cairo_surface_create_for_rectangle()
  *
  * #cairo_device_type_t is used to describe the type of a given
  * device. The devices types are also known as "backends" within cairo.
@@ -1963,7 +1964,8 @@ cairo_device_reference (cairo_device_t *device);
  * any type, but some backends also provide type-specific functions
  * that must only be called with a device of the appropriate
  * type. These functions have names that begin with
- * cairo_<emphasis>type</emphasis>_device<!-- --> such as cairo_xcb_device_debug_set_render_version().
+ * <literal>cairo_<emphasis>type</emphasis>_device</literal> such as
+ * cairo_xcb_device_debug_cap_xrender_version().
  *
  * The behavior of calling a type-specific function with a surface of
  * the wrong type is undefined.
@@ -2082,7 +2084,8 @@ cairo_surface_status (cairo_surface_t *surface);
  * backends" within cairo.
  *
  * The type of a surface is determined by the function used to create
- * it, which will generally be of the form cairo_<emphasis>type</emphasis>_surface_create(),
+ * it, which will generally be of the form
+ * <function>cairo_<emphasis>type</emphasis>_surface_create(<!-- -->)</function>,
  * (though see cairo_surface_create_similar() as well).
  *
  * The surface type can be queried with cairo_surface_get_type()
@@ -2091,7 +2094,7 @@ cairo_surface_status (cairo_surface_t *surface);
  * any type, but some backends also provide type-specific functions
  * that must only be called with a surface of the appropriate
  * type. These functions have names that begin with
- * cairo_<emphasis>type</emphasis>_surface<!-- --> such as cairo_image_surface_get_width().
+ * <literal>cairo_<emphasis>type</emphasis>_surface</literal> such as cairo_image_surface_get_width().
  *
  * The behavior of calling a type-specific function with a surface of
  * the wrong type is undefined.
@@ -2509,7 +2512,7 @@ cairo_pattern_get_extend (cairo_pattern_t *pattern);
  *
  * #cairo_filter_t is used to indicate what filtering should be
  * applied when reading pixel values from patterns. See
- * cairo_pattern_set_source() for indicating the desired filter to be
+ * cairo_pattern_set_filter() for indicating the desired filter to be
  * used with a particular pattern.
  */
 typedef enum _cairo_filter {
