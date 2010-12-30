@@ -111,7 +111,6 @@ static void (*CGContextSetAllowsFontSmoothingPtr) (CGContextRef, bool) = NULL;
 
 /* not yet public */
 static unsigned int (*CGContextGetTypePtr) (CGContextRef) = NULL;
-static void (*CGContextSetShouldAntialiasFontsPtr) (CGContextRef, bool) = NULL;
 static bool (*CGContextGetAllowsFontSmoothingPtr) (CGContextRef) = NULL;
 
 static cairo_bool_t _cairo_quartz_symbol_lookup_done = FALSE;
@@ -142,7 +141,6 @@ static void quartz_ensure_symbols (void)
 
     CGContextDrawTiledImagePtr = dlsym (RTLD_DEFAULT, "CGContextDrawTiledImage");
     CGContextGetTypePtr = dlsym (RTLD_DEFAULT, "CGContextGetType");
-    CGContextSetShouldAntialiasFontsPtr = dlsym (RTLD_DEFAULT, "CGContextSetShouldAntialiasFonts");
     CGContextCopyPathPtr = dlsym (RTLD_DEFAULT, "CGContextCopyPath");
     CGContextGetAllowsFontSmoothingPtr = dlsym (RTLD_DEFAULT, "CGContextGetAllowsFontSmoothing");
     CGContextSetAllowsFontSmoothingPtr = dlsym (RTLD_DEFAULT, "CGContextSetAllowsFontSmoothing");
