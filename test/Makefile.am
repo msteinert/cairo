@@ -1045,37 +1045,20 @@ REFERENCE_IMAGES = \
 	quartz-surface-source.ps2.ref.png \
 	quartz-surface-source.ps3.ref.png \
 	radial-gradient.image16.ref.png \
-	radial-gradient.pdf.xfail.png \
-	radial-gradient.quartz.ref.png \
 	radial-gradient.ref.png \
-	radial-gradient.svg.xfail.png \
 	radial-gradient-extend.ps3.ref.png \
 	radial-gradient-extend.ref.png \
 	radial-gradient-source.image16.ref.png \
 	radial-gradient-source.argb32.ref.png \
 	radial-gradient-source.rgb24.ref.png \
-	radial-gradient-source.pdf.argb32.xfail.png \
-	radial-gradient-source.pdf.rgb24.xfail.png \
-	radial-gradient-source.quartz.argb32.ref.png \
-	radial-gradient-source.quartz.rgb24.ref.png \
-	radial-gradient-mask.argb32.ref.png \
-	radial-gradient-mask.rgb24.ref.png \
+	radial-gradient-mask.ref.png \
 	radial-gradient-mask.image16.ref.png \
-	radial-gradient-mask.pdf.argb32.xfail.png \
-	radial-gradient-mask.pdf.rgb24.xfail.png \
-	radial-gradient-mask.quartz.argb32.ref.png \
-	radial-gradient-mask.quartz.rgb24.ref.png \
 	radial-gradient-mask-source.argb32.ref.png \
 	radial-gradient-mask-source.rgb24.ref.png \
 	radial-gradient-mask-source.image16.ref.png \
-	radial-gradient-mask-source.pdf.argb32.xfail.png \
-	radial-gradient-mask-source.pdf.rgb24.xfail.png \
-	radial-gradient-mask-source.quartz.argb32.ref.png \
-	radial-gradient-mask-source.quartz.rgb24.ref.png \
-	radial-gradient-one-stop.argb32.ref.png \
-	radial-gradient-one-stop.rgb24.ref.png \
-	radial-gradient-one-stop.ps3.argb32.ref.png \
-	radial-gradient-one-stop.ps3.rgb24.ref.png \
+	radial-gradient-mask-source.xlib.argb32.ref.png \
+	radial-gradient-mask-source.xlib.rgb24.ref.png \
+	radial-gradient-one-stop.ref.png \
 	random-intersections-eo.image16.ref.png \
 	random-intersections-eo.ps.ref.png \
 	random-intersections-eo.quartz.ref.png \
