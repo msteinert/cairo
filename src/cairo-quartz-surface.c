@@ -1951,15 +1951,14 @@ _cairo_quartz_surface_stroke_cg (cairo_quartz_surface_t *surface,
     origCTM = CGContextGetCTM (surface->cgContext);
 
     if (style->dash && style->num_dashes) {
-#define STATIC_DASH 32
-	cairo_quartz_float_t sdash[STATIC_DASH];
+	cairo_quartz_float_t sdash[CAIRO_STACK_ARRAY_LENGTH (cairo_quartz_float_t)];
 	cairo_quartz_float_t *fdash = sdash;
 	unsigned int max_dashes = style->num_dashes;
 	unsigned int k;
 
 	if (style->num_dashes%2)
 	    max_dashes *= 2;
-	if (max_dashes > STATIC_DASH)
+	if (max_dashes > ARRAY_LENGTH (sdash))
 	    fdash = _cairo_malloc_ab (max_dashes, sizeof (cairo_quartz_float_t));
 	if (unlikely (fdash == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -2073,11 +2072,11 @@ _cairo_quartz_surface_show_glyphs_cg (cairo_quartz_surface_t *surface,
 				      int *remaining_glyphs)
 {
     CGAffineTransform textTransform, ctm, invTextTransform;
-#define STATIC_BUF_SIZE 64
-    CGGlyph glyphs_static[STATIC_BUF_SIZE];
-    CGSize cg_advances_static[STATIC_BUF_SIZE];
+    CGGlyph glyphs_static[CAIRO_STACK_ARRAY_LENGTH (CGSize)];
+    CGSize cg_advances_static[CAIRO_STACK_ARRAY_LENGTH (CGSize)];
     CGGlyph *cg_glyphs = &glyphs_static[0];
     CGSize *cg_advances = &cg_advances_static[0];
+    COMPILE_TIME_ASSERT (sizeof (CGGlyph) <= sizeof (CGSize));
 
     cairo_quartz_drawing_state_t state;
     cairo_rectangle_int_t extents;
@@ -2145,18 +2144,14 @@ _cairo_quartz_surface_show_glyphs_cg (cairo_quartz_surface_t *surface,
 	    break;
     }
 
-    if (num_glyphs > STATIC_BUF_SIZE) {
-	cg_glyphs = (CGGlyph*) _cairo_malloc_ab (num_glyphs, sizeof (CGGlyph));
+    if (num_glyphs > ARRAY_LENGTH (glyphs_static)) {
+	cg_glyphs = (CGGlyph*) _cairo_malloc_ab (num_glyphs, sizeof (CGGlyph) + sizeof (CGSize));
 	if (unlikely (cg_glyphs == NULL)) {
 	    rv = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto BAIL;
 	}
 
-	cg_advances = (CGSize*) _cairo_malloc_ab (num_glyphs, sizeof (CGSize));
-	if (unlikely (cg_advances == NULL)) {
-	    rv = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    goto BAIL;
-	}
+	cg_advances = (CGSize*) (cg_glyphs + num_glyphs);
     }
 
     textTransform = CGAffineTransformMake (scaled_font->scale.xx,
@@ -2222,9 +2217,6 @@ BAIL:
 
 	_cairo_quartz_fixup_unbounded_operation (surface, &ub, scaled_font->options.antialias);
     }
-
-    if (cg_advances != cg_advances_static)
-	free (cg_advances);
 
     if (cg_glyphs != glyphs_static)
 	free (cg_glyphs);
