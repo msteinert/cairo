@@ -1206,8 +1206,7 @@ static cairo_int_status_t
 _cairo_quartz_setup_source (cairo_quartz_drawing_state_t *state,
 			    cairo_quartz_surface_t *surface,
 			    cairo_operator_t op,
-			    const cairo_pattern_t *source,
-			    const cairo_rectangle_int_t *extents)
+			    const cairo_pattern_t *source)
 {
     cairo_status_t status;
 
@@ -1249,7 +1248,14 @@ _cairo_quartz_setup_source (cairo_quartz_drawing_state_t *state,
 	source->type == CAIRO_PATTERN_TYPE_RADIAL)
     {
 	const cairo_gradient_pattern_t *gpat = (const cairo_gradient_pattern_t *)source;
-	return _cairo_quartz_setup_gradient_source (state, gpat, extents);
+	cairo_rectangle_int_t extents;
+
+	extents = surface->virtual_extents;
+	extents.x -= surface->base.device_transform.x0;
+	extents.y -= surface->base.device_transform.y0;
+	_cairo_rectangle_union (&extents, &surface->extents);
+
+	return _cairo_quartz_setup_gradient_source (state, gpat, &extents);
     }
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
@@ -1374,12 +1380,11 @@ static cairo_int_status_t
 _cairo_quartz_setup_source_safe (cairo_quartz_drawing_state_t *state,
 				 cairo_quartz_surface_t *surface,
 				 cairo_operator_t op,
-				 const cairo_pattern_t *source,
-				 const cairo_rectangle_int_t *extents)
+				 const cairo_pattern_t *source)
 {
     cairo_int_status_t status;
 
-    status = _cairo_quartz_setup_source (state, surface, op, source, extents);
+    status = _cairo_quartz_setup_source (state, surface, op, source);
     if (unlikely (status))
 	_cairo_quartz_teardown_source (state, surface);
 
@@ -1757,7 +1762,6 @@ _cairo_quartz_surface_paint_cg (cairo_quartz_surface_t *surface,
 {
     cairo_quartz_drawing_state_t state;
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
-    cairo_rectangle_int_t extents;
 
     ND ((stderr, "%p _cairo_quartz_surface_paint op %d source->type %d\n", surface, op, source->type));
 
@@ -1768,11 +1772,7 @@ _cairo_quartz_surface_paint_cg (cairo_quartz_surface_t *surface,
     if (unlikely (rv))
 	return rv;
 
-    extents = surface->virtual_extents;
-    extents.x -= surface->base.device_transform.x0;
-    extents.y -= surface->base.device_transform.y0;
-    _cairo_rectangle_union (&extents, &surface->extents);
-    rv = _cairo_quartz_setup_source_safe (&state, surface, op, source, &extents);
+    rv = _cairo_quartz_setup_source_safe (&state, surface, op, source);
     if (unlikely (rv))
 	return rv;
 
@@ -1831,7 +1831,6 @@ _cairo_quartz_surface_fill_cg (cairo_quartz_surface_t *surface,
     cairo_quartz_drawing_state_t state;
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
     CGPathRef path_for_unbounded = NULL;
-    cairo_rectangle_int_t extents;
 
     ND ((stderr, "%p _cairo_quartz_surface_fill op %d source->type %d\n", surface, op, source->type));
 
@@ -1842,11 +1841,7 @@ _cairo_quartz_surface_fill_cg (cairo_quartz_surface_t *surface,
     if (unlikely (rv))
 	return rv;
 
-    extents = surface->virtual_extents;
-    extents.x -= surface->base.device_transform.x0;
-    extents.y -= surface->base.device_transform.y0;
-    _cairo_rectangle_union (&extents, &surface->extents);
-    rv = _cairo_quartz_setup_source_safe (&state, surface, op, source, &extents);
+    rv = _cairo_quartz_setup_source_safe (&state, surface, op, source);
     if (unlikely (rv))
 	return rv;
 
@@ -1940,7 +1935,6 @@ _cairo_quartz_surface_stroke_cg (cairo_quartz_surface_t *surface,
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
     CGAffineTransform origCTM, strokeTransform;
     CGPathRef path_for_unbounded = NULL;
-    cairo_rectangle_int_t extents;
 
     ND ((stderr, "%p _cairo_quartz_surface_stroke op %d source->type %d\n", surface, op, source->type));
 
@@ -1984,11 +1978,7 @@ _cairo_quartz_surface_stroke_cg (cairo_quartz_surface_t *surface,
     } else
 	CGContextSetLineDash (surface->cgContext, 0, NULL, 0);
 
-    extents = surface->virtual_extents;
-    extents.x -= surface->base.device_transform.x0;
-    extents.y -= surface->base.device_transform.y0;
-    _cairo_rectangle_union (&extents, &surface->extents);
-    rv = _cairo_quartz_setup_source_safe (&state, surface, op, source, &extents);
+    rv = _cairo_quartz_setup_source_safe (&state, surface, op, source);
     if (unlikely (rv))
 	return rv;
 
@@ -2091,7 +2081,6 @@ _cairo_quartz_surface_show_glyphs_cg (cairo_quartz_surface_t *surface,
     COMPILE_TIME_ASSERT (sizeof (CGGlyph) <= sizeof (CGSize));
 
     cairo_quartz_drawing_state_t state;
-    cairo_rectangle_int_t extents;
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
     cairo_quartz_float_t xprev, yprev;
     int i;
@@ -2113,11 +2102,7 @@ _cairo_quartz_surface_show_glyphs_cg (cairo_quartz_surface_t *surface,
     if (unlikely (rv))
 	return rv;
 
-    extents = surface->virtual_extents;
-    extents.x -= surface->base.device_transform.x0;
-    extents.y -= surface->base.device_transform.y0;
-    _cairo_rectangle_union (&extents, &surface->extents);
-    rv = _cairo_quartz_setup_source_safe (&state, surface, op, source, &extents);
+    rv = _cairo_quartz_setup_source_safe (&state, surface, op, source);
     if (unlikely (rv))
 	return rv;
 
