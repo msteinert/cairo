@@ -2399,8 +2399,12 @@ _cairo_quartz_surface_mask_cg (cairo_quartz_surface_t *surface,
     }
 
     /* For these, we can skip creating a temporary surface, since we already have one */
-    if (mask->type == CAIRO_PATTERN_TYPE_SURFACE && mask->extend == CAIRO_EXTEND_NONE)
-	return _cairo_quartz_surface_mask_with_surface (surface, op, source, (cairo_surface_pattern_t *) mask, clip);
+    if (mask->type == CAIRO_PATTERN_TYPE_SURFACE && mask->extend == CAIRO_EXTEND_NONE) {
+	const cairo_surface_pattern_t *mask_spat =  (const cairo_surface_pattern_t *) mask;
+
+	if (mask_spat->surface->content & CAIRO_CONTENT_ALPHA)
+	    return _cairo_quartz_surface_mask_with_surface (surface, op, source, mask_spat, clip);
+    }
 
     return _cairo_quartz_surface_mask_with_generic (surface, op, source, mask, clip);
 }
