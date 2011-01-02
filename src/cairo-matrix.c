@@ -1022,7 +1022,7 @@ _pixman_nearest_sample (double d)
  * accept) and an identity matrix.
  *
  * Passing a non-zero value in x_offset/y_offset has the same effect
- * as applying cairo_matrix_translate (matrix, x_offset, y_offset) and
+ * as applying cairo_matrix_translate(matrix, x_offset, y_offset) and
  * setting x_offset and y_offset to 0.
  *
  * Upon return x_offset and y_offset contain the translation vector if
@@ -1075,7 +1075,7 @@ _cairo_matrix_is_pixman_translation (const cairo_matrix_t     *matrix,
  * y_offset) as a %pixman_transform_t and an translation.
  *
  * Passing a non-zero value in x_offset/y_offset has the same effect
- * as applying cairo_matrix_translate (matrix, x_offset, y_offset) and
+ * as applying cairo_matrix_translate(matrix, x_offset, y_offset) and
  * setting x_offset and y_offset to 0.
  *
  * If it is possible to represent the matrix with an identity
