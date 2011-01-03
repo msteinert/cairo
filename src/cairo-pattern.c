@@ -4470,45 +4470,6 @@ _cairo_pattern_hash (const cairo_pattern_t *pattern)
     }
 }
 
-static unsigned long
-_cairo_gradient_pattern_color_stops_size (const cairo_pattern_t *pattern)
-{
-    cairo_gradient_pattern_t *gradient = (cairo_gradient_pattern_t *) pattern;
-
-    return gradient->n_stops * (sizeof (double) + sizeof (cairo_color_t));
-}
-
-unsigned long
-_cairo_pattern_size (const cairo_pattern_t *pattern)
-{
-    if (pattern->status)
-	return 0;
-
-    /* XXX */
-    switch (pattern->type) {
-    case CAIRO_PATTERN_TYPE_SOLID:
-	return sizeof (cairo_solid_pattern_t);
-	break;
-    case CAIRO_PATTERN_TYPE_SURFACE:
-	return sizeof (cairo_surface_pattern_t);
-	break;
-    case CAIRO_PATTERN_TYPE_LINEAR:
-	return sizeof (cairo_linear_pattern_t) +
-	    _cairo_gradient_pattern_color_stops_size (pattern);
-	break;
-    case CAIRO_PATTERN_TYPE_RADIAL:
-	return sizeof (cairo_radial_pattern_t) +
-	    _cairo_gradient_pattern_color_stops_size (pattern);
-    case CAIRO_PATTERN_TYPE_MESH:
-	return sizeof (cairo_mesh_pattern_t) +
-	    _cairo_gradient_pattern_color_stops_size (pattern);
-    default:
-	ASSERT_NOT_REACHED;
-	return 0;
-    }
-}
-
-
 static cairo_bool_t
 _cairo_solid_pattern_equal (const cairo_solid_pattern_t *a,
 			    const cairo_solid_pattern_t *b)

@@ -2316,9 +2316,6 @@ cairo_private cairo_bool_t
 _cairo_linear_pattern_equal (const cairo_linear_pattern_t *a,
 			     const cairo_linear_pattern_t *b);
 
-cairo_private unsigned long
-_cairo_pattern_size (const cairo_pattern_t *pattern);
-
 cairo_private cairo_bool_t
 _cairo_radial_pattern_equal (const cairo_radial_pattern_t *a,
 			     const cairo_radial_pattern_t *b);
