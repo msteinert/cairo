@@ -2644,9 +2644,10 @@ _cairo_radial_pattern_box_to_parameter (const cairo_radial_pattern_t *radial,
     cairo_bool_t valid;
 
     assert (! _radial_pattern_is_degenerate (radial));
-    assert (tolerance > 0);
     assert (x0 < x1);
     assert (y0 < y1);
+
+    tolerance = MAX (tolerance, DBL_EPSILON);
 
     range[0] = range[1] = 0;
     valid = FALSE;

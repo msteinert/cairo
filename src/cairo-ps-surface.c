@@ -3259,7 +3259,7 @@ _cairo_ps_surface_emit_gradient (cairo_ps_surface_t       *surface,
 	pattern->base.extend == CAIRO_EXTEND_REFLECT)
     {
 	double bounds_x1, bounds_x2, bounds_y1, bounds_y2;
-	double tolerance;
+	double x_scale, y_scale, tolerance;
 
 	/* TODO: use tighter extents */
 	bounds_x1 = 0;
@@ -3271,8 +3271,12 @@ _cairo_ps_surface_emit_gradient (cairo_ps_surface_t       *surface,
 					      &bounds_x2, &bounds_y2,
 					      NULL);
 
-	tolerance = 1. / MAX (surface->base.x_fallback_resolution,
-			      surface->base.y_fallback_resolution);
+	x_scale = surface->base.x_resolution / surface->base.x_fallback_resolution;
+	y_scale = surface->base.y_resolution / surface->base.y_fallback_resolution;
+
+	tolerance = fabs (_cairo_matrix_compute_determinant (&pattern->base.matrix));
+	tolerance /= _cairo_matrix_transformed_circle_major_axis (&pattern->base.matrix, 1);
+	tolerance *= MIN (x_scale, y_scale);
 
 	_cairo_gradient_pattern_box_to_parameter (pattern,
 						  bounds_x1, bounds_y1,

@@ -842,7 +842,10 @@ _cairo_quartz_create_gradient_function (const cairo_gradient_pattern_t *gradient
 
     if (gradient->base.extend != CAIRO_EXTEND_NONE) {
 	double bounds_x1, bounds_x2, bounds_y1, bounds_y2;
-	double t[2];
+	double t[2], tolerance;
+
+	tolerance = fabs (_cairo_matrix_compute_determinant (&gradient->base.matrix));
+	tolerance /= _cairo_matrix_transformed_circle_major_axis (&gradient->base.matrix, 1);
 
 	bounds_x1 = extents->x;
 	bounds_y1 = extents->y;
@@ -853,8 +856,11 @@ _cairo_quartz_create_gradient_function (const cairo_gradient_pattern_t *gradient
 					      &bounds_x2, &bounds_y2,
 					      NULL);
 
-	_cairo_gradient_pattern_box_to_parameter (gradient, bounds_x1, bounds_y1,
-						  bounds_x2, bounds_y2, 1, t);
+	_cairo_gradient_pattern_box_to_parameter (gradient,
+						  bounds_x1, bounds_y1,
+						  bounds_x2, bounds_y2,
+						  tolerance,
+						  t);
 
 	/* set the input range for the function -- the function knows how
 	   to map values outside of 0.0 .. 1.0 to the correct color */
