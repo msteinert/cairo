@@ -91,6 +91,7 @@ _cairo_boilerplate_xcb_cleanup (void *closure)
     xcb_target_closure_t *xtc = closure;
     cairo_status_t status;
 
+    cairo_surface_finish (xtc->surface);
     if (xtc->is_pixmap)
 	xcb_free_pixmap (xtc->c, xtc->drawable);
     else
