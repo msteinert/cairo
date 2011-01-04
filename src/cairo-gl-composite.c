@@ -150,8 +150,10 @@ _cairo_gl_solid_operand_init (cairo_gl_operand_t *operand,
 
 static cairo_status_t
 _cairo_gl_gradient_operand_init (cairo_gl_operand_t *operand,
+                                 const cairo_pattern_t *pattern,
 				 cairo_gl_surface_t *dst,
-                                 const cairo_pattern_t *pattern)
+				 int src_x, int src_y,
+				 int dst_x, int dst_y)
 {
     const cairo_gradient_pattern_t *gradient = (const cairo_gradient_pattern_t *)pattern;
     cairo_status_t status;
@@ -233,6 +235,7 @@ _cairo_gl_gradient_operand_init (cairo_gl_operand_t *operand,
 			       &m);
     }
 
+    cairo_matrix_translate (&operand->gradient.m, src_x - dst_x, src_y - dst_y);
 
     operand->gradient.extend = pattern->extend;
 
@@ -283,7 +286,10 @@ _cairo_gl_operand_init (cairo_gl_operand_t *operand,
 		                             &((cairo_solid_pattern_t *) pattern)->color);
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
-	status = _cairo_gl_gradient_operand_init (operand, dst, pattern);
+	status = _cairo_gl_gradient_operand_init (operand,
+						  pattern, dst,
+						  src_x, src_y,
+						  dst_x, dst_y);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    return status;
 
