@@ -30,6 +30,9 @@
 
 #include <assert.h>
 
+/* Errors have response_type == 0 */
+#define CAIRO_XCB_ERROR 0
+
 static const cairo_user_data_key_t xcb_closure_key;
 
 typedef struct _xcb_target_closure {
@@ -592,7 +595,7 @@ _cairo_boilerplate_xcb_finish_surface (cairo_surface_t *surface)
 	return cairo_surface_status (surface);
 
     while ((ev = xcb_poll_for_event (xtc->c)) != NULL) {
-	if (ev->response_type == 0 /* trust me! */) {
+	if (ev->response_type == CAIRO_XCB_ERROR) {
 	    xcb_generic_error_t *error = (xcb_generic_error_t *) ev;
 
 #if XCB_GENERIC_ERROR_HAS_MAJOR_MINOR_CODES
