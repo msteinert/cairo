@@ -79,6 +79,13 @@ _cairo_boilerplate_xcb_handle_errors (xcb_target_closure_t *xtc)
 }
 
 static void
+_cairo_boilerplate_xcb_sync_server (xcb_target_closure_t *xtc)
+{
+    free (xcb_get_input_focus_reply (xtc->c,
+				     xcb_get_input_focus (xtc->c), NULL));
+}
+
+static void
 _cairo_boilerplate_xcb_cleanup (void *closure)
 {
     xcb_target_closure_t *xtc = closure;
@@ -93,6 +100,9 @@ _cairo_boilerplate_xcb_cleanup (void *closure)
     cairo_device_finish (xtc->device);
     cairo_device_destroy (xtc->device);
 
+    /* First synchronize with the X server to make sure there are no more errors
+     * in-flight which we would miss otherwise */
+    _cairo_boilerplate_xcb_sync_server (xtc);
     status = _cairo_boilerplate_xcb_handle_errors (xtc);
     assert (status == CAIRO_STATUS_SUCCESS);
 
@@ -637,6 +647,9 @@ _cairo_boilerplate_xcb_finish_surface (cairo_surface_t *surface)
     if (cairo_surface_status (surface))
 	return cairo_surface_status (surface);
 
+    /* First synchronize with the X server to make sure there are no more errors
+     * in-flight which we would miss otherwise */
+    _cairo_boilerplate_xcb_sync_server (xtc);
     status = _cairo_boilerplate_xcb_handle_errors (xtc);
     if (status)
 	return status;
