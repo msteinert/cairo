@@ -112,7 +112,9 @@ typedef enum cairo_gl_operand_type {
     CAIRO_GL_OPERAND_CONSTANT,
     CAIRO_GL_OPERAND_TEXTURE,
     CAIRO_GL_OPERAND_LINEAR_GRADIENT,
-    CAIRO_GL_OPERAND_RADIAL_GRADIENT,
+    CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0,
+    CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE,
+    CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT,
     CAIRO_GL_OPERAND_SPANS,
 
     CAIRO_GL_OPERAND_COUNT
@@ -159,19 +161,10 @@ typedef struct cairo_gl_operand {
 	struct {
 	    cairo_gl_gradient_t *gradient;
 	    cairo_matrix_t m;
-	    float x0, y0, dx, dy;
-	    float scale;
-            cairo_extend_t extend;
-	} linear;
-	struct {
-	    cairo_gl_gradient_t *gradient;
-	    cairo_matrix_t m;
-	    float circle_1_x;
-	    float circle_1_y;
-	    float radius_0;
-	    float radius_1;
-            cairo_extend_t extend;
-	} radial;
+	    cairo_circle_double_t circle_d;
+	    double radius_0, a;
+	    cairo_extend_t extend;
+	} gradient;
     };
     unsigned int vertex_offset;
 } cairo_gl_operand_t;

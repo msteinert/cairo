@@ -422,9 +422,11 @@ cairo_gl_operand_get_var_type (cairo_gl_operand_type_t type)
         ASSERT_NOT_REACHED;
     case CAIRO_GL_OPERAND_NONE:
     case CAIRO_GL_OPERAND_CONSTANT:
-    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
         return CAIRO_GL_VAR_NONE;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
     case CAIRO_GL_OPERAND_TEXTURE:
         return CAIRO_GL_VAR_TEXCOORDS;
     case CAIRO_GL_OPERAND_SPANS:
@@ -563,39 +565,84 @@ cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
             "}\n",
 	     namestr, namestr, namestr, namestr, namestr);
         break;
-    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
-        _cairo_output_stream_printf (stream, 
-            "uniform sampler1D %s_sampler;\n"
-            "uniform mat3 %s_matrix;\n"
-            "uniform vec2 %s_circle_1;\n"
-            "uniform float %s_radius_0;\n"
-            "uniform float %s_radius_1;\n"
-            "\n"
-            "vec4 get_%s()\n"
-            "{\n"
-            "    vec2 pos = (%s_matrix * vec3 (gl_FragCoord.xy, 1.0)).xy;\n"
-            "    \n"
-            "    float dr = %s_radius_1 - %s_radius_0;\n"
-            "    float dot_circle_1 = dot (%s_circle_1, %s_circle_1);\n"
-            "    float dot_pos_circle_1 = dot (pos, %s_circle_1);\n"
-            "    \n"
-            "    float A = dot_circle_1 - dr * dr;\n"
-            "    float B = -2.0 * (dot_pos_circle_1 + %s_radius_0 * dr);\n"
-            "    float C = dot (pos, pos) - %s_radius_0 * %s_radius_0;\n"
-            "    float det = B * B - 4.0 * A * C;\n"
-            "    det = max (det, 0.0);\n"
-            "    \n"
-            "    float sqrt_det = sqrt (det);\n"
-            "    sqrt_det *= sign(A);\n"
-            "    \n"
-            "    float t = (-B + sqrt_det) / (2.0 * A);\n"
-            "    return texture1D (%s_sampler, t);\n"
-            "}\n",
-            namestr, namestr, namestr, namestr, namestr, 
-            namestr, namestr, namestr, namestr, namestr, 
-            namestr, namestr, namestr, namestr, namestr, 
-            namestr);
-        break;
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
+	_cairo_output_stream_printf (stream,
+	    "varying vec2 %s_texcoords;\n"
+	    "uniform sampler1D %s_sampler;\n"
+	    "uniform vec3 %s_circle_d;\n"
+	    "uniform float %s_radius_0;\n"
+	    "\n"
+	    "vec4 get_%s()\n"
+	    "{\n"
+	    "    vec3 pos = vec3 (%s_texcoords, %s_radius_0);\n"
+	    "    \n"
+	    "    float B = dot (pos, %s_circle_d);\n"
+	    "    float C = dot (pos, vec3 (pos.xy, -pos.z));\n"
+	    "    \n"
+	    "    float t = 0.5 * C / B;\n"
+	    "    float is_valid = step (-%s_radius_0, t * %s_circle_d.z);\n"
+	    "    return mix (vec4 (0.0), texture1D (%s_sampler, t), is_valid);\n"
+	    "}\n",
+	    namestr, namestr, namestr, namestr, namestr, namestr,
+	    namestr, namestr, namestr, namestr, namestr);
+	break;
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
+	_cairo_output_stream_printf (stream,
+	    "varying vec2 %s_texcoords;\n"
+	    "uniform sampler1D %s_sampler;\n"
+	    "uniform vec3 %s_circle_d;\n"
+	    "uniform float %s_a;\n"
+	    "uniform float %s_radius_0;\n"
+	    "\n"
+	    "vec4 get_%s()\n"
+	    "{\n"
+	    "    vec3 pos = vec3 (%s_texcoords, %s_radius_0);\n"
+	    "    \n"
+	    "    float B = dot (pos, %s_circle_d);\n"
+	    "    float C = dot (pos, vec3 (pos.xy, -pos.z));\n"
+	    "    \n"
+	    "    float det = dot (vec2 (B, %s_a), vec2 (B, -C));\n"
+	    "    float sqrtdet = sqrt (abs (det));\n"
+	    "    vec2 t = (B + vec2 (sqrtdet, -sqrtdet)) / %s_a;\n"
+	    "    \n"
+	    "    vec2 is_valid = step (vec2 (0.0), t) * step (t, vec2(1.0));\n"
+	    "    float has_color = step (0., det) * max (is_valid.x, is_valid.y);\n"
+	    "    \n"
+	    "    float upper_t = mix (t.y, t.x, is_valid.x);\n"
+	    "    return mix (vec4 (0.0), texture1D (%s_sampler, upper_t), has_color);\n"
+	    "}\n",
+	    namestr, namestr, namestr, namestr, namestr, namestr,
+	    namestr, namestr, namestr, namestr, namestr, namestr);
+	break;
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
+	_cairo_output_stream_printf (stream,
+	    "varying vec2 %s_texcoords;\n"
+	    "uniform sampler1D %s_sampler;\n"
+	    "uniform vec3 %s_circle_d;\n"
+	    "uniform float %s_a;\n"
+	    "uniform float %s_radius_0;\n"
+	    "\n"
+	    "vec4 get_%s()\n"
+	    "{\n"
+	    "    vec3 pos = vec3 (%s_texcoords, %s_radius_0);\n"
+	    "    \n"
+	    "    float B = dot (pos, %s_circle_d);\n"
+	    "    float C = dot (pos, vec3 (pos.xy, -pos.z));\n"
+	    "    \n"
+	    "    float det = dot (vec2 (B, %s_a), vec2 (B, -C));\n"
+	    "    float sqrtdet = sqrt (abs (det));\n"
+	    "    vec2 t = (B + vec2 (sqrtdet, -sqrtdet)) / %s_a;\n"
+	    "    \n"
+	    "    vec2 is_valid = step (vec2 (-%s_radius_0), t * %s_circle_d.z);\n"
+	    "    float has_color = step (0., det) * max (is_valid.x, is_valid.y);\n"
+	    "    \n"
+	    "    float upper_t = mix (t.y, t.x, is_valid.x);\n"
+	    "    return mix (vec4 (0.0), texture1D (%s_sampler, upper_t), has_color);\n"
+	    "}\n",
+	    namestr, namestr, namestr, namestr, namestr,
+	    namestr, namestr, namestr, namestr, namestr,
+	    namestr, namestr, namestr, namestr);
+	break;
     case CAIRO_GL_OPERAND_SPANS:
         _cairo_output_stream_printf (stream, 
             "varying float %s_coverage;\n"

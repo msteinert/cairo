@@ -156,19 +156,21 @@ _cairo_gl_gradient_operand_init (cairo_gl_operand_t *operand,
     const cairo_gradient_pattern_t *gradient = (const cairo_gradient_pattern_t *)pattern;
     cairo_status_t status;
 
+    assert (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR ||
+	    gradient->base.type == CAIRO_PATTERN_TYPE_RADIAL);
+
     if (! _cairo_gl_device_has_glsl (dst->base.device))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    status = _cairo_gl_create_gradient_texture (dst,
+						gradient,
+						&operand->gradient.gradient);
+    if (unlikely (status))
+	return status;
+
     if (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR) {
 	cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) gradient;
-        double x0, y0;
-	float dx, dy, sf, offset;
-
-        status = _cairo_gl_create_gradient_texture (dst,
-                                                    gradient,
-                                                    &operand->linear.gradient);
-        if (unlikely (status))
-            return status;
+	double x0, y0, dx, dy, sf, offset;
 
 	dx = linear->pd2.x - linear->pd1.x;
 	dy = linear->pd2.y - linear->pd1.y;
@@ -180,64 +182,61 @@ _cairo_gl_gradient_operand_init (cairo_gl_operand_t *operand,
 	y0 = linear->pd1.y;
 	offset = dx * x0 + dy * y0;
 
-	if (_cairo_matrix_is_identity (&linear->base.base.matrix)) {
-	    operand->linear.m.xx = dx;
-	    operand->linear.m.xy = dy;
-	    operand->linear.m.x0 = -offset;
-	} else {
-	    cairo_matrix_t m;
-
-	    cairo_matrix_init (&m, dx, 0, dy, 0, -offset, 0);
-	    cairo_matrix_multiply (&operand->linear.m,
-				   &linear->base.base.matrix, &m);
-	}
-	operand->linear.m.yx = 0.0;
-	operand->linear.m.yy = 1.0;
-	operand->linear.m.y0 = 0.0;
-
-        operand->linear.extend = pattern->extend;
-
 	operand->type = CAIRO_GL_OPERAND_LINEAR_GRADIENT;
-        return CAIRO_STATUS_SUCCESS;
+
+	cairo_matrix_init (&operand->gradient.m, dx, 0, dy, 1, -offset, 0);
+	if (! _cairo_matrix_is_identity (&pattern->matrix)) {
+	    cairo_matrix_multiply (&operand->gradient.m,
+				   &pattern->matrix,
+				   &operand->gradient.m);
+	}
     } else {
-	cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) gradient;
-        double x0, y0, r0, x1, y1, r1;
+	cairo_matrix_t m;
+	cairo_circle_double_t circles[2];
+	double x0, y0, r0, dx, dy, dr;
 
-	x0 = radial->cd1.center.x;
-	x1 = radial->cd2.center.x;
-	y0 = radial->cd1.center.y;
-	y1 = radial->cd2.center.y;
-	r0 = radial->cd1.radius;
-	r1 = radial->cd2.radius;
-
-        status = _cairo_gl_create_gradient_texture (dst,
-                                                    gradient,
-                                                    &operand->radial.gradient);
-        if (unlikely (status))
-            return status;
-
-	/* Translation matrix from the destination fragment coordinates
-	 * (pixels from lower left = 0,0) to the coordinates in the
+	/*
+	 * Some fragment shader implementations use half-floats to
+	 * represent numbers, so the maximum number they can represent
+	 * is about 2^14. Some intermediate computations used in the
+	 * radial gradient shaders can produce results of up to 2*k^4.
+	 * Setting k=8 makes the maximum result about 8192 (assuming
+	 * that the extreme circles are not much smaller than the
+	 * destination image).
 	 */
-	cairo_matrix_init_translate (&operand->radial.m, -x0, -y0);
-	cairo_matrix_multiply (&operand->radial.m,
-			       &pattern->matrix,
-			       &operand->radial.m);
-	cairo_matrix_translate (&operand->radial.m, 0, dst->height);
-	cairo_matrix_scale (&operand->radial.m, 1.0, -1.0);
+	_cairo_gradient_pattern_fit_to_range (gradient, 8.,
+					      &operand->gradient.m, circles);
 
-	operand->radial.circle_1_x = x1 - x0;
-	operand->radial.circle_1_y = y1 - y0;
-	operand->radial.radius_0 = r0;
-	operand->radial.radius_1 = r1;
+	x0 = circles[0].center.x;
+	y0 = circles[0].center.y;
+	r0 = circles[0].radius;
+	dx = circles[1].center.x - x0;
+	dy = circles[1].center.y - y0;
+	dr = circles[1].radius   - r0;
 
-        operand->radial.extend = pattern->extend;
+	operand->gradient.a = dx * dx + dy * dy - dr * dr;
+	operand->gradient.radius_0 = r0;
+	operand->gradient.circle_d.center.x = dx;
+	operand->gradient.circle_d.center.y = dy;
+	operand->gradient.circle_d.radius   = dr;
 
-	operand->type = CAIRO_GL_OPERAND_RADIAL_GRADIENT;
-        return CAIRO_STATUS_SUCCESS;
+	if (operand->gradient.a == 0)
+	    operand->type = CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0;
+	else if (pattern->extend == CAIRO_EXTEND_NONE)
+	    operand->type = CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE;
+	else
+	    operand->type = CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT;
+
+	cairo_matrix_init_translate (&m, -x0, -y0);
+	cairo_matrix_multiply (&operand->gradient.m,
+			       &operand->gradient.m,
+			       &m);
     }
 
-    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    operand->gradient.extend = pattern->extend;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -247,10 +246,10 @@ _cairo_gl_operand_destroy (cairo_gl_operand_t *operand)
     case CAIRO_GL_OPERAND_CONSTANT:
 	break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
-	_cairo_gl_gradient_destroy (operand->linear.gradient);
-	break;
-    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
-	_cairo_gl_gradient_destroy (operand->radial.gradient);
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
+	_cairo_gl_gradient_destroy (operand->gradient.gradient);
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
         _cairo_pattern_release_surface (NULL, /* XXX */
@@ -376,35 +375,26 @@ _cairo_gl_operand_bind_to_shader (cairo_gl_context_t *ctx,
                                     operand->constant.color[2],
                                     operand->constant.color[3]);
         break;
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
+	strcpy (custom_part, "_a");
+	_cairo_gl_shader_bind_float  (ctx,
+				      uniform_name,
+				      operand->gradient.a);
+	/* fall through */
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
+	strcpy (custom_part, "_circle_d");
+	_cairo_gl_shader_bind_vec3   (ctx,
+				      uniform_name,
+				      operand->gradient.circle_d.center.x,
+				      operand->gradient.circle_d.center.y,
+				      operand->gradient.circle_d.radius);
+	strcpy (custom_part, "_radius_0");
+	_cairo_gl_shader_bind_float  (ctx,
+				      uniform_name,
+				      operand->gradient.radius_0);
+	/* fall through */
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
-        strcpy (custom_part, "_sampler");
-	_cairo_gl_shader_bind_texture(ctx,
-                                      uniform_name,
-                                      tex_unit);
-        break;
-    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
-        strcpy (custom_part, "_matrix");
-        _cairo_gl_shader_bind_matrix (ctx,
-                                      uniform_name,
-                                      &operand->radial.m);
-        strcpy (custom_part, "_circle_1");
-        _cairo_gl_shader_bind_vec2   (ctx,
-                                      uniform_name,
-                                      operand->radial.circle_1_x,
-                                      operand->radial.circle_1_y);
-        strcpy (custom_part, "_radius_0");
-        _cairo_gl_shader_bind_float  (ctx,
-                                      uniform_name,
-                                      operand->radial.radius_0);
-        strcpy (custom_part, "_radius_1");
-        _cairo_gl_shader_bind_float  (ctx,
-                                      uniform_name,
-                                      operand->radial.radius_1);
-        strcpy (custom_part, "_sampler");
-	_cairo_gl_shader_bind_texture(ctx,
-                                      uniform_name,
-                                      tex_unit);
-        break;
     case CAIRO_GL_OPERAND_TEXTURE:
         strcpy (custom_part, "_sampler");
 	_cairo_gl_shader_bind_texture(ctx,
@@ -498,7 +488,9 @@ _cairo_gl_operand_setup_fixed (cairo_gl_operand_t *operand,
     default:
         ASSERT_NOT_REACHED;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
-    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
     case CAIRO_GL_OPERAND_NONE:
         return;
     }
@@ -561,7 +553,9 @@ _cairo_gl_operand_needs_setup (cairo_gl_operand_t *dest,
                dest->texture.attributes.filter != source->texture.attributes.filter ||
                dest->texture.attributes.has_component_alpha != source->texture.attributes.has_component_alpha;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
-    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
         /* XXX: improve this */
         return TRUE;
     default:
@@ -634,10 +628,13 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
         break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
-        _cairo_gl_gradient_reference (operand->linear.gradient);
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
+        _cairo_gl_gradient_reference (operand->gradient.gradient);
         glActiveTexture (GL_TEXTURE0 + tex_unit);
-        glBindTexture (GL_TEXTURE_1D, operand->linear.gradient->tex);
-        _cairo_gl_texture_set_extend (ctx, GL_TEXTURE_1D, operand->linear.extend);
+        glBindTexture (GL_TEXTURE_1D, operand->gradient.gradient->tex);
+        _cairo_gl_texture_set_extend (ctx, GL_TEXTURE_1D, operand->gradient.extend);
         _cairo_gl_texture_set_filter (ctx, GL_TEXTURE_1D, CAIRO_FILTER_BILINEAR);
         glEnable (GL_TEXTURE_1D);
 
@@ -646,14 +643,6 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
                            (void *) (uintptr_t) vertex_offset);
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
 	break;
-    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
-        _cairo_gl_gradient_reference (operand->radial.gradient);
-        glActiveTexture (GL_TEXTURE0 + tex_unit);
-        glBindTexture (GL_TEXTURE_1D, operand->radial.gradient->tex);
-        _cairo_gl_texture_set_extend (ctx, GL_TEXTURE_1D, operand->radial.extend);
-        _cairo_gl_texture_set_filter (ctx, GL_TEXTURE_1D, CAIRO_FILTER_BILINEAR);
-        glEnable (GL_TEXTURE_1D);
-        break;
     }
 
     if (! use_shaders)
@@ -688,16 +677,14 @@ _cairo_gl_context_destroy_operand (cairo_gl_context_t *ctx,
         glDisableClientState (GL_TEXTURE_COORD_ARRAY);
         break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
-        _cairo_gl_gradient_destroy (ctx->operands[tex_unit].linear.gradient);
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
+        _cairo_gl_gradient_destroy (ctx->operands[tex_unit].gradient.gradient);
         glActiveTexture (GL_TEXTURE0 + tex_unit);
         glDisable (GL_TEXTURE_1D);
         glClientActiveTexture (GL_TEXTURE0 + tex_unit);
         glDisableClientState (GL_TEXTURE_COORD_ARRAY);
-        break;
-    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
-        _cairo_gl_gradient_destroy (ctx->operands[tex_unit].radial.gradient);
-        glActiveTexture (GL_TEXTURE0 + tex_unit);
-        glDisable (GL_TEXTURE_1D);
         break;
     }
 
@@ -791,12 +778,14 @@ _cairo_gl_operand_get_vertex_size (cairo_gl_operand_type_t type)
         ASSERT_NOT_REACHED;
     case CAIRO_GL_OPERAND_NONE:
     case CAIRO_GL_OPERAND_CONSTANT:
-    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
         return 0;
     case CAIRO_GL_OPERAND_SPANS:
         return 4 * sizeof (GLbyte);
     case CAIRO_GL_OPERAND_TEXTURE:
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
         return 2 * sizeof (GLfloat);
     }
 }
@@ -1084,7 +1073,6 @@ _cairo_gl_operand_emit (cairo_gl_operand_t *operand,
         ASSERT_NOT_REACHED;
     case CAIRO_GL_OPERAND_NONE:
     case CAIRO_GL_OPERAND_CONSTANT:
-    case CAIRO_GL_OPERAND_RADIAL_GRADIENT:
         break;
     case CAIRO_GL_OPERAND_SPANS:
         {
@@ -1101,14 +1089,17 @@ _cairo_gl_operand_emit (cairo_gl_operand_t *operand,
         }
         break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
         {
 	    double s = x;
 	    double t = y;
 
-	    cairo_matrix_transform_point (&operand->linear.m, &s, &t);
+	    cairo_matrix_transform_point (&operand->gradient.m, &s, &t);
 
 	    *(*vb)++ = s;
-	    *(*vb)++ = 0.0;
+	    *(*vb)++ = t;
         }
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
