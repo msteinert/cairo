@@ -43,10 +43,46 @@ typedef struct _xcb_target_closure {
     cairo_surface_t *surface;
 } xcb_target_closure_t;
 
+static cairo_status_t
+_cairo_boilerplate_xcb_handle_errors (xcb_target_closure_t *xtc)
+{
+    xcb_generic_event_t *ev;
+
+    if ((ev = xcb_poll_for_event (xtc->c)) != NULL) {
+	if (ev->response_type == CAIRO_XCB_ERROR) {
+	    xcb_generic_error_t *error = (xcb_generic_error_t *) ev;
+
+#if XCB_GENERIC_ERROR_HAS_MAJOR_MINOR_CODES
+	    fprintf (stderr,
+		     "Detected error during xcb run: %d major=%d, minor=%d\n",
+		     error->error_code, error->major_code, error->minor_code);
+#else
+	    fprintf (stderr,
+		     "Detected error during xcb run: %d\n",
+		     error->error_code);
+#endif
+	} else {
+	    fprintf (stderr,
+		     "Detected unexpected event during xcb run: %d\n",
+		     ev->response_type);
+	}
+	free (ev);
+
+	/* Silently discard all following errors */
+	while ((ev = xcb_poll_for_event (xtc->c)) != NULL)
+	    free (ev);
+
+	return CAIRO_STATUS_WRITE_ERROR;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static void
 _cairo_boilerplate_xcb_cleanup (void *closure)
 {
     xcb_target_closure_t *xtc = closure;
+    cairo_status_t status;
 
     if (xtc->is_pixmap)
 	xcb_free_pixmap (xtc->c, xtc->drawable);
@@ -57,6 +93,9 @@ _cairo_boilerplate_xcb_cleanup (void *closure)
     cairo_device_finish (xtc->device);
     cairo_device_destroy (xtc->device);
 
+    status = _cairo_boilerplate_xcb_handle_errors (xtc);
+    assert (status == CAIRO_STATUS_SUCCESS);
+
     xcb_disconnect (xtc->c);
 
     free (xtc);
@@ -66,10 +105,14 @@ static void
 _cairo_boilerplate_xcb_synchronize (void *closure)
 {
     xcb_target_closure_t *xtc = closure;
+    cairo_status_t status;
     free (xcb_get_image_reply (xtc->c,
 		xcb_get_image (xtc->c, XCB_IMAGE_FORMAT_Z_PIXMAP,
 		    xtc->drawable, 0, 0, 1, 1, /* AllPlanes */ -1),
 		0));
+
+    status = _cairo_boilerplate_xcb_handle_errors (xtc);
+    assert (status == CAIRO_STATUS_SUCCESS);
 }
 
 static xcb_render_pictforminfo_t *
@@ -575,7 +618,7 @@ _cairo_boilerplate_xcb_finish_surface (cairo_surface_t *surface)
 {
     xcb_target_closure_t *xtc = cairo_surface_get_user_data (surface,
 							     &xcb_closure_key);
-    xcb_generic_event_t *ev;
+    cairo_status_t status;
 
     if (xtc->surface != NULL) {
 	cairo_t *cr;
@@ -594,32 +637,9 @@ _cairo_boilerplate_xcb_finish_surface (cairo_surface_t *surface)
     if (cairo_surface_status (surface))
 	return cairo_surface_status (surface);
 
-    if ((ev = xcb_poll_for_event (xtc->c)) != NULL) {
-	if (ev->response_type == CAIRO_XCB_ERROR) {
-	    xcb_generic_error_t *error = (xcb_generic_error_t *) ev;
-
-#if XCB_GENERIC_ERROR_HAS_MAJOR_MINOR_CODES
-	    fprintf (stderr,
-		     "Detected error during xcb run: %d major=%d, minor=%d\n",
-		     error->error_code, error->major_code, error->minor_code);
-#else
-	    fprintf (stderr,
-		     "Detected error during xcb run: %d\n",
-		     error->error_code);
-#endif
-	} else {
-	    fprintf (stderr,
-		     "Detected unexpected event during xcb run: %d\n",
-		     ev->response_type);
-	}
-	free (ev);
-
-	/* Silently discard all following errors */
-	while ((ev = xcb_poll_for_event (xtc->c)) != NULL)
-	    free (ev);
-
-	return CAIRO_STATUS_WRITE_ERROR;
-    }
+    status = _cairo_boilerplate_xcb_handle_errors (xtc);
+    if (status)
+	return status;
 
     if (xcb_connection_has_error (xtc->c))
 	return CAIRO_STATUS_WRITE_ERROR;
