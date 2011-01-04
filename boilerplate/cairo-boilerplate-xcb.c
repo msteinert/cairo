@@ -594,7 +594,7 @@ _cairo_boilerplate_xcb_finish_surface (cairo_surface_t *surface)
     if (cairo_surface_status (surface))
 	return cairo_surface_status (surface);
 
-    while ((ev = xcb_poll_for_event (xtc->c)) != NULL) {
+    if ((ev = xcb_poll_for_event (xtc->c)) != NULL) {
 	if (ev->response_type == CAIRO_XCB_ERROR) {
 	    xcb_generic_error_t *error = (xcb_generic_error_t *) ev;
 
@@ -613,6 +613,10 @@ _cairo_boilerplate_xcb_finish_surface (cairo_surface_t *surface)
 		     ev->response_type);
 	}
 	free (ev);
+
+	/* Silently discard all following errors */
+	while ((ev = xcb_poll_for_event (xtc->c)) != NULL)
+	    free (ev);
 
 	return CAIRO_STATUS_WRITE_ERROR;
     }
