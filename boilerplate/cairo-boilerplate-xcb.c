@@ -592,8 +592,6 @@ _cairo_boilerplate_xcb_finish_surface (cairo_surface_t *surface)
 	return cairo_surface_status (surface);
 
     while ((ev = xcb_poll_for_event (xtc->c)) != NULL) {
-	cairo_status_t status = CAIRO_STATUS_SUCCESS;
-
 	if (ev->response_type == 0 /* trust me! */) {
 	    xcb_generic_error_t *error = (xcb_generic_error_t *) ev;
 
@@ -606,13 +604,14 @@ _cairo_boilerplate_xcb_finish_surface (cairo_surface_t *surface)
 		     "Detected error during xcb run: %d\n",
 		     error->error_code);
 #endif
-	    free (error);
-
-	    status = CAIRO_STATUS_WRITE_ERROR;
+	} else {
+	    fprintf (stderr,
+		     "Detected unexpected event during xcb run: %d\n",
+		     ev->response_type);
 	}
+	free (ev);
 
-	if (status)
-	    return status;
+	return CAIRO_STATUS_WRITE_ERROR;
     }
 
     if (xcb_connection_has_error (xtc->c))
