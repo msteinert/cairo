@@ -831,6 +831,11 @@ static const CGFunctionCallbacks gradient_callbacks = {
     0, ComputeGradientValue, (CGFunctionReleaseInfoCallback) cairo_pattern_destroy
 };
 
+/* Quartz computes a small number of samples of the gradient color
+ * function. On MacOS X 10.5 it apparently computes only 1024
+ * samples. */
+#define MAX_GRADIENT_RANGE 1024
+
 static CGFunctionRef
 _cairo_quartz_create_gradient_function (const cairo_gradient_pattern_t *gradient,
 					const cairo_rectangle_int_t *extents,
@@ -862,6 +867,12 @@ _cairo_quartz_create_gradient_function (const cairo_gradient_pattern_t *gradient
 						  tolerance,
 						  t);
 
+	if (gradient->base.extend == CAIRO_EXTEND_PAD) {
+	    t[0] = MAX (t[0], -0.5);
+	    t[1] = MIN (t[1],  1.5);
+	} else if (t[1] - t[0] > MAX_GRADIENT_RANGE)
+	    return NULL;
+
 	/* set the input range for the function -- the function knows how
 	   to map values outside of 0.0 .. 1.0 to the correct color */
 	input_value_range[0] = t[0];
@@ -875,8 +886,6 @@ _cairo_quartz_create_gradient_function (const cairo_gradient_pattern_t *gradient
     _cairo_gradient_pattern_interpolate (gradient, input_value_range[1], end);
 
     if (_cairo_pattern_create_copy (&pat, &gradient->base))
-	/* quartz doesn't deal very well with malloc failing, so there's
-	 * not much point in us trying either */
 	return NULL;
 
     return CGFunctionCreate (pat,
@@ -1156,12 +1165,15 @@ _cairo_quartz_setup_gradient_source (cairo_quartz_drawing_state_t *state,
     cairo_matrix_invert (&mat);
     _cairo_quartz_cairo_matrix_to_quartz (&mat, &state->transform);
 
-    rgb = CGColorSpaceCreateDeviceRGB ();
-
     gradFunc = _cairo_quartz_create_gradient_function (gradient,
 						       extents,
 						       &start,
 						       &end);
+
+    if (unlikely (gradFunc == NULL))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    rgb = CGColorSpaceCreateDeviceRGB ();
 
     if (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR) {
 	state->shading = CGShadingCreateAxial (rgb,
