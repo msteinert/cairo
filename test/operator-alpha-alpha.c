@@ -93,9 +93,9 @@ subdraw (cairo_t *cr, int width, int height)
     cairo_surface_t *bg, *fg;
 
     bg = cairo_surface_create_similar (cairo_get_target (cr),
-	    CAIRO_CONTENT_COLOR_ALPHA, SIZE * STEPS, SIZE * STEPS);
+	    CAIRO_CONTENT_ALPHA, SIZE * STEPS, SIZE * STEPS);
     fg = cairo_surface_create_similar (cairo_get_target (cr),
-	    CAIRO_CONTENT_COLOR_ALPHA, SIZE * STEPS, SIZE * STEPS);
+	    CAIRO_CONTENT_ALPHA, SIZE * STEPS, SIZE * STEPS);
     bgcr = cairo_create (bg);
     fgcr = cairo_create (fg);
     cairo_scale (bgcr, SIZE, SIZE);
