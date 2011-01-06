@@ -602,10 +602,8 @@ _cairo_quartz_filter_to_quartz (cairo_filter_t filter)
 {
     switch (filter) {
     case CAIRO_FILTER_NEAREST:
-	return kCGInterpolationNone;
-
     case CAIRO_FILTER_FAST:
-	return kCGInterpolationLow;
+	return kCGInterpolationNone;
 
     case CAIRO_FILTER_BEST:
     case CAIRO_FILTER_GOOD:
@@ -994,6 +992,9 @@ typedef struct {
     /* The destination of the drawing of the source */
     CGContextRef cgDrawContext;
 
+    /* The filter to be used when drawing the source */
+    CGInterpolationQuality filter;
+
     /* Action type */
     cairo_quartz_action_t action;
 
@@ -1115,6 +1116,8 @@ _cairo_quartz_setup_state (cairo_quartz_drawing_state_t *state,
     state->cgMaskContext = surface->cgContext;
     state->cgDrawContext = state->cgMaskContext;
 
+    state->filter = _cairo_quartz_filter_to_quartz (source->filter);
+
     if (op == CAIRO_OPERATOR_CLEAR) {
 	CGContextSetRGBFillColor (state->cgDrawContext, 0, 0, 0, 1);
 
@@ -1152,8 +1155,6 @@ _cairo_quartz_setup_state (cairo_quartz_drawing_state_t *state,
 			       -state->clipRect.origin.x,
 			       -state->clipRect.origin.y);
     }
-
-    CGContextSetInterpolationQuality (state->cgDrawContext, _cairo_quartz_filter_to_quartz (source->filter));
 
     if (source->type == CAIRO_PATTERN_TYPE_SOLID) {
 	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) source;
@@ -1208,7 +1209,13 @@ _cairo_quartz_setup_state (cairo_quartz_drawing_state_t *state,
 
 	state->image = img;
 
-	cairo_matrix_invert (&m);
+	if (state->filter == kCGInterpolationNone && _cairo_matrix_is_translation (&m)) {
+	    m.x0 = -ceil (m.x0 - 0.5);
+	    m.y0 = -ceil (m.y0 - 0.5);
+	} else {
+	    cairo_matrix_invert (&m);
+	}
+
 	_cairo_quartz_cairo_matrix_to_quartz (&m, &state->transform);
 
 	is_bounded = _cairo_surface_get_extents (pat_surf, &extents);
@@ -1334,6 +1341,9 @@ static void
 _cairo_quartz_draw_source (cairo_quartz_drawing_state_t *state,
 			   cairo_operator_t              op)
 {
+    CGContextSetShouldAntialias (state->cgDrawContext, state->filter != kCGInterpolationNone);
+    CGContextSetInterpolationQuality(state->cgDrawContext, state->filter);
+
     if (state->action == DO_DIRECT) {
 	CGContextFillRect (state->cgDrawContext, state->rect);
 	return;
@@ -2151,14 +2161,15 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 
 static cairo_int_status_t
 _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
-                                         cairo_operator_t op,
-                                         const cairo_pattern_t *source,
-                                         const cairo_surface_pattern_t *mask,
-					 cairo_clip_t *clip)
+					 cairo_operator_t        op,
+					 const cairo_pattern_t  *source,
+					 cairo_surface_t        *mask_surf,
+					 const cairo_matrix_t   *mask_mat,
+					 CGInterpolationQuality filter,
+					 cairo_clip_t           *clip)
 {
     CGRect rect;
     CGImageRef img;
-    cairo_surface_t *pat_surf = mask->surface;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     CGAffineTransform mask_matrix;
     cairo_quartz_drawing_state_t state;
@@ -2166,7 +2177,7 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
     if (IS_EMPTY (surface))
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
-    status = _cairo_surface_to_cgimage (pat_surf, &img);
+    status = _cairo_surface_to_cgimage (mask_surf, &img);
     if (unlikely (status))
 	return status;
 
@@ -2178,13 +2189,18 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
 	goto BAIL;
 
     rect = CGRectMake (0.0, 0.0, CGImageGetWidth (img), CGImageGetHeight (img));
-    _cairo_quartz_cairo_matrix_to_quartz (&mask->base.matrix, &mask_matrix);
+    _cairo_quartz_cairo_matrix_to_quartz (mask_mat, &mask_matrix);
 
     /* ClipToMask is essentially drawing an image, so we need to flip the CTM
      * to get the image to appear oriented the right way */
     CGContextConcatCTM (state.cgMaskContext, CGAffineTransformInvert (mask_matrix));
     CGContextTranslateCTM (state.cgMaskContext, 0.0, rect.size.height);
     CGContextScaleCTM (state.cgMaskContext, 1.0, -1.0);
+
+    state.filter = filter;
+
+    CGContextSetInterpolationQuality (state.cgMaskContext, filter);
+    CGContextSetShouldAntialias (state.cgMaskContext, filter != kCGInterpolationNone);
 
     CGContextClipToMask (state.cgMaskContext, rect, img);
 
@@ -2198,48 +2214,6 @@ BAIL:
     _cairo_quartz_teardown_state (&state, surface);
 
     CGImageRelease (img);
-
-    return status;
-}
-
-/* This is somewhat less than ideal, but it gets the job done;
- * it would be better to avoid calling back into cairo.  This
- * creates a temporary surface to use as the mask.
- */
-static cairo_int_status_t
-_cairo_quartz_surface_mask_with_generic (cairo_quartz_surface_t *surface,
-					 cairo_operator_t op,
-					 const cairo_pattern_t *source,
-					 const cairo_pattern_t *mask,
-					 cairo_clip_t *clip)
-{
-    cairo_surface_t *gradient_surf;
-    cairo_surface_pattern_t surface_pattern;
-    cairo_int_status_t status;
-
-    /* Render the gradient to a surface */
-    gradient_surf = _cairo_quartz_surface_create_similar (surface,
-							  CAIRO_CONTENT_ALPHA,
-							  surface->extents.width,
-							  surface->extents.height);
-    status = gradient_surf->status;
-    if (unlikely (status))
-	goto BAIL;
-
-    /* gradient_surf is clear, thus we can use OVER instead of SOURCE
-     * to make sure we won't have to create a temporary layer or
-     * fallback.
-     */
-    status = _cairo_quartz_surface_paint (gradient_surf, CAIRO_OPERATOR_OVER, mask, NULL);
-    if (unlikely (status))
-	goto BAIL;
-
-    _cairo_pattern_init_for_surface (&surface_pattern, gradient_surf);
-    status = _cairo_quartz_surface_mask_with_surface (surface, op, source, &surface_pattern, clip);
-    _cairo_pattern_fini (&surface_pattern.base);
-
- BAIL:
-    cairo_surface_destroy (gradient_surf);
 
     return status;
 }
@@ -2274,6 +2248,12 @@ _cairo_quartz_surface_mask_cg (cairo_quartz_surface_t *surface,
 			       const cairo_pattern_t *mask,
 			       cairo_clip_t *clip)
 {
+    cairo_surface_t *mask_surf;
+    cairo_matrix_t matrix;
+    cairo_status_t status;
+    cairo_bool_t need_temp;
+    CGInterpolationQuality filter;
+
     ND ((stderr, "%p _cairo_quartz_surface_mask op %d source->type %d mask->type %d\n", surface, op, source->type, mask->type));
 
     if (IS_EMPTY (surface))
@@ -2288,15 +2268,79 @@ _cairo_quartz_surface_mask_cg (cairo_quartz_surface_t *surface,
 						      clip);
     }
 
-    /* For these, we can skip creating a temporary surface, since we already have one */
-    if (mask->type == CAIRO_PATTERN_TYPE_SURFACE && mask->extend == CAIRO_EXTEND_NONE) {
-	const cairo_surface_pattern_t *mask_spat =  (const cairo_surface_pattern_t *) mask;
+    need_temp = (mask->type   != CAIRO_PATTERN_TYPE_SURFACE ||
+		 mask->extend != CAIRO_EXTEND_NONE);
 
-	if (mask_spat->surface->content & CAIRO_CONTENT_ALPHA)
-	    return _cairo_quartz_surface_mask_with_surface (surface, op, source, mask_spat, clip);
+    filter = _cairo_quartz_filter_to_quartz (source->filter);
+
+    if (! need_temp) {
+	mask_surf = ((const cairo_surface_pattern_t *) mask)->surface;
+
+	/* When an opaque surface used as a mask in Quartz, its
+	 * luminosity is used as the alpha value, so we con only use
+	 * surfaces with alpha without creating a temporary mask. */
+	need_temp = ! (mask_surf->content & CAIRO_CONTENT_ALPHA);
     }
 
-    return _cairo_quartz_surface_mask_with_generic (surface, op, source, mask, clip);
+    if (! need_temp) {
+	CGInterpolationQuality mask_filter;
+	cairo_bool_t simple_transform;
+
+	matrix = mask->matrix;
+
+	mask_filter = _cairo_quartz_filter_to_quartz (mask->filter);
+	if (mask_filter == kCGInterpolationNone) {
+	    simple_transform = _cairo_matrix_is_translation (&matrix);
+	    if (simple_transform) {
+		matrix.x0 = ceil (matrix.x0 - 0.5);
+		matrix.y0 = ceil (matrix.y0 - 0.5);
+	    }
+	} else {
+	    simple_transform = _cairo_matrix_is_integer_translation (&matrix,
+								     NULL,
+								     NULL);
+	}
+
+	/* Quartz only allows one interpolation to be set for mask and
+	 * source, so we can skip the temp surface only if the source
+	 * filtering makes the mask look correct. */
+	if (source->type == CAIRO_PATTERN_TYPE_SURFACE)
+	    need_temp = ! (simple_transform || filter == mask_filter);
+	else
+	    filter = mask_filter;
+    }
+
+    if (need_temp) {
+	/* Render the mask to a surface */
+	mask_surf = _cairo_quartz_surface_create_similar (surface,
+							  CAIRO_CONTENT_ALPHA,
+							  surface->extents.width,
+							  surface->extents.height);
+	status = mask_surf->status;
+	if (unlikely (status))
+	    goto BAIL;
+
+	/* mask_surf is clear, so use OVER instead of SOURCE to avoid a
+	 * temporary layer or fallback to cairo-image. */
+	status = _cairo_surface_paint (mask_surf, CAIRO_OPERATOR_OVER, mask, NULL);
+	if (unlikely (status))
+	    goto BAIL;
+
+	cairo_matrix_init_identity (&matrix);
+    }
+
+    status = _cairo_quartz_surface_mask_with_surface (surface, op, source,
+						      mask_surf,
+						      &matrix,
+						      filter,
+						      clip);
+
+BAIL:
+
+    if (need_temp)
+	cairo_surface_destroy (mask_surf);
+
+    return status;
 }
 
 static cairo_int_status_t
