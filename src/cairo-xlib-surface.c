@@ -4514,30 +4514,20 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_display_t *display,
 	if (unlikely (status))
 	    return status;
 
+	/* The glyph coordinates must be representable in an int16_t.
+	 * When possible, they will be expressed as an offset from the
+	 * previous glyph, otherwise they will be an offset from the
+	 * surface origin. If we can't guarantee this to be possible,
+	 * fallback.
+	 */
+	if (glyphs[i].d.x > INT16_MAX || glyphs[i].d.y > INT16_MAX ||
+	    glyphs[i].d.x < INT16_MIN || glyphs[i].d.y < INT16_MIN)
+	{
+	    break;
+	}
+
 	this_x = _cairo_lround (glyphs[i].d.x);
 	this_y = _cairo_lround (glyphs[i].d.y);
-
-	/* Glyph skipping:
-	 *
-	 * We skip any glyphs that have troublesome coordinates.  We want
-	 * to make sure that (glyph2.x - (glyph1.x + glyph1.width)) fits in
-	 * a signed 16bit integer, otherwise it will overflow in the render
-	 * protocol.
-	 * To ensure this, we'll make sure that (glyph2.x - glyph1.x) fits in
-	 * a signed 15bit integer.  The trivial option would be to allow
-	 * coordinates -8192..8192, but that's kinda dull.  It probably will
-	 * take a decade or so to get monitors 8192x4096 or something.  A
-	 * negative value of -8192 on the other hand, is absolutely useless.
-	 * Note that we do want to allow some negative positions.  The glyph
-	 * may start off the screen but part of it make it to the screen.
-	 * Anyway, we will allow positions in the range -4096..122887.  That
-	 * will buy us a few more years before this stops working.
-	 *
-	 * Update: upon seeing weird glyphs, we just return and let fallback
-	 * code do the job.
-	 */
-	if (((this_x+4096)|(this_y+4096))&~0x3fffu)
-	    break;
 
 	/* Send unsent glyphs to the server */
 	if (_cairo_xlib_scaled_glyph_get_glyphset_info (scaled_glyph) == NULL) {
@@ -4585,8 +4575,18 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_display_t *display,
 	 * prefer the latter is the fact that Xserver ADDs all glyphs
 	 * to the mask first, and then composes that to final surface,
 	 * though it's not a big deal.
+	 *
+	 * If the glyph has a coordinate which cannot be represented
+	 * as a 16-bit offset from the previous glyph, flush the
+	 * current chunk. The current glyph will be the first one in
+	 * the next chunk, thus its coordinates will be an offset from
+	 * the destination origin. This offset is guaranteed to be
+	 * representable as 16-bit offset (otherwise we would have
+	 * fallen back).
 	 */
 	if (request_size + width > max_request_size - _cairo_sz_xGlyphElt ||
+	    this_x - x > INT16_MAX || this_x - x < INT16_MIN ||
+	    this_y - y > INT16_MAX || this_y - y < INT16_MIN ||
 	    (this_glyphset_info != glyphset_info)) {
 	    status = _emit_glyphs_chunk (display, dst, glyphs, i,
 					 scaled_font, op, src, attributes,
