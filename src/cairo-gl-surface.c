@@ -459,7 +459,7 @@ cairo_gl_surface_set_size (cairo_surface_t *abstract_surface,
     }
 
     if (! _cairo_surface_is_gl (abstract_surface) ||
-        ! _cairo_gl_surface_is_texture (surface)) {
+        _cairo_gl_surface_is_texture (surface)) {
 	status = _cairo_surface_set_error (abstract_surface,
 		                           _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
 	return;
