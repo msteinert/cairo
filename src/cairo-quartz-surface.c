@@ -99,7 +99,6 @@ enum PrivateCGCompositeMode {
 typedef enum PrivateCGCompositeMode PrivateCGCompositeMode;
 CG_EXTERN void CGContextSetCompositeOperation (CGContextRef, PrivateCGCompositeMode);
 #endif
-CG_EXTERN void CGContextSetCTM (CGContextRef, CGAffineTransform);
 
 /* Some of these are present in earlier versions of the OS than where
  * they are public; other are not public at all
@@ -1863,7 +1862,7 @@ _cairo_quartz_surface_stroke_cg (cairo_quartz_surface_t *surface,
 {
     cairo_quartz_drawing_state_t state;
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
-    CGAffineTransform origCTM, strokeTransform;
+    CGAffineTransform strokeTransform, invStrokeTransform;
 
     ND ((stderr, "%p _cairo_quartz_surface_stroke op %d source->type %d\n", surface, op, source->type));
 
@@ -1882,8 +1881,6 @@ _cairo_quartz_surface_stroke_cg (cairo_quartz_surface_t *surface,
     CGContextSetLineCap (state.cgMaskContext, _cairo_quartz_cairo_line_cap_to_quartz (style->line_cap));
     CGContextSetLineJoin (state.cgMaskContext, _cairo_quartz_cairo_line_join_to_quartz (style->line_join));
     CGContextSetMiterLimit (state.cgMaskContext, style->miter_limit);
-
-    origCTM = CGContextGetCTM (state.cgMaskContext);
 
     if (style->dash && style->num_dashes) {
 	cairo_quartz_float_t sdash[CAIRO_STACK_ARRAY_LENGTH (cairo_quartz_float_t)];
@@ -1921,7 +1918,9 @@ _cairo_quartz_surface_stroke_cg (cairo_quartz_surface_t *surface,
 	CGContextReplacePathWithStrokedPath (state.cgMaskContext);
 	CGContextClip (state.cgMaskContext);
 
-	CGContextSetCTM (state.cgMaskContext, origCTM);
+	_cairo_quartz_cairo_matrix_to_quartz (ctm_inverse, &invStrokeTransform);
+	CGContextConcatCTM (state.cgMaskContext, invStrokeTransform);
+
 	_cairo_quartz_draw_source (&state, op);
     }
 
@@ -1979,7 +1978,7 @@ _cairo_quartz_surface_show_glyphs_cg (cairo_quartz_surface_t *surface,
 				      cairo_clip_t *clip,
 				      int *remaining_glyphs)
 {
-    CGAffineTransform textTransform, ctm, invTextTransform;
+    CGAffineTransform textTransform, invTextTransform;
     CGGlyph glyphs_static[CAIRO_STACK_ARRAY_LENGTH (CGSize)];
     CGSize cg_advances_static[CAIRO_STACK_ARRAY_LENGTH (CGSize)];
     CGGlyph *cg_glyphs = &glyphs_static[0];
@@ -2054,11 +2053,17 @@ _cairo_quartz_surface_show_glyphs_cg (cairo_quartz_surface_t *surface,
 
     textTransform = CGAffineTransformMake (scaled_font->scale.xx,
 					   scaled_font->scale.yx,
-					   -scaled_font->scale.xy,
-					   -scaled_font->scale.yy,
-					   0, 0);
-    _cairo_quartz_cairo_matrix_to_quartz (&scaled_font->scale_inverse, &invTextTransform);
+					   scaled_font->scale.xy,
+					   scaled_font->scale.yy,
+					   0.0, 0.0);
 
+    invTextTransform = CGAffineTransformMake (scaled_font->scale_inverse.xx,
+					      scaled_font->scale_inverse.yx,
+					      scaled_font->scale_inverse.xy,
+					      scaled_font->scale_inverse.yy,
+					      0.0, 0.0);
+
+    CGContextSetTextPosition (state.cgMaskContext, 0.0, 0.0);
     CGContextSetTextMatrix (state.cgMaskContext, CGAffineTransformIdentity);
 
     /* Convert our glyph positions to glyph advances.  We need n-1 advances,
@@ -2078,16 +2083,18 @@ _cairo_quartz_surface_show_glyphs_cg (cairo_quartz_surface_t *surface,
     }
 
     /* Translate to the first glyph's position before drawing */
-    ctm = CGContextGetCTM (state.cgMaskContext);
     CGContextTranslateCTM (state.cgMaskContext, glyphs[0].x, glyphs[0].y);
     CGContextConcatCTM (state.cgMaskContext, textTransform);
+    CGContextScaleCTM (state.cgMaskContext, 1.0, -1.0);
 
     CGContextShowGlyphsWithAdvances (state.cgMaskContext,
 				     cg_glyphs,
 				     cg_advances,
 				     num_glyphs);
 
-    CGContextSetCTM (state.cgMaskContext, ctm);
+    CGContextScaleCTM (state.cgMaskContext, 1.0, -1.0);
+    CGContextConcatCTM (state.cgMaskContext, invTextTransform);
+    CGContextTranslateCTM (state.cgMaskContext, -glyphs[0].x, -glyphs[0].y);
 
     if (state.action != DO_DIRECT)
 	_cairo_quartz_draw_source (&state, op);
@@ -2153,7 +2160,7 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
     CGImageRef img;
     cairo_surface_t *pat_surf = mask->surface;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    CGAffineTransform ctm, mask_matrix;
+    CGAffineTransform mask_matrix;
     cairo_quartz_drawing_state_t state;
 
     if (IS_EMPTY (surface))
@@ -2170,21 +2177,20 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
     if (unlikely (img == NULL))
 	goto BAIL;
 
-    rect = CGRectMake (0.0f, 0.0f, CGImageGetWidth (img) , CGImageGetHeight (img));
+    rect = CGRectMake (0.0, 0.0, CGImageGetWidth (img), CGImageGetHeight (img));
+    _cairo_quartz_cairo_matrix_to_quartz (&mask->base.matrix, &mask_matrix);
 
     /* ClipToMask is essentially drawing an image, so we need to flip the CTM
      * to get the image to appear oriented the right way */
-    ctm = CGContextGetCTM (state.cgMaskContext);
+    CGContextConcatCTM (state.cgMaskContext, CGAffineTransformInvert (mask_matrix));
+    CGContextTranslateCTM (state.cgMaskContext, 0.0, rect.size.height);
+    CGContextScaleCTM (state.cgMaskContext, 1.0, -1.0);
 
-    _cairo_quartz_cairo_matrix_to_quartz (&mask->base.matrix, &mask_matrix);
-    mask_matrix = CGAffineTransformInvert (mask_matrix);
-    mask_matrix = CGAffineTransformTranslate (mask_matrix, 0.0, CGImageGetHeight (img));
-    mask_matrix = CGAffineTransformScale (mask_matrix, 1.0, -1.0);
-
-    CGContextConcatCTM (state.cgMaskContext, mask_matrix);
     CGContextClipToMask (state.cgMaskContext, rect, img);
 
-    CGContextSetCTM (state.cgMaskContext, ctm);
+    CGContextScaleCTM (state.cgMaskContext, 1.0, -1.0);
+    CGContextTranslateCTM (state.cgMaskContext, 0.0, -rect.size.height);
+    CGContextConcatCTM (state.cgMaskContext, mask_matrix);
 
     _cairo_quartz_draw_source (&state, op);
 
