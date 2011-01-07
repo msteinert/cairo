@@ -127,21 +127,24 @@ CLEANFILES += $(BUILT_SOURCES)
 REFERENCE_IMAGES = \
 	a1-bug.ref.png \
 	a1-bug.image16.ref.png \
+	a1-bug.quartz.xfail.png \
 	a1-bug.xlib.ref.png \
 	a1-image-sample.ref.png \
 	a1-image-sample.gl.xfail.png \
-	a1-image-sample.quartz.xfail.png \
 	a1-mask.ref.png \
 	a1-mask-sample.ref.png \
-	a1-mask-sample.quartz.xfail.png \
 	a1-rasterisation-rectangles.ref.png \
+	a1-rasterisation-rectangles.quartz.xfail.png \
 	a1-rasterisation-triangles.ref.png \
+	a1-rasterisation-triangles.quartz.xfail.png \
 	a1-traps-sample.ref.png \
 	a1-traps-sample.quartz.xfail.png \
 	a8-clear.ref.png \
+	a8-clear.quartz.ref.png \
 	a8-mask.ref.png \
 	aliasing.ref.png \
 	aliasing.image16.ref.png \
+	aliasing.quartz.ref.png \
 	aliasing.xlib.ref.png \
 	alpha-similar.gl.argb32.xfail.png \
 	alpha-similar.gl.rgb24.xfail.png \
@@ -614,7 +617,6 @@ REFERENCE_IMAGES = \
 	filter-nearest-offset.pdf.xfail.png \
 	filter-nearest-offset.ps2.ref.png \
 	filter-nearest-offset.ps3.ref.png \
-	filter-nearest-offset.quartz.xfail.png \
 	filter-nearest-offset.ref.png \
 	filter-nearest-offset.svg.xfail.png \
 	filter-nearest-transformed.image16.ref.png \
@@ -964,6 +966,8 @@ REFERENCE_IMAGES = \
 	overlapping-glyphs.rgb24.ref.png \
 	overlapping-glyphs.pdf.argb32.xfail.png \
 	overlapping-glyphs.pdf.rgb24.xfail.png \
+	overlapping-glyphs.quartz.argb32.ref.png \
+	overlapping-glyphs.quartz.rgb24.ref.png \
 	overlapping-glyphs.svg.rgb24.ref.png \
 	overlapping-glyphs.svg.argb32.ref.png \
 	paint-repeat.ref.png \
@@ -976,6 +980,7 @@ REFERENCE_IMAGES = \
 	paint.ref.png \
 	partial-clip-text.ref.png \
 	partial-clip-text.ps.ref.png \
+	partial-clip-text.quartz.ref.png \
 	partial-clip-text.svg.ref.png \
 	partial-coverage-half-reference.ref.png \
 	partial-coverage-half-triangles.ref.png \
@@ -1046,19 +1051,26 @@ REFERENCE_IMAGES = \
 	quartz-surface-source.ps3.ref.png \
 	radial-gradient.image16.ref.png \
 	radial-gradient.ref.png \
+	radial-gradient.quartz.ref.png \
 	radial-gradient-extend.ps3.ref.png \
 	radial-gradient-extend.ref.png \
 	radial-gradient-source.image16.ref.png \
 	radial-gradient-source.argb32.ref.png \
 	radial-gradient-source.rgb24.ref.png \
+	radial-gradient-source.quartz.argb32.ref.png \
+	radial-gradient-source.quartz.rgb24.ref.png \
 	radial-gradient-mask.ref.png \
 	radial-gradient-mask.image16.ref.png \
+	radial-gradient-mask.quartz.ref.png \
 	radial-gradient-mask-source.argb32.ref.png \
 	radial-gradient-mask-source.rgb24.ref.png \
 	radial-gradient-mask-source.image16.ref.png \
+	radial-gradient-mask-source.quartz.argb32.ref.png \
+	radial-gradient-mask-source.quartz.rgb24.ref.png \
 	radial-gradient-mask-source.xlib.argb32.ref.png \
 	radial-gradient-mask-source.xlib.rgb24.ref.png \
 	radial-gradient-one-stop.ref.png \
+	radial-gradient-one-stop.quartz.ref.png \
 	random-intersections-eo.image16.ref.png \
 	random-intersections-eo.ps.ref.png \
 	random-intersections-eo.quartz.ref.png \
@@ -1285,8 +1297,8 @@ REFERENCE_IMAGES = \
 	surface-pattern-operator.xlib.rgb24.ref.png \
 	surface-pattern-operator.pdf.argb32.xfail.png \
 	surface-pattern-operator.pdf.rgb24.xfail.png \
-	surface-pattern-operator.quartz.argb32.xfail.png \
-	surface-pattern-operator.quartz.rgb24.xfail.png \
+	surface-pattern-operator.quartz.argb32.ref.png \
+	surface-pattern-operator.quartz.rgb24.ref.png \
 	surface-pattern-scale-down.image16.ref.png \
 	surface-pattern-scale-down.pdf.ref.png \
 	surface-pattern-scale-down.ps2.ref.png \
@@ -1397,6 +1409,8 @@ REFERENCE_IMAGES = \
 	unbounded-operator.pdf.argb32.ref.png \
 	unbounded-operator.ps2.argb32.ref.png \
 	unbounded-operator.ps3.argb32.ref.png \
+	unbounded-operator.quartz.argb32.ref.png \
+	unbounded-operator.quartz.rgb24.ref.png \
 	unbounded-operator.ref.png \
 	unbounded-operator.rgb24.ref.png \
 	unbounded-operator.svg12.argb32.ref.png \
