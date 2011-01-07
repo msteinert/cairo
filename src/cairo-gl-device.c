@@ -279,12 +279,13 @@ void
 _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
                                    cairo_gl_surface_t *surface)
 {
-    if (ctx->current_target == surface)
+    if (ctx->current_target == surface && ! surface->needs_update)
         return;
 
     _cairo_gl_composite_flush (ctx);
 
     ctx->current_target = surface;
+    surface->needs_update = FALSE;
 
     if (_cairo_gl_surface_is_texture (surface)) {
         _cairo_gl_ensure_framebuffer (ctx, surface);

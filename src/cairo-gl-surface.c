@@ -214,6 +214,7 @@ _cairo_gl_surface_init (cairo_device_t *device,
 
     surface->width = width;
     surface->height = height;
+    surface->needs_update = FALSE;
 }
 
 static cairo_surface_t *
@@ -465,8 +466,11 @@ cairo_gl_surface_set_size (cairo_surface_t *abstract_surface,
 	return;
     }
 
-    surface->width = width;
-    surface->height = height;
+    if (surface->width != width || surface->height != height) {
+	surface->needs_update = TRUE;
+	surface->width = width;
+	surface->height = height;
+    }
 }
 
 int

@@ -93,6 +93,7 @@ typedef struct _cairo_gl_surface {
     GLuint fb; /* GL framebuffer object wrapping our data. */
     GLuint depth; /* GL framebuffer object holding depth */
     int owns_tex;
+    cairo_bool_t needs_update;
 } cairo_gl_surface_t;
 
 typedef struct cairo_gl_glyph_cache {
