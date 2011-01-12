@@ -165,18 +165,6 @@ sqlen (cairo_point_double_t p0, cairo_point_double_t p1)
     return delta.x * delta.x + delta.y * delta.y;
 }
 
-static inline double
-max (double x, double y)
-{
-    return x > y ? x : y;
-}
-
-static inline double
-min (double x, double y)
-{
-    return x < y ? x : y;
-}
-
 static inline int16_t
 _color_delta_to_shifted_short (int32_t from, int32_t to, int shift)
 {
@@ -201,7 +189,7 @@ static inline int
 sqsteps2shift (double steps_sq)
 {
     int r;
-    frexp (max (1.0, steps_sq), &r);
+    frexp (MAX (1.0, steps_sq), &r);
     return (r + 1) >> 1;
 }
 
@@ -350,9 +338,9 @@ static inline double
 bezier_steps_sq (cairo_point_double_t p[4])
 {
     double tmp = sqlen (p[0], p[1]);
-    tmp = max (tmp, sqlen (p[2], p[3]));
-    tmp = max (tmp, sqlen (p[0], p[2]) * .25);
-    tmp = max (tmp, sqlen (p[1], p[3]) * .25);
+    tmp = MAX (tmp, sqlen (p[2], p[3]));
+    tmp = MAX (tmp, sqlen (p[0], p[2]) * .25);
+    tmp = MAX (tmp, sqlen (p[1], p[3]) * .25);
     return 18.0 * tmp;
 }
 
@@ -585,21 +573,27 @@ static void
 draw_bezier_curve (unsigned char *data, int width, int height, int stride,
 		   cairo_point_double_t p[4], double c0[4], double c3[4])
 {
-    double steps_sq;
-    int v;
+    double top, bottom, left, right, steps_sq;
+    int i, v;
+
+    top = bottom = p[0].y;
+    for (i = 1; i < 4; ++i) {
+	top    = MIN (top,    p[i].y);
+	bottom = MAX (bottom, p[i].y);
+    }
 
     /* Check visibility */
-    v = intersect_interval (min (min (p[0].y, p[1].y), min (p[2].y, p[3].y)),
-			    max (max (p[0].y, p[1].y), max (p[2].y, p[3].y)),
-			    0,
-			    height);
+    v = intersect_interval (top, bottom, 0, height);
     if (v == OUTSIDE)
 	return;
 
-    v &= intersect_interval (min (min (p[0].x, p[1].x), min (p[2].x, p[3].x)),
-			     max (max (p[0].x, p[1].x), max (p[2].x, p[3].x)),
-			     0,
-			     width);
+    left = right = p[0].x;
+    for (i = 1; i < 4; ++i) {
+	left  = MIN (left,  p[i].x);
+	right = MAX (right, p[i].x);
+    }
+
+    v &= intersect_interval (left, right, 0, width);
     if (v == OUTSIDE)
 	return;
 
@@ -800,8 +794,8 @@ draw_bezier_patch (unsigned char *data, int width, int height, int stride,
     top = bottom = p[0][0].y;
     for (i = 0; i < 4; ++i) {
 	for (j= 0; j < 4; ++j) {
-	    top    = min (top,    p[i][j].y);
-	    bottom = max (bottom, p[i][j].y);
+	    top    = MIN (top,    p[i][j].y);
+	    bottom = MAX (bottom, p[i][j].y);
 	}
     }
 
@@ -812,8 +806,8 @@ draw_bezier_patch (unsigned char *data, int width, int height, int stride,
     left = right = p[0][0].x;
     for (i = 0; i < 4; ++i) {
 	for (j= 0; j < 4; ++j) {
-	    left  = min (left,  p[i][j].x);
-	    right = max (right, p[i][j].x);
+	    left  = MIN (left,  p[i][j].x);
+	    right = MAX (right, p[i][j].x);
 	}
     }
 
@@ -823,7 +817,7 @@ draw_bezier_patch (unsigned char *data, int width, int height, int stride,
 
     steps_sq = 0;
     for (i = 0; i < 4; ++i)
-	steps_sq = max (steps_sq, bezier_steps_sq (p[i]));
+	steps_sq = MAX (steps_sq, bezier_steps_sq (p[i]));
 
     if (steps_sq >= (v == INSIDE ? STEPS_MAX_V * STEPS_MAX_V : STEPS_CLIP_V * STEPS_CLIP_V)) {
 	/* The number of steps is greater than the threshold. This
