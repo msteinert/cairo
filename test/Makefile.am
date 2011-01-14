@@ -1813,6 +1813,17 @@ check-ref-missing:
 
 release-verify-sane-tests: check-ref-missing
 
+results.tar:
+	@tar cf $@ index.html testtable.js *.log; \
+	for i in output/*.fail.png ; do \
+		testname=$${i#output/} ; \
+		testname=$${testname%%.*} ; \
+		tar uf $@ $${testname}*.ref.png $${i%fail.png}out.png $${i%fail.png}diff.png ; \
+	done
+
+results.tar.gz: results.tar
+	gzip -c $< > $@
+
 .PHONY: check-valgrind test recheck retest check-ref-dups check-ref-missing release-verify-sane-tests
 
 EXTRA_DIST += Makefile.win32
