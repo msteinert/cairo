@@ -1429,6 +1429,7 @@ REFERENCE_IMAGES = \
 	user-font.ref.png \
 	user-font.svg.ref.png \
 	user-font.xlib.ref.png \
+	xcb-stress-cache.ref.png \
 	xcb-surface-source.rgb24.ref.png \
 	xcb-surface-source.argb32.ref.png \
 	xcomposite-projection.ref.png \

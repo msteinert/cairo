@@ -294,6 +294,7 @@ test_sources = \
 	user-font-proxy.c				\
 	user-font-rescale.c				\
 	white-in-noop.c					\
+	xcb-stress-cache.c				\
 	xcomposite-projection.c				\
 	xlib-expose-event.c 				\
 	zero-alpha.c					\
