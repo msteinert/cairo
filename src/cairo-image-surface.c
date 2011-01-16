@@ -524,6 +524,11 @@ slim_hidden_def (cairo_image_surface_create_for_data);
  * Get a pointer to the data of the image surface, for direct
  * inspection or modification.
  *
+ * A call to cairo_surface_flush() is required before accessing the
+ * pixel data to ensure that all pending drawing operations are
+ * finished. A call to cairo_surface_mark_dirty() is required after
+ * the data is modified.
+ *
  * Return value: a pointer to the image data of this surface or %NULL
  * if @surface is not an image surface, or if cairo_surface_finish()
  * has been called.

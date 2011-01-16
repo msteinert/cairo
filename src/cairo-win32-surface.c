@@ -1849,6 +1849,12 @@ _cairo_surface_is_win32 (cairo_surface_t *surface)
  * Returns the HDC associated with this surface, or %NULL if none.
  * Also returns %NULL if the surface is not a win32 surface.
  *
+ * A call to cairo_surface_flush() is required before using the HDC to
+ * ensure that all pending drawing operations are finished and to
+ * restore any temporary modification cairo has made to its state. A
+ * call to cairo_surface_mark_dirty() is required after the state or
+ * the content of the HDC has been modified.
+ *
  * Return value: HDC or %NULL if no HDC available.
  *
  * Since: 1.2

@@ -2714,6 +2714,13 @@ cairo_quartz_surface_create (cairo_format_t format,
  * Returns the CGContextRef that the given Quartz surface is backed
  * by.
  *
+ * A call to cairo_surface_flush() is required before using the
+ * CGContextRef to ensure that all pending drawing operations are
+ * finished and to restore any temporary modification cairo has made
+ * to its state. A call to cairo_surface_mark_dirty() is required
+ * after the state or the content of the CGContextRef has been
+ * modified.
+ *
  * Return value: the CGContextRef for the given surface.
  *
  * Since: 1.4
