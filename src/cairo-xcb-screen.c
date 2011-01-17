@@ -116,6 +116,10 @@ _surface_cache_entry_destroy (void *closure)
 {
     struct pattern_cache_entry *entry = closure;
 
+    /* Destroy all the references to the surfaces that were generated
+     * because of the caching. This means that the cache is giving up
+     * the resources held by that surface. They are now considered as
+     * owned by whatever holds a reference to the surface. */
     if (entry->picture->snapshot_of != NULL)
 	_cairo_surface_detach_snapshot (entry->picture);
     cairo_surface_destroy (entry->picture);
