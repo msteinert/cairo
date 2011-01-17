@@ -1308,7 +1308,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 
     _cairo_surface_attach_snapshot (source,
 				    &picture->base,
-				    cairo_surface_finish);
+				    NULL);
 
 setup_picture:
     filter = pattern->base.filter;
