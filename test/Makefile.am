@@ -1444,6 +1444,7 @@ REFERENCE_IMAGES = \
 	xlib-surface-source.ps3.ref.png \
 	xlib-surface-source.svg12.argb32.xfail.png \
 	xlib-surface-source.svg12.rgb24.xfail.png \
+	white-in-noop.ref.png \
 	zero-mask.ref.png \
 	zero-mask.rgb24.ref.png \
 	zero-alpha.ref.png
