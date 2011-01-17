@@ -293,6 +293,7 @@ test_sources = \
 	user-font-mask.c				\
 	user-font-proxy.c				\
 	user-font-rescale.c				\
+	white-in-noop.c					\
 	xcomposite-projection.c				\
 	xlib-expose-event.c 				\
 	zero-alpha.c					\
