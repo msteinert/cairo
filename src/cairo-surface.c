@@ -1899,7 +1899,8 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 
     /* catch a common reduction of _cairo_clip_combine_with_surface() */
     if (op == CAIRO_OPERATOR_IN &&
-	_cairo_color_equal (color, CAIRO_COLOR_WHITE))
+	surface->content == CAIRO_CONTENT_ALPHA &&
+	CAIRO_COLOR_IS_OPAQUE (color))
     {
 	return CAIRO_STATUS_SUCCESS;
     }
