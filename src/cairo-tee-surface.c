@@ -450,9 +450,6 @@ cairo_tee_surface_create (cairo_surface_t *master)
 			 master->content);
 
     _cairo_surface_wrapper_init (&surface->master, master);
-    /* we trust that these are already set and remain constant */
-    surface->base.device_transform = master->device_transform;
-    surface->base.device_transform_inverse = master->device_transform_inverse;
 
     _cairo_array_init (&surface->slaves, sizeof (cairo_surface_wrapper_t));
 
