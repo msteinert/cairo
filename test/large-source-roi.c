@@ -47,7 +47,9 @@ static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     cairo_surface_t *source;
-    double source_width = 32767.0;
+    /* Since 1cc750ed92a936d84b47cac696aaffd226e1c02e pixman will not
+     * paint on the source surface if source_width > 30582. */
+    double source_width = 30000.0;
 
     cairo_set_source_rgb (cr, 1,1,1);
     cairo_paint (cr);
