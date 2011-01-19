@@ -303,10 +303,6 @@ _cairo_gstate_restore (cairo_gstate_t **gstate, cairo_gstate_t **freelist)
  * Redirect @gstate rendering to a "child" target. The original
  * "parent" target with which the gstate was created will not be
  * affected. See _cairo_gstate_get_target().
- *
- * Unless the redirected target has the same device offsets as the
- * original #cairo_t target, the clip will be INVALID after this call,
- * and the caller should either recreate or reset the clip.
  **/
 cairo_status_t
 _cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child)
@@ -320,7 +316,6 @@ _cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child)
     /* Set up our new parent_target based on our current target;
      * gstate->parent_target will take the ref that is held by gstate->target
      */
-    cairo_surface_destroy (gstate->parent_target);
     gstate->parent_target = gstate->target;
 
     /* Now set up our new target; we overwrite gstate->target directly,
@@ -358,21 +353,6 @@ _cairo_gstate_is_group (cairo_gstate_t *gstate)
 }
 
 /**
- * _cairo_gstate_is_redirected
- * @gstate: a #cairo_gstate_t
- *
- * This space left intentionally blank.
- *
- * Return value: %TRUE if the gstate is redirected to a target
- * different than the original, %FALSE otherwise.
- **/
-cairo_bool_t
-_cairo_gstate_is_redirected (cairo_gstate_t *gstate)
-{
-    return (gstate->target != gstate->original_target);
-}
-
-/**
  * _cairo_gstate_get_target:
  * @gstate: a #cairo_gstate_t
  *
@@ -385,19 +365,6 @@ cairo_surface_t *
 _cairo_gstate_get_target (cairo_gstate_t *gstate)
 {
     return gstate->target;
-}
-
-/**
- * _cairo_gstate_get_parent_target:
- * @gstate: a #cairo_gstate_t
- *
- * Return the parent surface of the current drawing target surface;
- * if this particular gstate isn't a redirect gstate, this will return %NULL.
- **/
-cairo_surface_t *
-_cairo_gstate_get_parent_target (cairo_gstate_t *gstate)
-{
-    return gstate->parent_target;
 }
 
 /**
