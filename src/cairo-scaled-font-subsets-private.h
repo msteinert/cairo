@@ -650,23 +650,6 @@ cairo_private void
 _cairo_type2_charstrings_fini (cairo_type2_charstrings_t *charstrings);
 
 /**
- * _cairo_truetype_create_glyph_to_unicode_map:
- * @font_subset: the #cairo_scaled_font_subset_t to initialize from
- *
- * If possible (depending on the format of the underlying
- * #cairo_scaled_font_t and the font backend in use) assign
- * the unicode character of each glyph in font_subset to
- * fontsubset->to_unicode.
- *
- * Return value: %CAIRO_STATUS_SUCCESS if successful,
- * %CAIRO_INT_STATUS_UNSUPPORTED if the unicode encoding of
- * the glyphs is not available.  Possible  errors include
- * %CAIRO_STATUS_NO_MEMORY.
- **/
-cairo_private cairo_int_status_t
-_cairo_truetype_create_glyph_to_unicode_map (cairo_scaled_font_subset_t	*font_subset);
-
-/**
  * _cairo_truetype_index_to_ucs4:
  * @scaled_font: the #cairo_scaled_font_t
  * @index: the glyph index

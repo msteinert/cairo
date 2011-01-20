@@ -1965,13 +1965,6 @@ _cairo_pen_fini (cairo_pen_t *pen);
 cairo_private cairo_status_t
 _cairo_pen_add_points (cairo_pen_t *pen, cairo_point_t *point, int num_points);
 
-cairo_private cairo_status_t
-_cairo_pen_add_points_for_slopes (cairo_pen_t *pen,
-				  cairo_point_t *a,
-				  cairo_point_t *b,
-				  cairo_point_t *c,
-				  cairo_point_t *d);
-
 cairo_private int
 _cairo_pen_find_active_cw_vertex_index (const cairo_pen_t *pen,
 					const cairo_slope_t *slope);

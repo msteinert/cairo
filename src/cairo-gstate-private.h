@@ -289,14 +289,6 @@ cairo_private cairo_rectangle_list_t*
 _cairo_gstate_copy_clip_rectangle_list (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
-_cairo_gstate_show_surface (cairo_gstate_t	*gstate,
-			    cairo_surface_t	*surface,
-			    double		 x,
-			    double		 y,
-			    double		width,
-			    double		height);
-
-cairo_private cairo_status_t
 _cairo_gstate_select_font_face (cairo_gstate_t *gstate,
 				const char *family,
 				cairo_font_slant_t slant,
