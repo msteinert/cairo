@@ -88,6 +88,9 @@ cairo_private cairo_status_t
 _cairo_gstate_restore (cairo_gstate_t **gstate, cairo_gstate_t **freelist);
 
 cairo_private cairo_bool_t
+_cairo_gstate_is_group (cairo_gstate_t *gstate);
+
+cairo_private cairo_bool_t
 _cairo_gstate_is_redirected (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t
