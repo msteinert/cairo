@@ -1025,8 +1025,9 @@ cairo_pattern_get_type (cairo_pattern_t *pattern)
  * Checks whether an error has previously occurred for this
  * pattern.
  *
- * Return value: %CAIRO_STATUS_SUCCESS, %CAIRO_STATUS_NO_MEMORY, or
- * %CAIRO_STATUS_PATTERN_TYPE_MISMATCH.
+ * Return value: %CAIRO_STATUS_SUCCESS, %CAIRO_STATUS_NO_MEMORY,
+ * %CAIRO_STATUS_INVALID_MATRIX, %CAIRO_STATUS_PATTERN_TYPE_MISMATCH,
+ * or %CAIRO_STATUS_INVALID_MESH_CONSTRUCTION.
  **/
 cairo_status_t
 cairo_pattern_status (cairo_pattern_t *pattern)
