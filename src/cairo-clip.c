@@ -1109,8 +1109,9 @@ _cairo_clip_contains_rectangle (cairo_clip_t *clip,
 {
     cairo_clip_path_t *clip_path;
 
+    /* clip == NULL means no clip, so the clip contains everything */
     if (clip == NULL)
-	return FALSE;
+	return TRUE;
 
     clip_path = clip->path;
     if (clip_path->extents.x > rect->x ||
@@ -1147,9 +1148,6 @@ _cairo_clip_contains_extents (cairo_clip_t *clip,
 			      const cairo_composite_rectangles_t *extents)
 {
     const cairo_rectangle_int_t *rect;
-
-    if (clip == NULL)
-	return FALSE;
 
     rect = extents->is_bounded ? &extents->bounded : &extents->unbounded;
     return _cairo_clip_contains_rectangle (clip, rect);
