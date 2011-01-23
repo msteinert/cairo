@@ -1,3 +1,51 @@
+Snapshot 1.11.2 (2011-01-23)
+===========================
+
+In this first snapshot along the way to cairo-1.12.0, we are very excited
+to announce the introduction of Bezier surface gradients, known as type
+6/7 gradients in PS/PDF parlance. This is the culmination of much work by
+the dynamic duo: Adrian Johnson and Andrea Canciani. Thanks guys!
+
+Also, I want to warmly welcome Uli Schlachter who recently joined the
+Cairo community on a mission. That mission is to make cairo-xcb a
+supported backend for 1.12. And for this snapshot he has made great
+strides in fixing all the bugs I had left behind. Thanks Uli!
+
+And we have also seen a new contributor, Alexandros Frantzis, who has
+begun bringing up cairo-gl for GLESv2 devices. Thanks Alex!
+
+And lastly, I must also thank Adrian and Andrea for the vast numbers of
+bugs that they have tackled between them, fixing all those little corner
+cases that lie hidden until too late.
+
+API additions:
+
+The ability to construct piece-wise Bezier surface gradients:
+
+	cairo_pattern_create_mesh
+
+	constructs a pattern of type CAIRO_PATTERN_TYPE_MESH using
+
+	cairo_pattern_mesh_begin_patch
+	cairo_pattern_mesh_end_patch
+	cairo_pattern_mesh_curve_to
+	cairo_pattern_mesh_line_to
+	cairo_pattern_mesh_move_to
+	cairo_pattern_mesh_set_control_point
+	cairo_pattern_mesh_set_corner_color_rgb
+	cairo_pattern_mesh_set_corner_color_rgba
+	cairo_pattern_mesh_get_patch_count
+	cairo_pattern_mesh_get_path
+	cairo_pattern_mesh_get_corner_color_rgba
+	cairo_pattern_mesh_get_control_point
+
+The introduction of a unique ID accessible via the mime data type:
+	CAIRO_MIME_TYPE_UNIQUE_ID
+
+
+
+
+
 Release 1.10.2 (2010-12-25 Chris Wilson <chris@chris-wilson.co.uk>)
 ===================================================================
 The cairo community is pleased to announce the 1.10.2 release of the
