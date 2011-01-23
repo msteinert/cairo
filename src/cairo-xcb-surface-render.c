@@ -2292,6 +2292,7 @@ _cairo_xcb_surface_clear (cairo_xcb_surface_t *dst)
     if (dst->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE) {
 	xcb_render_color_t transparent = { 0 };
 
+	_cairo_xcb_surface_ensure_picture (dst);
 	_cairo_xcb_connection_render_fill_rectangles (dst->connection,
 						      XCB_RENDER_PICT_OP_CLEAR,
 						      dst->picture,
