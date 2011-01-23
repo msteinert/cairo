@@ -2282,17 +2282,27 @@ _cairo_xcb_surface_clear (cairo_xcb_surface_t *dst)
     if (unlikely (status))
 	return status;
 
-    gc = _cairo_xcb_screen_get_gc (dst->screen, dst->drawable, dst->depth);
-
     rect.x = rect.y = 0;
     rect.width  = dst->width;
     rect.height = dst->height;
 
-    _cairo_xcb_connection_poly_fill_rectangle (dst->connection,
-					       dst->drawable, gc,
-					       1, &rect);
+    if (dst->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE) {
+	xcb_render_color_t transparent = { 0 };
 
-    _cairo_xcb_screen_put_gc (dst->screen, dst->depth, gc);
+	_cairo_xcb_connection_render_fill_rectangles (dst->connection,
+						      XCB_RENDER_PICT_OP_CLEAR,
+						      dst->picture,
+						      transparent,
+						      1, &rect);
+    } else {
+	gc = _cairo_xcb_screen_get_gc (dst->screen, dst->drawable, dst->depth);
+
+	_cairo_xcb_connection_poly_fill_rectangle (dst->connection,
+						   dst->drawable, gc,
+						   1, &rect);
+
+	_cairo_xcb_screen_put_gc (dst->screen, dst->depth, gc);
+    }
 
     _cairo_xcb_connection_release (dst->connection);
 
