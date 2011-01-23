@@ -1491,11 +1491,13 @@ _render_composite_boxes (cairo_xcb_surface_t	*dst,
     }
 
     if (num_boxes) {
-	_cairo_xcb_connection_render_set_picture_clip_rectangles(dst->connection,
-								 dst->picture,
-								 0, 0,
-								 num_boxes,
-								 clip_boxes);
+	if (num_boxes > 1) {
+	    _cairo_xcb_connection_render_set_picture_clip_rectangles(dst->connection,
+								     dst->picture,
+								     0, 0,
+								     num_boxes,
+								     clip_boxes);
+	}
 
 	if (mask_pattern != NULL) {
 	    mask = _cairo_xcb_picture_for_pattern (dst, mask_pattern, extents);
@@ -1527,7 +1529,8 @@ _render_composite_boxes (cairo_xcb_surface_t	*dst,
 						    extents->width, extents->height);
 	}
 
-	_cairo_xcb_surface_clear_clip_region (dst);
+	if (num_boxes > 1)
+	    _cairo_xcb_surface_clear_clip_region (dst);
     }
 
     if (clip_boxes != stack_boxes)
