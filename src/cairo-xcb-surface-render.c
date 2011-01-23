@@ -293,7 +293,8 @@ _cairo_xcb_surface_clear_clip_region (cairo_xcb_surface_t *surface)
     uint32_t values[] = { XCB_NONE };
     _cairo_xcb_connection_render_change_picture (surface->connection,
 						 surface->picture,
-						 XCB_RENDER_CP_CLIP_MASK, values);
+						 XCB_RENDER_CP_CLIP_MASK,
+						 values);
 }
 
 static void
@@ -1433,6 +1434,7 @@ _render_fill_boxes (void			*abstract_dst,
     return CAIRO_STATUS_SUCCESS;
 }
 
+/* pixel aligned, non-overlapping boxes */
 static cairo_int_status_t
 _render_composite_boxes (cairo_xcb_surface_t	*dst,
 			 cairo_operator_t	 op,
@@ -1443,6 +1445,9 @@ _render_composite_boxes (cairo_xcb_surface_t	*dst,
 {
     cairo_xcb_picture_t *src, *mask;
     const struct _cairo_boxes_chunk *chunk;
+    xcb_rectangle_t stack_boxes[128];
+    xcb_rectangle_t *clip_boxes;
+    int num_boxes;
     int render_op;
 
     render_op = _render_operator (op);
@@ -1456,66 +1461,77 @@ _render_composite_boxes (cairo_xcb_surface_t	*dst,
     if (unlikely (src->base.status))
 	return src->base.status;
 
-    if (mask_pattern != NULL) {
-	mask = _cairo_xcb_picture_for_pattern (dst, mask_pattern, extents);
-	if (unlikely (mask->base.status)) {
-	    cairo_surface_destroy (&src->base);
-	    return mask->base.status;
-	}
+    /* amalgamate into a single Composite call by setting a clip region */
+    clip_boxes = stack_boxes;
+    if (boxes->num_boxes > ARRAY_LENGTH(stack_boxes)) {
+	clip_boxes = _cairo_malloc_ab(boxes->num_boxes, sizeof(xcb_rectangle_t));
+	if (unlikely (clip_boxes == NULL))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
 
-	for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
-	    const cairo_box_t *box = chunk->base;
-	    int i;
+    num_boxes = 0;
+    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
+	const cairo_box_t *box = chunk->base;
+	int i;
 
-	    for (i = 0; i < chunk->count; i++) {
-		int x = _cairo_fixed_integer_round_down (box[i].p1.x);
-		int y = _cairo_fixed_integer_round_down (box[i].p1.y);
-		int width  = _cairo_fixed_integer_round_down (box[i].p2.x) - x;
-		int height = _cairo_fixed_integer_round_down (box[i].p2.y) - y;
+	for (i = 0; i < chunk->count; i++) {
+	    int x = _cairo_fixed_integer_round_down (box[i].p1.x);
+	    int y = _cairo_fixed_integer_round_down (box[i].p1.y);
+	    int width  = _cairo_fixed_integer_round_down (box[i].p2.x) - x;
+	    int height = _cairo_fixed_integer_round_down (box[i].p2.y) - y;
 
-		if (width && height) {
-		    _cairo_xcb_connection_render_composite (dst->connection,
-							    render_op,
-							    src->picture,
-							    mask->picture,
-							    dst->picture,
-							    x + src->x,
-							    y + src->y,
-							    x + mask->x,
-							    y + mask->y,
-							    x, y,
-							    width, height);
-		}
-	    }
-	}
-
-	cairo_surface_destroy (&mask->base);
-    } else {
-	for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
-	    const cairo_box_t *box = chunk->base;
-	    int i;
-
-	    for (i = 0; i < chunk->count; i++) {
-		int x = _cairo_fixed_integer_round_down (box[i].p1.x);
-		int y = _cairo_fixed_integer_round_down (box[i].p1.y);
-		int width  = _cairo_fixed_integer_round_down (box[i].p2.x) - x;
-		int height = _cairo_fixed_integer_round_down (box[i].p2.y) - y;
-
-		if (width && height) {
-		    _cairo_xcb_connection_render_composite (dst->connection,
-							    render_op,
-							    src->picture,
-							    XCB_NONE,
-							    dst->picture,
-							    x + src->x,
-							    y + src->y,
-							    0, 0,
-							    x, y,
-							    width, height);
-		}
+	    if (width && height) {
+		clip_boxes[num_boxes].x = x;
+		clip_boxes[num_boxes].y = y;
+		clip_boxes[num_boxes].width = width;
+		clip_boxes[num_boxes].height = height;
+		num_boxes++;
 	    }
 	}
     }
+
+    if (num_boxes) {
+	_cairo_xcb_connection_render_set_picture_clip_rectangles(dst->connection,
+								 dst->picture,
+								 0, 0,
+								 num_boxes,
+								 clip_boxes);
+
+	if (mask_pattern != NULL) {
+	    mask = _cairo_xcb_picture_for_pattern (dst, mask_pattern, extents);
+	    if (unlikely (mask->base.status)) {
+		cairo_surface_destroy (&src->base);
+		return mask->base.status;
+	    }
+
+	    _cairo_xcb_connection_render_composite (dst->connection,
+						    render_op,
+						    src->picture,
+						    mask->picture,
+						    dst->picture,
+						    src->x, src->y,
+						    mask->x, mask->y,
+						    extents->x, extents->y,
+						    extents->width, extents->height);
+
+	    cairo_surface_destroy (&mask->base);
+	} else {
+	    _cairo_xcb_connection_render_composite (dst->connection,
+						    render_op,
+						    src->picture,
+						    XCB_NONE,
+						    dst->picture,
+						    src->x, src->y,
+						    0, 0,
+						    extents->x, extents->y,
+						    extents->width, extents->height);
+	}
+
+	_cairo_xcb_surface_clear_clip_region (dst);
+    }
+
+    if (clip_boxes != stack_boxes)
+	free (clip_boxes);
 
     cairo_surface_destroy (&src->base);
 
