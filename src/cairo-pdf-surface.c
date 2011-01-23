@@ -1245,6 +1245,18 @@ _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	*surface,
     return status;
 }
 
+static cairo_bool_t
+_gradient_stops_are_opaque (const cairo_gradient_pattern_t *gradient)
+{
+    unsigned int i;
+
+    for (i = 0; i < gradient->n_stops; i++)
+	if (! CAIRO_COLOR_IS_OPAQUE (&gradient->stops[i].color))
+	    return FALSE;
+
+    return TRUE;
+}
+
 static cairo_status_t
 _cairo_pdf_surface_add_pdf_pattern (cairo_pdf_surface_t		*surface,
 				    const cairo_pattern_t	*pattern,

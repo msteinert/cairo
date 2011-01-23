@@ -1,3 +1,62 @@
+Release 1.10.2 (2010-12-25 Chris Wilson <chris@chris-wilson.co.uk>)
+===================================================================
+The cairo community is pleased to announce the 1.10.2 release of the
+cairo graphics library. This is the first update to cairo's stable 1.10
+series and contains a large number of bug fixes.
+
+While many people have contributed and have help to test the release,
+2 people deserve special recognition for their efforts in tracking down
+and fixing bugs, Andrea Canciani and Adrian Johnson. Thanks to their
+tremendous efforts, and of all cairo contributors, it is much
+appreciated.
+
+We recommend everyone upgrade to cairo 1.10.2 and hope that everyone
+will continue to have lots of fun with cairo!
+
+-Chris
+
+Bug fixes
+---------
+
+  Fix embedding of grayscale jpegs in PS.
+  https://bugs.freedesktop.org/show_bug.cgi?id=31632
+
+  Fix the reported path of extents containing a curve.
+
+  Fix the compositing of unaligned boxes.
+
+  Reset the clipper in PDF upon finish.
+
+  Fix degenerates arcs to become a degenerate line.
+
+  Build support for autoconf 2.67
+
+  Fix painting of transformed patterns in PS
+
+  Fix the EPS bounding box for PS
+  https://bugs.freedesktop.org/show_bug.cgi?id=24688
+
+  Fix the missing content for EPS
+  https://bugs.freedesktop.org/show_bug.cgi?id=24688
+
+  Fix regression upon changing page size in PS/PDF
+  https://bugs.freedesktop.org/show_bug.cgi?id=24691
+
+  Only use ActualText with PDF-1.5 documents
+
+  Fix the bbox for type1 fallbacks.
+
+  Reset the color after ending the context in PDF
+  https://bugs.freedesktop.org/show_bug.cgi?id=31140
+
+  Fix the advance of subsetted type1 fonts
+  https://bugs.freedesktop.org/show_bug.cgi?id=31062
+
+  Fix handling of EXTEND_NONE gradients for PDF
+
+  Restrict in-place optimisation for a8 image masks with SOURCE
+
+
 Release 1.10.0 (2010-09-06 Chris Wilson <chris@chris-wilson.co.uk>)
 ===================================================================
 The cairo community is astounded (and flabbergast) to finally announce
