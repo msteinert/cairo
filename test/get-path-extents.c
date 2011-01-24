@@ -148,8 +148,7 @@ draw (cairo_t *cr, int width, int height)
     phase = "Degenerate arc (R=0)";
     errors += !check_extents (ctx, phase, cr2, FILL, EQUALS, 0, 0, 0, 0);
     errors += !check_extents (ctx, phase, cr2, STROKE, EQUALS, 0, 0, 0, 0);
-    /*XXX: I'd expect these extents to be oriented at 200, 400 */
-    errors += !check_extents (ctx, phase, cr2, PATH, EQUALS, 0, 0, 0, 0);
+    errors += !check_extents (ctx, phase, cr2, PATH, EQUALS, 200, 400, 0, 0);
 
     cairo_new_path (cr2);
     cairo_arc (cr2, 200, 400, 10., 0, 0);
