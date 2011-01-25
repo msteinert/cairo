@@ -1445,8 +1445,10 @@ _render_composite_boxes (cairo_xcb_surface_t	*dst,
 {
     cairo_xcb_picture_t *src, *mask;
     const struct _cairo_boxes_chunk *chunk;
-    xcb_rectangle_t stack_boxes[128];
+    xcb_rectangle_t stack_boxes[CAIRO_STACK_ARRAY_LENGTH (xcb_rectangle_t)];
     xcb_rectangle_t *clip_boxes;
+    cairo_rectangle_int_t stack_extents;
+    cairo_status_t status;
     int num_boxes;
     int render_op;
 
@@ -1457,17 +1459,18 @@ _render_composite_boxes (cairo_xcb_surface_t	*dst,
 	mask_pattern = NULL;
     }
 
-    src = _cairo_xcb_picture_for_pattern (dst, src_pattern, extents);
-    if (unlikely (src->base.status))
-	return src->base.status;
-
     /* amalgamate into a single Composite call by setting a clip region */
     clip_boxes = stack_boxes;
-    if (boxes->num_boxes > ARRAY_LENGTH(stack_boxes)) {
-	clip_boxes = _cairo_malloc_ab(boxes->num_boxes, sizeof(xcb_rectangle_t));
+    if (boxes->num_boxes > ARRAY_LENGTH (stack_boxes)) {
+	clip_boxes = _cairo_malloc_ab (boxes->num_boxes, sizeof (xcb_rectangle_t));
 	if (unlikely (clip_boxes == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
+
+    src = _cairo_xcb_picture_for_pattern (dst, src_pattern, extents);
+    status = src->base.status;
+    if (unlikely (status))
+	goto cleanup_boxes;
 
     num_boxes = 0;
     for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
@@ -1492,27 +1495,32 @@ _render_composite_boxes (cairo_xcb_surface_t	*dst,
 
     if (num_boxes) {
 	if (num_boxes > 1) {
-	    _cairo_xcb_connection_render_set_picture_clip_rectangles(dst->connection,
-								     dst->picture,
-								     0, 0,
-								     num_boxes,
-								     clip_boxes);
+	    _cairo_xcb_connection_render_set_picture_clip_rectangles (dst->connection,
+								      dst->picture,
+								      0, 0,
+								      num_boxes,
+								      clip_boxes);
+	} else {
+	    stack_extents.x = clip_boxes[0].x;
+	    stack_extents.y = clip_boxes[0].y;
+	    stack_extents.width = clip_boxes[0].width;
+	    stack_extents.height = clip_boxes[0].height;
+	    extents = &stack_extents;
 	}
 
 	if (mask_pattern != NULL) {
 	    mask = _cairo_xcb_picture_for_pattern (dst, mask_pattern, extents);
-	    if (unlikely (mask->base.status)) {
-		cairo_surface_destroy (&src->base);
-		return mask->base.status;
-	    }
+	    status = mask->base.status;
+	    if (unlikely (status))
+		goto cleanup_clip;
 
 	    _cairo_xcb_connection_render_composite (dst->connection,
 						    render_op,
 						    src->picture,
 						    mask->picture,
 						    dst->picture,
-						    src->x, src->y,
-						    mask->x, mask->y,
+						    src->x + extents->x, src->y + extents->y,
+						    mask->x + extents->x, mask->y + extents->y,
 						    extents->x, extents->y,
 						    extents->width, extents->height);
 
@@ -1523,22 +1531,26 @@ _render_composite_boxes (cairo_xcb_surface_t	*dst,
 						    src->picture,
 						    XCB_NONE,
 						    dst->picture,
-						    src->x, src->y,
+						    src->x + extents->x, src->y + extents->y,
 						    0, 0,
 						    extents->x, extents->y,
 						    extents->width, extents->height);
 	}
 
+cleanup_clip:
+
 	if (num_boxes > 1)
 	    _cairo_xcb_surface_clear_clip_region (dst);
     }
 
+    cairo_surface_destroy (&src->base);
+
+cleanup_boxes:
+
     if (clip_boxes != stack_boxes)
 	free (clip_boxes);
 
-    cairo_surface_destroy (&src->base);
-
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 
