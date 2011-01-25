@@ -687,7 +687,7 @@ dnl The tracing utility requires LD_PRELOAD, so only build it for systems
 dnl that are known to work.
 
 case $host in
-*-linux*|*-*bsd*|*-solaris*|*-*-darwin*|*-dragonfly*)
+*-linux*|*-*bsd*|*-solaris*|*-*-darwin*|*-dragonfly*|*-*-gnu*)
 	have_ld_preload="yes"
 	;;
 *)
