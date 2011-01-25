@@ -1631,7 +1631,8 @@ typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scal
  * using cairo_glyph_allocate() and placed in @glyphs.  Upon return,
  * @num_glyphs should contain the number of generated glyphs.  If the value
  * @glyphs points at has changed after the call, the caller will free the
- * allocated glyph array using cairo_glyph_free().
+ * allocated glyph array using cairo_glyph_free().  The caller will also free
+ * the original value of @glyphs, so the callback shouldn't do so.
  * The callback should populate the glyph indices and positions (in font space)
  * assuming that the text is to be shown at the origin.
  *
@@ -1642,8 +1643,9 @@ typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scal
  * as a cluster buffer, and @num_clusters points to the number of cluster
  * entries available there.  If the provided cluster array is too short for
  * the conversion (or for convenience), a new cluster array may be allocated
- * using cairo_text_cluster_allocate() and placed in @clusters.  Upon return,
- * @num_clusters should contain the number of generated clusters.
+ * using cairo_text_cluster_allocate() and placed in @clusters.  In this case,
+ * the original value of @clusters will still be freed by the caller.  Upon
+ * return, @num_clusters should contain the number of generated clusters.
  * If the value @clusters points at has changed after the call, the caller
  * will free the allocated cluster array using cairo_text_cluster_free().
  *
