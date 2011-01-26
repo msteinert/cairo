@@ -74,6 +74,13 @@ slim_hidden_proto (cairo_xcb_surface_create_with_xrender_format);
  * extension if it is available.
  */
 
+/**
+ * CAIRO_HAS_XCB_SURFACE:
+ *
+ * Defined if the xcb surface backend is available.
+ * This macro can be used to conditionally compile backend-specific code.
+ */
+
 #if CAIRO_HAS_XCB_SHM_FUNCTIONS
 static cairo_status_t
 _cairo_xcb_surface_create_similar_shm (cairo_xcb_surface_t *other,
@@ -1131,6 +1138,37 @@ _cairo_xcb_screen_from_visual (xcb_connection_t *connection,
     return NULL;
 }
 
+/**
+ * cairo_xcb_surface_create:
+ * @xcb_connection: an XCB connection
+ * @drawable: an XCB drawable
+ * @visual: the visual to use for drawing to @drawable. The depth
+ *          of the visual must match the depth of the drawable.
+ *          Currently, only TrueColor visuals are fully supported.
+ * @width: the current width of @drawable
+ * @height: the current height of @drawable
+ *
+ * Creates an XCB surface that draws to the given drawable.
+ * The way that colors are represented in the drawable is specified
+ * by the provided visual.
+ *
+ * Note: If @drawable is a Window, then the function
+ * cairo_xcb_surface_set_size() must be called whenever the size of the
+ * window changes.
+ *
+ * When @drawable is a Window containing child windows then drawing to
+ * the created surface will be clipped by those child windows.  When
+ * the created surface is used as a source, the contents of the
+ * children will be included.
+ *
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy() when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if an error such as out of memory
+ * occurs. You can use cairo_surface_status() to check for this.
+ **/
 cairo_surface_t *
 cairo_xcb_surface_create (xcb_connection_t  *xcb_connection,
 			  xcb_drawable_t     drawable,
@@ -1191,6 +1229,25 @@ cairo_xcb_surface_create (xcb_connection_t  *xcb_connection,
 slim_hidden_def (cairo_xcb_surface_create);
 #endif
 
+/**
+ * cairo_xcb_surface_create_for_bitmap:
+ * @xcb_connection: an XCB connection
+ * @xcb_screen: the XCB screen associated with @bitmap
+ * @bitmap: an XCB drawable (a Pixmap with depth 1)
+ * @width: the current width of @drawable
+ * @height: the current height of @drawable
+ *
+ * Creates an XCB surface that draws to the given bitmap.
+ * This will be drawn to as a %CAIRO_FORMAT_A1 object.
+ *
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy() when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if an error such as out of memory
+ * occurs. You can use cairo_surface_status() to check for this.
+ **/
 cairo_surface_t *
 cairo_xcb_surface_create_for_bitmap (xcb_connection_t	*xcb_connection,
 				     xcb_screen_t	*xcb_screen,
@@ -1237,7 +1294,18 @@ slim_hidden_def (cairo_xcb_surface_create_for_bitmap);
  * cairo_xcb_surface_set_size() must be called whenever the size of the
  * window changes.
  *
- * Return value: the newly created surface.
+ * When @drawable is a Window containing child windows then drawing to
+ * the created surface will be clipped by those child windows.  When
+ * the created surface is used as a source, the contents of the
+ * children will be included.
+ *
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy() when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if an error such as out of memory
+ * occurs. You can use cairo_surface_status() to check for this.
  **/
 cairo_surface_t *
 cairo_xcb_surface_create_with_xrender_format (xcb_connection_t	    *xcb_connection,

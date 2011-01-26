@@ -792,6 +792,19 @@ _cairo_xcb_connection_get_xid (cairo_xcb_connection_t *connection)
 
 /* public (debug) interface */
 
+/**
+ * cairo_xcb_device_debug_cap_xshm_version:
+ * @device: a #cairo_device_t for the XCB backend
+ * @major_version: major version to restrict to
+ * @minor_version: minor version to restrict to
+ *
+ * Restricts all future XCB surfaces for this devices to the specified version
+ * of the SHM extension. This function exists solely for debugging purpose.
+ * It let's you find out how cairo would behave with an older version of
+ * the SHM extension.
+ *
+ * Use the special values -1 and -1 for disabling the SHM extension.
+ **/
 void
 cairo_xcb_device_debug_cap_xshm_version (cairo_device_t *device,
                                          int major_version,
@@ -811,6 +824,19 @@ cairo_xcb_device_debug_cap_xshm_version (cairo_device_t *device,
     }
 }
 
+/**
+ * cairo_xcb_device_debug_cap_xrender_version:
+ * @device: a #cairo_device_t for the XCB backend
+ * @major_version: major version to restrict to
+ * @minor_version: minor version to restrict to
+ *
+ * Restricts all future XCB surfaces for this devices to the specified version
+ * of the RENDER extension. This function exists solely for debugging purpose.
+ * It let's you find out how cairo would behave with an older version of
+ * the RENDER extension.
+ *
+ * Use the special values -1 and -1 for disabling the RENDER extension.
+ **/
 void
 cairo_xcb_device_debug_cap_xrender_version (cairo_device_t *device,
                                             int major_version,
