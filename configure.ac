@@ -88,7 +88,7 @@ CAIRO_ENABLE_SURFACE_BACKEND(xlib_xrender, Xlib Xrender, auto, [
 
 dnl ===========================================================================
 
-CAIRO_ENABLE_SURFACE_BACKEND(xcb, XCB, no, [
+CAIRO_ENABLE_SURFACE_BACKEND(xcb, XCB, auto, [
   xcb_REQUIRES="xcb >= 1.1.92 xcb-render >= 0.9.92"
   PKG_CHECK_MODULES(xcb, $xcb_REQUIRES, ,
 		    [AC_MSG_RESULT(no)

@@ -43,7 +43,7 @@ enabled_cairo_boilerplate_cxx_sources += $(cairo_boilerplate_xlib_xrender_cxx_so
 enabled_cairo_boilerplate_sources += $(cairo_boilerplate_xlib_xrender_sources)
 endif
 
-unsupported_cairo_boilerplate_headers += $(cairo_boilerplate_xcb_headers)
+supported_cairo_boilerplate_headers += $(cairo_boilerplate_xcb_headers)
 all_cairo_boilerplate_headers += $(cairo_boilerplate_xcb_headers)
 all_cairo_boilerplate_private += $(cairo_boilerplate_xcb_private)
 all_cairo_boilerplate_cxx_sources += $(cairo_boilerplate_xcb_cxx_sources)

@@ -53,7 +53,7 @@ ifeq ($(CAIRO_HAS_XLIB_XRENDER_SURFACE),1)
 enabled_cairo_pkgconf += cairo-xlib-xrender.pc
 endif
 
-unsupported_cairo_headers += $(cairo_xcb_headers)
+supported_cairo_headers += $(cairo_xcb_headers)
 all_cairo_headers += $(cairo_xcb_headers)
 all_cairo_private += $(cairo_xcb_private)
 all_cairo_cxx_sources += $(cairo_xcb_cxx_sources)
