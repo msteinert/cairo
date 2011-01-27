@@ -520,7 +520,7 @@ cairo_gl_shader_get_vertex_source (cairo_gl_var_type_t src,
     _cairo_output_stream_printf (stream,
 				 "void main()\n"
 				 "{\n"
-				 "    gl_Position = ftransform();\n");
+				 "    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n");
 
     cairo_gl_shader_emit_vertex (stream, src, CAIRO_GL_TEX_SOURCE);
     cairo_gl_shader_emit_vertex (stream, mask, CAIRO_GL_TEX_MASK);
