@@ -359,9 +359,15 @@ _cairo_gl_context_init_shaders (cairo_gl_context_t *ctx)
 	(_cairo_gl_has_extension ("GL_ARB_shader_objects") &&
 	 _cairo_gl_has_extension ("GL_ARB_fragment_shader") &&
 	 _cairo_gl_has_extension ("GL_ARB_vertex_shader")))
+    {
 	ctx->shader_impl = &shader_impl_core_2_0;
+    }
     else
+    {
 	ctx->shader_impl = NULL;
+	fprintf (stderr, "Error: The cairo gl backend requires shader support!\n");
+	return CAIRO_STATUS_DEVICE_ERROR;
+    }
 
     memset (ctx->vertex_shaders, 0, sizeof (ctx->vertex_shaders));
 
