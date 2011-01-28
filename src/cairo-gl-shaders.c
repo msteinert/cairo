@@ -379,16 +379,14 @@ _cairo_gl_context_init_shaders (cairo_gl_context_t *ctx)
     if (unlikely (status))
 	return status;
 
-    if (ctx->shader_impl != NULL) {
-	_cairo_gl_shader_init (&ctx->fill_rectangles_shader);
-	status = _cairo_gl_shader_compile (ctx,
-					   &ctx->fill_rectangles_shader,
-					   CAIRO_GL_VAR_NONE,
-					   CAIRO_GL_VAR_NONE,
-					   fill_fs_source);
-	if (unlikely (status))
-	    return status;
-    }
+    _cairo_gl_shader_init (&ctx->fill_rectangles_shader);
+    status = _cairo_gl_shader_compile (ctx,
+				       &ctx->fill_rectangles_shader,
+				       CAIRO_GL_VAR_NONE,
+				       CAIRO_GL_VAR_NONE,
+				       fill_fs_source);
+    if (unlikely (status))
+	return status;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -719,9 +717,6 @@ _cairo_gl_shader_compile (cairo_gl_context_t *ctx,
     unsigned int vertex_shader;
     cairo_status_t status;
 
-    if (ctx->shader_impl == NULL)
-        return CAIRO_STATUS_SUCCESS;
-
     assert (shader->program == 0);
 
     vertex_shader = cairo_gl_var_type_hash (src, mask, CAIRO_GL_VAR_NONE);
@@ -813,9 +808,6 @@ void
 _cairo_gl_set_shader (cairo_gl_context_t *ctx,
 		      cairo_gl_shader_t *shader)
 {
-    if (ctx->shader_impl == NULL)
-	return;
-
     if (ctx->current_shader == shader)
         return;
 
@@ -834,11 +826,6 @@ _cairo_gl_get_shader_by_type (cairo_gl_context_t *ctx,
     cairo_shader_cache_entry_t lookup, *entry;
     char *fs_source;
     cairo_status_t status;
-
-    if (ctx->shader_impl == NULL) {
-        *shader = NULL;
-	return CAIRO_STATUS_SUCCESS;
-    }
 
     lookup.src = source;
     lookup.mask = mask;
