@@ -225,7 +225,6 @@ typedef struct _cairo_gl_dispatch {
 struct _cairo_gl_context {
     cairo_device_t base;
 
-    GLuint dummy_tex;
     GLuint texture_load_pbo;
     GLuint vbo;
     GLint max_framebuffer_size;

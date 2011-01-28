@@ -196,12 +196,6 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     if (unlikely (status))
         return status;
 
-    /* Set up the dummy texture for tex_env_combine with constant color. */
-    glGenTextures (1, &ctx->dummy_tex);
-    glBindTexture (ctx->tex_target, ctx->dummy_tex);
-    glTexImage2D (ctx->tex_target, 0, GL_RGBA, 1, 1, 0,
-		  GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
     /* PBO for any sort of texture upload */
     dispatch->GenBuffers (1, &ctx->texture_load_pbo);
     dispatch->GenBuffers (1, &ctx->vbo);
