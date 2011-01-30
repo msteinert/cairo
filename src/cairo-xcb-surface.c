@@ -159,8 +159,7 @@ _cairo_xcb_surface_create_similar_image (cairo_xcb_surface_t *other,
 							pixman_format,
 							width, height,
 							&image);
-	if (_cairo_status_is_error (status))
-	    return _cairo_surface_create_in_error (status);
+	/* Ignore errors and fall through */
     }
 #endif
 
