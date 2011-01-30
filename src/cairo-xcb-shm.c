@@ -43,6 +43,8 @@
 #include <sys/shm.h>
 #include <errno.h>
 
+#define CAIRO_MAX_SHM_MEMORY (16*1024*1024)
+
 /* a simple buddy allocator for memory pools
  * XXX fragmentation? use Doug Lea's malloc?
  */
@@ -489,6 +491,7 @@ _cairo_xcb_connection_allocate_shm_info (cairo_xcb_connection_t *connection,
     cairo_xcb_shm_info_t *shm_info;
     cairo_xcb_shm_mem_pool_t *pool, *next;
     size_t bytes, maxbits = 16, minbits = 8;
+    size_t shm_allocated = 0;
     void *mem = NULL;
     cairo_status_t status;
 
@@ -513,7 +516,14 @@ _cairo_xcb_connection_allocate_shm_info (cairo_xcb_connection_t *connection,
 	    _cairo_xcb_connection_shm_detach (connection,
 					      pool->shmseg);
 	    _cairo_xcb_shm_mem_pool_destroy (pool);
+	} else {
+	    shm_allocated += pool->max_bytes;
 	}
+    }
+
+    if (unlikely (shm_allocated >= CAIRO_MAX_SHM_MEMORY)) {
+	CAIRO_MUTEX_UNLOCK (connection->shm_mutex);
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     pool = malloc (sizeof (cairo_xcb_shm_mem_pool_t));
