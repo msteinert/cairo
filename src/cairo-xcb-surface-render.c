@@ -727,67 +727,6 @@ _cairo_xcb_solid_picture (cairo_xcb_surface_t *target,
     return picture;
 }
 
-static cairo_status_t
-_cairo_xcb_shm_image_create (cairo_xcb_connection_t *connection,
-			     pixman_format_code_t pixman_format,
-			     int width, int height,
-			     cairo_image_surface_t **image_out,
-			     cairo_xcb_shm_info_t **shm_info_out)
-{
-    cairo_surface_t *image = NULL;
-    cairo_xcb_shm_info_t *shm_info = NULL;
-    cairo_status_t status;
-
-#if CAIRO_HAS_XCB_SHM_FUNCTIONS
-    if ((connection->flags & CAIRO_XCB_HAS_SHM)) {
-	size_t size, stride;
-
-	stride = CAIRO_STRIDE_FOR_WIDTH_BPP (width, PIXMAN_FORMAT_BPP (pixman_format));
-	size = stride * height;
-	if (size > CAIRO_XCB_SHM_SMALL_IMAGE) {
-	    status = _cairo_xcb_connection_allocate_shm_info (connection,
-							      size, &shm_info);
-	    if (unlikely (status))
-		return status;
-
-	    image = _cairo_image_surface_create_with_pixman_format (shm_info->mem,
-								    pixman_format,
-								    width, height,
-								    stride);
-	    status = image->status;
-	    if (unlikely (status)) {
-		_cairo_xcb_shm_info_destroy (shm_info);
-		return status;
-	    }
-
-	    status = _cairo_user_data_array_set_data (&image->user_data,
-						      (const cairo_user_data_key_t *) connection,
-						      shm_info,
-						      (cairo_destroy_func_t) _cairo_xcb_shm_info_destroy);
-	    if (unlikely (status)) {
-		cairo_surface_destroy (image);
-		_cairo_xcb_shm_info_destroy (shm_info);
-		return status;
-	    }
-	}
-    }
-#endif
-
-    if (image == NULL) {
-	image = _cairo_image_surface_create_with_pixman_format (NULL,
-								pixman_format,
-								width, height,
-								0);
-	status = image->status;
-	if (unlikely (status))
-	    return status;
-    }
-
-    *image_out = (cairo_image_surface_t *) image;
-    *shm_info_out = shm_info;
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static cairo_xcb_picture_t *
 _render_to_picture (cairo_xcb_surface_t *target,
 		    const cairo_pattern_t *pattern,

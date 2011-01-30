@@ -140,7 +140,7 @@ _cairo_xcb_pixmap_copy (cairo_xcb_surface_t *target)
     return surface;
 }
 
-static cairo_status_t
+cairo_status_t
 _cairo_xcb_shm_image_create (cairo_xcb_connection_t *connection,
 			     pixman_format_code_t pixman_format,
 			     int width, int height,
