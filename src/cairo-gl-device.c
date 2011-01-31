@@ -269,6 +269,46 @@ _cairo_gl_ensure_framebuffer (cairo_gl_context_t *ctx,
     }
 }
 
+/*
+ * Stores a parallel projection transformation in matrix 'm',
+ * using column-major order.
+ *
+ * This is equivalent to:
+ *
+ * glLoadIdentity()
+ * gluOrtho2D()
+ *
+ * The calculation for the ortho tranformation was taken from the
+ * mesa source code.
+ */
+static void
+_gl_identity_ortho (GLfloat *m,
+		    GLfloat left, GLfloat right,
+		    GLfloat bottom, GLfloat top)
+{
+#define M(row,col)  m[col*4+row]
+    M(0,0) = 2.f / (right - left);
+    M(0,1) = 0.f;
+    M(0,2) = 0.f;
+    M(0,3) = -(right + left) / (right - left);
+
+    M(1,0) = 0.f;
+    M(1,1) = 2.f / (top - bottom);
+    M(1,2) = 0.f;
+    M(1,3) = -(top + bottom) / (top - bottom);
+
+    M(2,0) = 0.f;
+    M(2,1) = 0.f;
+    M(2,2) = -1.f;
+    M(2,3) = 0.f;
+
+    M(3,0) = 0.f;
+    M(3,1) = 0.f;
+    M(3,2) = 0.f;
+    M(3,3) = 1.f;
+#undef M
+}
+
 void
 _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
                                    cairo_gl_surface_t *surface)
@@ -295,13 +335,10 @@ _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
 
     glViewport (0, 0, surface->width, surface->height);
 
-    glMatrixMode (GL_PROJECTION);
-    glLoadIdentity ();
     if (_cairo_gl_surface_is_texture (surface))
-	glOrtho (0, surface->width, 0, surface->height, -1.0, 1.0);
+	_gl_identity_ortho (ctx->modelviewprojection_matrix,
+			    0, surface->width, 0, surface->height);
     else
-	glOrtho (0, surface->width, surface->height, 0, -1.0, 1.0);
-
-    glMatrixMode (GL_MODELVIEW);
-    glLoadIdentity ();
+	_gl_identity_ortho (ctx->modelviewprojection_matrix,
+			    0, surface->width, surface->height, 0);
 }

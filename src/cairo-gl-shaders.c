@@ -518,9 +518,10 @@ cairo_gl_shader_get_vertex_source (cairo_gl_var_type_t src,
     cairo_gl_shader_emit_variable (stream, mask, CAIRO_GL_TEX_MASK);
 
     _cairo_output_stream_printf (stream,
+				 "uniform mat4 ModelViewProjectionMatrix;\n"
 				 "void main()\n"
 				 "{\n"
-				 "    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n");
+				 "    gl_Position = ModelViewProjectionMatrix * gl_Vertex;\n");
 
     cairo_gl_shader_emit_vertex (stream, src, CAIRO_GL_TEX_SOURCE);
     cairo_gl_shader_emit_vertex (stream, mask, CAIRO_GL_TEX_MASK);

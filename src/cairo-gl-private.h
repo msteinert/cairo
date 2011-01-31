@@ -259,6 +259,7 @@ struct _cairo_gl_context {
 
     cairo_bool_t has_mesa_pack_invert;
     cairo_gl_dispatch_t dispatch;
+    GLfloat modelviewprojection_matrix[16];
 
     void (*acquire) (void *ctx);
     void (*release) (void *ctx);
