@@ -210,6 +210,8 @@ typedef struct _cairo_gl_dispatch {
 			 GLfloat w);
     void (*UniformMatrix3fv) (GLint location, GLsizei count,
 				GLboolean transpose, const GLfloat *value);
+    void (*UniformMatrix4fv) (GLint location, GLsizei count,
+			      GLboolean transpose, const GLfloat *value);
     void (*Uniform1i) (GLint location, GLint x);
 
     /* Framebuffer objects */
