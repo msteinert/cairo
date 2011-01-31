@@ -533,7 +533,6 @@ _cairo_xcb_connection_poly_fill_rectangle (cairo_xcb_connection_t *connection,
 					   uint32_t num_rectangles,
 					   xcb_rectangle_t *rectangles);
 
-#if CAIRO_HAS_XCB_SHM_FUNCTIONS
 cairo_private cairo_status_t
 _cairo_xcb_shm_image_create (cairo_xcb_connection_t *connection,
 			     pixman_format_code_t pixman_format,
@@ -541,6 +540,7 @@ _cairo_xcb_shm_image_create (cairo_xcb_connection_t *connection,
 			     cairo_image_surface_t **image_out,
 			     cairo_xcb_shm_info_t **shm_info_out);
 
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
 cairo_private uint32_t
 _cairo_xcb_connection_shm_attach (cairo_xcb_connection_t *connection,
 				  uint32_t id,
