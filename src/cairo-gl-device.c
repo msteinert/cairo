@@ -248,6 +248,8 @@ _cairo_gl_ensure_framebuffer (cairo_gl_context_t *ctx,
 				    ctx->tex_target,
 				    surface->tex,
 				    0);
+    glDrawBuffer (GL_COLOR_ATTACHMENT0);
+    glReadBuffer (GL_COLOR_ATTACHMENT0);
 
     status = dispatch->CheckFramebufferStatus (GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
@@ -324,8 +326,6 @@ _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
     if (_cairo_gl_surface_is_texture (surface)) {
         _cairo_gl_ensure_framebuffer (ctx, surface);
         ctx->dispatch.BindFramebuffer (GL_FRAMEBUFFER, surface->fb);
-        glDrawBuffer (GL_COLOR_ATTACHMENT0);
-        glReadBuffer (GL_COLOR_ATTACHMENT0);
     } else {
         ctx->make_current (ctx, surface);
         ctx->dispatch.BindFramebuffer (GL_FRAMEBUFFER, 0);
