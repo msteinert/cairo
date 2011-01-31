@@ -93,6 +93,12 @@ typedef struct cairo_gl_shader_impl {
 		    cairo_matrix_t* m);
 
     void
+    (*bind_matrix4f) (cairo_gl_context_t *ctx,
+		      cairo_gl_shader_t *shader,
+		      const char *name,
+		      GLfloat* gl_m);
+
+    void
     (*bind_texture) (cairo_gl_context_t *ctx,
 		     cairo_gl_shader_t *shader,
 		     const char *name,
@@ -263,6 +269,18 @@ bind_matrix_core_2_0 (cairo_gl_context_t *ctx,
 }
 
 static void
+bind_matrix4f_core_2_0 (cairo_gl_context_t *ctx,
+		        cairo_gl_shader_t *shader,
+		        const char *name,
+		        GLfloat* gl_m)
+{
+    cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
+    GLint location = dispatch->GetUniformLocation (shader->program, name);
+    assert (location != -1);
+    dispatch->UniformMatrix4fv (location, 1, GL_FALSE, gl_m);
+}
+
+static void
 bind_texture_core_2_0 (cairo_gl_context_t *ctx, cairo_gl_shader_t *shader,
 		       const char *name, cairo_gl_tex_t tex_unit)
 {
@@ -292,6 +310,7 @@ static const cairo_gl_shader_impl_t shader_impl_core_2_0 = {
     bind_vec3_core_2_0,
     bind_vec4_core_2_0,
     bind_matrix_core_2_0,
+    bind_matrix4f_core_2_0,
     bind_texture_core_2_0,
     use_program_core_2_0,
 };
@@ -795,6 +814,13 @@ _cairo_gl_shader_bind_matrix (cairo_gl_context_t *ctx,
 			      const char *name, cairo_matrix_t* m)
 {
     ctx->shader_impl->bind_matrix (ctx, ctx->current_shader, name, m);
+}
+
+void
+_cairo_gl_shader_bind_matrix4f (cairo_gl_context_t *ctx,
+				const char *name, GLfloat* gl_m)
+{
+    ctx->shader_impl->bind_matrix4f (ctx, ctx->current_shader, name, gl_m);
 }
 
 void
