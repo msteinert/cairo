@@ -52,6 +52,8 @@ typedef struct _cairo_glx_context {
     Display *display;
     Window dummy_window;
     GLXContext context;
+
+    cairo_bool_t has_multithread_makecurrent;
 } cairo_glx_context_t;
 
 typedef struct _cairo_glx_surface {
@@ -92,7 +94,9 @@ _glx_release (void *abstract_ctx)
 {
     cairo_glx_context_t *ctx = abstract_ctx;
 
-    glXMakeCurrent (ctx->display, None, None);
+    if (!ctx->has_multithread_makecurrent) {
+	glXMakeCurrent (ctx->display, None, None);
+    }
 }
 
 static void
@@ -174,6 +178,7 @@ cairo_glx_device_create (Display *dpy, GLXContext gl_ctx)
     cairo_glx_context_t *ctx;
     cairo_status_t status;
     Window dummy = None;
+    const char *glx_extensions;
 
     status = _glx_dummy_ctx (dpy, gl_ctx, &dummy);
     if (unlikely (status))
@@ -204,6 +209,11 @@ cairo_glx_device_create (Display *dpy, GLXContext gl_ctx)
     if (unlikely (status)) {
 	free (ctx);
 	return _cairo_gl_context_create_in_error (status);
+    }
+
+    glx_extensions = glXQueryExtensionsString (dpy, DefaultScreen (dpy));
+    if (strstr(glx_extensions, "GLX_MESA_multithread_makecurrent")) {
+	ctx->has_multithread_makecurrent = TRUE;
     }
 
     ctx->base.release (ctx);
