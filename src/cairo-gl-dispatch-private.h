@@ -85,6 +85,13 @@ cairo_private cairo_gl_dispatch_entry_t dispatch_shaders_entries[] = {
     DISPATCH_ENTRY_ARB (UniformMatrix3fv),
     DISPATCH_ENTRY_ARB (UniformMatrix4fv),
     DISPATCH_ENTRY_ARB (Uniform1i),
+
+    /* Attributes */
+    DISPATCH_ENTRY_ARB (BindAttribLocation),
+    DISPATCH_ENTRY_ARB (VertexAttribPointer),
+    DISPATCH_ENTRY_ARB (EnableVertexAttribArray),
+    DISPATCH_ENTRY_ARB (DisableVertexAttribArray),
+
     DISPATCH_ENTRY_LAST
 };
 

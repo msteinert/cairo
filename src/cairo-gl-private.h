@@ -214,6 +214,15 @@ typedef struct _cairo_gl_dispatch {
 			      GLboolean transpose, const GLfloat *value);
     void (*Uniform1i) (GLint location, GLint x);
 
+    /* Attributes */
+    void (*BindAttribLocation) (GLuint program, GLuint index,
+				const GLchar *name);
+    void (*VertexAttribPointer) (GLuint index, GLint size, GLenum type,
+				 GLboolean normalized, GLsizei stride,
+				 const GLvoid *pointer);
+    void (*EnableVertexAttribArray) (GLuint index);
+    void (*DisableVertexAttribArray) (GLuint index);
+
     /* Framebuffer objects */
     void (*GenFramebuffers) (GLsizei n, GLuint* framebuffers);
     void (*BindFramebuffer) (GLenum target, GLuint framebuffer);
