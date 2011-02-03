@@ -3,6 +3,7 @@
  * Copyright © 2009 Eric Anholt
  * Copyright © 2009 Chris Wilson
  * Copyright © 2005,2010 Red Hat, Inc
+ * Copyright © 2011 Linaro Limited
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -36,6 +37,7 @@
  *	Carl Worth <cworth@cworth.org>
  *	Chris Wilson <chris@chris-wilson.co.uk>
  *	Eric Anholt <eric@anholt.net>
+ *	Alexandros Frantzis <alexandros.frantzis@linaro.org>
  */
 
 #include "cairoint.h"
@@ -516,6 +518,7 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
                                  unsigned int        vertex_size,
                                  unsigned int        vertex_offset)
 {
+    cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
     cairo_bool_t needs_setup;
 
     /* XXX: we need to do setup when switching from shaders
@@ -543,9 +546,10 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
     case CAIRO_GL_OPERAND_NONE:
         break;
     case CAIRO_GL_OPERAND_SPANS:
-	glColorPointer (4, GL_UNSIGNED_BYTE, vertex_size,
-                        (void *) (uintptr_t) vertex_offset);
-	glEnableClientState (GL_COLOR_ARRAY);
+	dispatch->VertexAttribPointer (CAIRO_GL_COLOR_ATTRIB_INDEX, 4,
+				       GL_UNSIGNED_BYTE, GL_TRUE, vertex_size,
+				       (void *) (uintptr_t) vertex_offset);
+	dispatch->EnableVertexAttribArray (CAIRO_GL_COLOR_ATTRIB_INDEX);
         /* fall through */
     case CAIRO_GL_OPERAND_CONSTANT:
         break;
@@ -557,10 +561,10 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
         _cairo_gl_texture_set_filter (ctx, ctx->tex_target,
                                       operand->texture.attributes.filter);
 
-	glClientActiveTexture (GL_TEXTURE0 + tex_unit);
-	glTexCoordPointer (2, GL_FLOAT, vertex_size,
-                           (void *) (uintptr_t) vertex_offset);
-	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+	dispatch->VertexAttribPointer (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit, 2,
+					GL_FLOAT, GL_FALSE, vertex_size,
+					(void *) (uintptr_t) vertex_offset);
+	dispatch->EnableVertexAttribArray (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit);
         break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
@@ -572,10 +576,10 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
         _cairo_gl_texture_set_extend (ctx, GL_TEXTURE_1D, operand->gradient.extend);
         _cairo_gl_texture_set_filter (ctx, GL_TEXTURE_1D, CAIRO_FILTER_BILINEAR);
 
-	glClientActiveTexture (GL_TEXTURE0 + tex_unit);
-	glTexCoordPointer (2, GL_FLOAT, vertex_size,
-                           (void *) (uintptr_t) vertex_offset);
-	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+	dispatch->VertexAttribPointer (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit, 2,
+				       GL_FLOAT, GL_FALSE, vertex_size,
+				       (void *) (uintptr_t) vertex_offset);
+	dispatch->EnableVertexAttribArray (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit);
 	break;
     }
 }
@@ -584,6 +588,7 @@ void
 _cairo_gl_context_destroy_operand (cairo_gl_context_t *ctx,
                                    cairo_gl_tex_t tex_unit)
 {
+    cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
     assert (_cairo_gl_context_is_flushed (ctx));
 
     switch (ctx->operands[tex_unit].type) {
@@ -593,23 +598,19 @@ _cairo_gl_context_destroy_operand (cairo_gl_context_t *ctx,
     case CAIRO_GL_OPERAND_NONE:
         break;
     case CAIRO_GL_OPERAND_SPANS:
-        glDisableClientState (GL_COLOR_ARRAY);
+        dispatch->DisableVertexAttribArray (CAIRO_GL_COLOR_ATTRIB_INDEX);
         /* fall through */
     case CAIRO_GL_OPERAND_CONSTANT:
         break;
     case CAIRO_GL_OPERAND_TEXTURE:
-        glActiveTexture (GL_TEXTURE0 + tex_unit);
-        glClientActiveTexture (GL_TEXTURE0 + tex_unit);
-        glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+        dispatch->DisableVertexAttribArray (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit);
         break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
         _cairo_gl_gradient_destroy (ctx->operands[tex_unit].gradient.gradient);
-        glActiveTexture (GL_TEXTURE0 + tex_unit);
-        glClientActiveTexture (GL_TEXTURE0 + tex_unit);
-        glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+        dispatch->DisableVertexAttribArray (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit);
         break;
     }
 
@@ -862,8 +863,9 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     if (_cairo_gl_context_is_flushed (ctx)) {
         ctx->dispatch.BindBuffer (GL_ARRAY_BUFFER, ctx->vbo);
 
-        glVertexPointer (2, GL_FLOAT, vertex_size, NULL);
-        glEnableClientState (GL_VERTEX_ARRAY);
+	ctx->dispatch.VertexAttribPointer (CAIRO_GL_VERTEX_ATTRIB_INDEX, 2,
+					   GL_FLOAT, GL_FALSE, vertex_size, NULL);
+	ctx->dispatch.EnableVertexAttribArray (CAIRO_GL_VERTEX_ATTRIB_INDEX);
     }
 
     _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_SOURCE, &setup->src, vertex_size, dst_size);

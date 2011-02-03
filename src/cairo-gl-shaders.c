@@ -163,6 +163,16 @@ link_shader_core_2_0 (cairo_gl_context_t *ctx, GLuint *program,
     *program = dispatch->CreateProgram ();
     dispatch->AttachShader (*program, vert);
     dispatch->AttachShader (*program, frag);
+
+    dispatch->BindAttribLocation (*program, CAIRO_GL_VERTEX_ATTRIB_INDEX,
+				  "Vertex");
+    dispatch->BindAttribLocation (*program, CAIRO_GL_COLOR_ATTRIB_INDEX,
+				  "Color");
+    dispatch->BindAttribLocation (*program, CAIRO_GL_TEXCOORD0_ATTRIB_INDEX,
+				  "MultiTexCoord0");
+    dispatch->BindAttribLocation (*program, CAIRO_GL_TEXCOORD1_ATTRIB_INDEX,
+				  "MultiTexCoord1");
+
     dispatch->LinkProgram (*program);
     dispatch->GetProgramiv (*program, GL_LINK_STATUS, &gl_status);
     if (gl_status == GL_FALSE) {
@@ -492,12 +502,12 @@ cairo_gl_shader_emit_vertex (cairo_output_stream_t *stream,
         break;
     case CAIRO_GL_VAR_TEXCOORDS:
         _cairo_output_stream_printf (stream, 
-                                     "    %s_texcoords = gl_MultiTexCoord%d.xy;\n",
+                                     "    %s_texcoords = MultiTexCoord%d.xy;\n",
                                      operand_names[name], name);
         break;
     case CAIRO_GL_VAR_COVERAGE:
         _cairo_output_stream_printf (stream, 
-                                     "    %s_coverage = gl_Color.a;\n",
+                                     "    %s_coverage = Color.a;\n",
                                      operand_names[name]);
         break;
     }
@@ -518,10 +528,14 @@ cairo_gl_shader_get_vertex_source (cairo_gl_var_type_t src,
     cairo_gl_shader_emit_variable (stream, mask, CAIRO_GL_TEX_MASK);
 
     _cairo_output_stream_printf (stream,
+				 "attribute vec4 Vertex;\n"
+				 "attribute vec4 Color;\n"
+				 "attribute vec4 MultiTexCoord0;\n"
+				 "attribute vec4 MultiTexCoord1;\n"
 				 "uniform mat4 ModelViewProjectionMatrix;\n"
 				 "void main()\n"
 				 "{\n"
-				 "    gl_Position = ModelViewProjectionMatrix * gl_Vertex;\n");
+				 "    gl_Position = ModelViewProjectionMatrix * Vertex;\n");
 
     cairo_gl_shader_emit_vertex (stream, src, CAIRO_GL_TEX_SOURCE);
     cairo_gl_shader_emit_vertex (stream, mask, CAIRO_GL_TEX_MASK);

@@ -3,6 +3,7 @@
  * Copyright © 2009 Eric Anholt
  * Copyright © 2009 Chris Wilson
  * Copyright © 2005,2010 Red Hat, Inc
+ * Copyright © 2011 Linaro Limited
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -37,6 +38,7 @@
  *	Chris Wilson <chris@chris-wilson.co.uk>
  *	Eric Anholt <eric@anholt.net>
  *	T. Zachary Laine <whatwasthataddress@gmail.com>
+ *	Alexandros Frantzis <alexandros.frantzis@linaro.org>
  */
 
 #ifndef CAIRO_GL_PRIVATE_H
@@ -83,6 +85,14 @@
 
 /* VBO size that we allocate, smaller size means we gotta flush more often */
 #define CAIRO_GL_VBO_SIZE 16384
+
+/* Indices for vertex attributes used by BindAttribLocation etc */
+enum {
+    CAIRO_GL_VERTEX_ATTRIB_INDEX = 0,
+    CAIRO_GL_COLOR_ATTRIB_INDEX  = 1,
+    CAIRO_GL_TEXCOORD0_ATTRIB_INDEX = 2,
+    CAIRO_GL_TEXCOORD1_ATTRIB_INDEX = CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + 1
+};
 
 typedef struct _cairo_gl_surface {
     cairo_surface_t base;
