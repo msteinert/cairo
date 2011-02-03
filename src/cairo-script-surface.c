@@ -964,7 +964,7 @@ _emit_mesh_pattern (cairo_script_surface_t *surface,
     unsigned int i, n;
 
     mesh = (cairo_pattern_t *) pattern;
-    status = cairo_pattern_mesh_get_patch_count (mesh, &n);
+    status = cairo_mesh_pattern_get_patch_count (mesh, &n);
     if (unlikely (status))
 	return status;
 
@@ -976,7 +976,7 @@ _emit_mesh_pattern (cairo_script_surface_t *surface,
 
 	_cairo_output_stream_printf (ctx->stream, "\n  mesh-begin-patch");
 
-	path = cairo_pattern_mesh_get_path (mesh, i);
+	path = cairo_mesh_pattern_get_path (mesh, i);
 	if (unlikely (path->status))
 	    return path->status;
 
@@ -1009,7 +1009,7 @@ _emit_mesh_pattern (cairo_script_surface_t *surface,
 	for (j = 0; j < 4; j++) {
 	    double x, y;
 
-	    status = cairo_pattern_mesh_get_control_point (mesh, i, j, &x, &y);
+	    status = cairo_mesh_pattern_get_control_point (mesh, i, j, &x, &y);
 	    if (unlikely (status))
 		return status;
 	    _cairo_output_stream_printf (ctx->stream,
@@ -1020,7 +1020,7 @@ _emit_mesh_pattern (cairo_script_surface_t *surface,
 	for (j = 0; j < 4; j++) {
 	    double r, g, b, a;
 
-	    status = cairo_pattern_mesh_get_corner_color_rgba (mesh, i, j, &r, &g, &b, &a);
+	    status = cairo_mesh_pattern_get_corner_color_rgba (mesh, i, j, &r, &g, &b, &a);
 	    if (unlikely (status))
 		return status;
 

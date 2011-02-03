@@ -62,14 +62,14 @@ sector_patch (cairo_pattern_t *pattern,
 
     h = 4.0/3.0 * tan ((angle_B - angle_A) / 4.0);
 
-    cairo_pattern_mesh_begin_patch (pattern);
+    cairo_mesh_pattern_begin_patch (pattern);
 
-    cairo_pattern_mesh_move_to (pattern, CENTER_X, CENTER_Y);
-    cairo_pattern_mesh_line_to (pattern,
+    cairo_mesh_pattern_move_to (pattern, CENTER_X, CENTER_Y);
+    cairo_mesh_pattern_line_to (pattern,
 				CENTER_X + r_cos_A,
 				CENTER_Y + r_sin_A);
 
-    cairo_pattern_mesh_curve_to (pattern,
+    cairo_mesh_pattern_curve_to (pattern,
 				 CENTER_X + r_cos_A - h * r_sin_A,
 				 CENTER_Y + r_sin_A + h * r_cos_A,
 				 CENTER_X + r_cos_B + h * r_sin_B,
@@ -77,11 +77,11 @@ sector_patch (cairo_pattern_t *pattern,
 				 CENTER_X + r_cos_B,
 				 CENTER_Y + r_sin_B);
 
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 0, 1, 1, 1);
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 1, A_r, A_g, A_b);
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 2, B_r, B_g, B_b);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 0, 1, 1, 1);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 1, A_r, A_g, A_b);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 2, B_r, B_g, B_b);
 
-    cairo_pattern_mesh_end_patch (pattern);
+    cairo_mesh_pattern_end_patch (pattern);
 }
 
 static cairo_test_status_t

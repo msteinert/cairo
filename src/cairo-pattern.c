@@ -840,17 +840,17 @@ static const int mesh_control_point_j[4] = { 1, 2, 2, 1 };
  * </programlisting></informalexample>
  *
  * Each patch is constructed by first calling
- * cairo_pattern_mesh_begin_patch(), then cairo_pattern_mesh_move_to()
+ * cairo_mesh_pattern_begin_patch(), then cairo_mesh_pattern_move_to()
  * to specify the first point in the patch (C0). Then the sides are
- * specified with calls to cairo_pattern_mesh_curve_to() and
- * cairo_pattern_mesh_line_to().
+ * specified with calls to cairo_mesh_pattern_curve_to() and
+ * cairo_mesh_pattern_line_to().
  *
  * The four additional control points (P0, P1, P2, P3) in a patch can
- * be specified with cairo_pattern_mesh_set_control_point().
+ * be specified with cairo_mesh_pattern_set_control_point().
  *
  * At each corner of the patch (C0, C1, C2, C3) a color may be
- * specified with cairo_pattern_mesh_set_corner_color_rgb() or
- * cairo_pattern_mesh_set_corner_color_rgba(). Any corner whose color
+ * specified with cairo_mesh_pattern_set_corner_color_rgb() or
+ * cairo_mesh_pattern_set_corner_color_rgba(). Any corner whose color
  * is not explicitly specified defaults to transparent black.
  *
  * A Coons patch is a special case of the tensor-product patch where
@@ -873,7 +873,7 @@ static const int mesh_control_point_j[4] = { 1, 2, 2, 1 };
  * specifying colors, corner 0 will always be the first point, corner
  * 1 the point between side 0 and side 1 etc.
  *
- * Calling cairo_pattern_mesh_end_patch() completes the current
+ * Calling cairo_mesh_pattern_end_patch() completes the current
  * patch. If less than 4 sides have been defined, the first missing
  * side is defined as a line from the current point to the first point
  * of the patch (C0) and the other sides are degenerate lines from C0
@@ -882,33 +882,33 @@ static const int mesh_control_point_j[4] = { 1, 2, 2, 1 };
  * the color of C0.
  *
  * Additional patches may be added with additional calls to
- * cairo_pattern_mesh_begin_patch()/cairo_pattern_mesh_end_patch().
+ * cairo_mesh_pattern_begin_patch()/cairo_mesh_pattern_end_patch().
  *
  * <informalexample><programlisting>
- * cairo_pattern_t *mesh = cairo_pattern_mesh_create_mesh ();
+ * cairo_pattern_t *mesh = cairo_mesh_pattern_create_mesh ();
  *
  * /&ast; Add a Coons patch &ast;/
- * cairo_pattern_mesh_begin_patch (mesh);
- * cairo_pattern_mesh_move_to (pattern, 0, 0);
- * cairo_pattern_mesh_curve_to (pattern, 30, -30,  60,  30, 100, 0);
- * cairo_pattern_mesh_curve_to (pattern, 60,  30, 130,  60, 100, 100);
- * cairo_pattern_mesh_curve_to (pattern, 60,  70,  30, 130,   0, 100);
- * cairo_pattern_mesh_curve_to (pattern, 30,  70, -30,  30,   0, 0);
- * cairo_pattern_mesh_set_corner_color_rgb (pattern, 0, 1, 0, 0);
- * cairo_pattern_mesh_set_corner_color_rgb (pattern, 1, 0, 1, 0);
- * cairo_pattern_mesh_set_corner_color_rgb (pattern, 2, 0, 0, 1);
- * cairo_pattern_mesh_set_corner_color_rgb (pattern, 3, 1, 1, 0);
- * cairo_pattern_mesh_end_patch (mesh);
+ * cairo_mesh_pattern_begin_patch (mesh);
+ * cairo_mesh_pattern_move_to (pattern, 0, 0);
+ * cairo_mesh_pattern_curve_to (pattern, 30, -30,  60,  30, 100, 0);
+ * cairo_mesh_pattern_curve_to (pattern, 60,  30, 130,  60, 100, 100);
+ * cairo_mesh_pattern_curve_to (pattern, 60,  70,  30, 130,   0, 100);
+ * cairo_mesh_pattern_curve_to (pattern, 30,  70, -30,  30,   0, 0);
+ * cairo_mesh_pattern_set_corner_color_rgb (pattern, 0, 1, 0, 0);
+ * cairo_mesh_pattern_set_corner_color_rgb (pattern, 1, 0, 1, 0);
+ * cairo_mesh_pattern_set_corner_color_rgb (pattern, 2, 0, 0, 1);
+ * cairo_mesh_pattern_set_corner_color_rgb (pattern, 3, 1, 1, 0);
+ * cairo_mesh_pattern_end_patch (mesh);
  *
  * /&ast; Add a Gouraud-shaded triangle &ast;/
- * cairo_pattern_mesh_begin_patch (mesh)
- * cairo_pattern_mesh_move_to (pattern, 100, 100);
- * cairo_pattern_mesh_line_to (pattern, 130, 130);
- * cairo_pattern_mesh_line_to (pattern, 130,  70);
- * cairo_pattern_mesh_set_corner_color_rgb (pattern, 0, 1, 0, 0);
- * cairo_pattern_mesh_set_corner_color_rgb (pattern, 1, 0, 1, 0);
- * cairo_pattern_mesh_set_corner_color_rgb (pattern, 2, 0, 0, 1);
- * cairo_pattern_mesh_end_patch (mesh)
+ * cairo_mesh_pattern_begin_patch (mesh)
+ * cairo_mesh_pattern_move_to (pattern, 100, 100);
+ * cairo_mesh_pattern_line_to (pattern, 130, 130);
+ * cairo_mesh_pattern_line_to (pattern, 130,  70);
+ * cairo_mesh_pattern_set_corner_color_rgb (pattern, 0, 1, 0, 0);
+ * cairo_mesh_pattern_set_corner_color_rgb (pattern, 1, 0, 1, 0);
+ * cairo_mesh_pattern_set_corner_color_rgb (pattern, 2, 0, 0, 1);
+ * cairo_mesh_pattern_end_patch (mesh)
  * </programlisting></informalexample>
  *
  * When two patches overlap, the last one that has been added is drawn
@@ -1137,16 +1137,16 @@ cairo_pattern_set_user_data (cairo_pattern_t		 *pattern,
 }
 
 /**
- * cairo_pattern_mesh_begin_patch:
+ * cairo_mesh_pattern_begin_patch:
  * @pattern: a #cairo_pattern_t
  *
  * Begin a patch in a mesh pattern.
  *
  * After calling this function, the patch shape should be defined with
- * cairo_pattern_mesh_move_to(), cairo_pattern_mesh_line_to() and
- * cairo_pattern_mesh_curve_to().
+ * cairo_mesh_pattern_move_to(), cairo_mesh_pattern_line_to() and
+ * cairo_mesh_pattern_curve_to().
  *
- * After defining the patch, cairo_pattern_mesh_end_patch() must be
+ * After defining the patch, cairo_mesh_pattern_end_patch() must be
  * called before using @pattern as a source or mask.
  *
  * Note: If @pattern is not a mesh pattern then @pattern will be put
@@ -1158,7 +1158,7 @@ cairo_pattern_set_user_data (cairo_pattern_t		 *pattern,
  * Since: 1.12
  **/
 void
-cairo_pattern_mesh_begin_patch (cairo_pattern_t *pattern)
+cairo_mesh_pattern_begin_patch (cairo_pattern_t *pattern)
 {
     cairo_mesh_pattern_t *mesh;
     cairo_status_t status;
@@ -1240,14 +1240,14 @@ _calc_control_point (cairo_mesh_patch_t *patch, int control_point)
 }
 
 /**
- * cairo_pattern_mesh_end_patch:
+ * cairo_mesh_pattern_end_patch:
  * @pattern: a #cairo_pattern_t
  *
  * Indicates the end of the current patch in a mesh pattern.
  *
  * If the current patch has less than 4 sides, it is closed with a
  * straight line from the current point to the first point of the
- * patch as if cairo_pattern_mesh_line_to() was used.
+ * patch as if cairo_mesh_pattern_line_to() was used.
  *
  * Note: If @pattern is not a mesh pattern then @pattern will be put
  * into an error status with a status of
@@ -1259,7 +1259,7 @@ _calc_control_point (cairo_mesh_patch_t *patch, int control_point)
  * Since: 1.12
  **/
 void
-cairo_pattern_mesh_end_patch (cairo_pattern_t *pattern)
+cairo_mesh_pattern_end_patch (cairo_pattern_t *pattern)
 {
     cairo_mesh_pattern_t *mesh;
     cairo_mesh_patch_t *current_patch;
@@ -1288,7 +1288,7 @@ cairo_pattern_mesh_end_patch (cairo_pattern_t *pattern)
     while (mesh->current_side < 3) {
 	int corner_num;
 
-	cairo_pattern_mesh_line_to (pattern,
+	cairo_mesh_pattern_line_to (pattern,
 				    current_patch->points[0][0].x,
 				    current_patch->points[0][0].y);
 
@@ -1313,7 +1313,7 @@ cairo_pattern_mesh_end_patch (cairo_pattern_t *pattern)
 }
 
 /**
- * cairo_pattern_mesh_curve_to:
+ * cairo_mesh_pattern_curve_to:
  * @pattern: a #cairo_pattern_t
  * @x1: the X coordinate of the first control point
  * @y1: the Y coordinate of the first control point
@@ -1327,8 +1327,8 @@ cairo_pattern_mesh_end_patch (cairo_pattern_t *pattern)
  * (@x1, @y1) and (@x2, @y2) as the control points.
  *
  * If the current patch has no current point before the call to
- * cairo_pattern_mesh_curve_to(), this function will behave as if
- * preceded by a call to cairo_pattern_mesh_move_to(@pattern, @x1,
+ * cairo_mesh_pattern_curve_to(), this function will behave as if
+ * preceded by a call to cairo_mesh_pattern_move_to(@pattern, @x1,
  * @y1).
  *
  * After this call the current point will be (@x3, @y3).
@@ -1343,7 +1343,7 @@ cairo_pattern_mesh_end_patch (cairo_pattern_t *pattern)
  * Since: 1.12
  **/
 void
-cairo_pattern_mesh_curve_to (cairo_pattern_t *pattern,
+cairo_mesh_pattern_curve_to (cairo_pattern_t *pattern,
 			     double x1, double y1,
 			     double x2, double y2,
 			     double x3, double y3)
@@ -1371,7 +1371,7 @@ cairo_pattern_mesh_curve_to (cairo_pattern_t *pattern,
     }
 
     if (mesh->current_side == -2)
-	cairo_pattern_mesh_move_to (pattern, x1, y1);
+	cairo_mesh_pattern_move_to (pattern, x1, y1);
 
     assert (mesh->current_side >= -1);
     assert (pattern->status == CAIRO_STATUS_SUCCESS);
@@ -1400,10 +1400,10 @@ cairo_pattern_mesh_curve_to (cairo_pattern_t *pattern,
 	mesh->current_patch->points[i][j].y = y3;
     }
 }
-slim_hidden_def (cairo_pattern_mesh_curve_to);
+slim_hidden_def (cairo_mesh_pattern_curve_to);
 
 /**
- * cairo_pattern_mesh_line_to:
+ * cairo_mesh_pattern_line_to:
  * @pattern: a #cairo_pattern_t
  * @x: the X coordinate of the end of the new line
  * @y: the Y coordinate of the end of the new line
@@ -1412,8 +1412,8 @@ slim_hidden_def (cairo_pattern_mesh_curve_to);
  * (@x, @y) in pattern-space coordinates.
  *
  * If there is no current point before the call to
- * cairo_pattern_mesh_line_to() this function will behave as
- * cairo_pattern_mesh_move_to(@pattern, @x, @y).
+ * cairo_mesh_pattern_line_to() this function will behave as
+ * cairo_mesh_pattern_move_to(@pattern, @x, @y).
  *
  * After this call the current point will be (@x, @y).
  *
@@ -1427,7 +1427,7 @@ slim_hidden_def (cairo_pattern_mesh_curve_to);
  * Since: 1.12
  **/
 void
-cairo_pattern_mesh_line_to (cairo_pattern_t *pattern,
+cairo_mesh_pattern_line_to (cairo_pattern_t *pattern,
 			    double x, double y)
 {
     cairo_mesh_pattern_t *mesh;
@@ -1454,7 +1454,7 @@ cairo_pattern_mesh_line_to (cairo_pattern_t *pattern,
     }
 
     if (mesh->current_side == -2) {
-	cairo_pattern_mesh_move_to (pattern, x, y);
+	cairo_mesh_pattern_move_to (pattern, x, y);
 	return;
     }
 
@@ -1464,17 +1464,17 @@ cairo_pattern_mesh_line_to (cairo_pattern_t *pattern,
 
     last_point = mesh->current_patch->points[i][j];
 
-    cairo_pattern_mesh_curve_to (pattern,
+    cairo_mesh_pattern_curve_to (pattern,
 				 (2 * last_point.x + x) * (1. / 3),
 				 (2 * last_point.y + y) * (1. / 3),
 				 (last_point.x + 2 * x) * (1. / 3),
 				 (last_point.y + 2 * y) * (1. / 3),
 				 x, y);
 }
-slim_hidden_def (cairo_pattern_mesh_line_to);
+slim_hidden_def (cairo_mesh_pattern_line_to);
 
 /**
- * cairo_pattern_mesh_move_to:
+ * cairo_mesh_pattern_move_to:
  * @pattern: a #cairo_pattern_t
  * @x: the X coordinate of the new position
  * @y: the Y coordinate of the new position
@@ -1493,7 +1493,7 @@ slim_hidden_def (cairo_pattern_mesh_line_to);
  * Since: 1.12
  **/
 void
-cairo_pattern_mesh_move_to (cairo_pattern_t *pattern,
+cairo_mesh_pattern_move_to (cairo_pattern_t *pattern,
 			    double x, double y)
 {
     cairo_mesh_pattern_t *mesh;
@@ -1521,10 +1521,10 @@ cairo_pattern_mesh_move_to (cairo_pattern_t *pattern,
     mesh->current_patch->points[0][0].x = x;
     mesh->current_patch->points[0][0].y = y;
 }
-slim_hidden_def (cairo_pattern_mesh_move_to);
+slim_hidden_def (cairo_mesh_pattern_move_to);
 
 /**
- * cairo_pattern_mesh_set_control_point:
+ * cairo_mesh_pattern_set_control_point:
  * @pattern: a #cairo_pattern_t
  * @point_num: the control point to set the position for
  * @x: the X coordinate of the control point
@@ -1546,7 +1546,7 @@ slim_hidden_def (cairo_pattern_mesh_move_to);
  * Since: 1.12
  **/
 void
-cairo_pattern_mesh_set_control_point (cairo_pattern_t *pattern,
+cairo_mesh_pattern_set_control_point (cairo_pattern_t *pattern,
 				      unsigned int     point_num,
 				      double           x,
 				      double           y)
@@ -1623,7 +1623,7 @@ _cairo_pattern_gradient_grow (cairo_gradient_pattern_t *pattern)
 }
 
 static void
-_cairo_pattern_mesh_set_corner_color (cairo_mesh_pattern_t *mesh,
+_cairo_mesh_pattern_set_corner_color (cairo_mesh_pattern_t *mesh,
 				      unsigned int     corner_num,
 				      double red, double green, double blue,
 				      double alpha)
@@ -1648,7 +1648,7 @@ _cairo_pattern_mesh_set_corner_color (cairo_mesh_pattern_t *mesh,
 }
 
 /**
- * cairo_pattern_mesh_set_corner_color_rgb:
+ * cairo_mesh_pattern_set_corner_color_rgb:
  * @pattern: a #cairo_pattern_t
  * @corner_num: the corner to set the color for
  * @red: red component of color
@@ -1673,15 +1673,15 @@ _cairo_pattern_mesh_set_corner_color (cairo_mesh_pattern_t *mesh,
  * Since: 1.12
  **/
 void
-cairo_pattern_mesh_set_corner_color_rgb (cairo_pattern_t *pattern,
+cairo_mesh_pattern_set_corner_color_rgb (cairo_pattern_t *pattern,
 					 unsigned int     corner_num,
 					 double red, double green, double blue)
 {
-    cairo_pattern_mesh_set_corner_color_rgba (pattern, corner_num, red, green, blue, 1.0);
+    cairo_mesh_pattern_set_corner_color_rgba (pattern, corner_num, red, green, blue, 1.0);
 }
 
 /**
- * cairo_pattern_mesh_set_corner_color_rgba:
+ * cairo_mesh_pattern_set_corner_color_rgba:
  * @pattern: a #cairo_pattern_t
  * @corner_num: the corner to set the color for
  * @red: red component of color
@@ -1707,7 +1707,7 @@ cairo_pattern_mesh_set_corner_color_rgb (cairo_pattern_t *pattern,
  * Since: 1.12
  **/
 void
-cairo_pattern_mesh_set_corner_color_rgba (cairo_pattern_t *pattern,
+cairo_mesh_pattern_set_corner_color_rgba (cairo_pattern_t *pattern,
 					  unsigned int     corner_num,
 					  double red, double green, double blue,
 					  double alpha)
@@ -1738,9 +1738,9 @@ cairo_pattern_mesh_set_corner_color_rgba (cairo_pattern_t *pattern,
     blue   = _cairo_restrict_value (blue,   0.0, 1.0);
     alpha  = _cairo_restrict_value (alpha,  0.0, 1.0);
 
-    _cairo_pattern_mesh_set_corner_color (mesh, corner_num, red, green, blue, alpha);
+    _cairo_mesh_pattern_set_corner_color (mesh, corner_num, red, green, blue, alpha);
 }
-slim_hidden_def (cairo_pattern_mesh_set_corner_color_rgba);
+slim_hidden_def (cairo_mesh_pattern_set_corner_color_rgba);
 
 static void
 _cairo_pattern_add_color_stop (cairo_gradient_pattern_t	*pattern,
@@ -4874,14 +4874,14 @@ cairo_pattern_get_radial_circles (cairo_pattern_t *pattern,
 }
 
 /**
- * cairo_pattern_mesh_get_patch_count
+ * cairo_mesh_pattern_get_patch_count
  * @pattern: a #cairo_pattern_t
  * @count: return value for the number patches, or %NULL
  *
  * Gets the number of patches specified in the given mesh pattern.
  *
  * The number only includes patches which have been finished by
- * calling cairo_pattern_mesh_end_patch(). For example it will be 0
+ * calling cairo_mesh_pattern_end_patch(). For example it will be 0
  * during the definition of the first patch.
  *
  * Return value: %CAIRO_STATUS_SUCCESS, or
@@ -4891,7 +4891,7 @@ cairo_pattern_get_radial_circles (cairo_pattern_t *pattern,
  * Since: 1.12
  */
 cairo_status_t
-cairo_pattern_mesh_get_patch_count (cairo_pattern_t *pattern,
+cairo_mesh_pattern_get_patch_count (cairo_pattern_t *pattern,
 				    unsigned int *count)
 {
     cairo_mesh_pattern_t *mesh = (cairo_mesh_pattern_t *) pattern;
@@ -4912,7 +4912,7 @@ cairo_pattern_mesh_get_patch_count (cairo_pattern_t *pattern,
 }
 
 /**
- * cairo_pattern_mesh_get_path
+ * cairo_mesh_pattern_get_path
  * @pattern: a #cairo_pattern_t
  * @patch_num: the patch number to return data for
  *
@@ -4920,7 +4920,7 @@ cairo_pattern_mesh_get_patch_count (cairo_pattern_t *pattern,
  * pattern.
  *
  * @patch_num can range 0 to 1 less than the number returned by
- * cairo_pattern_mesh_get_patch_count().
+ * cairo_mesh_pattern_get_patch_count().
  *
  * Return value: the path defining the patch, or a path with status
  * %CAIRO_STATUS_INVALID_INDEX if @patch_num or @point_num is not
@@ -4930,7 +4930,7 @@ cairo_pattern_mesh_get_patch_count (cairo_pattern_t *pattern,
  * Since: 1.12
  */
 cairo_path_t *
-cairo_pattern_mesh_get_path (cairo_pattern_t *pattern,
+cairo_mesh_pattern_get_path (cairo_pattern_t *pattern,
 			     unsigned int patch_num)
 {
     cairo_mesh_pattern_t *mesh = (cairo_mesh_pattern_t *) pattern;
@@ -4999,7 +4999,7 @@ cairo_pattern_mesh_get_path (cairo_pattern_t *pattern,
 }
 
 /**
- * cairo_pattern_mesh_get_corner_color_rgba
+ * cairo_mesh_pattern_get_corner_color_rgba
  * @pattern: a #cairo_pattern_t
  * @patch_num: the patch number to return data for
  * @corner_num: the corner number to return data for
@@ -5012,7 +5012,7 @@ cairo_pattern_mesh_get_path (cairo_pattern_t *pattern,
  * @patch_num for a mesh pattern.
  *
  * @patch_num can range 0 to 1 less than the number returned by
- * cairo_pattern_mesh_get_patch_count().
+ * cairo_mesh_pattern_get_patch_count().
  *
  * Valid values for @corner_num are from 0 to 3 and identify the
  * corners as explained in cairo_pattern_create_mesh().
@@ -5025,7 +5025,7 @@ cairo_pattern_mesh_get_path (cairo_pattern_t *pattern,
  * Since: 1.12
  **/
 cairo_status_t
-cairo_pattern_mesh_get_corner_color_rgba (cairo_pattern_t *pattern,
+cairo_mesh_pattern_get_corner_color_rgba (cairo_pattern_t *pattern,
 					  unsigned int patch_num,
 					  unsigned int corner_num,
 					  double *red, double *green,
@@ -5066,7 +5066,7 @@ cairo_pattern_mesh_get_corner_color_rgba (cairo_pattern_t *pattern,
 }
 
 /**
- * cairo_pattern_mesh_get_control_point
+ * cairo_mesh_pattern_get_control_point
  * @pattern: a #cairo_pattern_t
  * @patch_num: the patch number to return data for
  * @point_num: the control point number to return data for
@@ -5077,7 +5077,7 @@ cairo_pattern_mesh_get_corner_color_rgba (cairo_pattern_t *pattern,
  * pattern.
  *
  * @patch_num can range 0 to 1 less than the number returned by
- * cairo_pattern_mesh_get_patch_count().
+ * cairo_mesh_pattern_get_patch_count().
  *
  * Valid values for @point_num are from 0 to 3 and identify the
  * control points as explained in cairo_pattern_create_mesh().
@@ -5090,7 +5090,7 @@ cairo_pattern_mesh_get_corner_color_rgba (cairo_pattern_t *pattern,
  * Since: 1.12
  **/
 cairo_status_t
-cairo_pattern_mesh_get_control_point (cairo_pattern_t *pattern,
+cairo_mesh_pattern_get_control_point (cairo_pattern_t *pattern,
 				      unsigned int patch_num,
 				      unsigned int point_num,
 				      double *x, double *y)

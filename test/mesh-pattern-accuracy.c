@@ -49,38 +49,38 @@ draw (cairo_t *cr, int width, int height)
 
     pattern = cairo_pattern_create_mesh ();
 
-    cairo_pattern_mesh_begin_patch (pattern);
+    cairo_mesh_pattern_begin_patch (pattern);
 
-    cairo_pattern_mesh_move_to (pattern, 0, 0);
-    cairo_pattern_mesh_line_to (pattern, 1, 0);
-    cairo_pattern_mesh_line_to (pattern, 1, 1);
-    cairo_pattern_mesh_line_to (pattern, 0, 1);
+    cairo_mesh_pattern_move_to (pattern, 0, 0);
+    cairo_mesh_pattern_line_to (pattern, 1, 0);
+    cairo_mesh_pattern_line_to (pattern, 1, 1);
+    cairo_mesh_pattern_line_to (pattern, 0, 1);
 
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 0, 0, 0, 0);
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 1, 1, 1, 1);
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 2, 0, 0, 0);
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 3, 1, 1, 1);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 0, 0, 0, 0);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 1, 1, 1, 1);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 2, 0, 0, 0);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 3, 1, 1, 1);
 
-    cairo_pattern_mesh_end_patch (pattern);
+    cairo_mesh_pattern_end_patch (pattern);
 
-    cairo_pattern_mesh_begin_patch (pattern);
+    cairo_mesh_pattern_begin_patch (pattern);
 
     /* A small 1x1 red patch, that should be rendered as a 2x2 red
      * square in the center of the image */
 
     offset = 0.5 / SIZE;
 
-    cairo_pattern_mesh_move_to (pattern, 0.5 + offset, 0.5 + offset);
-    cairo_pattern_mesh_line_to (pattern, 0.5 + offset, 0.5 - offset);
-    cairo_pattern_mesh_line_to (pattern, 0.5 - offset, 0.5 - offset);
-    cairo_pattern_mesh_line_to (pattern, 0.5 - offset, 0.5 + offset);
+    cairo_mesh_pattern_move_to (pattern, 0.5 + offset, 0.5 + offset);
+    cairo_mesh_pattern_line_to (pattern, 0.5 + offset, 0.5 - offset);
+    cairo_mesh_pattern_line_to (pattern, 0.5 - offset, 0.5 - offset);
+    cairo_mesh_pattern_line_to (pattern, 0.5 - offset, 0.5 + offset);
 
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 0, 1, 0, 0);
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 1, 1, 0, 0);
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 2, 1, 0, 0);
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 3, 1, 0, 0);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 0, 1, 0, 0);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 1, 1, 0, 0);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 2, 1, 0, 0);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 3, 1, 0, 0);
 
-    cairo_pattern_mesh_end_patch (pattern);
+    cairo_mesh_pattern_end_patch (pattern);
 
     cairo_scale (cr, SIZE, SIZE);
 

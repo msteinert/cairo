@@ -44,26 +44,26 @@ draw (cairo_t *cr, int width, int height)
 
     pattern = cairo_pattern_create_mesh ();
 
-    cairo_pattern_mesh_begin_patch (pattern);
+    cairo_mesh_pattern_begin_patch (pattern);
 
-    cairo_pattern_mesh_move_to (pattern, 1, 1);
+    cairo_mesh_pattern_move_to (pattern, 1, 1);
 
-    cairo_pattern_mesh_curve_to (pattern, 6, 0, -1, 0, 4, 1);
-    cairo_pattern_mesh_curve_to (pattern, 5, 6, 5, -1, 4, 4);
-    cairo_pattern_mesh_curve_to (pattern, -1, 3, 6, 3, 1, 4);
-    cairo_pattern_mesh_curve_to (pattern, 2, -1, 2, 6, 1, 1);
+    cairo_mesh_pattern_curve_to (pattern, 6, 0, -1, 0, 4, 1);
+    cairo_mesh_pattern_curve_to (pattern, 5, 6, 5, -1, 4, 4);
+    cairo_mesh_pattern_curve_to (pattern, -1, 3, 6, 3, 1, 4);
+    cairo_mesh_pattern_curve_to (pattern, 2, -1, 2, 6, 1, 1);
 
-    cairo_pattern_mesh_set_control_point (pattern, 0, 2, 3);
-    cairo_pattern_mesh_set_control_point (pattern, 1, 3, 3);
-    cairo_pattern_mesh_set_control_point (pattern, 2, 3, 2);
-    cairo_pattern_mesh_set_control_point (pattern, 3, 2, 2);
+    cairo_mesh_pattern_set_control_point (pattern, 0, 2, 3);
+    cairo_mesh_pattern_set_control_point (pattern, 1, 3, 3);
+    cairo_mesh_pattern_set_control_point (pattern, 2, 3, 2);
+    cairo_mesh_pattern_set_control_point (pattern, 3, 2, 2);
 
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 0, 1, 0, 0);
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 1, 0, 0, 1);
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 2, 0, 0, 0);
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 3, 0, 1, 0);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 0, 1, 0, 0);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 1, 0, 0, 1);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 2, 0, 0, 0);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 3, 0, 1, 0);
 
-    cairo_pattern_mesh_end_patch (pattern);
+    cairo_mesh_pattern_end_patch (pattern);
 
     cairo_scale (cr, SIZE, SIZE);
 

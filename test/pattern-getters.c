@@ -189,7 +189,7 @@ draw (cairo_t *cr, int width, int height)
 	int i;
 	pat = cairo_pattern_create_mesh ();
 
-	status = cairo_pattern_mesh_get_patch_count (pat, &count);
+	status = cairo_mesh_pattern_get_patch_count (pat, &count);
 	CHECK_SUCCESS;
 
 	if (count != 0) {
@@ -197,13 +197,13 @@ draw (cairo_t *cr, int width, int height)
 	    return CAIRO_TEST_FAILURE;
 	}
 
-	cairo_pattern_mesh_begin_patch (pat);
-	cairo_pattern_mesh_move_to (pat, 0, 0);
-	cairo_pattern_mesh_line_to (pat, 0, 3);
-	cairo_pattern_mesh_line_to (pat, 3, 3);
-	cairo_pattern_mesh_line_to (pat, 3, 0);
+	cairo_mesh_pattern_begin_patch (pat);
+	cairo_mesh_pattern_move_to (pat, 0, 0);
+	cairo_mesh_pattern_line_to (pat, 0, 3);
+	cairo_mesh_pattern_line_to (pat, 3, 3);
+	cairo_mesh_pattern_line_to (pat, 3, 0);
 
-	status = cairo_pattern_mesh_get_patch_count (pat, &count);
+	status = cairo_mesh_pattern_get_patch_count (pat, &count);
 	CHECK_SUCCESS;
 
 	if (count != 0) {
@@ -211,9 +211,9 @@ draw (cairo_t *cr, int width, int height)
 	    return CAIRO_TEST_FAILURE;
 	}
 
-	cairo_pattern_mesh_end_patch (pat);
+	cairo_mesh_pattern_end_patch (pat);
 
-	status = cairo_pattern_mesh_get_patch_count (pat, &count);
+	status = cairo_mesh_pattern_get_patch_count (pat, &count);
 	CHECK_SUCCESS;
 
 	if (count != 1) {
@@ -226,7 +226,7 @@ draw (cairo_t *cr, int width, int height)
 	    double cp_y[4] = { 1, 2, 2, 1 };
 	    double x, y;
 
-	    status = cairo_pattern_mesh_get_control_point (pat, 0, i, &x, &y);
+	    status = cairo_mesh_pattern_get_control_point (pat, 0, i, &x, &y);
 	    CHECK_SUCCESS;
 
 	    if (!CAIRO_TEST_DOUBLE_EQUALS(x,cp_x[i]) ||
@@ -237,18 +237,18 @@ draw (cairo_t *cr, int width, int height)
 	    }
 	}
 
-	cairo_pattern_mesh_begin_patch (pat);
-	cairo_pattern_mesh_move_to (pat, 0, 0);
-	cairo_pattern_mesh_line_to (pat, 1, 0);
-	cairo_pattern_mesh_line_to (pat, 1, 1);
-	cairo_pattern_mesh_set_corner_color_rgb (pat, 0, 1, 1, 1);
-	cairo_pattern_mesh_end_patch (pat);
+	cairo_mesh_pattern_begin_patch (pat);
+	cairo_mesh_pattern_move_to (pat, 0, 0);
+	cairo_mesh_pattern_line_to (pat, 1, 0);
+	cairo_mesh_pattern_line_to (pat, 1, 1);
+	cairo_mesh_pattern_set_corner_color_rgb (pat, 0, 1, 1, 1);
+	cairo_mesh_pattern_end_patch (pat);
 
 	for (i = 0; i < 4; i++) {
 	    double corner_color[4] = { 1, 0, 0, 1 };
 	    double a, r, g, b;
 
-	    status = cairo_pattern_mesh_get_corner_color_rgba (pat, 1, i,
+	    status = cairo_mesh_pattern_get_corner_color_rgba (pat, 1, i,
 							       &r, &g, &b, &a);
 	    CHECK_SUCCESS;
 

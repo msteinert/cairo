@@ -3613,7 +3613,7 @@ _mesh_begin_patch (csi_t *ctx)
     if (_csi_unlikely (status))
 	return status;
 
-    cairo_pattern_mesh_begin_patch (pattern);
+    cairo_mesh_pattern_begin_patch (pattern);
     return CSI_STATUS_SUCCESS;
 }
 
@@ -3648,7 +3648,7 @@ _mesh_curve_to (csi_t *ctx)
     if (_csi_unlikely (status))
 	return status;
 
-    cairo_pattern_mesh_curve_to (pattern, x1, y1, x2, y2, x3, y3);
+    cairo_mesh_pattern_curve_to (pattern, x1, y1, x2, y2, x3, y3);
 
     pop (6);
     return CSI_STATUS_SUCCESS;
@@ -3666,7 +3666,7 @@ _mesh_end_patch (csi_t *ctx)
     if (_csi_unlikely (status))
 	return status;
 
-    cairo_pattern_mesh_end_patch (pattern);
+    cairo_mesh_pattern_end_patch (pattern);
     return CSI_STATUS_SUCCESS;
 }
 
@@ -3689,7 +3689,7 @@ _mesh_line_to (csi_t *ctx)
     if (_csi_unlikely (status))
 	return status;
 
-    cairo_pattern_mesh_line_to (pattern, x, y);
+    cairo_mesh_pattern_line_to (pattern, x, y);
 
     pop (2);
     return CSI_STATUS_SUCCESS;
@@ -3714,7 +3714,7 @@ _mesh_move_to (csi_t *ctx)
     if (_csi_unlikely (status))
 	return status;
 
-    cairo_pattern_mesh_move_to (pattern, x, y);
+    cairo_mesh_pattern_move_to (pattern, x, y);
 
     pop (2);
     return CSI_STATUS_SUCCESS;
@@ -3743,7 +3743,7 @@ _mesh_set_control_point (csi_t *ctx)
     if (_csi_unlikely (status))
 	return status;
 
-    cairo_pattern_mesh_set_control_point (pattern, point, x, y);
+    cairo_mesh_pattern_set_control_point (pattern, point, x, y);
 
     pop (3);
     return CSI_STATUS_SUCCESS;
@@ -3778,7 +3778,7 @@ _mesh_set_corner_color (csi_t *ctx)
     if (_csi_unlikely (status))
 	return status;
 
-    cairo_pattern_mesh_set_corner_color_rgba (pattern, corner, r, g, b, a);
+    cairo_mesh_pattern_set_corner_color_rgba (pattern, corner, r, g, b, a);
 
     pop (5);
     return CSI_STATUS_SUCCESS;

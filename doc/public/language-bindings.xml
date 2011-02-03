@@ -530,18 +530,18 @@ cairo_pattern_t
       cairo_linear_gradient_t (<link linkend="cairo-pattern-create-linear"><function>cairo_pattern_create_linear()</function></link>)
       cairo_radial_gradient_t (<link linkend="cairo-pattern-create-radial"><function>cairo_pattern_create_radial()</function></link>)
    cairo_mesh_t (<link linkend="cairo-pattern-create-mesh"><function>cairo_pattern_create_mesh()</function></link>)
-         <link linkend="cairo-pattern-mesh-begin-patch"><function>cairo_pattern_mesh_begin_patch()</function></link>
-         <link linkend="cairo-pattern-mesh-end-patch"><function>cairo_pattern_mesh_end_patch()</function></link>
-         <link linkend="cairo-pattern-mesh-move-to"><function>cairo_pattern_mesh_move_to()</function></link>
-         <link linkend="cairo-pattern-mesh-line-to"><function>cairo_pattern_mesh_line_to()</function></link>
-         <link linkend="cairo-pattern-mesh-curve-to"><function>cairo_pattern_mesh_curve_to()</function></link>
-         <link linkend="cairo-pattern-mesh-set-control-point"><function>cairo_pattern_mesh_set_control_point()</function></link>
-         <link linkend="cairo-pattern-mesh-set-corner-color-rgb"><function>cairo_pattern_mesh_set_corner_color_rgb()</function></link>
-         <link linkend="cairo-pattern-mesh-set-corner-color-rgba"><function>cairo_pattern_mesh_set_corner_color_rgba()</function></link>
-         <link linkend="cairo-pattern-mesh-get-patch-count"><function>cairo_pattern_mesh_get_patch_count()</function></link>
-         <link linkend="cairo-pattern-mesh-get-path"><function>cairo_pattern_mesh_get_path()</function></link>
-         <link linkend="cairo-pattern-mesh-get-control-point"><function>cairo_pattern_mesh_get_control_point()</function></link>
-         <link linkend="cairo-pattern-mesh-get-corner-color-rgba"><function>cairo_pattern_mesh_get_corner_color_rgba()</function></link>
+         <link linkend="cairo-mesh-pattern-begin-patch"><function>cairo_mesh_pattern_begin_patch()</function></link>
+         <link linkend="cairo-mesh-pattern-end-patch"><function>cairo_mesh_pattern_end_patch()</function></link>
+         <link linkend="cairo-mesh-pattern-move-to"><function>cairo_mesh_pattern_move_to()</function></link>
+         <link linkend="cairo-mesh-pattern-line-to"><function>cairo_mesh_pattern_line_to()</function></link>
+         <link linkend="cairo-mesh-pattern-curve-to"><function>cairo_mesh_pattern_curve_to()</function></link>
+         <link linkend="cairo-mesh-pattern-set-control-point"><function>cairo_mesh_pattern_set_control_point()</function></link>
+         <link linkend="cairo-mesh-pattern-set-corner-color-rgb"><function>cairo_mesh_pattern_set_corner_color_rgb()</function></link>
+         <link linkend="cairo-mesh-pattern-set-corner-color-rgba"><function>cairo_mesh_pattern_set_corner_color_rgba()</function></link>
+         <link linkend="cairo-mesh-pattern-get-patch-count"><function>cairo_mesh_pattern_get_patch_count()</function></link>
+         <link linkend="cairo-mesh-pattern-get-path"><function>cairo_mesh_pattern_get_path()</function></link>
+         <link linkend="cairo-mesh-pattern-get-control-point"><function>cairo_mesh_pattern_get_control_point()</function></link>
+         <link linkend="cairo-mesh-pattern-get-corner-color-rgba"><function>cairo_mesh_pattern_get_corner_color_rgba()</function></link>
     </programlisting>
     <para>
     </para>

@@ -46,20 +46,20 @@ draw (cairo_t *cr, int width, int height)
 
     pattern = cairo_pattern_create_mesh ();
 
-    cairo_pattern_mesh_begin_patch (pattern);
+    cairo_mesh_pattern_begin_patch (pattern);
 
-    cairo_pattern_mesh_move_to (pattern, 0, 0);
-    cairo_pattern_mesh_curve_to (pattern,  30, -30, 60,  30, 100, 0);
-    cairo_pattern_mesh_curve_to (pattern, 130, 140, 60, -40, 100, 100);
-    cairo_pattern_mesh_curve_to (pattern,  60,  70, 30, 130,   0, 100);
-    cairo_pattern_mesh_curve_to (pattern, -30, -40, 30, 140,   0, 0);
+    cairo_mesh_pattern_move_to (pattern, 0, 0);
+    cairo_mesh_pattern_curve_to (pattern,  30, -30, 60,  30, 100, 0);
+    cairo_mesh_pattern_curve_to (pattern, 130, 140, 60, -40, 100, 100);
+    cairo_mesh_pattern_curve_to (pattern,  60,  70, 30, 130,   0, 100);
+    cairo_mesh_pattern_curve_to (pattern, -30, -40, 30, 140,   0, 0);
 
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 0, 1, 0, 0);
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 1, 0, 1, 0);
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 2, 0, 0, 1);
-    cairo_pattern_mesh_set_corner_color_rgb (pattern, 3, 1, 1, 0);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 0, 1, 0, 0);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 1, 0, 1, 0);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 2, 0, 0, 1);
+    cairo_mesh_pattern_set_corner_color_rgb (pattern, 3, 1, 1, 0);
 
-    cairo_pattern_mesh_end_patch (pattern);
+    cairo_mesh_pattern_end_patch (pattern);
 
     cairo_set_source (cr, pattern);
     cairo_paint (cr);

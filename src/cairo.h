@@ -273,7 +273,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_DEVICE_ERROR: an operation to the device caused an unspecified error (Since 1.10)
  * @CAIRO_STATUS_INVALID_MESH_CONSTRUCTION: a mesh pattern
  *   construction operation was used outside of a
- *   cairo_pattern_mesh_begin_patch()/cairo_pattern_mesh_end_patch()
+ *   cairo_mesh_pattern_begin_patch()/cairo_mesh_pattern_end_patch()
  *   pair (Since 1.12)
  * @CAIRO_STATUS_LAST_STATUS: this is a special value indicating the number of
  *   status values defined in this enumeration.  When using this value, note
@@ -2420,37 +2420,37 @@ cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern,
 				   double alpha);
 
 cairo_public void
-cairo_pattern_mesh_begin_patch (cairo_pattern_t *pattern);
+cairo_mesh_pattern_begin_patch (cairo_pattern_t *pattern);
 
 cairo_public void
-cairo_pattern_mesh_end_patch (cairo_pattern_t *pattern);
+cairo_mesh_pattern_end_patch (cairo_pattern_t *pattern);
 
 cairo_public void
-cairo_pattern_mesh_curve_to (cairo_pattern_t *pattern,
+cairo_mesh_pattern_curve_to (cairo_pattern_t *pattern,
 			     double x1, double y1,
 			     double x2, double y2,
 			     double x3, double y3);
 
 cairo_public void
-cairo_pattern_mesh_line_to (cairo_pattern_t *pattern,
+cairo_mesh_pattern_line_to (cairo_pattern_t *pattern,
 			    double x, double y);
 
 cairo_public void
-cairo_pattern_mesh_move_to (cairo_pattern_t *pattern,
+cairo_mesh_pattern_move_to (cairo_pattern_t *pattern,
 			    double x, double y);
 
 cairo_public void
-cairo_pattern_mesh_set_control_point (cairo_pattern_t *pattern,
+cairo_mesh_pattern_set_control_point (cairo_pattern_t *pattern,
 				      unsigned int point_num,
 				      double x, double y);
 
 cairo_public void
-cairo_pattern_mesh_set_corner_color_rgb (cairo_pattern_t *pattern,
+cairo_mesh_pattern_set_corner_color_rgb (cairo_pattern_t *pattern,
 					 unsigned int corner_num,
 					 double red, double green, double blue);
 
 cairo_public void
-cairo_pattern_mesh_set_corner_color_rgba (cairo_pattern_t *pattern,
+cairo_mesh_pattern_set_corner_color_rgba (cairo_pattern_t *pattern,
 					  unsigned int corner_num,
 					  double red, double green, double blue,
 					  double alpha);
@@ -2563,22 +2563,22 @@ cairo_pattern_get_radial_circles (cairo_pattern_t *pattern,
 				  double *x1, double *y1, double *r1);
 
 cairo_public cairo_status_t
-cairo_pattern_mesh_get_patch_count (cairo_pattern_t *pattern,
+cairo_mesh_pattern_get_patch_count (cairo_pattern_t *pattern,
 				    unsigned int *count);
 
 cairo_public cairo_path_t *
-cairo_pattern_mesh_get_path (cairo_pattern_t *pattern,
+cairo_mesh_pattern_get_path (cairo_pattern_t *pattern,
 			     unsigned int patch_num);
 
 cairo_public cairo_status_t
-cairo_pattern_mesh_get_corner_color_rgba (cairo_pattern_t *pattern,
+cairo_mesh_pattern_get_corner_color_rgba (cairo_pattern_t *pattern,
 					  unsigned int patch_num,
 					  unsigned int corner_num,
 					  double *red, double *green,
 					  double *blue, double *alpha);
 
 cairo_public cairo_status_t
-cairo_pattern_mesh_get_control_point (cairo_pattern_t *pattern,
+cairo_mesh_pattern_get_control_point (cairo_pattern_t *pattern,
 				      unsigned int patch_num,
 				      unsigned int point_num,
 				      double *x, double *y);
