@@ -407,7 +407,6 @@ _cairo_quartz_init_glyph_metrics (cairo_quartz_scaled_font_t *font,
     int advance;
     CGRect bbox;
     double emscale = CGFontGetUnitsPerEmPtr (font_face->cgFont);
-    double xscale, yscale;
     double xmin, ymin, xmax, ymax;
 
     if (glyph == INVALID_GLYPH)
@@ -426,11 +425,6 @@ _cairo_quartz_init_glyph_metrics (cairo_quartz_scaled_font_t *font,
         bbox.origin.x = bbox.origin.y = 0;
         bbox.size.width = bbox.size.height = 0;
     }
-
-    status = _cairo_matrix_compute_basis_scale_factors (&font->base.scale,
-						  &xscale, &yscale, 1);
-    if (status)
-	goto FAIL;
 
     bbox = CGRectMake (bbox.origin.x / emscale,
 		       bbox.origin.y / emscale,
@@ -595,7 +589,6 @@ _cairo_quartz_init_glyph_surface (cairo_quartz_scaled_font_t *font,
     int advance;
     CGRect bbox;
     double width, height;
-    double xscale, yscale;
     double emscale = CGFontGetUnitsPerEmPtr (font_face->cgFont);
 
     CGContextRef cgContext = NULL;
@@ -626,11 +619,6 @@ _cairo_quartz_init_glyph_surface (cairo_quartz_scaled_font_t *font,
     {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
-
-    status = _cairo_matrix_compute_basis_scale_factors (&font->base.scale,
-						  &xscale, &yscale, 1);
-    if (status)
-	return status;
 
     /* scale(1,-1) * font->base.scale * scale(1,-1) */
     textMatrix = CGAffineTransformMake (font->base.scale.xx,
