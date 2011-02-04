@@ -1622,9 +1622,6 @@ _cairo_gstate_set_font_matrix (cairo_gstate_t	    *gstate,
     if (memcmp (matrix, &gstate->font_matrix, sizeof (cairo_matrix_t)) == 0)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (! _cairo_matrix_is_invertible (matrix))
-	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
-
     _cairo_gstate_unset_scaled_font (gstate);
 
     gstate->font_matrix = *matrix;
