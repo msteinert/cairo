@@ -1605,17 +1605,6 @@ _cairo_gstate_select_font_face (cairo_gstate_t       *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_set_font_size (cairo_gstate_t *gstate,
-			     double          size)
-{
-    _cairo_gstate_unset_scaled_font (gstate);
-
-    cairo_matrix_init_scale (&gstate->font_matrix, size, size);
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-cairo_status_t
 _cairo_gstate_set_font_matrix (cairo_gstate_t	    *gstate,
 			       const cairo_matrix_t *matrix)
 {

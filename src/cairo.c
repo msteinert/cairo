@@ -3061,14 +3061,11 @@ cairo_get_font_face (cairo_t *cr)
 void
 cairo_set_font_size (cairo_t *cr, double size)
 {
-    cairo_status_t status;
+    cairo_matrix_t scale;
 
-    if (unlikely (cr->status))
-	return;
+    cairo_matrix_init_scale (&scale, size, size);
 
-    status = _cairo_gstate_set_font_size (cr->gstate, size);
-    if (unlikely (status))
-	_cairo_set_error (cr, status);
+    cairo_set_font_matrix (cr, &scale);
 }
 slim_hidden_def (cairo_set_font_size);
 

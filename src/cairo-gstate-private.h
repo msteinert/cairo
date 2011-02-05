@@ -302,10 +302,6 @@ _cairo_gstate_select_font_face (cairo_gstate_t *gstate,
 				cairo_font_slant_t slant,
 				cairo_font_weight_t weight);
 
-cairo_private cairo_status_t
-_cairo_gstate_set_font_size (cairo_gstate_t *gstate,
-			     double          size);
-
 cairo_private void
 _cairo_gstate_get_font_matrix (cairo_gstate_t *gstate,
 			       cairo_matrix_t *matrix);
