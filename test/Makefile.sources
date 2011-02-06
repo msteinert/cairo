@@ -131,6 +131,7 @@ test_sources = \
 	huge-linear.c					\
 	huge-radial.c					\
 	image-surface-source.c				\
+	image-bug-710072.c				\
 	implicit-close.c				\
 	infinite-join.c					\
 	in-fill-empty-trapezoid.c			\

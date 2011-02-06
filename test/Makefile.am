@@ -736,6 +736,9 @@ REFERENCE_IMAGES = \
 	huge-radial.ps3.ref.png \
 	huge-radial.quartz.ref.png \
 	huge-radial.ref.png \
+	image-bug-710072-aligned.ref.png \
+	image-bug-710072-unaligned.ref.png \
+	image-bug-710072-unaligned.xlib.ref.png \
 	image-surface-source.image16.ref.png \
 	image-surface-source.ps2.ref.png \
 	image-surface-source.ps3.ref.png \
