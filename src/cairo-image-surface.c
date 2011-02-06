@@ -3577,6 +3577,20 @@ _cairo_image_surface_stroke (void			*abstract_surface,
 	cairo_boxes_t boxes;
 
 	_cairo_boxes_init (&boxes);
+	if (num_boxes == 0) {
+		/* When compositing with the span renderer, we limit the mask
+		 * to the bounded area, and so we must also constrain the path
+		 * appropriately. (Unlike the other compositing paths
+		 * where the operation itself is limited to extents.)
+		 */
+		boxes_stack[0].p1.x = extents.bounded.x;
+		boxes_stack[0].p1.y = extents.bounded.y;
+		boxes_stack[0].p2.x = extents.bounded.x + extents.bounded.width;
+		boxes_stack[0].p2.y = extents.bounded.y + extents.bounded.height;
+
+		clip_boxes = boxes_stack;
+		num_boxes = 1;
+	}
 	_cairo_boxes_limit (&boxes, clip_boxes, num_boxes);
 
 	status = _cairo_path_fixed_stroke_rectilinear_to_boxes (path,
@@ -3676,6 +3690,20 @@ _cairo_image_surface_fill (void				*abstract_surface,
 	cairo_boxes_t boxes;
 
 	_cairo_boxes_init (&boxes);
+	if (num_boxes == 0) {
+		/* When compositing with the span renderer, we limit the mask
+		 * to the bounded area, and so we must also constrain the path
+		 * appropriately. (Unlike the other compositing paths
+		 * where the operation itself is limited to extents.)
+		 */
+		boxes_stack[0].p1.x = extents.bounded.x;
+		boxes_stack[0].p1.y = extents.bounded.y;
+		boxes_stack[0].p2.x = extents.bounded.x + extents.bounded.width;
+		boxes_stack[0].p2.y = extents.bounded.y + extents.bounded.height;
+
+		clip_boxes = boxes_stack;
+		num_boxes = 1;
+	}
 	_cairo_boxes_limit (&boxes, clip_boxes, num_boxes);
 
 	status = _cairo_path_fixed_fill_rectilinear_to_boxes (path,
