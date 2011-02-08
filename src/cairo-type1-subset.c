@@ -422,6 +422,10 @@ cairo_type1_font_subset_write_header (cairo_type1_font_subset_t *font,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     end += 3;
 
+    /* There are some buggy fonts that contain more than one /Encoding */
+    if (find_token (end, segment_end, "/Encoding"))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     _cairo_output_stream_write (font->output, end, segment_end - end);
 
     return font->output->status;
