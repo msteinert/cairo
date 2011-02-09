@@ -296,10 +296,14 @@ cairo_device_finish (cairo_device_t *device)
 
     cairo_device_flush (device);
 
-    device->finished = TRUE;
-
     if (device->backend->finish != NULL)
 	device->backend->finish (device);
+
+    /* We only finish the device after the backend's callback returns because
+     * the device might still be needed during the callback
+     * (e.g. for cairo_device_acquire ()).
+     */
+    device->finished = TRUE;
 }
 slim_hidden_def (cairo_device_finish);
 
