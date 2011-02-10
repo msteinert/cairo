@@ -73,7 +73,7 @@ _egl_acquire (void *abstract_ctx)
     }
 
     eglMakeCurrent (ctx->display,
-		    ctx->dummy_surface, ctx->dummy_surface, ctx->context);
+		    current_surface, current_surface, ctx->context);
 }
 
 static void
