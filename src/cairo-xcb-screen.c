@@ -68,9 +68,12 @@ _cairo_xcb_screen_finish (cairo_xcb_screen_t *screen)
     for (i = 0; i < ARRAY_LENGTH (screen->stock_colors); i++)
 	cairo_surface_destroy (screen->stock_colors[i]);
 
-    _cairo_cache_fini (&screen->surface_pattern_cache);
     _cairo_cache_fini (&screen->linear_pattern_cache);
     _cairo_cache_fini (&screen->radial_pattern_cache);
+    /* Do this one last, because the above two will cause picture_t
+     * to be finished. This results in a call to ..._remove_surface_picture
+     * which uses the surface pattern cache. */
+    _cairo_cache_fini (&screen->surface_pattern_cache);
     _cairo_freelist_fini (&screen->pattern_cache_entry_freelist);
 
     cairo_device_finish (screen->device);
