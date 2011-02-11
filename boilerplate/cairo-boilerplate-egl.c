@@ -73,8 +73,17 @@ _cairo_boilerplate_egl_create_surface (const char		 *name,
     egl_target_closure_t *gltc;
     cairo_surface_t *surface;
     int major, minor;
-    EGLConfig *configs;
+    EGLConfig config;
     EGLint numConfigs;
+    EGLint config_attribs[] = {
+	EGL_RED_SIZE, 8,
+	EGL_GREEN_SIZE, 8,
+	EGL_BLUE_SIZE, 8,
+	EGL_ALPHA_SIZE, 8,
+	EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
+	EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
+	EGL_NONE
+    };
 
     gltc = xcalloc (1, sizeof (egl_target_closure_t));
     *closure = gltc;
@@ -86,17 +95,15 @@ _cairo_boilerplate_egl_create_surface (const char		 *name,
 	return NULL;
     }
 
-    eglGetConfigs (gltc->dpy, NULL, 0, &numConfigs);
+    eglChooseConfig (gltc->dpy, config_attribs, &config, 1, &numConfigs);
     if (numConfigs == 0) {
 	free (gltc);
 	return NULL;
     }
-    configs = xmalloc(sizeof(*configs) *numConfigs);
-    eglGetConfigs (gltc->dpy, configs, numConfigs, &numConfigs);
 
     eglBindAPI (EGL_OPENGL_API);
 
-    gltc->ctx = eglCreateContext (gltc->dpy, configs[0], EGL_NO_CONTEXT, NULL);
+    gltc->ctx = eglCreateContext (gltc->dpy, config, EGL_NO_CONTEXT, NULL);
     if (gltc->ctx == EGL_NO_CONTEXT) {
 	eglTerminate (gltc->dpy);
 	free (gltc);
