@@ -140,7 +140,7 @@ cairo_egl_device_create (EGLDisplay dpy, EGLContext egl)
 	EGL_HEIGHT, 1,
 	EGL_NONE,
     };
-    EGLConfig *configs;
+    EGLConfig config;
     EGLint numConfigs;
 
     ctx = calloc (1, sizeof (cairo_egl_context_t));
@@ -158,15 +158,21 @@ cairo_egl_device_create (EGLDisplay dpy, EGLContext egl)
 
     if (!_egl_make_current_surfaceless (ctx)) {
 	/* Fall back to dummy surface, meh. */
-	eglGetConfigs (dpy, NULL, 0, &numConfigs);
-	configs = malloc (sizeof(*configs) *numConfigs);
-	if (configs == NULL) {
-	    free (ctx);
-	    return _cairo_gl_context_create_in_error (CAIRO_STATUS_NO_MEMORY);
-	}
-	eglGetConfigs (dpy, configs, numConfigs, &numConfigs);
-	ctx->dummy_surface = eglCreatePbufferSurface (dpy, configs[0], attribs);
-	free (configs);
+	EGLint config_attribs[] = {
+	    EGL_CONFIG_ID, 0,
+	    EGL_NONE
+	};
+
+	/*
+	 * In order to be able to make an egl context current when using a
+	 * pbuffer surface, that surface must have been created with a config
+	 * that is compatible with the context config. For Mesa, this means
+	 * that the configs must be the same.
+	 */
+	eglQueryContext (dpy, egl, EGL_CONFIG_ID, &config_attribs[1]);
+	eglChooseConfig (dpy, config_attribs, &config, 1, &numConfigs);
+
+	ctx->dummy_surface = eglCreatePbufferSurface (dpy, config, attribs);
 
 	if (ctx->dummy_surface == NULL) {
 	    free (ctx);
