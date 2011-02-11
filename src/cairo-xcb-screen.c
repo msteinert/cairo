@@ -70,24 +70,12 @@ _cairo_xcb_screen_finish (cairo_xcb_screen_t *screen)
 
     _cairo_cache_fini (&screen->linear_pattern_cache);
     _cairo_cache_fini (&screen->radial_pattern_cache);
-    /* Do this one last, because the above two will cause picture_t
-     * to be finished. This results in a call to ..._remove_surface_picture
-     * which uses the surface pattern cache. */
-    _cairo_cache_fini (&screen->surface_pattern_cache);
     _cairo_freelist_fini (&screen->pattern_cache_entry_freelist);
 
     cairo_device_finish (screen->device);
     cairo_device_destroy (screen->device);
 
     free (screen);
-}
-
-static cairo_bool_t
-_surface_pattern_cache_entry_equal (const void *A, const void *B)
-{
-    const struct pattern_cache_entry *a = A, *b = B;
-
-    return a->key.hash == b->key.hash;
 }
 
 static cairo_bool_t
@@ -112,21 +100,6 @@ _radial_pattern_cache_entry_equal (const void *A, const void *B)
 
     return _cairo_radial_pattern_equal (&a->pattern.gradient.radial,
 					&b->pattern.gradient.radial);
-}
-
-static void
-_surface_cache_entry_destroy (void *closure)
-{
-    struct pattern_cache_entry *entry = closure;
-
-    /* Destroy all the references to the surfaces that were generated
-     * because of the caching. This means that the cache is giving up
-     * the resources held by that surface. They are now considered as
-     * owned by whatever holds a reference to the surface. */
-    if (entry->picture->snapshot_of != NULL)
-	_cairo_surface_detach_snapshot (entry->picture);
-    cairo_surface_destroy (entry->picture);
-    _cairo_freelist_free (&entry->screen->pattern_cache_entry_freelist, entry);
 }
 
 static void
@@ -271,21 +244,13 @@ _cairo_xcb_screen_get (xcb_connection_t *xcb_connection,
     for (i = 0; i < ARRAY_LENGTH (screen->stock_colors); i++)
 	screen->stock_colors[i] = NULL;
 
-    status = _cairo_cache_init (&screen->surface_pattern_cache,
-				_surface_pattern_cache_entry_equal,
-				NULL,
-				_surface_cache_entry_destroy,
-				16*1024*1024);
-    if (unlikely (status))
-	goto error_screen;
-
     status = _cairo_cache_init (&screen->linear_pattern_cache,
 				_linear_pattern_cache_entry_equal,
 				NULL,
 				_pattern_cache_entry_destroy,
 				16);
     if (unlikely (status))
-	goto error_surface;
+	goto error_screen;
 
     status = _cairo_cache_init (&screen->radial_pattern_cache,
 				_radial_pattern_cache_entry_equal,
@@ -304,8 +269,6 @@ unlock:
 
 error_linear:
     _cairo_cache_fini (&screen->linear_pattern_cache);
-error_surface:
-    _cairo_cache_fini (&screen->surface_pattern_cache);
 error_screen:
     CAIRO_MUTEX_UNLOCK (connection->screens_mutex);
     cairo_device_destroy (screen->device);
@@ -365,53 +328,6 @@ _cairo_xcb_screen_put_gc (cairo_xcb_screen_t *screen, int depth, xcb_gcontext_t 
     screen->gc[i] = gc;
     screen->gc_depths &= ~(0xff << (8*i));
     screen->gc_depths |= depth << (8*i);
-}
-
-cairo_status_t
-_cairo_xcb_screen_store_surface_picture (cairo_xcb_screen_t *screen,
-					 cairo_surface_t *picture,
-					 unsigned int size)
-{
-    struct pattern_cache_entry *entry;
-    cairo_status_t status;
-
-    assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->device.mutex));
-
-    entry = _cairo_freelist_alloc (&screen->pattern_cache_entry_freelist);
-    if (unlikely (entry == NULL))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    entry->key.hash = picture->unique_id;
-    entry->key.size = size;
-
-    entry->picture = cairo_surface_reference (picture);
-    entry->screen = screen;
-
-    status = _cairo_cache_insert (&screen->surface_pattern_cache,
-				  &entry->key);
-    if (unlikely (status)) {
-	cairo_surface_destroy (picture);
-	_cairo_freelist_free (&screen->pattern_cache_entry_freelist, entry);
-	return status;
-    }
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-void
-_cairo_xcb_screen_remove_surface_picture (cairo_xcb_screen_t *screen,
-					  cairo_surface_t *picture)
-{
-    struct pattern_cache_entry tmpl;
-    struct pattern_cache_entry *entry;
-
-    assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->device.mutex));
-
-    tmpl.key.hash = picture->unique_id;
-
-    entry = _cairo_cache_lookup (&screen->surface_pattern_cache, &tmpl.key);
-    if (entry != NULL)
-	_cairo_cache_remove (&screen->surface_pattern_cache, &entry->key);
 }
 
 cairo_status_t

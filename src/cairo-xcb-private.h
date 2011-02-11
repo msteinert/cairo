@@ -158,7 +158,6 @@ struct _cairo_xcb_screen {
     } solid_cache[16];
     int solid_cache_size;
 
-    cairo_cache_t surface_pattern_cache;
     cairo_cache_t linear_pattern_cache;
     cairo_cache_t radial_pattern_cache;
     cairo_freelist_t pattern_cache_entry_freelist;
@@ -296,14 +295,6 @@ _cairo_xcb_screen_get_gc (cairo_xcb_screen_t *screen,
 
 cairo_private void
 _cairo_xcb_screen_put_gc (cairo_xcb_screen_t *screen, int depth, xcb_gcontext_t gc);
-
-cairo_private cairo_status_t
-_cairo_xcb_screen_store_surface_picture (cairo_xcb_screen_t *screen,
-					 cairo_surface_t *picture,
-					 unsigned int size);
-cairo_private void
-_cairo_xcb_screen_remove_surface_picture (cairo_xcb_screen_t *screen,
-					  cairo_surface_t *picture);
 
 cairo_private cairo_status_t
 _cairo_xcb_screen_store_linear_picture (cairo_xcb_screen_t *screen,

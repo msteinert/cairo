@@ -112,8 +112,6 @@ _cairo_xcb_picture_finish (void *abstract_surface)
     if (unlikely (status))
 	return status;
 
-    _cairo_xcb_screen_remove_surface_picture (surface->screen, &surface->base);
-
     if (surface->owner == NULL) {
 	_cairo_xcb_connection_render_free_picture (connection, surface->picture);
     }
@@ -1236,11 +1234,6 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	    return picture;
     }
 
-    status = _cairo_xcb_screen_store_surface_picture (target->screen,
-						      &picture->base,
-						      CAIRO_STRIDE_FOR_WIDTH_BPP (picture->width,
-										  PIXMAN_FORMAT_BPP (picture->pixman_format))
-						      * picture->height);
     if (unlikely (status)) {
 	cairo_surface_destroy (&picture->base);
 	return (cairo_xcb_picture_t *) _cairo_surface_create_in_error (status);
