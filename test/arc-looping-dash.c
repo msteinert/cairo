@@ -66,6 +66,8 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_dash (cr, dashes, 2, 0);
     cairo_stroke (cr);
 
+    cairo_restore (cr);
+
     return CAIRO_TEST_SUCCESS;
 }
 
