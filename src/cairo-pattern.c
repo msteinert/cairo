@@ -4910,6 +4910,7 @@ cairo_mesh_pattern_get_patch_count (cairo_pattern_t *pattern,
 
     return CAIRO_STATUS_SUCCESS;
 }
+slim_hidden_def (cairo_mesh_pattern_get_patch_count);
 
 /**
  * cairo_mesh_pattern_get_path
@@ -4997,6 +4998,7 @@ cairo_mesh_pattern_get_path (cairo_pattern_t *pattern,
 
     return path;
 }
+slim_hidden_def (cairo_mesh_pattern_get_path);
 
 /**
  * cairo_mesh_pattern_get_corner_color_rgba
@@ -5064,6 +5066,7 @@ cairo_mesh_pattern_get_corner_color_rgba (cairo_pattern_t *pattern,
 
     return CAIRO_STATUS_SUCCESS;
 }
+slim_hidden_def (cairo_mesh_pattern_get_corner_color_rgba);
 
 /**
  * cairo_mesh_pattern_get_control_point
@@ -5128,6 +5131,7 @@ cairo_mesh_pattern_get_control_point (cairo_pattern_t *pattern,
 
     return CAIRO_STATUS_SUCCESS;
 }
+slim_hidden_def (cairo_mesh_pattern_get_control_point);
 
 void
 _cairo_pattern_reset_static_data (void)
