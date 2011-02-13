@@ -39,6 +39,17 @@ draw_with_extend (cairo_t *cr, int w, int h, cairo_extend_t extend)
     cairo_set_source_rgb (cr, 1,1,1);
     cairo_paint (cr);
 
+    cairo_save (cr);
+
+    /* When the destination surface is created by cairo-test-suite to
+     * test device-offset, it is bigger than w x h. This test expects
+     * the group to have a size which is exactly w x h, so it must
+     * clip to the this rectangle to guarantee that the group will
+     * have the correct size.
+     */
+    cairo_rectangle (cr, 0, 0, w, h);
+    cairo_clip (cr);
+
     cairo_push_group_with_content (cr, CAIRO_CONTENT_COLOR); {
         /* A two by two checkerboard with black, red and yellow
          * cells. */
@@ -51,6 +62,8 @@ draw_with_extend (cairo_t *cr, int w, int h, cairo_extend_t extend)
     }
     pattern = cairo_pop_group (cr);
     cairo_pattern_set_extend(pattern, extend);
+
+    cairo_restore (cr);
 
     cairo_scale (cr, 0.5, 0.5);
     cairo_set_source (cr, pattern);
