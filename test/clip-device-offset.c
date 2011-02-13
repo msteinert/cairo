@@ -54,8 +54,8 @@ draw (cairo_t *cr, int width, int height)
   cairo_pattern_t *source;
   double old_x, old_y;
 
-  cairo_surface_get_device_offset (cairo_get_target (cr), &old_x, &old_y);
-  cairo_surface_set_device_offset (cairo_get_target (cr), old_x+5, old_y+5);
+  cairo_surface_get_device_offset (cairo_get_group_target (cr), &old_x, &old_y);
+  cairo_surface_set_device_offset (cairo_get_group_target (cr), old_x+5, old_y+5);
 
   source = create_green_source ();
   cairo_set_source (cr, source);
@@ -66,7 +66,7 @@ draw (cairo_t *cr, int width, int height)
   cairo_clip (cr);
   cairo_paint (cr);
 
-  cairo_surface_set_device_offset (cairo_get_target (cr), old_x, old_y);
+  cairo_surface_set_device_offset (cairo_get_group_target (cr), old_x, old_y);
 
   return CAIRO_TEST_SUCCESS;
 }
