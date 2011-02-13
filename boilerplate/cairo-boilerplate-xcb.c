@@ -635,7 +635,6 @@ _cairo_boilerplate_xcb_finish_surface (cairo_surface_t *surface)
 	cairo_t *cr;
 
 	cr = cairo_create (xtc->surface);
-	cairo_surface_set_device_offset (surface, 0, 0);
 	cairo_set_source_surface (cr, surface, 0, 0);
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 	cairo_paint (cr);
