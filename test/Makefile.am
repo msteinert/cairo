@@ -1449,6 +1449,9 @@ REFERENCE_IMAGES = \
 	xcb-stress-cache.ref.png \
 	xcb-surface-source.rgb24.ref.png \
 	xcb-surface-source.argb32.ref.png \
+	xcb-surface-source.image16.ref.png \
+	xcb-surface-source.ps.argb32.ref.png \
+	xcb-surface-source.ps.rgb24.ref.png \
 	xcomposite-projection.ref.png \
 	xcomposite-projection.image16.ref.png \
 	xcomposite-projection.quartz.ref.png \
@@ -1458,8 +1461,8 @@ REFERENCE_IMAGES = \
 	xlib-surface-source.rgb24.ref.png \
 	xlib-surface-source.argb32.ref.png \
 	xlib-surface-source.image16.ref.png \
-	xlib-surface-source.ps2.ref.png \
-	xlib-surface-source.ps3.ref.png \
+	xlib-surface-source.ps.argb32.ref.png \
+	xlib-surface-source.ps.rgb24.ref.png \
 	xlib-surface-source.svg12.argb32.xfail.png \
 	xlib-surface-source.svg12.rgb24.xfail.png \
 	white-in-noop.ref.png \
