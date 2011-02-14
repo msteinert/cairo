@@ -86,6 +86,13 @@
 /* VBO size that we allocate, smaller size means we gotta flush more often */
 #define CAIRO_GL_VBO_SIZE 16384
 
+/* GL flavor */
+typedef enum cairo_gl_flavor {
+    CAIRO_GL_FLAVOR_NONE = 0,
+    CAIRO_GL_FLAVOR_DESKTOP = 1,
+    CAIRO_GL_FLAVOR_ES = 2
+} cairo_gl_flavor_t;
+
 /* Indices for vertex attributes used by BindAttribLocation etc */
 enum {
     CAIRO_GL_VERTEX_ATTRIB_INDEX = 0,
@@ -279,6 +286,7 @@ struct _cairo_gl_context {
     cairo_bool_t has_mesa_pack_invert;
     cairo_gl_dispatch_t dispatch;
     GLfloat modelviewprojection_matrix[16];
+    cairo_gl_flavor_t gl_flavor;
 
     void (*acquire) (void *ctx);
     void (*release) (void *ctx);
@@ -556,6 +564,9 @@ _cairo_gl_shader_fini (cairo_gl_context_t *ctx, cairo_gl_shader_t *shader);
 
 cairo_private int
 _cairo_gl_get_version (void);
+
+cairo_private cairo_gl_flavor_t
+_cairo_gl_get_flavor (void);
 
 cairo_private cairo_bool_t
 _cairo_gl_has_extension (const char *ext);

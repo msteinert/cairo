@@ -183,6 +183,7 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 	_cairo_gl_has_extension ("GL_MESA_pack_invert");
 
     ctx->current_operator = -1;
+    ctx->gl_flavor = _cairo_gl_get_flavor ();
 
     status = _cairo_gl_context_init_shaders (ctx);
     if (unlikely (status))

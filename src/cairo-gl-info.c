@@ -55,6 +55,22 @@ _cairo_gl_get_version (void)
     return CAIRO_GL_VERSION_ENCODE (major, minor);
 }
 
+cairo_gl_flavor_t
+_cairo_gl_get_flavor (void)
+{
+    const char *version = (const char *) glGetString (GL_VERSION);
+    cairo_gl_flavor_t flavor;
+
+    if (version == NULL)
+	flavor = CAIRO_GL_FLAVOR_NONE;
+    else if (strstr (version, "OpenGL ES") != NULL)
+	flavor = CAIRO_GL_FLAVOR_ES;
+    else
+	flavor = CAIRO_GL_FLAVOR_DESKTOP;
+
+    return flavor;
+}
+
 cairo_bool_t
 _cairo_gl_has_extension (const char *ext)
 {
