@@ -78,7 +78,7 @@ typedef void (*add_stops_t)(cairo_pattern_t *pattern);
  *
  */
 
-const static double radiuses[NUM_GRADIENTS] = {
+static const double radiuses[NUM_GRADIENTS] = {
     0.25,
     0.50,
     0.50,
