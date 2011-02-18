@@ -453,11 +453,9 @@ cairo_status_t
 _cairo_device_set_error (cairo_device_t *device,
 			 cairo_status_t  status)
 {
-    if (status == CAIRO_STATUS_SUCCESS || status >= CAIRO_INT_STATUS_UNSUPPORTED)
-	return status;
+    if (status == CAIRO_STATUS_SUCCESS)
+        return CAIRO_STATUS_SUCCESS;
 
-    /* Don't overwrite an existing error. This preserves the first
-     * error, which is the most significant. */
     _cairo_status_set_error (&device->status, status);
 
     return _cairo_error (status);
