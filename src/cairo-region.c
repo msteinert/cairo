@@ -133,10 +133,10 @@ _cairo_region_create_in_error (cairo_status_t status)
  **/
 static cairo_status_t
 _cairo_region_set_error (cairo_region_t *region,
-			cairo_status_t status)
+			 cairo_status_t status)
 {
-    if (! _cairo_status_is_error (status))
-	return status;
+    if (status == CAIRO_STATUS_SUCCESS)
+        return CAIRO_STATUS_SUCCESS;
 
     /* Don't overwrite an existing error. This preserves the first
      * error, which is the most significant. */
