@@ -171,7 +171,7 @@ _cairo_surface_set_error (cairo_surface_t *surface,
 {
     if (status == CAIRO_STATUS_SUCCESS ||
         status == CAIRO_INT_STATUS_NOTHING_TO_DO)
-        return;
+        return CAIRO_STATUS_SUCCESS;
 
     /* Don't overwrite an existing error. This preserves the first
      * error, which is the most significant. */
