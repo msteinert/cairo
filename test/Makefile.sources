@@ -11,6 +11,7 @@ test_sources = \
 	alpha-similar.c					\
 	arc-infinite-loop.c				\
 	arc-looping-dash.c				\
+	arc-negative.c					\
 	api-special-cases.c				\
 	big-line.c					\
 	big-trap.c					\
