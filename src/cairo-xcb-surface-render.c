@@ -1008,7 +1008,6 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
     cairo_surface_t *source = pattern->surface;
     cairo_xcb_picture_t *picture;
     cairo_filter_t filter;
-    cairo_status_t status;
 
     {
 	cairo_xcb_surface_t *snapshot;
@@ -1232,11 +1231,6 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 
 	if (unlikely (picture->base.status))
 	    return picture;
-    }
-
-    if (unlikely (status)) {
-	cairo_surface_destroy (&picture->base);
-	return (cairo_xcb_picture_t *) _cairo_surface_create_in_error (status);
     }
 
     _cairo_surface_attach_snapshot (source,
