@@ -169,12 +169,6 @@ cairo_status_t
 _cairo_surface_set_error (cairo_surface_t *surface,
 			  cairo_status_t status)
 {
-    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
-	status = CAIRO_STATUS_SUCCESS;
-
-    if (status == CAIRO_STATUS_SUCCESS || status >= CAIRO_INT_STATUS_UNSUPPORTED)
-	return status;
-
     /* Don't overwrite an existing error. This preserves the first
      * error, which is the most significant. */
     _cairo_status_set_error (&surface->status, status);
