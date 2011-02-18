@@ -254,6 +254,7 @@ _cairo_atomic_ptr_cmpxchg_return_old_fallback(void **x, void *oldv, void *newv)
     _cairo_atomic_int_cmpxchg((cairo_atomic_int_t *)x, oldv, newv)
 
 #define _cairo_status_set_error(status, err) do { \
+    assert (err < CAIRO_STATUS_LAST_STATUS); \
     /* hide compiler warnings about cairo_status_t != int (gcc treats its as \
      * an unsigned integer instead, and about ignoring the return value. */  \
     int ret__ = _cairo_atomic_int_cmpxchg ((cairo_atomic_int_t *) status, CAIRO_STATUS_SUCCESS, err); \
