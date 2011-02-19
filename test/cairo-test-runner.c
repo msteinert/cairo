@@ -126,7 +126,7 @@ _log (cairo_test_context_t *ctx,
 }
 
 static void
-_tests_reverse ()
+_tests_reverse (void)
 {
     cairo_test_t *list, *next;
 

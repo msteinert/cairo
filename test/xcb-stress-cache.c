@@ -58,7 +58,7 @@
  */
 
 static cairo_surface_t *
-create_image ()
+create_image (void)
 {
     cairo_surface_t *surface;
     cairo_t *cr;
