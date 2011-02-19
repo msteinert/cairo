@@ -1417,6 +1417,10 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 	}
     }
 
+#if PIXMAN_HAS_ATOMIC_OPS
+    *ix = *iy = 0;
+#endif
+
     if (pixman_image == NULL) {
 	struct acquire_source_cleanup *cleanup;
 	cairo_image_surface_t *image;
