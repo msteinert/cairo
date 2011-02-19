@@ -158,13 +158,13 @@ draw (cairo_t *cr, int width, int height)
     errors += !check_extents (ctx, phase, cr2, PATH, EQUALS, 200, 400, 0, 0);
 
     cairo_new_path (cr2);
-    cairo_new_path (cr2);
     cairo_arc (cr2, 200, 400, 10., 0, 0);
     phase = "Degenerate arc (Θ=0)";
     errors += !check_extents (ctx, phase, cr2, FILL, EQUALS, 0, 0, 0, 0);
     errors += !check_extents (ctx, phase, cr2, STROKE, EQUALS, 0, 0, 0, 0);
     errors += !check_extents (ctx, phase, cr2, PATH, EQUALS, 210, 400, 0, 0);
 
+    cairo_new_path (cr2);
     cairo_arc_negative (cr2, 200, 400, 10., 0, 0);
     phase = "Degenerate negative arc (Θ=0)";
     errors += !check_extents (ctx, phase, cr2, FILL, EQUALS, 0, 0, 0, 0);
