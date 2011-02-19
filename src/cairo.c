@@ -1910,8 +1910,6 @@ cairo_arc_negative (cairo_t *cr,
 	return;
     }
 
-	return;
-
     if (angle2 > angle1) {
 	/* decrease angle2 by multiples of full circle until it
 	 * satisfies angle2 <= angle1 */
