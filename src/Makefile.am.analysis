@@ -24,7 +24,10 @@ headers-standalone: $(enabled_cairo_headers) $(enabled_cairo_private)
 	@echo Checking that enabled public/private headers can be compiled standalone
 	@status=true; for f in $(enabled_cairo_headers) $(enabled_cairo_private); do \
 		echo "  CHECK $$f"; \
-		$(COMPILE) -o /dev/null $(srcdir)/$$f || status=false; \
+		echo "#include \"$(srcdir)/$$f\"" > headers-standalone-tmp.c; \
+		echo "int main(int argc, char * argv[]) {}" >> headers-standalone-tmp.c; \
+		$(COMPILE) -o /dev/null headers-standalone-tmp.c || status=false; \
+		$(RM) headers-standalone-tmp.c; \
 	done; $$status
 	@touch $@
 CLEANFILES += headers-standalone
