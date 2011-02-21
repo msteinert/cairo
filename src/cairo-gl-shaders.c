@@ -99,12 +99,6 @@ typedef struct cairo_gl_shader_impl {
 		      GLfloat* gl_m);
 
     void
-    (*bind_texture) (cairo_gl_context_t *ctx,
-		     cairo_gl_shader_t *shader,
-		     const char *name,
-		     cairo_gl_tex_t tex_unit);
-
-    void
     (*use) (cairo_gl_context_t *ctx,
 	    cairo_gl_shader_t *shader);
 } shader_impl_t;
@@ -291,16 +285,6 @@ bind_matrix4f_core_2_0 (cairo_gl_context_t *ctx,
 }
 
 static void
-bind_texture_core_2_0 (cairo_gl_context_t *ctx, cairo_gl_shader_t *shader,
-		       const char *name, cairo_gl_tex_t tex_unit)
-{
-    cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
-    GLint location = dispatch->GetUniformLocation (shader->program, name);
-    assert (location != -1);
-    dispatch->Uniform1i (location, tex_unit);
-}
-
-static void
 use_program_core_2_0 (cairo_gl_context_t *ctx,
 		      cairo_gl_shader_t *shader)
 {
@@ -321,7 +305,6 @@ static const cairo_gl_shader_impl_t shader_impl_core_2_0 = {
     bind_vec4_core_2_0,
     bind_matrix_core_2_0,
     bind_matrix4f_core_2_0,
-    bind_texture_core_2_0,
     use_program_core_2_0,
 };
 
@@ -788,6 +771,38 @@ _cairo_gl_shader_compile (cairo_gl_context_t *ctx,
     return status;
 }
 
+/* We always bind the source to texture unit 0 if present, and mask to
+ * texture unit 1 if present, so we can just initialize these once at
+ * compile time.
+ */
+static void
+_cairo_gl_shader_set_samplers (cairo_gl_context_t *ctx,
+			       cairo_gl_shader_t *shader)
+{
+    cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
+    GLint location;
+    GLint saved_program;
+
+    /* We have to save/restore the current program because we might be
+     * asked for a different program while a shader is bound.  This shouldn't
+     * be a performance issue, since this is only called once per compile.
+     */
+    glGetIntegerv (GL_CURRENT_PROGRAM, &saved_program);
+    dispatch->UseProgram (shader->program);
+
+    location = dispatch->GetUniformLocation (shader->program, "source_sampler");
+    if (location != -1) {
+	dispatch->Uniform1i (location, CAIRO_GL_TEX_SOURCE);
+    }
+
+    location = dispatch->GetUniformLocation (shader->program, "mask_sampler");
+    if (location != -1) {
+	dispatch->Uniform1i (location, CAIRO_GL_TEX_MASK);
+    }
+
+    dispatch->UseProgram (saved_program);
+}
+
 void
 _cairo_gl_shader_bind_float (cairo_gl_context_t *ctx,
 			     const char *name,
@@ -836,13 +851,6 @@ _cairo_gl_shader_bind_matrix4f (cairo_gl_context_t *ctx,
 				const char *name, GLfloat* gl_m)
 {
     ctx->shader_impl->bind_matrix4f (ctx, ctx->current_shader, name, gl_m);
-}
-
-void
-_cairo_gl_shader_bind_texture (cairo_gl_context_t *ctx,
-			       const char *name, GLuint tex_unit)
-{
-    ctx->shader_impl->bind_texture (ctx, ctx->current_shader, name, tex_unit);
 }
 
 void
@@ -912,6 +920,8 @@ _cairo_gl_get_shader_by_type (cairo_gl_context_t *ctx,
 	free (entry);
 	return status;
     }
+
+    _cairo_gl_shader_set_samplers (ctx, &entry->shader);
 
     status = _cairo_cache_insert (&ctx->shaders, &entry->base);
     if (unlikely (status)) {

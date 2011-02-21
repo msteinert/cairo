@@ -548,11 +548,6 @@ _cairo_gl_shader_bind_matrix4f (cairo_gl_context_t *ctx,
 				GLfloat* gl_m);
 
 cairo_private void
-_cairo_gl_shader_bind_texture (cairo_gl_context_t *ctx,
-			       const char *name,
-			       GLuint tex_unit);
-
-cairo_private void
 _cairo_gl_set_shader (cairo_gl_context_t *ctx,
 		      cairo_gl_shader_t *shader);
 

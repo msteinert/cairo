@@ -401,13 +401,9 @@ _cairo_gl_operand_bind_to_shader (cairo_gl_context_t *ctx,
 	_cairo_gl_shader_bind_float  (ctx,
 				      uniform_name,
 				      operand->gradient.radius_0);
-	/* fall through */
+        break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
     case CAIRO_GL_OPERAND_TEXTURE:
-        strcpy (custom_part, "_sampler");
-	_cairo_gl_shader_bind_texture(ctx,
-                                      uniform_name,
-                                      tex_unit);
         break;
     }
 }
