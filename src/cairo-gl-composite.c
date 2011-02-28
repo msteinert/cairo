@@ -782,8 +782,8 @@ _cairo_gl_composite_begin_component_alpha  (cairo_gl_context_t *ctx,
     if (setup->op == CAIRO_OPERATOR_OVER) {
 	setup->op = CAIRO_OPERATOR_ADD;
 	status = _cairo_gl_get_shader_by_type (ctx,
-                                               setup->src.type,
-                                               setup->mask.type,
+                                               &setup->src,
+                                               &setup->mask,
                                                CAIRO_GL_SHADER_IN_CA_SOURCE_ALPHA,
                                                &pre_shader);
         if (unlikely (status))
@@ -831,8 +831,8 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     }
 
     status = _cairo_gl_get_shader_by_type (ctx,
-                                           setup->src.type,
-                                           setup->mask.type,
+                                           &setup->src,
+                                           &setup->mask,
                                            component_alpha ? CAIRO_GL_SHADER_IN_CA_SOURCE
                                                            : CAIRO_GL_SHADER_IN_NORMAL,
                                            &shader);

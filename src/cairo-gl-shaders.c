@@ -536,14 +536,14 @@ cairo_gl_shader_get_vertex_source (cairo_gl_var_type_t src,
 
 static void
 cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
-                            GLuint tex_target,
-                            cairo_gl_operand_type_t type,
+                            cairo_gl_context_t *ctx,
+                            cairo_gl_operand_t *op,
                             cairo_gl_tex_t name)
 {
     const char *namestr = operand_names[name];
-    const char *rectstr = (tex_target == GL_TEXTURE_RECTANGLE ? "Rect" : "");
+    const char *rectstr = (ctx->tex_target == GL_TEXTURE_RECTANGLE ? "Rect" : "");
 
-    switch (type) {
+    switch (op->type) {
     case CAIRO_GL_OPERAND_COUNT:
     default:
         ASSERT_NOT_REACHED;
@@ -677,11 +677,11 @@ cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
 }
 
 static cairo_status_t
-cairo_gl_shader_get_fragment_source (GLuint tex_target,
+cairo_gl_shader_get_fragment_source (cairo_gl_context_t *ctx,
                                      cairo_gl_shader_in_t in,
-                                     cairo_gl_operand_type_t src,
-                                     cairo_gl_operand_type_t mask,
-                                     cairo_gl_operand_type_t dest,
+                                     cairo_gl_operand_t *src,
+                                     cairo_gl_operand_t *mask,
+                                     cairo_gl_operand_type_t dest_type,
 				     char **out)
 {
     cairo_output_stream_t *stream = _cairo_memory_stream_create ();
@@ -689,8 +689,8 @@ cairo_gl_shader_get_fragment_source (GLuint tex_target,
     unsigned long length;
     cairo_status_t status;
 
-    cairo_gl_shader_emit_color (stream, tex_target, src, CAIRO_GL_TEX_SOURCE);
-    cairo_gl_shader_emit_color (stream, tex_target, mask, CAIRO_GL_TEX_MASK);
+    cairo_gl_shader_emit_color (stream, ctx, src, CAIRO_GL_TEX_SOURCE);
+    cairo_gl_shader_emit_color (stream, ctx, mask, CAIRO_GL_TEX_MASK);
 
     _cairo_output_stream_printf (stream,
         "void main()\n"
@@ -867,8 +867,8 @@ _cairo_gl_set_shader (cairo_gl_context_t *ctx,
 
 cairo_status_t
 _cairo_gl_get_shader_by_type (cairo_gl_context_t *ctx,
-                              cairo_gl_operand_type_t source,
-                              cairo_gl_operand_type_t mask,
+                              cairo_gl_operand_t *source,
+                              cairo_gl_operand_t *mask,
                               cairo_gl_shader_in_t in,
                               cairo_gl_shader_t **shader)
 {
@@ -876,8 +876,8 @@ _cairo_gl_get_shader_by_type (cairo_gl_context_t *ctx,
     char *fs_source;
     cairo_status_t status;
 
-    lookup.src = source;
-    lookup.mask = mask;
+    lookup.src = source->type;
+    lookup.mask = mask->type;
     lookup.dest = CAIRO_GL_OPERAND_NONE;
     lookup.in = in;
     lookup.base.hash = _cairo_gl_shader_cache_hash (&lookup);
@@ -890,7 +890,7 @@ _cairo_gl_get_shader_by_type (cairo_gl_context_t *ctx,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    status = cairo_gl_shader_get_fragment_source (ctx->tex_target,
+    status = cairo_gl_shader_get_fragment_source (ctx,
 						  in,
 						  source,
 						  mask,
@@ -911,8 +911,8 @@ _cairo_gl_get_shader_by_type (cairo_gl_context_t *ctx,
     _cairo_gl_shader_init (&entry->shader);
     status = _cairo_gl_shader_compile (ctx,
 				       &entry->shader,
-				       cairo_gl_operand_get_var_type (source),
-				       cairo_gl_operand_get_var_type (mask),
+				       cairo_gl_operand_get_var_type (source->type),
+				       cairo_gl_operand_get_var_type (mask->type),
 				       fs_source);
     free (fs_source);
 

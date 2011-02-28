@@ -517,8 +517,8 @@ _cairo_gl_context_is_flushed (cairo_gl_context_t *ctx)
 
 cairo_private cairo_status_t
 _cairo_gl_get_shader_by_type (cairo_gl_context_t *ctx,
-                              cairo_gl_operand_type_t source,
-                              cairo_gl_operand_type_t mask,
+                              cairo_gl_operand_t *source,
+                              cairo_gl_operand_t *mask,
                               cairo_gl_shader_in_t in,
                               cairo_gl_shader_t **shader);
 
