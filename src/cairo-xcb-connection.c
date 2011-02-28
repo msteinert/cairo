@@ -78,7 +78,6 @@ typedef struct _cairo_xcb_xid {
 #define XCB_RENDER_HAS_TRIANGLES(surface)		XCB_RENDER_AT_LEAST((surface), 0, 4)
 #define XCB_RENDER_HAS_TRISTRIP(surface)		XCB_RENDER_AT_LEAST((surface), 0, 4)
 #define XCB_RENDER_HAS_TRIFAN(surface)			XCB_RENDER_AT_LEAST((surface), 0, 4)
-#define XCB_RENDER_HAS_SPANS(surface)			XCB_RENDER_AT_LEAST((surface), 0, 12)
 
 #define XCB_RENDER_HAS_PICTURE_TRANSFORM(surface)	XCB_RENDER_AT_LEAST((surface), 0, 6)
 #define XCB_RENDER_HAS_FILTERS(surface)			XCB_RENDER_AT_LEAST((surface), 0, 6)
@@ -890,24 +889,3 @@ cairo_xcb_device_debug_cap_xrender_version (cairo_device_t *device,
 	    connection->flags &= ~CAIRO_XCB_RENDER_HAS_GRADIENTS;
     }
 }
-
-#if 0
-void
-cairo_xcb_device_debug_cap_xcairo_version (cairo_device_t *device,
-                                           int major_version,
-                                           int minor_version)
-{
-    cairo_xcb_connection_t *connection = (cairo_xcb_connection_t *) device;
-    cairo_status_t status;
-
-    if (device->backend->type != CAIRO_DEVICE_TYPE_XCB) {
-	status = _cairo_device_set_error (device, CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
-	return;
-    }
-
-    /* clear any flags that are inappropriate for the desired version */
-    if (major_version < 0 && minor_version < 0) {
-	connection->flags &= ~(CAIRO_XCB_HAS_CAIRO);
-    }
-}
-#endif
