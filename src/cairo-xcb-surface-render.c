@@ -211,7 +211,8 @@ _operator_is_supported (uint32_t flags, cairo_operator_t op)
     if (op <= CAIRO_OPERATOR_SATURATE)
 	return TRUE;
 
-    return flags & CAIRO_XCB_RENDER_HAS_PDF_OPERATORS;
+    /* TODO Support pdf operators via CAIRO_XCB_RENDER_HAS_PDF_OPERATORS */
+    return FALSE;
 }
 
 static int
