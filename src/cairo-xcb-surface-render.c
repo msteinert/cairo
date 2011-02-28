@@ -2778,128 +2778,6 @@ _boxes_for_traps (cairo_boxes_t *boxes,
     }
 }
 
-typedef struct _cairo_xcb_surface_span_renderer {
-    cairo_span_renderer_t base;
-
-    void *spans;
-    unsigned len;
-    unsigned size;
-    uint16_t spans_embedded[1024];
-} cairo_xcb_surface_span_renderer_t;
-
-static cairo_status_t
-_cairo_xcb_surface_span_renderer_accumulate (void	*abstract_renderer,
-					     int	 y,
-					     int	 height,
-					     const cairo_half_open_span_t *spans,
-					     unsigned	 num_spans)
-{
-    cairo_xcb_surface_span_renderer_t *renderer = abstract_renderer;
-    uint16_t *u16;
-    int len;
-
-    len = 4 * (2 + num_spans);
-    if (renderer->size < renderer->len + len) {
-	char *new_spans;
-
-	do {
-	    renderer->size <<= 1;
-	} while (renderer->size < renderer->len + len);
-
-	if (renderer->spans == renderer->spans_embedded) {
-	    new_spans = malloc (renderer->size);
-	    if (unlikely (new_spans == NULL))
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-	    memcpy (new_spans, renderer->spans, renderer->len);
-	} else {
-	    new_spans = realloc (renderer->spans, renderer->size);
-	    if (unlikely (new_spans == NULL))
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	}
-
-	renderer->spans = new_spans;
-    }
-
-    u16 = (uint16_t *) ((char *) renderer->spans + renderer->len);
-    *u16++ = y;
-    *u16++ = height;
-    *u16++ = num_spans;
-    *u16++ = 0;
-    while (num_spans--) {
-	*u16++ = spans->x;
-	*u16++ = spans->coverage * 0x0101;
-	spans++;
-    }
-    renderer->len += len;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-typedef struct {
-    cairo_polygon_t		*polygon;
-    cairo_fill_rule_t		 fill_rule;
-    cairo_antialias_t		 antialias;
-} composite_spans_info_t;
-
-static cairo_status_t
-_composite_spans (void *closure,
-		  cairo_xcb_surface_t *dst,
-		  cairo_operator_t op,
-		  const cairo_pattern_t         *pattern,
-		  int                            dst_x,
-		  int                            dst_y,
-		  const cairo_rectangle_int_t   *extents,
-		  cairo_region_t		*clip_region)
-{
-    composite_spans_info_t *info = closure;
-    cairo_xcb_surface_span_renderer_t renderer;
-    cairo_scan_converter_t *converter;
-    cairo_status_t status;
-    cairo_xcb_picture_t *src;
-
-    renderer.base.render_rows = _cairo_xcb_surface_span_renderer_accumulate;
-    renderer.spans = renderer.spans_embedded;
-    renderer.size = ARRAY_LENGTH (renderer.spans_embedded);
-    renderer.len = 0;
-
-    converter = _cairo_tor_scan_converter_create (extents->x,
-						  extents->x + extents->width,
-						  extents->y,
-						  extents->y + extents->height,
-						  info->fill_rule);
-    status = converter->add_polygon (converter, info->polygon);
-    if (unlikely (status))
-	goto CLEANUP_RENDERER;
-
-    status = converter->generate (converter, &renderer.base);
-    if (unlikely (status))
-	goto CLEANUP_CONVERTER;
-
-    src = _cairo_xcb_picture_for_pattern (dst, pattern, extents);
-    status = src->base.status;
-    if (unlikely (status))
-	goto CLEANUP_CONVERTER;
-
-    _cairo_xcb_connection_render_spans (dst->connection,
-					dst->picture,
-					_render_operator (op),
-					src->picture,
-					extents->x + src->x, extents->y + src->y,
-					extents->x + dst_x, extents->y + dst_y,
-					extents->width, extents->height,
-					renderer.len >> 1, renderer.spans);
-    cairo_surface_destroy (&src->base);
-
- CLEANUP_CONVERTER:
-    converter->destroy (converter);
- CLEANUP_RENDERER:
-    if (renderer.spans != renderer.spans_embedded)
-	free (renderer.spans);
-
-    return status;
-}
-
 static cairo_status_t
 _composite_mask (void				*closure,
 		 cairo_xcb_surface_t		*dst,
@@ -2994,8 +2872,7 @@ _cairo_xcb_surface_render_paint (cairo_xcb_surface_t	*surface,
     if (unlikely (! _operator_is_supported (surface->flags, op)))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if ((surface->flags & (CAIRO_XCB_RENDER_HAS_COMPOSITE_SPANS |
-			   CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS |
+    if ((surface->flags & (CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS |
 			   CAIRO_XCB_RENDER_HAS_COMPOSITE)) == 0)
     {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -3104,12 +2981,6 @@ _cairo_xcb_surface_render_mask (cairo_xcb_surface_t	*surface,
     return status;
 }
 
-typedef struct {
-    cairo_polygon_t	polygon;
-    cairo_fill_rule_t	fill_rule;
-    cairo_antialias_t	antialias;
-} composite_polygon_info_t;
-
 static cairo_status_t
 _cairo_xcb_surface_render_composite_polygon (cairo_xcb_surface_t *dst,
 					     cairo_operator_t op,
@@ -3161,18 +3032,6 @@ _cairo_xcb_surface_render_composite_polygon (cairo_xcb_surface_t *dst,
     is_not_empty = _cairo_rectangle_intersect (&extents->bounded, &extents->mask);
     if (extents->is_bounded && ! is_not_empty)
 	return CAIRO_STATUS_SUCCESS;
-
-    if (dst->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_SPANS) {
-	composite_spans_info_t spans;
-
-	spans.polygon = polygon;
-	spans.fill_rule = CAIRO_FILL_RULE_WINDING;
-	spans.antialias = antialias;
-
-	return _clip_and_composite (dst, op, source,
-				    _composite_spans, &spans,
-				    extents, clip);
-    }
 
     _cairo_traps_init (&traps.traps);
 
@@ -3351,8 +3210,7 @@ _cairo_xcb_surface_render_stroke (cairo_xcb_surface_t	*surface,
     if (unlikely (! _operator_is_supported (surface->flags, op)))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if ((surface->flags & (CAIRO_XCB_RENDER_HAS_COMPOSITE_SPANS |
-			   CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS |
+    if ((surface->flags & (CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS |
 			   CAIRO_XCB_RENDER_HAS_COMPOSITE)) == 0)
     {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -3404,7 +3262,7 @@ _cairo_xcb_surface_render_stroke (cairo_xcb_surface_t	*surface,
     }
 
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
-	if (surface->flags & (CAIRO_XCB_RENDER_HAS_COMPOSITE_SPANS | CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS)) {
+	if (surface->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS) {
 	    status = _cairo_xcb_surface_render_stroke_as_polygon (surface, op, source,
 								  path, style,
 								  ctm, ctm_inverse,
@@ -3534,8 +3392,7 @@ _cairo_xcb_surface_render_fill (cairo_xcb_surface_t	*surface,
     if (unlikely (! _operator_is_supported (surface->flags, op)))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if ((surface->flags & (CAIRO_XCB_RENDER_HAS_COMPOSITE_SPANS |
-			   CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS |
+    if ((surface->flags & (CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS |
 			   CAIRO_XCB_RENDER_HAS_COMPOSITE)) == 0)
     {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -3585,7 +3442,7 @@ _cairo_xcb_surface_render_fill (cairo_xcb_surface_t	*surface,
     }
 
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
-	if (surface->flags & (CAIRO_XCB_RENDER_HAS_COMPOSITE_SPANS | CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS)) {
+	if (surface->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS) {
 	    status = _cairo_xcb_surface_render_fill_as_polygon (surface, op, source, path,
 								fill_rule, tolerance, antialias,
 								clip, clip_boxes, num_boxes,

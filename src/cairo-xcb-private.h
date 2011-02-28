@@ -204,13 +204,12 @@ enum {
     CAIRO_XCB_RENDER_HAS_FILL_RECTANGLES	= 0x0002,
     CAIRO_XCB_RENDER_HAS_COMPOSITE		= 0x0004,
     CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS	= 0x0008,
-    CAIRO_XCB_RENDER_HAS_COMPOSITE_SPANS	= 0x0010,
-    CAIRO_XCB_RENDER_HAS_COMPOSITE_GLYPHS	= 0x0020,
-    CAIRO_XCB_RENDER_HAS_PICTURE_TRANSFORM	= 0x0040,
-    CAIRO_XCB_RENDER_HAS_FILTERS		= 0x0080,
-    CAIRO_XCB_RENDER_HAS_PDF_OPERATORS		= 0x0100,
-    CAIRO_XCB_RENDER_HAS_EXTENDED_REPEAT	= 0x0200,
-    CAIRO_XCB_RENDER_HAS_GRADIENTS		= 0x0400,
+    CAIRO_XCB_RENDER_HAS_COMPOSITE_GLYPHS	= 0x0010,
+    CAIRO_XCB_RENDER_HAS_PICTURE_TRANSFORM	= 0x0020,
+    CAIRO_XCB_RENDER_HAS_FILTERS		= 0x0040,
+    CAIRO_XCB_RENDER_HAS_PDF_OPERATORS		= 0x0080,
+    CAIRO_XCB_RENDER_HAS_EXTENDED_REPEAT	= 0x0100,
+    CAIRO_XCB_RENDER_HAS_GRADIENTS		= 0x0200,
 
     CAIRO_XCB_HAS_DRI2				= 0x40000000,
     CAIRO_XCB_HAS_SHM				= 0x80000000
@@ -585,16 +584,6 @@ _cairo_xcb_connection_shm_put_image (cairo_xcb_connection_t *connection,
 }
 #endif
 
-cairo_private void
-_cairo_xcb_connection_render_spans (cairo_xcb_connection_t *connection,
-				    xcb_render_picture_t dst,
-				    int op,
-				    xcb_render_picture_t src,
-				    int16_t src_x, int16_t src_y,
-				    int16_t dst_x, int16_t dst_y,
-				    int16_t width, int16_t height,
-				    unsigned int length,
-				    uint16_t *spans);
 cairo_private void
 _cairo_xcb_connection_render_create_picture (cairo_xcb_connection_t  *connection,
 					     xcb_render_picture_t     picture,
