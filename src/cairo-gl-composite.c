@@ -652,9 +652,9 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
         _cairo_gl_gradient_reference (operand->gradient.gradient);
         glActiveTexture (GL_TEXTURE0 + tex_unit);
-        glBindTexture (GL_TEXTURE_1D, operand->gradient.gradient->tex);
-        _cairo_gl_texture_set_extend (ctx, GL_TEXTURE_1D, operand->gradient.extend);
-        _cairo_gl_texture_set_filter (ctx, GL_TEXTURE_1D, CAIRO_FILTER_BILINEAR);
+        glBindTexture (ctx->tex_target, operand->gradient.gradient->tex);
+        _cairo_gl_texture_set_extend (ctx, ctx->tex_target, operand->gradient.extend);
+        _cairo_gl_texture_set_filter (ctx, ctx->tex_target, CAIRO_FILTER_BILINEAR);
 
 	dispatch->VertexAttribPointer (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit, 2,
 				       GL_FLOAT, GL_FALSE, vertex_size,

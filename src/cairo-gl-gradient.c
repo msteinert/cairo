@@ -239,9 +239,9 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
 
     glGenTextures (1, &gradient->tex);
     _cairo_gl_context_activate (ctx, CAIRO_GL_TEX_TEMP);
-    glBindTexture (GL_TEXTURE_1D, gradient->tex);
-    glTexImage1D (GL_TEXTURE_1D, 0, GL_RGBA8, tex_width, 0,
-                  GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, 0);
+    glBindTexture (ctx->tex_target, gradient->tex);
+    glTexImage2D (ctx->tex_target, 0, GL_RGBA8, tex_width, 1, 0,
+		  GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, 0);
 
     dispatch->BindBuffer (GL_PIXEL_UNPACK_BUFFER, 0);
 
