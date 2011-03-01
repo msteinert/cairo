@@ -458,9 +458,30 @@ _cairo_gl_operand_bind_to_shader (cairo_gl_context_t *ctx,
 	_cairo_gl_shader_bind_float  (ctx,
 				      uniform_name,
 				      operand->gradient.radius_0);
-        break;
+        /* fall through */
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
     case CAIRO_GL_OPERAND_TEXTURE:
+	/*
+	 * For GLES2 we use shaders to implement GL_CLAMP_TO_BORDER (used
+	 * with CAIRO_EXTEND_NONE). When bilinear filtering is enabled,
+	 * these shaders need the texture dimensions for their calculations.
+	 */
+	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES &&
+	    _cairo_gl_operand_get_extend (operand) == CAIRO_EXTEND_NONE &&
+	    _cairo_gl_operand_get_gl_filter (operand) == GL_LINEAR)
+	{
+	    float width, height;
+	    if (operand->type == CAIRO_GL_OPERAND_TEXTURE) {
+		width = operand->texture.surface->width;
+		height = operand->texture.surface->height;
+	    }
+	    else {
+		width = operand->gradient.gradient->cache_entry.size,
+		height = 1;
+	    }
+	    strcpy (custom_part, "_texdims");
+	    _cairo_gl_shader_bind_vec2 (ctx, uniform_name, width, height);
+	}
         break;
     }
 }
@@ -485,8 +506,14 @@ _cairo_gl_texture_set_extend (cairo_gl_context_t *ctx,
 
     switch (extend) {
     case CAIRO_EXTEND_NONE:
-	glTexParameteri (target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri (target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES) {
+	    glTexParameteri (target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	    glTexParameteri (target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	}
+	else {
+	    glTexParameteri (target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	    glTexParameteri (target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	}
 	break;
     case CAIRO_EXTEND_PAD:
 	glTexParameteri (target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

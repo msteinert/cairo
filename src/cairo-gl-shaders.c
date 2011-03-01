@@ -315,13 +315,17 @@ typedef struct _cairo_shader_cache_entry {
     cairo_gl_operand_type_t mask;
     cairo_gl_operand_type_t dest;
     cairo_gl_shader_in_t in;
+    GLint src_gl_filter;
+    cairo_bool_t src_border_fade;
+    GLint mask_gl_filter;
+    cairo_bool_t mask_border_fade;
 
     cairo_gl_context_t *ctx; /* XXX: needed to destroy the program */
     cairo_gl_shader_t shader;
 } cairo_shader_cache_entry_t;
 
 static cairo_bool_t
-_cairo_gl_shader_cache_equal (const void *key_a, const void *key_b)
+_cairo_gl_shader_cache_equal_desktop (const void *key_a, const void *key_b)
 {
     const cairo_shader_cache_entry_t *a = key_a;
     const cairo_shader_cache_entry_t *b = key_b;
@@ -330,6 +334,27 @@ _cairo_gl_shader_cache_equal (const void *key_a, const void *key_b)
            a->mask == b->mask &&
            a->dest == b->dest &&
            a->in   == b->in;
+}
+
+/*
+ * For GLES2 we use more complicated shaders to implement missing GL
+ * features. In this case we need more parameters to uniquely identify
+ * a shader (vs _cairo_gl_shader_cache_equal_desktop()).
+ */
+static cairo_bool_t
+_cairo_gl_shader_cache_equal_gles2 (const void *key_a, const void *key_b)
+{
+    const cairo_shader_cache_entry_t *a = key_a;
+    const cairo_shader_cache_entry_t *b = key_b;
+
+    return a->src  == b->src  &&
+	   a->mask == b->mask &&
+	   a->dest == b->dest &&
+	   a->in   == b->in   &&
+	   a->src_gl_filter == b->src_gl_filter &&
+	   a->src_border_fade == b->src_border_fade &&
+	   a->mask_gl_filter == b->mask_gl_filter &&
+	   a->mask_border_fade == b->mask_border_fade;
 }
 
 static unsigned long
@@ -384,7 +409,9 @@ _cairo_gl_context_init_shaders (cairo_gl_context_t *ctx)
     memset (ctx->vertex_shaders, 0, sizeof (ctx->vertex_shaders));
 
     status = _cairo_cache_init (&ctx->shaders,
-                                _cairo_gl_shader_cache_equal,
+                                ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP ?
+				    _cairo_gl_shader_cache_equal_desktop :
+				    _cairo_gl_shader_cache_equal_gles2,
                                 NULL,
                                 _cairo_gl_shader_cache_destroy,
                                 CAIRO_GL_MAX_SHADERS_PER_CONTEXT);
@@ -534,6 +561,22 @@ cairo_gl_shader_get_vertex_source (cairo_gl_var_type_t src,
     return CAIRO_STATUS_SUCCESS;
 }
 
+/*
+ * Returns whether an operand needs a special border fade fragment shader
+ * to simulate the GL_CLAMP_TO_BORDER wrapping method that is missing in GLES2.
+ */
+static cairo_bool_t
+_cairo_gl_shader_needs_border_fade (cairo_gl_operand_t *operand)
+{
+    cairo_extend_t extend =_cairo_gl_operand_get_extend (operand);
+
+    return extend == CAIRO_EXTEND_NONE &&
+	   (operand->type == CAIRO_GL_OPERAND_TEXTURE ||
+	    operand->type == CAIRO_GL_OPERAND_LINEAR_GRADIENT ||
+	    operand->type == CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE ||
+	    operand->type == CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0);
+}
+
 static void
 cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
                             cairo_gl_context_t *ctx,
@@ -566,29 +609,62 @@ cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
             namestr, namestr, namestr);
         break;
     case CAIRO_GL_OPERAND_TEXTURE:
-        _cairo_output_stream_printf (stream, 
-            "uniform sampler2D%s %s_sampler;\n"
-            "varying vec2 %s_texcoords;\n"
-            "vec4 get_%s()\n"
-            "{\n"
-            "    return texture2D%s(%s_sampler, %s_texcoords);\n"
-            "}\n",
-            rectstr, namestr, namestr, namestr, rectstr, namestr, namestr);
+	_cairo_output_stream_printf (stream,
+	     "uniform sampler2D%s %s_sampler;\n"
+	     "uniform vec2 %s_texdims;\n"
+	     "varying vec2 %s_texcoords;\n"
+	     "vec4 get_%s()\n"
+	     "{\n",
+	     rectstr, namestr, namestr, namestr, namestr);
+	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES &&
+	    _cairo_gl_shader_needs_border_fade (op))
+	{
+	    _cairo_output_stream_printf (stream,
+		"    vec2 border_fade = %s_border_fade (%s_texcoords, %s_texdims);\n"
+		"    vec4 texel = texture2D%s (%s_sampler, %s_texcoords);\n"
+		"    return texel * border_fade.x * border_fade.y;\n"
+		"}\n",
+		namestr, namestr, namestr, rectstr, namestr, namestr);
+	}
+	else
+	{
+	    _cairo_output_stream_printf (stream,
+	        "    return texture2D%s (%s_sampler, %s_texcoords);\n"
+		"}\n",
+		rectstr, namestr, namestr);
+	}
         break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
-        _cairo_output_stream_printf (stream, 
-            "varying vec2 %s_texcoords;\n"
-            "uniform sampler1D %s_sampler;\n"
-            "\n"
-            "vec4 get_%s()\n"
-            "{\n"
-            "    return texture1D (%s_sampler, %s_texcoords.x);\n"
-            "}\n",
-	     namestr, namestr, namestr, namestr, namestr);
-        break;
+	_cairo_output_stream_printf (stream,
+	    "varying vec2 %s_texcoords;\n"
+	    "uniform vec2 %s_texdims;\n"
+	    "uniform sampler1D %s_sampler;\n"
+	    "\n"
+	    "vec4 get_%s()\n"
+	    "{\n",
+	    namestr, namestr, namestr, namestr);
+	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES &&
+	    _cairo_gl_shader_needs_border_fade (op))
+	{
+	    _cairo_output_stream_printf (stream,
+		"    float border_fade = %s_border_fade (%s_texcoords.x, %s_texdims.x);\n"
+		"    vec4 texel = texture1D (%s_sampler, %s_texcoords.x);\n"
+		"    return texel * border_fade;\n"
+		"}\n",
+		namestr, namestr, namestr, namestr, namestr);
+	}
+	else
+	{
+	    _cairo_output_stream_printf (stream,
+		"    return texture1D (%s_sampler, %s_texcoords.x);\n"
+		"}\n",
+		namestr, namestr);
+	}
+	break;
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
 	_cairo_output_stream_printf (stream,
 	    "varying vec2 %s_texcoords;\n"
+	    "uniform vec2 %s_texdims;\n"
 	    "uniform sampler1D %s_sampler;\n"
 	    "uniform vec3 %s_circle_d;\n"
 	    "uniform float %s_radius_0;\n"
@@ -601,15 +677,31 @@ cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
 	    "    float C = dot (pos, vec3 (pos.xy, -pos.z));\n"
 	    "    \n"
 	    "    float t = 0.5 * C / B;\n"
-	    "    float is_valid = step (-%s_radius_0, t * %s_circle_d.z);\n"
-	    "    return mix (vec4 (0.0), texture1D (%s_sampler, t), is_valid);\n"
-	    "}\n",
+	    "    float is_valid = step (-%s_radius_0, t * %s_circle_d.z);\n",
 	    namestr, namestr, namestr, namestr, namestr, namestr,
 	    namestr, namestr, namestr, namestr, namestr);
+	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES &&
+	    _cairo_gl_shader_needs_border_fade (op))
+	{
+	    _cairo_output_stream_printf (stream,
+		"    float border_fade = %s_border_fade (t, %s_texdims.x);\n"
+		"    vec4 texel = texture1D (%s_sampler, t);\n"
+		"    return mix (vec4 (0.0), texel * border_fade, is_valid);\n"
+		"}\n",
+		namestr, namestr, namestr);
+	}
+	else
+	{
+	    _cairo_output_stream_printf (stream,
+		"    return mix (vec4 (0.0), texture1D (%s_sampler, t), is_valid);\n"
+		"}\n",
+		namestr);
+	}
 	break;
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
 	_cairo_output_stream_printf (stream,
 	    "varying vec2 %s_texcoords;\n"
+	    "uniform vec2 %s_texdims;\n"
 	    "uniform sampler1D %s_sampler;\n"
 	    "uniform vec3 %s_circle_d;\n"
 	    "uniform float %s_a;\n"
@@ -629,11 +721,26 @@ cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
 	    "    vec2 is_valid = step (vec2 (0.0), t) * step (t, vec2(1.0));\n"
 	    "    float has_color = step (0., det) * max (is_valid.x, is_valid.y);\n"
 	    "    \n"
-	    "    float upper_t = mix (t.y, t.x, is_valid.x);\n"
-	    "    return mix (vec4 (0.0), texture1D (%s_sampler, upper_t), has_color);\n"
-	    "}\n",
+	    "    float upper_t = mix (t.y, t.x, is_valid.x);\n",
 	    namestr, namestr, namestr, namestr, namestr, namestr,
 	    namestr, namestr, namestr, namestr, namestr, namestr);
+	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES &&
+	    _cairo_gl_shader_needs_border_fade (op))
+	{
+	    _cairo_output_stream_printf (stream,
+		"    float border_fade = %s_border_fade (upper_t, %s_texdims.x);\n"
+		"    vec4 texel = texture1D (%s_sampler, upper_t);\n"
+		"    return mix (vec4 (0.0), texel * border_fade, has_color);\n"
+		"}\n",
+		namestr, namestr, namestr);
+	}
+	else
+	{
+	    _cairo_output_stream_printf (stream,
+		"    return mix (vec4 (0.0), texture1D (%s_sampler, upper_t), has_color);\n"
+		"}\n",
+		namestr);
+	}
 	break;
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
 	_cairo_output_stream_printf (stream,
@@ -676,6 +783,57 @@ cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
     }
 }
 
+/*
+ * Emits the border fade functions used by an operand.
+ *
+ * If bilinear filtering is used, the emitted function performs a linear
+ * fade to transparency effect in the intervals [-1/2n, 1/2n] and
+ * [1 - 1/2n, 1 + 1/2n] (n: texture size).
+ *
+ * If nearest filtering is used, the emitted function just returns
+ * 0.0 for all values outside [0, 1).
+ */
+static void
+_cairo_gl_shader_emit_border_fade (cairo_output_stream_t *stream,
+				   cairo_gl_operand_t *operand,
+				   cairo_gl_tex_t name)
+{
+    const char *namestr = operand_names[name];
+    GLint gl_filter = _cairo_gl_operand_get_gl_filter (operand);
+
+    /* 2D version */
+    _cairo_output_stream_printf (stream,
+	"vec2 %s_border_fade (vec2 coords, vec2 dims)\n"
+	"{\n",
+	namestr);
+
+    if (gl_filter == GL_LINEAR)
+	_cairo_output_stream_printf (stream,
+	    "    return clamp(-abs(dims * (coords - 0.5)) + (dims + vec2(1.0)) * 0.5, 0.0, 1.0);\n");
+    else
+	_cairo_output_stream_printf (stream,
+	    "    bvec2 in_tex1 = greaterThanEqual (coords, vec2 (0.0));\n"
+	    "    bvec2 in_tex2 = lessThan (coords, vec2 (1.0));\n"
+	    "    return vec2 (float (all (in_tex1) && all (in_tex2)));\n");
+
+    _cairo_output_stream_printf (stream, "}\n");
+
+    /* 1D version */
+    _cairo_output_stream_printf (stream,
+	"float %s_border_fade (float x, float dim)\n"
+	"{\n",
+	namestr);
+    if (gl_filter == GL_LINEAR)
+	_cairo_output_stream_printf (stream,
+	    "    return clamp(-abs(dim * (x - 0.5)) + (dim + 1.0) * 0.5, 0.0, 1.0);\n");
+    else
+	_cairo_output_stream_printf (stream,
+	    "    bool in_tex = x >= 0.0 && x < 1.0;\n"
+	    "    return float (in_tex);\n");
+
+    _cairo_output_stream_printf (stream, "}\n");
+}
+
 static cairo_status_t
 cairo_gl_shader_get_fragment_source (cairo_gl_context_t *ctx,
                                      cairo_gl_shader_in_t in,
@@ -688,6 +846,13 @@ cairo_gl_shader_get_fragment_source (cairo_gl_context_t *ctx,
     unsigned char *source;
     unsigned long length;
     cairo_status_t status;
+
+    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES) {
+	if (_cairo_gl_shader_needs_border_fade (src))
+	    _cairo_gl_shader_emit_border_fade (stream, src, CAIRO_GL_TEX_SOURCE);
+	if (_cairo_gl_shader_needs_border_fade (mask))
+	    _cairo_gl_shader_emit_border_fade (stream, mask, CAIRO_GL_TEX_MASK);
+    }
 
     cairo_gl_shader_emit_color (stream, ctx, src, CAIRO_GL_TEX_SOURCE);
     cairo_gl_shader_emit_color (stream, ctx, mask, CAIRO_GL_TEX_MASK);
@@ -880,6 +1045,10 @@ _cairo_gl_get_shader_by_type (cairo_gl_context_t *ctx,
     lookup.mask = mask->type;
     lookup.dest = CAIRO_GL_OPERAND_NONE;
     lookup.in = in;
+    lookup.src_gl_filter = _cairo_gl_operand_get_gl_filter (source);
+    lookup.src_border_fade = _cairo_gl_shader_needs_border_fade (source);
+    lookup.mask_gl_filter = _cairo_gl_operand_get_gl_filter (mask);
+    lookup.mask_border_fade = _cairo_gl_shader_needs_border_fade (mask);
     lookup.base.hash = _cairo_gl_shader_cache_hash (&lookup);
     lookup.base.size = 1;
 

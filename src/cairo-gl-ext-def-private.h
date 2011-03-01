@@ -96,4 +96,8 @@
 #define GL_PACK_INVERT_MESA 0x8758
 #endif
 
+#ifndef GL_CLAMP_TO_BORDER
+#define GL_CLAMP_TO_BORDER 0x812D
+#endif
+
 #endif /* CAIRO_GL_EXT_DEF_PRIVATE_H */
