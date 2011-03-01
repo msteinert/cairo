@@ -575,6 +575,14 @@ cairo_private cairo_status_t
 _cairo_gl_dispatch_init(cairo_gl_dispatch_t *dispatch,
 			cairo_gl_get_proc_addr_func_t get_proc_addr);
 
+cairo_private cairo_filter_t
+_cairo_gl_operand_get_filter (cairo_gl_operand_t *operand);
+
+cairo_private GLint
+_cairo_gl_operand_get_gl_filter (cairo_gl_operand_t *operand);
+
+cairo_private cairo_extend_t
+_cairo_gl_operand_get_extend (cairo_gl_operand_t *operand);
 
 slim_hidden_proto (cairo_gl_surface_create);
 slim_hidden_proto (cairo_gl_surface_create_for_texture);

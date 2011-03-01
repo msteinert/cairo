@@ -308,6 +308,63 @@ _cairo_gl_operand_init (cairo_gl_operand_t *operand,
     }
 }
 
+cairo_filter_t
+_cairo_gl_operand_get_filter (cairo_gl_operand_t *operand)
+{
+    cairo_filter_t filter;
+
+    switch ((int) operand->type) {
+    case CAIRO_GL_OPERAND_TEXTURE:
+	filter = operand->texture.attributes.filter;
+	break;
+    case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
+	filter = CAIRO_FILTER_BILINEAR;
+	break;
+    default:
+	filter = CAIRO_FILTER_DEFAULT;
+	break;
+    }
+
+    return filter;
+}
+
+GLint
+_cairo_gl_operand_get_gl_filter (cairo_gl_operand_t *operand)
+{
+    cairo_filter_t filter = _cairo_gl_operand_get_filter (operand);
+
+    return filter != CAIRO_FILTER_FAST && filter != CAIRO_FILTER_NEAREST ?
+	   GL_LINEAR :
+	   GL_NEAREST;
+}
+
+cairo_extend_t
+_cairo_gl_operand_get_extend (cairo_gl_operand_t *operand)
+{
+    cairo_extend_t extend;
+
+    switch ((int) operand->type) {
+    case CAIRO_GL_OPERAND_TEXTURE:
+	extend = operand->texture.attributes.extend;
+	break;
+    case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
+	extend = operand->gradient.extend;
+	break;
+    default:
+	extend = CAIRO_EXTEND_NONE;
+	break;
+    }
+
+    return extend;
+}
+
+
 cairo_int_status_t
 _cairo_gl_composite_set_source (cairo_gl_composite_t *setup,
 			        const cairo_pattern_t *pattern,
