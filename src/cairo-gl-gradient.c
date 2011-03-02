@@ -44,6 +44,7 @@
 #include "cairo-gl-gradient-private.h"
 #include "cairo-gl-private.h"
 
+
 static int
 _cairo_gl_gradient_sample_width (unsigned int                 n_stops,
                                  const cairo_gradient_stop_t *stops)
@@ -95,6 +96,17 @@ _cairo_gl_gradient_render (const cairo_gl_context_t    *ctx,
     pixman_gradient_stop_t *pixman_stops;
     pixman_point_fixed_t p1, p2;
     unsigned int i;
+    pixman_format_code_t gradient_pixman_format;
+
+    /*
+     * Ensure that the order of the gradient's components in memory is BGRA.
+     * This is done so that the gradient's pixel data is always suitable for
+     * texture upload using format=GL_BGRA and type=GL_UNSIGNED_BYTE.
+     */
+    if (_cairo_is_little_endian ())
+	gradient_pixman_format = PIXMAN_a8r8g8b8;
+    else
+	gradient_pixman_format = PIXMAN_b8g8r8a8;
 
     pixman_stops = pixman_stops_stack;
     if (unlikely (n_stops > ARRAY_LENGTH (pixman_stops_stack))) {
@@ -129,7 +141,7 @@ _cairo_gl_gradient_render (const cairo_gl_context_t    *ctx,
     pixman_image_set_filter (gradient, PIXMAN_FILTER_BILINEAR, NULL, 0);
     pixman_image_set_repeat (gradient, PIXMAN_REPEAT_PAD);
 
-    image = pixman_image_create_bits (PIXMAN_a8r8g8b8, width, 1,
+    image = pixman_image_create_bits (gradient_pixman_format, width, 1,
 				      bytes, sizeof(uint32_t)*width);
     if (unlikely (image == NULL)) {
 	pixman_image_unref (gradient);
@@ -240,8 +252,13 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
     glGenTextures (1, &gradient->tex);
     _cairo_gl_context_activate (ctx, CAIRO_GL_TEX_TEMP);
     glBindTexture (ctx->tex_target, gradient->tex);
-    glTexImage2D (ctx->tex_target, 0, GL_RGBA8, tex_width, 1, 0,
-		  GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, 0);
+
+    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP)
+	glTexImage2D (ctx->tex_target, 0, GL_RGBA8, tex_width, 1, 0,
+		      GL_BGRA, GL_UNSIGNED_BYTE, 0);
+    else
+	glTexImage2D (ctx->tex_target, 0, GL_BGRA, tex_width, 1, 0,
+		      GL_BGRA, GL_UNSIGNED_BYTE, data);
 
     dispatch->BindBuffer (GL_PIXEL_UNPACK_BUFFER, 0);
 

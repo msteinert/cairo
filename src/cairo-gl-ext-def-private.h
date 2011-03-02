@@ -100,4 +100,16 @@
 #define GL_CLAMP_TO_BORDER 0x812D
 #endif
 
+#ifndef GL_BGRA
+#define GL_BGRA 0x80E1
+#endif
+
+#ifndef GL_RGBA8
+#define GL_RGBA8 0x8058
+#endif
+
+#ifndef GL_UNSIGNED_INT_8_8_8_8_REV
+#define GL_UNSIGNED_INT_8_8_8_8_REV 0x8367
+#endif
+
 #endif /* CAIRO_GL_EXT_DEF_PRIVATE_H */

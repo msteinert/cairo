@@ -156,6 +156,7 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     cairo_status_t status;
     cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
     int gl_version = _cairo_gl_get_version ();
+    cairo_gl_flavor_t gl_flavor = _cairo_gl_get_flavor ();
     int n;
 
     _cairo_device_init (&ctx->base, &_cairo_gl_device_backend);
@@ -179,11 +180,15 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 	! _cairo_gl_has_extension ("GL_ARB_pixel_buffer_object"))
 	return _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
 
+    if (gl_flavor == CAIRO_GL_FLAVOR_ES &&
+	! _cairo_gl_has_extension ("GL_EXT_texture_format_BGRA8888"))
+	return _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
+
     ctx->has_mesa_pack_invert =
 	_cairo_gl_has_extension ("GL_MESA_pack_invert");
 
     ctx->current_operator = -1;
-    ctx->gl_flavor = _cairo_gl_get_flavor ();
+    ctx->gl_flavor = gl_flavor;
 
     status = _cairo_gl_context_init_shaders (ctx);
     if (unlikely (status))
