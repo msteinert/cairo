@@ -176,7 +176,8 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     else
 	return _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
 
-    if (gl_version < CAIRO_GL_VERSION_ENCODE (2, 1) &&
+    if (gl_flavor == CAIRO_GL_FLAVOR_DESKTOP &&
+	gl_version < CAIRO_GL_VERSION_ENCODE (2, 1) &&
 	! _cairo_gl_has_extension ("GL_ARB_pixel_buffer_object"))
 	return _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
 

@@ -234,33 +234,42 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
     gradient->stops = gradient->stops_embedded;
     memcpy (gradient->stops_embedded, stops, n_stops * sizeof (cairo_gradient_stop_t));
 
-    dispatch->BindBuffer (GL_PIXEL_UNPACK_BUFFER, ctx->texture_load_pbo);
-    dispatch->BufferData (GL_PIXEL_UNPACK_BUFFER,
-			  tex_width * sizeof (uint32_t), 0, GL_STREAM_DRAW);
-    data = dispatch->MapBuffer (GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
-
-    status = _cairo_gl_gradient_render (ctx, n_stops, stops, data, tex_width);
-
-    dispatch->UnmapBuffer (GL_PIXEL_UNPACK_BUFFER);
-
-    if (unlikely (status)) {
-        dispatch->BindBuffer (GL_PIXEL_UNPACK_BUFFER, 0);
-        free (gradient);
-        return status;
-    }
-
     glGenTextures (1, &gradient->tex);
     _cairo_gl_context_activate (ctx, CAIRO_GL_TEX_TEMP);
     glBindTexture (ctx->tex_target, gradient->tex);
 
-    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP)
+    /* GL_PIXEL_UNPACK_BUFFER is only available in Desktop GL */
+    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP) {
+	dispatch->BindBuffer (GL_PIXEL_UNPACK_BUFFER, ctx->texture_load_pbo);
+	dispatch->BufferData (GL_PIXEL_UNPACK_BUFFER,
+			      tex_width * sizeof (uint32_t), 0, GL_STREAM_DRAW);
+	data = dispatch->MapBuffer (GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
+
+	status = _cairo_gl_gradient_render (ctx, n_stops, stops, data, tex_width);
+
+	dispatch->UnmapBuffer (GL_PIXEL_UNPACK_BUFFER);
+
+	if (unlikely (status)) {
+	    dispatch->BindBuffer (GL_PIXEL_UNPACK_BUFFER, 0);
+	    free (gradient);
+	    return status;
+	}
+
 	glTexImage2D (ctx->tex_target, 0, GL_RGBA8, tex_width, 1, 0,
 		      GL_BGRA, GL_UNSIGNED_BYTE, 0);
-    else
+
+	dispatch->BindBuffer (GL_PIXEL_UNPACK_BUFFER, 0);
+    }
+    else {
+	data = _cairo_malloc_ab (tex_width, sizeof (uint32_t));
+
+	status = _cairo_gl_gradient_render (ctx, n_stops, stops, data, tex_width);
+
 	glTexImage2D (ctx->tex_target, 0, GL_BGRA, tex_width, 1, 0,
 		      GL_BGRA, GL_UNSIGNED_BYTE, data);
 
-    dispatch->BindBuffer (GL_PIXEL_UNPACK_BUFFER, 0);
+	free (data);
+    }
 
     /* we ignore errors here and just return an uncached gradient */
     if (likely (! _cairo_cache_insert (&ctx->gradients, &gradient->cache_entry)))
