@@ -1779,7 +1779,7 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 	(*clone_out)->device_transform_inverse = src->device_transform_inverse;
     }
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /**
@@ -2711,25 +2711,22 @@ _cairo_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
 				int			 num_glyphs,
 				cairo_region_t		*clip_region)
 {
-    cairo_status_t status;
-
-    if (dst->status)
+    if (unlikely (dst->status))
 	return dst->status;
 
     assert (_cairo_surface_is_writable (dst));
 
-    if (dst->backend->old_show_glyphs) {
-	status = dst->backend->old_show_glyphs (scaled_font,
-						op, pattern, dst,
-						source_x, source_y,
-                                                dest_x, dest_y,
-						width, height,
-						glyphs, num_glyphs,
-						clip_region);
-    } else
-	status = CAIRO_INT_STATUS_UNSUPPORTED;
+    if (dst->backend->old_show_glyphs == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    return _cairo_surface_set_error (dst, status);
+    return _cairo_surface_set_error
+	    (dst, dst->backend->old_show_glyphs (scaled_font,
+						 op, pattern, dst,
+						 source_x, source_y,
+						 dest_x, dest_y,
+						 width, height,
+						 glyphs, num_glyphs,
+						 clip_region));
 }
 
 static cairo_status_t
