@@ -210,7 +210,7 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     ctx->max_texture_size = 0;
     glGetIntegerv (GL_MAX_TEXTURE_SIZE, &ctx->max_texture_size);
     ctx->max_textures = 0;
-    glGetIntegerv (GL_MAX_TEXTURE_UNITS, &ctx->max_textures);
+    glGetIntegerv (GL_MAX_TEXTURE_IMAGE_UNITS, &ctx->max_textures);
 
     for (n = 0; n < ARRAY_LENGTH (ctx->glyph_cache); n++)
 	_cairo_gl_glyph_cache_init (&ctx->glyph_cache[n]);
