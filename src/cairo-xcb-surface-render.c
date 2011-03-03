@@ -62,8 +62,6 @@
 typedef struct _cairo_xcb_picture {
     cairo_surface_t base;
 
-    cairo_surface_t *owner;
-
     cairo_xcb_screen_t *screen;
     xcb_render_picture_t picture;
     xcb_render_pictformat_t xrender_format;
@@ -105,16 +103,11 @@ _cairo_xcb_picture_finish (void *abstract_surface)
     cairo_xcb_connection_t *connection = _picture_to_connection (surface);
     cairo_status_t status;
 
-    if (surface->owner != NULL)
-	cairo_surface_destroy (surface->owner);
-
     status = _cairo_xcb_connection_acquire (connection);
     if (unlikely (status))
 	return status;
 
-    if (surface->owner == NULL) {
-	_cairo_xcb_connection_render_free_picture (connection, surface->picture);
-    }
+    _cairo_xcb_connection_render_free_picture (connection, surface->picture);
 
     _cairo_xcb_connection_release (connection);
 
@@ -152,7 +145,6 @@ _cairo_xcb_picture_create (cairo_xcb_screen_t *screen,
 			 _cairo_content_from_pixman_format (pixman_format));
 
     surface->screen = screen;
-    surface->owner = NULL;
     surface->picture = _cairo_xcb_connection_get_xid (screen->connection);
     surface->pixman_format = pixman_format;
     surface->xrender_format = xrender_format;
@@ -161,41 +153,6 @@ _cairo_xcb_picture_create (cairo_xcb_screen_t *screen,
     surface->x = surface->y = 0;
     surface->width = width;
     surface->height = height;
-
-    surface->transform = identity_transform;
-    surface->extend = CAIRO_EXTEND_NONE;
-    surface->filter = CAIRO_FILTER_NEAREST;
-    surface->has_component_alpha = FALSE;
-
-    return surface;
-}
-
-static cairo_xcb_picture_t *
-_cairo_xcb_picture_copy (cairo_xcb_surface_t *target)
-{
-    cairo_xcb_picture_t *surface;
-
-    surface = malloc (sizeof (cairo_xcb_picture_t));
-    if (unlikely (surface == NULL))
-	return (cairo_xcb_picture_t *)
-	    _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
-
-    _cairo_surface_init (&surface->base,
-			 &_cairo_xcb_picture_backend,
-			 target->base.device,
-			 target->base.content);
-
-    surface->screen = target->screen;
-    surface->owner = cairo_surface_reference (&target->base);
-    _cairo_xcb_surface_ensure_picture (target);
-    surface->picture = target->picture;
-    surface->pixman_format = target->pixman_format;
-    surface->xrender_format = target->xrender_format;
-
-    surface->x0 = surface->y0 = 0;
-    surface->x = surface->y = 0;
-    surface->width = target->width;
-    surface->height = target->height;
 
     surface->transform = identity_transform;
     surface->extend = CAIRO_EXTEND_NONE;
@@ -978,25 +935,21 @@ _copy_to_picture (cairo_xcb_surface_t *source,
     if (source->drm != NULL)
 	cairo_surface_flush (source->drm);
 
-    if (source->owns_pixmap && ! force) {
-	picture = _cairo_xcb_picture_copy (source);
-    } else {
-	picture = _cairo_xcb_picture_create (source->screen,
-					     source->xrender_format,
-					     source->pixman_format,
-					     source->width,
-					     source->height);
-	if (unlikely (picture->base.status))
-	    return picture;
+    picture = _cairo_xcb_picture_create (source->screen,
+					 source->xrender_format,
+					 source->pixman_format,
+					 source->width,
+					 source->height);
+    if (unlikely (picture->base.status))
+	return picture;
 
-	_cairo_xcb_connection_render_create_picture (source->connection,
-						     picture->picture,
-						     source->drawable,
-						     source->xrender_format,
-						     XCB_RENDER_CP_GRAPHICS_EXPOSURE |
-						     XCB_RENDER_CP_SUBWINDOW_MODE,
-						     values);
-    }
+    _cairo_xcb_connection_render_create_picture (source->connection,
+						 picture->picture,
+						 source->drawable,
+						 source->xrender_format,
+						 XCB_RENDER_CP_GRAPHICS_EXPOSURE |
+						 XCB_RENDER_CP_SUBWINDOW_MODE,
+						 values);
 
     return picture;
 }
