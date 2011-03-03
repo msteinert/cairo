@@ -89,8 +89,6 @@ _gl_flush (void *device)
 
     ctx->dispatch.BindBuffer (GL_ARRAY_BUFFER, 0);
 
-    glDisableClientState (GL_VERTEX_ARRAY);
-
     glDisable (GL_SCISSOR_TEST);
     glDisable (GL_BLEND);
 
