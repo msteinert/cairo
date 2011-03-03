@@ -227,6 +227,20 @@ ffs (int x)
     return 0;
 }
 
+#define _USE_MATH_DEFINES
+
+#include <float.h>
+
+static inline double
+fmax (double a, double b)
+{
+    if (_isnan(a))
+        return b;
+    if (_isnan(b))
+        return a;
+    return a > b ? a : b;
+}
+
 #endif
 
 #if defined(_MSC_VER) && defined(_M_IX86)
