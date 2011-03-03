@@ -703,24 +703,24 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
     cairo_image_surface_t *image;
     cairo_gl_context_t *ctx;
     GLenum format, type;
-    cairo_format_t cairo_format;
+    pixman_format_code_t pixman_format;
     unsigned int cpp;
     cairo_status_t status;
 
     /* Want to use a switch statement here but the compiler gets whiny. */
     if (surface->base.content == CAIRO_CONTENT_COLOR_ALPHA) {
 	format = GL_BGRA;
-	cairo_format = CAIRO_FORMAT_ARGB32;
+	pixman_format = PIXMAN_a8r8g8b8;
 	type = GL_UNSIGNED_INT_8_8_8_8_REV;
 	cpp = 4;
     } else if (surface->base.content == CAIRO_CONTENT_COLOR) {
 	format = GL_BGRA;
-	cairo_format = CAIRO_FORMAT_RGB24;
+	pixman_format = PIXMAN_x8r8g8b8;
 	type = GL_UNSIGNED_INT_8_8_8_8_REV;
 	cpp = 4;
     } else if (surface->base.content == CAIRO_CONTENT_ALPHA) {
 	format = GL_ALPHA;
-	cairo_format = CAIRO_FORMAT_A8;
+	pixman_format = PIXMAN_a8;
 	type = GL_UNSIGNED_BYTE;
 	cpp = 1;
     } else {
@@ -728,25 +728,56 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
+    status = _cairo_gl_context_acquire (surface->base.device, &ctx);
+    if (unlikely (status))
+        return status;
+
+    /*
+     * GLES2 supports only RGBA, UNSIGNED_BYTE so use that.
+     * We are also using this format for ALPHA as GLES2 does not
+     * support GL_PACK_ROW_LENGTH anyway, and this makes sure that the
+     * pixman image that is created has row_stride = row_width * bpp.
+     */
+    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES) {
+	format = GL_RGBA;
+	if (!_cairo_is_little_endian ()) {
+	    ASSERT_NOT_REACHED;
+	    /* TODO: Add r8g8b8a8 support to pixman and enable this
+	       if (surface->base.content == CAIRO_CONTENT_COLOR)
+	       pixman_format = PIXMAN_r8g8b8x8;
+	       else
+	       pixman_format = PIXMAN_r8g8b8a8;
+	    */
+	}
+	else {
+	    if (surface->base.content == CAIRO_CONTENT_COLOR)
+		pixman_format = PIXMAN_x8b8g8r8;
+	    else
+		pixman_format = PIXMAN_a8b8g8r8;
+	}
+	type = GL_UNSIGNED_BYTE;
+	cpp = 4;
+    }
+
     image = (cairo_image_surface_t*)
-	cairo_image_surface_create (cairo_format,
-				    interest->width, interest->height);
+	_cairo_image_surface_create_with_pixman_format (NULL,
+							pixman_format,
+							interest->width,
+							interest->height,
+							-1);
     if (unlikely (image->base.status))
-	return image->base.status;
+	return _cairo_gl_context_release (ctx, image->base.status);
 
     /* This is inefficient, as we'd rather just read the thing without making
      * it the destination.  But then, this is the fallback path, so let's not
      * fall back instead.
      */
-    status = _cairo_gl_context_acquire (surface->base.device, &ctx);
-    if (unlikely (status))
-        return status;
-
     _cairo_gl_composite_flush (ctx);
     _cairo_gl_context_set_destination (ctx, surface);
 
     glPixelStorei (GL_PACK_ALIGNMENT, 1);
-    glPixelStorei (GL_PACK_ROW_LENGTH, image->stride / cpp);
+    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP)
+	glPixelStorei (GL_PACK_ROW_LENGTH, image->stride / cpp);
     if (! _cairo_gl_surface_is_texture (surface) &&
 	ctx->has_mesa_pack_invert)
 	glPixelStorei (GL_PACK_INVERT_MESA, 1);

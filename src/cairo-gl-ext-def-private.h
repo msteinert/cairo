@@ -112,4 +112,8 @@
 #define GL_UNSIGNED_INT_8_8_8_8_REV 0x8367
 #endif
 
+#ifndef GL_PACK_ROW_LENGTH
+#define GL_PACK_ROW_LENGTH 0x0D02
+#endif
+
 #endif /* CAIRO_GL_EXT_DEF_PRIVATE_H */
