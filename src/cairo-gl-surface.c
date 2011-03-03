@@ -74,12 +74,125 @@ static cairo_bool_t _cairo_surface_is_gl (cairo_surface_t *surface)
     return surface->backend == &_cairo_gl_surface_backend;
 }
 
-cairo_bool_t
-_cairo_gl_get_image_format_and_type (pixman_format_code_t pixman_format,
-				     GLenum *internal_format, GLenum *format,
-				     GLenum *type, cairo_bool_t *has_alpha)
+static cairo_bool_t
+_cairo_gl_get_image_format_and_type_gles2 (pixman_format_code_t pixman_format,
+					   GLenum *internal_format, GLenum *format,
+					   GLenum *type, cairo_bool_t *has_alpha,
+					   cairo_bool_t *needs_swap)
+{
+    cairo_bool_t is_little_endian = _cairo_is_little_endian ();
+
+    *has_alpha = TRUE;
+
+    switch ((int) pixman_format) {
+    case PIXMAN_a8r8g8b8:
+	*internal_format = GL_BGRA;
+	*format = GL_BGRA;
+	*type = GL_UNSIGNED_BYTE;
+	*needs_swap = !is_little_endian;
+	return TRUE;
+
+    case PIXMAN_x8r8g8b8:
+	*internal_format = GL_BGRA;
+	*format = GL_BGRA;
+	*type = GL_UNSIGNED_BYTE;
+	*has_alpha = FALSE;
+	*needs_swap = !is_little_endian;
+	return TRUE;
+
+    case PIXMAN_a8b8g8r8:
+	*internal_format = GL_RGBA;
+	*format = GL_RGBA;
+	*type = GL_UNSIGNED_BYTE;
+	*needs_swap = !is_little_endian;
+	return TRUE;
+
+    case PIXMAN_x8b8g8r8:
+	*internal_format = GL_RGBA;
+	*format = GL_RGBA;
+	*type = GL_UNSIGNED_BYTE;
+	*has_alpha = FALSE;
+	*needs_swap = !is_little_endian;
+	return TRUE;
+
+    case PIXMAN_b8g8r8a8:
+	*internal_format = GL_BGRA;
+	*format = GL_BGRA;
+	*type = GL_UNSIGNED_BYTE;
+	*needs_swap = is_little_endian;
+	return TRUE;
+
+    case PIXMAN_b8g8r8x8:
+	*internal_format = GL_BGRA;
+	*format = GL_BGRA;
+	*type = GL_UNSIGNED_BYTE;
+	*has_alpha = FALSE;
+	*needs_swap = is_little_endian;
+	return TRUE;
+
+    case PIXMAN_r8g8b8:
+	*internal_format = GL_RGB;
+	*format = GL_RGB;
+	*type = GL_UNSIGNED_BYTE;
+	*needs_swap = is_little_endian;
+	return TRUE;
+
+    case PIXMAN_b8g8r8:
+	*internal_format = GL_RGB;
+	*format = GL_RGB;
+	*type = GL_UNSIGNED_BYTE;
+	*needs_swap = !is_little_endian;
+	return TRUE;
+
+    case PIXMAN_r5g6b5:
+	*internal_format = GL_RGB;
+	*format = GL_RGB;
+	*type = GL_UNSIGNED_SHORT_5_6_5;
+	*needs_swap = FALSE;
+	return TRUE;
+
+    case PIXMAN_b5g6r5:
+	*internal_format = GL_RGB;
+	*format = GL_RGB;
+	*type = GL_UNSIGNED_SHORT_5_6_5;
+	*needs_swap = TRUE;
+	return TRUE;
+
+    case PIXMAN_a1b5g5r5:
+	*internal_format = GL_RGBA;
+	*format = GL_RGBA;
+	*type = GL_UNSIGNED_SHORT_5_5_5_1;
+	*needs_swap = TRUE;
+	return TRUE;
+
+    case PIXMAN_x1b5g5r5:
+	*internal_format = GL_RGBA;
+	*format = GL_RGBA;
+	*type = GL_UNSIGNED_SHORT_5_5_5_1;
+	*has_alpha = FALSE;
+	*needs_swap = TRUE;
+	return TRUE;
+
+    case PIXMAN_a8:
+	*internal_format = GL_ALPHA;
+	*format = GL_ALPHA;
+	*type = GL_UNSIGNED_BYTE;
+	*needs_swap = FALSE;
+	return TRUE;
+
+    default:
+	return FALSE;
+    }
+}
+
+static cairo_bool_t
+_cairo_gl_get_image_format_and_type_gl (pixman_format_code_t pixman_format,
+					GLenum *internal_format, GLenum *format,
+					GLenum *type, cairo_bool_t *has_alpha,
+					cairo_bool_t *needs_swap)
 {
     *has_alpha = TRUE;
+    *needs_swap = FALSE;
 
     switch (pixman_format) {
     case PIXMAN_a8r8g8b8:
@@ -193,6 +306,55 @@ _cairo_gl_get_image_format_and_type (pixman_format_code_t pixman_format,
     default:
 	return FALSE;
     }
+}
+
+/*
+ * Extracts pixel data from an image surface.
+ */
+static cairo_status_t
+_cairo_gl_surface_extract_image_data (cairo_image_surface_t *image,
+				      int x, int y,
+				      int width, int height,
+				      void **output)
+{
+    int cpp = PIXMAN_FORMAT_BPP (image->pixman_format) / 8;
+    char *data = _cairo_malloc_ab (width * height, cpp);
+    char *dst = data;
+    unsigned char *src = image->data + y * image->stride + x * cpp;
+    int i;
+
+    if (unlikely (data == NULL))
+	return CAIRO_STATUS_NO_MEMORY;
+
+    for (i = 0; i < height; i++) {
+	memcpy (dst, src, width * cpp);
+	src += image->stride;
+	dst += width * cpp;
+    }
+
+    *output = data;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_bool_t
+_cairo_gl_get_image_format_and_type (cairo_gl_flavor_t flavor,
+				     pixman_format_code_t pixman_format,
+				     GLenum *internal_format, GLenum *format,
+				     GLenum *type, cairo_bool_t *has_alpha,
+				     cairo_bool_t *needs_swap)
+{
+    if (flavor == CAIRO_GL_FLAVOR_DESKTOP)
+	return _cairo_gl_get_image_format_and_type_gl (pixman_format,
+						       internal_format, format,
+						       type, has_alpha,
+						       needs_swap);
+    else
+	return _cairo_gl_get_image_format_and_type_gles2 (pixman_format,
+							  internal_format, format,
+							  type, has_alpha,
+							  needs_swap);
+
 }
 
 cairo_bool_t
@@ -578,47 +740,79 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 			      int dst_x, int dst_y)
 {
     GLenum internal_format, format, type;
-    cairo_bool_t has_alpha;
+    cairo_bool_t has_alpha, needs_swap;
     cairo_image_surface_t *clone = NULL;
     cairo_gl_context_t *ctx;
     int cpp;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
-    if (! _cairo_gl_get_image_format_and_type (src->pixman_format,
+    status = _cairo_gl_context_acquire (dst->base.device, &ctx);
+    if (unlikely (status))
+	return status;
+
+    if (! _cairo_gl_get_image_format_and_type (ctx->gl_flavor,
+					       src->pixman_format,
 					       &internal_format,
 					       &format,
 					       &type,
-					       &has_alpha))
+					       &has_alpha,
+					       &needs_swap))
     {
 	cairo_bool_t is_supported;
 
 	clone = _cairo_image_surface_coerce (src);
-	if (unlikely (clone->base.status))
-	    return clone->base.status;
+	if (unlikely (status = clone->base.status))
+	    goto FAIL;
 
 	is_supported =
-	    _cairo_gl_get_image_format_and_type (clone->pixman_format,
+	    _cairo_gl_get_image_format_and_type (ctx->gl_flavor,
+						 clone->pixman_format,
 		                                 &internal_format,
 						 &format,
 						 &type,
-						 &has_alpha);
+						 &has_alpha,
+						 &needs_swap);
 	assert (is_supported);
+	assert (!needs_swap);
 	src = clone;
     }
 
     cpp = PIXMAN_FORMAT_BPP (src->pixman_format) / 8;
 
-    status = _cairo_gl_context_acquire (dst->base.device, &ctx);
-    if (unlikely (status))
-	return status;
-
     status = _cairo_gl_surface_flush (&dst->base);
     if (unlikely (status))
 	goto FAIL;
 
-    glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
-    glPixelStorei (GL_UNPACK_ROW_LENGTH, src->stride / cpp);
+    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP)
+	glPixelStorei (GL_UNPACK_ROW_LENGTH, src->stride / cpp);
     if (_cairo_gl_surface_is_texture (dst)) {
+	void *data_start = src->data + src_y * src->stride + src_x * cpp;
+	void *data_start_gles2 = NULL;
+
+	/*
+	 * Due to GL_UNPACK_ROW_LENGTH missing in GLES2 we have to extract the
+	 * image data ourselves in some cases. In particular, we must extract
+	 * the pixels if:
+	 * a. we don't want full-length lines or
+	 * b. the row stride cannot be handled by GL itself using a 4 byte alignment
+	 *    constraint
+	 */
+	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES &&
+	    (src->width * cpp < src->stride - 3 ||
+	     width != src->width))
+	{
+	    glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+	    status = _cairo_gl_surface_extract_image_data (src, src_x, src_y,
+							   width, height,
+							   &data_start_gles2);
+	    if (unlikely (status))
+		goto FAIL;
+	}
+	else
+	{
+	    glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+	}
+
         _cairo_gl_context_activate (ctx, CAIRO_GL_TEX_TEMP);
 	glBindTexture (ctx->tex_target, dst->tex);
 	glTexParameteri (ctx->tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -626,7 +820,12 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	glTexSubImage2D (ctx->tex_target, 0,
 			 dst_x, dst_y, width, height,
 			 format, type,
-			 src->data + src_y * src->stride + src_x * cpp);
+			 data_start_gles2 != NULL ? data_start_gles2 :
+						    data_start);
+
+
+	if (data_start_gles2)
+	    free (data_start_gles2);
 
 	/* If we just treated some rgb-only data as rgba, then we have to
 	 * go back and fix up the alpha channel where we filled in this
@@ -684,7 +883,8 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
     }
 
 FAIL:
-    glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
+    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP)
+	glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
 
     status = _cairo_gl_context_release (ctx, status);
 
@@ -775,7 +975,7 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
     _cairo_gl_composite_flush (ctx);
     _cairo_gl_context_set_destination (ctx, surface);
 
-    glPixelStorei (GL_PACK_ALIGNMENT, 1);
+    glPixelStorei (GL_PACK_ALIGNMENT, 4);
     if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP)
 	glPixelStorei (GL_PACK_ROW_LENGTH, image->stride / cpp);
     if (! _cairo_gl_surface_is_texture (surface) &&

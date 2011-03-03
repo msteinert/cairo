@@ -466,9 +466,11 @@ _cairo_gl_context_destroy_operand (cairo_gl_context_t *ctx,
                                    cairo_gl_tex_t tex_unit);
 
 cairo_private cairo_bool_t
-_cairo_gl_get_image_format_and_type (pixman_format_code_t pixman_format,
+_cairo_gl_get_image_format_and_type (cairo_gl_flavor_t flavor,
+				     pixman_format_code_t pixman_format,
 				     GLenum *internal_format, GLenum *format,
-				     GLenum *type, cairo_bool_t *has_alpha);
+				     GLenum *type, cairo_bool_t *has_alpha,
+				     cairo_bool_t *needs_swap);
 
 cairo_private void
 _cairo_gl_surface_scaled_font_fini ( cairo_scaled_font_t  *scaled_font);
