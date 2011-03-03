@@ -341,6 +341,22 @@ ifeq ($(CAIRO_HAS_GL_SURFACE),1)
 enabled_cairo_pkgconf += cairo-gl.pc
 endif
 
+unsupported_cairo_headers += $(cairo_glesv2_headers)
+all_cairo_headers += $(cairo_glesv2_headers)
+all_cairo_private += $(cairo_glesv2_private)
+all_cairo_cxx_sources += $(cairo_glesv2_cxx_sources)
+all_cairo_sources += $(cairo_glesv2_sources)
+ifeq ($(CAIRO_HAS_GLESV2_SURFACE),1)
+enabled_cairo_headers += $(cairo_glesv2_headers)
+enabled_cairo_private += $(cairo_glesv2_private)
+enabled_cairo_cxx_sources += $(cairo_glesv2_cxx_sources)
+enabled_cairo_sources += $(cairo_glesv2_sources)
+endif
+all_cairo_pkgconf += cairo-glesv2.pc
+ifeq ($(CAIRO_HAS_GLESV2_SURFACE),1)
+enabled_cairo_pkgconf += cairo-glesv2.pc
+endif
+
 unsupported_cairo_headers += $(cairo_directfb_headers)
 all_cairo_headers += $(cairo_directfb_headers)
 all_cairo_private += $(cairo_directfb_private)

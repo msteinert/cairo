@@ -328,6 +328,10 @@ cairo_gl_sources = cairo-gl-composite.c \
 		   cairo-gl-shaders.c \
 		   cairo-gl-surface.c
 
+cairo_glesv2_headers = $(cairo_gl_headers)
+cairo_glesv2_private = $(cairo_gl_private)
+cairo_glesv2_sources = $(cairo_gl_sources)
+
 cairo_egl_sources += cairo-egl-context.c
 cairo_glx_sources += cairo-glx-context.c
 cairo_wgl_sources += cairo-wgl-context.c
