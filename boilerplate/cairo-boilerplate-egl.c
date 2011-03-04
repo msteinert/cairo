@@ -33,6 +33,11 @@
 #include "cairo-boilerplate-private.h"
 
 #include <cairo-gl.h>
+#if CAIRO_HAS_GL_SURFACE
+#include <GL/gl.h>
+#elif CAIRO_HAS_GLESV2_SURFACE
+#include <GLES2/gl2.h>
+#endif
 
 static const cairo_user_data_key_t gl_closure_key;
 
@@ -81,7 +86,17 @@ _cairo_boilerplate_egl_create_surface (const char		 *name,
 	EGL_BLUE_SIZE, 8,
 	EGL_ALPHA_SIZE, 8,
 	EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
+#if CAIRO_HAS_GL_SURFACE
 	EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
+#elif CAIRO_HAS_GLESV2_SURFACE
+	EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+#endif
+	EGL_NONE
+    };
+    const EGLint ctx_attribs[] = {
+#if CAIRO_HAS_GLESV2_SURFACE
+	EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
 	EGL_NONE
     };
 
@@ -101,9 +116,14 @@ _cairo_boilerplate_egl_create_surface (const char		 *name,
 	return NULL;
     }
 
+#if CAIRO_HAS_GL_SURFACE
     eglBindAPI (EGL_OPENGL_API);
+#elif CAIRO_HAS_GLESV2_SURFACE
+    eglBindAPI (EGL_OPENGL_ES_API);
+#endif
 
-    gltc->ctx = eglCreateContext (gltc->dpy, config, EGL_NO_CONTEXT, NULL);
+    gltc->ctx = eglCreateContext (gltc->dpy, config, EGL_NO_CONTEXT,
+				  ctx_attribs);
     if (gltc->ctx == EGL_NO_CONTEXT) {
 	eglTerminate (gltc->dpy);
 	free (gltc);
