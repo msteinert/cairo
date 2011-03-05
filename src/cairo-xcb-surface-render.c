@@ -379,6 +379,14 @@ _pattern_is_supported (uint32_t flags,
     } else { /* gradient */
 	if ((flags & CAIRO_XCB_RENDER_HAS_GRADIENTS) == 0)
 	    return FALSE;
+
+	/* The RENDER specification says that the inner circle has to be
+	 * completely contained inside the outer one. */
+	if (pattern->type == CAIRO_PATTERN_TYPE_RADIAL &&
+	    ! _cairo_radial_pattern_focus_is_inside ((cairo_radial_pattern_t *) pattern))
+	{
+	    return FALSE;
+	}
     }
 
     return pattern->type != CAIRO_PATTERN_TYPE_MESH;

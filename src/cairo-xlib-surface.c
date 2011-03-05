@@ -2105,6 +2105,12 @@ _cairo_xlib_surface_acquire_pattern_surface (cairo_xlib_display_t *display,
 	    if (dst->buggy_gradients)
 		break;
 
+	    /* The RENDER specification says that the inner circle has
+	     * to be completely contained inside the outer one. */
+	    if (pattern->type == CAIRO_PATTERN_TYPE_RADIAL &&
+		! _cairo_radial_pattern_focus_is_inside ((cairo_radial_pattern_t *) gradient))
+		break;
+
 	    assert (gradient->n_stops > 0);
 	    n_stops = MAX (gradient->n_stops, 2);
 

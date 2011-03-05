@@ -2631,6 +2631,35 @@ _extend_range (double range[2], double value, cairo_bool_t valid)
     return TRUE;
 }
 
+/**
+ * _cairo_radial_pattern_focus_is_inside
+ *
+ * Returns %TRUE if and only if the focus point exists and is
+ * contained in one of the two extreme circles. This condition is
+ * equivalent to one of the two extreme circles being completely
+ * contained in the other one.
+ *
+ * Note: if the focus is on the border of one of the two circles (in
+ * which case the circles are tangent in the focus point), it is not
+ * considered as contained in the circle, hence this function returns
+ * %FALSE.
+ *
+ **/
+cairo_bool_t
+_cairo_radial_pattern_focus_is_inside (const cairo_radial_pattern_t *radial)
+{
+    double cx, cy, cr, dx, dy, dr;
+
+    cx = radial->cd1.center.x;
+    cy = radial->cd1.center.y;
+    cr = radial->cd1.radius;
+    dx = radial->cd2.center.x - cx;
+    dy = radial->cd2.center.y - cy;
+    dr = radial->cd2.radius   - cr;
+
+    return dx*dx + dy*dy < dr*dr;
+}
+
 static void
 _cairo_radial_pattern_box_to_parameter (const cairo_radial_pattern_t *radial,
 					double x0, double y0,
