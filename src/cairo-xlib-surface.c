@@ -2100,28 +2100,28 @@ _cairo_xlib_surface_acquire_pattern_surface (cairo_xlib_display_t *display,
 	    XRenderColor *colors;
 	    XRenderPictFormat *format;
 	    Picture picture;
-	    unsigned int i;
+	    unsigned int i, n_stops;
 
 	    if (dst->buggy_gradients)
 		break;
 
-	    if (gradient->n_stops < 2) /* becomes a solid */
-		break;
+	    assert (gradient->n_stops > 0);
+	    n_stops = MAX (gradient->n_stops, 2);
 
-	    if (gradient->n_stops < sizeof (buf) / (sizeof (XFixed) + sizeof (XRenderColor)))
+	    if (n_stops < sizeof (buf) / (sizeof (XFixed) + sizeof (XRenderColor)))
 	    {
 		stops = (XFixed *) buf;
 	    }
 	    else
 	    {
 		stops =
-		    _cairo_malloc_ab (gradient->n_stops,
+		    _cairo_malloc_ab (n_stops,
 				      sizeof (XFixed) + sizeof (XRenderColor));
 		if (unlikely (stops == NULL))
 		    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }
 
-	    colors = (XRenderColor *) (stops + gradient->n_stops);
+	    colors = (XRenderColor *) (stops + n_stops);
 	    for (i = 0; i < gradient->n_stops; i++) {
 		stops[i] =
 		    _cairo_fixed_16_16_from_double (gradient->stops[i].offset);
@@ -2130,6 +2130,19 @@ _cairo_xlib_surface_acquire_pattern_surface (cairo_xlib_display_t *display,
 		colors[i].green = gradient->stops[i].color.green_short;
 		colors[i].blue  = gradient->stops[i].color.blue_short;
 		colors[i].alpha = gradient->stops[i].color.alpha_short;
+	    }
+
+	    /* RENDER does not support gradients with less than 2
+	     * stops. If a gradient has only a single stop, duplicate
+	     * it to make RENDER happy. */
+	    if (gradient->n_stops == 1) {
+		stops[1] =
+		    _cairo_fixed_16_16_from_double (gradient->stops[0].offset);
+
+		colors[1].red   = gradient->stops[0].color.red_short;
+		colors[1].green = gradient->stops[0].color.green_short;
+		colors[1].blue  = gradient->stops[0].color.blue_short;
+		colors[1].alpha = gradient->stops[0].color.alpha_short;
 	    }
 
 #if 0
@@ -2157,7 +2170,7 @@ _cairo_xlib_surface_acquire_pattern_surface (cairo_xlib_display_t *display,
 
 		picture = XRenderCreateLinearGradient (display->display, &grad,
 						       stops, colors,
-						       gradient->n_stops);
+						       n_stops);
 	    } else {
 		XRadialGradient grad;
 
@@ -2170,7 +2183,7 @@ _cairo_xlib_surface_acquire_pattern_surface (cairo_xlib_display_t *display,
 
 		picture = XRenderCreateRadialGradient (display->display, &grad,
 						       stops, colors,
-						       gradient->n_stops);
+						       n_stops);
 	    }
 
 	    if (stops != (XFixed *) buf)

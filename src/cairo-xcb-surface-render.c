@@ -735,26 +735,30 @@ _render_to_picture (cairo_xcb_surface_t *target,
 
 static xcb_render_fixed_t *
 _gradient_to_xcb (const cairo_gradient_pattern_t *gradient,
+		  unsigned int *n_stops,
 		  char *buf, unsigned int buflen)
 {
     xcb_render_fixed_t *stops;
     xcb_render_color_t *colors;
     unsigned int i;
 
-    if (gradient->n_stops * (sizeof (xcb_render_fixed_t) + sizeof (xcb_render_color_t)) < buflen)
+    assert (gradient->n_stops > 0);
+    *n_stops = MAX (gradient->n_stops, 2);
+
+    if (*n_stops * (sizeof (xcb_render_fixed_t) + sizeof (xcb_render_color_t)) < buflen)
     {
 	stops = (xcb_render_fixed_t *) buf;
     }
     else
     {
 	stops =
-	    _cairo_malloc_ab (gradient->n_stops,
+	    _cairo_malloc_ab (*n_stops,
 			      sizeof (xcb_render_fixed_t) + sizeof (xcb_render_color_t));
 	if (unlikely (stops == NULL))
 	    return NULL;
     }
 
-    colors = (xcb_render_color_t *) (stops + gradient->n_stops);
+    colors = (xcb_render_color_t *) (stops + *n_stops);
     for (i = 0; i < gradient->n_stops; i++) {
 	stops[i] =
 	    _cairo_fixed_16_16_from_double (gradient->stops[i].offset);
@@ -763,6 +767,18 @@ _gradient_to_xcb (const cairo_gradient_pattern_t *gradient,
 	colors[i].green = gradient->stops[i].color.green_short;
 	colors[i].blue  = gradient->stops[i].color.blue_short;
 	colors[i].alpha = gradient->stops[i].color.alpha_short;
+    }
+
+    /* RENDER does not support gradients with less than 2 stops. If a
+     * gradient has only a single stop, duplicate it to make RENDER
+     * happy. */
+    if (gradient->n_stops == 1) {
+	stops[1] = _cairo_fixed_16_16_from_double (gradient->stops[0].offset);
+
+	colors[1].red   = gradient->stops[0].color.red_short;
+	colors[1].green = gradient->stops[0].color.green_short;
+	colors[1].blue  = gradient->stops[0].color.blue_short;
+	colors[1].alpha = gradient->stops[0].color.alpha_short;
     }
 
     return stops;
@@ -781,6 +797,7 @@ _cairo_xcb_linear_picture (cairo_xcb_surface_t *target,
     cairo_circle_double_t extremes[2];
     cairo_xcb_picture_t *picture;
     cairo_status_t status;
+    unsigned int n_stops;
 
     _cairo_gradient_pattern_fit_to_range (&pattern->base, PIXMAN_MAX_INT >> 1, &matrix, extremes);
 
@@ -789,7 +806,7 @@ _cairo_xcb_linear_picture (cairo_xcb_surface_t *target,
     if (picture != NULL)
 	goto setup_picture;
 
-    stops = _gradient_to_xcb (&pattern->base, buf, sizeof (buf));
+    stops = _gradient_to_xcb (&pattern->base, &n_stops, buf, sizeof (buf));
     if (unlikely (stops == NULL))
 	return (cairo_xcb_picture_t *) _cairo_surface_create_in_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -804,7 +821,7 @@ _cairo_xcb_linear_picture (cairo_xcb_surface_t *target,
     }
     picture->filter = CAIRO_FILTER_DEFAULT;
 
-    colors = (xcb_render_color_t *) (stops + pattern->base.n_stops);
+    colors = (xcb_render_color_t *) (stops + n_stops);
 
     p1.x = _cairo_fixed_16_16_from_double (extremes[0].center.x);
     p1.y = _cairo_fixed_16_16_from_double (extremes[0].center.y);
@@ -814,7 +831,7 @@ _cairo_xcb_linear_picture (cairo_xcb_surface_t *target,
     _cairo_xcb_connection_render_create_linear_gradient (target->connection,
 							 picture->picture,
 							 p1, p2,
-							 pattern->base.n_stops,
+							 n_stops,
 							 stops, colors);
 
     if (stops != (xcb_render_fixed_t *) buf)
@@ -855,6 +872,7 @@ _cairo_xcb_radial_picture (cairo_xcb_surface_t *target,
     cairo_circle_double_t extremes[2];
     cairo_xcb_picture_t *picture;
     cairo_status_t status;
+    unsigned int n_stops;
 
     _cairo_gradient_pattern_fit_to_range (&pattern->base, PIXMAN_MAX_INT >> 1, &matrix, extremes);
 
@@ -863,7 +881,7 @@ _cairo_xcb_radial_picture (cairo_xcb_surface_t *target,
     if (picture != NULL)
 	goto setup_picture;
 
-    stops = _gradient_to_xcb (&pattern->base, buf, sizeof (buf));
+    stops = _gradient_to_xcb (&pattern->base, &n_stops, buf, sizeof (buf));
     if (unlikely (stops == NULL))
 	return (cairo_xcb_picture_t *) _cairo_surface_create_in_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -878,7 +896,7 @@ _cairo_xcb_radial_picture (cairo_xcb_surface_t *target,
     }
     picture->filter = CAIRO_FILTER_DEFAULT;
 
-    colors = (xcb_render_color_t *) (stops + pattern->base.n_stops);
+    colors = (xcb_render_color_t *) (stops + n_stops);
 
     p1.x = _cairo_fixed_16_16_from_double (extremes[0].center.x);
     p1.y = _cairo_fixed_16_16_from_double (extremes[0].center.y);
@@ -891,7 +909,7 @@ _cairo_xcb_radial_picture (cairo_xcb_surface_t *target,
     _cairo_xcb_connection_render_create_radial_gradient (target->connection,
 							 picture->picture,
 							 p1, p2, r1, r2,
-							 pattern->base.n_stops,
+							 n_stops,
 							 stops, colors);
 
     if (stops != (xcb_render_fixed_t *) buf)
