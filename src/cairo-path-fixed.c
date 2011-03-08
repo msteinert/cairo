@@ -1290,8 +1290,11 @@ _cairo_path_fixed_is_rectangle (const cairo_path_fixed_t *path,
     if (! _cairo_path_fixed_is_box (path, box))
 	return FALSE;
 
+    /* This check is valid because the current implementation of
+     * _cairo_path_fixed_is_box () only accepts rectangles like:
+     * move,line,line,line[,line|close[,close|move]]. */
     buf = cairo_path_head (path);
-    if (buf->points[0].y == buf->points[1].y)
+    if (buf->num_ops > 4)
 	return TRUE;
 
     return FALSE;
