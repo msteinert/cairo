@@ -235,6 +235,7 @@ test_sources = \
 	scaled-font-zero-matrix.c			\
 	stroke-ctm-caps.c				\
 	stroke-image.c				        \
+	stroke-open-box.c				\
 	select-font-face.c				\
 	select-font-no-show-text.c			\
 	self-copy.c					\
