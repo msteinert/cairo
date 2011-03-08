@@ -182,6 +182,13 @@ _cairo_popcount (uint32_t mask)
 #endif
 }
 
+static cairo_always_inline cairo_bool_t
+_cairo_is_little_endian (void)
+{
+    static const int i = 1;
+    return *((char *) &i) == 0x01;
+}
+
 #ifdef WORDS_BIGENDIAN
 #define CAIRO_BITSWAP8_IF_LITTLE_ENDIAN(c) (c)
 #else

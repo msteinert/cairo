@@ -164,9 +164,6 @@ _cairo_xlib_surface_create_internal (cairo_xlib_screen_t	*screen,
 static cairo_bool_t
 _cairo_surface_is_xlib (cairo_surface_t *surface);
 
-static cairo_bool_t
-_native_byte_order_lsb (void);
-
 static cairo_int_status_t
 _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_operator_t     op,
@@ -644,7 +641,7 @@ static void
 _swap_ximage_to_native (XImage *ximage)
 {
     int unit_bytes = 0;
-    int native_byte_order = _native_byte_order_lsb () ? LSBFirst : MSBFirst;
+    int native_byte_order = _cairo_is_little_endian () ? LSBFirst : MSBFirst;
 
     if (ximage->bits_per_pixel == 1 &&
 	ximage->bitmap_bit_order != native_byte_order)
@@ -1151,7 +1148,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     cairo_xlib_display_t *display;
     XImage ximage;
     cairo_format_masks_t image_masks;
-    int native_byte_order = _native_byte_order_lsb () ? LSBFirst : MSBFirst;
+    int native_byte_order = _cairo_is_little_endian () ? LSBFirst : MSBFirst;
     pixman_image_t *pixman_image = NULL;
     cairo_status_t status;
     cairo_bool_t own_data;
@@ -4025,14 +4022,6 @@ _cairo_xlib_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
     }
 }
 
-static cairo_bool_t
-_native_byte_order_lsb (void)
-{
-    int	x = 1;
-
-    return *((char *) &x) == 1;
-}
-
 static int
 _cairo_xlib_get_glyphset_index_for_format (cairo_format_t format)
 {
@@ -4254,7 +4243,7 @@ _cairo_xlib_surface_add_glyph (cairo_xlib_display_t *display,
     switch (_cairo_xlib_get_glyphset_index_for_format (scaled_glyph->surface->format)) {
     case GLYPHSET_INDEX_A1:
 	/* local bitmaps are always stored with bit == byte */
-	if (_native_byte_order_lsb() != (BitmapBitOrder (display->display) == LSBFirst)) {
+	if (_cairo_is_little_endian() != (BitmapBitOrder (display->display) == LSBFirst)) {
 	    int		    c = glyph_surface->stride * glyph_surface->height;
 	    unsigned char   *d;
 	    unsigned char   *new, *n;
@@ -4279,7 +4268,7 @@ _cairo_xlib_surface_add_glyph (cairo_xlib_display_t *display,
     case GLYPHSET_INDEX_A8:
 	break;
     case GLYPHSET_INDEX_ARGB32:
-	if (_native_byte_order_lsb() != (ImageByteOrder (display->display) == LSBFirst)) {
+	if (_cairo_is_little_endian() != (ImageByteOrder (display->display) == LSBFirst)) {
 	    unsigned int c = glyph_surface->stride * glyph_surface->height / 4;
 	    const uint32_t *d;
 	    uint32_t *new, *n;

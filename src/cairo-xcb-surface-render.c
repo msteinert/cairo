@@ -3820,14 +3820,6 @@ _cairo_xcb_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
     }
 }
 
-static cairo_bool_t
-_native_byte_order_lsb (void)
-{
-    int	x = 1;
-
-    return *((char *) &x) == 1;
-}
-
 static int
 _cairo_xcb_get_glyphset_index_for_format (cairo_format_t format)
 {
@@ -4016,7 +4008,7 @@ _cairo_xcb_surface_add_glyph (cairo_xcb_connection_t *connection,
     switch (_cairo_xcb_get_glyphset_index_for_format (scaled_glyph->surface->format)) {
     case GLYPHSET_INDEX_A1:
 	/* local bitmaps are always stored with bit == byte */
-	if (_native_byte_order_lsb() != (connection->root->bitmap_format_bit_order == XCB_IMAGE_ORDER_LSB_FIRST)) {
+	if (_cairo_is_little_endian() != (connection->root->bitmap_format_bit_order == XCB_IMAGE_ORDER_LSB_FIRST)) {
 	    int		    c = glyph_surface->stride * glyph_surface->height;
 	    const uint8_t *d;
 	    uint8_t *new, *n;
@@ -4044,7 +4036,7 @@ _cairo_xcb_surface_add_glyph (cairo_xcb_connection_t *connection,
 	break;
 
     case GLYPHSET_INDEX_ARGB32:
-	if (_native_byte_order_lsb() != (connection->root->image_byte_order == XCB_IMAGE_ORDER_LSB_FIRST)) {
+	if (_cairo_is_little_endian() != (connection->root->image_byte_order == XCB_IMAGE_ORDER_LSB_FIRST)) {
 	    unsigned int c = glyph_surface->stride * glyph_surface->height / 4;
 	    const uint32_t *d;
 	    uint32_t *new, *n;
