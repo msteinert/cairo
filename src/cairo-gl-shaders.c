@@ -385,6 +385,9 @@ cairo_status_t
 _cairo_gl_context_init_shaders (cairo_gl_context_t *ctx)
 {
     static const char *fill_fs_source =
+	"#ifdef GL_ES\n"
+	"precision mediump float;\n"
+	"#endif\n"
 	"uniform vec4 color;\n"
 	"void main()\n"
 	"{\n"
@@ -846,6 +849,11 @@ cairo_gl_shader_get_fragment_source (cairo_gl_context_t *ctx,
     unsigned char *source;
     unsigned long length;
     cairo_status_t status;
+
+    _cairo_output_stream_printf (stream,
+	"#ifdef GL_ES\n"
+	"precision mediump float;\n"
+	"#endif\n");
 
     if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES) {
 	if (_cairo_gl_shader_needs_border_fade (src))
