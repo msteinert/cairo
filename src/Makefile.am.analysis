@@ -25,9 +25,9 @@ headers-standalone: $(enabled_cairo_headers) $(enabled_cairo_private)
 	@status=true; for f in $(enabled_cairo_headers) $(enabled_cairo_private); do \
 		echo "  CHECK $$f"; \
 		echo "#include \"$(srcdir)/$$f\"" > headers-standalone-tmp.c; \
-		echo "int main(int argc, char * argv[]) {}" >> headers-standalone-tmp.c; \
-		$(COMPILE) -o /dev/null headers-standalone-tmp.c || status=false; \
-		$(RM) headers-standalone-tmp.c; \
+		echo "int main(int argc, char * argv[]) { return 0; }" >> headers-standalone-tmp.c; \
+		$(COMPILE) -o headers-standalone-tmp headers-standalone-tmp.c || status=false; \
+		$(RM) headers-standalone-tmp headers-standalone-tmp.c; \
 	done; $$status
 	@touch $@
 CLEANFILES += headers-standalone
