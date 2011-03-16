@@ -80,6 +80,7 @@
 #if CAIRO_HAS_QUARTZ_SURFACE
 #define Cursor QuartzCursor
 #include <cairo-quartz.h>
+#undef Cursor
 #endif
 #if CAIRO_HAS_SVG_SURFACE
 #include <cairo-svg.h>
@@ -93,6 +94,7 @@
 #if CAIRO_HAS_XLIB_SURFACE
 #define Cursor XCursor
 #include <cairo-xlib.h>
+#undef Cursor
 #endif
 
 #define ARRAY_LENGTH(array) (sizeof (array) / sizeof ((array)[0]))
