@@ -40,7 +40,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_source_rgb (cr, 0, 0, 0);
     cairo_paint (cr);
 
-    for (i = 0; i < sizeof (xy) / sizeof (xy[0]); i++)
+    for (i = 0; i < ARRAY_LENGTH (xy); i++)
 	cairo_line_to (cr, xy[i].x, xy[i].y);
 
     cairo_set_source_rgb (cr, 1, 0, 0);

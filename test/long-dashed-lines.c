@@ -49,7 +49,7 @@ draw (cairo_t *cr, int width, int height)
     /* completely invisible rectangle */
     cairo_rectangle (cr, -5, -5, 70, 70);
 
-    cairo_set_dash (cr, dashes, sizeof (dashes) / sizeof (dashes[0]), 0.);
+    cairo_set_dash (cr, dashes, ARRAY_LENGTH (dashes), 0.);
     cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
     cairo_set_line_join (cr, CAIRO_LINE_JOIN_BEVEL);
     cairo_set_source_rgb (cr, 0, 0, 0);

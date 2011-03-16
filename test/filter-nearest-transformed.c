@@ -79,7 +79,7 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_set_antialias (cr, CAIRO_ANTIALIAS_NONE);
 
-    for (k = 0; k < sizeof (transform) / sizeof (transform[0]); k++) {
+    for (k = 0; k < ARRAY_LENGTH (transform); k++) {
 	/* draw a "large" section from an image */
 	cairo_save (cr); {
 	    cairo_set_matrix(cr, &ctx_transform[k]);

@@ -57,7 +57,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_test_status_t result = CAIRO_TEST_SUCCESS;
 
     path.status = CAIRO_STATUS_SUCCESS;
-    path.num_data = sizeof (path_data) / sizeof (path_data[0]);
+    path.num_data = ARRAY_LENGTH (path_data);
     path.data = path_data;
 
     cairo_new_path (cr);

@@ -129,7 +129,7 @@ draw (cairo_t *cr, void (*shapes)(cairo_t *))
     cairo_set_source_rgb (cr, 1, 1, 1);
     cairo_paint (cr);
 
-    for (i = 0; i < sizeof (clip_funcs) / sizeof (clip_funcs[0]); i++) {
+    for (i = 0; i < ARRAY_LENGTH (clip_funcs); i++) {
 	cairo_translate (cr, translations[i][0], translations[i][1]);
 
 	cairo_save (cr);

@@ -82,7 +82,7 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_translate (cr, PAD, PAD);
 
-    cairo_set_dash (cr, dash, sizeof(dash)/sizeof(dash[0]), - 2 * LINE_WIDTH);
+    cairo_set_dash (cr, dash, ARRAY_LENGTH (dash), - 2 * LINE_WIDTH);
     cairo_set_line_width (cr, LINE_WIDTH);
     draw_three_shapes (cr);
 
@@ -90,7 +90,7 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_save (cr);
     {
-	cairo_set_dash (cr, dash, sizeof(dash)/sizeof(dash[0]), - 2 * LINE_WIDTH);
+	cairo_set_dash (cr, dash, ARRAY_LENGTH (dash), - 2 * LINE_WIDTH);
 	cairo_set_line_width (cr, LINE_WIDTH);
 	cairo_scale (cr, 1, 2);
 	draw_three_shapes (cr);
@@ -102,7 +102,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_save (cr);
     {
 	cairo_scale (cr, 1, 2);
-	cairo_set_dash (cr, dash, sizeof(dash)/sizeof(dash[0]), - 2 * LINE_WIDTH);
+	cairo_set_dash (cr, dash, ARRAY_LENGTH (dash), - 2 * LINE_WIDTH);
 	cairo_set_line_width (cr, LINE_WIDTH);
 	draw_three_shapes (cr);
     }

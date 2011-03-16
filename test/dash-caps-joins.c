@@ -64,7 +64,7 @@ draw (cairo_t *cr, int width, int height)
     for (i=0; i<2; i++) {
 	cairo_save (cr);
 	cairo_set_line_width (cr, LINE_WIDTH);
-	cairo_set_dash (cr, dash, sizeof(dash)/sizeof(dash[0]), dash_offset);
+	cairo_set_dash (cr, dash, ARRAY_LENGTH (dash), dash_offset);
 
 	cairo_translate (cr, PAD, PAD);
 

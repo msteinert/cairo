@@ -346,7 +346,7 @@ preamble (cairo_test_context_t *ctx)
     int n, num_ppi;
     const char *path = _cairo_test_mkdir (CAIRO_TEST_OUTPUT_DIR) ? CAIRO_TEST_OUTPUT_DIR : ".";
 
-    num_ppi = sizeof (ppi) / sizeof (ppi[0]);
+    num_ppi = ARRAY_LENGTH (ppi);
 
 #if GENERATE_REFERENCE
     for (n = 0; n < num_ppi; n++) {

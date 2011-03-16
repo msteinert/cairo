@@ -45,7 +45,7 @@ paint_curve (cairo_t *cr)
     cairo_set_line_width (cr, 2);
     cairo_move_to (cr, points[0].x, points[0].y);
 
-    for (i = 1; i < sizeof (points) / sizeof (points[0]) - 2; i += 3) {
+    for (i = 1; i < ARRAY_LENGTH (points) - 2; i += 3) {
 	cairo_curve_to (cr,
 			points[i].x, points[i].y,
 			points[i + 1].x, points[i + 1].y,

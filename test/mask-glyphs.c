@@ -128,7 +128,7 @@ _render_image (cairo_t *cr,
     cairo_set_font_size (cr, 5);
     scaled_font = cairo_get_scaled_font (cr);
 
-    for (i = 0; i < sizeof (channel) / sizeof (channel[0]); i++) {
+    for (i = 0; i < ARRAY_LENGTH (channel); i++) {
 	cairo_push_group_with_content (cr, CAIRO_CONTENT_ALPHA);
 	for (n = 0; n < 256; n++) {
 	    cairo_status_t status;

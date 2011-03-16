@@ -40,7 +40,7 @@ draw_symbol (cairo_t *cr)
     cairo_stroke (cr);
 
     cairo_save (cr);
-    cairo_set_dash (cr, dash, sizeof (dash) / sizeof (dash[0]), 0.);
+    cairo_set_dash (cr, dash, ARRAY_LENGTH (dash), 0.);
     cairo_move_to (cr, 0, 0);
     cairo_arc (cr, 0, 0, 12.5, 0, 3 * M_PI / 2);
     cairo_close_path (cr);

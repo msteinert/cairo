@@ -151,7 +151,7 @@ draw (cairo_t *cr, int width, int height)
 	}
 
 	if (!double_buf_equal (ctx, new_buf, expected_values,
-			       sizeof(expected_values)/sizeof(double)) != 0)
+			       ARRAY_LENGTH (expected_values)) != 0)
 	{
 	    cairo_pattern_destroy (pat);
 	    return CAIRO_TEST_FAILURE;
