@@ -26,8 +26,6 @@
 
 #include "cairo-test.h"
 
-#define ARRAY_LENGTH(array) (sizeof (array) / sizeof ((array)[0]))
-
 #define TARGET_SIZE 10
 
 #define SUB_SIZE 15

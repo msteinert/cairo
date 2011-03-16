@@ -126,9 +126,8 @@ static cairo_operator_t operators[] = {
     CAIRO_OPERATOR_DEST_IN, CAIRO_OPERATOR_DEST_ATOP
 };
 
-#define ARRAY_SIZE(a) (sizeof (a) / sizeof ((a)[0]))
-#define IMAGE_WIDTH (ARRAY_SIZE (operators) * (WIDTH + PAD) + PAD)
-#define IMAGE_HEIGHT (ARRAY_SIZE (draw_funcs) * (HEIGHT + PAD) + PAD)
+#define IMAGE_WIDTH (ARRAY_LENGTH (operators) * (WIDTH + PAD) + PAD)
+#define IMAGE_HEIGHT (ARRAY_LENGTH (draw_funcs) * (HEIGHT + PAD) + PAD)
 
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
@@ -141,8 +140,8 @@ draw (cairo_t *cr, int width, int height)
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
 
-    for (j = 0; j < ARRAY_SIZE (draw_funcs); j++) {
-	for (i = 0; i < ARRAY_SIZE (operators); i++) {
+    for (j = 0; j < ARRAY_LENGTH (draw_funcs); j++) {
+	for (i = 0; i < ARRAY_LENGTH (operators); i++) {
 	    x = i * (WIDTH + PAD) + PAD;
 	    y = j * (HEIGHT + PAD) + PAD;
 

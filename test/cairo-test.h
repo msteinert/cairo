@@ -79,6 +79,18 @@ cairo_test_NaN (void)
 #endif
 }
 
+#ifndef MIN
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef MAX
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
+#ifndef ARRAY_LENGTH
+#define ARRAY_LENGTH(__array) ((int) (sizeof (__array) / sizeof (__array[0])))
+#endif
+
 #define CAIRO_TEST_OUTPUT_DIR "output"
 
 #define CAIRO_TEST_LOG_SUFFIX ".log"

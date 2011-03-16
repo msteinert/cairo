@@ -122,9 +122,8 @@ static void (* const draw_funcs[])(cairo_t *cr, int x, int y) = {
 
 #define N_OPERATORS (1 + CAIRO_OPERATOR_SATURATE - CAIRO_OPERATOR_CLEAR)
 
-#define ARRAY_SIZE(a) (sizeof (a) / sizeof ((a)[0]))
 #define IMAGE_WIDTH (N_OPERATORS * (WIDTH + PAD) + PAD)
-#define IMAGE_HEIGHT (ARRAY_SIZE (draw_funcs) * (HEIGHT + PAD) + PAD)
+#define IMAGE_HEIGHT (ARRAY_LENGTH (draw_funcs) * (HEIGHT + PAD) + PAD)
 
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
@@ -139,7 +138,7 @@ draw (cairo_t *cr, int width, int height)
 			    CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size (cr, 0.9 * HEIGHT);
 
-    for (j = 0; j < ARRAY_SIZE (draw_funcs); j++) {
+    for (j = 0; j < ARRAY_LENGTH (draw_funcs); j++) {
 	for (op = CAIRO_OPERATOR_CLEAR; op < N_OPERATORS; op++) {
 	    x = op * (WIDTH + PAD) + PAD;
 	    y = j * (HEIGHT + PAD) + PAD;

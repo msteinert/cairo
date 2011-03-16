@@ -26,7 +26,6 @@
 
 #include "cairo-test.h"
 
-#define ARRAY_LENGTH(x) (sizeof(x) / sizeof(x[0]))
 typedef enum {
   CLEAR,
   CLEARED,

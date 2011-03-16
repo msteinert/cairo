@@ -46,10 +46,8 @@ static const  struct color {
     { 1, 0, 1 },
     { .5, .5, .5 },
 };
-#define NUM_COLORS (sizeof (color) / sizeof (color[0]))
-#ifndef MAX
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-#endif
+
+#define NUM_COLORS ARRAY_LENGTH (color)
 
 static void
 object (cairo_t *cr, const struct color *fg, const struct color *bg)

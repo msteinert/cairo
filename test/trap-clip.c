@@ -167,9 +167,8 @@ static void (* const clip_funcs[])(cairo_t *cr, int x, int y) = {
     clip_circle,
 };
 
-#define ARRAY_SIZE(a) (sizeof (a) / sizeof ((a)[0]))
-#define IMAGE_WIDTH (ARRAY_SIZE (pattern_funcs) * (WIDTH + PAD) + PAD)
-#define IMAGE_HEIGHT (ARRAY_SIZE (draw_funcs) * ARRAY_SIZE (clip_funcs) * (HEIGHT + PAD) + PAD)
+#define IMAGE_WIDTH (ARRAY_LENGTH (pattern_funcs) * (WIDTH + PAD) + PAD)
+#define IMAGE_HEIGHT (ARRAY_LENGTH (draw_funcs) * ARRAY_LENGTH (clip_funcs) * (HEIGHT + PAD) + PAD)
 
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
@@ -177,11 +176,11 @@ draw (cairo_t *cr, int width, int height)
     const cairo_test_context_t *ctx = cairo_test_get_context (cr);
     size_t i, j, k, x, y;
 
-    for (k = 0; k < ARRAY_SIZE (clip_funcs); k++) {
-	for (j = 0; j < ARRAY_SIZE (draw_funcs); j++) {
-	    for (i = 0; i < ARRAY_SIZE (pattern_funcs); i++) {
+    for (k = 0; k < ARRAY_LENGTH (clip_funcs); k++) {
+	for (j = 0; j < ARRAY_LENGTH (draw_funcs); j++) {
+	    for (i = 0; i < ARRAY_LENGTH (pattern_funcs); i++) {
 		x = i * (WIDTH + PAD) + PAD;
-		y = (ARRAY_SIZE (draw_funcs) * k + j) * (HEIGHT + PAD) + PAD;
+		y = (ARRAY_LENGTH (draw_funcs) * k + j) * (HEIGHT + PAD) + PAD;
 
 		cairo_save (cr);
 

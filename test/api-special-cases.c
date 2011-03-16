@@ -97,7 +97,6 @@
 #undef Cursor
 #endif
 
-#define ARRAY_LENGTH(array) (sizeof (array) / sizeof ((array)[0]))
 #define surface_has_type(surface,type) (cairo_surface_get_type (surface) == (type))
 
 typedef cairo_test_status_t (* surface_test_func_t) (cairo_surface_t *surface);

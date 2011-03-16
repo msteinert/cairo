@@ -99,8 +99,8 @@ create_pattern (int index)
     radius1 = radiuses[NUM_GRADIENTS - index - 1];
 
     /* center the gradient */
-    left = fmin (x0 - radius0, x1 - radius1);
-    right = fmax (x0 + radius0, x1 + radius1);
+    left = MIN (x0 - radius0, x1 - radius1);
+    right = MAX (x0 + radius0, x1 + radius1);
     center = (left + right) * 0.5;
     x0 -= center;
     x1 -= center;

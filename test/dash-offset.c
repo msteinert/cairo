@@ -27,8 +27,6 @@
 
 #include "cairo-test.h"
 
-#define ARRAY_SIZE(a) (sizeof (a) / sizeof ((a)[0]))
-
 /* Lengths of the dashes of the dash patterns */
 static const double dashes[] = { 2, 2, 4, 4 };
 /* Dash offset in userspace units
@@ -45,8 +43,8 @@ static const double int_offset[] = { -2, -1, 0, 1, 2 };
 
 #define PAD 6
 #define STROKE_LENGTH 32
-#define IMAGE_WIDTH (PAD + (STROKE_LENGTH + PAD) * ARRAY_SIZE(dashes))
-#define IMAGE_HEIGHT (PAD + PAD * ARRAY_SIZE(int_offset) + PAD * ARRAY_SIZE(frac_offset) * ARRAY_SIZE(int_offset))
+#define IMAGE_WIDTH (PAD + (STROKE_LENGTH + PAD) * ARRAY_LENGTH (dashes))
+#define IMAGE_HEIGHT (PAD + PAD * ARRAY_LENGTH (int_offset) + PAD * ARRAY_LENGTH (frac_offset) * ARRAY_LENGTH (int_offset))
 
 
 static cairo_test_status_t
@@ -62,13 +60,13 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_line_width (cr, 2);
 
     total = 0.0;
-    for (k = 0; k < ARRAY_SIZE(dashes); ++k) {
+    for (k = 0; k < ARRAY_LENGTH (dashes); ++k) {
 	total += dashes[k];
-	for (i = 0; i < ARRAY_SIZE(frac_offset); ++i) {
-	    for (j = 0; j < ARRAY_SIZE(int_offset); ++j) {
+	for (i = 0; i < ARRAY_LENGTH (frac_offset); ++i) {
+	    for (j = 0; j < ARRAY_LENGTH (int_offset); ++j) {
 		cairo_set_dash (cr, dashes, k + 1, frac_offset[i] + total * int_offset[j]);
-		cairo_move_to (cr, (STROKE_LENGTH + PAD) * k + PAD, PAD * (i + j + ARRAY_SIZE(frac_offset) * j + 1));
-		cairo_line_to (cr, (STROKE_LENGTH + PAD) * (k + 1), PAD * (i + j + ARRAY_SIZE(frac_offset) * j + 1));
+		cairo_move_to (cr, (STROKE_LENGTH + PAD) * k + PAD, PAD * (i + j + ARRAY_LENGTH (frac_offset) * j + 1));
+		cairo_line_to (cr, (STROKE_LENGTH + PAD) * (k + 1), PAD * (i + j + ARRAY_LENGTH (frac_offset) * j + 1));
 		cairo_stroke (cr);
 	    }
 	}

@@ -37,8 +37,6 @@
  *  for a specific bug).
  */
 
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-
 #define GENERATE_REF 0
 
 /* For determining whether we establish the clip path before or after

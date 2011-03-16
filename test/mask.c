@@ -180,9 +180,8 @@ static void (* const clip_funcs[])(cairo_t *cr, int x, int y) = {
     clip_circle,
 };
 
-#define ARRAY_SIZE(a) (sizeof (a) / sizeof ((a)[0]))
-#define IMAGE_WIDTH (ARRAY_SIZE (pattern_funcs) * (WIDTH + PAD) + PAD)
-#define IMAGE_HEIGHT (ARRAY_SIZE (mask_funcs) * ARRAY_SIZE (clip_funcs) * (HEIGHT + PAD) + PAD)
+#define IMAGE_WIDTH (ARRAY_LENGTH (pattern_funcs) * (WIDTH + PAD) + PAD)
+#define IMAGE_HEIGHT (ARRAY_LENGTH (mask_funcs) * ARRAY_LENGTH (clip_funcs) * (HEIGHT + PAD) + PAD)
 
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
@@ -201,11 +200,11 @@ draw (cairo_t *cr, int width, int height)
     cr2 = cairo_create (tmp_surface);
     cairo_surface_destroy (tmp_surface);
 
-    for (k = 0; k < ARRAY_SIZE (clip_funcs); k++) {
-	for (j = 0; j < ARRAY_SIZE (mask_funcs); j++) {
-	    for (i = 0; i < ARRAY_SIZE (pattern_funcs); i++) {
+    for (k = 0; k < ARRAY_LENGTH (clip_funcs); k++) {
+	for (j = 0; j < ARRAY_LENGTH (mask_funcs); j++) {
+	    for (i = 0; i < ARRAY_LENGTH (pattern_funcs); i++) {
 		int x = i * (WIDTH + PAD) + PAD;
-		int y = (ARRAY_SIZE (mask_funcs) * k + j) * (HEIGHT + PAD) + PAD;
+		int y = (ARRAY_LENGTH (mask_funcs) * k + j) * (HEIGHT + PAD) + PAD;
 
 		/* Clear intermediate surface we are going to be drawing onto */
 		cairo_save (cr2);

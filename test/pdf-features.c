@@ -40,8 +40,6 @@
 #define MM_TO_POINTS(mm) ((mm) / 25.4 * 72.0)
 #define TEXT_SIZE 12
 
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
-
 static struct {
     const char *page_size;
     const char *page_size_alias;
@@ -110,7 +108,7 @@ preamble (cairo_test_context_t *ctx)
 			    CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size (cr, TEXT_SIZE);
 
-    for (i = 0; i < ARRAY_SIZE (pages); i++) {
+    for (i = 0; i < ARRAY_LENGTH (pages); i++) {
 	cairo_pdf_surface_set_size (surface,
 				   pages[i].width_in_points,
 				   pages[i].height_in_points);

@@ -143,8 +143,6 @@ scale_path_not_line_width (cairo_t *cr)
     cairo_restore (cr);
 }
 
-#define ARRAY_SIZE(arr) (sizeof(arr)/sizeof(arr[0]))
-
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {

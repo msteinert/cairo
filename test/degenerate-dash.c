@@ -27,10 +27,6 @@
 
 #include "cairo-test.h"
 
-#ifndef ARRAY_LENGTH
-#define ARRAY_LENGTH(A) (int) (sizeof (A) / sizeof ((A)[0]))
-#endif
-
 #define PAD 5
 
 static cairo_test_status_t

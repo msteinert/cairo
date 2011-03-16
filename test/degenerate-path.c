@@ -28,8 +28,6 @@
 #define PAD 3.0
 #define LINE_WIDTH 6.0
 
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
-
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
@@ -40,7 +38,7 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_set_source_rgb (cr, 1, 0, 0);
 
-    for (i=0; i<ARRAY_SIZE(cap); i++) {
+    for (i = 0; i < ARRAY_LENGTH (cap); i++) {
 	cairo_save (cr);
 
 	cairo_set_line_cap (cr, cap[i]);

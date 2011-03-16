@@ -135,8 +135,6 @@ mask_with_extend_none (cairo_t *cr)
     cairo_surface_destroy (surface);
 }
 
-#define ARRAY_LENGTH(array) (sizeof (array) / sizeof ((array)[0]))
-
 typedef void (* mask_func_t) (cairo_t *);
 
 static mask_func_t mask_funcs[] = {
