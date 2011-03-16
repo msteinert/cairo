@@ -1086,6 +1086,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	xcb_pixmap_t pixmap;
 	pixman_format_code_t pixman_format;
 	cairo_surface_pattern_t pattern;
+	cairo_status_t status;
 
 	/* XXX XRenderCreatePictureForNative:
 	 * Copy the source to a temporary pixmap if possible.
