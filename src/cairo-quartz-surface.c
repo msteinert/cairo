@@ -2061,16 +2061,18 @@ _cairo_quartz_surface_show_glyphs_cg (cairo_quartz_surface_t *surface,
 	cg_advances = (CGSize*) (cg_glyphs + num_glyphs);
     }
 
+    /* scale(1,-1) * scaled_font->scale */
     textTransform = CGAffineTransformMake (scaled_font->scale.xx,
 					   scaled_font->scale.yx,
-					   scaled_font->scale.xy,
-					   scaled_font->scale.yy,
+					   -scaled_font->scale.xy,
+					   -scaled_font->scale.yy,
 					   0.0, 0.0);
 
+    /* scaled_font->scale_inverse * scale(1,-1) */
     invTextTransform = CGAffineTransformMake (scaled_font->scale_inverse.xx,
-					      scaled_font->scale_inverse.yx,
+					      -scaled_font->scale_inverse.yx,
 					      scaled_font->scale_inverse.xy,
-					      scaled_font->scale_inverse.yy,
+					      -scaled_font->scale_inverse.yy,
 					      0.0, 0.0);
 
     CGContextSetTextPosition (state.cgMaskContext, 0.0, 0.0);
@@ -2095,14 +2097,12 @@ _cairo_quartz_surface_show_glyphs_cg (cairo_quartz_surface_t *surface,
     /* Translate to the first glyph's position before drawing */
     CGContextTranslateCTM (state.cgMaskContext, glyphs[0].x, glyphs[0].y);
     CGContextConcatCTM (state.cgMaskContext, textTransform);
-    CGContextScaleCTM (state.cgMaskContext, 1.0, -1.0);
 
     CGContextShowGlyphsWithAdvances (state.cgMaskContext,
 				     cg_glyphs,
 				     cg_advances,
 				     num_glyphs);
 
-    CGContextScaleCTM (state.cgMaskContext, 1.0, -1.0);
     CGContextConcatCTM (state.cgMaskContext, invTextTransform);
     CGContextTranslateCTM (state.cgMaskContext, -glyphs[0].x, -glyphs[0].y);
 
