@@ -241,6 +241,7 @@ test_sources = \
 	self-copy-overlap.c				\
 	self-intersecting.c				\
 	set-source.c					\
+	show-glyphs-advance.c				\
 	show-glyphs-many.c				\
 	show-text-current-point.c			\
 	skew-extreme.c					\

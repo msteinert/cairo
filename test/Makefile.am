@@ -1197,6 +1197,11 @@ REFERENCE_IMAGES = \
 	self-intersecting.xlib.ref.png \
 	set-source.ref.png \
 	set-source.rgb24.ref.png \
+	show-glyphs-advance.image16.ref.png \
+	show-glyphs-advance.ps.ref.png \
+	show-glyphs-advance.quartz.ref.png \
+	show-glyphs-advance.ref.png \
+	show-glyphs-advance.svg.ref.png \
 	show-glyphs-many.ref.png \
 	show-text-current-point.image16.ref.png \
 	show-text-current-point.ps2.ref.png \
