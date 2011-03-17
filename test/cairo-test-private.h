@@ -36,7 +36,12 @@
 
 CAIRO_BEGIN_DECLS
 
-cairo_bool_t
+typedef enum {
+    DIRECT,
+    SIMILAR
+} cairo_test_similar_t;
+
+cairo_test_similar_t
 cairo_test_target_has_similar (const cairo_test_context_t *ctx,
 			       const cairo_boilerplate_target_t *target);
 

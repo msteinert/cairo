@@ -454,12 +454,12 @@ _cairo_test_mkdir (const char *path)
     return errno == EEXIST;
 }
 
-cairo_bool_t
+cairo_test_similar_t
 cairo_test_target_has_similar (const cairo_test_context_t *ctx,
 			       const cairo_boilerplate_target_t *target)
 {
     cairo_surface_t *surface;
-    cairo_bool_t has_similar;
+    cairo_test_similar_t has_similar;
     cairo_t * cr;
     cairo_surface_t *similar;
     cairo_status_t status;
@@ -468,16 +468,16 @@ cairo_test_target_has_similar (const cairo_test_context_t *ctx,
 
     /* ignore image intermediate targets */
     if (target->expected_type == CAIRO_SURFACE_TYPE_IMAGE)
-	return FALSE;
+	return DIRECT;
 
     if (getenv ("CAIRO_TEST_IGNORE_SIMILAR"))
-	return FALSE;
+	return DIRECT;
 
     xasprintf (&path, "%s/%s",
 	       _cairo_test_mkdir (CAIRO_TEST_OUTPUT_DIR) ? CAIRO_TEST_OUTPUT_DIR : ".",
 	       ctx->test_name);
 
-    has_similar = FALSE;
+    has_similar = DIRECT;
     do {
 	do {
 	    surface = (target->create_surface) (path,
@@ -502,7 +502,10 @@ cairo_test_target_has_similar (const cairo_test_context_t *ctx,
 	similar = cairo_get_group_target (cr);
 	status = cairo_surface_status (similar);
 
-	has_similar = cairo_surface_get_type (similar) == cairo_surface_get_type (surface);
+	if (cairo_surface_get_type (similar) == cairo_surface_get_type (surface))
+	    has_similar = SIMILAR;
+	else
+	    has_similar = DIRECT;
 
 	cairo_destroy (cr);
 	cairo_surface_destroy (surface);
@@ -1813,10 +1816,10 @@ _cairo_test_context_run (cairo_test_context_t *ctx)
 
 	for (j = 0; j < NUM_DEVICE_OFFSETS; j++) {
 	    int dev_offset = ((j + ctx->thread) % NUM_DEVICE_OFFSETS) * 25;
-	    int similar, has_similar;
+	    cairo_test_similar_t similar, has_similar;
 
 	    has_similar = cairo_test_target_has_similar (ctx, target);
-	    for (similar = 0; similar <= has_similar ; similar++) {
+	    for (similar = DIRECT; similar <= has_similar; similar++) {
 		cairo_status_t status;
 
 		status = _cairo_test_context_run_for_target (ctx,

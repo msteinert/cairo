@@ -909,18 +909,18 @@ main (int argc, char **argv)
 			 target_error = FALSE,
 			 target_crashed = FALSE,
 			 target_skipped = TRUE;
-	    int has_similar;
+	    cairo_test_similar_t has_similar;
 
 	    target = ctx.targets_to_test[n];
 
 	    has_similar = runner.full_test ?
 			  cairo_test_target_has_similar (&ctx, target) :
-		          0;
+			  DIRECT;
 	    for (m = 0; m < runner.num_device_offsets; m++) {
 		int dev_offset = m * 25;
-		int similar;
+		cairo_test_similar_t similar;
 
-		for (similar = 0; similar <= has_similar; similar++) {
+		for (similar = DIRECT; similar <= has_similar; similar++) {
 		    status = _cairo_test_runner_draw (&runner, &ctx, target,
 						      similar, dev_offset);
 		    switch (status) {
