@@ -177,12 +177,9 @@ _list_free (cairo_test_list_t *list)
 static cairo_bool_t
 is_running_under_debugger (void)
 {
+#if HAVE_UNISTD_H && HAVE_LIBGEN_H && __linux__
     char buf[1024];
 
-    if (RUNNING_ON_VALGRIND)
-	return TRUE;
-
-#if HAVE_UNISTD_H && HAVE_LIBGEN_H && __linux__
     sprintf (buf, "/proc/%d/exe", getppid ());
     if (readlink (buf, buf, sizeof (buf)) != -1 &&
 	strncmp (basename (buf), "gdb", 3) == 0)
@@ -190,6 +187,9 @@ is_running_under_debugger (void)
 	return TRUE;
     }
 #endif
+
+    if (RUNNING_ON_VALGRIND)
+	return TRUE;
 
     return FALSE;
 }
