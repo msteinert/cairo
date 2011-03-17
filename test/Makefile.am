@@ -787,11 +787,13 @@ REFERENCE_IMAGES = \
 	leaky-polygon.image16.ref.png \
 	leaky-polygon.ref.png \
 	leaky-polygon.ps.ref.png \
+	line-width-overlap.ref.png \
 	line-width-scale.image16.ref.png \
 	line-width-scale.ps2.ref.png \
 	line-width-scale.ps3.ref.png \
 	line-width-scale.quartz.ref.png \
 	line-width-scale.ref.png \
+	line-width-tolerance.ref.png \
 	line-width.ref.png \
 	linear-gradient-extend.ref.png \
 	linear-gradient-reflect.image16.ref.png \
