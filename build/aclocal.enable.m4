@@ -8,11 +8,6 @@ dnl
 dnl ===========================================================================
 
 dnl
-dnl Used to force cache invalidation
-dnl
-m4_define([cr_cache_version], [6])
-
-dnl
 dnl Define a macro to enable features
 dnl  - Macro: _CAIRO_ENABLE (ID, NAME, WHAT, DEFAULT, COMMANDS)
 dnl
@@ -30,8 +25,7 @@ dnl		"no" for experimental features, eg. your favorite new backend
 dnl		"yes" for recommended features, eg. png functions
 dnl		"auto" for other supported features, eg. xlib surface backend
 dnl		"always" for mandatory features (can't be disabled), eg. image surface backend
-dnl	COMMANDS are run to check whether the feature can be enabled.  Their
-dnl		result may be cached, so user should not count on them being run.
+dnl	COMMANDS are run to check whether the feature can be enabled.
 dnl		They should set use_$(ID) to something other than yes if the
 dnl		feature cannot be built, eg. "no (requires SomeThing)".  It then
 dnl		should also set $(ID)_REQUIRES/CFLAGS/LIBS/...
@@ -52,7 +46,6 @@ AC_DEFUN([_CAIRO_ENABLE],
 	m4_pushdef([cr_feature_what], m4_normalize([$3]))dnl
 	m4_pushdef([cr_feature_default], m4_normalize([$4]))dnl
 	m4_pushdef([cr_feature_commands], [$5])dnl
-	m4_pushdef([cr_feature_commands_len], m4_len([$5]))dnl
 	dnl
 	m4_pushdef([cr_feature_arg], m4_translit([$1],_,-))dnl
 	dnl
@@ -81,59 +74,16 @@ AC_DEFUN([_CAIRO_ENABLE],
 		use_$1="no (disabled, use --enable-cr_feature_arg to enable)"
 	],dnl
 	[yes|auto],[dnl
-		dnl Cache invalidating:
-		dnl
-		dnl To be extremely user-friendly, we discard cache results if
-		dnl any of the following conditions happens:
-		dnl
-		dnl   - Global cache version changes
-		dnl     This is used to force a cache invalidation for these
-		dnl     macros
-		dnl
-		dnl   - Set of cached variables changes
-		dnl     (XXX should also do if the default value of such
-		dnl     variables changes.  Argh...)
-		dnl
-		dnl   - Length of the COMMANDS string changes!
-		dnl     (This is much more friendly to the cache than caching
-		dnl     the commands string itself.  Note that this still does
-		dnl     not catch all valid cases where we should be
-		dnl     invalidting.  For example if COMMANDS uses
-		dnl     variables/macros defined outside, we don't detect changes
-		dnl     in those variables.  Also doesn't detect in-place
-		dnl     modifications like bumping verson numbers.
-		dnl     Just modify COMMANDS in an obvious way to force recheck.
-		dnl     Hashing sounds a bit too harsh to do here...)
-		dnl
-		dnl  - If feature is requested and cached results for enabling
-		dnl    feature is no.  We are going to terminate with an error
-		dnl    if this happens anyway, so we can be more friendly by
-		dnl    assuming that user installed some missing pieces since
-		dnl    last time and so we recheck.  Although even in that
-		dnl    case other cached values probably get in the way...
-		dnl
-		AS_IF([test "x$cairo_cv_[]$1[]_cache_version" != "x[]cr_cache_version" -o \
-			    "x$cairo_cv_[]$1[]_cache_commands_len" != "x[]cr_feature_commands_len" -o \
-			    "x$cairo_cv_[]$1[]_cache_vars" != "x[]_CAIRO_FEATURE_VARS"],
-		      [unset cairo_cv_[]$1[]_use])
-		AS_IF([test "x$enable_$1" = xyes -a "x$cairo_cv_[]$1[]_use" != xyes],
-		      [unset cairo_cv_[]$1[]_use])
+		AC_MSG_CHECKING([for cairo's ]cr_feature_name[ feature])
+		echo
 
-		AC_CACHE_CHECK([for cairo's ]cr_feature_name[ feature], cairo_cv_[]$1[]_use,
-		[dnl
-			echo
-			use_[]$1=yes
-			CAIRO_FEATURE_VARS_FOREACH(cr_var, [cr_feature[_]cr_var[=]_CAIRO_SH_ESCAPE_UNQUOTED(m4_do([cr_var_default_]cr_var[_value]))]m4_newline)
-			cr_feature_commands
-			cairo_cv_[]$1[]_use=$use_[]$1
-			cairo_cv_[]$1[]_cache_vars="_CAIRO_FEATURE_VARS"
-			cairo_cv_[]$1[]_cache_commands_len="cr_feature_commands_len"
-			cairo_cv_[]$1[]_cache_version="cr_cache_version"
-			CAIRO_FEATURE_VARS_FOREACH([cr_var], [[cairo_cv_]cr_feature[_]cr_var[=$]cr_feature[_]cr_var]m4_newline)
-			AC_MSG_CHECKING([whether cairo's ]cr_feature_name[ feature could be enabled])
-		])dnl
+		use_[]$1=yes
+		CAIRO_FEATURE_VARS_FOREACH(cr_var, [cr_feature[_]cr_var[=]_CAIRO_SH_ESCAPE_UNQUOTED(m4_do([cr_var_default_]cr_var[_value]))]m4_newline)
 
-		use_[]$1=$cairo_cv_[]$1[]_use
+		cr_feature_commands
+
+		AC_MSG_CHECKING([whether cairo's ]cr_feature_name[ feature could be enabled])
+		AC_MSG_RESULT([$use_$1])
 
 		AS_IF([test "x$enable_$1" = "xyes" -a "x$use_$1" != xyes],
 		[dnl
@@ -151,14 +101,13 @@ AC_DEFUN([_CAIRO_ENABLE],
 
 	AS_IF([test "x$use_$1" = "xyes"],
 	[dnl
-		CAIRO_FEATURE_VARS_FOREACH([cr_var], [cr_feature[_]cr_var[=$cairo_cv_]cr_feature[_]cr_var]m4_newline)
 		CAIRO_ACCUMULATED_FEATURE_VARS_FOREACH([cr_var],
 		[dnl
 			CAIRO_ACCUMULATE_UNQUOTED_BEFORE(cr_var, [$]cr_feature[_]cr_var)
 		])dnl
 	],[dnl
 		dnl If not enabled, empty the vars so no one accidentally uses them.
-		CAIRO_FEATURE_VARS_FOREACH([cr_var], [cr_feature[_]cr_var[=$cairo_cv_]cr_feature[_]cr_var]m4_newline)
+		CAIRO_FEATURE_VARS_FOREACH([cr_var], [unset cr_feature[_]cr_var]m4_newline)
 	])dnl
 
 	_CAIRO_FEATURE_HOOKS(cr_feature, cr_feature_name, cr_feature_default, cr_feature_what)dnl
@@ -168,7 +117,6 @@ AC_DEFUN([_CAIRO_ENABLE],
 	m4_popdef([cr_feature_what])dnl
 	m4_popdef([cr_feature_default])dnl
 	m4_popdef([cr_feature_commands])dnl
-	m4_popdef([cr_feature_commands_len])dnl
 	m4_popdef([cr_feature_arg])dnl
 ])
 
