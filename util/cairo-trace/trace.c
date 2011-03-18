@@ -3715,10 +3715,11 @@ cairo_surface_write_to_png_stream (cairo_surface_t *surface,
 
 	_trace_printf ("%% s%ld ", _get_surface_id (surface));
 #if CAIRO_HAS_SYMBOL_LOOKUP
-	_emit_string_literal (lookup_symbol (symbol, sizeof (symbol),
-					     write_func),
-			      -1);
+	lookup_symbol (symbol, sizeof (symbol), write_func);
+#else
+	symbol[0] = '\0';
 #endif
+	_emit_string_literal (symbol, -1);
 	_trace_printf (" write-to-png-stream\n");
 	_write_unlock ();
     }
