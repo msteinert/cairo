@@ -126,6 +126,7 @@ _cairo_format_from_pixman_format (pixman_format_code_t pixman_format)
     case PIXMAN_a2b10g10r10:
     case PIXMAN_x2r10g10b10:
     case PIXMAN_a2r10g10b10:
+    case PIXMAN_x14r6g6b6:
     default:
 	return CAIRO_FORMAT_INVALID;
     }
