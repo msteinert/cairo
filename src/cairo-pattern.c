@@ -3782,7 +3782,6 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
     int tx, ty;
     double pad;
     cairo_bool_t is_identity;
-    cairo_bool_t is_empty;
     cairo_bool_t is_bounded;
     cairo_int_status_t status;
 
@@ -3953,7 +3952,7 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
     if ( _cairo_surface_get_extents (surface, &extents)) {
 	if (attr->extend == CAIRO_EXTEND_NONE) {
 	    /* Never acquire a larger area than the source itself */
-	    is_empty = _cairo_rectangle_intersect (&extents, &sampled_area);
+	    _cairo_rectangle_intersect (&extents, &sampled_area);
 	} else {
 	    int trim = 0;
 
@@ -3979,12 +3978,8 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 		/* source is wholly contained within extents, drop the REPEAT */
 		attr->extend = CAIRO_EXTEND_NONE;
 	    }
-
-	    is_empty = extents.width == 0 || extents.height == 0;
 	}
     }
-
-    /* XXX can we use is_empty? */
 
     status = _cairo_surface_clone_similar (dst, surface,
 					   extents.x, extents.y,

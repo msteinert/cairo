@@ -1502,12 +1502,8 @@ sampled_area (const cairo_surface_pattern_t *pattern,
     sample->width  = ceil (x2 + pad) - sample->x;
     sample->height = ceil (y2 + pad) - sample->y;
 
-    if (_cairo_surface_get_extents (pattern->surface, &surface_extents)) {
-	cairo_bool_t is_empty;
-
-	is_empty = _cairo_rectangle_intersect (sample,
-					       &surface_extents);
-    }
+    if (_cairo_surface_get_extents (pattern->surface, &surface_extents))
+	_cairo_rectangle_intersect (sample, &surface_extents);
 
     return filter;
 }

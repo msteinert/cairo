@@ -6309,14 +6309,12 @@ _cairo_pdf_surface_fill_stroke (void			*abstract_surface,
 
     /* use the more accurate extents */
     if (extents.is_bounded) {
-	cairo_bool_t is_empty;
-
 	_cairo_path_fixed_fill_extents (path,
 					fill_rule,
 					fill_tolerance,
 					&extents.mask);
 
-	is_empty = ! _cairo_rectangle_intersect (&extents.bounded, &extents.mask);
+	_cairo_rectangle_intersect (&extents.bounded, &extents.mask);
     }
 
     fill_pattern_res.id = 0;
@@ -6343,8 +6341,6 @@ _cairo_pdf_surface_fill_stroke (void			*abstract_surface,
 
     /* use the more accurate extents */
     if (extents.is_bounded) {
-	cairo_bool_t is_empty;
-
 	status = _cairo_path_fixed_stroke_extents (path, stroke_style,
 						   stroke_ctm, stroke_ctm_inverse,
 						   stroke_tolerance,
@@ -6352,7 +6348,7 @@ _cairo_pdf_surface_fill_stroke (void			*abstract_surface,
 	if (unlikely (status))
 	    return status;
 
-	is_empty = ! _cairo_rectangle_intersect (&extents.bounded, &extents.mask);
+	_cairo_rectangle_intersect (&extents.bounded, &extents.mask);
     }
 
     stroke_pattern_res.id = 0;

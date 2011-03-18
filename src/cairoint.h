@@ -283,7 +283,7 @@ _cairo_unbounded_rectangle_init (cairo_rectangle_int_t *rect)
     rect->height = CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN;
 }
 
-cairo_private cairo_bool_t
+cairo_private_no_warn cairo_bool_t
 _cairo_rectangle_intersect (cairo_rectangle_int_t *dst,
 			    const cairo_rectangle_int_t *src);
 

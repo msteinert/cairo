@@ -694,7 +694,7 @@ cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
 	is_empty = _cairo_surface_get_extents (parent_surface, &extents);
 	clip_extents = _cairo_clip_get_extents (_cairo_gstate_get_clip (cr->gstate));
 	if (clip_extents != NULL)
-	    is_empty = _cairo_rectangle_intersect (&extents, clip_extents);
+	    _cairo_rectangle_intersect (&extents, clip_extents);
 
 	group_surface = _cairo_surface_create_similar_solid (parent_surface,
 							     content,

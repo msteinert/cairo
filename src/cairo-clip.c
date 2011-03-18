@@ -368,7 +368,6 @@ _cairo_clip_path_reapply_clip_path_transform (cairo_clip_t      *clip,
 {
     cairo_status_t status;
     cairo_clip_path_t *clip_path;
-    cairo_bool_t is_empty;
 
     if (other_path->prev != NULL) {
         status = _cairo_clip_path_reapply_clip_path_transform (clip,
@@ -394,8 +393,8 @@ _cairo_clip_path_reapply_clip_path_transform (cairo_clip_t      *clip,
     _cairo_path_fixed_approximate_clip_extents (&clip_path->path,
 						&clip_path->extents);
     if (clip_path->prev != NULL) {
-	is_empty = _cairo_rectangle_intersect (&clip_path->extents,
-					       &clip_path->prev->extents);
+	_cairo_rectangle_intersect (&clip_path->extents,
+				    &clip_path->prev->extents);
     }
 
     clip_path->fill_rule = other_path->fill_rule;
@@ -1399,7 +1398,6 @@ intersect_with_boxes (cairo_composite_rectangles_t *extents,
 {
     cairo_rectangle_int_t rect;
     cairo_box_t box;
-    cairo_bool_t is_empty;
 
     box.p1.x = box.p1.y = INT_MIN;
     box.p2.x = box.p2.y = INT_MAX;
@@ -1416,8 +1414,8 @@ intersect_with_boxes (cairo_composite_rectangles_t *extents,
     }
 
     _cairo_box_round_to_rectangle (&box, &rect);
-    is_empty = _cairo_rectangle_intersect (&extents->bounded, &rect);
-    is_empty = _cairo_rectangle_intersect (&extents->unbounded, &rect);
+    _cairo_rectangle_intersect (&extents->bounded, &rect);
+    _cairo_rectangle_intersect (&extents->unbounded, &rect);
 }
 
 cairo_status_t
