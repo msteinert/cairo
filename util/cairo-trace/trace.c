@@ -2970,7 +2970,7 @@ _emit_font_options (const cairo_font_options_t *options)
     }
 
     hint_metrics = DLCALL (cairo_font_options_get_hint_metrics, options);
-    if (hint_style != CAIRO_HINT_METRICS_DEFAULT) {
+    if (hint_metrics != CAIRO_HINT_METRICS_DEFAULT) {
 	_trace_printf (" /hint-metrics //%s",
 		       _hint_metrics_to_string (hint_metrics));
     }
