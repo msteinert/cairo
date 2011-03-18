@@ -1728,7 +1728,7 @@ _emit_path (cairo_script_surface_t *surface,
 
     if (path == NULL) {
 	_cairo_path_fixed_init (&surface->cr.current_path);
-    } else if (_cairo_path_fixed_is_box (path, &box)) {
+    } else if (_cairo_path_fixed_is_rectangle (path, &box)) {
 	double x1 = _cairo_fixed_to_double (box.p1.x);
 	double y1 = _cairo_fixed_to_double (box.p1.y);
 	double x2 = _cairo_fixed_to_double (box.p2.x);
