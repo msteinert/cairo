@@ -1465,8 +1465,7 @@ _cairo_clip_to_boxes (cairo_clip_t **clip,
     return status;
 }
 
-
-static cairo_rectangle_list_t *
+cairo_rectangle_list_t *
 _cairo_rectangle_list_create_in_error (cairo_status_t status)
 {
     cairo_rectangle_list_t *list;
@@ -1478,7 +1477,7 @@ _cairo_rectangle_list_create_in_error (cairo_status_t status)
 
     list = malloc (sizeof (*list));
     if (unlikely (list == NULL)) {
-	_cairo_error_throw (status);
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
     }
 

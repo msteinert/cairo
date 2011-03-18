@@ -1560,11 +1560,17 @@ _cairo_gstate_copy_clip_rectangle_list (cairo_gstate_t *gstate)
     cairo_clip_t clip;
     cairo_rectangle_int_t extents;
     cairo_rectangle_list_t *list;
+    cairo_status_t status;
 
     _cairo_clip_init_copy (&clip, &gstate->clip);
 
     if (_cairo_surface_get_extents (gstate->target, &extents))
-        _cairo_clip_rectangle (&clip, &extents);
+	status = _cairo_clip_rectangle (&clip, &extents);
+    else
+	status = CAIRO_STATUS_SUCCESS;
+
+    if (unlikely (status))
+	return _cairo_rectangle_list_create_in_error (status);
 
     list = _cairo_clip_copy_rectangle_list (&clip, gstate);
     _cairo_clip_fini (&clip);

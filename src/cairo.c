@@ -2843,26 +2843,6 @@ cairo_in_clip (cairo_t *cr, double x, double y)
     return _cairo_gstate_in_clip (cr->gstate, x, y);
 }
 
-static cairo_rectangle_list_t *
-_cairo_rectangle_list_create_in_error (cairo_status_t status)
-{
-    cairo_rectangle_list_t *list;
-
-    if (status == CAIRO_STATUS_NO_MEMORY)
-        return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
-
-    list = malloc (sizeof (cairo_rectangle_list_t));
-    if (unlikely (list == NULL)) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-        return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
-    }
-
-    list->status = status;
-    list->rectangles = NULL;
-    list->num_rectangles = 0;
-    return list;
-}
-
 /**
  * cairo_copy_clip_rectangle_list:
  * @cr: a cairo context

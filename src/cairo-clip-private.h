@@ -148,4 +148,7 @@ _cairo_clip_drop_cache (cairo_clip_t  *clip);
 cairo_private cairo_rectangle_list_t*
 _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate);
 
+cairo_private cairo_rectangle_list_t *
+_cairo_rectangle_list_create_in_error (cairo_status_t status);
+
 #endif /* CAIRO_CLIP_PRIVATE_H */
