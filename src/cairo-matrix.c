@@ -1132,7 +1132,7 @@ _cairo_matrix_to_pixman_matrix_offset (const cairo_matrix_t	*matrix,
 	     */
 	    tx = m.x0;
 	    ty = m.y0;
-	    norm = fmax (fabs (tx), fabs (ty));
+	    norm = MAX (fabs (tx), fabs (ty));
 
 	    for (i = -1; i < 2; i+=2) {
 		for (j = -1; j < 2; j+=2) {
@@ -1149,7 +1149,7 @@ _cairo_matrix_to_pixman_matrix_offset (const cairo_matrix_t	*matrix,
 		    x *= den;
 		    y *= den;
 
-		    new_norm = fmax (fabs (x), fabs (y));
+		    new_norm = MAX (fabs (x), fabs (y));
 		    if (norm > new_norm) {
 			norm = new_norm;
 			tx = x;
