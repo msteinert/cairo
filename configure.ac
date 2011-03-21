@@ -49,6 +49,9 @@ if test "x$have_dlsym" = "xno"; then
 fi
 AC_CHECK_HEADERS(dlfcn.h, [have_dlsym=yes], [have_dlsym=no])
 AM_CONDITIONAL(CAIRO_HAS_DL, test "x$have_dl" = "xyes")
+if test "x$have_dlsym" = "xyes"; then
+  AC_DEFINE([CAIRO_HAS_DLSYM], 1, [Define to 1 if dlsym is available])
+fi
 
 dnl ===========================================================================
 
@@ -317,6 +320,10 @@ CAIRO_ENABLE_SURFACE_BACKEND(gl, OpenGL, no, [
 	      gl_NONPKGCONFIG_LIBS="-lGL"
 	  fi])
 
+  if test "x$have_dl" = "xyes" -a "x$have_dlsym" = "xyes"; then
+    gl_LIBS="$gl_LIBS -ldl"
+  fi
+
   need_glx_functions=yes
   need_wgl_functions=yes
   need_egl_functions=yes
@@ -332,6 +339,10 @@ CAIRO_ENABLE_SURFACE_BACKEND(glesv2, OpenGLESv2, no, [
 	      glesv2_NONPKGCONFIG_CFLAGS=
 	      glesv2_NONPKGCONFIG_LIBS="-lGLESv2"
 	  fi])
+
+  if test "x$have_dl" = "xyes" -a "x$have_dlsym" = "xyes"; then
+    glesv2_LIBS="$glesv2_LIBS -ldl"
+  fi
 
   need_egl_functions=yes
 ])
