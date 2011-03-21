@@ -2781,6 +2781,11 @@ _composite_unaligned_boxes (cairo_image_surface_t *dst,
     const struct _cairo_boxes_chunk *chunk;
     int i, src_x, src_y;
 
+    /* The below code breaks for operator source. This can best be seen with
+     * multiple boxes where black is drawn to dst outside of the boxes. */
+    if (op == CAIRO_OPERATOR_SOURCE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     i = CAIRO_STRIDE_FOR_WIDTH_BPP (extents->bounded.width, 8) * extents->bounded.height;
     if ((unsigned) i <= sizeof (buf)) {
 	mask = pixman_image_create_bits (PIXMAN_a8,
