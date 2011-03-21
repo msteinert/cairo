@@ -2240,7 +2240,7 @@ _cairo_gradient_pattern_fit_to_range (const cairo_gradient_pattern_t *gradient,
 				      cairo_matrix_t                 *out_matrix,
 				      cairo_circle_double_t	      out_circle[2]);
 
-cairo_bool_t
+cairo_private cairo_bool_t
 _cairo_radial_pattern_focus_is_inside (const cairo_radial_pattern_t *radial);
 
 cairo_private cairo_bool_t
@@ -2462,6 +2462,7 @@ slim_hidden_proto (cairo_scaled_font_status);
 slim_hidden_proto (cairo_scaled_font_get_user_data);
 slim_hidden_proto (cairo_scaled_font_set_user_data);
 slim_hidden_proto (cairo_scaled_font_text_to_glyphs);
+slim_hidden_proto (cairo_set_font_matrix);
 slim_hidden_proto (cairo_set_font_options);
 slim_hidden_proto (cairo_set_font_size);
 slim_hidden_proto (cairo_set_line_cap);

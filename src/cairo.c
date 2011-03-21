@@ -3075,6 +3075,7 @@ cairo_set_font_matrix (cairo_t		    *cr,
     if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
+slim_hidden_def (cairo_set_font_matrix);
 
 /**
  * cairo_get_font_matrix
