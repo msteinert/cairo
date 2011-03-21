@@ -132,6 +132,8 @@ _gl_destroy (void *device)
 
     cairo_region_destroy (ctx->clip_region);
 
+    free (ctx->vb_mem);
+
     ctx->destroy (ctx);
 
     free (ctx);
@@ -191,6 +193,10 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 	! _cairo_gl_has_extension ("GL_EXT_texture_format_BGRA8888"))
 	return _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
 
+    ctx->has_map_buffer = (gl_flavor == CAIRO_GL_FLAVOR_DESKTOP ||
+			   (gl_flavor == CAIRO_GL_FLAVOR_ES &&
+			    _cairo_gl_has_extension ("GL_OES_mapbuffer")));
+
     ctx->has_mesa_pack_invert =
 	_cairo_gl_has_extension ("GL_MESA_pack_invert");
 
@@ -208,6 +214,14 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
                                 CAIRO_GL_GRADIENT_CACHE_SIZE);
     if (unlikely (status))
         return status;
+
+    if (! ctx->has_map_buffer) {
+	ctx->vb_mem = _cairo_malloc_ab (CAIRO_GL_VBO_SIZE, 1);
+	if (unlikely (ctx->vb_mem == NULL)) {
+	    _cairo_cache_fini (&ctx->gradients);
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	}
+    }
 
     /* PBO for any sort of texture upload */
     dispatch->GenBuffers (1, &ctx->texture_load_pbo);

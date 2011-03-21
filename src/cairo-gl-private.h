@@ -285,6 +285,7 @@ struct _cairo_gl_context {
     cairo_gl_operand_t operands[2];
 
     char *vb;
+    char *vb_mem;
     unsigned int vb_offset;
     unsigned int vertex_size;
     cairo_region_t *clip_region;
@@ -293,6 +294,7 @@ struct _cairo_gl_context {
     cairo_gl_dispatch_t dispatch;
     GLfloat modelviewprojection_matrix[16];
     cairo_gl_flavor_t gl_flavor;
+    cairo_bool_t has_map_buffer;
 
     void (*acquire) (void *ctx);
     void (*release) (void *ctx);

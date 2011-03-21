@@ -125,8 +125,7 @@ _cairo_gl_dispatch_init_buffers (cairo_gl_dispatch_t *dispatch,
 	    return CAIRO_STATUS_DEVICE_ERROR;
     }
     else if (gl_flavor == CAIRO_GL_FLAVOR_ES &&
-	     gl_version >= CAIRO_GL_VERSION_ENCODE (2, 0) &&
-	     _cairo_gl_has_extension ("GL_OES_mapbuffer"))
+	     gl_version >= CAIRO_GL_VERSION_ENCODE (2, 0))
     {
 	dispatch_name = CAIRO_GL_DISPATCH_NAME_ES;
     }

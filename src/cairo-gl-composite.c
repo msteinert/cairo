@@ -1014,7 +1014,12 @@ _cairo_gl_composite_flush (cairo_gl_context_t *ctx)
 
     count = ctx->vb_offset / ctx->vertex_size;
 
-    ctx->dispatch.UnmapBuffer (GL_ARRAY_BUFFER);
+    if (ctx->has_map_buffer)
+	ctx->dispatch.UnmapBuffer (GL_ARRAY_BUFFER);
+    else
+	ctx->dispatch.BufferData (GL_ARRAY_BUFFER, ctx->vb_offset,
+				  ctx->vb, GL_STREAM_DRAW);
+
     ctx->vb = NULL;
     ctx->vb_offset = 0;
 
@@ -1044,9 +1049,14 @@ _cairo_gl_composite_prepare_buffer (cairo_gl_context_t *ctx,
 	_cairo_gl_composite_flush (ctx);
 
     if (ctx->vb == NULL) {
-	dispatch->BufferData (GL_ARRAY_BUFFER, CAIRO_GL_VBO_SIZE,
-			      NULL, GL_STREAM_DRAW);
-	ctx->vb = dispatch->MapBuffer (GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+	if (ctx->has_map_buffer) {
+	    dispatch->BufferData (GL_ARRAY_BUFFER, CAIRO_GL_VBO_SIZE,
+				  NULL, GL_STREAM_DRAW);
+	    ctx->vb = dispatch->MapBuffer (GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+	}
+	else {
+	    ctx->vb = ctx->vb_mem;
+	}
     }
 }
 
