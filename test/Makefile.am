@@ -913,13 +913,8 @@ REFERENCE_IMAGES = \
 	operator-clear.xlib.argb32.ref.png \
 	operator-clear.xlib.rgb24.ref.png \
 	operator-source.image16.ref.png \
-	operator-source.pdf.rgb24.ref.png \
-	operator-source.quartz.argb32.ref.png \
-	operator-source.quartz.rgb24.ref.png \
 	operator-source.ref.png \
 	operator-source.rgb24.ref.png \
-	operator-source.svg12.argb32.xfail.png \
-	operator-source.svg12.rgb24.xfail.png \
 	operator-source.xlib-fallback.ref.png \
 	operator-source.xlib.ref.png \
 	operator-source.xlib.rgb24.ref.png \
