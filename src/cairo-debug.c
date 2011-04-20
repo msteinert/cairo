@@ -118,6 +118,7 @@ _cairo_debug_check_image_surface_is_defined (const cairo_surface_t *surface)
 	width = image->width*2;
 	break;
     case CAIRO_FORMAT_RGB24:
+    case CAIRO_FORMAT_RGB30:
     case CAIRO_FORMAT_ARGB32:
 	width = image->width*4;
 	break;

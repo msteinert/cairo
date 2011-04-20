@@ -584,6 +584,7 @@ _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
 	    xrender_format = XRenderFindVisualFormat(display->display, visual);
 	    break;
 	}
+	case CAIRO_FORMAT_RGB30:
 	case CAIRO_FORMAT_INVALID:
 	default:
 	    ASSERT_NOT_REACHED;

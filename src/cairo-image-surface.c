@@ -101,6 +101,8 @@ _cairo_format_from_pixman_format (pixman_format_code_t pixman_format)
     switch (pixman_format) {
     case PIXMAN_a8r8g8b8:
 	return CAIRO_FORMAT_ARGB32;
+    case PIXMAN_x2b10g10r10:
+	return CAIRO_FORMAT_RGB30;
     case PIXMAN_x8r8g8b8:
 	return CAIRO_FORMAT_RGB24;
     case PIXMAN_a8:
@@ -122,7 +124,6 @@ _cairo_format_from_pixman_format (pixman_format_code_t pixman_format)
     case PIXMAN_yuy2:     case PIXMAN_yv12:
     case PIXMAN_b8g8r8x8:
     case PIXMAN_b8g8r8a8:
-    case PIXMAN_x2b10g10r10:
     case PIXMAN_a2b10g10r10:
     case PIXMAN_x2r10g10b10:
     case PIXMAN_a2r10g10b10:
@@ -299,6 +300,9 @@ _cairo_format_to_pixman_format_code (cairo_format_t format)
 	break;
     case CAIRO_FORMAT_RGB24:
 	ret = PIXMAN_x8r8g8b8;
+	break;
+    case CAIRO_FORMAT_RGB30:
+	ret = PIXMAN_x2r10g10b10;
 	break;
     case CAIRO_FORMAT_RGB16_565:
 	ret = PIXMAN_r5g6b5;
@@ -668,6 +672,8 @@ _cairo_content_from_format (cairo_format_t format)
     switch (format) {
     case CAIRO_FORMAT_ARGB32:
 	return CAIRO_CONTENT_COLOR_ALPHA;
+    case CAIRO_FORMAT_RGB30:
+	return CAIRO_CONTENT_COLOR;
     case CAIRO_FORMAT_RGB24:
 	return CAIRO_CONTENT_COLOR;
     case CAIRO_FORMAT_RGB16_565:
@@ -688,7 +694,7 @@ _cairo_format_bits_per_pixel (cairo_format_t format)
 {
     switch (format) {
     case CAIRO_FORMAT_ARGB32:
-	return 32;
+    case CAIRO_FORMAT_RGB30:
     case CAIRO_FORMAT_RGB24:
 	return 32;
     case CAIRO_FORMAT_RGB16_565:
@@ -1270,6 +1276,21 @@ _pixel_to_solid (cairo_image_surface_t *image, int x, int y)
 	color.red = expand_channel ((pixel >> 11 & 0x1f) << 11, 5);
 	color.green = expand_channel ((pixel >> 5 & 0x3f) << 10, 6);
 	color.blue = expand_channel ((pixel & 0x1f) << 11, 5);
+	return pixman_image_create_solid_fill (&color);
+
+    case CAIRO_FORMAT_RGB30:
+	pixel = *(uint32_t *) (image->data + y * image->stride + 4 * x);
+	pixel &= 0x3fffffff; /* ignore alpha bits */
+	if (pixel == 0)
+	    return _pixman_black_image ();
+	if (pixel == 0x3fffffff)
+	    return _pixman_white_image ();
+
+	/* convert 10bpc to 16bpc */
+	color.alpha = 0xffff;
+	color.red = expand_channel((pixel >> 20) & 0x3fff, 10);
+	color.green = expand_channel((pixel >> 10) & 0x3fff, 10);
+	color.blue = expand_channel(pixel & 0x3fff, 10);
 	return pixman_image_create_solid_fill (&color);
 
     case CAIRO_FORMAT_ARGB32:

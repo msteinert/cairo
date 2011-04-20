@@ -2251,6 +2251,7 @@ cairo_surface_has_show_text_glyphs (cairo_surface_t *surface);
  * @CAIRO_FORMAT_RGB16_565: each pixel is a 16-bit quantity
  *   with red in the upper 5 bits, then green in the middle
  *   6 bits, and blue in the lower 5 bits.
+ * @CAIRO_FORMAT_RGB30: like RGB24 but with 10bpc
  *
  * #cairo_format_t is used to identify the memory format of
  * image data.
@@ -2263,7 +2264,8 @@ typedef enum _cairo_format {
     CAIRO_FORMAT_RGB24     = 1,
     CAIRO_FORMAT_A8        = 2,
     CAIRO_FORMAT_A1        = 3,
-    CAIRO_FORMAT_RGB16_565 = 4
+    CAIRO_FORMAT_RGB16_565 = 4,
+    CAIRO_FORMAT_RGB30     = 5,
 } cairo_format_t;
 
 cairo_public cairo_surface_t *

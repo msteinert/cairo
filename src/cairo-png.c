@@ -241,6 +241,10 @@ write_png (cairo_surface_t	*surface,
 	else
 	    png_color_type = PNG_COLOR_TYPE_RGB_ALPHA;
 	break;
+    case CAIRO_FORMAT_RGB30:
+	depth = 30;
+	png_color_type = PNG_COLOR_TYPE_RGB;
+	break;
     case CAIRO_FORMAT_RGB24:
 	depth = 8;
 	png_color_type = PNG_COLOR_TYPE_RGB;

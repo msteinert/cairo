@@ -1862,7 +1862,7 @@ _cairo_surface_release_device_reference (cairo_surface_t *surface);
  * in cairo-xlib-surface.c--again see -Wswitch-enum).
  */
 #define CAIRO_FORMAT_VALID(format) ((format) >= CAIRO_FORMAT_ARGB32 &&		\
-                                    (format) <= CAIRO_FORMAT_RGB16_565)
+                                    (format) <= CAIRO_FORMAT_RGB30)
 
 /* pixman-required stride alignment in bytes. */
 #define CAIRO_STRIDE_ALIGNMENT (sizeof (uint32_t))

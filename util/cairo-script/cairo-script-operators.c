@@ -2854,6 +2854,7 @@ _image_read_raw (csi_file_t *src,
 	rowlen = 3 * width;
 	break;
     default:
+    case CAIRO_FORMAT_RGB30:
     case CAIRO_FORMAT_INVALID:
     case CAIRO_FORMAT_ARGB32:
 	rowlen = 4 * width;
@@ -2915,6 +2916,7 @@ _image_read_raw (csi_file_t *src,
 #endif
 		}
 		break;
+	    case CAIRO_FORMAT_RGB30:
 	    case CAIRO_FORMAT_INVALID:
 	    case CAIRO_FORMAT_ARGB32:
 		/* stride == width */
@@ -3003,6 +3005,7 @@ _image_read_raw (csi_file_t *src,
 #endif
 	    }
 	    break;
+	case CAIRO_FORMAT_RGB30:
 	case CAIRO_FORMAT_INVALID:
 	case CAIRO_FORMAT_ARGB32:
 	    /* stride == width */
@@ -3038,6 +3041,7 @@ _image_read_raw (csi_file_t *src,
 	case CAIRO_FORMAT_A8:
 	    break;
 
+	case CAIRO_FORMAT_RGB30:
 	case CAIRO_FORMAT_RGB24:
 	case CAIRO_FORMAT_INVALID:
 	default:
