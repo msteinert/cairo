@@ -72,6 +72,15 @@ typedef struct _cairo_win32_surface {
 
     cairo_surface_t *image;
 
+    /* We use the x and y parts of extents for situations where
+     * we're not supposed to draw to the entire surface.
+     * For example, during a paint event a program will get
+     * a DC that has been clipped to the dirty region.
+     * A cairo surface constructed for that DC will have extents
+     * that match bounds of the clipped region.
+     *
+     * jrmuizel: I'm not sure if storing these extents instead
+     * of just using the size is better... */
     cairo_rectangle_int_t extents;
 
     /* Initial clip bits
