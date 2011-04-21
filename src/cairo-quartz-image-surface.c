@@ -105,7 +105,10 @@ _cairo_quartz_image_surface_acquire_dest_image (void *asurface,
     cairo_quartz_image_surface_t *surface = (cairo_quartz_image_surface_t *) asurface;
 
     *image_out = surface->imageSurface;
-    *image_rect = surface->extents;
+    image_rect->x = 0;
+    image_rect->y = 0;
+    image_rect->width = surface->width;
+    image_rect->height = surface->height;
     *image_extra = NULL;
 
     return CAIRO_STATUS_SUCCESS;
@@ -117,7 +120,10 @@ _cairo_quartz_image_surface_get_extents (void *asurface,
 {
     cairo_quartz_image_surface_t *surface = (cairo_quartz_image_surface_t *) asurface;
 
-    *extents = surface->extents;
+    extents->x = 0;
+    extents->y = 0;
+    extents->width = surface->width;
+    extents->height = surface->height;
     return TRUE;
 }
 
@@ -263,9 +269,8 @@ cairo_quartz_image_surface_create (cairo_surface_t *surface)
 			 NULL, /* device */
 			 _cairo_content_from_format (format));
 
-    qisurf->extents.x = qisurf->extents.y = 0;
-    qisurf->extents.width = width;
-    qisurf->extents.height = height;
+    qisurf->width = width;
+    qisurf->height = height;
 
     qisurf->image = image;
     qisurf->imageSurface = image_surface;

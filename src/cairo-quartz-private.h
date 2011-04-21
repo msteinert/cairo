@@ -74,7 +74,7 @@ typedef struct cairo_quartz_surface {
 typedef struct cairo_quartz_image_surface {
     cairo_surface_t base;
 
-    cairo_rectangle_int_t extents;
+    int width, height;
 
     CGImageRef image;
     cairo_image_surface_t *imageSurface;
