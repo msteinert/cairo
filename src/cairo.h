@@ -474,9 +474,9 @@ cairo_pop_group_to_source (cairo_t *cr);
  * the source color.
  * @CAIRO_OPERATOR_COLOR_BURN: darkens the destination color to reflect
  * the source color.
- * @CAIRO_OPERATOR_HARD_LIGHT: Multiplies or screens, dependant on source
+ * @CAIRO_OPERATOR_HARD_LIGHT: Multiplies or screens, dependent on source
  * color.
- * @CAIRO_OPERATOR_SOFT_LIGHT: Darkens or lightens, dependant on source
+ * @CAIRO_OPERATOR_SOFT_LIGHT: Darkens or lightens, dependent on source
  * color.
  * @CAIRO_OPERATOR_DIFFERENCE: Takes the difference of the source and
  * destination color.
@@ -486,7 +486,7 @@ cairo_pop_group_to_source (cairo_t *cr);
  * and the saturation and luminosity of the target.
  * @CAIRO_OPERATOR_HSL_SATURATION: Creates a color with the saturation
  * of the source and the hue and luminosity of the target. Painting with
- * this mode onto a gray area prduces no change.
+ * this mode onto a gray area produces no change.
  * @CAIRO_OPERATOR_HSL_COLOR: Creates a color with the hue and saturation
  * of the source and the luminosity of the target. This preserves the gray
  * levels of the target and is useful for coloring monochrome images or

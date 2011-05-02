@@ -300,7 +300,7 @@ usage (const char *argv0)
 	     "--no-bars   Don't display change bars at all.\n\n"
 	     "\n"
 	     "--use-ms    Use milliseconds to calculate differences.\n"
-	     "            (instead of ticks which are hardware dependant)\n"
+	     "            (instead of ticks which are hardware dependent)\n"
 	     "\n"
 	     "--min-change threshold[%%]\n"
 	     "            Suppress all changes below the given threshold.\n"
