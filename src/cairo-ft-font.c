@@ -2153,7 +2153,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	vertical_layout = TRUE;
     }
 
-    error = FT_Load_Glyph (scaled_font->unscaled->face,
+    error = FT_Load_Glyph (face,
 			   _cairo_scaled_glyph_index(scaled_glyph),
 			   load_flags);
     /* XXX ignoring all other errors for now.  They are not fatal, typically
