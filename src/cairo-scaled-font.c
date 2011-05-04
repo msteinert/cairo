@@ -2272,6 +2272,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
 		break;
 	    case CAIRO_FORMAT_RGB16_565:
 	    case CAIRO_FORMAT_RGB24:
+	    case CAIRO_FORMAT_RGB30:
 	    case CAIRO_FORMAT_INVALID:
 	    default:
 		ASSERT_NOT_REACHED;
