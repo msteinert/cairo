@@ -101,7 +101,7 @@ _cairo_format_from_pixman_format (pixman_format_code_t pixman_format)
     switch (pixman_format) {
     case PIXMAN_a8r8g8b8:
 	return CAIRO_FORMAT_ARGB32;
-    case PIXMAN_x2b10g10r10:
+    case PIXMAN_x2r10g10b10:
 	return CAIRO_FORMAT_RGB30;
     case PIXMAN_x8r8g8b8:
 	return CAIRO_FORMAT_RGB24;
@@ -125,7 +125,7 @@ _cairo_format_from_pixman_format (pixman_format_code_t pixman_format)
     case PIXMAN_b8g8r8x8:
     case PIXMAN_b8g8r8a8:
     case PIXMAN_a2b10g10r10:
-    case PIXMAN_x2r10g10b10:
+    case PIXMAN_x2b10g10r10:
     case PIXMAN_a2r10g10b10:
     case PIXMAN_x14r6g6b6:
     default:
