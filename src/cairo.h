@@ -2265,7 +2265,7 @@ typedef enum _cairo_format {
     CAIRO_FORMAT_A8        = 2,
     CAIRO_FORMAT_A1        = 3,
     CAIRO_FORMAT_RGB16_565 = 4,
-    CAIRO_FORMAT_RGB30     = 5,
+    CAIRO_FORMAT_RGB30     = 5
 } cairo_format_t;
 
 cairo_public cairo_surface_t *
