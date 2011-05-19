@@ -2101,14 +2101,14 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 	}
 
 	if (round_glyph_positions == CAIRO_ROUND_GLYPH_POS_ON)
-	    x = _cairo_fixed_from_double (_cairo_lround (glyphs[i].x));
+	    x = _cairo_fixed_from_int (_cairo_lround (glyphs[i].x));
 	else
 	    x = _cairo_fixed_from_double (glyphs[i].x);
 	x1 = x + scaled_glyph->bbox.p1.x;
 	x2 = x + scaled_glyph->bbox.p2.x;
 
 	if (round_glyph_positions == CAIRO_ROUND_GLYPH_POS_ON)
-	    y = _cairo_fixed_from_double (_cairo_lround (glyphs[i].y));
+	    y = _cairo_fixed_from_int (_cairo_lround (glyphs[i].y));
 	else
 	    y = _cairo_fixed_from_double (glyphs[i].y);
 	y1 = y + scaled_glyph->bbox.p1.y;
