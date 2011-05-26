@@ -718,6 +718,7 @@ _trace_vprintf (const char *fmt, va_list ap)
     }
 
     ret_ignored = fwrite (buffer, 1, p-buffer, logfile);
+    (void)ret_ignored;
 }
 
 static void CAIRO_PRINTF_FORMAT(1, 2)
@@ -1018,9 +1019,8 @@ _is_current (enum operand_type type, const void *ptr, int depth)
 }
 
 static void
-_push_operand (enum operand_type t, const void *ptr)
+_push_object(Object *obj)
 {
-    Object *obj = _get_object (t, ptr);
 
     if (current_stack_depth == ARRAY_LENGTH (current_object))
     {
@@ -1039,6 +1039,12 @@ _push_operand (enum operand_type t, const void *ptr)
 
     obj->operand = current_stack_depth;
     current_object[current_stack_depth++] = obj;
+}
+
+static void
+_push_operand (enum operand_type t, const void *ptr)
+{
+    _push_object(_get_object(t, ptr));
 }
 
 static void
@@ -1233,14 +1239,8 @@ _has_scaled_font_id (const cairo_scaled_font_t *font)
     return _has_id (SCALED_FONT, font);
 }
 
-static cairo_bool_t
-_has_surface_id (const cairo_surface_t *surface)
-{
-    return _has_id (SURFACE, surface);
-}
-
-static long
-_create_surface_id (cairo_surface_t *surface)
+static Object *
+_create_surface (cairo_surface_t *surface)
 {
     Object *obj;
 
@@ -1251,7 +1251,7 @@ _create_surface_id (cairo_surface_t *surface)
 		surface, &destroy_key, obj, _object_undef);
     }
 
-    return obj->token;
+    return obj;
 }
 
 static long
@@ -1338,6 +1338,7 @@ _write_base85_data (struct _data_stream *stream,
 		ret = fwrite ("z", 1, 1, logfile);
 	    else
 		ret = fwrite (five_tuple, 5, 1, logfile);
+	    (void)ret;
 	    stream->base85_pending = 0;
 	}
     }
@@ -1422,6 +1423,7 @@ _write_base85_data_end (struct _data_stream *stream)
 		0, 4 - stream->base85_pending);
 	_expand_four_tuple_to_five (stream->four_tuple, five_tuple);
 	ret = fwrite (five_tuple, stream->base85_pending+1, 1, logfile);
+	(void) ret;
     }
 }
 
@@ -1841,6 +1843,7 @@ ESCAPED_CHAR:
 
 		to_octal (c, buf+1, 3);
 		ret_ignored = fwrite (buf, 4, 1, logfile);
+		(void)ret_ignored;
 	    }
 	    break;
 	}
@@ -1853,7 +1856,7 @@ _emit_current (Object *obj)
 {
     if (obj != NULL && ! _pop_operands_to_object (obj)) {
 	_trace_printf ("%s%ld\n", obj->type->op_code, obj->token);
-	_push_operand (obj->type->op_type, obj->addr);
+	_push_object (obj);
     }
 }
 
@@ -1928,7 +1931,7 @@ cairo_create (cairo_surface_t *target)
 
 void
 cairo_save (cairo_t *cr)
-{ 
+{
     _enter_trace ();
     _emit_line_info ();
     _emit_cairo_op (cr, "save\n");
@@ -2445,16 +2448,19 @@ cairo_surface_t *
 cairo_get_target (cairo_t *cr)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_get_target, cr);
-    surface_id = _create_surface_id (ret);
+    if (cr != NULL) {
+	Object *obj = _create_surface (ret);
 
-    if (cr != NULL && ! _has_surface_id (ret)) {
-	_emit_cairo_op (cr, "/target get /s%ld exch def\n", surface_id);
-	_get_object (SURFACE, ret)->defined = TRUE;
+	if (! obj->defined) {
+	    _emit_cairo_op (cr,
+			    "/target get /s%ld exch def\n",
+			    obj->token);
+	    obj->defined = TRUE;
+	}
     }
 
     _exit_trace ();
@@ -2465,16 +2471,19 @@ cairo_surface_t *
 cairo_get_group_target (cairo_t *cr)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_get_group_target, cr);
-    surface_id = _create_surface_id (ret);
+    if (cr != NULL) {
+	Object *obj = _create_surface (ret);
 
-    if (cr != NULL && ! _has_surface_id (ret)) {
-	_emit_cairo_op (cr, "/group-target get /s%ld exch def\n", surface_id);
-	_get_object (SURFACE, ret)->defined = TRUE;
+	if (! obj->defined) {
+	    _emit_cairo_op (cr,
+			    "/group-target get /s%ld exch def\n",
+			    obj->token);
+	    obj->defined = TRUE;
+	}
     }
 
     _exit_trace ();
@@ -3386,28 +3395,26 @@ cairo_surface_t *
 cairo_image_surface_create (cairo_format_t format, int width, int height)
 {
     cairo_surface_t *ret;
-    long surface_id;
-    const char *format_str;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_image_surface_create, format, width, height);
 
-    surface_id = _create_surface_id (ret);
-    format_str = _format_to_string (format);
-
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+	const char *format_str = _format_to_string (format);
+
 	_trace_printf ("dict\n"
 		       "  /width %d set\n"
 		       "  /height %d set\n"
 		       "  /format //%s set\n"
 		       "  image dup /s%ld exch def\n",
-		       width, height, format_str, surface_id);
-	_get_object (SURFACE, ret)->width = width;
-	_get_object (SURFACE, ret)->height = height;
-	_get_object (SURFACE, ret)->defined = TRUE;
-	_push_operand (SURFACE, ret);
+		       width, height, format_str, obj->token);
+	obj->width = width;
+	obj->height = height;
+	obj->defined = TRUE;
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -3419,15 +3426,15 @@ cairo_surface_t *
 cairo_image_surface_create_for_data (unsigned char *data, cairo_format_t format, int width, int height, int stride)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_image_surface_create_for_data, data, format, width, height, stride);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
 	/* cairo_image_surface_create_for_data() is both used to supply
 	 * foreign pixel data to cairo and in order to read pixels back.
 	 * Defer grabbing the pixel contents until we have to, but only for
@@ -3440,7 +3447,7 @@ cairo_image_surface_create_for_data (unsigned char *data, cairo_format_t format,
 	if (width * height < 32*32) {
 	    _emit_image (ret, NULL);
 	    _trace_printf (" dup /s%ld exch def\n",
-			   surface_id);
+			   obj->token);
 	} else {
 	    _trace_printf ("dict\n"
 			   "  /width %d set\n"
@@ -3449,15 +3456,15 @@ cairo_image_surface_create_for_data (unsigned char *data, cairo_format_t format,
 			   "  image dup /s%ld exch def\n",
 			   width, height,
 			   _format_to_string (format),
-			   surface_id);
+			   obj->token);
 
-	    _get_object (SURFACE, ret)->foreign = TRUE;
+	    obj->foreign = TRUE;
 	}
 
-	_get_object (SURFACE, ret)->width  = width;
-	_get_object (SURFACE, ret)->height = height;
-	_get_object (SURFACE, ret)->defined = TRUE;
-	_push_operand (SURFACE, ret);
+	obj->width  = width;
+	obj->height = height;
+	obj->defined = TRUE;
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -3471,31 +3478,29 @@ cairo_surface_create_similar (cairo_surface_t *other,
 			      int width, int height)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_surface_create_similar, other, content, width, height);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (other != NULL && _write_lock ()) {
-	Object *obj;
+	Object *other_obj = _get_object(SURFACE, other);
+	Object *new_obj = _create_surface (ret);
 
-	obj = _get_object (SURFACE, other);
-	if (obj->defined)
-	    _trace_printf ("s%ld ", obj->token);
-	else if (current_stack_depth == obj->operand + 1)
+	if (other_obj->defined)
+	    _trace_printf ("s%ld ", other_obj->token);
+	else if (current_stack_depth == other_obj->operand + 1)
 	    _trace_printf ("dup ");
 	else
-	    _trace_printf ("%d index ", current_stack_depth - obj->operand - 1);
+	    _trace_printf ("%d index ",
+			   current_stack_depth - other_obj->operand - 1);
 	_trace_printf ("%d %d //%s similar %% s%ld\n",
-		       width,
-		       height,
+		       width, height,
 		       _content_to_string (content),
-		       surface_id);
+		       new_obj->token);
 
-	_push_operand (SURFACE, ret);
+	_push_object (new_obj);
 	_write_unlock ();
     }
 
@@ -3509,29 +3514,27 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
                                     double width, double height)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_surface_create_for_rectangle, target, x, y, width, height);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (target != NULL && _write_lock ()) {
-	Object *obj;
+	Object *target_obj = _get_object (SURFACE, target);
+	Object *child_obj = _create_surface (ret);
 
-	obj = _get_object (SURFACE, target);
-	if (obj->defined)
-	    _trace_printf ("s%ld ", obj->token);
-	else if (current_stack_depth == obj->operand + 1)
+	if (target_obj->defined)
+	    _trace_printf ("s%ld ", target_obj->token);
+	else if (current_stack_depth == target_obj->operand + 1)
 	    _trace_printf ("dup ");
 	else
-	    _trace_printf ("%d index ", current_stack_depth - obj->operand - 1);
+	    _trace_printf ("%d index ", current_stack_depth - target_obj->operand - 1);
 	_trace_printf ("%f %f %f %f subsurface %% s%ld\n",
 		       x, y, width, height,
-		       surface_id);
+		       child_obj->token);
 
-	_push_operand (SURFACE, ret);
+	_push_object (child_obj);
 	_write_unlock ();
     }
 
@@ -4232,15 +4235,15 @@ cairo_surface_t *
 cairo_ps_surface_create (const char *filename, double width_in_points, double height_in_points)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_ps_surface_create, filename, width_in_points, height_in_points);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
 	_trace_printf ("dict\n"
 		       "  /type /PS set\n"
 		       "  /filename ");
@@ -4251,9 +4254,10 @@ cairo_ps_surface_create (const char *filename, double width_in_points, double he
 		       "  surface %% s%ld\n",
 		       width_in_points,
 		       height_in_points,
-		       surface_id);
-	_surface_object_set_size (ret, width_in_points, height_in_points);
-	_push_operand (SURFACE, ret);
+		       obj->token);
+	obj->width = width_in_points;
+	obj->height = height_in_points;
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -4265,15 +4269,15 @@ cairo_surface_t *
 cairo_ps_surface_create_for_stream (cairo_write_func_t write_func, void *closure, double width_in_points, double height_in_points)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_ps_surface_create_for_stream, write_func, closure, width_in_points, height_in_points);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
 	_trace_printf ("dict\n"
 		       "  /type /PS set\n"
 		       "  /width %g set\n"
@@ -4281,9 +4285,10 @@ cairo_ps_surface_create_for_stream (cairo_write_func_t write_func, void *closure
 		       "  surface %% s%ld\n",
 		       width_in_points,
 		       height_in_points,
-		       surface_id);
-	_surface_object_set_size (ret, width_in_points, height_in_points);
-	_push_operand (SURFACE, ret);
+		       obj->token);
+	obj->width = width_in_points;
+	obj->height = height_in_points;
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -4309,15 +4314,15 @@ cairo_surface_t *
 cairo_pdf_surface_create (const char *filename, double width_in_points, double height_in_points)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_pdf_surface_create, filename, width_in_points, height_in_points);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
 	_trace_printf ("dict\n"
 		       "  /type /PDF set\n"
 		       "  /filename ");
@@ -4328,9 +4333,10 @@ cairo_pdf_surface_create (const char *filename, double width_in_points, double h
 		       "  surface %% s%ld\n",
 		       width_in_points,
 		       height_in_points,
-		       surface_id);
-	_surface_object_set_size (ret, width_in_points, height_in_points);
-	_push_operand (SURFACE, ret);
+		       obj->token);
+	obj->width = width_in_points;
+	obj->height = height_in_points;
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -4342,15 +4348,15 @@ cairo_surface_t *
 cairo_pdf_surface_create_for_stream (cairo_write_func_t write_func, void *closure, double width_in_points, double height_in_points)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_pdf_surface_create_for_stream, write_func, closure, width_in_points, height_in_points);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
 	_trace_printf ("dict\n"
 		       "  /type /PDF set\n"
 		       "  /width %g set\n"
@@ -4358,9 +4364,10 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t write_func, void *closur
 		       "  surface %% s%ld\n",
 		       width_in_points,
 		       height_in_points,
-		       surface_id);
-	_surface_object_set_size (ret, width_in_points, height_in_points);
-	_push_operand (SURFACE, ret);
+		       obj->token);
+	obj->width = width_in_points;
+	obj->height = height_in_points;
+	_push_object (obj);
 	_write_unlock ();
     }
     _exit_trace ();
@@ -4384,15 +4391,15 @@ cairo_surface_t *
 cairo_svg_surface_create (const char *filename, double width, double height)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_svg_surface_create, filename, width, height);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
 	_trace_printf ("dict\n"
 		       "  /type /SVG set\n"
 		       "  /filename ");
@@ -4403,9 +4410,10 @@ cairo_svg_surface_create (const char *filename, double width, double height)
 		       "  surface %% s%ld\n",
 		       width,
 		       height,
-		       surface_id);
-	_surface_object_set_size (ret, width, height);
-	_push_operand (SURFACE, ret);
+		       obj->token);
+	obj->width = width;
+	obj->height = height;
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -4417,15 +4425,15 @@ cairo_surface_t *
 cairo_svg_surface_create_for_stream (cairo_write_func_t write_func, void *closure, double width, double height)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_svg_surface_create_for_stream, write_func, closure, width, height);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
 	_trace_printf ("dict\n"
 		       "  /type /SVG set\n"
 		       "  /width %g set\n"
@@ -4433,9 +4441,10 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t write_func, void *closur
 		       "  surface %% s%ld\n",
 		       width,
 		       height,
-		       surface_id);
-	_surface_object_set_size (ret, width, height);
-	_push_operand (SURFACE, ret);
+		       obj->token);
+	obj->width = width;
+	obj->height = height;
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -4450,26 +4459,23 @@ cairo_surface_t *
 cairo_image_surface_create_from_png (const char *filename)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_image_surface_create_from_png, filename);
 
-    surface_id = _create_surface_id (ret);
-
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
 	char filename_string[4096];
 
 	_encode_string_literal (filename_string, sizeof (filename_string),
 				filename, -1);
 	_emit_image (ret, "  /filename %s set\n", filename_string);
-	_trace_printf (" dup /s%ld exch def\n",
-		       surface_id);
+	_trace_printf (" dup /s%ld exch def\n", obj->token);
 	_surface_object_set_size_from_surface (ret);
-	_get_object (SURFACE, ret)->defined = TRUE;
-	_push_operand (SURFACE, ret);
+	obj->defined = TRUE;
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -4481,21 +4487,22 @@ cairo_surface_t *
 cairo_image_surface_create_from_png_stream (cairo_read_func_t read_func, void *closure)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_image_surface_create_from_png_stream, read_func, closure);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
 	_emit_image (ret, NULL);
 	_trace_printf (" dup /s%ld exch def\n",
-		       surface_id);
+		       obj->token);
+
 	_surface_object_set_size_from_surface (ret);
-	_get_object (SURFACE, ret)->defined = TRUE;
-	_push_operand (SURFACE, ret);
+	obj->defined = TRUE;
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -4520,16 +4527,16 @@ cairo_xlib_surface_create (Display *dpy,
 			   int width, int height)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_xlib_surface_create,
 	          dpy, drawable, visual, width, height);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
 	_trace_printf ("dict\n"
 		       "  /type /xlib set\n"
 		       "  /drawable 16!%lx set\n"
@@ -4539,13 +4546,13 @@ cairo_xlib_surface_create (Display *dpy,
 		       "  surface dup /s%ld exch def\n",
 		       drawable,
 		       _content_from_surface (ret),
-		       width,
-		       height,
-		       surface_id);
-	_get_object (SURFACE, ret)->defined = TRUE;
-	_surface_object_set_size (ret, width, height);
-	_get_object (SURFACE, ret)->foreign = TRUE;
-	_push_operand (SURFACE, ret);
+		       width, height,
+		       obj->token);
+	obj->defined = TRUE;
+	obj->width = width;
+	obj->height = height;
+	obj->foreign = TRUE;
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -4560,16 +4567,16 @@ cairo_xlib_surface_create_for_bitmap (Display *dpy,
 				      int width, int height)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_xlib_surface_create_for_bitmap,
 	          dpy, bitmap, screen, width, height);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
 	_trace_printf ("dict\n"
 		       "  /type /xlib set\n"
 		       "  /drawable 16!%lx set\n"
@@ -4580,13 +4587,13 @@ cairo_xlib_surface_create_for_bitmap (Display *dpy,
 		       "  surface dup /s%ld exch def\n",
 		       bitmap,
 		       _content_from_surface (ret),
-		       width,
-		       height,
-		       surface_id);
-	_get_object (SURFACE, ret)->defined = TRUE;
-	_surface_object_set_size (ret, width, height);
-	_get_object (SURFACE, ret)->foreign = TRUE;
-	_push_operand (SURFACE, ret);
+		       width, height,
+		       obj->token);
+	obj->defined = TRUE;
+	obj->width = width;
+	obj->height = height;
+	obj->foreign = TRUE;
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -4604,16 +4611,16 @@ cairo_xlib_surface_create_with_xrender_format (Display *dpy,
 					       int width, int height)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_xlib_surface_create_with_xrender_format,
 	          dpy, drawable, screen, format, width, height);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
 	_trace_printf ("dict\n"
 		       "  /type /xrender set\n"
 		       "  /drawable 16!%lx set\n"
@@ -4624,14 +4631,14 @@ cairo_xlib_surface_create_with_xrender_format (Display *dpy,
 		       "  surface dup /s%ld exch def\n",
 		       drawable,
 		       _content_from_surface (ret),
-		       width,
-		       height,
+		       width, height,
 		       format->depth,
-		       surface_id);
-	_get_object (SURFACE, ret)->defined = TRUE;
-	_surface_object_set_size (ret, width, height);
-	_get_object (SURFACE, ret)->foreign = TRUE;
-	_push_operand (SURFACE, ret);
+		       obj->token);
+	obj->defined = TRUE;
+	obj->width = width;
+	obj->height = height;
+	obj->foreign = TRUE;
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -4650,15 +4657,15 @@ cairo_script_surface_create (cairo_device_t *device,
 			     double height)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_script_surface_create, device, content, width, height);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
 	_trace_printf ("dict\n"
 		       "  /type /script set\n"
 		       "  /content %s set\n"
@@ -4667,10 +4674,11 @@ cairo_script_surface_create (cairo_device_t *device,
 		       "  surface dup /s%ld exch def\n",
 		       _content_to_string (content),
 		       width, height,
-		       surface_id);
-	_surface_object_set_size (ret, width, height);
-	_get_object (SURFACE, ret)->defined = TRUE;
-	_push_operand (SURFACE, ret);
+		       obj->token);
+	obj->width = width;
+	obj->height = height;
+	obj->defined = TRUE;
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -4683,21 +4691,21 @@ cairo_script_surface_create_for_target (cairo_device_t *device,
 					cairo_surface_t *target)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_script_surface_create_for_target, device, target);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
 	_trace_printf ("dict\n"
 		       "  /type /script set\n"
 		       "  surface dup /s%ld exch def\n",
-		       surface_id);
-	_get_object (SURFACE, ret)->defined = TRUE;
-	_push_operand (SURFACE, ret);
+		       obj->token);
+	obj->defined = TRUE;
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -4714,15 +4722,15 @@ _cairo_test_fallback_surface_create (cairo_content_t	content,
 				     int		height)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (_cairo_test_fallback_surface_create, content, width, height);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
 	_trace_printf ("dict\n"
 		       "  /type /test-fallback set\n"
 		       "  /content //%s set\n"
@@ -4731,10 +4739,11 @@ _cairo_test_fallback_surface_create (cairo_content_t	content,
 		       "  surface dup /s%ld exch def\n",
 		       _content_to_string (content),
 		       width, height,
-		       surface_id);
-	_surface_object_set_size (ret, width, height);
-	_get_object (SURFACE, ret)->defined = TRUE;
-	_push_operand (SURFACE, ret);
+		       obj->token);
+	obj->width = width;
+	obj->height = height;
+	obj->defined = TRUE;
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -4747,23 +4756,23 @@ cairo_surface_t *
 _cairo_test_paginated_surface_create (cairo_surface_t *surface)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (_cairo_test_paginated_surface_create, surface);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
 	/* XXX store initial data? */
 	_trace_printf ("dict\n"
 		       "  /type /test-paginated set\n"
 		       "  /target s%ld set\n"
 		       "  surface dup /s%ld exch def\n",
 		       _get_surface_id (surface),
-		       surface_id);
-	_push_operand (SURFACE, ret);
+		       obj->token);
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -4777,23 +4786,23 @@ cairo_surface_t *
 _cairo_test_null_surface_create (cairo_content_t	content)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (_cairo_test_null_surface_create, content);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
 	_trace_printf ("dict\n"
 		       "  /type /test-null set\n"
 		       "  /content //%s set\n"
 		       "  surface dup /s%ld exch def\n",
 		       _content_to_string (content),
-		       surface_id);
-	_get_object (SURFACE, ret)->defined = TRUE;
-	_push_operand (SURFACE, ret);
+		       obj->token);
+	obj->defined = TRUE;
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -4807,15 +4816,15 @@ cairo_recording_surface_create (cairo_content_t content,
 				const cairo_rectangle_t *extents)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_recording_surface_create, content, extents);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
 	if (extents) {
 	    _trace_printf ("dict\n"
 			   "  /type /recording set\n"
@@ -4825,18 +4834,19 @@ cairo_recording_surface_create (cairo_content_t content,
 			   _content_to_string (content),
 			   extents->x, extents->y,
 			   extents->width, extents->height,
-			   surface_id);
-	    _surface_object_set_size (ret, extents->width, extents->height);
+			   obj->token);
+	    obj->width = extents->width;
+	    obj->height = extents->height;
 	} else {
 	    _trace_printf ("dict\n"
 			   "  /type /recording set\n"
 			   "  /content //%s set\n"
 			   "  surface dup /s%ld exch def\n",
 			   _content_to_string (content),
-			   surface_id);
+			   obj->token);
 	}
-	_get_object (SURFACE, ret)->defined = TRUE;
-	_push_operand (SURFACE, ret);
+	obj->defined = TRUE;
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -4852,15 +4862,15 @@ cairo_vg_surface_create (cairo_vg_context_t *context,
 			 int width, int height)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_vg_surface_create, context, content, width, height);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
 	_trace_printf ("dict\n"
 		       "  /type /vg set\n"
 		       "  /content //%s set\n"
@@ -4869,10 +4879,11 @@ cairo_vg_surface_create (cairo_vg_context_t *context,
 		       "  surface dup /s%ld exch def\n",
 		       _content_to_string (content),
 		       width, height,
-		       surface_id);
-	_surface_object_set_size (ret, width, height);
-	_get_object (SURFACE, ret)->defined = TRUE;
-	_push_operand (SURFACE, ret);
+		       obj->token);
+	obj->width = width;
+	obj->height = height;
+	obj->defined = TRUE;
+	_push_object (obj);
 	_write_unlock ();
     }
 
@@ -4887,16 +4898,15 @@ cairo_vg_surface_create_for_image (cairo_vg_context_t *context,
 				   int width, int height)
 {
     cairo_surface_t *ret;
-    long surface_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_vg_surface_create_for_image,
 		  context, image, format, width, height);
-    surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
 	cairo_content_t content;
 
 	content = DLCALL (cairo_surface_get_content, ret);
@@ -4908,10 +4918,11 @@ cairo_vg_surface_create_for_image (cairo_vg_context_t *context,
 		       "  surface dup /s%ld exch def\n",
 		       _content_to_string (content),
 		       width, height,
-		       surface_id);
-	_surface_object_set_size (ret, width, height);
-	_get_object (SURFACE, ret)->defined = TRUE;
-	_push_operand (SURFACE, ret);
+		       obj->token);
+	obj->width = width;
+	obj->height = height;
+	obj->defined = TRUE;
+	_push_object (obj);
 	_write_unlock ();
     }
 
