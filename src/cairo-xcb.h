@@ -87,6 +87,17 @@ cairo_xcb_device_debug_cap_xrender_version (cairo_device_t *device,
                                             int major_version,
                                             int minor_version);
 
+/*
+ * @precision: -1 implies automatically choose based on antialiasing mode,
+ *            any other value overrides and sets the corresponding PolyMode.
+ */
+cairo_public void
+cairo_xcb_device_debug_set_precision (cairo_device_t *device,
+				      int precision);
+
+cairo_public int
+cairo_xcb_device_debug_get_precision (cairo_device_t *device);
+
 CAIRO_END_DECLS
 
 #else  /* CAIRO_HAS_XCB_SURFACE */

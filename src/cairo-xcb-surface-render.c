@@ -254,6 +254,37 @@ _cairo_xcb_surface_clear_clip_region (cairo_xcb_surface_t *surface)
 }
 
 static void
+_cairo_xcb_surface_set_precision (cairo_xcb_surface_t	*surface,
+				  cairo_antialias_t	 antialias)
+{
+    cairo_xcb_connection_t *connection = surface->connection;
+    uint32_t precision;
+
+    if (connection->force_precision != -1)
+	    precision = connection->force_precision;
+    else switch (antialias) {
+    default:
+    case CAIRO_ANTIALIAS_DEFAULT:
+    case CAIRO_ANTIALIAS_GRAY:
+    case CAIRO_ANTIALIAS_NONE:
+	precision = 1;
+	break;
+    case CAIRO_ANTIALIAS_SUBPIXEL:
+	precision = 0;
+	break;
+    }
+
+    if (surface->precision != precision) {
+	_cairo_xcb_connection_render_change_picture (connection,
+						     surface->picture,
+						     XCB_RENDER_CP_POLY_MODE,
+						     &precision);
+	surface->precision = precision;
+    }
+}
+
+
+static void
 _cairo_xcb_surface_ensure_picture (cairo_xcb_surface_t *surface)
 {
     assert (surface->fallback == NULL);
@@ -1595,6 +1626,7 @@ _composite_traps (void *closure,
 	render_reference_y = xtraps[0].left.p2.y >> 16;
     }
 
+    _cairo_xcb_surface_set_precision (dst, info->antialias);
     _cairo_xcb_connection_render_trapezoids (dst->connection,
 					     _render_operator (op),
 					     src->picture,

@@ -96,6 +96,7 @@ struct _cairo_xcb_surface {
     xcb_render_picture_t picture;
     xcb_render_pictformat_t xrender_format;
     pixman_format_code_t pixman_format;
+    uint32_t precision;
 
     cairo_list_t link;
 };
@@ -177,6 +178,8 @@ struct _cairo_xcb_connection {
 
     unsigned int maximum_request_length;
     unsigned int flags;
+
+    int force_precision;
 
     const xcb_setup_t *root;
     const xcb_query_extension_reply_t *render;

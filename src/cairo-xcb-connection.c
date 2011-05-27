@@ -889,3 +889,23 @@ cairo_xcb_device_debug_cap_xrender_version (cairo_device_t *device,
 	    connection->flags &= ~CAIRO_XCB_RENDER_HAS_GRADIENTS;
     }
 }
+
+
+void
+cairo_xcb_device_debug_set_precision (cairo_device_t *device,
+				      int precision)
+{
+    if (device->status)
+	    return;
+
+    ((cairo_xcb_connection_t *) device)->force_precision = precision;
+}
+
+int
+cairo_xcb_device_debug_get_precision (cairo_device_t *device)
+{
+    if (device->status)
+	    return -1;
+
+    return ((cairo_xcb_connection_t *) device)->force_precision;
+}

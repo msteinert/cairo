@@ -80,6 +80,8 @@ struct _cairo_xlib_display {
     cairo_xlib_job_t *workqueue;
     cairo_freelist_t wq_freelist;
 
+    int force_precision;
+
     cairo_xlib_hook_t *close_display_hooks;
     unsigned int buggy_gradients :1;
     unsigned int buggy_pad_reflect :1;
@@ -150,6 +152,10 @@ _cairo_xlib_display_has_reflect (cairo_device_t *device);
 
 cairo_private cairo_bool_t
 _cairo_xlib_display_has_gradients (cairo_device_t *device);
+
+cairo_private void
+_cairo_xlib_display_set_precision(cairo_device_t *device,
+				  int precision);
 
 cairo_private XRenderPictFormat *
 _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,

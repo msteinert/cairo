@@ -86,6 +86,17 @@ _cairo_boilerplate_xcb_sync_server (xcb_target_closure_t *xtc)
 }
 
 static void
+_cairo_boilerplate_xcb_setup_test_surface (cairo_surface_t *surface)
+{
+
+    /* For testing purposes, tell the X server to strictly adhere to the
+     * Render specification.
+     */
+    cairo_xcb_device_debug_set_precision(cairo_surface_get_device(surface),
+					 PolyModePrecise);
+}
+
+static void
 _cairo_boilerplate_xcb_cleanup (void *closure)
 {
     xcb_target_closure_t *xtc = closure;
@@ -240,6 +251,9 @@ _cairo_boilerplate_xcb_create_surface (const char		 *name,
 							    render_format,
 							    width, height);
     free (formats);
+
+    if (mode != CAIRO_BOILERPLATE_MODE_PERF)
+	cairo_xcb_surface_setup_test_surface(surface);
 
     xtc->device = cairo_device_reference (cairo_surface_get_device (surface));
     status = cairo_surface_set_user_data (surface, &xcb_closure_key, xtc, NULL);

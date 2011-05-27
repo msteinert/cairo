@@ -78,6 +78,18 @@ _cairo_boilerplate_xlib_check_screen_size (Display *dpy,
     return width <= WidthOfScreen (scr) && height <= HeightOfScreen (scr);
 }
 
+static void
+_cairo_boilerplate_xlib_setup_test_surface (cairo_surface_t *surface)
+{
+
+    /* For testing purposes, tell the X server to strictly adhere to the
+     * Render specification.
+     */
+    cairo_xlib_device_debug_set_precision(cairo_surface_get_device(surface),
+					  PolyModePrecise);
+}
+
+
 #if CAIRO_HAS_XLIB_XRENDER_SURFACE
 /* For the xlib backend we distinguish between TEST and PERF mode in a
  * couple of ways.
@@ -98,6 +110,7 @@ _cairo_boilerplate_xlib_test_create_surface (Display		   *dpy,
 					     xlib_target_closure_t *xtc)
 {
     XRenderPictFormat *xrender_format;
+    cairo_surface_t *surface;
 
     /* This kills performance, but it makes debugging much
      * easier. That's why we have it here when in TEST mode, but not
@@ -133,10 +146,14 @@ _cairo_boilerplate_xlib_test_create_surface (Display		   *dpy,
 				   width, height, xrender_format->depth);
     xtc->drawable_is_pixmap = TRUE;
 
-    return cairo_xlib_surface_create_with_xrender_format (dpy, xtc->drawable,
+    surface = cairo_xlib_surface_create_with_xrender_format (dpy, xtc->drawable,
 							  DefaultScreenOfDisplay (dpy),
 							  xrender_format,
 							  width, height);
+
+    _cairo_boilerplate_xlib_setup_test_surface(surface);
+
+    return surface;
 }
 
 static cairo_surface_t *
@@ -333,6 +350,8 @@ _cairo_boilerplate_xlib_window_create_surface (const char		 *name,
     if (cairo_surface_status (surface))
 	_cairo_boilerplate_xlib_cleanup (xtc);
 
+    _cairo_boilerplate_xlib_setup_test_surface(surface);
+
     return surface;
 }
 
@@ -476,6 +495,8 @@ _cairo_boilerplate_xlib_fallback_create_surface (const char		   *name,
 	_cairo_boilerplate_xlib_cleanup (xtc);
     else
 	cairo_boilerplate_xlib_surface_disable_render (surface);
+
+    _cairo_boilerplate_xlib_setup_test_surface(surface);
 
     return surface;
 }

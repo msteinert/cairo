@@ -1098,12 +1098,15 @@ _cairo_xlib_surface_set_precision (cairo_xlib_display_t	*display,
 {
     int precision;
 
-    switch (antialias) {
+    if (display->force_precision != -1)
+	    precision = display->force_precision;
+    else switch (antialias) {
+    default:
     case CAIRO_ANTIALIAS_DEFAULT:
     case CAIRO_ANTIALIAS_GRAY:
+    case CAIRO_ANTIALIAS_NONE:
 	precision = PolyModeImprecise;
 	break;
-    case CAIRO_ANTIALIAS_NONE:
     case CAIRO_ANTIALIAS_SUBPIXEL:
 	precision = PolyModePrecise;
 	break;

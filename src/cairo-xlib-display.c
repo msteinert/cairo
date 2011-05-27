@@ -350,6 +350,8 @@ _cairo_xlib_device_create (Display *dpy)
     memset (display->cached_xrender_formats, 0,
 	    sizeof (display->cached_xrender_formats));
 
+    display->force_precision = -1;
+
     /* Prior to Render 0.10, there is no protocol support for gradients and
      * we call function stubs instead, which would silently consume the drawing.
      */
@@ -641,4 +643,23 @@ cairo_bool_t
 _cairo_xlib_display_has_gradients (cairo_device_t *device)
 {
     return ! ((cairo_xlib_display_t *) device)->buggy_gradients;
+}
+
+void
+cairo_xlib_device_debug_set_precision (cairo_device_t *device,
+				       int precision)
+{
+    if (device->status)
+	    return;
+
+    ((cairo_xlib_display_t *) device)->force_precision = precision;
+}
+
+int
+cairo_xlib_device_debug_get_precision (cairo_device_t *device)
+{
+    if (device->status)
+	    return -1;
+
+    return ((cairo_xlib_display_t *) device)->force_precision;
 }
