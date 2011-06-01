@@ -68,6 +68,12 @@
 #define CAIRO_PERF_MIN_STD_DEV_COUNT	3
 #define CAIRO_PERF_STABLE_STD_DEV_COUNT 3
 
+struct trace {
+    const cairo_boilerplate_target_t *target;
+    void            *closure;
+    cairo_surface_t *surface;
+};
+
 cairo_bool_t
 cairo_perf_can_run (cairo_perf_t *perf,
 		    const char	 *name,
@@ -203,15 +209,16 @@ scache_remove (void *closure)
 static cairo_surface_t *
 _similar_surface_create (void		 *closure,
 			 cairo_content_t  content,
-			 double 	  width,
-			 double 	  height,
+			 double		  width,
+			 double		  height,
 			 long		  uid)
 {
+    struct trace *args = closure;
     cairo_surface_t *surface;
     struct scache skey, *s;
 
     if (uid == 0 || surface_cache == NULL)
-	return cairo_surface_create_similar (closure, content, width, height);
+	return args->target->create_similar (args->surface, content, width, height);
 
     skey.entry.hash = uid;
     s = _cairo_hash_table_lookup (surface_cache, &skey.entry);
@@ -228,7 +235,7 @@ _similar_surface_create (void		 *closure,
 	 */
     }
 
-    surface = cairo_surface_create_similar (closure, content, width, height);
+    surface = args->target->create_similar (args->surface, content, width, height);
     s = malloc (sizeof (struct scache));
     if (s == NULL)
 	return surface;
@@ -304,8 +311,7 @@ describe (cairo_perf_t *perf,
 
 static void
 execute (cairo_perf_t	 *perf,
-         void            *closure,
-	 cairo_surface_t *target,
+	 struct trace	 *args,
 	 const char	 *trace)
 {
     static cairo_bool_t first_run = TRUE;
@@ -315,7 +321,7 @@ execute (cairo_perf_t	 *perf,
     int low_std_dev_count;
     char *trace_cpy, *name, *dot;
     const cairo_script_interpreter_hooks_t hooks = {
-	.closure = target,
+	.closure = args,
 	.surface_create = _similar_surface_create,
 	.context_create = _context_create
     };
@@ -347,7 +353,7 @@ execute (cairo_perf_t	 *perf,
 	first_run = FALSE;
     }
 
-    describe (perf, closure);
+    describe (perf, args->closure);
 
     times = perf->times;
 
@@ -373,7 +379,7 @@ execute (cairo_perf_t	 *perf,
 	cairo_perf_timer_start ();
 
 	cairo_script_interpreter_run (csi, trace);
-	clear_surface (target); /* queue a write to the sync'ed surface */
+	clear_surface (args->surface); /* queue a write to the sync'ed surface */
 
 	cairo_perf_timer_stop ();
 	times[i] = cairo_perf_timer_elapsed ();
@@ -700,31 +706,31 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 		  const cairo_boilerplate_target_t *target,
 		  const char			   *trace)
 {
-    cairo_surface_t *surface;
-    void *closure;
+    struct trace args;
 
-    surface = (target->create_surface) (NULL,
-					CAIRO_CONTENT_COLOR_ALPHA,
-					1, 1,
-					1, 1,
-					CAIRO_BOILERPLATE_MODE_PERF,
-					0,
-					&closure);
-    if (surface == NULL) {
+    args.target = target;
+    args.surface = target->create_surface (NULL,
+					   CAIRO_CONTENT_COLOR_ALPHA,
+					   1, 1,
+					   1, 1,
+					   CAIRO_BOILERPLATE_MODE_PERF,
+					   0,
+					   &args.closure);
+    if (cairo_surface_status (args.surface)) {
 	fprintf (stderr,
 		 "Error: Failed to create target surface: %s\n",
 		 target->name);
 	return;
     }
 
-    cairo_perf_timer_set_synchronize (target->synchronize, closure);
+    cairo_perf_timer_set_synchronize (target->synchronize, args.closure);
 
-    execute (perf, closure, surface, trace);
+    execute (perf, &args, trace);
 
-    cairo_surface_destroy (surface);
+    cairo_surface_destroy (args.surface);
 
     if (target->cleanup)
-	target->cleanup (closure);
+	target->cleanup (args.closure);
 
     cairo_debug_reset_static_data ();
 #if HAVE_FCFINI

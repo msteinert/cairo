@@ -126,6 +126,12 @@ typedef cairo_surface_t *
 				       int			  id,
 				       void			**closure);
 
+typedef cairo_surface_t *
+(*cairo_boilerplate_create_similar_t) (cairo_surface_t		 *other,
+				       cairo_content_t		  content,
+				       int			  width,
+				       int			  height);
+
 typedef void
 (*cairo_boilerplate_force_fallbacks_t) (cairo_surface_t *surface,
 				       double		 x_pixels_per_inch,
@@ -163,11 +169,12 @@ typedef struct _cairo_boilerplate_target {
     unsigned int				 error_tolerance;
     const char					*probe; /* runtime dl check */
     cairo_boilerplate_create_surface_t		 create_surface;
-    cairo_boilerplate_force_fallbacks_t 	 force_fallbacks;
+    cairo_boilerplate_create_similar_t		 create_similar;
+    cairo_boilerplate_force_fallbacks_t		 force_fallbacks;
     cairo_boilerplate_finish_surface_t		 finish_surface;
     cairo_boilerplate_get_image_surface_t	 get_image_surface;
     cairo_boilerplate_write_to_png_t		 write_to_png;
-    cairo_boilerplate_cleanup_t 		 cleanup;
+    cairo_boilerplate_cleanup_t			 cleanup;
     cairo_boilerplate_wait_t			 synchronize;
     cairo_boilerplate_describe_t                 describe;
     cairo_bool_t				 is_measurable;

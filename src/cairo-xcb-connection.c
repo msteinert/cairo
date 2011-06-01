@@ -789,6 +789,15 @@ _cairo_xcb_connection_get_xid (cairo_xcb_connection_t *connection)
     return xid;
 }
 
+xcb_connection_t *
+cairo_xcb_device_get_connection (cairo_device_t *device)
+{
+    if (device->backend->type != CAIRO_DEVICE_TYPE_XCB)
+	    return NULL;
+
+    return ((cairo_xcb_connection_t *)device)->xcb_connection;
+}
+
 /* public (debug) interface */
 
 /**

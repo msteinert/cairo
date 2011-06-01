@@ -151,6 +151,35 @@ _cairo_boilerplate_image_create_surface (const char		   *name,
     return cairo_image_surface_create (format, ceil (width), ceil (height));
 }
 
+static const cairo_user_data_key_t key;
+
+static cairo_surface_t *
+_cairo_boilerplate_image_create_similar (cairo_surface_t *other,
+					 cairo_content_t content,
+					 int width, int height)
+{
+    cairo_format_t format;
+    cairo_surface_t *surface;
+    int stride;
+    void *ptr;
+
+    switch (content) {
+    case CAIRO_CONTENT_ALPHA: format = CAIRO_FORMAT_A8; break;
+    case CAIRO_CONTENT_COLOR: format = CAIRO_FORMAT_RGB24; break;
+    default:
+    case CAIRO_CONTENT_COLOR_ALPHA: format = CAIRO_FORMAT_ARGB32; break;
+    }
+
+    stride = cairo_format_stride_for_width(format, width);
+    ptr = malloc (stride* height);
+
+    surface = cairo_image_surface_create_for_data (ptr, format,
+						   width, height, stride);
+    cairo_surface_set_user_data (surface, &key, ptr, free);
+
+    return surface;
+}
+
 static cairo_surface_t *
 _cairo_boilerplate_image16_create_surface (const char		     *name,
 					   cairo_content_t	      content,
@@ -160,12 +189,39 @@ _cairo_boilerplate_image16_create_surface (const char		     *name,
 					   double		      max_height,
 					   cairo_boilerplate_mode_t   mode,
 					   int			      id,
-					   void 		    **closure)
+					   void			    **closure)
 {
     *closure = NULL;
 
     /* XXX force CAIRO_CONTENT_COLOR */
     return cairo_image_surface_create (CAIRO_FORMAT_RGB16_565, ceil (width), ceil (height));
+}
+
+static cairo_surface_t *
+_cairo_boilerplate_image16_create_similar (cairo_surface_t *other,
+					   cairo_content_t content,
+					   int width, int height)
+{
+    cairo_format_t format;
+    cairo_surface_t *surface;
+    int stride;
+    void *ptr;
+
+    switch (content) {
+    case CAIRO_CONTENT_ALPHA: format = CAIRO_FORMAT_A8; break;
+    case CAIRO_CONTENT_COLOR: format = CAIRO_FORMAT_RGB16_565; break;
+    default:
+    case CAIRO_CONTENT_COLOR_ALPHA: format = CAIRO_FORMAT_ARGB32; break;
+    }
+
+    stride = cairo_format_stride_for_width(format, width);
+    ptr = malloc (stride* height);
+
+    surface = cairo_image_surface_create_for_data (ptr, format,
+						   width, height, stride);
+    cairo_surface_set_user_data (surface, &key, ptr, free);
+
+    return surface;
 }
 
 static char *
@@ -334,7 +390,9 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
     {
 	"image", "image", NULL, NULL,
 	CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR_ALPHA, 0,
-	NULL, _cairo_boilerplate_image_create_surface,
+	NULL,
+	_cairo_boilerplate_image_create_surface,
+	_cairo_boilerplate_image_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
@@ -345,7 +403,9 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
     {
 	"image", "image", NULL, NULL,
 	CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR, 0,
-	NULL, _cairo_boilerplate_image_create_surface,
+	NULL,
+	_cairo_boilerplate_image_create_surface,
+	_cairo_boilerplate_image_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
@@ -356,7 +416,9 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
     {
 	"image16", "image", NULL, NULL,
 	CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR, 0,
-	NULL, _cairo_boilerplate_image16_create_surface,
+	NULL,
+	_cairo_boilerplate_image16_create_surface,
+	_cairo_boilerplate_image16_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
@@ -370,6 +432,7 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	CAIRO_SURFACE_TYPE_RECORDING, CAIRO_CONTENT_COLOR_ALPHA, 0,
 	"cairo_recording_surface_create",
 	_cairo_boilerplate_recording_create_surface,
+	cairo_surface_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
@@ -382,6 +445,7 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	CAIRO_SURFACE_TYPE_RECORDING, CAIRO_CONTENT_COLOR, 0,
 	"cairo_recording_surface_create",
 	_cairo_boilerplate_recording_create_surface,
+	cairo_surface_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,

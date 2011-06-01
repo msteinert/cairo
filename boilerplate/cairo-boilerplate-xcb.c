@@ -170,6 +170,66 @@ find_depth (xcb_connection_t  *connection,
     return NULL;
 }
 
+static const cairo_user_data_key_t key;
+
+struct similar {
+    xcb_connection_t *connection;
+    xcb_drawable_t pixmap;
+};
+
+static void _destroy_similar (void *closure)
+{
+    struct similar *similar = closure;
+
+    xcb_free_pixmap (similar->connection, similar->pixmap);
+    free (similar);
+}
+
+static cairo_surface_t *
+_cairo_boilerplate_xcb_create_similar (cairo_surface_t *other,
+				       cairo_content_t content,
+				       int width, int height)
+{
+    xcb_screen_t *root;
+    cairo_surface_t *surface;
+    struct similar *similar;
+    xcb_render_pictforminfo_t *render_format;
+    int depth;
+    void *formats;
+
+    similar = malloc (sizeof (*similar));
+
+    switch (content) {
+    default:
+    case CAIRO_CONTENT_COLOR_ALPHA: depth = 32; break;
+    case CAIRO_CONTENT_COLOR: depth = 24; break;
+    case CAIRO_CONTENT_ALPHA: depth = 8; break;
+    }
+
+    similar->connection =
+	cairo_xcb_device_get_connection (cairo_surface_get_device(other));
+    similar->pixmap = xcb_generate_id (similar->connection);
+
+    root = xcb_setup_roots_iterator(xcb_get_setup(similar->connection)).data;
+    xcb_create_pixmap (similar->connection, depth,
+		       similar->pixmap, root->root,
+		       width, height);
+
+    render_format = find_depth (similar->connection, depth, &formats);
+    if (render_format == NULL)
+	return NULL;
+
+    surface = cairo_xcb_surface_create_with_xrender_format (similar->connection,
+							    root,
+							    similar->pixmap,
+							    render_format,
+							    width, height);
+    cairo_surface_set_user_data (surface, &key, similar, _destroy_similar);
+    free(formats);
+
+    return surface;
+}
+
 static cairo_surface_t *
 _cairo_boilerplate_xcb_create_surface (const char		 *name,
 				       cairo_content_t		  content,
@@ -681,6 +741,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR_ALPHA, 1,
 	"cairo_xcb_surface_create_with_xrender_format",
 	_cairo_boilerplate_xcb_create_surface,
+	_cairo_boilerplate_xcb_create_similar,
 	NULL,
 	_cairo_boilerplate_xcb_finish_surface,
 	_cairo_boilerplate_get_image_surface,
@@ -695,6 +756,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR, 1,
 	"cairo_xcb_surface_create_with_xrender_format",
 	_cairo_boilerplate_xcb_create_surface,
+	_cairo_boilerplate_xcb_create_similar,
 	NULL,
 	_cairo_boilerplate_xcb_finish_surface,
 	_cairo_boilerplate_get_image_surface,
@@ -709,6 +771,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR, 1,
 	"cairo_xcb_surface_create_with_xrender_format",
 	_cairo_boilerplate_xcb_create_window,
+	_cairo_boilerplate_xcb_create_similar,
 	NULL,
 	_cairo_boilerplate_xcb_finish_surface,
 	_cairo_boilerplate_get_image_surface,
@@ -723,6 +786,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR, 1,
 	"cairo_xcb_surface_create_with_xrender_format",
 	_cairo_boilerplate_xcb_create_window_db,
+	_cairo_boilerplate_xcb_create_similar,
 	NULL,
 	_cairo_boilerplate_xcb_finish_surface,
 	_cairo_boilerplate_get_image_surface,
@@ -737,6 +801,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR_ALPHA, 1,
 	"cairo_xcb_surface_create_with_xrender_format",
 	_cairo_boilerplate_xcb_create_render_0_0,
+	cairo_surface_create_similar,
 	NULL,
 	_cairo_boilerplate_xcb_finish_surface,
 	_cairo_boilerplate_get_image_surface,
@@ -751,6 +816,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR, 1,
 	"cairo_xcb_surface_create_with_xrender_format",
 	_cairo_boilerplate_xcb_create_render_0_0,
+	cairo_surface_create_similar,
 	NULL,
 	_cairo_boilerplate_xcb_finish_surface,
 	_cairo_boilerplate_get_image_surface,
@@ -765,6 +831,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR, 1,
 	"cairo_xcb_surface_create_with_xrender_format",
 	_cairo_boilerplate_xcb_create_fallback,
+	cairo_surface_create_similar,
 	NULL,
 	_cairo_boilerplate_xcb_finish_surface,
 	_cairo_boilerplate_get_image_surface,
