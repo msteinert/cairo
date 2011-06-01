@@ -48,6 +48,7 @@ cairo_perf_micro_SOURCES =		\
 	micro/glyphs.c		\
 	micro/twin.c			\
 	micro/unaligned-clip.c	\
+	micro/wave.c			\
 	micro/world-map.c		\
 	micro/world-map.h		\
 	micro/zrusin.c		\

@@ -553,5 +553,6 @@ const cairo_perf_case_t perf_cases[] = {
     { pythagoras_tree, 768, 768 },
     { intersections, 512, 512 },
     { spiral, 512, 512 },
+    { wave, 500, 500 },
     { NULL }
 };
