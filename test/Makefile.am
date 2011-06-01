@@ -1407,6 +1407,7 @@ REFERENCE_IMAGES = \
 	twin-antialias-subpixel.ref.png \
 	twin-antialias-subpixel.image16.ref.png \
 	twin-antialias-subpixel.xlib.ref.png \
+	unaligned-box.ref.png \
 	unantialiased-shapes.quartz.ref.png \
 	unantialiased-shapes.ref.png \
 	unbounded-operator.gl.argb32.xfail.png \
