@@ -131,6 +131,7 @@ static const cairo_boilerplate_target_t target[] = {{
     CAIRO_SURFACE_TYPE_SCRIPT, CAIRO_CONTENT_COLOR_ALPHA, 0,
     "cairo_script_surface_create",
     _cairo_boilerplate_script_create_surface,
+    cairo_surface_create_similar,
     NULL,
     _cairo_boilerplate_script_finish_surface,
     _cairo_boilerplate_script_get_image_surface,
