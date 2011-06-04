@@ -1246,8 +1246,10 @@ _pixel_to_solid (cairo_image_surface_t *image, int x, int y)
 
     switch (image->format) {
     default:
-    case CAIRO_FORMAT_INVALID:
 	ASSERT_NOT_REACHED;
+	return NULL;
+
+    case CAIRO_FORMAT_INVALID:
 	return NULL;
 
     case CAIRO_FORMAT_A1:
@@ -1364,7 +1366,9 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 		}
 		else
 		{
-		    return _pixel_to_solid (source, sample.x, sample.y);
+		    pixman_image = _pixel_to_solid (source, sample.x, sample.y);
+                    if (pixman_image)
+                        return pixman_image;
 		}
 	    }
 
@@ -1403,9 +1407,11 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 
 	    if (sample.width == 1 && sample.height == 1) {
 		if (is_contained) {
-		    return _pixel_to_solid (source,
-					    sub->extents.x + sample.x,
-					    sub->extents.y + sample.y);
+		    pixman_image = _pixel_to_solid (source,
+                                                    sub->extents.x + sample.x,
+                                                    sub->extents.y + sample.y);
+                    if (pixman_image)
+                        return pixman_image;
 		} else {
 		    if (extend == CAIRO_EXTEND_NONE)
 			return _pixman_transparent_image ();
@@ -1468,8 +1474,11 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 	    else
 	    {
 		pixman_image = _pixel_to_solid (image, sample.x, sample.y);
-		_cairo_surface_release_source_image (pattern->surface, image, extra);
-		return pixman_image;
+                if (pixman_image)
+                {
+                    _cairo_surface_release_source_image (pattern->surface, image, extra);
+                    return pixman_image;
+                }
 	    }
 	}
 
