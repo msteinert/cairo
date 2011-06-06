@@ -777,6 +777,7 @@ static cairo_bool_t
 _init_logfile (void)
 {
     static cairo_bool_t initialized;
+    char buf[4096];
     const char *filename;
     const char *env;
 
@@ -818,7 +819,7 @@ _init_logfile (void)
 
     filename = getenv ("CAIRO_TRACE_OUTFILE_EXACT");
     if (filename == NULL) {
-	char buf[4096], name[4096] = "";
+	char name[4096] = "";
 
 	filename = getenv ("CAIRO_TRACE_OUTDIR");
 	if (filename == NULL)
