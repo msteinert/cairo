@@ -154,16 +154,23 @@ test_diff_print_binary (test_diff_t		    *diff,
 			double			     max_change,
 			cairo_perf_report_options_t *options)
 {
-    printf ("%5s-%-4s %26s-%-3d  %6.2f (%.2f %4.2f%%) -> %6.2f (%.2f %4.2f%%): %5.2fx ",
-	    diff->tests[0]->backend, diff->tests[0]->content,
-	    diff->tests[0]->name, diff->tests[0]->size,
-	    diff->tests[0]->stats.min_ticks / diff->tests[0]->stats.ticks_per_ms,
-	    diff->tests[0]->stats.median_ticks / diff->tests[0]->stats.ticks_per_ms,
-	    diff->tests[0]->stats.std_dev * 100,
-	    diff->tests[1]->stats.min_ticks / diff->tests[1]->stats.ticks_per_ms,
-	    diff->tests[1]->stats.median_ticks / diff->tests[1]->stats.ticks_per_ms,
-	    diff->tests[1]->stats.std_dev * 100,
-	    fabs (diff->change));
+    if (diff->tests[0]->size)
+	printf ("%5s-%-4s %26s-%-3d",
+		diff->tests[0]->backend, diff->tests[0]->content,
+		diff->tests[0]->name, diff->tests[0]->size);
+    else
+	printf ("%5s %26s", diff->tests[0]->backend, diff->tests[0]->name);
+
+    if (diff->tests[0]->size) {
+	printf ("  %6.2f (%.2f %4.2f%%) -> %6.2f (%.2f %4.2f%%): %5.2fx ",
+		diff->tests[0]->stats.min_ticks / diff->tests[0]->stats.ticks_per_ms,
+		diff->tests[0]->stats.median_ticks / diff->tests[0]->stats.ticks_per_ms,
+		diff->tests[0]->stats.std_dev * 100,
+		diff->tests[1]->stats.min_ticks / diff->tests[1]->stats.ticks_per_ms,
+		diff->tests[1]->stats.median_ticks / diff->tests[1]->stats.ticks_per_ms,
+		diff->tests[1]->stats.std_dev * 100,
+		fabs (diff->change));
+    }
 
     if (diff->change > 1.0)
 	printf ("speedup\n");
