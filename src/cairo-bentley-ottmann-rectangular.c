@@ -731,8 +731,18 @@ _cairo_bentley_ottmann_tessellate_boxes (const cairo_boxes_t *in,
     cairo_status_t status;
     int i, j;
 
-    if (unlikely (in->num_boxes <= 1))
+    if (unlikely (in->num_boxes == 0)) {
+	_cairo_boxes_clear (out);
 	return CAIRO_STATUS_SUCCESS;
+    }
+
+    if (unlikely (in->num_boxes == 1)) {
+	cairo_box_t box = in->chunks.base[0];
+	_cairo_boxes_clear (out);
+	status = _cairo_boxes_add (out, &box);
+	assert (status == CAIRO_STATUS_SUCCESS);
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     rectangles = stack_rectangles;
     rectangles_ptrs = stack_rectangles_ptrs;
