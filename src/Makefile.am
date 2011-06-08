@@ -67,9 +67,9 @@ cairo.def: cairo-features.h $(enabled_cairo_headers)
 	@echo Generating $@
 	@(echo EXPORTS; \
 	(cd $(srcdir); cat $(enabled_cairo_headers) || echo 'cairo_ERROR ()' ) | \
-	grep -v -E '^# *include' | \
+	$(EGREP) -v '^# *include' | \
 	( cat cairo-features.h - | $(CPP) -D__cplusplus - || echo 'cairo_ERROR ()' ) | \
-	grep -E '^cairo_.* \(' | \
+	$(EGREP) '^cairo_.* \(' | \
 	sed -e 's/[ 	].*//' | \
 	sort; \
 	echo LIBRARY libcairo-$(CAIRO_VERSION_SONUM).dll; \
