@@ -186,10 +186,10 @@ _cairo_xcb_surface_create_similar (void			*abstract_other,
     cairo_status_t status;
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+	return NULL;
 
     if (width <= 0 || height <= 0)
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+	return NULL;
 
 #if CAIRO_HAS_DRM_SURFACE && CAIRO_HAS_XCB_DRM_FUNCTIONS
     if (other->drm != NULL) {
