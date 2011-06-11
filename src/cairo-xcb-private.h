@@ -55,6 +55,10 @@
 #include <xcb/xcbext.h>
 #include <pixman.h>
 
+#define CAIRO_XCB_RENDER_AT_LEAST(major, minor)	\
+	((XCB_RENDER_MAJOR_VERSION > major) ||	\
+	((XCB_RENDER_MAJOR_VERSION == major) && (XCB_RENDER_MINOR_VERSION >= minor)))
+
 typedef struct _cairo_xcb_connection cairo_xcb_connection_t;
 typedef struct _cairo_xcb_font cairo_xcb_font_t;
 typedef struct _cairo_xcb_screen cairo_xcb_screen_t;
