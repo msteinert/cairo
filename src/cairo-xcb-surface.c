@@ -185,11 +185,11 @@ _cairo_xcb_surface_create_similar (void			*abstract_other,
     xcb_pixmap_t pixmap;
     cairo_status_t status;
 
-    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
-	return NULL;
-
-    if (width <= 0 || height <= 0)
-	return NULL;
+    if (unlikely(width  > XLIB_COORD_MAX ||
+		 height > XLIB_COORD_MAX ||
+		 width  <= 0 ||
+		 height <= 0))
+	return _cairo_xcb_surface_create_similar_image (other, content, width, height);
 
 #if CAIRO_HAS_DRM_SURFACE && CAIRO_HAS_XCB_DRM_FUNCTIONS
     if (other->drm != NULL) {
