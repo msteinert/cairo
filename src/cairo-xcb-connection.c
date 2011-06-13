@@ -327,7 +327,7 @@ _cairo_xcb_connection_query_render (cairo_xcb_connection_t *connection)
     cairo_status_t status;
     cairo_bool_t present;
 
-    version_cookie = xcb_render_query_version (c, 0, 10);
+    version_cookie = xcb_render_query_version (c, XCB_RENDER_MAJOR_VERSION, XCB_RENDER_MINOR_VERSION);
     formats_cookie = xcb_render_query_pict_formats (c);
 
     present = has_required_depths (connection);
