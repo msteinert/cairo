@@ -3370,7 +3370,7 @@ cairo_xlib_surface_create (Display     *dpy,
     cairo_xlib_screen_t *screen;
     cairo_status_t status;
 
-    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX) {
+    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX || width <= 0 || height <= 0) {
 	/* you're lying, and you know it! */
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
     }
@@ -3413,7 +3413,7 @@ cairo_xlib_surface_create_for_bitmap (Display  *dpy,
     cairo_xlib_screen_t *screen;
     cairo_status_t status;
 
-    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
+    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX || width <= 0 || height <= 0)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
 
     status = _cairo_xlib_screen_get (dpy, scr, &screen);
@@ -3459,7 +3459,7 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
     cairo_xlib_screen_t *screen;
     cairo_status_t status;
 
-    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
+    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX || width <= 0 || height <= 0)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
 
     status = _cairo_xlib_screen_get (dpy, scr, &screen);
@@ -3541,7 +3541,7 @@ cairo_xlib_surface_set_size (cairo_surface_t *abstract_surface,
 	return;
     }
 
-    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX) {
+    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX || width <= 0 || height <= 0) {
 	status = _cairo_surface_set_error (abstract_surface,
 		                           _cairo_error (CAIRO_STATUS_INVALID_SIZE));
 	return;
@@ -3587,7 +3587,7 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
 	return;
     }
 
-    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX) {
+    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX || width <= 0 || height <= 0) {
 	status = _cairo_surface_set_error (abstract_surface,
 		                           _cairo_error (CAIRO_STATUS_INVALID_SIZE));
 	return;

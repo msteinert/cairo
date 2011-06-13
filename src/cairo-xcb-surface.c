@@ -1187,6 +1187,8 @@ cairo_xcb_surface_create (xcb_connection_t  *xcb_connection,
 
     if (unlikely (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+    if (unlikely (width <= 0 || height <= 0))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
 
     xcb_screen = _cairo_xcb_screen_from_visual (xcb_connection, visual, &depth);
     if (unlikely (xcb_screen == NULL))
@@ -1261,6 +1263,8 @@ cairo_xcb_surface_create_for_bitmap (xcb_connection_t	*xcb_connection,
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+    if (unlikely (width <= 0 || height <= 0))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
 
     screen = _cairo_xcb_screen_get (xcb_connection, xcb_screen);
     if (unlikely (screen == NULL))
@@ -1322,6 +1326,8 @@ cairo_xcb_surface_create_with_xrender_format (xcb_connection_t	    *xcb_connecti
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_WRITE_ERROR));
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+    if (unlikely (width <= 0 || height <= 0))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
 
     image_masks.alpha_mask =
@@ -1402,7 +1408,7 @@ cairo_xcb_surface_set_size (cairo_surface_t *abstract_surface,
 	return;
     }
 
-    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX) {
+    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX || width <= 0 || height <= 0) {
 	status_ignored = _cairo_surface_set_error (abstract_surface,
 						   _cairo_error (CAIRO_STATUS_INVALID_SIZE));
 	return;

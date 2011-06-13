@@ -502,6 +502,8 @@ cairo_surface_create_similar (cairo_surface_t  *other,
 	return _cairo_surface_create_in_error (other->status);
     if (unlikely (other->finished))
 	return _cairo_surface_create_in_error (CAIRO_STATUS_SURFACE_FINISHED);
+    if (unlikely (width < 0 || height < 0))
+	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_SIZE);
 
     if (unlikely (! CAIRO_CONTENT_VALID (content)))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_CONTENT));
