@@ -200,10 +200,12 @@ _render_operator (cairo_operator_t op)
     C(ADD, ADD);
     C(SATURATE, SATURATE);
 
+    /* PDF operators were added in RENDER 0.11, check if the xcb headers have
+     * the defines, else fall through to the default case. */
 #if CAIRO_XCB_RENDER_AT_LEAST(0, 11)
 #define BLEND(x,y) C(x,y)
 #else
-#define BLEND(x,y) case CAIRO_OPERATOR_##x: ASSERT_NOT_REACHED; return XCB_RENDER_PICT_OP_OVER
+#define BLEND(x,y) case CAIRO_OPERATOR_##x:
 #endif
     BLEND(MULTIPLY, MULTIPLY);
     BLEND(SCREEN, SCREEN);
