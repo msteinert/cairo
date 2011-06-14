@@ -75,6 +75,7 @@
 #include <crtdbg.h>
 #define vsnprintf _vsnprintf
 #define access _access
+#define unlink _unlink
 #define F_OK 0
 #endif
 
