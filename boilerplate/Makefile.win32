@@ -11,10 +11,13 @@ HEADERS = \
 
 SOURCES = \
 	$(enabled_cairo_boilerplate_sources) \
+	cairo-boilerplate-constructors.c \
 	$(NULL)
 
 OBJECTS = $(patsubst %.c, $(CFG)/%-static.obj, $(SOURCES))
 
+cairo-boilerplate-constructors.c: Makefile.sources Makefile.win32 $(enabled_cairo_boilerplate_sources) make-cairo-boilerplate-constructors.sh
+	sh ./make-cairo-boilerplate-constructors.sh $(enabled_cairo_boilerplate_sources) > $@
 
 all: $(CFG)/boiler.lib
 
