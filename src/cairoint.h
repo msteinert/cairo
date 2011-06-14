@@ -72,6 +72,10 @@
 
 #include "cairo-compiler-private.h"
 
+#if CAIRO_HAS_PS_SURFACE || CAIRO_HAS_SCRIPT_SURFACE || CAIRO_HAS_XML_SURFACE
+#define CAIRO_HAS_DEFLATE_STREAM 1
+#endif
+
 #if CAIRO_HAS_PS_SURFACE  || \
     CAIRO_HAS_PDF_SURFACE || \
     CAIRO_HAS_SVG_SURFACE || \

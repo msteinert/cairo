@@ -114,12 +114,12 @@ CAIRO_ENABLE_FUNCTIONS(xlib_xcb, Xlib/XCB, no, [
   if test "x$use_xcb" = "xyes" -a "x$use_xlib" = "xyes"; then
     xlib_xcb_REQUIRES="x11-xcb"
     PKG_CHECK_MODULES(xlib_xcb, $xlib_xcb_REQUIRES, ,
-		      [use_xlib_xcb="no (requires $xlib_xcb_REQUIRES http://xcb.freedesktop.org)"])
+		      [AC_MSG_RESULT(no)
+		      use_xlib_xcb="no (requires $xlib_xcb_REQUIRES http://xcb.freedesktop.org)"])
   else
     use_xlib_xcb="no (requires both --enable-xlib and --enable-xcb)"
   fi
 ])
-AM_CONDITIONAL(BUILD_XLIB_XCB, test "x$use_xlib_xcb" = "xyes")
 
 CAIRO_ENABLE_FUNCTIONS(xcb_shm, XCB/SHM, auto, [
   if test "x$use_xcb" = "xyes"; then
@@ -131,7 +131,6 @@ CAIRO_ENABLE_FUNCTIONS(xcb_shm, XCB/SHM, auto, [
     use_xcb_shm="no (requires --enable-xcb)"
   fi
 ])
-AM_CONDITIONAL(BUILD_XCB_SHM, test "x$use_xcb_shm" = "xyes")
 
 dnl ===========================================================================
 

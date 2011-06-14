@@ -38,6 +38,8 @@
 
 #include "cairoint.h"
 
+#if CAIRO_HAS_XLIB_XCB_FUNCTIONS
+
 #include "cairo-xlib.h"
 #include "cairo-xcb.h"
 
@@ -537,3 +539,5 @@ cairo_xlib_surface_get_height (cairo_surface_t *abstract_surface)
 
     return surface->xcb->height;
 }
+
+#endif /* CAIRO_HAS_XLIB_XCB_FUNCTIONS */

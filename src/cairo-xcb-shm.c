@@ -36,6 +36,8 @@
 
 #include "cairoint.h"
 
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
+
 #include "cairo-xcb-private.h"
 
 #include <xcb/shm.h>
@@ -650,3 +652,5 @@ _cairo_xcb_connection_shm_mem_pools_fini (cairo_xcb_connection_t *connection)
 								 link));
     }
 }
+
+#endif /* CAIRO_HAS_XCB_SHM_FUNCTIONS */

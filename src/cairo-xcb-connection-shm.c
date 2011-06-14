@@ -31,6 +31,8 @@
 
 #include "cairoint.h"
 
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
+
 #include "cairo-xcb-private.h"
 
 #include <xcb/xcbext.h>
@@ -107,3 +109,5 @@ _cairo_xcb_connection_shm_detach (cairo_xcb_connection_t *connection,
     xcb_shm_detach (connection->xcb_connection, segment);
     _cairo_xcb_connection_put_xid (connection, segment);
 }
+
+#endif /* CAIRO_HAS_XCB_SHM_FUNCTIONS */
