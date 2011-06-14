@@ -44,6 +44,10 @@ void _register_##name__ (void) { \
 					 sizeof (targets__) / sizeof (targets__[0])); \
 }
 
+#define CAIRO_NO_BOILERPLATE(name__) \
+void _register_##name__ (void); \
+void _register_##name__ (void) { }
+
 CAIRO_END_DECLS
 
 #endif /* _CAIRO_BOILERPLATE_PRIVATE_H_ */

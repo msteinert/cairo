@@ -36,6 +36,8 @@
 
 #include "cairo-boilerplate-private.h"
 
+#if CAIRO_CAN_TEST_WIN32_PRINTING_SURFACE
+
 #include <cairo-win32.h>
 #include <cairo-win32-private.h>
 #include <cairo-paginated-surface-private.h>
@@ -343,7 +345,6 @@ _cairo_boilerplate_win32_printing_cleanup (void *closure)
 }
 
 static const cairo_boilerplate_target_t targets[] = {
-#if CAIRO_CAN_TEST_WIN32_PRINTING_SURFACE
     {
 	"win32-printing", "win32", ".ps", NULL,
 	CAIRO_SURFACE_TYPE_WIN32_PRINTING,
@@ -369,6 +370,11 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_win32_printing_cleanup,
 	NULL, NULL, FALSE, TRUE, TRUE
     },
-#endif
 };
 CAIRO_BOILERPLATE (win32_printing, targets)
+
+#else
+
+CAIRO_NO_BOILERPLATE (win32_printing)
+
+#endif
