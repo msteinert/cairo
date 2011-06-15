@@ -148,7 +148,6 @@ _cairo_toy_font_face_init_key (cairo_toy_font_face_t *key,
     hash += ((unsigned long) slant) * 1607;
     hash += ((unsigned long) weight) * 1451;
 
-    assert (hash != 0);
     key->base.hash_entry.hash = hash;
 }
 
@@ -312,7 +311,6 @@ cairo_toy_font_face_create (const char          *family,
 
 	/* remove the bad font from the hash table */
 	_cairo_hash_table_remove (hash_table, &font_face->base.hash_entry);
-	font_face->base.hash_entry.hash = 0;
     }
 
     /* Otherwise create it and insert into hash table. */
@@ -366,7 +364,12 @@ _cairo_toy_font_face_destroy (void *abstract_face)
 	return;
     }
 
-    if (font_face->base.hash_entry.hash != 0)
+    /* Font faces in SUCCESS status are guaranteed to be in the
+     * hashtable. Font faces in an error status are removed from the
+     * hashtable if they are found during a lookup, thus they should
+     * only be removed if they are in the hashtable. */
+    if (likely (font_face->base.status == CAIRO_STATUS_SUCCESS) ||
+	_cairo_hash_table_lookup (hash_table, &font_face->base.hash_entry) == font_face)
 	_cairo_hash_table_remove (hash_table, &font_face->base.hash_entry);
 
     _cairo_toy_font_face_hash_table_unlock ();
