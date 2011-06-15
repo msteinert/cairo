@@ -739,6 +739,13 @@ _cairo_bentley_ottmann_tessellate_boxes (const cairo_boxes_t *in,
     if (unlikely (in->num_boxes == 1)) {
 	cairo_box_t box = in->chunks.base[0];
 	_cairo_boxes_clear (out);
+
+	if (box.p1.x > box.p2.x) {
+	    cairo_fixed_t tmp = box.p1.x;
+	    box.p1.x = box.p2.x;
+	    box.p2.x = tmp;
+	}
+
 	status = _cairo_boxes_add (out, &box);
 	assert (status == CAIRO_STATUS_SUCCESS);
 	return CAIRO_STATUS_SUCCESS;
