@@ -1985,32 +1985,18 @@ _cairo_win32_font_face_keys_equal (const void *key_a,
 static void
 _cairo_win32_font_face_hash_table_destroy (void)
 {
-    cairo_win32_font_face_t *font_face;
+    cairo_hash_table_t *hash_table;
 
+    /* We manually acquire the lock rather than calling
+     * _cairo_win32_font_face_hash_table_lock simply to avoid creating
+     * the table only to destroy it again. */
     CAIRO_MUTEX_LOCK (_cairo_win32_font_face_mutex);
-
-    if (cairo_win32_font_face_hash_table) {
-	/* This is rather inefficient, but destroying the hash table
-	 * is something we only do during debugging, (during
-	 * cairo_debug_reset_static_data), when efficiency is not
-	 * relevant. */
-        while (1) {
-	    font_face= _cairo_hash_table_random_entry (cairo_win32_font_face_hash_table,
-						       NULL);
-	    if (font_face == NULL)
-		break;
-	    _cairo_hash_table_remove (cairo_win32_font_face_hash_table,
-				      &font_face->base.hash_entry);
-
-	    cairo_font_face_destroy (&font_face->base);
-	}
-
-	_cairo_hash_table_destroy (cairo_win32_font_face_hash_table);
-
-	cairo_win32_font_face_hash_table = NULL;
-    }
-
+    hash_table = cairo_win32_font_face_hash_table;
+    cairo_win32_font_face_hash_table = NULL;
     CAIRO_MUTEX_UNLOCK (_cairo_win32_font_face_mutex);
+
+    if (hash_table != NULL)
+	_cairo_hash_table_destroy (hash_table);
 }
 
 static cairo_hash_table_t *
