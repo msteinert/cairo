@@ -21,7 +21,9 @@ endif
 
 if BUILD_SPHINX
 if CAIRO_HAS_SCRIPT_SURFACE
+if CAIRO_HAS_TEE_SURFACE
 SUBDIRS += cairo-sphinx
+endif
 endif
 endif
 
