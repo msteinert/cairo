@@ -35,6 +35,8 @@
 
 #include "cairoint.h"
 
+#if !CAIRO_HAS_XLIB_XCB_FUNCTIONS
+
 #include "cairo-xlib-private.h"
 
 #include "cairo-error-private.h"
@@ -185,3 +187,5 @@ _cairo_xlib_visual_info_destroy (cairo_xlib_visual_info_t *info)
     /* No need for XFreeColors() whilst using DefaultColormap */
     free (info);
 }
+
+#endif /* !CAIRO_HAS_XLIB_XCB_FUNCTIONS */

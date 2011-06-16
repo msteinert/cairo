@@ -35,6 +35,8 @@
 
 #include "cairoint.h"
 
+#if !CAIRO_HAS_XLIB_XCB_FUNCTIONS
+
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-xrender-private.h"
 #include "cairo-freelist-private.h"
@@ -663,3 +665,5 @@ cairo_xlib_device_debug_get_precision (cairo_device_t *device)
 
     return ((cairo_xlib_display_t *) device)->force_precision;
 }
+
+#endif /* !CAIRO_HAS_XLIB_XCB_FUNCTIONS */

@@ -47,6 +47,8 @@
 
 #include "cairoint.h"
 
+#if !CAIRO_HAS_XLIB_XCB_FUNCTIONS
+
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-surface-private.h"
 #include "cairo-clip-private.h"
@@ -4849,3 +4851,5 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 
     return status;
 }
+
+#endif /* !CAIRO_HAS_XLIB_XCB_FUNCTIONS */

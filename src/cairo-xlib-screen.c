@@ -54,6 +54,8 @@
 
 #include "cairoint.h"
 
+#if !CAIRO_HAS_XLIB_XCB_FUNCTIONS
+
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-xrender-private.h"
 
@@ -464,3 +466,5 @@ _cairo_xlib_screen_get_font_options (cairo_xlib_screen_t *info)
 
     return &info->font_options;
 }
+
+#endif /* !CAIRO_HAS_XLIB_XCB_FUNCTIONS */
