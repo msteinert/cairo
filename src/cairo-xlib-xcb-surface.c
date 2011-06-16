@@ -540,4 +540,17 @@ cairo_xlib_surface_get_height (cairo_surface_t *abstract_surface)
     return surface->xcb->height;
 }
 
+void
+cairo_xlib_device_debug_set_precision (cairo_device_t *device,
+				       int precision)
+{
+    cairo_xcb_device_debug_set_precision (device, precision);
+}
+
+int
+cairo_xlib_device_debug_get_precision (cairo_device_t *device)
+{
+    return cairo_xcb_device_debug_get_precision (device);
+}
+
 #endif /* CAIRO_HAS_XLIB_XCB_FUNCTIONS */
