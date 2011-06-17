@@ -2116,8 +2116,14 @@ cairo_win32_font_face_create_for_logfontw_hfont (LOGFONTW *logfont, HFONT font)
     font_face = _cairo_hash_table_lookup (hash_table,
 					 &key.base.hash_entry);
     if (font_face != NULL) {
-	cairo_font_face_reference (&font_face->base);
-	goto DONE;
+	if (font_face->base.status == CAIRO_STATUS_SUCCESS) {
+	    cairo_font_face_reference (&font_face->base);
+	    _cairo_win32_font_face_hash_table_unlock ();
+	    return &font_face->base;
+	}
+
+	/* remove the bad font from the hash table */
+	_cairo_hash_table_remove (hash_table, &font_face->base.hash_entry);
     }
 
     /* Otherwise create it and insert into hash table. */
