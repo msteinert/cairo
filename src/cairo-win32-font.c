@@ -149,6 +149,10 @@ static cairo_status_t
 _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font,
 					  cairo_scaled_glyph_t      *scaled_glyph);
 
+static void
+_cairo_win32_font_face_destroy (void *abstract_face);
+
+
 #define NEARLY_ZERO(d) (fabs(d) < (1. / 65536.))
 
 static HDC
@@ -1920,11 +1924,6 @@ struct _cairo_win32_font_face {
 
 /* implement the platform-specific interface */
 
-static void
-_cairo_win32_font_face_destroy (void *abstract_face)
-{
-}
-
 static cairo_bool_t
 _is_scale (const cairo_matrix_t *matrix, double scale)
 {
@@ -2038,6 +2037,37 @@ static void
 _cairo_win32_font_face_hash_table_unlock (void)
 {
     CAIRO_MUTEX_UNLOCK (_cairo_win32_font_face_mutex);
+}
+
+static void
+_cairo_win32_font_face_destroy (void *abstract_face)
+{
+    cairo_win32_font_face_t *font_face = abstract_face;
+    cairo_hash_table_t *hash_table;
+
+    if (font_face == NULL ||
+	    CAIRO_REFERENCE_COUNT_IS_INVALID (&font_face->base.ref_count))
+	return;
+
+    hash_table = _cairo_win32_font_face_hash_table_lock ();
+    /* All created objects must have been mapped in the hash table. */
+    assert (hash_table != NULL);
+
+    if (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&font_face->base.ref_count)) {
+	/* somebody recreated the font whilst we waited for the lock */
+	_cairo_win32_font_face_hash_table_unlock ();
+	return;
+    }
+
+    /* Font faces in SUCCESS status are guaranteed to be in the
+     * hashtable. Font faces in an error status are removed from the
+     * hashtable if they are found during a lookup, thus they should
+     * only be removed if they are in the hashtable. */
+    if (likely (font_face->base.status == CAIRO_STATUS_SUCCESS) ||
+	_cairo_hash_table_lookup (hash_table, &font_face->base.hash_entry) == font_face)
+	_cairo_hash_table_remove (hash_table, &font_face->base.hash_entry);
+
+    _cairo_win32_font_face_hash_table_unlock ();
 }
 
 static void
