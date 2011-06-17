@@ -302,9 +302,7 @@ cairo_toy_font_face_create (const char          *family,
 					  &key.base.hash_entry);
     if (font_face != NULL) {
 	if (font_face->base.status == CAIRO_STATUS_SUCCESS) {
-	    /* We increment the reference count here manually to avoid
-	       double-locking. */
-	    _cairo_reference_count_inc (&font_face->base.ref_count);
+	    cairo_font_face_reference (&font_face->base);
 	    _cairo_toy_font_face_hash_table_unlock ();
 	    return &font_face->base;
 	}
