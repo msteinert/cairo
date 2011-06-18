@@ -11,16 +11,15 @@ top_builddir = $(top_srcdir)
 endif
 
 CC := cl
-LINK := link
+LD := link
+AR := lib
 
 ifeq ($(CFG),debug)
-MS_MDFLAGS := -MDd
-MS_LDFLAGS := -LDd
-OPT := -Od -Zi
+CFG_CFLAGS := -MDd -Od -Zi
+CFG_LDFLAGS := -DEBUG
 else
-MS_MDFLAGS := -MD
-MS_LDFLAGS := -LD
-OPT := -MD -O2
+CFG_CFLAGS := -MD -O2
+CFG_LDFLAGS :=
 endif
 
 PIXMAN_CFLAGS := -I$(top_srcdir)/../pixman/pixman
@@ -37,12 +36,17 @@ ZLIB_CFLAGS += -I$(top_srcdir)/../zlib/
 CAIRO_LIBS += $(top_builddir)/../zlib/zdll.lib
 endif
 
-DEFAULT_CFLAGS = -nologo $(MS_MDFLAGS) $(OPT)
-DEFAULT_CFLAGS += -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
-DEFAULT_CFLAGS += -I. -I$(top_srcdir)
+DEFAULT_CFLAGS = -nologo $(CFG_CFLAGS)
+DEFAULT_CFLAGS += -I. -I$(top_srcdir) -I$(top_srcdir)/src
 DEFAULT_CFLAGS += $(PIXMAN_CFLAGS) $(LIBPNG_CFLAGS) $(ZLIB_CFLAGS)
 
 CAIRO_CFLAGS = $(DEFAULT_CFLAGS) $(CFLAGS)
+
+DEFAULT_LDFLAGS = -nologo $(CFG_LDFLAGS)
+DEFAULT_ARFLAGS = -nologo
+
+CAIRO_LDFLAGS = $(DEFAULT_LDFLAGS) $(LDFLAGS)
+CAIRO_ARFLAGS = $(DEFAULT_ARFLAGS) $(LDFLAGS)
 
 inform:
 	@echo

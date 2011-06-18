@@ -2,8 +2,6 @@ top_srcdir = ..
 include $(top_srcdir)/build/Makefile.win32.common
 include Makefile.win32.features
 
-CFLAGS += -I../src
-
 HEADERS = \
 	$(enabled_cairo_boilerplate_headers) \
 	$(enabled_cairo_boilerplate_private) \
@@ -23,4 +21,4 @@ all: $(CFG)/boiler.lib
 
 
 $(CFG)/boiler.lib: $(OBJECTS)
-	lib -NOLOGO -OUT:$@ $(OBJECTS) $(WIN_LIBS)
+	@$(AR) $(CAIRO_ARFLAGS) -OUT:$@ $(OBJECTS)

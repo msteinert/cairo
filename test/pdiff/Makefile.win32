@@ -1,8 +1,6 @@
 top_srcdir = ../..
 include $(top_srcdir)/build/Makefile.win32.common
 
-CFLAGS += -I../../src
-
 SOURCES = \
 	lpyramid.c \
 	pdiff.c \
@@ -13,4 +11,4 @@ OBJECTS = $(patsubst %.c, $(CFG)/%-static.obj, $(SOURCES))
 all: $(CFG)/pdiff.lib
 
 $(CFG)/pdiff.lib: $(OBJECTS)
-	lib -NOLOGO -OUT:$@ $(OBJECTS)
+	@$(AR) $(CAIRO_ARFLAGS) -OUT:$@ $(OBJECTS)

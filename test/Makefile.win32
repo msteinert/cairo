@@ -2,7 +2,7 @@ top_srcdir = ..
 include $(top_srcdir)/build/Makefile.win32.common
 include $(top_srcdir)/test/Makefile.sources
 
-CFLAGS += -I../src -I../boilerplate -I./pdiff
+CFLAGS += -I$(top_srcdir)/boilerplate -I./pdiff
 
 TEST_LIBS = ./pdiff/$(CFG)/pdiff.lib $(top_srcdir)/src/$(CFG)/cairo-static.lib $(top_srcdir)/boilerplate/$(CFG)/boiler.lib
 
@@ -16,7 +16,7 @@ SOURCES = $(cairo_test_suite_sources) $(test_sources) cairo-test-constructors.c
 OBJECTS = $(patsubst %.c, $(CFG)/%-static.obj, $(SOURCES))
 
 cairo-test-suite.exe: $(OBJECTS) $(TEST_LIBS)
-	$(CC) $(OPT) $(MS_MDFLAGS) $(OBJECTS) -Fe"$@" -link $(LDFLAGS) $(TEST_LIBS) $(CAIRO_LIBS)
+	@$(LD) $(CAIRO_LDFLAGS) -OUT:$@ $(OBJECTS) $(TEST_LIBS) $(CAIRO_LIBS)
 
 ./pdiff/$(CFG)/pdiff.lib:
 	$(MAKE) -C pdiff -f Makefile.win32
