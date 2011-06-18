@@ -4,15 +4,9 @@ include $(top_srcdir)/test/Makefile.sources
 
 CFLAGS += -I../src -I../boilerplate -I./pdiff
 
-LDFLAGS += ./pdiff/pdiff.lib ../src/$(CFG)/cairo-static.lib $(PIXMAN_LIBS) ../boilerplate/$(CFG)/boiler.lib $(EXE_LDFLAGS)
+TEST_LIBS = ./pdiff/pdiff.lib $(top_srcdir)/src/$(CFG)/cairo-static.lib $(top_srcdir)/boilerplate/$(CFG)/boiler.lib
 
-
-TESTCORE_SOURCES = \
-	cairo-test.c \
-	buffer-diff.c \
-	$(NULL)
-
-all: cairo-test-suite.exe
+all: inform cairo-test-suite.exe
 
 cairo-test-constructors.c: Makefile.sources Makefile.win32 $(test_sources) make-cairo-test-constructors.sh
 	sh ./make-cairo-test-constructors.sh $(test_sources) > $@
@@ -21,18 +15,21 @@ SOURCES = $(cairo_test_suite_sources) $(test_sources) cairo-test-constructors.c
 
 OBJECTS = $(patsubst %.c, $(CFG)/%-static.obj, $(SOURCES))
 
-cairo-test-suite.exe: $(OBJECTS) ./pdiff/pdiff.lib ../boilerplate/$(CFG)/boiler.lib
-	$(CC) $(OPT) $(MS_MDFLAGS) $(OBJECTS) -Fe"$@" -link $(LDFLAGS) $(CAIRO_LIBS) /NODEFAULTLIB:library
+cairo-test-suite.exe: $(OBJECTS) $(TEST_LIBS)
+	$(CC) $(OPT) $(MS_MDFLAGS) $(OBJECTS) -Fe"$@" -link $(LDFLAGS) $(TEST_LIBS) $(CAIRO_LIBS)
 
 ./pdiff/pdiff.lib:
 	(cd pdiff ; $(MAKE) -f Makefile.win32)
 
-../boilerplate/$(CFG)/boiler.lib:
-	(cd ../boilerplate ; $(MAKE) -f Makefile.win32)
+$(top_srcdir)/src/$(CFG)/cairo-static.lib:
+	$(MAKE) -C $(top_srcdir)/src -f Makefile.win32
+
+$(top_srcdir)/boilerplate/$(CFG)/boiler.lib:
+	$(MAKE) -C $(top_srcdir)/boilerplate -f Makefile.win32
 
 .PHONY: check test
 
-check: cairo-test-suite.exe
+check: inform cairo-test-suite.exe
 	./cairo-test-suite.exe
 
-test: check
+test: inform check
