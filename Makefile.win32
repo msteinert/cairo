@@ -3,7 +3,6 @@
 
 top_srcdir = .
 include $(top_srcdir)/build/Makefile.win32.common
-include $(top_srcdir)/build/Makefile.win32.features-h
 
 SUBDIRS = src
 TEST_SUBDIRS = boilerplate test

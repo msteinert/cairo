@@ -4,6 +4,7 @@ default: all
 # Edit build/Makefile.win32.features to enable features to build
 #
 include $(top_srcdir)/build/Makefile.win32.features
+include $(top_srcdir)/build/Makefile.win32.features-h
 
 ifeq ($(top_builddir),)
 top_builddir = $(top_srcdir)
@@ -59,11 +60,11 @@ endif
 
 # Some generic rules
 
-$(CFG)/%.obj: %.c
+$(CFG)/%.obj: %.c $(top_srcdir)/src/cairo-features.h
 	@mkdir -p $(CFG)
 	@$(CC) $(CAIRO_CFLAGS) -c -Fo"$@" $<
 
-$(CFG)/%-static.obj: %.c
+$(CFG)/%-static.obj: %.c $(top_srcdir)/src/cairo-features.h
 	@mkdir -p $(CFG)
 	@$(CC) $(CAIRO_CFLAGS) -c -DCAIRO_WIN32_STATIC_BUILD=1 -Fo"$@" $<
 
