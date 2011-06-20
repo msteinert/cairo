@@ -116,7 +116,7 @@ _cairo_boilerplate_directfb_window_create_surface (DFBInfo	   *info,
     desc.width	= width;
     desc.height = height;
     if (content == CAIRO_CONTENT_COLOR_ALPHA) {
-	desc.flags |= DWDESC_CAPS | DSDESC_PIXELFORMAT;
+	desc.flags |= DWDESC_CAPS | DWDESC_PIXELFORMAT;
 	desc.caps  |= DWCAPS_DOUBLEBUFFER | DWCAPS_ALPHACHANNEL;
 	desc.pixelformat = DSPF_ARGB;
     }
