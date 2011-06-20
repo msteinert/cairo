@@ -100,7 +100,7 @@ AC_DEFUN([CAIRO_CC_TRY_LINK_WITH_ENV_SILENT],[dnl
 	_save_libs="$LIBS"
 	$1
 	AC_LINK_IFELSE(
-		[$_compile_program],
+		[AC_LANG_SOURCE([$_compile_program])],
 		[cairo_cc_stderr=`test -f conftest.err && cat conftest.err`
 		 cairo_cc_flag=yes],
 		[cairo_cc_stderr=`test -f conftest.err && cat conftest.err`
