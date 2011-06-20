@@ -1901,13 +1901,12 @@ _cairo_script_surface_create_similar (void	       *abstract_surface,
     return &surface->base;
 }
 
-static void
+static cairo_status_t
 _device_flush (void *abstract_device)
 {
     cairo_script_context_t *ctx = abstract_device;
-    cairo_status_t status;
 
-    status = _cairo_output_stream_flush (ctx->stream);
+    return _cairo_output_stream_flush (ctx->stream);
 }
 
 static void
