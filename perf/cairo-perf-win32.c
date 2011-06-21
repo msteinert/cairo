@@ -25,12 +25,14 @@
  *	    Carl Worth <cworth@cworth.org>
  */
 
+#include "cairo-perf.h"
+
+#if CAIRO_HAS_WIN32_SURFACE
+
 #define USE_WINAPI
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-
-#include "cairo-perf.h"
 
 /* timers */
 
@@ -87,3 +89,5 @@ void
 cairo_perf_yield (void) {
     SleepEx(0, TRUE);
 }
+
+#endif /* CAIRO_HAS_WIN32_SURFACE */

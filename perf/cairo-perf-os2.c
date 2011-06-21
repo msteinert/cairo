@@ -27,10 +27,12 @@
  *	    Carl Worth <cworth@cworth.org> (win32/linux code)
  */
 
+#include "cairo-perf.h"
+
+#if CAIRO_HAS_OS2_SURFACE
+
 #define INCL_BASE
 #include <os2.h>
-
-#include "cairo-perf.h"
 
 /* timers */
 typedef struct _cairo_perf_timer
@@ -93,3 +95,5 @@ cairo_perf_yield (void) {
     /* try to deactivate this thread until the scheduler calls it again */
     DosSleep (0);
 }
+
+#endif /* CAIRO_HAS_OS2_SURFACE */

@@ -815,6 +815,7 @@ src/Makefile
 test/Makefile
 test/pdiff/Makefile
 perf/Makefile
+perf/micro/Makefile
 util/Makefile
 util/cairo-fdr/Makefile
 util/cairo-gobject/Makefile

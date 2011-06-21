@@ -1,5 +1,7 @@
 include $(top_srcdir)/build/Makefile.am.common
 
+include $(top_srcdir)/perf/Makefile.sources
+
 AM_CPPFLAGS =					\
 	-I$(srcdir)				\
 	-I$(top_srcdir)/boilerplate		\
@@ -22,105 +24,46 @@ EXTRA_LTLIBRARIES += libcairoperf.la
 
 LDADD = libcairoperf.la \
 	$(top_builddir)/boilerplate/libcairoboilerplate.la \
-	$(top_builddir)/src/libcairo.la \
-	$(CAIROPERF_LIBS)
+	$(top_builddir)/src/libcairo.la
 
-cairo_perf_micro_SOURCES =		\
-	cairo-perf-micro.c	\
-	cairo-perf.h		\
-	micro/cairo-perf-cover.c	\
-	micro/box-outline.c		\
-	micro/composite-checker.c	\
-	micro/fill.c			\
-	micro/long-lines.c		\
-	micro/mosaic.c		\
-	micro/mosaic.h		\
-	micro/paint.c			\
-	micro/paint-with-alpha.c	\
-	micro/mask.c			\
-	micro/pattern_create_radial.c \
-	micro/rectangles.c		\
-	micro/rounded-rectangles.c	\
-	micro/stroke.c		\
-	micro/subimage_copy.c		\
-	micro/tessellate.c		\
-	micro/text.c			\
-	micro/glyphs.c		\
-	micro/twin.c			\
-	micro/unaligned-clip.c	\
-	micro/wave.c			\
-	micro/world-map.c		\
-	micro/world-map.h		\
-	micro/zrusin.c		\
-	micro/zrusin-another.h	\
-	micro/long-dashed-lines.c	\
-	micro/dragon.c		\
-	micro/pythagoras-tree.c	\
-	micro/intersections.c		\
-	micro/spiral.c
-
-if CAIRO_HAS_WIN32_SURFACE
-cairo_perf_micro_SOURCES += cairo-perf-win32.c
-else
-if CAIRO_HAS_OS2_SURFACE
-cairo_perf_micro_SOURCES += cairo-perf-os2.c
-else
-cairo_perf_micro_SOURCES += cairo-perf-posix.c
-endif
-endif
-cairo_perf_micro_LDADD = $(LDADD)
+cairo_perf_micro_SOURCES = $(cairo_perf_micro_sources)
+cairo_perf_micro_LDADD = \
+	$(top_builddir)/perf/micro/libcairo-perf-micro.la \
+	$(LDADD)
 cairo_perf_micro_DEPENDENCIES = \
-        $(top_builddir)/boilerplate/libcairoboilerplate.la	\
-	$(top_builddir)/src/libcairo.la \
-	libcairoperf.la
+	$(top_builddir)/perf/micro/libcairo-perf-micro.la \
+	$(LDADD)
 
 libcairoperf_la_SOURCES = \
-	cairo-perf-report.c	\
-	cairo-stats.c		\
-	cairo-stats.h
+	$(libcairoperf_sources)	\
+	$(libcairoperf_headers)
+libcairoperf_la_LIBADD = $(CAIROPERF_LIBS)
 
-cairo_perf_trace_SOURCES =		\
-	cairo-perf-trace.c		\
-	../src/cairo-error.c		\
-	../src/cairo-hash.c
-if CAIRO_HAS_WIN32_SURFACE
-cairo_perf_trace_SOURCES += cairo-perf-win32.c
-else
-if CAIRO_HAS_OS2_SURFACE
-cairo_perf_trace_SOURCES += cairo-perf-os2.c
-else
-cairo_perf_trace_SOURCES += cairo-perf-posix.c
-endif
-endif
+cairo_perf_trace_SOURCES = \
+	$(cairo_perf_trace_sources)	\
+	$(cairo_perf_trace_external_sources)
 cairo_perf_trace_LDADD =		\
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
 	$(LDADD)
 cairo_perf_trace_DEPENDENCIES = \
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
-        $(top_builddir)/boilerplate/libcairoboilerplate.la	\
-	$(top_builddir)/src/libcairo.la \
-	libcairoperf.la
+	$(LDADD)
 
-cairo_perf_diff_files_SOURCES =	\
-	cairo-perf-diff-files.c
-
-cairo_perf_print_SOURCES =	\
-	cairo-perf-print.c
-
-cairo_perf_chart_SOURCES =	\
-	cairo-perf-chart.c
-
-cairo_perf_compare_backends_SOURCES =	\
-	cairo-perf-compare-backends.c
+cairo_perf_diff_files_SOURCES =	$(cairo_perf_diff_files_sources)
+cairo_perf_print_SOURCES = $(cairo_perf_print_sources)
+cairo_perf_chart_SOURCES = $(cairo_perf_chart_sources)
+cairo_perf_compare_backends_SOURCES = $(cairo_perf_compare_backends_sources)
 
 cairo_perf_graph_files_SOURCES = \
-	cairo-perf-graph.h \
-	cairo-perf-graph-files.c \
-	cairo-perf-graph-widget.c
+	$(cairo_perf_graph_files_sources)	\
+	$(cairo_perf_graph_files_headers)
 cairo_perf_graph_files_CFLAGS = @gtk_CFLAGS@
 cairo_perf_graph_files_LDADD = @gtk_LIBS@ $(LDADD)
 
 # Install rules to rebuild the libraries and add explicit dependencies
+$(top_builddir)/perf/micro/libcairo-perf-micro.la:
+	cd $(top_builddir)/perf/micro && $(MAKE) $(AM_MAKEFLAGS) libcairo-perf-micro.la
+
 $(top_builddir)/boilerplate/libcairoboilerplate.la: $(top_builddir)/src/libcairo.la
 	cd $(top_builddir)/boilerplate && $(MAKE) $(AM_MAKEFLAGS) libcairoboilerplate.la
 

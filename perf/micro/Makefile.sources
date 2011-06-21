@@ -1,0 +1,35 @@
+libcairo_perf_micro_sources = \
+	cairo-perf-cover.c	\
+	box-outline.c		\
+	composite-checker.c	\
+	fill.c			\
+	long-lines.c		\
+	mosaic.c		\
+	paint.c			\
+	paint-with-alpha.c	\
+	mask.c			\
+	pattern_create_radial.c \
+	rectangles.c		\
+	rounded-rectangles.c	\
+	stroke.c		\
+	subimage_copy.c		\
+	tessellate.c		\
+	text.c			\
+	glyphs.c		\
+	twin.c			\
+	unaligned-clip.c	\
+	wave.c			\
+	world-map.c		\
+	zrusin.c		\
+	long-dashed-lines.c	\
+	dragon.c		\
+	pythagoras-tree.c	\
+	intersections.c		\
+	spiral.c		\
+	$(NULL)
+
+libcairo_perf_micro_headers = \
+	mosaic.h		\
+	world-map.h		\
+	zrusin-another.h	\
+	$(NULL)

@@ -51,7 +51,43 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifdef _MSC_VER
+#include "dirent-win32.h"
+
+typedef SSIZE_T ssize_t;
+
+static char *
+basename_no_ext (char *path)
+{
+    static char name[_MAX_FNAME + 1];
+
+    _splitpath (path, NULL, NULL, name, NULL);
+
+    name[_MAX_FNAME] = '\0';
+
+    return name;
+}
+
+
+#else
 #include <dirent.h>
+
+static char *
+basename_no_ext (char *path)
+{
+    char *dot, *name;
+
+    name = basename (path);
+
+    dot = strchr (name, '.');
+    if (dot)
+	*dot = '\0';
+
+    return name;
+}
+
+#endif
 
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -319,18 +355,19 @@ execute (cairo_perf_t	 *perf,
     cairo_perf_ticks_t *times;
     cairo_stats_t stats = {0.0, 0.0};
     int low_std_dev_count;
-    char *trace_cpy, *name, *dot;
+    char *trace_cpy, *name;
     const cairo_script_interpreter_hooks_t hooks = {
-	.closure = args,
-	.surface_create = _similar_surface_create,
-	.context_create = _context_create
+	args,
+	_similar_surface_create,
+	NULL, /* surface_destroy */
+	_context_create,
+	NULL, /* context_destroy */
+	NULL, /* show_page */
+	NULL /* copy_page */
     };
 
     trace_cpy = xstrdup (trace);
-    name = basename (trace_cpy);
-    dot = strchr (name, '.');
-    if (dot)
-	*dot = '\0';
+    name = basename_no_ext (trace_cpy);
 
     if (perf->list_only) {
 	printf ("%s\n", name);

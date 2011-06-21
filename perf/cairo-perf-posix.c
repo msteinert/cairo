@@ -55,6 +55,10 @@
 
 #define _XOPEN_SOURCE 600	/* for round() */
 
+#include "cairo-perf.h"
+
+#if !CAIRO_HAS_OS2_SURFACE && !CAIRO_HAS_WIN32_SURFACE
+
 #include "config.h"
 
 #include <signal.h>
@@ -64,8 +68,6 @@
 #ifdef _POSIX_PRIORITY_SCHEDULING
 #include <sched.h>
 #endif
-
-#include "cairo-perf.h"
 
 /* timers */
 
@@ -251,3 +253,5 @@ cairo_perf_yield (void)
     sched_yield ();
 #endif
 }
+
+#endif /* !CAIRO_HAS_OS2_SURFACE && !CAIRO_HAS_WIN32_SURFACE */

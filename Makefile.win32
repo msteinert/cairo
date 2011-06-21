@@ -9,5 +9,8 @@ all: cairo
 cairo: inform
 	@$(MAKE) -C src -f Makefile.win32
 
+perf: inform
+	@$(MAKE) -C perf -f Makefile.win32 perf
+
 test: inform
 	@$(MAKE) -C test -f Makefile.win32 test
