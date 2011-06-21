@@ -24,6 +24,7 @@
  */
 
 #include "cairo-perf.h"
+#define _USE_MATH_DEFINES /* for M_SQRT2 on win32 */
 #include <math.h>
 
 static void
