@@ -1399,8 +1399,9 @@ intersect_with_boxes (cairo_composite_rectangles_t *extents,
     cairo_rectangle_int_t rect;
     cairo_box_t box;
 
-    box.p1.x = box.p1.y = INT_MIN;
-    box.p2.x = box.p2.y = INT_MAX;
+    /* Find the extents over all the clip boxes */
+    box.p1.x = box.p1.y = INT_MAX;
+    box.p2.x = box.p2.y = INT_MIN;
     while (num_boxes--) {
 	if (boxes->p1.x < box.p1.x)
 	    box.p1.x = boxes->p1.x;
