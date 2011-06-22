@@ -43,6 +43,11 @@
 
 #include <setjmp.h>
 
+#ifdef _MSC_VER
+#undef inline
+#define inline __inline
+#endif
+
 #ifndef FALSE
 #define FALSE 0
 #endif

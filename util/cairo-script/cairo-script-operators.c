@@ -39,6 +39,12 @@
 #include <stdio.h> /* snprintf */
 #include <stdlib.h> /* mkstemp */
 #include <string.h>
+
+#ifdef _MSC_VER
+#define _USE_MATH_DEFINES /* for M_LN2, M_PI and M_SQRT2 on win32 */
+#define snprintf _snprintf
+#endif
+
 #include <math.h>
 #include <limits.h> /* INT_MAX */
 #include <assert.h>

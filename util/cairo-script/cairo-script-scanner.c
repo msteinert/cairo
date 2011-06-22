@@ -37,6 +37,7 @@
 #include <limits.h> /* INT_MAX */
 #include <math.h> /* pow */
 #include <stdio.h> /* EOF */
+#include <stdint.h> /* for {INT,UINT}*_{MIN,MAX} */
 #include <string.h> /* memset */
 #include <assert.h>
 #include <zlib.h>

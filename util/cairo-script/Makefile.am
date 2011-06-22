@@ -1,3 +1,5 @@
+include $(top_srcdir)/util/cairo-script/Makefile.sources
+
 SUBDIRS = examples
 
 lib_LTLIBRARIES = libcairo-script-interpreter.la
@@ -8,14 +10,8 @@ AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_builddir)/src
 cairoincludedir=$(includedir)/cairo
 cairoinclude_HEADERS = cairo-script-interpreter.h
 libcairo_script_interpreter_la_SOURCES = \
-	cairo-script-private.h \
-	cairo-script-file.c \
-	cairo-script-hash.c \
-	cairo-script-interpreter.c \
-	cairo-script-objects.c \
-	cairo-script-operators.c \
-	cairo-script-scanner.c \
-	cairo-script-stack.c \
+	$(libcairo_script_interpreter_sources)	\
+	$(libcairo_script_interpreter_headers)	\
 	$(NULL)
 libcairo_script_interpreter_la_CFLAGS = $(CAIRO_CFLAGS)
 libcairo_script_interpreter_la_LDFLAGS = -version-info $(CAIRO_LIBTOOL_VERSION_INFO) -no-undefined $(export_symbols)
