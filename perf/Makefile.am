@@ -81,6 +81,7 @@ libcairoperf_la_SOURCES = \
 
 cairo_perf_trace_SOURCES =		\
 	cairo-perf-trace.c		\
+	../src/cairo-error.c		\
 	../src/cairo-hash.c
 if CAIRO_HAS_WIN32_SURFACE
 cairo_perf_trace_SOURCES += cairo-perf-win32.c

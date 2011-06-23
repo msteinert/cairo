@@ -154,32 +154,6 @@ static const cairo_t _cairo_nil__null_pointer = {
 #include <assert.h>
 
 /**
- * _cairo_error:
- * @status: a status value indicating an error, (eg. not
- * %CAIRO_STATUS_SUCCESS)
- *
- * Checks that status is an error status, but does nothing else.
- *
- * All assignments of an error status to any user-visible object
- * within the cairo application should result in a call to
- * _cairo_error().
- *
- * The purpose of this function is to allow the user to set a
- * breakpoint in _cairo_error() to generate a stack trace for when the
- * user causes cairo to detect an error.
- *
- * Return value: the error status.
- **/
-cairo_status_t
-_cairo_error (cairo_status_t status)
-{
-    CAIRO_ENSURE_UNIQUE;
-    assert (_cairo_status_is_error (status));
-
-    return status;
-}
-
-/**
  * _cairo_set_error:
  * @cr: a cairo context
  * @status: a status value indicating an error

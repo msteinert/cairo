@@ -884,9 +884,3 @@ main (int   argc,
 
     return 0;
 }
-
-cairo_status_t
-_cairo_error (cairo_status_t status)
-{
-    return status;
-}

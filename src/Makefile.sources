@@ -123,6 +123,7 @@ cairo_sources = \
 	cairo-composite-rectangles.c \
 	cairo-debug.c \
 	cairo-device.c \
+	cairo-error.c \
 	cairo-fixed.c \
 	cairo-font-face.c \
 	cairo-font-face-twin.c \
