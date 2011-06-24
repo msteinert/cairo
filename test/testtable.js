@@ -358,7 +358,7 @@ function parseTest (testData) {
     var rows = new Array ();
     var data = new Object ();
     var t = new Test ();
-    var lines = testData.split ("\n");
+    var lines = testData.replace (/\r/g, "").split ("\n");
     for (var i = 0; i < lines.length; i++) {
 	t.addData (lines[i].split (" "));
 	if (t.isComplete ()) {
@@ -406,7 +406,7 @@ function parseFile (fileName, parser) {
 
 function parseTestList (listData) {
     var summaryRE = /\d+ Passed, \d+ Failed \x5b\d+ crashed, \d+ expected\x5d, \d+ Skipped/;
-    var lines = listData.split ("\n");
+    var lines = listData.replace (/\r/g, "").split ("\n");
     for (var i = 0; i < lines.length; i++) {
 	if (summaryRE.test (lines[i]))
 	    return;
