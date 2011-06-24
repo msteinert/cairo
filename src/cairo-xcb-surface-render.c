@@ -280,10 +280,10 @@ _cairo_xcb_surface_set_precision (cairo_xcb_surface_t	*surface,
     case CAIRO_ANTIALIAS_DEFAULT:
     case CAIRO_ANTIALIAS_GRAY:
     case CAIRO_ANTIALIAS_NONE:
-	precision = 1;
+	precision = XCB_RENDER_POLY_MODE_IMPRECISE;
 	break;
     case CAIRO_ANTIALIAS_SUBPIXEL:
-	precision = 0;
+	precision = XCB_RENDER_POLY_MODE_PRECISE;
 	break;
     }
 

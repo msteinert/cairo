@@ -92,7 +92,8 @@ _cairo_boilerplate_xcb_setup_test_surface (cairo_surface_t *surface)
     /* For testing purposes, tell the X server to strictly adhere to the
      * Render specification.
      */
-    cairo_xcb_device_debug_set_precision(cairo_surface_get_device(surface), 0);
+    cairo_xcb_device_debug_set_precision(cairo_surface_get_device(surface),
+					 XCB_RENDER_POLY_MODE_PRECISE);
 }
 
 static void
