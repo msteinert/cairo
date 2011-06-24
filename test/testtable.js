@@ -48,6 +48,7 @@ function resetGlobals () {
 
 
 /* utility functions */
+function isKey (key) { return key[key.length-1] == ':'; }
 function normalizeKey (key) { return key.toLowerCase ().replace (/[^a-z0-9]/, ""); }
 function isVisible (x) { return x.style.display != "none"; }
 
@@ -293,7 +294,8 @@ function Test () {
 
     this.addData = function (array) {
 	for (var i = 0; i < array.length - 1; i += 2)
-	    this[normalizeKey (array[i])] = array[i+1];
+	    if (isKey (array[i]))
+		this[normalizeKey (array[i])] = array[i+1];
     };
 }
 
