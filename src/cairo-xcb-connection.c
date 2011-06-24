@@ -665,6 +665,7 @@ _cairo_xcb_connection_get (xcb_connection_t *xcb_connection)
     CAIRO_MUTEX_LOCK (connection->device.mutex);
 
     connection->flags = 0;
+    connection->force_precision = -1;
 
     xcb_prefetch_extension_data (xcb_connection, &xcb_big_requests_id);
     xcb_prefetch_extension_data (xcb_connection, &xcb_render_id);

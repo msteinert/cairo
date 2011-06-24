@@ -1087,6 +1087,7 @@ _cairo_xcb_surface_create_internal (cairo_xcb_screen_t		*screen,
     surface->depth  = PIXMAN_FORMAT_DEPTH (pixman_format);
 
     surface->picture = XCB_NONE;
+    surface->precision = 0;
 
     surface->pixman_format = pixman_format;
     surface->xrender_format = xrender_format;
