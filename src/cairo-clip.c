@@ -1398,20 +1398,22 @@ intersect_with_boxes (cairo_composite_rectangles_t *extents,
 {
     cairo_rectangle_int_t rect;
     cairo_box_t box;
+    int i;
+
+    assert (num_boxes > 0);
 
     /* Find the extents over all the clip boxes */
-    box.p1.x = box.p1.y = INT_MAX;
-    box.p2.x = box.p2.y = INT_MIN;
-    while (num_boxes--) {
-	if (boxes->p1.x < box.p1.x)
-	    box.p1.x = boxes->p1.x;
-	if (boxes->p1.y < box.p1.y)
-	    box.p1.y = boxes->p1.y;
+    box = boxes[0];
+    for (i = 1; i < num_boxes; i++) {
+	if (boxes[i].p1.x < box.p1.x)
+	    box.p1.x = boxes[i].p1.x;
+	if (boxes[i].p1.y < box.p1.y)
+	    box.p1.y = boxes[i].p1.y;
 
-	if (boxes->p2.x > box.p2.x)
-	    box.p2.x = boxes->p2.x;
-	if (boxes->p2.y > box.p2.y)
-	    box.p2.y = boxes->p2.y;
+	if (boxes[i].p2.x > box.p2.x)
+	    box.p2.x = boxes[i].p2.x;
+	if (boxes[i].p2.y > box.p2.y)
+	    box.p2.y = boxes[i].p2.y;
     }
 
     _cairo_box_round_to_rectangle (&box, &rect);
