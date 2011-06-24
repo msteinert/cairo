@@ -1402,10 +1402,28 @@ categorize_solid_dest_operator (cairo_operator_t op,
 	else
 	    return DO_UNSUPPORTED;
 	break;
-    }
 
-    ASSERT_NOT_REACHED;
-    return DO_UNSUPPORTED;
+    case CAIRO_OPERATOR_MULTIPLY:
+    case CAIRO_OPERATOR_SCREEN:
+    case CAIRO_OPERATOR_OVERLAY:
+    case CAIRO_OPERATOR_DARKEN:
+    case CAIRO_OPERATOR_LIGHTEN:
+    case CAIRO_OPERATOR_COLOR_DODGE:
+    case CAIRO_OPERATOR_COLOR_BURN:
+    case CAIRO_OPERATOR_HARD_LIGHT:
+    case CAIRO_OPERATOR_SOFT_LIGHT:
+    case CAIRO_OPERATOR_DIFFERENCE:
+    case CAIRO_OPERATOR_EXCLUSION:
+    case CAIRO_OPERATOR_HSL_HUE:
+    case CAIRO_OPERATOR_HSL_SATURATION:
+    case CAIRO_OPERATOR_HSL_COLOR:
+    case CAIRO_OPERATOR_HSL_LUMINOSITY:
+	return DO_UNSUPPORTED;
+
+    default:
+	ASSERT_NOT_REACHED;
+	return DO_UNSUPPORTED;
+    }
 }
 
 static cairo_int_status_t
