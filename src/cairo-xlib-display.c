@@ -547,6 +547,116 @@ _cairo_xlib_display_acquire (cairo_device_t *device, cairo_xlib_display_t **disp
 }
 
 XRenderPictFormat *
+_cairo_xlib_display_get_xrender_format_for_pixman(cairo_xlib_display_t *display,
+						  pixman_format_code_t format)
+{
+    Display *dpy = display->display;
+    XRenderPictFormat tmpl;
+    int mask;
+
+#define MASK(x) ((1<<(x))-1)
+
+    tmpl.depth = PIXMAN_FORMAT_DEPTH(format);
+    mask = PictFormatType | PictFormatDepth;
+
+    switch (PIXMAN_FORMAT_TYPE(format)) {
+    case PIXMAN_TYPE_ARGB:
+	tmpl.type = PictTypeDirect;
+
+	tmpl.direct.alphaMask = MASK(PIXMAN_FORMAT_A(format));
+	if (PIXMAN_FORMAT_A(format))
+	    tmpl.direct.alpha = (PIXMAN_FORMAT_R(format) +
+				 PIXMAN_FORMAT_G(format) +
+				 PIXMAN_FORMAT_B(format));
+
+	tmpl.direct.redMask = MASK(PIXMAN_FORMAT_R(format));
+	tmpl.direct.red = (PIXMAN_FORMAT_G(format) +
+			   PIXMAN_FORMAT_B(format));
+
+	tmpl.direct.greenMask = MASK(PIXMAN_FORMAT_G(format));
+	tmpl.direct.green = PIXMAN_FORMAT_B(format);
+
+	tmpl.direct.blueMask = MASK(PIXMAN_FORMAT_B(format));
+	tmpl.direct.blue = 0;
+
+	mask |= PictFormatRed | PictFormatRedMask;
+	mask |= PictFormatGreen | PictFormatGreenMask;
+	mask |= PictFormatBlue | PictFormatBlueMask;
+	mask |= PictFormatAlpha | PictFormatAlphaMask;
+	break;
+
+    case PIXMAN_TYPE_ABGR:
+	tmpl.type = PictTypeDirect;
+
+	tmpl.direct.alphaMask = MASK(PIXMAN_FORMAT_A(format));
+	if (tmpl.direct.alphaMask)
+	    tmpl.direct.alpha = (PIXMAN_FORMAT_B(format) +
+				 PIXMAN_FORMAT_G(format) +
+				 PIXMAN_FORMAT_R(format));
+
+	tmpl.direct.blueMask = MASK(PIXMAN_FORMAT_B(format));
+	tmpl.direct.blue = (PIXMAN_FORMAT_G(format) +
+			    PIXMAN_FORMAT_R(format));
+
+	tmpl.direct.greenMask = MASK(PIXMAN_FORMAT_G(format));
+	tmpl.direct.green = PIXMAN_FORMAT_R(format);
+
+	tmpl.direct.redMask = MASK(PIXMAN_FORMAT_R(format));
+	tmpl.direct.red = 0;
+
+	mask |= PictFormatRed | PictFormatRedMask;
+	mask |= PictFormatGreen | PictFormatGreenMask;
+	mask |= PictFormatBlue | PictFormatBlueMask;
+	mask |= PictFormatAlpha | PictFormatAlphaMask;
+	break;
+
+    case PIXMAN_TYPE_BGRA:
+	tmpl.type = PictTypeDirect;
+
+	tmpl.direct.blueMask = MASK(PIXMAN_FORMAT_B(format));
+	tmpl.direct.blue = (PIXMAN_FORMAT_BPP(format) - PIXMAN_FORMAT_B(format));
+
+	tmpl.direct.greenMask = MASK(PIXMAN_FORMAT_G(format));
+	tmpl.direct.green = (PIXMAN_FORMAT_BPP(format) - PIXMAN_FORMAT_B(format) -
+			     PIXMAN_FORMAT_G(format));
+
+	tmpl.direct.redMask = MASK(PIXMAN_FORMAT_R(format));
+	tmpl.direct.red = (PIXMAN_FORMAT_BPP(format) - PIXMAN_FORMAT_B(format) -
+			   PIXMAN_FORMAT_G(format) - PIXMAN_FORMAT_R(format));
+
+	tmpl.direct.alphaMask = MASK(PIXMAN_FORMAT_A(format));
+	tmpl.direct.alpha = 0;
+
+	mask |= PictFormatRed | PictFormatRedMask;
+	mask |= PictFormatGreen | PictFormatGreenMask;
+	mask |= PictFormatBlue | PictFormatBlueMask;
+	mask |= PictFormatAlpha | PictFormatAlphaMask;
+	break;
+
+    case PIXMAN_TYPE_A:
+	tmpl.type = PictTypeDirect;
+
+	tmpl.direct.alpha = 0;
+	tmpl.direct.alphaMask = MASK(PIXMAN_FORMAT_A(format));
+
+	mask |= PictFormatAlpha | PictFormatAlphaMask;
+	break;
+
+    case PIXMAN_TYPE_COLOR:
+    case PIXMAN_TYPE_GRAY:
+	/* XXX Find matching visual/colormap */
+	tmpl.type = PictTypeIndexed;
+	//tmpl.colormap = screen->visuals[PIXMAN_FORMAT_VIS(format)].vid;
+	//mask |= PictFormatColormap;
+	return NULL;
+    }
+#undef MASK
+
+    /* XXX caching? */
+    return XRenderFindFormat(dpy, mask, &tmpl, 1);
+}
+
+XRenderPictFormat *
 _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
 	                                cairo_format_t		 format)
 {
@@ -569,26 +679,14 @@ _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
 	    pict_format = PictStandardA8; break;
 	case CAIRO_FORMAT_RGB24:
 	    pict_format = PictStandardRGB24; break;
-	case CAIRO_FORMAT_RGB16_565: {
-	    Visual *visual = NULL;
-	    Screen *screen = DefaultScreenOfDisplay(display->display);
-	    int j;
-	    for (j = 0; j < screen->ndepths; j++) {
-	        Depth *d = &screen->depths[j];
-	        if (d->depth == 16 && d->nvisuals && &d->visuals[0]) {
-	            if (d->visuals[0].red_mask   == 0xf800 &&
-	                d->visuals[0].green_mask == 0x7e0 &&
-	                d->visuals[0].blue_mask  == 0x1f)
-	                visual = &d->visuals[0];
-	            break;
-	        }
-	    }
-	    if (!visual)
-	        return NULL;
-	    xrender_format = XRenderFindVisualFormat(display->display, visual);
+	case CAIRO_FORMAT_RGB16_565:
+	    xrender_format = _cairo_xlib_display_get_xrender_format_for_pixman(display,
+									       PIXMAN_r5g6b5);
 	    break;
-	}
 	case CAIRO_FORMAT_RGB30:
+	    xrender_format = _cairo_xlib_display_get_xrender_format_for_pixman(display,
+									       PIXMAN_x2r10g10b10);
+	    break;
 	case CAIRO_FORMAT_INVALID:
 	default:
 	    ASSERT_NOT_REACHED;

@@ -1157,6 +1157,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     pixman_image_t *pixman_image = NULL;
     cairo_status_t status;
     cairo_bool_t own_data;
+    cairo_bool_t is_rgb_image;
     GC gc;
 
     ximage.width = image->width;
@@ -1176,7 +1177,26 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     if (unlikely (status))
         return status;
 
-    if (!_pixman_format_to_masks (image->pixman_format, &image_masks))
+    is_rgb_image = _pixman_format_to_masks (image->pixman_format, &image_masks);
+
+    if (is_rgb_image &&
+	(image_masks.alpha_mask == surface->a_mask || surface->a_mask == 0) &&
+	(image_masks.red_mask   == surface->r_mask || surface->r_mask == 0) &&
+	(image_masks.green_mask == surface->g_mask || surface->g_mask == 0) &&
+	(image_masks.blue_mask  == surface->b_mask || surface->b_mask == 0))
+    {
+	int ret;
+
+	ximage.bits_per_pixel = image_masks.bpp;
+	ximage.bytes_per_line = image->stride;
+	ximage.data = (char *)image->data;
+	own_data = FALSE;
+
+	ret = XInitImage (&ximage);
+	assert (ret != 0);
+    }
+    else if (!is_rgb_image ||
+	     (surface->visual == NULL || surface->visual->class == TrueColor))
     {
         pixman_format_code_t intermediate_format;
         int ret;
@@ -1213,21 +1233,6 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 	ximage.bits_per_pixel = image_masks.bpp;
 	ximage.data = (char *) pixman_image_get_data (pixman_image);
 	ximage.bytes_per_line = pixman_image_get_stride (pixman_image);
-
-	ret = XInitImage (&ximage);
-	assert (ret != 0);
-    }
-    else if ((image_masks.alpha_mask == surface->a_mask || surface->a_mask == 0) &&
-             (image_masks.red_mask   == surface->r_mask || surface->r_mask == 0) &&
-             (image_masks.green_mask == surface->g_mask || surface->g_mask == 0) &&
-             (image_masks.blue_mask  == surface->b_mask || surface->b_mask == 0))
-    {
-	int ret;
-
-	ximage.bits_per_pixel = image_masks.bpp;
-	ximage.bytes_per_line = image->stride;
-	ximage.data = (char *)image->data;
-	own_data = FALSE;
 
 	ret = XInitImage (&ximage);
 	assert (ret != 0);
@@ -1467,6 +1472,73 @@ _cairo_xlib_surface_same_screen (cairo_xlib_surface_t *dst,
     return dst->screen == src->screen;
 }
 
+static cairo_xlib_surface_t *
+_cairo_xlib_surface_create_similar_for_image(cairo_xlib_surface_t *other,
+					     cairo_image_surface_t *image,
+					     int width, int height)
+{
+    XRenderPictFormat *xrender_format;
+    cairo_xlib_display_t *display;
+    cairo_xlib_surface_t *surface;
+    cairo_status_t status;
+    Visual *visual;
+    Pixmap pix;
+
+    /* Try to create a surface using an xrender format that exactly matches
+     * the image data so that we can upload the pixels and perform any
+     * conversion on the GPU.
+     */
+
+    if (!CAIRO_SURFACE_RENDER_HAS_CREATE_PICTURE (other)) {
+fallback:
+	return (cairo_xlib_surface_t *)
+	    _cairo_xlib_surface_create_similar (other,
+						image->base.content,
+						width, height);
+    }
+
+    status = _cairo_xlib_display_acquire (other->base.device, &display);
+    if (unlikely (status))
+	return (cairo_xlib_surface_t *) _cairo_surface_create_in_error(status);
+
+    if (image->format != CAIRO_FORMAT_INVALID)
+	    xrender_format =
+		_cairo_xlib_display_get_xrender_format (display, image->format);
+    else
+	xrender_format =
+	    _cairo_xlib_display_get_xrender_format_for_pixman (display,
+							       image->pixman_format);
+    if (xrender_format == NULL) {
+	cairo_device_release (&display->base);
+	goto fallback;
+    }
+
+    pix = XCreatePixmap (display->display, other->drawable,
+			 width, height, xrender_format->depth);
+
+    if (xrender_format == other->xrender_format)
+	visual = other->visual;
+    else
+	visual = _visual_for_xrender_format(other->screen->screen,
+					    xrender_format);
+
+    surface = (cairo_xlib_surface_t *)
+	_cairo_xlib_surface_create_internal (other->screen, pix, visual,
+					     xrender_format,
+					     width, height,
+					     xrender_format->depth);
+
+    if (unlikely (surface->base.status)) {
+	XFreePixmap (display->display, pix);
+	cairo_device_release (&display->base);
+	return surface;
+    }
+
+    surface->owns_pixmap = TRUE;
+    cairo_device_release (&display->base);
+    return surface;
+}
+
 static cairo_status_t
 _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 				   cairo_surface_t	*src,
@@ -1498,10 +1570,9 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
 	    return UNSUPPORTED ("roi too large for xlib");
 
-	clone = (cairo_xlib_surface_t *)
-	    _cairo_xlib_surface_create_similar (surface,
-						image_src->base.content,
-						width, height);
+	clone = _cairo_xlib_surface_create_similar_for_image(surface,
+							     image_src,
+							     width, height);
 	if (clone == NULL)
 	    return UNSUPPORTED ("unhandled image format, no similar surface");
 

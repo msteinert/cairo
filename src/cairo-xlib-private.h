@@ -161,6 +161,10 @@ cairo_private XRenderPictFormat *
 _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
 	                                cairo_format_t		 format);
 
+cairo_private XRenderPictFormat *
+_cairo_xlib_display_get_xrender_format_for_pixman (cairo_xlib_display_t *display,
+						   pixman_format_code_t format);
+
 cairo_private cairo_status_t
 _cairo_xlib_screen_get (Display *dpy,
 			Screen *screen,
