@@ -450,7 +450,7 @@ check-ref-missing:
 	@cd "$(srcdir)"; \
 	LANG=C; \
 	ret=true; \
-	tail -n+2 Makefile.refs | sed 's/\\$$//' | sed 's/^\t//' | sed 's/ $$//' > ref.list; \
+	grep '\.png \\$$' Makefile.refs | sed 's/ \\$$//' | tr -d '\t' > ref.list; \
 	if ! (find . -name '*.ref.png' ; find . -name '*.xfail.png' ; find . -name '*.new.png' ) \
 		| cut -d/ -f2- | sort | diff -u ref.list - ; then \
 		echo "*** Error: Sanity check failed"; \
