@@ -391,6 +391,12 @@ REFERENCE_IMAGES = \
 	extended-blend-alpha.rgb24.ref.png \
 	extended-blend-alpha.svg12.argb32.xfail.png \
 	extended-blend-alpha.svg12.rgb24.xfail.png \
+	extended-blend-solid-alpha.argb32.ref.png \
+	extended-blend-solid-alpha.image16.ref.png \
+	extended-blend-solid-alpha.rgb24.ref.png \
+	extended-blend-solid.argb32.ref.png \
+	extended-blend-solid.image16.ref.png \
+	extended-blend-solid.rgb24.ref.png \
 	extended-blend.argb32.ref.png \
 	extended-blend.image16.ref.png \
 	extended-blend.quartz.argb32.ref.png \

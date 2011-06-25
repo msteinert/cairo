@@ -95,7 +95,6 @@ test_sources = \
 	extend-repeat.c					\
 	extend-repeat-similar.c				\
 	extended-blend.c				\
-	extended-blend-alpha.c				\
 	fill-alpha.c					\
 	fill-alpha-pattern.c				\
 	fill-and-stroke.c				\
