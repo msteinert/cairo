@@ -219,21 +219,6 @@
 #ifdef _MSC_VER
 #undef inline
 #define inline __inline
-
-/* Add a definition of ffs */
-#include <intrin.h>
-#pragma intrinsic(_BitScanForward)
-static __forceinline int
-ffs (int x)
-{
-    unsigned long i;
-
-    if (_BitScanForward(&i, x) != 0)
-	return i + 1;
-
-    return 0;
-}
-
 #endif
 
 #if defined(_MSC_VER) && defined(_M_IX86)

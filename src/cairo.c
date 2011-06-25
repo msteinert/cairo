@@ -41,6 +41,7 @@
 
 #include "cairo-arc-private.h"
 #include "cairo-error-private.h"
+#include "cairo-freed-pool-private.h"
 #include "cairo-path-private.h"
 
 /**
@@ -177,84 +178,10 @@ _cairo_set_error (cairo_t *cr, cairo_status_t status)
     _cairo_status_set_error (&cr->status, _cairo_error (status));
 }
 
-/* We keep a small stash of contexts to reduce malloc pressure */
-#define CAIRO_STASH_SIZE 4
-#if CAIRO_NO_MUTEX
-static struct {
-    cairo_t pool[CAIRO_STASH_SIZE];
-    int occupied;
-} _context_stash;
-
-static cairo_t *
-_context_get (void)
-{
-    int avail;
-
-    avail = ffs (~_context_stash.occupied) - 1;
-    if (avail >= CAIRO_STASH_SIZE)
-	return malloc (sizeof (cairo_t));
-
-    _context_stash.occupied |= 1 << avail;
-    return &_context_stash.pool[avail];
-}
-
-static void
-_context_put (cairo_t *cr)
-{
-    if (cr < &_context_stash.pool[0] ||
-	cr >= &_context_stash.pool[CAIRO_STASH_SIZE])
-    {
-	free (cr);
-	return;
-    }
-
-    _context_stash.occupied &= ~(1 << (cr - &_context_stash.pool[0]));
-}
-#elif HAS_ATOMIC_OPS
-static struct {
-    cairo_t pool[CAIRO_STASH_SIZE];
-    cairo_atomic_int_t occupied;
-} _context_stash;
-
-static cairo_t *
-_context_get (void)
-{
-    cairo_atomic_int_t avail, old, new;
-
-    do {
-	old = _cairo_atomic_int_get (&_context_stash.occupied);
-	avail = ffs (~old) - 1;
-	if (avail >= CAIRO_STASH_SIZE)
-	    return malloc (sizeof (cairo_t));
-
-	new = old | (1 << avail);
-    } while (! _cairo_atomic_int_cmpxchg (&_context_stash.occupied, old, new));
-
-    return &_context_stash.pool[avail];
-}
-
-static void
-_context_put (cairo_t *cr)
-{
-    cairo_atomic_int_t old, new, avail;
-
-    if (cr < &_context_stash.pool[0] ||
-	cr >= &_context_stash.pool[CAIRO_STASH_SIZE])
-    {
-	free (cr);
-	return;
-    }
-
-    avail = ~(1 << (cr - &_context_stash.pool[0]));
-    do {
-	old = _cairo_atomic_int_get (&_context_stash.occupied);
-	new = old & avail;
-    } while (! _cairo_atomic_int_cmpxchg (&_context_stash.occupied, old, new));
-}
-#else
-#define _context_get() malloc (sizeof (cairo_t))
-#define _context_put(cr) free (cr)
+#if HAS_FREED_POOL
+static freed_pool_t context_pool;
 #endif
+
 
 /* XXX This should disappear in favour of a common pool of error objects. */
 static cairo_t *_cairo_nil__objects[CAIRO_STATUS_LAST_STATUS + 1];
@@ -346,9 +273,12 @@ cairo_create (cairo_surface_t *target)
     if (unlikely (target->status))
 	return _cairo_create_in_error (target->status);
 
-    cr = _context_get ();
-    if (unlikely (cr == NULL))
-	return _cairo_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+    cr = _freed_pool_get (&context_pool);
+    if (unlikely (cr == NULL)) {
+	cr = malloc (sizeof (cairo_t));
+	if (unlikely (cr == NULL))
+	    return _cairo_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+    }
 
     CAIRO_REFERENCE_COUNT_INIT (&cr->ref_count, 1);
 
@@ -363,7 +293,7 @@ cairo_create (cairo_surface_t *target)
 
     status = _cairo_gstate_init (cr->gstate, target);
     if (unlikely (status)) {
-	_context_put (cr);
+	_freed_pool_put (&context_pool, cr);
 	cr = _cairo_create_in_error (status);
     }
 
@@ -436,7 +366,7 @@ cairo_destroy (cairo_t *cr)
     /* mark the context as invalid to protect against misuse */
     cr->status = CAIRO_STATUS_NULL_POINTER;
 
-    _context_put (cr);
+    _freed_pool_put (&context_pool, cr);
 }
 slim_hidden_def (cairo_destroy);
 
