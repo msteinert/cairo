@@ -1,3 +1,5 @@
+# Note REFERENCE_IMAGES must be in lexicographical order.
+# Use generate_refs on a git checkout with updated images.
 REFERENCE_IMAGES = \
 	a1-bug.image16.ref.png \
 	a1-bug.quartz.xfail.png \
@@ -1351,4 +1353,5 @@ REFERENCE_IMAGES = \
 	xlib-surface-source.svg12.rgb24.xfail.png \
 	zero-alpha.ref.png \
 	zero-mask.ref.png \
-	zero-mask.rgb24.ref.png
+	zero-mask.rgb24.ref.png \
+	$(NULL)
