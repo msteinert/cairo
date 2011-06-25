@@ -30,17 +30,14 @@
 #define TEXT_SIZE 12
 
 static cairo_test_status_t
-draw (cairo_t *cr, int width, int height)
+draw (cairo_t *cr, cairo_antialias_t antialias)
 {
     cairo_text_extents_t extents;
     cairo_font_options_t *font_options;
     const char black[] = "black", blue[] = "blue";
 
-    /* We draw in the default black, so paint white first. */
-    cairo_save (cr);
     cairo_set_source_rgb (cr, 1.0, 1.0, 1.0); /* white */
     cairo_paint (cr);
-    cairo_restore (cr);
 
     cairo_select_font_face (cr, CAIRO_TEST_FONT_FAMILY " Sans",
 			    CAIRO_FONT_SLANT_NORMAL,
@@ -49,7 +46,8 @@ draw (cairo_t *cr, int width, int height)
 
     font_options = cairo_font_options_create ();
     cairo_get_font_options (cr, font_options);
-    cairo_font_options_set_antialias (font_options, CAIRO_ANTIALIAS_GRAY);
+    cairo_font_options_set_antialias (font_options, antialias);
+    cairo_font_options_set_subpixel_order (font_options, CAIRO_SUBPIXEL_ORDER_RGB);
     cairo_set_font_options (cr, font_options);
 
     cairo_font_options_destroy (font_options);
@@ -68,9 +66,41 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
+static cairo_test_status_t
+draw_gray (cairo_t *cr, int width, int height)
+{
+    return draw (cr, CAIRO_ANTIALIAS_GRAY);
+}
+
+static cairo_test_status_t
+draw_none (cairo_t *cr, int width, int height)
+{
+    return draw (cr, CAIRO_ANTIALIAS_NONE);
+}
+
+static cairo_test_status_t
+draw_subpixel (cairo_t *cr, int width, int height)
+{
+    return draw (cr, CAIRO_ANTIALIAS_SUBPIXEL);
+}
+
 CAIRO_TEST (text_antialias_gray,
 	    "Tests text rendering with grayscale antialiasing",
 	    "text", /* keywords */
 	    "target=raster", /* requirements */
 	    WIDTH, HEIGHT,
-	    NULL, draw)
+	    NULL, draw_gray)
+
+CAIRO_TEST (text_antialias_none,
+	    "Tests text rendering with no antialiasing",
+	    "text", /* keywords */
+	    "target=raster", /* requirements */
+	    WIDTH, HEIGHT,
+	    NULL, draw_none)
+
+CAIRO_TEST (text_antialias_subpixel,
+	    "Tests text rendering with subpixel antialiasing",
+	    "text", /* keywords */
+	    "target=raster", /* requirements */
+	    WIDTH, HEIGHT,
+	    NULL, draw_subpixel)
