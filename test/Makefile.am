@@ -442,7 +442,7 @@ $(NOLOG_TESTS_LOG):
 # Identify identical reference images
 check-ref-dups:
 	@LANG=C; \
-	( cd "$(scrdir)" && sha1sum *.ref.png | sort ) > ref.hash; \
+	( cd "$(srcdir)" && sha1sum *.ref.png | sort ) > ref.hash; \
 	join ref.hash ref.hash | grep -v -E '( .*.ref.png).*\1' | cut -d' ' -f 1-2 | sort -u
 
 # Not exactly the best script in the world...
