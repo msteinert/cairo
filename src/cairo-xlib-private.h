@@ -47,6 +47,8 @@
 #include "cairo-reference-count-private.h"
 #include "cairo-types-private.h"
 
+#include <pixman.h>
+
 typedef struct _cairo_xlib_display cairo_xlib_display_t;
 typedef struct _cairo_xlib_screen cairo_xlib_screen_t;
 
