@@ -418,6 +418,11 @@ cairo_xlib_surface_set_size (cairo_surface_t *abstract_surface,
 
     if (unlikely (abstract_surface->status))
 	return;
+    if (unlikely (abstract_surface->finished)) {
+	status = _cairo_surface_set_error (abstract_surface,
+		                           _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
+	return;
+    }
 
     if (surface->base.type != CAIRO_SURFACE_TYPE_XLIB) {
 	status = _cairo_surface_set_error (abstract_surface,
@@ -426,6 +431,10 @@ cairo_xlib_surface_set_size (cairo_surface_t *abstract_surface,
     }
 
     cairo_xcb_surface_set_size (&surface->xcb->base, width, height);
+    if (unlikely (surface->xcb->base.status)) {
+	status = _cairo_surface_set_error (abstract_surface,
+		                           _cairo_error (surface->xcb->base.status));
+    }
 }
 
 void
@@ -439,6 +448,11 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
 
     if (unlikely (abstract_surface->status))
 	return;
+    if (unlikely (abstract_surface->finished)) {
+	status = _cairo_surface_set_error (abstract_surface,
+		                           _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
+	return;
+    }
 
     if (surface->base.type != CAIRO_SURFACE_TYPE_XLIB) {
 	status = _cairo_surface_set_error (abstract_surface,
