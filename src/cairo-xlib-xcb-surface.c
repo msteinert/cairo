@@ -196,7 +196,9 @@ static cairo_status_t
 _cairo_xlib_xcb_surface_flush (void *abstract_surface)
 {
     cairo_xlib_xcb_surface_t *surface = abstract_surface;
-    return surface->xcb->base.backend->flush (surface->xcb);
+    /* We have to call cairo_surface_flush() to make sure snapshots are detached */
+    cairo_surface_flush (&surface->xcb->base);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
