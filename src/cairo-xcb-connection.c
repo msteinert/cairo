@@ -910,6 +910,9 @@ cairo_xcb_device_debug_set_precision (cairo_device_t *device,
 
     ((cairo_xcb_connection_t *) device)->force_precision = precision;
 }
+#if CAIRO_HAS_XLIB_XCB_FUNCTIONS
+slim_hidden_def (cairo_xcb_device_debug_set_precision);
+#endif
 
 int
 cairo_xcb_device_debug_get_precision (cairo_device_t *device)
@@ -919,3 +922,6 @@ cairo_xcb_device_debug_get_precision (cairo_device_t *device)
 
     return ((cairo_xcb_connection_t *) device)->force_precision;
 }
+#if CAIRO_HAS_XLIB_XCB_FUNCTIONS
+slim_hidden_def (cairo_xcb_device_debug_get_precision);
+#endif
