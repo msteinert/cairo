@@ -485,6 +485,12 @@ cairo_xlib_surface_get_drawable (cairo_surface_t *abstract_surface)
 	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return 0;
     }
+    /* This can happen when e.g. create_similar falls back to an image surface
+     * because we don't have the RENDER extension. */
+    if (surface->xcb->base.type != CAIRO_SURFACE_TYPE_XCB) {
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return 0;
+    }
 
     return surface->xcb->drawable;
 }
@@ -524,6 +530,12 @@ cairo_xlib_surface_get_depth (cairo_surface_t *abstract_surface)
 	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return 0;
     }
+    /* This can happen when e.g. create_similar falls back to an image surface
+     * because we don't have the RENDER extension. */
+    if (surface->xcb->base.type != CAIRO_SURFACE_TYPE_XCB) {
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return 0;
+    }
 
     return surface->xcb->depth;
 }
@@ -537,6 +549,12 @@ cairo_xlib_surface_get_width (cairo_surface_t *abstract_surface)
 	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return 0;
     }
+    /* This can happen when e.g. create_similar falls back to an image surface
+     * because we don't have the RENDER extension. */
+    if (surface->xcb->base.type != CAIRO_SURFACE_TYPE_XCB) {
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return 0;
+    }
 
     return surface->xcb->width;
 }
@@ -547,6 +565,12 @@ cairo_xlib_surface_get_height (cairo_surface_t *abstract_surface)
     cairo_xlib_xcb_surface_t *surface = (cairo_xlib_xcb_surface_t *) abstract_surface;
 
     if (surface->base.type != CAIRO_SURFACE_TYPE_XLIB) {
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return 0;
+    }
+    /* This can happen when e.g. create_similar falls back to an image surface
+     * because we don't have the RENDER extension. */
+    if (surface->xcb->base.type != CAIRO_SURFACE_TYPE_XCB) {
 	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return 0;
     }
