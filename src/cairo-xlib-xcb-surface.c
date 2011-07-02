@@ -117,7 +117,7 @@ _cairo_xlib_xcb_surface_get_font_options (void *abstract_surface,
 					  cairo_font_options_t *options)
 {
     cairo_xlib_xcb_surface_t *surface = abstract_surface;
-    surface->xcb->base.backend->get_font_options (surface->xcb, options);
+    cairo_surface_get_font_options (&surface->xcb->base, options);
 }
 
 static cairo_int_status_t
@@ -127,7 +127,7 @@ _cairo_xlib_xcb_surface_paint (void			*abstract_surface,
 			       cairo_clip_t		*clip)
 {
     cairo_xlib_xcb_surface_t *surface = abstract_surface;
-    return surface->xcb->base.backend->paint (surface->xcb, op, source, clip);
+    return _cairo_surface_paint (&surface->xcb->base, op, source, clip);
 }
 
 static cairo_int_status_t
@@ -138,7 +138,7 @@ _cairo_xlib_xcb_surface_mask (void			*abstract_surface,
 			      cairo_clip_t		*clip)
 {
     cairo_xlib_xcb_surface_t *surface = abstract_surface;
-    return surface->xcb->base.backend->mask (surface->xcb, op, source, mask, clip);
+    return _cairo_surface_mask (&surface->xcb->base, op, source, mask, clip);
 }
 
 static cairo_int_status_t
@@ -154,10 +154,9 @@ _cairo_xlib_xcb_surface_stroke (void				*abstract_surface,
 				cairo_clip_t			*clip)
 {
     cairo_xlib_xcb_surface_t *surface = abstract_surface;
-    return surface->xcb->base.backend->stroke (surface->xcb,
-					       op, source, path, style,
-					       ctm, ctm_inverse,
-					       tolerance, antialias, clip);
+    return _cairo_surface_stroke (&surface->xcb->base,
+				  op, source, path, style, ctm, ctm_inverse,
+				  tolerance, antialias, clip);
 }
 
 static cairo_int_status_t
@@ -171,10 +170,10 @@ _cairo_xlib_xcb_surface_fill (void			*abstract_surface,
 			      cairo_clip_t		*clip)
 {
     cairo_xlib_xcb_surface_t *surface = abstract_surface;
-    return surface->xcb->base.backend->fill (surface->xcb,
-					     op, source, path,
-					     fill_rule, tolerance, antialias,
-					     clip);
+    return _cairo_surface_fill (&surface->xcb->base,
+				op, source, path,
+				fill_rule, tolerance,
+				antialias, clip);
 }
 
 static cairo_int_status_t
@@ -188,9 +187,12 @@ _cairo_xlib_xcb_surface_glyphs (void			*abstract_surface,
 				int *num_remaining)
 {
     cairo_xlib_xcb_surface_t *surface = abstract_surface;
-    return surface->xcb->base.backend->show_glyphs (surface->xcb, op, source,
-						    glyphs, num_glyphs, scaled_font,
-						    clip, num_remaining);
+    *num_remaining = 0;
+    return _cairo_surface_show_text_glyphs (&surface->xcb->base, op, source,
+					    NULL, 0,
+					    glyphs, num_glyphs,
+					    NULL, 0, 0,
+					    scaled_font, clip);
 }
 
 static cairo_status_t
@@ -208,7 +210,8 @@ _cairo_xlib_xcb_surface_mark_dirty (void *abstract_surface,
 				    int width, int height)
 {
     cairo_xlib_xcb_surface_t *surface = abstract_surface;
-    return surface->xcb->base.backend->mark_dirty_rectangle (surface->xcb, x, y, width, height);
+    cairo_surface_mark_dirty_rectangle (&surface->xcb->base, x, y, width, height);
+    return cairo_surface_status (&surface->xcb->base);
 }
 
 static const cairo_surface_backend_t _cairo_xlib_xcb_surface_backend = {
