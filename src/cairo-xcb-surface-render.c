@@ -989,8 +989,7 @@ setup_picture:
 }
 
 static cairo_xcb_picture_t *
-_copy_to_picture (cairo_xcb_surface_t *source,
-		  cairo_bool_t force)
+_copy_to_picture (cairo_xcb_surface_t *source)
 {
     cairo_xcb_picture_t *picture;
     uint32_t values[] = { 0, 1 };
@@ -1058,7 +1057,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
     {
 	if (source->backend->type == CAIRO_SURFACE_TYPE_XCB) {
 	    if (((cairo_xcb_surface_t *) source)->screen == target->screen) {
-		picture = _copy_to_picture ((cairo_xcb_surface_t *) source, FALSE);
+		picture = _copy_to_picture ((cairo_xcb_surface_t *) source);
 		if (unlikely (picture->base.status))
 		    return picture;
 	    }
@@ -1070,7 +1069,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	    if (FALSE && xcb->screen == target->screen) {
 		xcb_rectangle_t rect;
 
-		picture = _copy_to_picture (xcb, TRUE);
+		picture = _copy_to_picture (xcb);
 		if (unlikely (picture->base.status))
 		    return picture;
 
@@ -1093,7 +1092,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	    cairo_xcb_surface_t *xcb = (cairo_xcb_surface_t *) snap->target;
 
 	    if (xcb->screen == target->screen) {
-		picture = _copy_to_picture (xcb, TRUE);
+		picture = _copy_to_picture (xcb);
 		if (unlikely (picture->base.status))
 		    return picture;
 	    }
@@ -1104,8 +1103,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
     {
 	if (source->backend->type == CAIRO_SURFACE_TYPE_XLIB) {
 	    if (((cairo_xlib_xcb_surface_t *) source)->xcb->screen == target->screen) {
-		picture = _copy_to_picture (((cairo_xlib_xcb_surface_t *) source)->xcb,
-					    FALSE);
+		picture = _copy_to_picture (((cairo_xlib_xcb_surface_t *) source)->xcb);
 		if (unlikely (picture->base.status))
 		    return picture;
 	    }
@@ -1116,7 +1114,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	    if (FALSE && xcb->screen == target->screen) {
 		xcb_rectangle_t rect;
 
-		picture = _copy_to_picture (xcb, TRUE);
+		picture = _copy_to_picture (xcb);
 		if (unlikely (picture->base.status))
 		    return picture;
 
@@ -1139,7 +1137,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	    cairo_xcb_surface_t *xcb = ((cairo_xlib_xcb_surface_t *) snap->target)->xcb;
 
 	    if (xcb->screen == target->screen) {
-		picture = _copy_to_picture (xcb, TRUE);
+		picture = _copy_to_picture (xcb);
 		if (unlikely (picture->base.status))
 		    return picture;
 	    }
@@ -1208,7 +1206,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	    return (cairo_xcb_picture_t *) _cairo_surface_create_in_error (status);
 	}
 
-	picture = _copy_to_picture (tmp, FALSE);
+	picture = _copy_to_picture (tmp);
 	cairo_surface_destroy (&tmp->base);
 
 	if (unlikely (picture->base.status))
