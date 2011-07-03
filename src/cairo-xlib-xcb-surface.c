@@ -47,6 +47,22 @@
 #include "cairo-xlib-xrender-private.h"
 
 #include <X11/Xlib-xcb.h>
+#include <X11/Xlibint.h>	/* For XESetCloseDisplay */
+
+struct cairo_xlib_xcb_display_t {
+    cairo_device_t  base;
+
+    Display        *dpy;
+    cairo_device_t *xcb_device;
+    XExtCodes      *codes;
+
+    cairo_list_t    link;
+};
+typedef struct cairo_xlib_xcb_display_t cairo_xlib_xcb_display_t;
+
+/* List of all cairo_xlib_xcb_display_t alive,
+ * protected by _cairo_xlib_display_mutex */
+static cairo_list_t displays;
 
 static cairo_surface_t *
 _cairo_xlib_xcb_surface_create (void *dpy,
@@ -245,6 +261,124 @@ static const cairo_surface_backend_t _cairo_xlib_xcb_surface_backend = {
     _cairo_xlib_xcb_surface_glyphs,
 };
 
+static void
+_cairo_xlib_xcb_display_finish (void *abstract_display)
+{
+    cairo_xlib_xcb_display_t *display = (cairo_xlib_xcb_display_t *) abstract_display;
+
+    CAIRO_MUTEX_LOCK (_cairo_xlib_display_mutex);
+    cairo_list_del (&display->link);
+    CAIRO_MUTEX_UNLOCK (_cairo_xlib_display_mutex);
+
+    cairo_device_destroy (display->xcb_device);
+    display->xcb_device = NULL;
+
+    XESetCloseDisplay (display->dpy, display->codes->extension, NULL);
+}
+
+static int
+_cairo_xlib_xcb_close_display(Display *dpy, XExtCodes *codes)
+{
+    cairo_xlib_xcb_display_t *display;
+
+    CAIRO_MUTEX_LOCK (_cairo_xlib_display_mutex);
+    cairo_list_foreach_entry (display,
+			      cairo_xlib_xcb_display_t,
+			      &displays,
+			      link)
+    {
+	if (display->dpy == dpy)
+	{
+	    /* _cairo_xlib_xcb_display_finish will lock the mutex again
+	     * -> deadlock (This mutex isn't recursive) */
+	    cairo_device_reference (&display->base);
+	    CAIRO_MUTEX_UNLOCK (_cairo_xlib_display_mutex);
+
+	    /* Make sure the xcb and xlib-xcb devices are finished */
+	    cairo_device_finish (display->xcb_device);
+	    cairo_device_finish (&display->base);
+	    cairo_device_destroy (&display->base);
+	    return 0;
+	}
+    }
+    CAIRO_MUTEX_UNLOCK (_cairo_xlib_display_mutex);
+
+    return 0;
+}
+
+static const cairo_device_backend_t _cairo_xlib_xcb_device_backend = {
+    CAIRO_DEVICE_TYPE_XLIB,
+
+    NULL,
+    NULL,
+
+    NULL, /* flush */
+    _cairo_xlib_xcb_display_finish,
+    free, /* destroy */
+};
+
+static cairo_device_t *
+_cairo_xlib_xcb_device_create (Display *dpy, cairo_device_t *xcb_device)
+{
+    cairo_xlib_xcb_display_t *display = NULL;
+    cairo_device_t *device;
+
+    if (xcb_device == NULL)
+	return NULL;
+
+    CAIRO_MUTEX_INITIALIZE ();
+
+    CAIRO_MUTEX_LOCK (_cairo_xlib_display_mutex);
+    if (displays.next == NULL) {
+	cairo_list_init (&displays);
+    }
+
+    cairo_list_foreach_entry (display,
+			      cairo_xlib_xcb_display_t,
+			      &displays,
+			      link)
+    {
+	if (display->dpy == dpy) {
+	    /* Maintain MRU order. */
+	    if (displays.next != &display->link)
+		cairo_list_move (&display->link, &displays);
+
+	    /* Grab a reference for our caller */
+	    device = cairo_device_reference (&display->base);
+	    assert (display->xcb_device == xcb_device);
+	    goto unlock;
+	}
+    }
+
+    display = malloc (sizeof (cairo_xlib_xcb_display_t));
+    if (unlikely (display == NULL)) {
+	device = _cairo_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
+	goto unlock;
+    }
+
+    display->codes = XAddExtension (dpy);
+    if (unlikely (display->codes == NULL)) {
+	device = _cairo_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
+	free (display);
+	goto unlock;
+    }
+
+    _cairo_device_init (&display->base, &_cairo_xlib_xcb_device_backend);
+
+    XESetCloseDisplay (dpy, display->codes->extension, _cairo_xlib_xcb_close_display);
+
+    display->dpy = dpy;
+    display->xcb_device = cairo_device_reference(xcb_device);
+
+    cairo_list_add (&display->link, &displays);
+    device = &display->base;
+
+unlock:
+    CAIRO_MUTEX_UNLOCK (_cairo_xlib_display_mutex);
+
+    return device;
+}
+
 static cairo_surface_t *
 _cairo_xlib_xcb_surface_create (void *dpy,
 				void *scr,
@@ -265,8 +399,11 @@ _cairo_xlib_xcb_surface_create (void *dpy,
 
     _cairo_surface_init (&surface->base,
 			 &_cairo_xlib_xcb_surface_backend,
-			 xcb->device,
+			 _cairo_xlib_xcb_device_create (dpy, xcb->device),
 			 xcb->content);
+
+    /* _cairo_surface_init() got another reference to the device, drop ours */
+    cairo_device_destroy (surface->base.device);
 
     surface->display = dpy;
     surface->screen = scr;
@@ -604,13 +741,15 @@ void
 cairo_xlib_device_debug_set_precision (cairo_device_t *device,
 				       int precision)
 {
-    cairo_xcb_device_debug_set_precision (device, precision);
+    cairo_xlib_xcb_display_t *display = (cairo_xlib_xcb_display_t *) device;
+    cairo_xcb_device_debug_set_precision (display->xcb_device, precision);
 }
 
 int
 cairo_xlib_device_debug_get_precision (cairo_device_t *device)
 {
-    return cairo_xcb_device_debug_get_precision (device);
+    cairo_xlib_xcb_display_t *display = (cairo_xlib_xcb_display_t *) device;
+    return cairo_xcb_device_debug_get_precision (display->xcb_device);
 }
 
 #endif /* CAIRO_HAS_XLIB_XCB_FUNCTIONS */
