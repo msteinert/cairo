@@ -233,6 +233,8 @@ _cairo_reset_static_data (void)
 	}
     }
     CAIRO_MUTEX_UNLOCK (_cairo_error_mutex);
+
+    _freed_pool_reset (&context_pool);
 }
 
 /**
