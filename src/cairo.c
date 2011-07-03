@@ -178,10 +178,7 @@ _cairo_set_error (cairo_t *cr, cairo_status_t status)
     _cairo_status_set_error (&cr->status, _cairo_error (status));
 }
 
-#if HAS_FREED_POOL
 static freed_pool_t context_pool;
-#endif
-
 
 /* XXX This should disappear in favour of a common pool of error objects. */
 static cairo_t *_cairo_nil__objects[CAIRO_STATUS_LAST_STATUS + 1];

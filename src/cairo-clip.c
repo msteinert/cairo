@@ -48,9 +48,7 @@
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-region-private.h"
 
-#if HAS_FREED_POOL
 static freed_pool_t clip_path_pool;
-#endif
 
 static cairo_clip_path_t *
 _cairo_clip_path_create (cairo_clip_t *clip)

@@ -118,11 +118,15 @@ _freed_pool_reset (freed_pool_t *pool);
 
 #else
 
+/* A warning about an unused freed-pool in a build without atomics
+ * enabled usually indicates a missing _freed_pool_reset() in the
+ * static reset function */
+
 typedef int freed_pool_t;
 
 #define _freed_pool_get(pool) NULL
 #define _freed_pool_put(pool, ptr) free(ptr)
-#define _freed_pool_reset(ptr)
+#define _freed_pool_reset(ptr) assert((ptr) != NULL)
 
 #endif
 

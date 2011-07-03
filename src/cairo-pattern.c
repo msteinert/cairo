@@ -56,9 +56,7 @@
  * functions.
  */
 
-#if HAS_FREED_POOL
 static freed_pool_t freed_pattern_pool[5];
-#endif
 
 static const cairo_solid_pattern_t _cairo_pattern_nil = {
     { CAIRO_PATTERN_TYPE_SOLID,		/* type */
@@ -5160,12 +5158,10 @@ slim_hidden_def (cairo_mesh_pattern_get_control_point);
 void
 _cairo_pattern_reset_static_data (void)
 {
-#if HAS_FREED_POOL
     int i;
 
     for (i = 0; i < ARRAY_LENGTH (freed_pattern_pool); i++)
 	_freed_pool_reset (&freed_pattern_pool[i]);
-#endif
 
     _cairo_pattern_reset_solid_surface_cache ();
 }
