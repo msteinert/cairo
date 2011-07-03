@@ -107,51 +107,71 @@
 #define INFINITY HUGE_VAL
 #endif
 
-static const cairo_t _cairo_nil = {
-  CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
-  CAIRO_STATUS_NO_MEMORY,	/* status */
-  { 0, 0, 0, NULL },		/* user_data */
-  NULL,				/* gstate */
-  {{ 0 }, { 0 }},		/* gstate_tail */
-  NULL,				/* gstate_freelist */
-  {{				/* path */
-    { 0, 0 },			/* last_move_point */
-    { 0, 0 },			/* current point */
-    FALSE,			/* has_current_point */
-    TRUE,			/* needs_move_to */
-    FALSE,			/* has_extents */
-    FALSE,			/* has_curve_to */
-    TRUE,			/* stroke_is_rectilinear */
-    TRUE,			/* fill_is_rectilinear */
-    TRUE,			/* fill_maybe_region */
-    TRUE,			/* fill_is_empty */
-    { {0, 0}, {0, 0}},		/* extents */
-    {{{NULL,NULL}}}		/* link */
-  }}
+#define DEFINE_NIL_CONTEXT(status)					\
+    {									\
+	CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */			\
+	status,				/* status */			\
+	{ 0, 0, 0, NULL },		/* user_data */			\
+	NULL,				/* gstate */			\
+	{{ 0 }, { 0 }},			/* gstate_tail */		\
+	NULL,				/* gstate_freelist */		\
+	{{				/* path */			\
+		{ 0, 0 },		/* last_move_point */		\
+		{ 0, 0 },		/* current point */		\
+		FALSE,			/* has_current_point */		\
+		TRUE,			/* needs_move_to */		\
+		FALSE,			/* has_extents */		\
+		FALSE,			/* has_curve_to */		\
+		TRUE,			/* stroke_is_rectilinear */	\
+		TRUE,			/* fill_is_rectilinear */	\
+		TRUE,			/* fill_maybe_region */		\
+		TRUE,			/* fill_is_empty */		\
+		{{0, 0}, {0, 0}},	/* extents */			\
+		{{{NULL,NULL}}}		/* link */			\
+	}}								\
+    }
+
+static const cairo_t _cairo_nil[] = {
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_NO_MEMORY),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_INVALID_RESTORE),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_INVALID_POP_GROUP),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_NO_CURRENT_POINT),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_INVALID_MATRIX),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_INVALID_STATUS),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_NULL_POINTER),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_INVALID_STRING),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_INVALID_PATH_DATA),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_READ_ERROR),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_WRITE_ERROR),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_SURFACE_FINISHED),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_SURFACE_TYPE_MISMATCH),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_PATTERN_TYPE_MISMATCH),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_INVALID_CONTENT),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_INVALID_FORMAT),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_INVALID_VISUAL),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_FILE_NOT_FOUND),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_INVALID_DASH),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_INVALID_DSC_COMMENT),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_INVALID_INDEX),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_CLIP_NOT_REPRESENTABLE),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_TEMP_FILE_ERROR),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_INVALID_STRIDE),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_FONT_TYPE_MISMATCH),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_USER_FONT_IMMUTABLE),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_USER_FONT_ERROR),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_NEGATIVE_COUNT),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_INVALID_CLUSTERS),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_INVALID_SLANT),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_INVALID_WEIGHT),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_INVALID_SIZE),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_DEVICE_TYPE_MISMATCH),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_DEVICE_ERROR),
+    DEFINE_NIL_CONTEXT (CAIRO_STATUS_INVALID_MESH_CONSTRUCTION)
 };
 
-static const cairo_t _cairo_nil__null_pointer = {
-  CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
-  CAIRO_STATUS_NULL_POINTER,	/* status */
-  { 0, 0, 0, NULL },		/* user_data */
-  NULL,				/* gstate */
-  {{ 0 }, { 0 }},		/* gstate_tail */
-  NULL,				/* gstate_freelist */
-  {{				/* path */
-    { 0, 0 },			/* last_move_point */
-    { 0, 0 },			/* current point */
-    FALSE,			/* has_current_point */
-    TRUE,			/* needs_move_to */
-    FALSE,			/* has_extents */
-    FALSE,			/* has_curve_to */
-    TRUE,			/* stroke_is_rectilinear */
-    TRUE,			/* fill_is_rectilinear */
-    TRUE,			/* fill_maybe_region */
-    TRUE,			/* fill_is_empty */
-    { {0, 0}, {0, 0}},		/* extents */
-    {{{NULL,NULL}}}		/* link */
-  }}
-};
+COMPILE_TIME_ASSERT (ARRAY_LENGTH (_cairo_nil) == CAIRO_STATUS_LAST_STATUS - 1);
+
 #include <assert.h>
 
 /**
@@ -180,9 +200,6 @@ _cairo_set_error (cairo_t *cr, cairo_status_t status)
 
 static freed_pool_t context_pool;
 
-/* XXX This should disappear in favour of a common pool of error objects. */
-static cairo_t *_cairo_nil__objects[CAIRO_STATUS_LAST_STATUS + 1];
-
 static cairo_t *
 _cairo_create_in_error (cairo_status_t status)
 {
@@ -190,29 +207,8 @@ _cairo_create_in_error (cairo_status_t status)
 
     assert (status != CAIRO_STATUS_SUCCESS);
 
-    /* special case OOM in order to avoid another allocation */
-    switch ((int) status) {
-    case CAIRO_STATUS_NO_MEMORY:
-	return (cairo_t *) &_cairo_nil;
-    case CAIRO_STATUS_NULL_POINTER:
-	return (cairo_t *) &_cairo_nil__null_pointer;
-    }
-
-    CAIRO_MUTEX_LOCK (_cairo_error_mutex);
-    cr = _cairo_nil__objects[status];
-    if (cr == NULL) {
-	cr = malloc (sizeof (cairo_t));
-	if (unlikely (cr == NULL)) {
-	    CAIRO_MUTEX_UNLOCK (_cairo_error_mutex);
-	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	    return (cairo_t *) &_cairo_nil;
-	}
-
-	*cr = _cairo_nil;
-	cr->status = status;
-	_cairo_nil__objects[status] = cr;
-    }
-    CAIRO_MUTEX_UNLOCK (_cairo_error_mutex);
+    cr = (cairo_t *) &_cairo_nil[status - CAIRO_STATUS_NO_MEMORY];
+    assert (status == cr->status);
 
     return cr;
 }
@@ -220,20 +216,6 @@ _cairo_create_in_error (cairo_status_t status)
 void
 _cairo_reset_static_data (void)
 {
-    int status;
-
-    CAIRO_MUTEX_LOCK (_cairo_error_mutex);
-    for (status = CAIRO_STATUS_SUCCESS;
-	 status <= CAIRO_STATUS_LAST_STATUS;
-	 status++)
-    {
-	if (_cairo_nil__objects[status] != NULL) {
-	    free (_cairo_nil__objects[status]);
-	    _cairo_nil__objects[status] = NULL;
-	}
-    }
-    CAIRO_MUTEX_UNLOCK (_cairo_error_mutex);
-
     _freed_pool_reset (&context_pool);
 }
 
