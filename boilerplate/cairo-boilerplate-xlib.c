@@ -412,6 +412,11 @@ _cairo_boilerplate_xlib_window_create_surface (const char		 *name,
 cairo_status_t
 cairo_boilerplate_xlib_surface_disable_render (cairo_surface_t *abstract_surface)
 {
+    /* The following stunt doesn't work with xlib-xcb because it doesn't use
+     * cairo_xlib_surface_t for its surfaces. Sadly, there is no sane
+     * alternative, so we can't disable render with xlib-xcb.
+     * FIXME: Find an alternative. */
+#if !CAIRO_HAS_XLIB_XCB_FUNCTIONS
     cairo_xlib_surface_t *surface = (cairo_xlib_surface_t*) abstract_surface;
 
     if (cairo_surface_get_type (abstract_surface) != CAIRO_SURFACE_TYPE_XLIB)
@@ -433,6 +438,7 @@ cairo_boilerplate_xlib_surface_disable_render (cairo_surface_t *abstract_surface
 #endif
 #if CAIRO_XLIB_SURFACE_HAS_BUGGY_REPEAT
     surface->buggy_repeat = TRUE;
+#endif
 #endif
 
     return CAIRO_STATUS_SUCCESS;
