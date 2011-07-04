@@ -278,10 +278,11 @@ _cairo_xlib_screen_close_display (cairo_xlib_display_t *display,
     dpy = display->display;
 
     for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
-	if ((info->gc_depths >> (8*i)) & 0xff)
+	if (info->gc_depths[i] != 0) {
 	    XFreeGC (dpy, info->gc[i]);
+	    info->gc_depths[i] = 0;
+	}
     }
-    info->gc_depths = 0;
 }
 
 void
@@ -332,7 +333,7 @@ _cairo_xlib_screen_get (Display *dpy,
     info->device = device;
     info->screen = screen;
     info->has_font_options = FALSE;
-    info->gc_depths = 0;
+    memset (info->gc_depths, 0, sizeof (info->gc_depths));
     memset (info->gc, 0, sizeof (info->gc));
 
     cairo_list_init (&info->visuals);
@@ -358,8 +359,8 @@ _cairo_xlib_screen_get_gc (cairo_xlib_display_t *display,
     int i;
 
     for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
-	if (((info->gc_depths >> (8*i)) & 0xff) == depth) {
-	    info->gc_depths &= ~(0xff << (8*i));
+	if (info->gc_depths[i] == depth) {
+	    info->gc_depths[i] = 0;
 	    gc = info->gc[i];
 	    break;
 	}
@@ -387,7 +388,7 @@ _cairo_xlib_screen_put_gc (cairo_xlib_display_t *display,
     int i;
 
     for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
-	if (((info->gc_depths >> (8*i)) & 0xff) == 0)
+	if (info->gc_depths[i] == 0)
 	    break;
     }
 
@@ -408,8 +409,7 @@ _cairo_xlib_screen_put_gc (cairo_xlib_display_t *display,
     }
 
     info->gc[i] = gc;
-    info->gc_depths &= ~(0xff << (8*i));
-    info->gc_depths |= depth << (8*i);
+    info->gc_depths[i] = depth;
 }
 
 cairo_status_t

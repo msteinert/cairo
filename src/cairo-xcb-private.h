@@ -56,6 +56,9 @@
 #include <xcb/xcbext.h>
 #include <pixman.h>
 
+/* maximum number of cached GC's */
+#define GC_CACHE_SIZE 4
+
 #define CAIRO_XCB_RENDER_AT_LEAST(major, minor)	\
 	((XCB_RENDER_MAJOR_VERSION > major) ||	\
 	((XCB_RENDER_MAJOR_VERSION == major) && (XCB_RENDER_MINOR_VERSION >= minor)))
@@ -172,8 +175,8 @@ struct _cairo_xcb_screen {
 
     xcb_screen_t	    *xcb_screen;
 
-    xcb_gcontext_t gc[4];
-    int gc_depths; /* 4 x uint8_t */
+    xcb_gcontext_t gc[GC_CACHE_SIZE];
+    uint8_t gc_depths[GC_CACHE_SIZE];
 
     cairo_surface_t *stock_colors[CAIRO_STOCK_NUM_COLORS];
     struct {

@@ -81,7 +81,7 @@ _cairo_xcb_screen_finish (cairo_xcb_screen_t *screen)
 	cairo_surface_destroy (screen->stock_colors[i]);
 
     for (i = 0; i < ARRAY_LENGTH (screen->gc); i++) {
-	if (((screen->gc_depths >> (8*i)) & 0xff) != 0)
+	if (screen->gc_depths[i] != 0)
 	    _cairo_xcb_connection_free_gc (screen->connection, screen->gc[i]);
     }
 
@@ -168,7 +168,7 @@ _cairo_xcb_screen_get (xcb_connection_t *xcb_connection,
     cairo_list_init (&screen->surfaces);
     cairo_list_init (&screen->pictures);
 
-    screen->gc_depths = 0;
+    memset (screen->gc_depths, 0, sizeof (screen->gc_depths));
     memset (screen->gc, 0, sizeof (screen->gc));
 
     screen->solid_cache_size = 0;
@@ -228,8 +228,8 @@ _cairo_xcb_screen_get_gc (cairo_xcb_screen_t *screen,
     assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->device.mutex));
 
     for (i = 0; i < ARRAY_LENGTH (screen->gc); i++) {
-	if (((screen->gc_depths >> (8*i)) & 0xff) == depth) {
-	    screen->gc_depths &= ~(0xff << (8*i));
+	if (screen->gc_depths[i] == depth) {
+	    screen->gc_depths[i] = 0;
 	    return screen->gc[i];
 	}
     }
@@ -245,7 +245,7 @@ _cairo_xcb_screen_put_gc (cairo_xcb_screen_t *screen, int depth, xcb_gcontext_t 
     assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->device.mutex));
 
     for (i = 0; i < ARRAY_LENGTH (screen->gc); i++) {
-	if (((screen->gc_depths >> (8*i)) & 0xff) == 0)
+	if (screen->gc_depths[i] == 0)
 	    break;
     }
 
@@ -256,8 +256,7 @@ _cairo_xcb_screen_put_gc (cairo_xcb_screen_t *screen, int depth, xcb_gcontext_t 
     }
 
     screen->gc[i] = gc;
-    screen->gc_depths &= ~(0xff << (8*i));
-    screen->gc_depths |= depth << (8*i);
+    screen->gc_depths[i] = depth;
 }
 
 cairo_status_t

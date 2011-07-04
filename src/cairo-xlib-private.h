@@ -66,6 +66,8 @@ struct _cairo_xlib_hook {
 #define CUBE_SIZE 6
 /* size of gray ramp */
 #define RAMP_SIZE 16
+/* maximum number of cached GC's */
+#define GC_CACHE_SIZE 4
 
 struct _cairo_xlib_display {
     cairo_device_t base;
@@ -110,8 +112,8 @@ struct _cairo_xlib_screen {
     cairo_bool_t has_font_options;
     cairo_font_options_t font_options;
 
-    GC gc[4];
-    cairo_atomic_int_t gc_depths; /* 4 x uint8_t */
+    GC gc[GC_CACHE_SIZE];
+    uint8_t gc_depths[GC_CACHE_SIZE];
 
     cairo_list_t visuals;
 };
