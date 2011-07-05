@@ -256,6 +256,9 @@ cairo_device_flush (cairo_device_t *device)
     if (device == NULL || device->status)
 	return;
 
+    if (device->finished)
+	return;
+
     if (device->backend->flush != NULL) {
 	status = device->backend->flush (device);
 	if (unlikely (status))
