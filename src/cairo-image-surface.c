@@ -3211,13 +3211,14 @@ _clip_get_single_path (cairo_clip_t *clip)
     cairo_clip_path_t *iter = clip->path;
     cairo_clip_path_t *path = NULL;
 
+    /* Boxes only effect the extents, so discard any outer boxes. */
     do {
-	if ((iter->flags & CAIRO_CLIP_PATH_IS_BOX) == 0) {
-	    if (path != NULL)
-		return FALSE;
+	if (path != NULL)
+	    return FALSE;
 
+	if ((iter->flags & CAIRO_CLIP_PATH_IS_BOX) == 0)
 	    path = iter;
-	}
+
 	iter = iter->prev;
     } while (iter != NULL);
 
