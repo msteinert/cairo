@@ -2438,6 +2438,7 @@ slim_hidden_proto (cairo_matrix_translate);
 slim_hidden_proto (cairo_move_to);
 slim_hidden_proto (cairo_new_path);
 slim_hidden_proto (cairo_paint);
+slim_hidden_proto (cairo_pattern_add_color_stop_rgba);
 slim_hidden_proto (cairo_pattern_create_for_surface);
 slim_hidden_proto (cairo_pattern_create_rgb);
 slim_hidden_proto (cairo_pattern_create_rgba);
