@@ -411,7 +411,7 @@ cairo_device_acquire (cairo_device_t *device)
 	return device->status;
 
     if (unlikely (device->finished))
-	return _cairo_device_set_error (device, CAIRO_STATUS_SURFACE_FINISHED); /* XXX */
+	return _cairo_device_set_error (device, CAIRO_STATUS_DEVICE_FINISHED);
 
     CAIRO_MUTEX_LOCK (device->mutex);
     if (device->mutex_depth++ == 0) {

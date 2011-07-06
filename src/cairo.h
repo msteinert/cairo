@@ -275,6 +275,7 @@ typedef struct _cairo_user_data_key {
  *   construction operation was used outside of a
  *   cairo_mesh_pattern_begin_patch()/cairo_mesh_pattern_end_patch()
  *   pair (Since 1.12)
+ * @CAIRO_STATUS_DEVICE_FINISHED: target device has been finished (Since 1.12)
  * @CAIRO_STATUS_LAST_STATUS: this is a special value indicating the number of
  *   status values defined in this enumeration.  When using this value, note
  *   that the version of cairo at run-time may have additional status values
@@ -327,6 +328,7 @@ typedef enum _cairo_status {
     CAIRO_STATUS_DEVICE_TYPE_MISMATCH,
     CAIRO_STATUS_DEVICE_ERROR,
     CAIRO_STATUS_INVALID_MESH_CONSTRUCTION,
+    CAIRO_STATUS_DEVICE_FINISHED,
 
     CAIRO_STATUS_LAST_STATUS
 } cairo_status_t;
