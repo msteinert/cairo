@@ -365,7 +365,7 @@ cairo_device_get_type (cairo_device_t *device)
     if (device == NULL ||
 	CAIRO_REFERENCE_COUNT_IS_INVALID (&device->ref_count))
     {
-	return (cairo_device_type_t) -1;
+	return CAIRO_DEVICE_TYPE_INVALID;
     }
 
     return device->backend->type;
