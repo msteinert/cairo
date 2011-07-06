@@ -86,8 +86,6 @@ cairo_status_t
 _cairo_gstate_init (cairo_gstate_t  *gstate,
 		    cairo_surface_t *target)
 {
-    cairo_status_t status;
-
     VG (VALGRIND_MAKE_MEM_UNDEFINED (gstate, sizeof (cairo_gstate_t)));
 
     gstate->next = NULL;
@@ -131,15 +129,7 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     /* Now that the gstate is fully initialized and ready for the eventual
      * _cairo_gstate_fini(), we can check for errors (and not worry about
      * the resource deallocation). */
-    status = target->status;
-    if (unlikely (status))
-	return status;
-
-    status = gstate->source->status;
-    if (unlikely (status))
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
+    return target->status;
 }
 
 /**
