@@ -1043,13 +1043,6 @@ cairo_private uint16_t
 _cairo_color_double_to_short (double d) cairo_const;
 
 cairo_private void
-_cairo_color_init (cairo_color_t *color);
-
-cairo_private void
-_cairo_color_init_rgb (cairo_color_t *color,
-		       double red, double green, double blue);
-
-cairo_private void
 _cairo_color_init_rgba (cairo_color_t *color,
 			double red, double green, double blue,
 			double alpha);

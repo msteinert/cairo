@@ -669,10 +669,11 @@ xr_poly_fill_rect (DrawablePtr drawable,
 	    }
 	}
 
-	_cairo_color_init_rgb (&color,
-			       ((gc->fgPixel & 0x00ff0000) >> 16) / 255.,
-			       ((gc->fgPixel & 0x0000ff00) >> 8) / 255.,
-			       ((gc->fgPixel & 0x000000ff) >> 0) / 255.);
+	_cairo_color_init_rgba (&color,
+				((gc->fgPixel & 0x00ff0000) >> 16) / 255.,
+				((gc->fgPixel & 0x0000ff00) >>  8) / 255.,
+				((gc->fgPixel & 0x000000ff) >>  0) / 255.,
+				1.0);
 	_cairo_pattern_init_solid (&pattern, &color, CAIRO_CONTENT_COLOR);
 
 	status = _cairo_surface_fill (surface,
