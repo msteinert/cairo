@@ -62,6 +62,18 @@ _cairo_xcb_screen_finish (cairo_xcb_screen_t *screen)
 	cairo_surface_destroy (surface);
     }
 
+    while (! cairo_list_is_empty (&screen->pictures)) {
+	cairo_surface_t *surface;
+
+	surface = &cairo_list_first_entry (&screen->pictures,
+					   cairo_xcb_picture_t,
+					   link)->base;
+
+	cairo_surface_reference (surface);
+	cairo_surface_finish (surface);
+	cairo_surface_destroy (surface);
+    }
+
     for (i = 0; i < screen->solid_cache_size; i++)
 	cairo_surface_destroy (screen->solid_cache[i].picture);
 
@@ -231,6 +243,7 @@ _cairo_xcb_screen_get (xcb_connection_t *xcb_connection,
 			  sizeof (struct pattern_cache_entry));
     cairo_list_init (&screen->link);
     cairo_list_init (&screen->surfaces);
+    cairo_list_init (&screen->pictures);
 
     if (connection->flags & CAIRO_XCB_HAS_DRI2)
 	screen->device = _xcb_drm_device (xcb_connection, xcb_screen);

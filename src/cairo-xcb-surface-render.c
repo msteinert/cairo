@@ -85,6 +85,7 @@ _cairo_xcb_picture_finish (void *abstract_surface)
     cairo_status_t status;
 
     status = _cairo_xcb_connection_acquire (connection);
+    cairo_list_del (&surface->link);
     if (unlikely (status))
 	return status;
 
@@ -124,6 +125,8 @@ _cairo_xcb_picture_create (cairo_xcb_screen_t *screen,
 			 &_cairo_xcb_picture_backend,
 			 &screen->connection->device,
 			 _cairo_content_from_pixman_format (pixman_format));
+
+    cairo_list_add (&surface->link, &screen->pictures);
 
     surface->screen = screen;
     surface->picture = _cairo_xcb_connection_get_xid (screen->connection);

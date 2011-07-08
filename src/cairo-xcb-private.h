@@ -123,6 +123,8 @@ struct _cairo_xcb_picture {
 
     int x0, y0;
     int x, y;
+
+    cairo_list_t link;
 };
 
 #if CAIRO_HAS_XLIB_XCB_FUNCTIONS
@@ -189,6 +191,7 @@ struct _cairo_xcb_screen {
 
     cairo_list_t link;
     cairo_list_t surfaces;
+    cairo_list_t pictures;
 };
 
 struct _cairo_xcb_connection {
