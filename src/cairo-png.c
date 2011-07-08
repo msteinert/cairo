@@ -178,7 +178,7 @@ write_png (cairo_surface_t	*surface,
     png_byte **volatile rows = NULL;
     png_color_16 white;
     int png_color_type;
-    int depth;
+    int bpc;
 
     status = _cairo_surface_acquire_source_image (surface,
 						  &image,
@@ -235,26 +235,26 @@ write_png (cairo_surface_t	*surface,
 
     switch (clone->format) {
     case CAIRO_FORMAT_ARGB32:
-	depth = 8;
+	bpc = 8;
 	if (_cairo_image_analyze_transparency (clone) == CAIRO_IMAGE_IS_OPAQUE)
 	    png_color_type = PNG_COLOR_TYPE_RGB;
 	else
 	    png_color_type = PNG_COLOR_TYPE_RGB_ALPHA;
 	break;
     case CAIRO_FORMAT_RGB30:
-	depth = 30;
+	bpc = 10;
 	png_color_type = PNG_COLOR_TYPE_RGB;
 	break;
     case CAIRO_FORMAT_RGB24:
-	depth = 8;
+	bpc = 8;
 	png_color_type = PNG_COLOR_TYPE_RGB;
 	break;
     case CAIRO_FORMAT_A8:
-	depth = 8;
+	bpc = 8;
 	png_color_type = PNG_COLOR_TYPE_GRAY;
 	break;
     case CAIRO_FORMAT_A1:
-	depth = 1;
+	bpc = 1;
 	png_color_type = PNG_COLOR_TYPE_GRAY;
 #ifndef WORDS_BIGENDIAN
 	png_set_packswap (png);
@@ -269,13 +269,13 @@ write_png (cairo_surface_t	*surface,
 
     png_set_IHDR (png, info,
 		  clone->width,
-		  clone->height, depth,
+		  clone->height, bpc,
 		  png_color_type,
 		  PNG_INTERLACE_NONE,
 		  PNG_COMPRESSION_TYPE_DEFAULT,
 		  PNG_FILTER_TYPE_DEFAULT);
 
-    white.gray = (1 << depth) - 1;
+    white.gray = (1 << bpc) - 1;
     white.red = white.blue = white.green = white.gray;
     png_set_bKGD (png, info, &white);
 
