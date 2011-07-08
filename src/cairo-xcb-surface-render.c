@@ -1016,17 +1016,6 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
     cairo_xcb_picture_t *picture;
     cairo_filter_t filter;
 
-    {
-	cairo_xcb_surface_t *snapshot;
-
-	snapshot = (cairo_xcb_surface_t *)
-	    _cairo_surface_has_snapshot (source, &_cairo_xcb_surface_backend);
-	if (snapshot != NULL) {
-	    if (snapshot->screen == target->screen)
-		source = &snapshot->base;
-	}
-    }
-
     picture = (cairo_xcb_picture_t *)
 	_cairo_surface_has_snapshot (source, &_cairo_xcb_picture_backend);
     if (picture != NULL) {
@@ -2533,17 +2522,6 @@ _upload_image_inplace (cairo_xcb_surface_t *surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     {
-	cairo_xcb_surface_t *snapshot;
-
-	snapshot = (cairo_xcb_surface_t *)
-	    _cairo_surface_has_snapshot (pattern->surface, &_cairo_xcb_surface_backend);
-	if (snapshot != NULL) {
-	    if (snapshot->screen == surface->screen)
-		return CAIRO_INT_STATUS_UNSUPPORTED;
-	}
-    }
-
-    {
 	cairo_xcb_picture_t *snapshot;
 
 	snapshot = (cairo_xcb_picture_t *)
@@ -2608,12 +2586,6 @@ _upload_image_inplace (cairo_xcb_surface_t *surface,
 
     _cairo_xcb_screen_put_gc (surface->screen, image->depth, gc);
     _cairo_xcb_connection_release (surface->connection);
-
-    if (surface->width == image->width && surface->height == image->height &&
-	extents->width == image->width && extents->height == image->height)
-    {
-	_cairo_surface_attach_snapshot (&image->base, &surface->base, NULL);
-    }
 
     return CAIRO_STATUS_SUCCESS;
 }
