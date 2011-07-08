@@ -1,5 +1,6 @@
 test_sources = \
 	a1-bug.c					\
+	a1-clip.c					\
 	a1-image-sample.c 				\
 	a1-mask.c					\
 	a1-mask-sample.c 				\

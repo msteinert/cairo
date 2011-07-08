@@ -1,10 +1,14 @@
 # Note REFERENCE_IMAGES must be in lexicographical order.
-# Use generate_refs on a git checkout with updated images.
+# Use generate_refs.sh on a git checkout with updated images.
 REFERENCE_IMAGES = \
 	a1-bug.image16.ref.png \
 	a1-bug.quartz.xfail.png \
 	a1-bug.ref.png \
 	a1-bug.xlib.ref.png \
+	a1-clip-fill-equal.ref.png \
+	a1-clip-fill.ref.png \
+	a1-clip-paint.ref.png \
+	a1-clip-stroke.ref.png \
 	a1-image-sample.gl.xfail.png \
 	a1-image-sample.ref.png \
 	a1-mask-sample.ref.png \
