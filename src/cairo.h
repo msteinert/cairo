@@ -1952,26 +1952,27 @@ cairo_device_reference (cairo_device_t *device);
 
 /**
  * cairo_device_type_t:
- * @CAIRO_DEVICE_TYPE_DRM: The surface is of type Direct Render Manager
- * @CAIRO_DEVICE_TYPE_GL: The surface is of type OpenGL
- * @CAIRO_DEVICE_TYPE_SCRIPT: The surface is of type script
- * @CAIRO_DEVICE_TYPE_XCB: The surface is of type xcb
- * @CAIRO_DEVICE_TYPE_XLIB: The surface is of type xlib
- * @CAIRO_DEVICE_TYPE_XML: The surface is of type XML
+ * @CAIRO_DEVICE_TYPE_INVALID: The device is not valid
+ * @CAIRO_DEVICE_TYPE_DRM: The device is of type Direct Render Manager
+ * @CAIRO_DEVICE_TYPE_GL: The device is of type OpenGL
+ * @CAIRO_DEVICE_TYPE_SCRIPT: The device is of type script
+ * @CAIRO_DEVICE_TYPE_XCB: The device is of type xcb
+ * @CAIRO_DEVICE_TYPE_XLIB: The device is of type xlib
+ * @CAIRO_DEVICE_TYPE_XML: The device is of type XML
  *
  * #cairo_device_type_t is used to describe the type of a given
  * device. The devices types are also known as "backends" within cairo.
  *
  * The device type can be queried with cairo_device_get_type()
  *
- * The various #cairo_device_t functions can be used with surfaces of
+ * The various #cairo_device_t functions can be used with devices of
  * any type, but some backends also provide type-specific functions
  * that must only be called with a device of the appropriate
  * type. These functions have names that begin with
  * <literal>cairo_<emphasis>type</emphasis>_device</literal> such as
  * cairo_xcb_device_debug_cap_xrender_version().
  *
- * The behavior of calling a type-specific function with a surface of
+ * The behavior of calling a type-specific function with a device of
  * the wrong type is undefined.
  *
  * New entries may be added in future versions.
