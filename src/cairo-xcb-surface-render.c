@@ -59,25 +59,6 @@
  * extension if it is available.
  */
 
-typedef struct _cairo_xcb_picture {
-    cairo_surface_t base;
-
-    cairo_xcb_screen_t *screen;
-    xcb_render_picture_t picture;
-    xcb_render_pictformat_t xrender_format;
-    pixman_format_code_t pixman_format;
-
-    int width, height;
-
-    cairo_extend_t extend;
-    cairo_filter_t filter;
-    cairo_bool_t has_component_alpha;
-    xcb_render_transform_t transform;
-
-    int x0, y0;
-    int x, y;
-} cairo_xcb_picture_t;
-
 static inline cairo_xcb_connection_t *
 _picture_to_connection (cairo_xcb_picture_t *picture)
 {

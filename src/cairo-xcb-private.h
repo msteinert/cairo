@@ -63,6 +63,7 @@ typedef struct _cairo_xcb_connection cairo_xcb_connection_t;
 typedef struct _cairo_xcb_font cairo_xcb_font_t;
 typedef struct _cairo_xcb_screen cairo_xcb_screen_t;
 typedef struct _cairo_xcb_surface cairo_xcb_surface_t;
+typedef struct _cairo_xcb_picture cairo_xcb_picture_t;
 typedef struct _cairo_xcb_shm_mem_pool cairo_xcb_shm_mem_pool_t;
 typedef struct _cairo_xcb_shm_info cairo_xcb_shm_info_t;
 
@@ -103,6 +104,25 @@ struct _cairo_xcb_surface {
     uint32_t precision;
 
     cairo_list_t link;
+};
+
+struct _cairo_xcb_picture {
+    cairo_surface_t base;
+
+    cairo_xcb_screen_t *screen;
+    xcb_render_picture_t picture;
+    xcb_render_pictformat_t xrender_format;
+    pixman_format_code_t pixman_format;
+
+    int width, height;
+
+    cairo_extend_t extend;
+    cairo_filter_t filter;
+    cairo_bool_t has_component_alpha;
+    xcb_render_transform_t transform;
+
+    int x0, y0;
+    int x, y;
 };
 
 #if CAIRO_HAS_XLIB_XCB_FUNCTIONS
