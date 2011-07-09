@@ -157,6 +157,7 @@ _cairo_device_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED:
     case CAIRO_STATUS_INVALID_CONTENT:
     case CAIRO_STATUS_INVALID_MESH_CONSTRUCTION:
+    case CAIRO_STATUS_DEVICE_FINISHED:
     default:
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_device_t *) &_nil_device;

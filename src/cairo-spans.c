@@ -205,6 +205,7 @@ _cairo_scan_converter_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_DEVICE_TYPE_MISMATCH: RETURN_NIL;
     case CAIRO_STATUS_DEVICE_ERROR: RETURN_NIL;
     case CAIRO_STATUS_INVALID_MESH_CONSTRUCTION: RETURN_NIL;
+    case CAIRO_STATUS_DEVICE_FINISHED: RETURN_NIL;
     default:
 	break;
     }
@@ -316,6 +317,7 @@ _cairo_span_renderer_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_DEVICE_TYPE_MISMATCH: RETURN_NIL;
     case CAIRO_STATUS_DEVICE_ERROR: RETURN_NIL;
     case CAIRO_STATUS_INVALID_MESH_CONSTRUCTION: RETURN_NIL;
+    case CAIRO_STATUS_DEVICE_FINISHED: RETURN_NIL;
     default:
 	break;
     }

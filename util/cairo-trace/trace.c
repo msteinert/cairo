@@ -1506,6 +1506,7 @@ _status_to_string (cairo_status_t status)
 	f(DEVICE_TYPE_MISMATCH);
 	f(DEVICE_ERROR);
 	f(INVALID_MESH_CONSTRUCTION);
+	f(DEVICE_FINISHED);
     case CAIRO_STATUS_LAST_STATUS:
 	break;
     }

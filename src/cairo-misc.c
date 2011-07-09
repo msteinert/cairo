@@ -152,6 +152,8 @@ cairo_status_to_string (cairo_status_t status)
 	return "an operation to the device caused an unspecified error";
     case CAIRO_STATUS_INVALID_MESH_CONSTRUCTION:
 	return "invalid operation during mesh pattern construction";
+    case CAIRO_STATUS_DEVICE_FINISHED:
+	return "the target device has been finished";
     default:
     case CAIRO_STATUS_LAST_STATUS:
 	return "<unknown error status>";
