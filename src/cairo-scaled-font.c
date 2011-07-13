@@ -963,7 +963,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	    }
 	}
 
-	_cairo_scaled_font_init_key (&key, font_face,
+	_cairo_scaled_font_init_key (&key, original_font_face,
 				     font_matrix, ctm, options);
     }
     else
@@ -979,7 +979,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	    }
 	}
 
-	_cairo_scaled_font_init_key (&key, font_face,
+	_cairo_scaled_font_init_key (&key, original_font_face,
 				     font_matrix, ctm, options);
 
 	while ((scaled_font = _cairo_hash_table_lookup (font_map->hash_table,
