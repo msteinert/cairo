@@ -2946,28 +2946,38 @@ _cairo_ft_resolve_pattern (FcPattern		      *pattern,
 
     FcDefaultSubstitute (pattern);
 
-    resolved = FcFontMatch (NULL, pattern, &result);
-    if (!resolved) {
-	/* We failed to find any font. Substitute twin so that the user can
-	 * see something (and hopefully recognise that the font is missing)
-	 * and not just receive a NO_MEMORY error during rendering.
-	 */
-	font_face = _cairo_font_face_twin_create_fallback ();
+    status = _cairo_ft_unscaled_font_create_for_pattern (pattern, &unscaled);
+    if (unlikely (status)) {
+	font_face = (cairo_font_face_t *)&_cairo_font_face_nil;
 	goto FREE_PATTERN;
     }
 
-    status = _cairo_ft_unscaled_font_create_for_pattern (resolved, &unscaled);
-    if (unlikely (status || unscaled == NULL)) {
-	font_face = (cairo_font_face_t *)&_cairo_font_face_nil;
-	goto FREE_RESOLVED;
-    }
+    if (unscaled == NULL) {
+	resolved = FcFontMatch (NULL, pattern, &result);
+	if (!resolved) {
+	    /* We failed to find any font. Substitute twin so that the user can
+	     * see something (and hopefully recognise that the font is missing)
+	     * and not just receive a NO_MEMORY error during rendering.
+	     */
+	    font_face = _cairo_font_face_twin_create_fallback ();
+	    goto FREE_PATTERN;
+	}
+
+	status = _cairo_ft_unscaled_font_create_for_pattern (resolved, &unscaled);
+	if (unlikely (status || unscaled == NULL)) {
+	    font_face = (cairo_font_face_t *)&_cairo_font_face_nil;
+	    goto FREE_RESOLVED;
+	}
+    } else
+	resolved = pattern;
 
     _get_pattern_ft_options (resolved, &ft_options);
     font_face = _cairo_ft_font_face_create (unscaled, &ft_options);
     _cairo_unscaled_font_destroy (&unscaled->base);
 
 FREE_RESOLVED:
-    FcPatternDestroy (resolved);
+    if (resolved != pattern)
+	FcPatternDestroy (resolved);
 
 FREE_PATTERN:
     FcPatternDestroy (pattern);
