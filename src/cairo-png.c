@@ -169,7 +169,7 @@ write_png (cairo_surface_t	*surface,
 	   void			*closure)
 {
     int i;
-    cairo_status_t status;
+    cairo_int_status_t status;
     cairo_image_surface_t *image;
     cairo_image_surface_t * volatile clone;
     void *image_extra;

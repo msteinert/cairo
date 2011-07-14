@@ -175,7 +175,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_glyph_t       *glyphs,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font,
-				 cairo_clip_t	     *clip,
+				 const cairo_clip_t	     *clip,
 				 int		     *remaining_glyphs);
 
 /*
@@ -367,6 +367,9 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
     Pixmap pix;
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
+	return NULL;
+
+    if (width == 0 || height == 0)
 	return NULL;
 
     if (! CAIRO_SURFACE_RENDER_HAS_CREATE_PICTURE (src))
@@ -1695,7 +1698,7 @@ _cairo_xlib_surface_can_repaint_solid_pattern_surface (void *abstract_surface,
     return CAIRO_SURFACE_RENDER_HAS_COMPOSITE (other);
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _cairo_xlib_surface_set_matrix (cairo_xlib_display_t *display,
                                 cairo_xlib_surface_t *surface,
 				const cairo_matrix_t *matrix,
@@ -1707,7 +1710,7 @@ _cairo_xlib_surface_set_matrix (cairo_xlib_display_t *display,
 {
     XTransform xtransform;
     pixman_transform_t *pixman_transform;
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     /* Casting between pixman_transform_t and XTransform is safe because
      * they happen to be the exact same type.
@@ -1718,8 +1721,8 @@ _cairo_xlib_surface_set_matrix (cairo_xlib_display_t *display,
 						    pixman_transform,
 						    x_offset, y_offset);
     if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
-	status = CAIRO_STATUS_SUCCESS;
-    if (unlikely (status != CAIRO_STATUS_SUCCESS))
+	status = CAIRO_INT_STATUS_SUCCESS;
+    if (unlikely (status != CAIRO_INT_STATUS_SUCCESS))
 	return status;
 
     if (memcmp (&xtransform, &surface->xtransform, sizeof (XTransform)) == 0)
@@ -4573,7 +4576,7 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_display_t *display,
 				 int *remaining_glyphs)
 {
     int i;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_int_status_t status = CAIRO_INT_STATUS_SUCCESS;
     cairo_scaled_glyph_t *scaled_glyph;
     cairo_fixed_t x = 0, y = 0;
     cairo_xlib_font_glyphset_info_t *glyphset_info = NULL, *this_glyphset_info;
@@ -4725,7 +4728,7 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_display_t *display,
     }
 
     *remaining_glyphs = num_glyphs - i;
-    if (*remaining_glyphs != 0 && status == CAIRO_STATUS_SUCCESS)
+    if (*remaining_glyphs != 0 && status == CAIRO_INT_STATUS_SUCCESS)
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
 
     return status;
@@ -4755,7 +4758,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_glyph_t       *glyphs,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font,
-				 cairo_clip_t	     *clip,
+				 const cairo_clip_t	     *clip,
 				 int		     *remaining_glyphs)
 {
     cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
@@ -4779,23 +4782,16 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
      * then the entire thing is copied to the destination surface,
      * including the fully transparent "background" of the rectangular
      * glyph surface. */
-    if (op == CAIRO_OPERATOR_SOURCE &&
-        ! CAIRO_SURFACE_RENDER_AT_LEAST(dst, 0, 11))
-    {
+    if (op == CAIRO_OPERATOR_SOURCE)
         return UNSUPPORTED ("known bug in Render");
-    }
 
     /* We can only use our code if we either have no clip or
      * have a real native clip region set.  If we're using
      * fallback clip masking, we have to go through the full
      * fallback path.
      */
-    if (clip != NULL) {
-	status = _cairo_clip_get_region (clip, &clip_region);
-	assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
-	if (status)
-	    return status;
-    }
+    if (!_cairo_clip_is_region (clip))
+        return UNSUPPORTED ("clip mask required");
 
     operation = _categorize_composite_operation (dst, op, src_pattern, TRUE);
     if (operation == DO_UNSUPPORTED)

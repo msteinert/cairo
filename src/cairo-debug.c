@@ -35,7 +35,6 @@
 
 #include "cairoint.h"
 
-
 /**
  * cairo_debug_reset_static_data:
  *
@@ -234,8 +233,10 @@ void
 _cairo_debug_print_path (FILE *stream, cairo_path_fixed_t *path)
 {
     cairo_status_t status;
+    cairo_box_t box;
 
-    printf ("path: extents=(%f, %f), (%f, %f)\n",
+    fprintf (stream,
+	     "path: extents=(%f, %f), (%f, %f)\n",
 	    _cairo_fixed_to_double (path->extents.p1.x),
 	    _cairo_fixed_to_double (path->extents.p1.y),
 	    _cairo_fixed_to_double (path->extents.p2.x),
@@ -249,5 +250,37 @@ _cairo_debug_print_path (FILE *stream, cairo_path_fixed_t *path)
 					  stream);
     assert (status == CAIRO_STATUS_SUCCESS);
 
+    if (_cairo_path_fixed_is_box (path, &box)) {
+	fprintf (stream, "[box (%d, %d), (%d, %d)]",
+		 box.p1.x, box.p1.y, box.p2.x, box.p2.y);
+    }
+
     printf ("\n");
+}
+
+void
+_cairo_debug_print_polygon (FILE *stream, cairo_polygon_t *polygon)
+{
+    int n;
+
+    fprintf (stream,
+	     "polygon: extents=(%f, %f), (%f, %f)\n",
+	    _cairo_fixed_to_double (polygon->extents.p1.x),
+	    _cairo_fixed_to_double (polygon->extents.p1.y),
+	    _cairo_fixed_to_double (polygon->extents.p2.x),
+	    _cairo_fixed_to_double (polygon->extents.p2.y));
+    for (n = 0; n < polygon->num_edges; n++) {
+	cairo_edge_t *edge = &polygon->edges[n];
+
+	fprintf (stream,
+		 "  (%f, %f) -> (%f, %f), top=%f, bottom=%f, dir=%d\n",
+		 _cairo_fixed_to_double (edge->line.p1.x),
+		 _cairo_fixed_to_double (edge->line.p1.y),
+		 _cairo_fixed_to_double (edge->line.p2.x),
+		 _cairo_fixed_to_double (edge->line.p2.y),
+		 _cairo_fixed_to_double (edge->top),
+		 _cairo_fixed_to_double (edge->bottom),
+		 edge->dir);
+
+    }
 }

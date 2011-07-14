@@ -37,7 +37,13 @@
 
 #include "cairoint.h"
 
+#include "cairo-boxes-private.h"
 #include "cairo-error-private.h"
+
+static void
+_cairo_polygon_add_edge (cairo_polygon_t *polygon,
+			 const cairo_point_t *p1,
+			 const cairo_point_t *p2);
 
 void
 _cairo_polygon_init (cairo_polygon_t *polygon,
@@ -78,6 +84,111 @@ _cairo_polygon_init (cairo_polygon_t *polygon,
 	}
     }
 }
+
+void
+_cairo_polygon_init_with_clip (cairo_polygon_t *polygon,
+			       const cairo_clip_t *clip)
+{
+    if (clip)
+	_cairo_polygon_init (polygon, clip->boxes, clip->num_boxes);
+    else
+	_cairo_polygon_init (polygon, 0, 0);
+}
+
+cairo_status_t
+_cairo_polygon_init_boxes (cairo_polygon_t *polygon,
+			   const cairo_boxes_t *boxes)
+{
+    const struct _cairo_boxes_chunk *chunk;
+    int i;
+
+    VG (VALGRIND_MAKE_MEM_UNDEFINED (polygon, sizeof (cairo_polygon_t)));
+
+    polygon->status = CAIRO_STATUS_SUCCESS;
+
+    polygon->num_edges = 0;
+
+    polygon->edges = polygon->edges_embedded;
+    polygon->edges_size = ARRAY_LENGTH (polygon->edges_embedded);
+    if (boxes->num_boxes > ARRAY_LENGTH (polygon->edges_embedded)/2) {
+	polygon->edges_size = 2 * boxes->num_boxes;
+	polygon->edges = _cairo_malloc_ab (polygon->edges_size,
+					   2*sizeof(cairo_edge_t));
+	if (unlikely (polygon->edges == NULL))
+	    return polygon->status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
+    polygon->extents.p1.x = polygon->extents.p1.y = INT32_MAX;
+    polygon->extents.p2.x = polygon->extents.p2.y = INT32_MIN;
+
+    polygon->limits = NULL;
+    polygon->num_limits = 0;
+
+    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
+	    for (i = 0; i < chunk->count; i++) {
+		    cairo_point_t p1, p2;
+
+		    p1 = chunk->base[i].p1;
+		    p2.x = p1.x;
+		    p2.y = chunk->base[i].p2.y;
+		    _cairo_polygon_add_edge (polygon, &p1, &p2);
+
+		    p1 = chunk->base[i].p2;
+		    p2.x = p1.x;
+		    p2.y = chunk->base[i].p1.y;
+		    _cairo_polygon_add_edge (polygon, &p1, &p2);
+	    }
+    }
+
+    return polygon->status;
+}
+
+cairo_status_t
+_cairo_polygon_init_box_array (cairo_polygon_t *polygon,
+			       cairo_box_t *boxes,
+			       int num_boxes)
+{
+    int i;
+
+    VG (VALGRIND_MAKE_MEM_UNDEFINED (polygon, sizeof (cairo_polygon_t)));
+
+    polygon->status = CAIRO_STATUS_SUCCESS;
+
+    polygon->num_edges = 0;
+
+    polygon->edges = polygon->edges_embedded;
+    polygon->edges_size = ARRAY_LENGTH (polygon->edges_embedded);
+    if (num_boxes > ARRAY_LENGTH (polygon->edges_embedded)/2) {
+	polygon->edges_size = 2 * num_boxes;
+	polygon->edges = _cairo_malloc_ab (polygon->edges_size,
+					   2*sizeof(cairo_edge_t));
+	if (unlikely (polygon->edges == NULL))
+	    return polygon->status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
+    polygon->extents.p1.x = polygon->extents.p1.y = INT32_MAX;
+    polygon->extents.p2.x = polygon->extents.p2.y = INT32_MIN;
+
+    polygon->limits = NULL;
+    polygon->num_limits = 0;
+
+    for (i = 0; i < num_boxes; i++) {
+	cairo_point_t p1, p2;
+
+	p1 = boxes[i].p1;
+	p2.x = p1.x;
+	p2.y = boxes[i].p2.y;
+	_cairo_polygon_add_edge (polygon, &p1, &p2);
+
+	p1 = boxes[i].p2;
+	p2.x = p1.x;
+	p2.y = boxes[i].p1.y;
+	_cairo_polygon_add_edge (polygon, &p1, &p2);
+    }
+
+    return polygon->status;
+}
+
 
 void
 _cairo_polygon_fini (cairo_polygon_t *polygon)

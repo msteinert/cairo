@@ -136,7 +136,6 @@ cairo_recording_surface_create (cairo_content_t		 content,
 				const cairo_rectangle_t	*extents)
 {
     cairo_recording_surface_t *recording_surface;
-    cairo_status_t status;
 
     recording_surface = malloc (sizeof (cairo_recording_surface_t));
     if (unlikely (recording_surface == NULL))
@@ -150,7 +149,6 @@ cairo_recording_surface_create (cairo_content_t		 content,
     recording_surface->content = content;
 
     recording_surface->unbounded = TRUE;
-    _cairo_clip_init (&recording_surface->clip);
 
     /* unbounded -> 'infinite' extents */
     if (extents != NULL) {
@@ -161,13 +159,6 @@ cairo_recording_surface_create (cairo_content_t		 content,
 	recording_surface->extents.y = floor (extents->y);
 	recording_surface->extents.width = ceil (extents->x + extents->width) - recording_surface->extents.x;
 	recording_surface->extents.height = ceil (extents->y + extents->height) - recording_surface->extents.y;
-
-	status = _cairo_clip_rectangle (&recording_surface->clip,
-					&recording_surface->extents);
-	if (unlikely (status)) {
-	    free (recording_surface);
-	    return _cairo_surface_create_in_error (status);
-	}
 
 	recording_surface->unbounded = FALSE;
     }
@@ -239,12 +230,11 @@ _cairo_recording_surface_finish (void *abstract_surface)
 	    ASSERT_NOT_REACHED;
 	}
 
-	_cairo_clip_fini (&command->header.clip);
+	_cairo_clip_destroy (command->header.clip);
 	free (command);
     }
 
     _cairo_array_fini (&recording_surface->commands);
-    _cairo_clip_fini (&recording_surface->clip);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -321,16 +311,14 @@ _command_init (cairo_recording_surface_t *recording_surface,
 	       cairo_command_header_t *command,
 	       cairo_command_type_t type,
 	       cairo_operator_t op,
-	       cairo_clip_t *clip)
+	       const cairo_clip_t *clip)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     command->type = type;
     command->op = op;
     command->region = CAIRO_RECORDING_REGION_ALL;
-    _cairo_clip_init_copy (&command->clip, clip);
-    if (recording_surface->clip.path != NULL)
-	status = _cairo_clip_apply_clip (&command->clip, &recording_surface->clip);
+    command->clip = _cairo_clip_copy (clip);
 
     return status;
 }
@@ -339,7 +327,7 @@ static cairo_int_status_t
 _cairo_recording_surface_paint (void			  *abstract_surface,
 				cairo_operator_t	   op,
 				const cairo_pattern_t	  *source,
-				cairo_clip_t		  *clip)
+				const cairo_clip_t		  *clip)
 {
     cairo_status_t status;
     cairo_recording_surface_t *recording_surface = abstract_surface;
@@ -373,7 +361,7 @@ _cairo_recording_surface_paint (void			  *abstract_surface,
   CLEANUP_SOURCE:
     _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
-    _cairo_clip_fini (&command->header.clip);
+    _cairo_clip_destroy (command->header.clip);
     free (command);
     return status;
 }
@@ -383,7 +371,7 @@ _cairo_recording_surface_mask (void			*abstract_surface,
 			       cairo_operator_t		 op,
 			       const cairo_pattern_t	*source,
 			       const cairo_pattern_t	*mask,
-			       cairo_clip_t		*clip)
+			       const cairo_clip_t	*clip)
 {
     cairo_status_t status;
     cairo_recording_surface_t *recording_surface = abstract_surface;
@@ -417,7 +405,7 @@ _cairo_recording_surface_mask (void			*abstract_surface,
   CLEANUP_SOURCE:
     _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
-    _cairo_clip_fini (&command->header.clip);
+    _cairo_clip_destroy (command->header.clip);
     free (command);
     return status;
 }
@@ -426,13 +414,13 @@ static cairo_int_status_t
 _cairo_recording_surface_stroke (void			*abstract_surface,
 				 cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
-				 cairo_path_fixed_t	*path,
+				 const cairo_path_fixed_t	*path,
 				 const cairo_stroke_style_t	*style,
 				 const cairo_matrix_t		*ctm,
 				 const cairo_matrix_t		*ctm_inverse,
 				 double			 tolerance,
 				 cairo_antialias_t	 antialias,
-				 cairo_clip_t		*clip)
+				 const cairo_clip_t	*clip)
 {
     cairo_status_t status;
     cairo_recording_surface_t *recording_surface = abstract_surface;
@@ -477,7 +465,7 @@ _cairo_recording_surface_stroke (void			*abstract_surface,
   CLEANUP_SOURCE:
     _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
-    _cairo_clip_fini (&command->header.clip);
+    _cairo_clip_destroy (command->header.clip);
     free (command);
     return status;
 }
@@ -486,11 +474,11 @@ static cairo_int_status_t
 _cairo_recording_surface_fill (void			*abstract_surface,
 			       cairo_operator_t		 op,
 			       const cairo_pattern_t	*source,
-			       cairo_path_fixed_t	*path,
+			       const cairo_path_fixed_t	*path,
 			       cairo_fill_rule_t	 fill_rule,
 			       double			 tolerance,
 			       cairo_antialias_t	 antialias,
-			       cairo_clip_t		*clip)
+			       const cairo_clip_t	*clip)
 {
     cairo_status_t status;
     cairo_recording_surface_t *recording_surface = abstract_surface;
@@ -528,7 +516,7 @@ _cairo_recording_surface_fill (void			*abstract_surface,
   CLEANUP_SOURCE:
     _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
-    _cairo_clip_fini (&command->header.clip);
+    _cairo_clip_destroy (command->header.clip);
     free (command);
     return status;
 }
@@ -551,7 +539,7 @@ _cairo_recording_surface_show_text_glyphs (void				*abstract_surface,
 					   int				 num_clusters,
 					   cairo_text_cluster_flags_t	 cluster_flags,
 					   cairo_scaled_font_t		*scaled_font,
-					   cairo_clip_t			*clip)
+					   const cairo_clip_t		*clip)
 {
     cairo_status_t status;
     cairo_recording_surface_t *recording_surface = abstract_surface;
@@ -622,7 +610,7 @@ _cairo_recording_surface_show_text_glyphs (void				*abstract_surface,
 
     _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
-    _cairo_clip_fini (&command->header.clip);
+    _cairo_clip_destroy (command->header.clip);
     free (command);
     return status;
 }
@@ -660,8 +648,6 @@ _cairo_recording_surface_snapshot (void *abstract_other)
     recording_surface->extents = other->extents;
     recording_surface->unbounded = other->unbounded;
     recording_surface->content = other->content;
-
-    _cairo_clip_init_copy (&recording_surface->clip, &other->clip);
 
     /* XXX We should in theory be able to reuse the original array, but we
      * need to handle reference cycles during subsurface and self-copy.
@@ -795,7 +781,7 @@ _cairo_recording_surface_get_path (cairo_surface_t    *surface,
 							command->stroke.tolerance,
 							&traps);
 
-	    if (status == CAIRO_STATUS_SUCCESS)
+	    if (status == CAIRO_INT_STATUS_SUCCESS)
 		status = _cairo_traps_path (&traps, path);
 
 	    _cairo_traps_fini (&traps);
@@ -828,7 +814,6 @@ _cairo_recording_surface_get_path (cairo_surface_t    *surface,
     return _cairo_surface_set_error (surface, status);
 }
 
-#define _clip(c) ((c)->header.clip.path ? &(c)->header.clip : NULL)
 static cairo_status_t
 _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 					  const cairo_rectangle_int_t *surface_extents,
@@ -867,18 +852,24 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 
     for (i = recording_surface->replay_start_idx; i < num_elements; i++) {
 	cairo_command_t *command = elements[i];
+	cairo_clip_t *clip = command->header.clip;
 
 	if (type == CAIRO_RECORDING_REPLAY && region != CAIRO_RECORDING_REGION_ALL) {
 	    if (command->header.region != region)
 		continue;
         }
 
+	if (! recording_surface->unbounded)
+		clip = _cairo_clip_copy_intersect_rectangle (clip, &recording_surface->extents);
+	if (_cairo_clip_is_all_clipped (clip))
+		continue;
+
 	switch (command->header.type) {
 	case CAIRO_COMMAND_PAINT:
 	    status = _cairo_surface_wrapper_paint (&wrapper,
 						   command->header.op,
 						   &command->paint.source.base,
-						   _clip (command));
+						   clip);
 	    break;
 
 	case CAIRO_COMMAND_MASK:
@@ -886,7 +877,7 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 						  command->header.op,
 						  &command->mask.source.base,
 						  &command->mask.mask.base,
-						  _clip (command));
+						  clip);
 	    break;
 
 	case CAIRO_COMMAND_STROKE:
@@ -900,7 +891,7 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 						    &command->stroke.ctm_inverse,
 						    command->stroke.tolerance,
 						    command->stroke.antialias,
-						    _clip (command));
+						    clip);
 	    break;
 	}
 	case CAIRO_COMMAND_FILL:
@@ -938,7 +929,7 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 							     &stroke_command->stroke.ctm_inverse,
 							     stroke_command->stroke.tolerance,
 							     stroke_command->stroke.antialias,
-							     _clip (command));
+							     clip);
 		i++;
 	    }
 	    else
@@ -950,7 +941,7 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 						      command->fill.fill_rule,
 						      command->fill.tolerance,
 						      command->fill.antialias,
-						      _clip (command));
+						      clip);
 	    }
 	    break;
 	}
@@ -980,7 +971,7 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 							      command->show_text_glyphs.clusters, command->show_text_glyphs.num_clusters,
 							      command->show_text_glyphs.cluster_flags,
 							      command->show_text_glyphs.scaled_font,
-							      _clip (command));
+							      clip);
 	    free (glyphs_copy);
 	    break;
 	}
@@ -989,29 +980,24 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 	}
 
 	if (type == CAIRO_RECORDING_CREATE_REGIONS) {
-	    if (status == CAIRO_STATUS_SUCCESS) {
+	    if (status == CAIRO_INT_STATUS_SUCCESS) {
 		command->header.region = CAIRO_RECORDING_REGION_NATIVE;
 	    } else if (status == CAIRO_INT_STATUS_IMAGE_FALLBACK) {
 		command->header.region = CAIRO_RECORDING_REGION_IMAGE_FALLBACK;
-		status = CAIRO_STATUS_SUCCESS;
+		status = CAIRO_INT_STATUS_SUCCESS;
 	    } else {
-		assert (_cairo_status_is_error (status));
+		assert (_cairo_int_status_is_error (status));
 	    }
 	}
+
+	if (clip != command->header.clip)
+	    _cairo_clip_destroy (clip);
 
 	if (unlikely (status))
 	    break;
     }
 
-    /* free up any caches */
-    for (i = recording_surface->replay_start_idx; i < num_elements; i++) {
-	cairo_command_t *command = elements[i];
-
-	_cairo_clip_drop_cache (&command->header.clip);
-    }
-
     _cairo_surface_wrapper_fini (&wrapper);
-
     return _cairo_surface_set_error (surface, status);
 }
 

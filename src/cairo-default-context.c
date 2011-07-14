@@ -131,7 +131,7 @@ _cairo_default_context_push_group (void *abstract_cr, cairo_content_t content)
     cairo_status_t status;
 
     clip = _cairo_gstate_get_clip (cr->gstate);
-    if (clip->all_clipped) {
+    if (_cairo_clip_is_all_clipped (clip)) {
 	group_surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 0, 0);
 	status = group_surface->status;
 	if (unlikely (status))
@@ -276,7 +276,8 @@ _cairo_default_context_set_source_rgba (void *abstract_cr, double red, double gr
     cairo_pattern_t *pattern;
     cairo_status_t status;
 
-    if (_current_source_matches_solid (cr->gstate->source, red, green, blue, 1.))
+    if (_current_source_matches_solid (cr->gstate->source,
+				       red, green, blue, alpha))
 	return CAIRO_STATUS_SUCCESS;
 
     /* push the current pattern to the freed lists */

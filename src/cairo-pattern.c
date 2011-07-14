@@ -2118,7 +2118,7 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
     pixman_transform_t	  pixman_transform;
     cairo_circle_double_t extremes[2];
     pixman_point_fixed_t  p1, p2;
-    cairo_status_t	  status;
+    cairo_int_status_t	  status;
     cairo_bool_t	  repeat = FALSE;
     int                   ix, iy;
     pixman_gradient_stop_t pixman_stops_static[2];
@@ -2241,7 +2241,7 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
 						    &pixman_transform,
 						    &ix, &iy);
     if (status != CAIRO_INT_STATUS_NOTHING_TO_DO) {
-	if (unlikely (status != CAIRO_STATUS_SUCCESS) ||
+	if (unlikely (status != CAIRO_INT_STATUS_SUCCESS) ||
 	    ! pixman_image_set_transform (pixman_image, &pixman_transform))
 	{
 	    cairo_surface_destroy (&image->base);

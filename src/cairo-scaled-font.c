@@ -1858,7 +1858,7 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
 				  cairo_text_cluster_flags_t *cluster_flags)
 {
     int num_chars = 0;
-    cairo_status_t status;
+    cairo_int_status_t status;
     cairo_glyph_t *orig_glyphs;
     cairo_text_cluster_t *orig_clusters;
 
@@ -1941,7 +1941,7 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
 						       clusters, num_clusters,
 						       cluster_flags);
         if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
-	    if (status == CAIRO_STATUS_SUCCESS) {
+	    if (status == CAIRO_INT_STATUS_SUCCESS) {
 	        /* The checks here are crude; we only should do them in
 		 * user-font backend, but they don't hurt here.  This stuff
 		 * can be hard to get right. */
@@ -2193,7 +2193,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
 				int			 num_glyphs,
 				cairo_region_t		*clip_region)
 {
-    cairo_status_t status;
+    cairo_int_status_t status;
     cairo_surface_t *mask = NULL;
     cairo_format_t mask_format = CAIRO_FORMAT_A1; /* shut gcc up */
     cairo_surface_pattern_t mask_pattern;
@@ -2224,7 +2224,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
 	glyphs += num_glyphs - remaining_glyphs;
 	num_glyphs = remaining_glyphs;
 	if (remaining_glyphs == 0)
-	    status = CAIRO_STATUS_SUCCESS;
+	    status = CAIRO_INT_STATUS_SUCCESS;
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    return _cairo_scaled_font_set_error (scaled_font, status);
     }
@@ -2480,7 +2480,7 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 			       int		    num_glyphs,
 			       cairo_path_fixed_t  *path)
 {
-    cairo_status_t status;
+    cairo_int_status_t status;
     int	i;
 
     status = scaled_font->status;
@@ -2495,7 +2495,7 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 					     glyphs[i].index,
 					     CAIRO_SCALED_GLYPH_INFO_PATH,
 					     &scaled_glyph);
-	if (status == CAIRO_STATUS_SUCCESS) {
+	if (status == CAIRO_INT_STATUS_SUCCESS) {
 	    status = _cairo_path_fixed_append (path,
 					       scaled_glyph->path,
 					       _cairo_fixed_from_double (glyphs[i].x),
@@ -2787,7 +2787,7 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 			    cairo_scaled_glyph_info_t info,
 			    cairo_scaled_glyph_t **scaled_glyph_ret)
 {
-    cairo_status_t		 status = CAIRO_STATUS_SUCCESS;
+    cairo_int_status_t		 status = CAIRO_INT_STATUS_SUCCESS;
     cairo_scaled_glyph_t	*scaled_glyph;
     cairo_scaled_glyph_info_t	 need_info;
 

@@ -76,6 +76,15 @@ _cairo_traps_limit (cairo_traps_t	*traps,
 }
 
 void
+_cairo_traps_init_with_clip (cairo_traps_t *traps,
+			     const cairo_clip_t *clip)
+{
+    _cairo_traps_init (traps);
+    if (clip)
+	_cairo_traps_limit (traps, clip->boxes, clip->num_boxes);
+}
+
+void
 _cairo_traps_clear (cairo_traps_t *traps)
 {
     traps->status = CAIRO_STATUS_SUCCESS;
@@ -485,6 +494,44 @@ _cairo_traps_extents (const cairo_traps_t *traps,
     }
 }
 
+static cairo_bool_t
+_mono_edge_is_vertical (const cairo_line_t *line)
+{
+    return _cairo_fixed_integer_round_down (line->p1.x) == _cairo_fixed_integer_round_down (line->p2.x);
+}
+
+static cairo_bool_t
+_traps_are_pixel_aligned (cairo_traps_t *traps,
+			  cairo_antialias_t antialias)
+{
+    int i;
+
+    if (antialias == CAIRO_ANTIALIAS_NONE) {
+	for (i = 0; i < traps->num_traps; i++) {
+	    if (! _mono_edge_is_vertical (&traps->traps[i].left)   ||
+		! _mono_edge_is_vertical (&traps->traps[i].right))
+	    {
+		traps->maybe_region = FALSE;
+		return FALSE;
+	    }
+	}
+    } else {
+	for (i = 0; i < traps->num_traps; i++) {
+	    if (traps->traps[i].left.p1.x != traps->traps[i].left.p2.x   ||
+		traps->traps[i].right.p1.x != traps->traps[i].right.p2.x ||
+		! _cairo_fixed_is_integer (traps->traps[i].top)          ||
+		! _cairo_fixed_is_integer (traps->traps[i].bottom)       ||
+		! _cairo_fixed_is_integer (traps->traps[i].left.p1.x)    ||
+		! _cairo_fixed_is_integer (traps->traps[i].right.p1.x))
+	    {
+		traps->maybe_region = FALSE;
+		return FALSE;
+	    }
+	}
+    }
+
+    return TRUE;
+}
 
 /**
  * _cairo_traps_extract_region:
@@ -502,6 +549,7 @@ _cairo_traps_extents (const cairo_traps_t *traps,
  **/
 cairo_int_status_t
 _cairo_traps_extract_region (cairo_traps_t   *traps,
+			     cairo_antialias_t antialias,
 			     cairo_region_t **region)
 {
     cairo_rectangle_int_t stack_rects[CAIRO_STACK_ARRAY_LENGTH (cairo_rectangle_int_t)];
@@ -510,20 +558,12 @@ _cairo_traps_extract_region (cairo_traps_t   *traps,
     int i, rect_count;
 
     /* we only treat this a hint... */
-    if (! traps->maybe_region)
+    if (antialias != CAIRO_ANTIALIAS_NONE && ! traps->maybe_region)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    for (i = 0; i < traps->num_traps; i++) {
-	if (traps->traps[i].left.p1.x != traps->traps[i].left.p2.x   ||
-	    traps->traps[i].right.p1.x != traps->traps[i].right.p2.x ||
-	    ! _cairo_fixed_is_integer (traps->traps[i].top)          ||
-	    ! _cairo_fixed_is_integer (traps->traps[i].bottom)       ||
-	    ! _cairo_fixed_is_integer (traps->traps[i].left.p1.x)    ||
-	    ! _cairo_fixed_is_integer (traps->traps[i].right.p1.x))
-	{
-	    traps->maybe_region = FALSE;
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-	}
+    if (! _traps_are_pixel_aligned (traps, antialias)) {
+	traps->maybe_region = FALSE;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
     if (traps->num_traps > ARRAY_LENGTH (stack_rects)) {
@@ -535,18 +575,29 @@ _cairo_traps_extract_region (cairo_traps_t   *traps,
 
     rect_count = 0;
     for (i = 0; i < traps->num_traps; i++) {
-	int x1 = _cairo_fixed_integer_part (traps->traps[i].left.p1.x);
-	int y1 = _cairo_fixed_integer_part (traps->traps[i].top);
-	int x2 = _cairo_fixed_integer_part (traps->traps[i].right.p1.x);
-	int y2 = _cairo_fixed_integer_part (traps->traps[i].bottom);
+	int x1, y1, x2, y2;
 
-	rects[rect_count].x = x1;
-	rects[rect_count].y = y1;
-	rects[rect_count].width = x2 - x1;
-	rects[rect_count].height = y2 - y1;
+	if (antialias == CAIRO_ANTIALIAS_NONE) {
+	    x1 = _cairo_fixed_integer_round_down (traps->traps[i].left.p1.x);
+	    y1 = _cairo_fixed_integer_round_down (traps->traps[i].top);
+	    x2 = _cairo_fixed_integer_round_down (traps->traps[i].right.p1.x);
+	    y2 = _cairo_fixed_integer_round_down (traps->traps[i].bottom);
+	} else {
+	    x1 = _cairo_fixed_integer_part (traps->traps[i].left.p1.x);
+	    y1 = _cairo_fixed_integer_part (traps->traps[i].top);
+	    x2 = _cairo_fixed_integer_part (traps->traps[i].right.p1.x);
+	    y2 = _cairo_fixed_integer_part (traps->traps[i].bottom);
+	}
 
-	rect_count++;
+	if (x2 > x1 && y2 > y1) {
+	    rects[rect_count].x = x1;
+	    rects[rect_count].y = y1;
+	    rects[rect_count].width  = x2 - x1;
+	    rects[rect_count].height = y2 - y1;
+	    rect_count++;
+	}
     }
+
 
     *region = cairo_region_create_rectangles (rects, rect_count);
     status = (*region)->status;

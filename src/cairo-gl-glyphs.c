@@ -40,6 +40,7 @@
 
 #include "cairo-gl-private.h"
 
+#include "cairo-composite-rectangles-private.h"
 #include "cairo-error-private.h"
 #include "cairo-rtree-private.h"
 
@@ -54,7 +55,7 @@ typedef struct _cairo_gl_glyph_private {
     struct { float x, y; } p1, p2;
 } cairo_gl_glyph_private_t;
 
-static cairo_status_t
+static cairo_int_status_t
 _cairo_gl_glyph_cache_add_glyph (cairo_gl_context_t *ctx,
 				 cairo_gl_glyph_cache_t *cache,
 				 cairo_scaled_glyph_t  *scaled_glyph)
@@ -63,7 +64,7 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_context_t *ctx,
     cairo_gl_surface_t *cache_surface;
     cairo_gl_glyph_private_t *glyph_private;
     cairo_rtree_node_t *node = NULL;
-    cairo_status_t status;
+    cairo_int_status_t status;
     int width, height;
 
     width = glyph_surface->width;
@@ -79,7 +80,7 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_context_t *ctx,
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	status = _cairo_rtree_evict_random (&cache->rtree,
 				            width, height, &node);
-	if (status == CAIRO_STATUS_SUCCESS) {
+	if (status == CAIRO_INT_STATUS_SUCCESS) {
 	    status = _cairo_rtree_node_insert (&cache->rtree,
 		                               node, width, height, &node);
 	}
@@ -148,6 +149,7 @@ cairo_gl_context_get_glyph_cache (cairo_gl_context_t *ctx,
 	cache = &ctx->glyph_cache[1];
         content = CAIRO_CONTENT_ALPHA;
 	break;
+    default:
     case CAIRO_FORMAT_INVALID:
 	ASSERT_NOT_REACHED;
 	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
@@ -227,10 +229,9 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 		const cairo_pattern_t	*source,
 		cairo_glyph_t		*glyphs,
 		int			 num_glyphs,
-		const cairo_rectangle_int_t *glyph_extents,
 		cairo_scaled_font_t	*scaled_font,
+		const cairo_composite_rectangles_t *extents,
 		cairo_bool_t		*has_component_alpha,
-		cairo_region_t		*clip_region,
 		int			*remaining_glyphs)
 {
     cairo_format_t last_format = CAIRO_FORMAT_INVALID;
@@ -249,7 +250,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     _cairo_scaled_font_freeze_cache (scaled_font);
 
     status = _cairo_gl_composite_init (&setup, op, dst,
-                                       TRUE, glyph_extents);
+                                       TRUE, &extents->bounded);
 
     if (unlikely (status))
 	goto FINISH;
@@ -260,10 +261,11 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     }
 
     status = _cairo_gl_composite_set_source (&setup, source,
-                                             glyph_extents->x, glyph_extents->y,
+                                             extents->bounded.x,
+					     extents->bounded.y,
                                              dst_x, dst_y,
-                                             glyph_extents->width,
-                                             glyph_extents->height);
+                                             extents->bounded.width,
+                                             extents->bounded.height);
     if (unlikely (status))
 	goto FINISH;
 
@@ -273,7 +275,8 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 	cairo_list_add (&scaled_font->link, &ctx->fonts);
     }
 
-    _cairo_gl_composite_set_clip_region (&setup, clip_region);
+    _cairo_gl_composite_set_clip_region (&setup,
+					 _cairo_clip_get_region (extents->clip));
 
     for (i = 0; i < num_glyphs; i++) {
 	cairo_scaled_glyph_t *scaled_glyph;
@@ -374,35 +377,41 @@ _cairo_gl_surface_show_glyphs_via_mask (cairo_gl_surface_t	*dst,
 					const cairo_pattern_t	*source,
 					cairo_glyph_t		*glyphs,
 					int			 num_glyphs,
-					const cairo_rectangle_int_t *glyph_extents,
 					cairo_scaled_font_t	*scaled_font,
-					cairo_clip_t		*clip,
+					cairo_composite_rectangles_t *extents,
 					int			*remaining_glyphs)
 {
     cairo_surface_t *mask;
     cairo_status_t status;
     cairo_bool_t has_component_alpha;
+    cairo_clip_t *saved_clip;
     int i;
 
     /* XXX: For non-CA, this should be CAIRO_CONTENT_ALPHA to save memory */
     mask = cairo_gl_surface_create (dst->base.device,
                                     CAIRO_CONTENT_COLOR_ALPHA,
-                                    glyph_extents->width,
-                                    glyph_extents->height);
+                                    extents->bounded.width,
+                                    extents->bounded.height);
     if (unlikely (mask->status))
         return mask->status;
 
     for (i = 0; i < num_glyphs; i++) {
-	glyphs[i].x -= glyph_extents->x;
-	glyphs[i].y -= glyph_extents->y;
+	glyphs[i].x -= extents->bounded.x;
+	glyphs[i].y -= extents->bounded.y;
     }
 
+
+    saved_clip = extents->clip;
+    extents->clip = NULL;
     status = _render_glyphs ((cairo_gl_surface_t *) mask, 0, 0,
 	                     CAIRO_OPERATOR_ADD,
 			     &_cairo_pattern_white.base,
-	                     glyphs, num_glyphs, glyph_extents,
-			     scaled_font, &has_component_alpha,
-			     NULL, remaining_glyphs);
+	                     glyphs, num_glyphs, scaled_font,
+			     extents,
+			     &has_component_alpha,
+			     remaining_glyphs);
+    extents->clip = saved_clip;
+
     if (likely (status == CAIRO_STATUS_SUCCESS)) {
 	cairo_surface_pattern_t mask_pattern;
 
@@ -410,14 +419,15 @@ _cairo_gl_surface_show_glyphs_via_mask (cairo_gl_surface_t	*dst,
 	_cairo_pattern_init_for_surface (&mask_pattern, mask);
 	mask_pattern.base.has_component_alpha = has_component_alpha;
 	cairo_matrix_init_translate (&mask_pattern.base.matrix,
-		                     -glyph_extents->x, -glyph_extents->y);
+		                     -extents->bounded.x, -extents->bounded.y);
 	status = _cairo_surface_mask (&dst->base, op,
-		                      source, &mask_pattern.base, clip);
+		                      source, &mask_pattern.base,
+				      extents->clip);
 	_cairo_pattern_fini (&mask_pattern.base);
     } else {
 	for (i = 0; i < num_glyphs; i++) {
-	    glyphs[i].x += glyph_extents->x;
-	    glyphs[i].y += glyph_extents->y;
+	    glyphs[i].x += extents->bounded.x;
+	    glyphs[i].y += extents->bounded.y;
 	}
 	*remaining_glyphs = num_glyphs;
     }
@@ -434,13 +444,11 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 			       cairo_glyph_t		*glyphs,
 			       int			 num_glyphs,
 			       cairo_scaled_font_t	*scaled_font,
-			       cairo_clip_t		*clip,
+			       const cairo_clip_t	*clip,
 			       int			*remaining_glyphs)
 {
     cairo_gl_surface_t *dst = abstract_dst;
-    cairo_rectangle_int_t surface_extents;
-    cairo_rectangle_int_t extents;
-    cairo_region_t *clip_region = NULL;
+    cairo_composite_rectangles_t extents;
     cairo_bool_t overlap, use_mask = FALSE;
     cairo_bool_t has_component_alpha;
     cairo_status_t status;
@@ -526,60 +534,40 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     if (! _cairo_gl_surface_owns_font (dst, scaled_font))
 	return UNSUPPORTED ("do not control font");
 
-    /* If the glyphs overlap, we need to build an intermediate mask rather
-     * then perform the compositing directly.
-     */
-    status = _cairo_scaled_font_glyph_device_extents (scaled_font,
-						      glyphs, num_glyphs,
-						      &extents,
-						      &overlap);
+    status = _cairo_composite_rectangles_init_for_glyphs (&extents,
+							  dst->width,
+							  dst->height,
+							  op, source,
+							  scaled_font,
+							  glyphs, num_glyphs,
+							  clip, &overlap);
     if (unlikely (status))
 	return status;
 
+    /* If the glyphs overlap, we need to build an intermediate mask rather
+     * then perform the compositing directly.
+     */
     use_mask |= overlap;
-
-    if (clip != NULL) {
-	status = _cairo_clip_get_region (clip, &clip_region);
-	/* the empty clip should never be propagated this far */
-	assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
-	if (unlikely (_cairo_status_is_error (status)))
-	    return status;
-
-	use_mask |= status == CAIRO_INT_STATUS_UNSUPPORTED;
-
-	if (! _cairo_rectangle_intersect (&extents,
-		                          _cairo_clip_get_extents (clip)))
-	    goto EMPTY;
-    }
-
-    surface_extents.x = surface_extents.y = 0;
-    surface_extents.width = dst->width;
-    surface_extents.height = dst->height;
-    if (! _cairo_rectangle_intersect (&extents, &surface_extents))
-	goto EMPTY;
+    use_mask |= ! _cairo_clip_is_region (extents.clip);
 
     if (use_mask) {
-	return _cairo_gl_surface_show_glyphs_via_mask (dst, op,
-			                               source,
-			                               glyphs, num_glyphs,
-						       &extents,
-						       scaled_font,
-						       clip,
-						       remaining_glyphs);
+	status = _cairo_gl_surface_show_glyphs_via_mask (dst, op,
+							 source,
+							 glyphs, num_glyphs,
+							 scaled_font,
+							 &extents,
+							 remaining_glyphs);
+    } else {
+	status = _render_glyphs (dst, extents.bounded.x, extents.bounded.y,
+				 op, source,
+				 glyphs, num_glyphs, scaled_font,
+				 &extents,
+				 &has_component_alpha,
+				 remaining_glyphs);
     }
 
-    return _render_glyphs (dst, extents.x, extents.y,
-	                   op, source,
-			   glyphs, num_glyphs, &extents,
-			   scaled_font, &has_component_alpha,
-			   clip_region, remaining_glyphs);
-
-EMPTY:
-    *remaining_glyphs = 0;
-    if (! _cairo_operator_bounded_by_mask (op))
-	return _cairo_surface_paint (&dst->base, op, source, clip);
-    else
-	return CAIRO_STATUS_SUCCESS;
+    _cairo_composite_rectangles_fini (&extents);
+    return status;
 }
 
 void

@@ -56,36 +56,36 @@ typedef cairo_int_status_t
 (*_paint_func)			(void			*surface,
 			         cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
-				 cairo_clip_t		*clip);
+				 const cairo_clip_t	*clip);
 
 typedef cairo_int_status_t
 (*_mask_func)			(void			*surface,
 			         cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
 				 const cairo_pattern_t	*mask,
-				 cairo_clip_t		*clip);
+				 const cairo_clip_t	*clip);
 
 typedef cairo_int_status_t
 (*_stroke_func)			(void			*surface,
 			         cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
-				 cairo_path_fixed_t	*path,
+				 const cairo_path_fixed_t	*path,
 				 const cairo_stroke_style_t	*style,
 				 const cairo_matrix_t		*ctm,
 				 const cairo_matrix_t		*ctm_inverse,
 				 double			 tolerance,
 				 cairo_antialias_t	 antialias,
-				 cairo_clip_t		*clip);
+				 const cairo_clip_t	*clip);
 
 typedef cairo_int_status_t
 (*_fill_func)			(void			*surface,
 			         cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
-				 cairo_path_fixed_t	*path,
+				 const cairo_path_fixed_t*path,
 				 cairo_fill_rule_t	 fill_rule,
 				 double			 tolerance,
 				 cairo_antialias_t	 antialias,
-				 cairo_clip_t		*clip);
+				 const cairo_clip_t	*clip);
 
 typedef cairo_int_status_t
 (*_show_glyphs_func)		(void			*surface,
@@ -94,7 +94,7 @@ typedef cairo_int_status_t
 				 cairo_glyph_t		*glyphs,
 				 int			 num_glyphs,
 				 cairo_scaled_font_t	*scaled_font,
-				 cairo_clip_t		*clip,
+				 const cairo_clip_t	*clip,
 				 int			*remaining_glyphs);
 
 typedef cairo_int_status_t
@@ -109,7 +109,7 @@ typedef cairo_int_status_t
 				 int			     num_clusters,
 				 cairo_text_cluster_flags_t  cluster_flags,
 				 cairo_scaled_font_t	    *scaled_font,
-				 cairo_clip_t		    *clip);
+				 const cairo_clip_t	    *clip);
 
 static cairo_surface_t *
 _cairo_null_surface_create_similar (void *other,

@@ -206,6 +206,7 @@ _format_to_string (cairo_format_t format)
 {
     switch (format) {
     case CAIRO_FORMAT_ARGB32:  return "ARGB32";
+    case CAIRO_FORMAT_RGB30:   return "RGB30";
     case CAIRO_FORMAT_RGB24:   return "RGB24";
     case CAIRO_FORMAT_RGB16_565:   return "RGB16_565";
     case CAIRO_FORMAT_A8:      return "A8";
@@ -416,7 +417,7 @@ _cairo_xml_close_path (void *closure)
 
 static void
 _cairo_xml_emit_path (cairo_xml_t *xml,
-		      cairo_path_fixed_t *path)
+		      const cairo_path_fixed_t *path)
 {
     cairo_status_t status;
 
@@ -500,7 +501,7 @@ _cairo_xml_surface_emit_clip_path (cairo_xml_surface_t *surface,
 
 static cairo_status_t
 _cairo_xml_surface_emit_clip (cairo_xml_surface_t *surface,
-			      cairo_clip_t *clip)
+			      const cairo_clip_t *clip)
 {
     if (clip == NULL)
 	return CAIRO_STATUS_SUCCESS;
@@ -686,7 +687,7 @@ static cairo_int_status_t
 _cairo_xml_surface_paint (void			*abstract_surface,
 			  cairo_operator_t	 op,
 			  const cairo_pattern_t	*source,
-			  cairo_clip_t		*clip)
+			  const cairo_clip_t	*clip)
 {
     cairo_xml_surface_t *surface = abstract_surface;
     cairo_xml_t *xml = to_xml (surface);
@@ -713,10 +714,10 @@ _cairo_xml_surface_paint (void			*abstract_surface,
 
 static cairo_int_status_t
 _cairo_xml_surface_mask (void			*abstract_surface,
-			  cairo_operator_t	 op,
-			  const cairo_pattern_t	*source,
-			  const cairo_pattern_t	*mask,
-			  cairo_clip_t		*clip)
+			 cairo_operator_t	 op,
+			 const cairo_pattern_t	*source,
+			 const cairo_pattern_t	*mask,
+			 const cairo_clip_t	*clip)
 {
     cairo_xml_surface_t *surface = abstract_surface;
     cairo_xml_t *xml = to_xml (surface);
@@ -749,13 +750,13 @@ static cairo_int_status_t
 _cairo_xml_surface_stroke (void				*abstract_surface,
 			   cairo_operator_t		 op,
 			   const cairo_pattern_t	*source,
-			   cairo_path_fixed_t		*path,
+			   const cairo_path_fixed_t		*path,
 			   const cairo_stroke_style_t		*style,
 			   const cairo_matrix_t		*ctm,
 			   const cairo_matrix_t		*ctm_inverse,
 			   double			 tolerance,
 			   cairo_antialias_t		 antialias,
-			   cairo_clip_t			*clip)
+			   const cairo_clip_t		*clip)
 {
     cairo_xml_surface_t *surface = abstract_surface;
     cairo_xml_t *xml = to_xml (surface);
@@ -805,11 +806,11 @@ static cairo_int_status_t
 _cairo_xml_surface_fill (void			*abstract_surface,
 			 cairo_operator_t	 op,
 			 const cairo_pattern_t	*source,
-			 cairo_path_fixed_t	*path,
+			 const cairo_path_fixed_t*path,
 			 cairo_fill_rule_t	 fill_rule,
 			 double			 tolerance,
 			 cairo_antialias_t	 antialias,
-			 cairo_clip_t		*clip)
+			 const cairo_clip_t	*clip)
 {
     cairo_xml_surface_t *surface = abstract_surface;
     cairo_xml_t *xml = to_xml (surface);
@@ -924,7 +925,7 @@ _cairo_xml_emit_scaled_font (cairo_xml_t *xml,
 			     cairo_glyph_t *glyphs,
 			     int num_glyphs)
 {
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     _cairo_xml_printf (xml, "<scaled-font>");
     _cairo_xml_indent (xml, 2);
@@ -948,7 +949,7 @@ _cairo_xml_surface_glyphs (void			    *abstract_surface,
 			   cairo_glyph_t	    *glyphs,
 			   int			     num_glyphs,
 			   cairo_scaled_font_t	    *scaled_font,
-			   cairo_clip_t		    *clip,
+			   const cairo_clip_t	    *clip,
 			   int			    *remaining_glyphs)
 {
     cairo_xml_surface_t *surface = abstract_surface;

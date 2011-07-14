@@ -122,7 +122,8 @@ static cairo_status_t
 _cairo_truetype_font_set_error (cairo_truetype_font_t *font,
 			        cairo_status_t status)
 {
-    if (status == CAIRO_STATUS_SUCCESS || status == CAIRO_INT_STATUS_UNSUPPORTED)
+    if (status == CAIRO_STATUS_SUCCESS ||
+	status == (int)CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
     _cairo_status_set_error (&font->status, status);
@@ -1056,19 +1057,19 @@ cairo_truetype_font_create_truetype_table_list (cairo_truetype_font_t *font)
     size = 0;
     if (font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
                                       TT_TAG_cvt, 0, NULL,
-                                      &size) == CAIRO_STATUS_SUCCESS)
+                                      &size) == CAIRO_INT_STATUS_SUCCESS)
         has_cvt = TRUE;
 
     size = 0;
     if (font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
                                       TT_TAG_fpgm, 0, NULL,
-                                      &size) == CAIRO_STATUS_SUCCESS)
+                                      &size) == CAIRO_INT_STATUS_SUCCESS)
         has_fpgm = TRUE;
 
     size = 0;
     if (font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
                                       TT_TAG_prep, 0, NULL,
-                                      &size) == CAIRO_STATUS_SUCCESS)
+                                      &size) == CAIRO_INT_STATUS_SUCCESS)
         has_prep = TRUE;
 
     font->num_tables = 0;
@@ -1344,7 +1345,7 @@ _cairo_truetype_index_to_ucs4 (cairo_scaled_font_t *scaled_font,
                                unsigned long        index,
                                uint32_t            *ucs4)
 {
-    cairo_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
+    cairo_int_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
     const cairo_scaled_font_backend_t *backend;
     tt_cmap_t *cmap;
     char buf[4];

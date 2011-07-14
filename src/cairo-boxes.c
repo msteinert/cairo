@@ -53,6 +53,15 @@ _cairo_boxes_init (cairo_boxes_t *boxes)
 }
 
 void
+_cairo_boxes_init_with_clip (cairo_boxes_t *boxes,
+			     cairo_clip_t *clip)
+{
+    _cairo_boxes_init (boxes);
+    if (clip)
+	_cairo_boxes_limit (boxes, clip->boxes, clip->num_boxes);
+}
+
+void
 _cairo_boxes_init_for_array (cairo_boxes_t *boxes,
 			     cairo_box_t *array,
 			     int num_boxes)
@@ -156,8 +165,19 @@ _cairo_boxes_add_internal (cairo_boxes_t *boxes,
 
 cairo_status_t
 _cairo_boxes_add (cairo_boxes_t *boxes,
+		  cairo_antialias_t antialias,
 		  const cairo_box_t *box)
 {
+    cairo_box_t b;
+
+    if (antialias == CAIRO_ANTIALIAS_NONE) {
+	b.p1.x = _cairo_fixed_round_down (box->p1.x);
+	b.p1.y = _cairo_fixed_round_down (box->p1.y);
+	b.p2.x = _cairo_fixed_round_down (box->p2.x);
+	b.p2.y = _cairo_fixed_round_down (box->p2.y);
+	box = &b;
+    }
+
     if (box->p1.y == box->p2.y)
 	return CAIRO_STATUS_SUCCESS;
 
@@ -247,6 +267,11 @@ _cairo_boxes_extents (const cairo_boxes_t *boxes,
     cairo_box_t box;
     int i;
 
+    if (boxes->num_boxes == 0) {
+	extents->x = extents->y = extents->width = extents->height = 0;
+	return;
+    }
+
     box.p1.y = box.p1.x = INT_MAX;
     box.p2.y = box.p2.x = INT_MIN;
 
@@ -283,9 +308,39 @@ _cairo_boxes_clear (cairo_boxes_t *boxes)
     boxes->tail = &boxes->chunks;
     boxes->chunks.next = 0;
     boxes->chunks.count = 0;
+    boxes->chunks.base = boxes->boxes_embedded;
+    boxes->chunks.size = ARRAY_LENGTH (boxes->boxes_embedded);
     boxes->num_boxes = 0;
 
     boxes->is_pixel_aligned = TRUE;
+}
+
+cairo_box_t *
+_cairo_boxes_to_array (const cairo_boxes_t *boxes,
+		       int *num_boxes,
+		       cairo_bool_t force_allocation)
+{
+    const struct _cairo_boxes_chunk *chunk;
+    cairo_box_t *box;
+    int i, j;
+
+    *num_boxes = boxes->num_boxes;
+    if (boxes->chunks.next == NULL && ! force_allocation)
+	    return boxes->chunks.base;
+
+    box = _cairo_malloc_ab (boxes->num_boxes, sizeof (cairo_box_t));
+    if (box == NULL) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	return NULL;
+    }
+
+    j = 0;
+    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
+	for (i = 0; i < chunk->count; i++)
+	    box[j++] = chunk->base[i];
+    }
+
+    return box;
 }
 
 void
@@ -296,5 +351,28 @@ _cairo_boxes_fini (cairo_boxes_t *boxes)
     for (chunk = boxes->chunks.next; chunk != NULL; chunk = next) {
 	next = chunk->next;
 	free (chunk);
+    }
+}
+
+void
+_cairo_debug_print_boxes (FILE *stream, const cairo_boxes_t *boxes)
+{
+    cairo_rectangle_int_t extents;
+    const struct _cairo_boxes_chunk *chunk;
+    int i;
+
+    _cairo_boxes_extents (boxes, &extents);
+    fprintf (stream, "boxes x %d: (%d, %d) x (%d, %d)\n",
+	     boxes->num_boxes,
+	     extents.x, extents.y, extents.width, extents.height);
+
+    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
+	for (i = 0; i < chunk->count; i++) {
+	    fprintf (stderr, "  box[%d]: (%f, %f), (%f, %f)\n", i,
+		     _cairo_fixed_to_double (chunk->base[i].p1.x),
+		     _cairo_fixed_to_double (chunk->base[i].p1.y),
+		     _cairo_fixed_to_double (chunk->base[i].p2.x),
+		     _cairo_fixed_to_double (chunk->base[i].p2.y));
+	}
     }
 }

@@ -122,7 +122,7 @@ static cairo_int_status_t
 _test_paginated_surface_paint (void		*abstract_surface,
 			       cairo_operator_t	 op,
 			       const cairo_pattern_t	*source,
-			       cairo_clip_t		*clip)
+			       const cairo_clip_t	*clip)
 {
     test_paginated_surface_t *surface = abstract_surface;
 
@@ -137,7 +137,7 @@ _test_paginated_surface_mask (void		*abstract_surface,
 			      cairo_operator_t	 op,
 			      const cairo_pattern_t	*source,
 			      const cairo_pattern_t	*mask,
-			      cairo_clip_t		*clip)
+			      const cairo_clip_t	*clip)
 {
     test_paginated_surface_t *surface = abstract_surface;
 
@@ -152,13 +152,13 @@ static cairo_int_status_t
 _test_paginated_surface_stroke (void				*abstract_surface,
 				cairo_operator_t		 op,
 				const cairo_pattern_t		*source,
-				cairo_path_fixed_t		*path,
+				const cairo_path_fixed_t		*path,
 				const cairo_stroke_style_t		*style,
 				const cairo_matrix_t			*ctm,
 				const cairo_matrix_t			*ctm_inverse,
 				double				 tolerance,
 				cairo_antialias_t		 antialias,
-				cairo_clip_t			*clip)
+				const cairo_clip_t		*clip)
 {
     test_paginated_surface_t *surface = abstract_surface;
 
@@ -176,11 +176,11 @@ static cairo_int_status_t
 _test_paginated_surface_fill (void				*abstract_surface,
 			      cairo_operator_t			 op,
 			      const cairo_pattern_t		*source,
-			      cairo_path_fixed_t		*path,
+			      const cairo_path_fixed_t		*path,
 			      cairo_fill_rule_t			 fill_rule,
 			      double				 tolerance,
 			      cairo_antialias_t			 antialias,
-			      cairo_clip_t			*clip)
+			      const cairo_clip_t		*clip)
 {
     test_paginated_surface_t *surface = abstract_surface;
 
@@ -213,7 +213,7 @@ _test_paginated_surface_show_text_glyphs (void			    *abstract_surface,
 					  int			     num_clusters,
 					  cairo_text_cluster_flags_t cluster_flags,
 					  cairo_scaled_font_t	    *scaled_font,
-					  cairo_clip_t		    *clip)
+					  const cairo_clip_t	    *clip)
 {
     test_paginated_surface_t *surface = abstract_surface;
 

@@ -55,7 +55,7 @@ struct _cairo_gstate {
     cairo_matrix_t font_matrix;
     cairo_font_options_t font_options;
 
-    cairo_clip_t clip;
+    cairo_clip_t *clip;
 
     cairo_surface_t *target;		/* The target to which all rendering is directed */
     cairo_surface_t *parent_target;	/* The previous target which was receiving rendering */

@@ -1402,6 +1402,7 @@ _cairo_path_fixed_stroke_to_traps (const cairo_path_fixed_t	*path,
 	status = _cairo_path_fixed_stroke_rectilinear_to_traps (path,
 								stroke_style,
 								ctm,
+								CAIRO_ANTIALIAS_DEFAULT,
 								traps);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    return status;
@@ -1440,6 +1441,7 @@ typedef struct _segment_t {
 typedef struct _cairo_rectilinear_stroker {
     const cairo_stroke_style_t *stroke_style;
     const cairo_matrix_t *ctm;
+    cairo_antialias_t antialias;
 
     cairo_fixed_t half_line_width;
     cairo_bool_t do_traps;
@@ -1478,6 +1480,7 @@ static cairo_bool_t
 _cairo_rectilinear_stroker_init (cairo_rectilinear_stroker_t	*stroker,
 				 const cairo_stroke_style_t	*stroke_style,
 				 const cairo_matrix_t		*ctm,
+				 cairo_antialias_t		 antialias,
 				 cairo_bool_t			 do_traps,
 				 void				*container)
 {
@@ -1512,6 +1515,7 @@ _cairo_rectilinear_stroker_init (cairo_rectilinear_stroker_t	*stroker,
 
     stroker->stroke_style = stroke_style;
     stroker->ctm = ctm;
+    stroker->antialias = antialias;
 
     stroker->half_line_width =
 	_cairo_fixed_from_double (stroke_style->line_width / 2.0);
@@ -1687,6 +1691,12 @@ _cairo_rectilinear_stroker_emit_segments (cairo_rectilinear_stroker_t *stroker)
 	}
 
 	if (stroker->do_traps) {
+	    if (stroker->antialias == CAIRO_ANTIALIAS_NONE) {
+		a->x = _cairo_fixed_round_down (a->x);
+		a->y = _cairo_fixed_round_down (a->y);
+		b->x = _cairo_fixed_round_down (b->x);
+		b->y = _cairo_fixed_round_down (b->y);
+	    }
 	    status = _cairo_traps_tessellate_rectangle (stroker->container, a, b);
 	} else {
 	    cairo_box_t box;
@@ -1694,7 +1704,7 @@ _cairo_rectilinear_stroker_emit_segments (cairo_rectilinear_stroker_t *stroker)
 	    box.p1 = *a;
 	    box.p2 = *b;
 
-	    status = _cairo_boxes_add (stroker->container, &box);
+	    status = _cairo_boxes_add (stroker->container, stroker->antialias, &box);
 	}
 	if (unlikely (status))
 	    return status;
@@ -1762,6 +1772,12 @@ _cairo_rectilinear_stroker_emit_segments_dashed (cairo_rectilinear_stroker_t *st
 	    }
 
 	    if (stroker->do_traps) {
+		if (stroker->antialias == CAIRO_ANTIALIAS_NONE) {
+		    p1.x = _cairo_fixed_round_down (p1.x);
+		    p1.y = _cairo_fixed_round_down (p1.y);
+		    p2.x = _cairo_fixed_round_down (p2.x);
+		    p2.y = _cairo_fixed_round_down (p2.y);
+		}
 		status = _cairo_traps_tessellate_rectangle (stroker->container, &p1, &p2);
 	    } else {
 		cairo_box_t box;
@@ -1769,7 +1785,7 @@ _cairo_rectilinear_stroker_emit_segments_dashed (cairo_rectilinear_stroker_t *st
 		box.p1 = p1;
 		box.p2 = p2;
 
-		status = _cairo_boxes_add (stroker->container, &box);
+		status = _cairo_boxes_add (stroker->container, stroker->antialias, &box);
 	    }
 	    if (unlikely (status))
 		return status;
@@ -1824,6 +1840,12 @@ _cairo_rectilinear_stroker_emit_segments_dashed (cairo_rectilinear_stroker_t *st
 	    continue;
 
 	if (stroker->do_traps) {
+	    if (stroker->antialias == CAIRO_ANTIALIAS_NONE) {
+		a->x = _cairo_fixed_round_down (a->x);
+		a->y = _cairo_fixed_round_down (a->y);
+		b->x = _cairo_fixed_round_down (b->x);
+		b->y = _cairo_fixed_round_down (b->y);
+	    }
 	    status = _cairo_traps_tessellate_rectangle (stroker->container, a, b);
 	} else {
 	    cairo_box_t box;
@@ -1831,7 +1853,7 @@ _cairo_rectilinear_stroker_emit_segments_dashed (cairo_rectilinear_stroker_t *st
 	    box.p1 = *a;
 	    box.p2 = *b;
 
-	    status = _cairo_boxes_add (stroker->container, &box);
+	    status = _cairo_boxes_add (stroker->container, stroker->antialias, &box);
 	}
 	if (unlikely (status))
 	    return status;
@@ -2029,6 +2051,7 @@ cairo_int_status_t
 _cairo_path_fixed_stroke_rectilinear_to_traps (const cairo_path_fixed_t	*path,
 					       const cairo_stroke_style_t	*stroke_style,
 					       const cairo_matrix_t	*ctm,
+					       cairo_antialias_t	 antialias,
 					       cairo_traps_t		*traps)
 {
     cairo_rectilinear_stroker_t rectilinear_stroker;
@@ -2037,7 +2060,7 @@ _cairo_path_fixed_stroke_rectilinear_to_traps (const cairo_path_fixed_t	*path,
     assert (_cairo_path_fixed_stroke_is_rectilinear (path));
 
     if (! _cairo_rectilinear_stroker_init (&rectilinear_stroker,
-					   stroke_style, ctm,
+					   stroke_style, ctm, antialias,
 					   TRUE, traps))
     {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -2082,6 +2105,7 @@ cairo_int_status_t
 _cairo_path_fixed_stroke_rectilinear_to_boxes (const cairo_path_fixed_t	*path,
 					       const cairo_stroke_style_t	*stroke_style,
 					       const cairo_matrix_t	*ctm,
+					       cairo_antialias_t	 antialias,
 					       cairo_boxes_t		*boxes)
 {
     cairo_rectilinear_stroker_t rectilinear_stroker;
@@ -2090,7 +2114,7 @@ _cairo_path_fixed_stroke_rectilinear_to_boxes (const cairo_path_fixed_t	*path,
     assert (_cairo_path_fixed_stroke_is_rectilinear (path));
 
     if (! _cairo_rectilinear_stroker_init (&rectilinear_stroker,
-					   stroke_style, ctm,
+					   stroke_style, ctm, antialias,
 					   FALSE, boxes))
     {
 	return CAIRO_INT_STATUS_UNSUPPORTED;

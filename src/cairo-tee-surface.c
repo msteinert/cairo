@@ -199,12 +199,12 @@ static cairo_int_status_t
 _cairo_tee_surface_paint (void			*abstract_surface,
 			  cairo_operator_t	 op,
 			  const cairo_pattern_t	*source,
-			  cairo_clip_t		*clip)
+			  const cairo_clip_t	*clip)
 {
     cairo_tee_surface_t *surface = abstract_surface;
     cairo_surface_wrapper_t *slaves;
     int n, num_slaves;
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     status = _cairo_surface_wrapper_paint (&surface->master, op, source, clip);
     if (unlikely (status))
@@ -226,12 +226,12 @@ _cairo_tee_surface_mask (void			*abstract_surface,
 			 cairo_operator_t	 op,
 			 const cairo_pattern_t	*source,
 			 const cairo_pattern_t	*mask,
-			 cairo_clip_t		*clip)
+			 const cairo_clip_t	*clip)
 {
     cairo_tee_surface_t *surface = abstract_surface;
     cairo_surface_wrapper_t *slaves;
+    cairo_int_status_t status;
     int n, num_slaves;
-    cairo_status_t status;
 
     status = _cairo_surface_wrapper_mask (&surface->master,
 					  op, source, mask, clip);
@@ -254,18 +254,18 @@ static cairo_int_status_t
 _cairo_tee_surface_stroke (void				*abstract_surface,
 			   cairo_operator_t		 op,
 			   const cairo_pattern_t	*source,
-			   cairo_path_fixed_t		*path,
+			   const cairo_path_fixed_t	*path,
 			   const cairo_stroke_style_t	*style,
 			   const cairo_matrix_t		*ctm,
 			   const cairo_matrix_t		*ctm_inverse,
 			   double			 tolerance,
 			   cairo_antialias_t		 antialias,
-			   cairo_clip_t			*clip)
+			   const cairo_clip_t		*clip)
 {
     cairo_tee_surface_t *surface = abstract_surface;
     cairo_surface_wrapper_t *slaves;
+    cairo_int_status_t status;
     int n, num_slaves;
-    cairo_status_t status;
 
     status = _cairo_surface_wrapper_stroke (&surface->master,
 					    op, source,
@@ -296,16 +296,16 @@ static cairo_int_status_t
 _cairo_tee_surface_fill (void				*abstract_surface,
 			 cairo_operator_t		 op,
 			 const cairo_pattern_t		*source,
-			 cairo_path_fixed_t		*path,
+			 const cairo_path_fixed_t	*path,
 			 cairo_fill_rule_t		 fill_rule,
 			 double				 tolerance,
 			 cairo_antialias_t		 antialias,
-			 cairo_clip_t			*clip)
+			 const cairo_clip_t		*clip)
 {
     cairo_tee_surface_t *surface = abstract_surface;
     cairo_surface_wrapper_t *slaves;
+    cairo_int_status_t status;
     int n, num_slaves;
-    cairo_status_t status;
 
     status = _cairo_surface_wrapper_fill (&surface->master,
 					  op, source,
@@ -327,7 +327,7 @@ _cairo_tee_surface_fill (void				*abstract_surface,
 	    return status;
     }
 
-    return CAIRO_STATUS_SUCCESS;
+    return CAIRO_INT_STATUS_SUCCESS;
 }
 
 static cairo_bool_t
@@ -348,12 +348,12 @@ _cairo_tee_surface_show_text_glyphs (void		    *abstract_surface,
 				     int		     num_clusters,
 				     cairo_text_cluster_flags_t cluster_flags,
 				     cairo_scaled_font_t    *scaled_font,
-				     cairo_clip_t	    *clip)
+				     const cairo_clip_t	    *clip)
 {
     cairo_tee_surface_t *surface = abstract_surface;
     cairo_surface_wrapper_t *slaves;
+    cairo_int_status_t status;
     int n, num_slaves;
-    cairo_status_t status;
     cairo_glyph_t *glyphs_copy;
 
     /* XXX: This copying is ugly. */
@@ -504,8 +504,8 @@ cairo_tee_surface_remove (cairo_surface_t *abstract_surface,
 {
     cairo_tee_surface_t *surface;
     cairo_surface_wrapper_t *slaves;
+    cairo_int_status_t status;
     int n, num_slaves;
-    cairo_status_t status;
 
     if (unlikely (abstract_surface->status))
 	return;
@@ -549,7 +549,7 @@ cairo_tee_surface_remove (cairo_surface_t *abstract_surface,
 
 cairo_surface_t *
 cairo_tee_surface_index (cairo_surface_t *abstract_surface,
-			 int index)
+			 unsigned int index)
 {
     cairo_tee_surface_t *surface;
 

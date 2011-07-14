@@ -744,7 +744,8 @@ struct _cairo_surface_backend {
                                  void					*dst,
                                  cairo_antialias_t			 antialias,
                                  const cairo_composite_rectangles_t *rects,
-				 cairo_region_t *clip_region);
+				 cairo_region_t			*clip_region);
+
 
     cairo_warn cairo_bool_t
     (*check_span_renderer)	(cairo_operator_t			 op,
@@ -818,36 +819,36 @@ struct _cairo_surface_backend {
     (*paint)			(void			*surface,
 				 cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
-				 cairo_clip_t		*clip);
+				 const cairo_clip_t		*clip);
 
     cairo_warn cairo_int_status_t
     (*mask)			(void			*surface,
 				 cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
 				 const cairo_pattern_t	*mask,
-				 cairo_clip_t		*clip);
+				 const cairo_clip_t		*clip);
 
     cairo_warn cairo_int_status_t
     (*stroke)			(void			*surface,
 				 cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
-				 cairo_path_fixed_t	*path,
+				 const cairo_path_fixed_t	*path,
 				 const cairo_stroke_style_t	*style,
 				 const cairo_matrix_t	*ctm,
 				 const cairo_matrix_t	*ctm_inverse,
 				 double			 tolerance,
 				 cairo_antialias_t	 antialias,
-				 cairo_clip_t		*clip);
+				 const cairo_clip_t		*clip);
 
     cairo_warn cairo_int_status_t
     (*fill)			(void			*surface,
 				 cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
-				 cairo_path_fixed_t	*path,
+				 const cairo_path_fixed_t	*path,
 				 cairo_fill_rule_t	 fill_rule,
 				 double			 tolerance,
 				 cairo_antialias_t	 antialias,
-				 cairo_clip_t           *clip);
+				 const cairo_clip_t           *clip);
 
     cairo_warn cairo_int_status_t
     (*show_glyphs)		(void			*surface,
@@ -856,7 +857,7 @@ struct _cairo_surface_backend {
 				 cairo_glyph_t		*glyphs,
 				 int			 num_glyphs,
 				 cairo_scaled_font_t	*scaled_font,
-				 cairo_clip_t           *clip,
+				 const cairo_clip_t           *clip,
 				 int			*remaining_glyphs);
 
     cairo_surface_t *
@@ -873,7 +874,7 @@ struct _cairo_surface_backend {
 				 cairo_fill_rule_t	 fill_rule,
 				 double			 fill_tolerance,
 				 cairo_antialias_t	 fill_antialias,
-				 cairo_path_fixed_t	*path,
+				 const cairo_path_fixed_t*path,
 				 cairo_operator_t	 stroke_op,
 				 const cairo_pattern_t	*stroke_source,
 				 const cairo_stroke_style_t	*stroke_style,
@@ -881,7 +882,7 @@ struct _cairo_surface_backend {
 				 const cairo_matrix_t	*stroke_ctm_inverse,
 				 double			 stroke_tolerance,
 				 cairo_antialias_t	 stroke_antialias,
-				 cairo_clip_t		*clip);
+				 const cairo_clip_t	*clip);
 
     cairo_surface_t *
     (*create_solid_pattern_surface)
@@ -908,7 +909,7 @@ struct _cairo_surface_backend {
 				 int			     num_clusters,
 				 cairo_text_cluster_flags_t  cluster_flags,
 				 cairo_scaled_font_t	    *scaled_font,
-				 cairo_clip_t               *clip);
+				 const cairo_clip_t               *clip);
 
     cairo_warn cairo_status_t
     (*acquire_source_image_transformed)	(void                    *abstract_surface,
@@ -1357,14 +1358,21 @@ _cairo_path_fixed_fill_to_polygon (const cairo_path_fixed_t *path,
 				   double              tolerance,
 				   cairo_polygon_t      *polygon);
 
+cairo_private cairo_status_t
+_cairo_path_fixed_fill_rectilinear_to_polygon (const cairo_path_fixed_t *path,
+					       cairo_antialias_t antialias,
+					       cairo_polygon_t *polygon);
+
 cairo_private cairo_int_status_t
 _cairo_path_fixed_fill_rectilinear_to_traps (const cairo_path_fixed_t *path,
 					     cairo_fill_rule_t fill_rule,
+					     cairo_antialias_t antialias,
 					     cairo_traps_t *traps);
 
 cairo_private cairo_status_t
 _cairo_path_fixed_fill_rectilinear_to_boxes (const cairo_path_fixed_t *path,
 					     cairo_fill_rule_t fill_rule,
+					     cairo_antialias_t antialias,
 					     cairo_boxes_t *boxes);
 
 cairo_private cairo_region_t *
@@ -1391,12 +1399,14 @@ cairo_private cairo_int_status_t
 _cairo_path_fixed_stroke_rectilinear_to_traps (const cairo_path_fixed_t	*path,
 					       const cairo_stroke_style_t	*stroke_style,
 					       const cairo_matrix_t	*ctm,
+					       cairo_antialias_t	 antialias,
 					       cairo_traps_t		*traps);
 
 cairo_private cairo_int_status_t
 _cairo_path_fixed_stroke_rectilinear_to_boxes (const cairo_path_fixed_t	*path,
 					       const cairo_stroke_style_t	*stroke_style,
 					       const cairo_matrix_t	*ctm,
+					       cairo_antialias_t	 antialias,
 					       cairo_boxes_t		*boxes);
 
 cairo_private cairo_int_status_t
@@ -1656,14 +1666,14 @@ cairo_private cairo_status_t
 _cairo_surface_paint (cairo_surface_t	*surface,
 		      cairo_operator_t	 op,
 		      const cairo_pattern_t *source,
-		      cairo_clip_t	    *clip);
+		      const cairo_clip_t	    *clip);
 
 cairo_private cairo_status_t
 _cairo_surface_mask (cairo_surface_t	*surface,
 		     cairo_operator_t	 op,
 		     const cairo_pattern_t	*source,
 		     const cairo_pattern_t	*mask,
-		     cairo_clip_t		*clip);
+		     const cairo_clip_t		*clip);
 
 cairo_private cairo_status_t
 _cairo_surface_fill_stroke (cairo_surface_t	    *surface,
@@ -1680,29 +1690,29 @@ _cairo_surface_fill_stroke (cairo_surface_t	    *surface,
 			    const cairo_matrix_t	    *stroke_ctm_inverse,
 			    double		     stroke_tolerance,
 			    cairo_antialias_t	     stroke_antialias,
-			    cairo_clip_t	    *clip);
+			    const cairo_clip_t	    *clip);
 
 cairo_private cairo_status_t
 _cairo_surface_stroke (cairo_surface_t		*surface,
 		       cairo_operator_t		 op,
 		       const cairo_pattern_t	*source,
-		       cairo_path_fixed_t	*path,
+		       const cairo_path_fixed_t	*path,
 		       const cairo_stroke_style_t	*style,
 		       const cairo_matrix_t		*ctm,
 		       const cairo_matrix_t		*ctm_inverse,
 		       double			 tolerance,
 		       cairo_antialias_t	 antialias,
-		       cairo_clip_t		*clip);
+		       const cairo_clip_t		*clip);
 
 cairo_private cairo_status_t
 _cairo_surface_fill (cairo_surface_t	*surface,
 		     cairo_operator_t	 op,
 		     const cairo_pattern_t *source,
-		     cairo_path_fixed_t	*path,
+		     const cairo_path_fixed_t	*path,
 		     cairo_fill_rule_t	 fill_rule,
 		     double		 tolerance,
 		     cairo_antialias_t	 antialias,
-		     cairo_clip_t	*clip);
+		     const cairo_clip_t	*clip);
 
 cairo_private cairo_status_t
 _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
@@ -1716,7 +1726,7 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 				 int			     num_clusters,
 				 cairo_text_cluster_flags_t  cluster_flags,
 				 cairo_scaled_font_t	    *scaled_font,
-				 cairo_clip_t		    *clip);
+				 const cairo_clip_t		    *clip);
 
 cairo_private cairo_status_t
 _cairo_surface_composite_trapezoids (cairo_operator_t	op,
@@ -2026,6 +2036,19 @@ _cairo_polygon_init (cairo_polygon_t   *polygon,
 		     int		num_boxes);
 
 cairo_private void
+_cairo_polygon_init_with_clip (cairo_polygon_t *polygon,
+			       const cairo_clip_t *clip);
+
+cairo_private cairo_status_t
+_cairo_polygon_init_boxes (cairo_polygon_t *polygon,
+			   const cairo_boxes_t *boxes);
+
+cairo_private cairo_status_t
+_cairo_polygon_init_box_array (cairo_polygon_t *polygon,
+			       cairo_box_t *boxes,
+			       int num_boxes);
+
+cairo_private void
 _cairo_polygon_fini (cairo_polygon_t *polygon);
 
 cairo_private cairo_status_t
@@ -2038,6 +2061,14 @@ cairo_private cairo_status_t
 _cairo_polygon_add_external_edge (void *polygon,
 				  const cairo_point_t *p1,
 				  const cairo_point_t *p2);
+
+cairo_private cairo_status_t
+_cairo_polygon_reduce (cairo_polygon_t *polygon,
+		       cairo_fill_rule_t fill_rule);
+
+cairo_private cairo_status_t
+_cairo_polygon_intersect (cairo_polygon_t *a, int winding_a,
+			  cairo_polygon_t *b, int winding_b);
 
 #define _cairo_polygon_status(P) ((cairo_polygon_t *) (P))->status
 
@@ -2129,6 +2160,10 @@ cairo_private void
 _cairo_traps_init (cairo_traps_t *traps);
 
 cairo_private void
+_cairo_traps_init_with_clip (cairo_traps_t *traps,
+			     const cairo_clip_t *clip);
+
+cairo_private void
 _cairo_traps_limit (cairo_traps_t	*traps,
 		    const cairo_box_t	*boxes,
 		    int			 num_boxes);
@@ -2200,6 +2235,7 @@ _cairo_traps_extents (const cairo_traps_t *traps,
 
 cairo_private cairo_int_status_t
 _cairo_traps_extract_region (cairo_traps_t  *traps,
+			     cairo_antialias_t antialias,
 			     cairo_region_t **region);
 
 cairo_private cairo_status_t
@@ -2454,6 +2490,9 @@ cairo_private void
 _cairo_debug_print_path (FILE *stream, cairo_path_fixed_t *path);
 
 cairo_private void
-_cairo_debug_print_clip (FILE *stream, cairo_clip_t *clip);
+_cairo_debug_print_polygon (FILE *stream, cairo_polygon_t *polygon);
+
+cairo_private void
+_cairo_debug_print_clip (FILE *stream, const cairo_clip_t *clip);
 
 #endif

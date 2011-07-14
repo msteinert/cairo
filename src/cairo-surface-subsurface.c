@@ -65,23 +65,18 @@ static cairo_int_status_t
 _cairo_surface_subsurface_paint (void *abstract_surface,
 				 cairo_operator_t op,
 				 const cairo_pattern_t *source,
-				 cairo_clip_t *clip)
+				 const cairo_clip_t *clip)
 {
     cairo_surface_subsurface_t *surface = abstract_surface;
     cairo_rectangle_int_t rect = { 0, 0, surface->extents.width, surface->extents.height };
     cairo_status_t status;
-    cairo_clip_t target_clip;
+    cairo_clip_t *target_clip;
 
-    _cairo_clip_init_copy (&target_clip, clip);
-    status = _cairo_clip_rectangle (&target_clip, &rect);
-    if (unlikely (status))
-	goto CLEANUP;
-
+    target_clip = _cairo_clip_copy_intersect_rectangle (clip, &rect);
     status = _cairo_surface_offset_paint (surface->target,
 					 -surface->extents.x, -surface->extents.y,
-					  op, source, &target_clip);
-  CLEANUP:
-    _cairo_clip_fini (&target_clip);
+					  op, source, target_clip);
+    _cairo_clip_destroy (target_clip);
     return status;
 }
 
@@ -90,23 +85,18 @@ _cairo_surface_subsurface_mask (void *abstract_surface,
 				cairo_operator_t op,
 				const cairo_pattern_t *source,
 				const cairo_pattern_t *mask,
-				cairo_clip_t *clip)
+				const cairo_clip_t *clip)
 {
     cairo_surface_subsurface_t *surface = abstract_surface;
     cairo_rectangle_int_t rect = { 0, 0, surface->extents.width, surface->extents.height };
     cairo_status_t status;
-    cairo_clip_t target_clip;
+    cairo_clip_t *target_clip;
 
-    _cairo_clip_init_copy (&target_clip, clip);
-    status = _cairo_clip_rectangle (&target_clip, &rect);
-    if (unlikely (status))
-	goto CLEANUP;
-
+    target_clip = _cairo_clip_copy_intersect_rectangle (clip, &rect);
     status = _cairo_surface_offset_mask (surface->target,
 					 -surface->extents.x, -surface->extents.y,
-					 op, source, mask, &target_clip);
-  CLEANUP:
-    _cairo_clip_fini (&target_clip);
+					 op, source, mask, target_clip);
+    _cairo_clip_destroy (target_clip);
     return status;
 }
 
@@ -114,28 +104,23 @@ static cairo_int_status_t
 _cairo_surface_subsurface_fill (void			*abstract_surface,
 				cairo_operator_t	 op,
 				const cairo_pattern_t	*source,
-				cairo_path_fixed_t	*path,
+				const cairo_path_fixed_t	*path,
 				cairo_fill_rule_t	 fill_rule,
 				double			 tolerance,
 				cairo_antialias_t	 antialias,
-				cairo_clip_t		*clip)
+				const cairo_clip_t		*clip)
 {
     cairo_surface_subsurface_t *surface = abstract_surface;
     cairo_rectangle_int_t rect = { 0, 0, surface->extents.width, surface->extents.height };
     cairo_status_t status;
-    cairo_clip_t target_clip;
+    cairo_clip_t *target_clip;
 
-    _cairo_clip_init_copy (&target_clip, clip);
-    status = _cairo_clip_rectangle (&target_clip, &rect);
-    if (unlikely (status))
-	goto CLEANUP;
-
+    target_clip = _cairo_clip_copy_intersect_rectangle (clip, &rect);
     status = _cairo_surface_offset_fill (surface->target,
 					 -surface->extents.x, -surface->extents.y,
 					 op, source, path, fill_rule, tolerance, antialias,
-					 &target_clip);
-  CLEANUP:
-    _cairo_clip_fini (&target_clip);
+					 target_clip);
+    _cairo_clip_destroy (target_clip);
     return status;
 }
 
@@ -143,31 +128,26 @@ static cairo_int_status_t
 _cairo_surface_subsurface_stroke (void				*abstract_surface,
 				  cairo_operator_t		 op,
 				  const cairo_pattern_t		*source,
-				  cairo_path_fixed_t		*path,
+				  const cairo_path_fixed_t		*path,
 				  const cairo_stroke_style_t	*stroke_style,
 				  const cairo_matrix_t		*ctm,
 				  const cairo_matrix_t		*ctm_inverse,
 				  double			 tolerance,
 				  cairo_antialias_t		 antialias,
-				  cairo_clip_t			*clip)
+				  const cairo_clip_t			*clip)
 {
     cairo_surface_subsurface_t *surface = abstract_surface;
     cairo_rectangle_int_t rect = { 0, 0, surface->extents.width, surface->extents.height };
     cairo_status_t status;
-    cairo_clip_t target_clip;
+    cairo_clip_t *target_clip;
 
-    _cairo_clip_init_copy (&target_clip, clip);
-    status = _cairo_clip_rectangle (&target_clip, &rect);
-    if (unlikely (status))
-	goto CLEANUP;
-
+    target_clip = _cairo_clip_copy_intersect_rectangle (clip, &rect);
     status = _cairo_surface_offset_stroke (surface->target,
 					   -surface->extents.x, -surface->extents.y,
 					   op, source, path, stroke_style, ctm, ctm_inverse,
 					   tolerance, antialias,
-					   &target_clip);
-  CLEANUP:
-    _cairo_clip_fini (&target_clip);
+					   target_clip);
+    _cairo_clip_destroy (target_clip);
     return status;
 }
 
@@ -178,27 +158,22 @@ _cairo_surface_subsurface_glyphs (void			*abstract_surface,
 				  cairo_glyph_t		*glyphs,
 				  int			 num_glyphs,
 				  cairo_scaled_font_t	*scaled_font,
-				  cairo_clip_t		*clip,
+				  const cairo_clip_t		*clip,
 				  int *remaining_glyphs)
 {
     cairo_surface_subsurface_t *surface = abstract_surface;
     cairo_rectangle_int_t rect = { 0, 0, surface->extents.width, surface->extents.height };
     cairo_status_t status;
-    cairo_clip_t target_clip;
+    cairo_clip_t *target_clip;
 
-    _cairo_clip_init_copy (&target_clip, clip);
-    status = _cairo_clip_rectangle (&target_clip, &rect);
-    if (unlikely (status))
-	goto CLEANUP;
-
+    target_clip = _cairo_clip_copy_intersect_rectangle (clip, &rect);
     status = _cairo_surface_offset_glyphs (surface->target,
 					   -surface->extents.x, -surface->extents.y,
 					   op, source,
 					   scaled_font, glyphs, num_glyphs,
-					   &target_clip);
+					   target_clip);
     *remaining_glyphs = 0;
-  CLEANUP:
-    _cairo_clip_fini (&target_clip);
+    _cairo_clip_destroy (target_clip);
     return status;
 }
 

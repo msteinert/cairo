@@ -164,6 +164,12 @@ _cairo_fixed_floor (cairo_fixed_t f)
 }
 
 static inline cairo_fixed_t
+_cairo_fixed_ceil (cairo_fixed_t f)
+{
+    return _cairo_fixed_floor (f + CAIRO_FIXED_FRAC_MASK);
+}
+
+static inline cairo_fixed_t
 _cairo_fixed_round (cairo_fixed_t f)
 {
     return _cairo_fixed_floor (f + (CAIRO_FIXED_FRAC_MASK+1)/2);

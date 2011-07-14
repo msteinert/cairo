@@ -39,6 +39,63 @@
 
 /* A collection of routines to facilitate vector surface clipping */
 
+/* XXX Eliminate repeated paths and nested clips */
+
+static cairo_status_t
+_cairo_path_fixed_add_box (cairo_path_fixed_t *path,
+			   const cairo_box_t *box)
+{
+    cairo_status_t status;
+
+    status = _cairo_path_fixed_move_to (path, box->p1.x, box->p1.y);
+    if (unlikely (status))
+	return status;
+
+    status = _cairo_path_fixed_line_to (path, box->p2.x, box->p1.y);
+    if (unlikely (status))
+	return status;
+
+    status = _cairo_path_fixed_line_to (path, box->p2.x, box->p2.y);
+    if (unlikely (status))
+	return status;
+
+    status = _cairo_path_fixed_line_to (path, box->p1.x, box->p2.y);
+    if (unlikely (status))
+	return status;
+
+    return _cairo_path_fixed_close_path (path);
+}
+
+static cairo_status_t
+_cairo_surface_clipper_intersect_clip_boxes (cairo_surface_clipper_t *clipper,
+					     const cairo_clip_t *clip)
+{
+    cairo_path_fixed_t path;
+    cairo_status_t status;
+    int i;
+
+    /* Reconstruct the path for the clip boxes.
+     * XXX maybe a new clipper callback?
+     */
+
+    _cairo_path_fixed_init (&path);
+    for (i = 0; i < clip->num_boxes; i++) {
+	status = _cairo_path_fixed_add_box (&path, &clip->boxes[i]);
+	if (unlikely (status)) {
+	    _cairo_path_fixed_fini (&path);
+	    return status;
+	}
+    }
+
+    status = clipper->intersect_clip_path (clipper, &path,
+					   CAIRO_FILL_RULE_WINDING,
+					   0.,
+					   CAIRO_ANTIALIAS_DEFAULT);
+    _cairo_path_fixed_init (&path);
+
+    return status;
+}
+
 static cairo_status_t
 _cairo_surface_clipper_intersect_clip_path_recursive (cairo_surface_clipper_t *clipper,
 						      cairo_clip_path_t *clip_path)
@@ -62,57 +119,33 @@ _cairo_surface_clipper_intersect_clip_path_recursive (cairo_surface_clipper_t *c
 
 cairo_status_t
 _cairo_surface_clipper_set_clip (cairo_surface_clipper_t *clipper,
-				 cairo_clip_t *clip)
+				 const cairo_clip_t *clip)
 {
     cairo_status_t status;
-    cairo_bool_t clear;
 
-    /* XXX as we cache a reference to the path, and compare every time,
-     * we may in future need to install a notification if the clip->path
-     * is every modified (e.g. cairo_clip_translate).
-     */
-
-    if (clip == NULL && clipper->clip.path == NULL)
+    if (_cairo_clip_equal (clip, clipper->clip))
 	return CAIRO_STATUS_SUCCESS;
-
-    if (clip != NULL && clipper->clip.path != NULL &&
-	_cairo_clip_equal (clip, &clipper->clip))
-    {
-	return CAIRO_STATUS_SUCCESS;
-    }
 
     /* all clipped out state should never propagate this far */
-    assert (clip == NULL || clip->path != NULL);
+    assert (!_cairo_clip_is_all_clipped (clip));
 
-    /* Check whether this clip is a continuation of the previous.
-     * If not, we have to remove the current clip and rebuild.
-     */
-    clear = clip == NULL || clip->path->prev != clipper->clip.path;
+    _cairo_clip_destroy (clipper->clip);
+    clipper->clip = _cairo_clip_copy (clip);
 
-    _cairo_clip_reset (&clipper->clip);
-    _cairo_clip_init_copy (&clipper->clip, clip);
+    status = clipper->intersect_clip_path (clipper, NULL, 0, 0, 0);
+    if (unlikely (status))
+	return status;
 
-    if (clear) {
-	clipper->is_clipped = FALSE;
-	status = clipper->intersect_clip_path (clipper, NULL, 0, 0, 0);
-	if (unlikely (status))
-	    return status;
+    if (clip == NULL)
+	return CAIRO_STATUS_SUCCESS;
 
-	if (clip != NULL && clip->path != NULL) {
-	    status =
-		_cairo_surface_clipper_intersect_clip_path_recursive (clipper,
-								      clip->path);
-	    clipper->is_clipped = TRUE;
-	}
-    } else {
-	cairo_clip_path_t *path = clip->path;
+    status = _cairo_surface_clipper_intersect_clip_boxes (clipper, clip);
+    if (unlikely (status))
+	return status;
 
-	clipper->is_clipped = TRUE;
-	status = clipper->intersect_clip_path (clipper,
-					       &path->path,
-					       path->fill_rule,
-					       path->tolerance,
-					       path->antialias);
+    if (clip->path != NULL) {
+	    status = _cairo_surface_clipper_intersect_clip_path_recursive (clipper,
+									   clip->path);
     }
 
     return status;
@@ -122,14 +155,13 @@ void
 _cairo_surface_clipper_init (cairo_surface_clipper_t *clipper,
 			     cairo_surface_clipper_intersect_clip_path_func_t func)
 {
-    _cairo_clip_init (&clipper->clip);
-    clipper->is_clipped = FALSE;
+    clipper->clip = NULL;
     clipper->intersect_clip_path = func;
 }
 
 void
 _cairo_surface_clipper_reset (cairo_surface_clipper_t *clipper)
 {
-    _cairo_clip_reset (&clipper->clip);
-    clipper->is_clipped = FALSE;
+    _cairo_clip_destroy (clipper->clip);
+    clipper->clip = NULL;
 }

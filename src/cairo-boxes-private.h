@@ -58,6 +58,10 @@ cairo_private void
 _cairo_boxes_init (cairo_boxes_t *boxes);
 
 cairo_private void
+_cairo_boxes_init_with_clip (cairo_boxes_t *boxes,
+			     cairo_clip_t *clip);
+
+cairo_private void
 _cairo_boxes_init_for_array (cairo_boxes_t *boxes,
 			     cairo_box_t *array,
 			     int num_boxes);
@@ -69,16 +73,39 @@ _cairo_boxes_limit (cairo_boxes_t	*boxes,
 
 cairo_private cairo_status_t
 _cairo_boxes_add (cairo_boxes_t *boxes,
+		  cairo_antialias_t antialias,
 		  const cairo_box_t *box);
 
 cairo_private void
 _cairo_boxes_extents (const cairo_boxes_t *boxes,
 		      cairo_rectangle_int_t *extents);
 
+cairo_private cairo_box_t *
+_cairo_boxes_to_array (const cairo_boxes_t *boxes,
+		       int *num_boxes,
+		       cairo_bool_t force_allocation);
+
+static inline void
+_cairo_boxes_free_array (const cairo_boxes_t *boxes,
+			 cairo_box_t *box)
+{
+    if (box != boxes->chunks.base)
+	free(box);
+}
+
+cairo_private cairo_status_t
+_cairo_boxes_intersect (const cairo_boxes_t *a,
+			const cairo_boxes_t *b,
+			cairo_boxes_t *out);
+
 cairo_private void
 _cairo_boxes_clear (cairo_boxes_t *boxes);
 
 cairo_private void
 _cairo_boxes_fini (cairo_boxes_t *boxes);
+
+cairo_private void
+_cairo_debug_print_boxes (FILE *stream,
+			  const cairo_boxes_t *boxes);
 
 #endif /* CAIRO_BOXES_H */

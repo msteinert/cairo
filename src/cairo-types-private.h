@@ -228,16 +228,7 @@ typedef enum _cairo_paginated_mode {
  * from #cairo_status_t. Oh well, without that, I'll use this bogus 100
  * offset.  We want to keep it fit in int8_t as the compiler may choose
  * that for #cairo_status_t */
-typedef enum _cairo_int_status {
-    CAIRO_INT_STATUS_UNSUPPORTED = 100,
-    CAIRO_INT_STATUS_DEGENERATE,
-    CAIRO_INT_STATUS_NOTHING_TO_DO,
-    CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY,
-    CAIRO_INT_STATUS_IMAGE_FALLBACK,
-    CAIRO_INT_STATUS_ANALYZE_RECORDING_SURFACE_PATTERN,
-
-    CAIRO_INT_STATUS_LAST_STATUS
-} cairo_int_status_t;
+typedef enum _cairo_int_status cairo_int_status_t;
 
 typedef enum _cairo_internal_surface_type {
     CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT = 0x1000,

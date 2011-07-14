@@ -59,29 +59,22 @@ _cairo_surface_offset_paint (cairo_surface_t		*target,
 			     int x, int y,
 			     cairo_operator_t		 op,
 			     const cairo_pattern_t	*source,
-			     cairo_clip_t		*clip)
+			     const cairo_clip_t		*clip)
 {
     cairo_status_t status;
-    cairo_clip_t clip_copy, *dev_clip = clip;
+    cairo_clip_t *dev_clip = (cairo_clip_t *) clip;
     cairo_pattern_union_t source_copy;
 
     if (unlikely (target->status))
 	return target->status;
 
-    if (clip && clip->all_clipped)
+    if (_cairo_clip_is_all_clipped (clip))
 	return CAIRO_STATUS_SUCCESS;
 
     if (x | y) {
 	cairo_matrix_t m;
 
-	if (clip != NULL) {
-	    cairo_matrix_init_translate (&m, -x, -y);
-	    status = _cairo_clip_init_copy_transformed (&clip_copy, clip, &m);
-	    if (unlikely (status))
-		goto FINISH;
-
-	    dev_clip = &clip_copy;
-	}
+	dev_clip = _cairo_clip_copy_with_translation (clip, -x, -y);
 
 	cairo_matrix_init_translate (&m, x, y);
 	_copy_transformed_pattern (&source_copy.base, source, &m);
@@ -90,9 +83,8 @@ _cairo_surface_offset_paint (cairo_surface_t		*target,
 
     status = _cairo_surface_paint (target, op, source, dev_clip);
 
-  FINISH:
     if (dev_clip != clip)
-	_cairo_clip_reset (dev_clip);
+	_cairo_clip_destroy (dev_clip);
 
     return status;
 }
@@ -103,30 +95,23 @@ _cairo_surface_offset_mask (cairo_surface_t		*target,
 			    cairo_operator_t		 op,
 			    const cairo_pattern_t	*source,
 			    const cairo_pattern_t	*mask,
-			    cairo_clip_t		*clip)
+			    const cairo_clip_t		*clip)
 {
     cairo_status_t status;
-    cairo_clip_t clip_copy, *dev_clip = clip;
+    cairo_clip_t *dev_clip = (cairo_clip_t *) clip;
     cairo_pattern_union_t source_copy;
     cairo_pattern_union_t mask_copy;
 
     if (unlikely (target->status))
 	return target->status;
 
-    if (clip && clip->all_clipped)
+    if (_cairo_clip_is_all_clipped (clip))
 	return CAIRO_STATUS_SUCCESS;
 
     if (x | y) {
 	cairo_matrix_t m;
 
-	if (clip != NULL) {
-	    cairo_matrix_init_translate (&m, -x, -y);
-	    status = _cairo_clip_init_copy_transformed (&clip_copy, clip, &m);
-	    if (unlikely (status))
-		goto FINISH;
-
-	    dev_clip = &clip_copy;
-	}
+	dev_clip = _cairo_clip_copy_with_translation (clip, -x, -y);
 
 	cairo_matrix_init_translate (&m, x, y);
 	_copy_transformed_pattern (&source_copy.base, source, &m);
@@ -139,9 +124,8 @@ _cairo_surface_offset_mask (cairo_surface_t		*target,
 				  source, mask,
 				  dev_clip);
 
-  FINISH:
     if (dev_clip != clip)
-	_cairo_clip_reset (dev_clip);
+	_cairo_clip_destroy (dev_clip);
 
     return status;
 }
@@ -151,16 +135,16 @@ _cairo_surface_offset_stroke (cairo_surface_t		*surface,
 			      int x, int y,
 			      cairo_operator_t		 op,
 			      const cairo_pattern_t	*source,
-			      cairo_path_fixed_t	*path,
+			      const cairo_path_fixed_t	*path,
 			      const cairo_stroke_style_t*stroke_style,
 			      const cairo_matrix_t	*ctm,
 			      const cairo_matrix_t	*ctm_inverse,
 			      double			 tolerance,
 			      cairo_antialias_t		 antialias,
-			      cairo_clip_t		*clip)
+			      const cairo_clip_t		*clip)
 {
-    cairo_path_fixed_t path_copy, *dev_path = path;
-    cairo_clip_t clip_copy, *dev_clip = clip;
+    cairo_path_fixed_t path_copy, *dev_path = (cairo_path_fixed_t *) path;
+    cairo_clip_t *dev_clip = (cairo_clip_t *) clip;
     cairo_matrix_t dev_ctm = *ctm;
     cairo_matrix_t dev_ctm_inverse = *ctm_inverse;
     cairo_pattern_union_t source_copy;
@@ -169,11 +153,13 @@ _cairo_surface_offset_stroke (cairo_surface_t		*surface,
     if (unlikely (surface->status))
 	return surface->status;
 
-    if (clip && clip->all_clipped)
+    if (_cairo_clip_is_all_clipped (clip))
 	return CAIRO_STATUS_SUCCESS;
 
     if (x | y) {
 	cairo_matrix_t m;
+
+	dev_clip = _cairo_clip_copy_with_translation (clip, -x, -y);
 
 	status = _cairo_path_fixed_init_copy (&path_copy, dev_path);
 	if (unlikely (status))
@@ -186,13 +172,6 @@ _cairo_surface_offset_stroke (cairo_surface_t		*surface,
 
 	cairo_matrix_init_translate (&m, -x, -y);
 	cairo_matrix_multiply (&dev_ctm, &dev_ctm, &m);
-	if (clip != NULL) {
-	    status = _cairo_clip_init_copy_transformed (&clip_copy, clip, &m);
-	    if (unlikely (status))
-		goto FINISH;
-
-	    dev_clip = &clip_copy;
-	}
 
 	cairo_matrix_init_translate (&m, x, y);
 	_copy_transformed_pattern (&source_copy.base, source, &m);
@@ -206,11 +185,11 @@ _cairo_surface_offset_stroke (cairo_surface_t		*surface,
 				    tolerance, antialias,
 				    dev_clip);
 
- FINISH:
+FINISH:
     if (dev_path != path)
 	_cairo_path_fixed_fini (dev_path);
     if (dev_clip != clip)
-	_cairo_clip_reset (dev_clip);
+	_cairo_clip_destroy (dev_clip);
 
     return status;
 }
@@ -220,25 +199,27 @@ _cairo_surface_offset_fill (cairo_surface_t	*surface,
 			    int x, int y,
 			    cairo_operator_t	 op,
 			    const cairo_pattern_t*source,
-			    cairo_path_fixed_t	*path,
+			    const cairo_path_fixed_t	*path,
 			    cairo_fill_rule_t	 fill_rule,
 			    double		 tolerance,
 			    cairo_antialias_t	 antialias,
-			    cairo_clip_t	*clip)
+			    const cairo_clip_t	*clip)
 {
     cairo_status_t status;
-    cairo_path_fixed_t path_copy, *dev_path = path;
-    cairo_clip_t clip_copy, *dev_clip = clip;
+    cairo_path_fixed_t path_copy, *dev_path = (cairo_path_fixed_t *) path;
+    cairo_clip_t *dev_clip = (cairo_clip_t *) clip;
     cairo_pattern_union_t source_copy;
 
     if (unlikely (surface->status))
 	return surface->status;
 
-    if (clip && clip->all_clipped)
+    if (_cairo_clip_is_all_clipped (clip))
 	return CAIRO_STATUS_SUCCESS;
 
     if (x | y) {
 	cairo_matrix_t m;
+
+	dev_clip = _cairo_clip_copy_with_translation (clip, -x, -y);
 
 	status = _cairo_path_fixed_init_copy (&path_copy, dev_path);
 	if (unlikely (status))
@@ -248,15 +229,6 @@ _cairo_surface_offset_fill (cairo_surface_t	*surface,
 				     _cairo_fixed_from_int (-x),
 				     _cairo_fixed_from_int (-y));
 	dev_path = &path_copy;
-
-	if (clip != NULL) {
-	    cairo_matrix_init_translate (&m, -x, -y);
-	    status = _cairo_clip_init_copy_transformed (&clip_copy, clip, &m);
-	    if (unlikely (status))
-		goto FINISH;
-
-	    dev_clip = &clip_copy;
-	}
 
 	cairo_matrix_init_translate (&m, x, y);
 	_copy_transformed_pattern (&source_copy.base, source, &m);
@@ -268,11 +240,11 @@ _cairo_surface_offset_fill (cairo_surface_t	*surface,
 				  tolerance, antialias,
 				  dev_clip);
 
- FINISH:
+FINISH:
     if (dev_path != path)
 	_cairo_path_fixed_fini (dev_path);
     if (dev_clip != clip)
-	_cairo_clip_reset (dev_clip);
+	_cairo_clip_destroy (dev_clip);
 
     return status;
 }
@@ -285,10 +257,10 @@ _cairo_surface_offset_glyphs (cairo_surface_t		*surface,
 			      cairo_scaled_font_t	*scaled_font,
 			      cairo_glyph_t		*glyphs,
 			      int			 num_glyphs,
-			      cairo_clip_t		*clip)
+			      const cairo_clip_t	*clip)
 {
     cairo_status_t status;
-    cairo_clip_t clip_copy, *dev_clip = clip;
+    cairo_clip_t *dev_clip = (cairo_clip_t *) clip;
     cairo_pattern_union_t source_copy;
     cairo_glyph_t *dev_glyphs;
     int i;
@@ -296,7 +268,7 @@ _cairo_surface_offset_glyphs (cairo_surface_t		*surface,
     if (unlikely (surface->status))
 	return surface->status;
 
-    if (clip && clip->all_clipped)
+    if (_cairo_clip_is_all_clipped (clip))
 	return CAIRO_STATUS_SUCCESS;
 
     dev_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
@@ -308,14 +280,7 @@ _cairo_surface_offset_glyphs (cairo_surface_t		*surface,
     if (x | y) {
 	cairo_matrix_t m;
 
-	if (clip != NULL) {
-	    cairo_matrix_init_translate (&m, -x, -y);
-	    status = _cairo_clip_init_copy_transformed (&clip_copy, clip, &m);
-	    if (unlikely (status))
-		goto FINISH;
-
-	    dev_clip = &clip_copy;
-	}
+	dev_clip = _cairo_clip_copy_with_translation (clip, -x, -y);
 
 	cairo_matrix_init_translate (&m, x, y);
 	_copy_transformed_pattern (&source_copy.base, source, &m);
@@ -334,9 +299,8 @@ _cairo_surface_offset_glyphs (cairo_surface_t		*surface,
 					      scaled_font,
 					      dev_clip);
 
- FINISH:
     if (dev_clip != clip)
-	_cairo_clip_reset (dev_clip);
+	_cairo_clip_destroy (dev_clip);
     free (dev_glyphs);
 
     return status;

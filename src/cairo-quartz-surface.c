@@ -1725,7 +1725,7 @@ static cairo_int_status_t
 _cairo_quartz_surface_paint_cg (cairo_quartz_surface_t *surface,
 				cairo_operator_t op,
 				const cairo_pattern_t *source,
-				cairo_clip_t *clip)
+				const cairo_clip_t *clip)
 {
     cairo_quartz_drawing_state_t state;
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
@@ -1752,7 +1752,7 @@ static cairo_int_status_t
 _cairo_quartz_surface_paint (void *abstract_surface,
 			     cairo_operator_t op,
 			     const cairo_pattern_t *source,
-			     cairo_clip_t *clip)
+			     const cairo_clip_t *clip)
 {
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
     cairo_int_status_t rv;
@@ -1779,11 +1779,11 @@ static cairo_int_status_t
 _cairo_quartz_surface_fill_cg (cairo_quartz_surface_t *surface,
 			       cairo_operator_t op,
 			       const cairo_pattern_t *source,
-			       cairo_path_fixed_t *path,
+			       const cairo_path_fixed_t *path,
 			       cairo_fill_rule_t fill_rule,
 			       double tolerance,
 			       cairo_antialias_t antialias,
-			       cairo_clip_t *clip)
+			       const cairo_clip_t *clip)
 {
     cairo_quartz_drawing_state_t state;
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
@@ -1827,11 +1827,11 @@ static cairo_int_status_t
 _cairo_quartz_surface_fill (void *abstract_surface,
 			    cairo_operator_t op,
 			    const cairo_pattern_t *source,
-			    cairo_path_fixed_t *path,
+			    const cairo_path_fixed_t *path,
 			    cairo_fill_rule_t fill_rule,
 			    double tolerance,
 			    cairo_antialias_t antialias,
-			    cairo_clip_t *clip)
+			    const cairo_clip_t *clip)
 {
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
     cairo_int_status_t rv;
@@ -1864,13 +1864,13 @@ static cairo_int_status_t
 _cairo_quartz_surface_stroke_cg (cairo_quartz_surface_t *surface,
 				 cairo_operator_t op,
 				 const cairo_pattern_t *source,
-				 cairo_path_fixed_t *path,
+				 const cairo_path_fixed_t *path,
 				 const cairo_stroke_style_t *style,
 				 const cairo_matrix_t *ctm,
 				 const cairo_matrix_t *ctm_inverse,
 				 double tolerance,
 				 cairo_antialias_t antialias,
-				 cairo_clip_t *clip)
+				 const cairo_clip_t *clip)
 {
     cairo_quartz_drawing_state_t state;
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
@@ -1947,13 +1947,13 @@ static cairo_int_status_t
 _cairo_quartz_surface_stroke (void *abstract_surface,
 			      cairo_operator_t op,
 			      const cairo_pattern_t *source,
-			      cairo_path_fixed_t *path,
+			      const cairo_path_fixed_t *path,
 			      const cairo_stroke_style_t *style,
 			      const cairo_matrix_t *ctm,
 			      const cairo_matrix_t *ctm_inverse,
 			      double tolerance,
 			      cairo_antialias_t antialias,
-			      cairo_clip_t *clip)
+			      const cairo_clip_t *clip)
 {
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
     cairo_int_status_t rv;
@@ -1987,7 +1987,7 @@ _cairo_quartz_surface_show_glyphs_cg (cairo_quartz_surface_t *surface,
 				      cairo_glyph_t *glyphs,
 				      int num_glyphs,
 				      cairo_scaled_font_t *scaled_font,
-				      cairo_clip_t *clip,
+				      const cairo_clip_t *clip,
 				      int *remaining_glyphs)
 {
     CGAffineTransform textTransform, invTextTransform;
@@ -2131,7 +2131,7 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 				   cairo_glyph_t *glyphs,
 				   int num_glyphs,
 				   cairo_scaled_font_t *scaled_font,
-				   cairo_clip_t *clip,
+				   const cairo_clip_t *clip,
 				   int *remaining_glyphs)
 {
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
@@ -2248,7 +2248,7 @@ _cairo_quartz_surface_mask_cg (cairo_quartz_surface_t *surface,
 			       cairo_operator_t op,
 			       const cairo_pattern_t *source,
 			       const cairo_pattern_t *mask,
-			       cairo_clip_t *clip)
+			       const cairo_clip_t *clip)
 {
     cairo_surface_t *mask_surf;
     cairo_matrix_t matrix;
@@ -2350,7 +2350,7 @@ _cairo_quartz_surface_mask (void *abstract_surface,
 			    cairo_operator_t op,
 			    const cairo_pattern_t *source,
 			    const cairo_pattern_t *mask,
-			    cairo_clip_t *clip)
+			    const cairo_clip_t *clip)
 {
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
     cairo_int_status_t rv;

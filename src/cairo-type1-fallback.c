@@ -626,7 +626,7 @@ cairo_type1_font_write_private_dict (cairo_type1_font_t *font,
 
   fail:
     status2 = _cairo_output_stream_destroy (encrypted_output);
-    if (status == CAIRO_STATUS_SUCCESS)
+    if (status == CAIRO_INT_STATUS_SUCCESS)
 	status = status2;
 
     return status;

@@ -493,7 +493,7 @@ _cairo_pdf_path_rectangle (pdf_path_info_t *info, cairo_box_t *box)
  */
 static cairo_status_t
 _cairo_pdf_operators_emit_path (cairo_pdf_operators_t	*pdf_operators,
-				cairo_path_fixed_t      *path,
+				const cairo_path_fixed_t*path,
 				cairo_matrix_t          *path_transform,
 				cairo_line_cap_t         line_cap)
 {
@@ -530,7 +530,7 @@ _cairo_pdf_operators_emit_path (cairo_pdf_operators_t	*pdf_operators,
 
 cairo_int_status_t
 _cairo_pdf_operators_clip (cairo_pdf_operators_t	*pdf_operators,
-			   cairo_path_fixed_t		*path,
+			   const cairo_path_fixed_t	*path,
 			   cairo_fill_rule_t		 fill_rule)
 {
     const char *pdf_operator;
@@ -763,7 +763,7 @@ _cairo_matrix_factor_out_scale (cairo_matrix_t *m, double *scale)
 
 static cairo_int_status_t
 _cairo_pdf_operators_emit_stroke (cairo_pdf_operators_t		*pdf_operators,
-				  cairo_path_fixed_t		*path,
+				  const cairo_path_fixed_t	*path,
 				  const cairo_stroke_style_t	*style,
 				  const cairo_matrix_t		*ctm,
 				  const cairo_matrix_t		*ctm_inverse,
@@ -854,7 +854,7 @@ _cairo_pdf_operators_emit_stroke (cairo_pdf_operators_t		*pdf_operators,
 
 cairo_int_status_t
 _cairo_pdf_operators_stroke (cairo_pdf_operators_t		*pdf_operators,
-			     cairo_path_fixed_t			*path,
+			     const cairo_path_fixed_t		*path,
 			     const cairo_stroke_style_t		*style,
 			     const cairo_matrix_t		*ctm,
 			     const cairo_matrix_t		*ctm_inverse)
@@ -869,7 +869,7 @@ _cairo_pdf_operators_stroke (cairo_pdf_operators_t		*pdf_operators,
 
 cairo_int_status_t
 _cairo_pdf_operators_fill (cairo_pdf_operators_t	*pdf_operators,
-			   cairo_path_fixed_t		*path,
+			   const cairo_path_fixed_t	*path,
 			   cairo_fill_rule_t		fill_rule)
 {
     const char *pdf_operator;
@@ -908,7 +908,7 @@ _cairo_pdf_operators_fill (cairo_pdf_operators_t	*pdf_operators,
 
 cairo_int_status_t
 _cairo_pdf_operators_fill_stroke (cairo_pdf_operators_t		*pdf_operators,
-				  cairo_path_fixed_t		*path,
+				  const cairo_path_fixed_t	*path,
 				  cairo_fill_rule_t		 fill_rule,
 				  const cairo_stroke_style_t	*style,
 				  const cairo_matrix_t		*ctm,

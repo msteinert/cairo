@@ -501,7 +501,7 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 			       cairo_glyph_t		*glyphs,
 			       int			 num_glyphs,
 			       cairo_scaled_font_t	*scaled_font,
-			       cairo_clip_t		*clip,
+			       const cairo_clip_t	*clip,
 			       int			*remaining_glyphs);
 
 static inline int

@@ -45,36 +45,36 @@ cairo_private cairo_status_t
 _cairo_surface_fallback_paint (cairo_surface_t		*surface,
 			       cairo_operator_t		 op,
 			       const cairo_pattern_t	*source,
-			       cairo_clip_t		*clip);
+			       const cairo_clip_t	*clip);
 
 cairo_private cairo_status_t
 _cairo_surface_fallback_mask (cairo_surface_t		*surface,
 			      cairo_operator_t		 op,
 			      const cairo_pattern_t	*source,
 			      const cairo_pattern_t	*mask,
-			      cairo_clip_t		*clip);
+			      const cairo_clip_t	*clip);
 
 cairo_private cairo_status_t
 _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 				cairo_operator_t	 op,
 				const cairo_pattern_t	*source,
-				cairo_path_fixed_t	*path,
+				const cairo_path_fixed_t	*path,
 				const cairo_stroke_style_t	*stroke_style,
 				const cairo_matrix_t		*ctm,
 				const cairo_matrix_t		*ctm_inverse,
 				double			 tolerance,
 				cairo_antialias_t	 antialias,
-				cairo_clip_t		*clip);
+				const cairo_clip_t	*clip);
 
 cairo_private cairo_status_t
 _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 			      cairo_operator_t		 op,
 			      const cairo_pattern_t	*source,
-			      cairo_path_fixed_t	*path,
+			      const cairo_path_fixed_t	*path,
 			      cairo_fill_rule_t		 fill_rule,
 			      double			 tolerance,
 			      cairo_antialias_t		 antialias,
-			      cairo_clip_t		*clip);
+			      const cairo_clip_t	*clip);
 
 cairo_private cairo_status_t
 _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
@@ -83,7 +83,7 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
 				     cairo_glyph_t		*glyphs,
 				     int			 num_glyphs,
 				     cairo_scaled_font_t	*scaled_font,
-				     cairo_clip_t		*clip);
+				     const cairo_clip_t		*clip);
 
 cairo_private cairo_surface_t *
 _cairo_surface_fallback_snapshot (cairo_surface_t *surface);

@@ -572,7 +572,7 @@ _cairo_ps_emit_imagemask (cairo_image_surface_t *image,
     return _cairo_output_stream_get_status (stream);
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _cairo_ps_surface_analyze_user_font_subset (cairo_scaled_font_subset_t *font_subset,
 					    void		       *closure)
 {
@@ -704,16 +704,15 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _cairo_ps_surface_emit_unscaled_font_subset (cairo_scaled_font_subset_t	*font_subset,
 				            void			*closure)
 {
     cairo_ps_surface_t *surface = closure;
-    cairo_status_t status;
-
+    cairo_int_status_t status;
 
     status = _cairo_scaled_font_subset_create_glyph_names (font_subset);
-    if (_cairo_status_is_error (status))
+    if (_cairo_int_status_is_error (status))
 	return status;
 
     status = _cairo_ps_surface_emit_type1_font_subset (surface, font_subset);
@@ -732,15 +731,15 @@ _cairo_ps_surface_emit_unscaled_font_subset (cairo_scaled_font_subset_t	*font_su
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _cairo_ps_surface_emit_scaled_font_subset (cairo_scaled_font_subset_t *font_subset,
                                            void			      *closure)
 {
     cairo_ps_surface_t *surface = closure;
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     status = _cairo_scaled_font_subset_create_glyph_names (font_subset);
-    if (_cairo_status_is_error (status))
+    if (_cairo_int_status_is_error (status))
 	return status;
 
     status = _cairo_ps_surface_emit_type3_font_subset (surface, font_subset);
@@ -748,7 +747,7 @@ _cairo_ps_surface_emit_scaled_font_subset (cairo_scaled_font_subset_t *font_subs
 	return status;
 
     ASSERT_NOT_REACHED;
-    return CAIRO_STATUS_SUCCESS;
+    return CAIRO_INT_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -1640,7 +1639,7 @@ _cairo_ps_surface_end_page (cairo_ps_surface_t *surface)
     if (unlikely (status))
 	return status;
 
-    if (surface->clipper.clip.path != NULL) {
+    if (surface->clipper.clip != NULL) {
 	_cairo_output_stream_printf (surface->stream, "Q Q\n");
 	_cairo_surface_clipper_reset (&surface->clipper);
     } else
@@ -2444,7 +2443,7 @@ _cairo_ps_surface_emit_recording_surface (cairo_ps_surface_t *surface,
     cairo_content_t old_content;
     cairo_rectangle_int_t old_page_bbox;
     cairo_box_t bbox;
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     old_content = surface->content;
     old_width = surface->width;
@@ -2516,7 +2515,7 @@ _cairo_ps_surface_emit_recording_surface (cairo_ps_surface_t *surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _cairo_ps_surface_emit_recording_subsurface (cairo_ps_surface_t *surface,
 					     cairo_surface_t    *recording_surface,
 					     const cairo_rectangle_int_t *extents)
@@ -2525,7 +2524,7 @@ _cairo_ps_surface_emit_recording_subsurface (cairo_ps_surface_t *surface,
     cairo_matrix_t old_cairo_to_ps;
     cairo_content_t old_content;
     cairo_rectangle_int_t old_page_bbox;
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     old_content = surface->content;
     old_width = surface->width;
@@ -2733,7 +2732,7 @@ _cairo_ps_surface_emit_surface (cairo_ps_surface_t      *surface,
 				int                      width,
 				int                      height)
 {
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     if (pattern->surface->type == CAIRO_SURFACE_TYPE_RECORDING) {
 	cairo_surface_t *source = pattern->surface;
@@ -3576,7 +3575,7 @@ static cairo_int_status_t
 _cairo_ps_surface_paint (void			*abstract_surface,
 			 cairo_operator_t	 op,
 			 const cairo_pattern_t	*source,
-			 cairo_clip_t		*clip)
+			 const cairo_clip_t		*clip)
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->stream;
@@ -3635,13 +3634,13 @@ static cairo_int_status_t
 _cairo_ps_surface_stroke (void			*abstract_surface,
 			  cairo_operator_t	 op,
 			  const cairo_pattern_t	*source,
-			  cairo_path_fixed_t	*path,
+			  const cairo_path_fixed_t	*path,
 			  const cairo_stroke_style_t	*style,
 			  const cairo_matrix_t	*ctm,
 			  const cairo_matrix_t	*ctm_inverse,
 			  double		 tolerance,
 			  cairo_antialias_t	 antialias,
-			  cairo_clip_t		*clip)
+			  const cairo_clip_t		*clip)
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_composite_rectangles_t extents;
@@ -3699,11 +3698,11 @@ static cairo_int_status_t
 _cairo_ps_surface_fill (void		*abstract_surface,
 			cairo_operator_t	 op,
 			const cairo_pattern_t	*source,
-			cairo_path_fixed_t	*path,
+			const cairo_path_fixed_t*path,
 			cairo_fill_rule_t	 fill_rule,
 			double			 tolerance,
 			cairo_antialias_t	 antialias,
-			cairo_clip_t		*clip)
+			const cairo_clip_t		*clip)
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_composite_rectangles_t extents;
@@ -3786,7 +3785,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 			       cairo_glyph_t         *glyphs,
 			       int		      num_glyphs,
 			       cairo_scaled_font_t   *scaled_font,
-			       cairo_clip_t	     *clip,
+			       const cairo_clip_t    *clip,
 			       int		     *remaining_glyphs)
 {
     cairo_ps_surface_t *surface = abstract_surface;
@@ -3840,7 +3839,7 @@ _cairo_ps_surface_set_paginated_mode (void			*abstract_surface,
 
     surface->paginated_mode = paginated_mode;
 
-    if (surface->clipper.clip.path != NULL) {
+    if (surface->clipper.clip != NULL) {
 	status = _cairo_pdf_operators_flush (&surface->pdf_operators);
 
 	_cairo_output_stream_printf (surface->stream, "Q q\n");

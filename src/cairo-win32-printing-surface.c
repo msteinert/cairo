@@ -1167,7 +1167,7 @@ static cairo_int_status_t
 _cairo_win32_printing_surface_paint (void			*abstract_surface,
                                      cairo_operator_t		 op,
                                      const cairo_pattern_t	*source,
-				     cairo_clip_t      *clip)
+				     const cairo_clip_t      *clip)
 {
     cairo_win32_surface_t *surface = abstract_surface;
     cairo_solid_pattern_t clear;
@@ -1244,13 +1244,13 @@ static cairo_int_status_t
 _cairo_win32_printing_surface_stroke (void			*abstract_surface,
                                       cairo_operator_t		 op,
                                       const cairo_pattern_t	*source,
-                                      cairo_path_fixed_t	*path,
+                                      const cairo_path_fixed_t	*path,
                                       const cairo_stroke_style_t *style,
                                       const cairo_matrix_t	*stroke_ctm,
                                       const cairo_matrix_t	*stroke_ctm_inverse,
                                       double			tolerance,
                                       cairo_antialias_t		antialias,
-				      cairo_clip_t    *clip)
+				      const cairo_clip_t    *clip)
 {
     cairo_win32_surface_t *surface = abstract_surface;
     cairo_int_status_t status;
@@ -1373,11 +1373,11 @@ static cairo_int_status_t
 _cairo_win32_printing_surface_fill (void		        *abstract_surface,
 				    cairo_operator_t		 op,
 				    const cairo_pattern_t	*source,
-				    cairo_path_fixed_t		*path,
+				    const cairo_path_fixed_t	*path,
 				    cairo_fill_rule_t		 fill_rule,
 				    double			 tolerance,
 				    cairo_antialias_t		 antialias,
-				    cairo_clip_t		*clip)
+				    const cairo_clip_t		*clip)
 {
     cairo_win32_surface_t *surface = abstract_surface;
     cairo_int_status_t status;
@@ -1528,7 +1528,7 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
                                            cairo_glyph_t        *glyphs,
                                            int			 num_glyphs,
                                            cairo_scaled_font_t  *scaled_font,
-					   cairo_clip_t		*clip,
+					   const cairo_clip_t	*clip,
 					   int			*remaining_glyphs)
 {
     cairo_win32_surface_t *surface = abstract_surface;

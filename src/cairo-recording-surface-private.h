@@ -40,7 +40,6 @@
 #include "cairoint.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-pattern-private.h"
-#include "cairo-clip-private.h"
 
 typedef enum {
     /* The 5 basic drawing operations. */
@@ -61,7 +60,7 @@ typedef struct _cairo_command_header {
     cairo_command_type_t	 type;
     cairo_recording_region_type_t     region;
     cairo_operator_t		 op;
-    cairo_clip_t		 clip;
+    cairo_clip_t		*clip;
 } cairo_command_header_t;
 
 typedef struct _cairo_command_paint {
@@ -129,8 +128,6 @@ typedef struct _cairo_recording_surface {
     cairo_rectangle_t extents_pixels;
     cairo_rectangle_int_t extents;
     cairo_bool_t unbounded;
-
-    cairo_clip_t clip;
 
     cairo_array_t commands;
 

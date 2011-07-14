@@ -1373,12 +1373,12 @@ cairo_cff_find_subroutines_used (cairo_cff_font_t  *font,
     return cairo_cff_parse_charstring (font, charstring, length, glyph_id);
 }
 
-static cairo_status_t
+static cairo_int_status_t
 cairo_cff_font_subset_charstrings_and_subroutines (cairo_cff_font_t  *font)
 {
     cff_index_element_t *element;
     unsigned int i;
-    cairo_status_t status;
+    cairo_int_status_t status;
     unsigned long glyph;
 
     font->subset_subroutines = TRUE;
@@ -1758,23 +1758,23 @@ cairo_cff_font_write_fdselect (cairo_cff_font_t  *font)
 
         byte = 3;
         status = _cairo_array_append (&font->output, &byte);
-        assert (status == CAIRO_STATUS_SUCCESS);
+        assert (status == CAIRO_INT_STATUS_SUCCESS);
 
         word = cpu_to_be16 (1);
         status = _cairo_array_append_multiple (&font->output, &word, 2);
-        assert (status == CAIRO_STATUS_SUCCESS);
+        assert (status == CAIRO_INT_STATUS_SUCCESS);
 
         word = cpu_to_be16 (0);
         status = _cairo_array_append_multiple (&font->output, &word, 2);
-        assert (status == CAIRO_STATUS_SUCCESS);
+        assert (status == CAIRO_INT_STATUS_SUCCESS);
 
         byte = 0;
         status = _cairo_array_append (&font->output, &byte);
-        assert (status == CAIRO_STATUS_SUCCESS);
+        assert (status == CAIRO_INT_STATUS_SUCCESS);
 
         word = cpu_to_be16 (font->scaled_font_subset->num_glyphs);
         status = _cairo_array_append_multiple (&font->output, &word, 2);
-        assert (status == CAIRO_STATUS_SUCCESS);
+        assert (status == CAIRO_INT_STATUS_SUCCESS);
     }
 
     return CAIRO_STATUS_SUCCESS;

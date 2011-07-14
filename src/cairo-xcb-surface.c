@@ -379,7 +379,7 @@ _get_image (cairo_xcb_surface_t		 *surface,
     cairo_image_surface_t *image;
     cairo_xcb_connection_t *connection;
     xcb_get_image_reply_t *reply;
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     if (surface->base.is_clear || surface->deferred_clear) {
 	image = (cairo_image_surface_t *)
@@ -594,7 +594,7 @@ static cairo_status_t
 _put_image (cairo_xcb_surface_t    *surface,
 	    cairo_image_surface_t  *image)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_int_status_t status = CAIRO_INT_STATUS_SUCCESS;
 
     /* XXX track damaged region? */
 
@@ -688,10 +688,10 @@ static cairo_int_status_t
 _cairo_xcb_surface_paint (void			*abstract_surface,
 			  cairo_operator_t	 op,
 			  const cairo_pattern_t	*source,
-			  cairo_clip_t		*clip)
+			  const cairo_clip_t	*clip)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     if (surface->fallback == NULL) {
 	status = _cairo_xcb_surface_cairo_paint (surface, op, source, clip);
@@ -713,10 +713,10 @@ _cairo_xcb_surface_mask (void			*abstract_surface,
 			 cairo_operator_t	 op,
 			 const cairo_pattern_t	*source,
 			 const cairo_pattern_t	*mask,
-			 cairo_clip_t		*clip)
+			 const cairo_clip_t	*clip)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     if (surface->fallback == NULL) {
 	status =  _cairo_xcb_surface_cairo_mask (surface,
@@ -741,16 +741,16 @@ static cairo_int_status_t
 _cairo_xcb_surface_stroke (void				*abstract_surface,
 			   cairo_operator_t		 op,
 			   const cairo_pattern_t	*source,
-			   cairo_path_fixed_t		*path,
+			   const cairo_path_fixed_t	*path,
 			   const cairo_stroke_style_t	*style,
 			   const cairo_matrix_t		*ctm,
 			   const cairo_matrix_t		*ctm_inverse,
 			   double			 tolerance,
 			   cairo_antialias_t		 antialias,
-			   cairo_clip_t			*clip)
+			   const cairo_clip_t		*clip)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     if (surface->fallback == NULL) {
 	status = _cairo_xcb_surface_cairo_stroke (surface, op, source,
@@ -786,14 +786,14 @@ static cairo_int_status_t
 _cairo_xcb_surface_fill (void			*abstract_surface,
 			 cairo_operator_t	 op,
 			 const cairo_pattern_t	*source,
-			 cairo_path_fixed_t	*path,
+			 const cairo_path_fixed_t*path,
 			 cairo_fill_rule_t	 fill_rule,
 			 double			 tolerance,
 			 cairo_antialias_t	 antialias,
-			 cairo_clip_t		*clip)
+			 const cairo_clip_t	*clip)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     if (surface->fallback == NULL) {
 	status = _cairo_xcb_surface_cairo_fill (surface, op, source,
@@ -827,11 +827,11 @@ _cairo_xcb_surface_glyphs (void				*abstract_surface,
 			   cairo_glyph_t		*glyphs,
 			   int				 num_glyphs,
 			   cairo_scaled_font_t		*scaled_font,
-			   cairo_clip_t			*clip,
+			   const cairo_clip_t		*clip,
 			   int *num_remaining)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     *num_remaining = 0;
 

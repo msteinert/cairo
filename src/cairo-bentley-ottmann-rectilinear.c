@@ -237,7 +237,7 @@ _cairo_bo_edge_end_trap (cairo_bo_edge_t	*left,
 	    box.p1.y = trap->top;
 	    box.p2.x = trap->right->edge.line.p1.x;
 	    box.p2.y = bot;
-	    status = _cairo_boxes_add (container, &box);
+	    status = _cairo_boxes_add (container, CAIRO_ANTIALIAS_DEFAULT, &box);
 	}
     }
 

@@ -129,8 +129,8 @@ cairo_private void
 _cairo_pdf_operators_reset (cairo_pdf_operators_t	 *pdf_operators);
 
 cairo_private cairo_int_status_t
-_cairo_pdf_operators_clip (cairo_pdf_operators_t 	*pdf_operators,
-			   cairo_path_fixed_t		*path,
+_cairo_pdf_operators_clip (cairo_pdf_operators_t	*pdf_operators,
+			   const cairo_path_fixed_t	*path,
 			   cairo_fill_rule_t		 fill_rule);
 
 cairo_private cairo_int_status_t
@@ -140,19 +140,19 @@ _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t		*pdf_operators,
 
 cairo_private cairo_int_status_t
 _cairo_pdf_operators_stroke (cairo_pdf_operators_t	*pdf_operators,
-			     cairo_path_fixed_t		*path,
+			     const cairo_path_fixed_t	*path,
 			     const cairo_stroke_style_t	*style,
 			     const cairo_matrix_t	*ctm,
 			     const cairo_matrix_t	*ctm_inverse);
 
 cairo_private cairo_int_status_t
-_cairo_pdf_operators_fill (cairo_pdf_operators_t 	*pdf_operators,
-			   cairo_path_fixed_t		*path,
-			   cairo_fill_rule_t	 	fill_rule);
+_cairo_pdf_operators_fill (cairo_pdf_operators_t	*pdf_operators,
+			   const cairo_path_fixed_t	*path,
+			   cairo_fill_rule_t		fill_rule);
 
 cairo_private cairo_int_status_t
 _cairo_pdf_operators_fill_stroke (cairo_pdf_operators_t		*pdf_operators,
-				  cairo_path_fixed_t		*path,
+				  const cairo_path_fixed_t	*path,
 				  cairo_fill_rule_t		 fill_rule,
 				  const cairo_stroke_style_t	*style,
 				  const cairo_matrix_t		*ctm,

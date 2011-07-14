@@ -279,7 +279,7 @@ _paint_fallback_image (cairo_paginated_surface_t *surface,
     cairo_status_t status;
     cairo_surface_t *image;
     cairo_surface_pattern_t pattern;
-    cairo_clip_t clip;
+    cairo_clip_t *clip;
 
     x = rect->x;
     y = rect->y;
@@ -304,15 +304,14 @@ _paint_fallback_image (cairo_paginated_surface_t *surface,
      * filtering (if possible) to avoid introducing potential artifacts. */
     pattern.base.filter = CAIRO_FILTER_NEAREST;
 
-    _cairo_clip_init (&clip);
-    status = _cairo_clip_rectangle (&clip, rect);
+    clip = _cairo_clip_intersect_rectangle (NULL, rect);
     if (likely (status == CAIRO_STATUS_SUCCESS)) {
 	status = _cairo_surface_paint (surface->target,
 				       CAIRO_OPERATOR_SOURCE,
-				       &pattern.base, &clip);
+				       &pattern.base, clip);
     }
 
-    _cairo_clip_fini (&clip);
+    _cairo_clip_destroy (clip);
     _cairo_pattern_fini (&pattern.base);
 
 CLEANUP_IMAGE:
@@ -325,7 +324,7 @@ static cairo_int_status_t
 _paint_page (cairo_paginated_surface_t *surface)
 {
     cairo_surface_t *analysis;
-    cairo_status_t status;
+    cairo_int_status_t status;
     cairo_bool_t has_supported, has_page_fallback, has_finegrained_fallback;
 
     if (unlikely (surface->target->status))
@@ -340,7 +339,7 @@ _paint_page (cairo_paginated_surface_t *surface)
     status = _cairo_recording_surface_replay_and_create_regions (surface->recording_surface,
 								 analysis);
     if (status || analysis->status) {
-	if (status == CAIRO_STATUS_SUCCESS)
+	if (status == CAIRO_INT_STATUS_SUCCESS)
 	    status = analysis->status;
 	goto FAIL;
     }
@@ -542,7 +541,7 @@ static cairo_int_status_t
 _cairo_paginated_surface_paint (void			*abstract_surface,
 				cairo_operator_t	 op,
 				const cairo_pattern_t	*source,
-				cairo_clip_t		*clip)
+				const cairo_clip_t	*clip)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
@@ -554,7 +553,7 @@ _cairo_paginated_surface_mask (void		*abstract_surface,
 			       cairo_operator_t	 op,
 			       const cairo_pattern_t	*source,
 			       const cairo_pattern_t	*mask,
-			       cairo_clip_t		*clip)
+			       const cairo_clip_t		*clip)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
@@ -565,13 +564,13 @@ static cairo_int_status_t
 _cairo_paginated_surface_stroke (void			*abstract_surface,
 				 cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
-				 cairo_path_fixed_t	*path,
+				 const cairo_path_fixed_t	*path,
 				 const cairo_stroke_style_t	*style,
 				 const cairo_matrix_t		*ctm,
 				 const cairo_matrix_t		*ctm_inverse,
 				 double			 tolerance,
 				 cairo_antialias_t	 antialias,
-				 cairo_clip_t		*clip)
+				 const cairo_clip_t		*clip)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
@@ -586,11 +585,11 @@ static cairo_int_status_t
 _cairo_paginated_surface_fill (void			*abstract_surface,
 			       cairo_operator_t		 op,
 			       const cairo_pattern_t	*source,
-			       cairo_path_fixed_t	*path,
+			       const cairo_path_fixed_t	*path,
 			       cairo_fill_rule_t	 fill_rule,
 			       double			 tolerance,
 			       cairo_antialias_t	 antialias,
-			       cairo_clip_t		*clip)
+			       const cairo_clip_t		*clip)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
@@ -620,7 +619,7 @@ _cairo_paginated_surface_show_text_glyphs (void			      *abstract_surface,
 					   int			       num_clusters,
 					   cairo_text_cluster_flags_t  cluster_flags,
 					   cairo_scaled_font_t	      *scaled_font,
-					   cairo_clip_t		      *clip)
+					   const cairo_clip_t		      *clip)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 

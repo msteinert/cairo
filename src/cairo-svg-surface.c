@@ -85,7 +85,7 @@ static const cairo_svg_version_t _cairo_svg_versions[] =
 
 static void
 _cairo_svg_surface_emit_path (cairo_output_stream_t	*output,
-			      cairo_path_fixed_t	*path,
+			      const cairo_path_fixed_t	*path,
 			      const cairo_matrix_t	*ctm_inverse);
 
 static cairo_bool_t
@@ -562,10 +562,10 @@ _cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
 static cairo_svg_page_t *
 _cairo_svg_surface_store_page (cairo_svg_surface_t *surface)
 {
-    unsigned int i;
     cairo_svg_page_t page;
     cairo_output_stream_t *stream;
-    cairo_status_t status;
+    cairo_int_status_t status;
+    unsigned int i;
 
     stream = _cairo_memory_stream_create ();
     if (_cairo_output_stream_get_status (stream)) {
@@ -715,7 +715,7 @@ _cairo_svg_path_close_path (void *closure)
 
 static void
 _cairo_svg_surface_emit_path (cairo_output_stream_t	*output,
-			      cairo_path_fixed_t	*path,
+			      const cairo_path_fixed_t	*path,
 			      const cairo_matrix_t	*ctm_inverse)
 {
     cairo_status_t status;
@@ -814,14 +814,14 @@ _cairo_svg_document_emit_bitmap_glyph_data (cairo_svg_document_t	*document,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _cairo_svg_document_emit_glyph (cairo_svg_document_t	*document,
 				cairo_scaled_font_t	*scaled_font,
 				unsigned long		 scaled_font_glyph_index,
 				unsigned int		 font_id,
 				unsigned int		 subset_glyph_index)
 {
-    cairo_status_t	     status;
+    cairo_int_status_t	     status;
 
     _cairo_output_stream_printf (document->xml_node_glyphs,
 				 "<symbol overflow=\"visible\" id=\"glyph%d-%d\">\n",
@@ -840,16 +840,16 @@ _cairo_svg_document_emit_glyph (cairo_svg_document_t	*document,
 
     _cairo_output_stream_printf (document->xml_node_glyphs, "</symbol>\n");
 
-    return CAIRO_STATUS_SUCCESS;
+    return CAIRO_INT_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _cairo_svg_document_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
 				      void				*closure)
 {
     cairo_svg_document_t *document = closure;
+    cairo_int_status_t status = CAIRO_INT_STATUS_SUCCESS;
     unsigned int i;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     _cairo_scaled_font_freeze_cache (font_subset->scaled_font);
     for (i = 0; i < font_subset->num_glyphs; i++) {
@@ -1163,7 +1163,7 @@ static cairo_int_status_t
 _cairo_surface_base64_encode (cairo_surface_t       *surface,
 			      cairo_output_stream_t *output)
 {
-    cairo_status_t status;
+    cairo_int_status_t status;
     base64_write_closure_t info;
 
     status = _cairo_surface_base64_encode_jpeg (surface, output);
@@ -2137,7 +2137,7 @@ _cairo_svg_surface_fill_stroke (void			*abstract_surface,
 				cairo_fill_rule_t	 fill_rule,
 				double			 fill_tolerance,
 				cairo_antialias_t	 fill_antialias,
-				cairo_path_fixed_t	*path,
+				const cairo_path_fixed_t*path,
 				cairo_operator_t	 stroke_op,
 				const cairo_pattern_t	*stroke_source,
 				const cairo_stroke_style_t	*stroke_style,
@@ -2145,7 +2145,7 @@ _cairo_svg_surface_fill_stroke (void			*abstract_surface,
 				const cairo_matrix_t		*stroke_ctm_inverse,
 				double			 stroke_tolerance,
 				cairo_antialias_t	 stroke_antialias,
-				cairo_clip_t		*clip)
+				const cairo_clip_t	*clip)
 {
     cairo_svg_surface_t *surface = abstract_surface;
     cairo_status_t status;
@@ -2179,11 +2179,11 @@ static cairo_int_status_t
 _cairo_svg_surface_fill (void			*abstract_surface,
 			 cairo_operator_t	 op,
 			 const cairo_pattern_t	*source,
-			 cairo_path_fixed_t	*path,
+			 const cairo_path_fixed_t*path,
 			 cairo_fill_rule_t	 fill_rule,
 			 double			 tolerance,
 			 cairo_antialias_t	 antialias,
-			 cairo_clip_t		*clip)
+			 const cairo_clip_t	*clip)
 {
     cairo_svg_surface_t *surface = abstract_surface;
     cairo_status_t status;
@@ -2274,7 +2274,7 @@ static cairo_int_status_t
 _cairo_svg_surface_paint (void		    *abstract_surface,
 			  cairo_operator_t   op,
 			  const cairo_pattern_t   *source,
-			  cairo_clip_t		  *clip)
+			  const cairo_clip_t	  *clip)
 {
     cairo_status_t status;
     cairo_svg_surface_t *surface = abstract_surface;
@@ -2340,7 +2340,7 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
 			 cairo_operator_t     op,
 			 const cairo_pattern_t	    *source,
 			 const cairo_pattern_t	    *mask,
-			 cairo_clip_t		    *clip)
+			 const cairo_clip_t	    *clip)
 {
     cairo_status_t status;
     cairo_svg_surface_t *surface = abstract_surface;
@@ -2430,13 +2430,13 @@ static cairo_int_status_t
 _cairo_svg_surface_stroke (void			*abstract_dst,
 			   cairo_operator_t      op,
 			   const cairo_pattern_t *source,
-			   cairo_path_fixed_t	*path,
+			   const cairo_path_fixed_t*path,
 			   const cairo_stroke_style_t *stroke_style,
 			   const cairo_matrix_t	*ctm,
 			   const cairo_matrix_t	*ctm_inverse,
 			   double		 tolerance,
 			   cairo_antialias_t	 antialias,
-			   cairo_clip_t		*clip)
+			   const cairo_clip_t	*clip)
 {
     cairo_svg_surface_t *surface = abstract_dst;
     cairo_status_t status;
@@ -2473,13 +2473,13 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
 				cairo_glyph_t		*glyphs,
 				int			 num_glyphs,
 				cairo_scaled_font_t	*scaled_font,
-				cairo_clip_t		*clip,
+				const cairo_clip_t	*clip,
 				int			*remaining_glyphs)
 {
     cairo_svg_surface_t *surface = abstract_surface;
     cairo_svg_document_t *document = surface->document;
     cairo_path_fixed_t path;
-    cairo_status_t status;
+    cairo_int_status_t status;
     cairo_scaled_font_subsets_glyph_t subset_glyph;
     int i;
 
@@ -2834,7 +2834,7 @@ _cairo_svg_surface_supports_fine_grained_fallbacks (void	*abstract_surface)
 						       CAIRO_OPERATOR_SOURCE);
     }
 
-    return status == CAIRO_STATUS_SUCCESS;
+    return status == CAIRO_INT_STATUS_SUCCESS;
 }
 
 static const cairo_paginated_surface_backend_t cairo_svg_surface_paginated_backend = {

@@ -39,7 +39,9 @@
 #include "cairoint.h"
 #include "cairo-private.h"
 
+#include "cairo-compiler-private.h"
 #include "cairo-error-private.h"
+
 #include <assert.h>
 
 /**
@@ -67,3 +69,5 @@ _cairo_error (cairo_status_t status)
 
     return status;
 }
+
+COMPILE_TIME_ASSERT ((int)CAIRO_INT_STATUS_LAST_STATUS == (int)CAIRO_STATUS_LAST_STATUS);

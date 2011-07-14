@@ -2,6 +2,7 @@
  * Copyright © 2004 Carl Worth
  * Copyright © 2006 Red Hat, Inc.
  * Copyright © 2009 Chris Wilson
+ * Copyright © 2011 Intel Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -52,6 +53,7 @@ struct _edge {
     edge_t *next, *prev;
     edge_t *right;
     cairo_fixed_t x, top;
+    int a_or_b;
     int dir;
 };
 
@@ -83,8 +85,6 @@ typedef struct _sweep_line {
     edge_t *insert_left, *insert_right;
     int32_t current_y;
     int32_t last_y;
-
-    cairo_fill_rule_t fill_rule;
 
     jmp_buf unwind;
 } sweep_line_t;
@@ -258,8 +258,7 @@ CAIRO_COMBSORT_DECLARE (_rectangle_sort,
 static void
 sweep_line_init (sweep_line_t	 *sweep_line,
 		 rectangle_t	**rectangles,
-		 int		  num_rectangles,
-		 cairo_fill_rule_t fill_rule)
+		 int		  num_rectangles)
 {
     _rectangle_sort (rectangles, num_rectangles);
     rectangles[num_rectangles] = NULL;
@@ -280,8 +279,6 @@ sweep_line_init (sweep_line_t	 *sweep_line,
     sweep_line->current_y = INT32_MIN;
     sweep_line->last_y = INT32_MIN;
 
-    sweep_line->fill_rule = fill_rule;
-
     pqueue_init (&sweep_line->pq);
 }
 
@@ -292,39 +289,21 @@ sweep_line_fini (sweep_line_t *sweep_line)
 }
 
 static void
-edge_end_box (sweep_line_t *sweep_line,
-	      edge_t	*left,
-	      int32_t		 bot,
-	      cairo_bool_t	 do_traps,
-	      void	        *container)
+end_box (sweep_line_t *sweep_line, edge_t *left, int32_t bot, cairo_boxes_t *out)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
-
-    /* Only emit (trivial) non-degenerate trapezoids with positive height. */
     if (likely (left->top < bot)) {
-	if (do_traps) {
-	    cairo_line_t _left = {
-		{ left->x, left->top },
-		{ left->x, bot },
-	    }, _right = {
-		{ left->right->x, left->top },
-		{ left->right->x, bot },
-	    };
-	    _cairo_traps_add_trap (container, left->top, bot, &_left, &_right);
-	    status = _cairo_traps_status ((cairo_traps_t *) container);
-	} else {
-	    cairo_box_t box;
+	cairo_status_t status;
+	cairo_box_t box;
 
-	    box.p1.x = left->x;
-	    box.p1.y = left->top;
-	    box.p2.x = left->right->x;
-	    box.p2.y = bot;
+	box.p1.x = left->x;
+	box.p1.y = left->top;
+	box.p2.x = left->right->x;
+	box.p2.y = bot;
 
-	    status = _cairo_boxes_add (container, CAIRO_ANTIALIAS_DEFAULT, &box);
-	}
+	status = _cairo_boxes_add (out, CAIRO_ANTIALIAS_DEFAULT, &box);
+	if (unlikely (status))
+	    longjmp (sweep_line->unwind, status);
     }
-    if (unlikely (status))
-	longjmp (sweep_line->unwind, status);
 
     left->right = NULL;
 }
@@ -335,12 +314,11 @@ edge_end_box (sweep_line_t *sweep_line,
  * right edge differs from `edge->next', or do nothing if the new
  * trapezoid would be a continuation of the existing one. */
 static inline void
-edge_start_or_continue_box (sweep_line_t *sweep_line,
-			    edge_t	*left,
-			    edge_t	*right,
-			    int		 top,
-			    cairo_bool_t	 do_traps,
-			    void		*container)
+start_or_continue_box (sweep_line_t *sweep_line,
+		       edge_t	*left,
+		       edge_t	*right,
+		       int		 top,
+		       cairo_boxes_t *out)
 {
     if (left->right == right)
 	return;
@@ -352,8 +330,7 @@ edge_start_or_continue_box (sweep_line_t *sweep_line,
 	    return;
 	}
 
-	edge_end_box (sweep_line,
-		      left, top, do_traps, container);
+	end_box (sweep_line, left, top, out);
     }
 
     if (right != NULL && left->x != right->x) {
@@ -362,12 +339,16 @@ edge_start_or_continue_box (sweep_line_t *sweep_line,
     }
 }
 
+static inline int is_zero(const int *winding)
+{
+    return winding[0] == 0 || winding[1] == 0;
+}
+
 static inline void
-active_edges_to_traps (sweep_line_t	*sweep,
-		       cairo_bool_t	 do_traps,
-		       void		*container)
+active_edges (sweep_line_t *sweep, cairo_boxes_t *out)
 {
     int top = sweep->current_y;
+    int winding[2] = { 0 };
     edge_t *pos;
 
     if (sweep->last_y == sweep->current_y)
@@ -377,102 +358,49 @@ active_edges_to_traps (sweep_line_t	*sweep,
     if (pos == &sweep->tail)
 	return;
 
-    if (sweep->fill_rule == CAIRO_FILL_RULE_WINDING) {
+    do {
+	edge_t *left, *right;
+
+	left = pos;
 	do {
-	    edge_t *left, *right;
-	    int winding;
+	    winding[left->a_or_b] += left->dir;
+	    if (!is_zero (winding))
+		break;
+	    if (left->next == &sweep->tail)
+		goto out;
 
-	    left = pos;
-	    winding = left->dir;
+	    if (unlikely (left->right != NULL))
+		end_box (sweep, left, top, out);
 
-	    right = left->next;
+	    left = left->next;
+	} while (1);
 
-	    /* Check if there is a co-linear edge with an existing trap */
-	    if (left->right == NULL) {
-		while (unlikely (right->x == left->x)) {
-		    winding += right->dir;
-		    if (right->right != NULL) {
-			/* continuation on left */
-			left->top = right->top;
-			left->right = right->right;
-			right->right = NULL;
-			winding -= right->dir;
-			break;
-		    }
+	right = left->next;
+	do {
+	    if (unlikely (right->right != NULL))
+		end_box (sweep, right, top, out);
 
-		    right = right->next;
-		}
-
-		if (winding == 0) {
-		    pos = right;
-		    continue;
-		}
+	    winding[right->a_or_b] += right->dir;
+	    if (is_zero (winding)) {
+		/* skip co-linear edges */
+		if (likely (right->x != right->next->x))
+		    break;
 	    }
 
-	    /* Greedily search for the closing edge, so that we generate the
-	     * maximal span width with the minimal number of trapezoids.
-	     */
+	    right = right->next;
+	} while (TRUE);
 
-	    do {
-		/* End all subsumed traps */
-		if (unlikely (right->right != NULL)) {
-		    edge_end_box (sweep,
-				  right, top, do_traps, container);
-		}
+	start_or_continue_box (sweep, left, right, top, out);
 
-		winding += right->dir;
-		if (winding == 0) {
-		    /* skip co-linear edges */
-		    if (likely (right->x != right->next->x))
-			break;
-		}
+	pos = right->next;
+    } while (pos != &sweep->tail);
 
-		right = right->next;
-	    } while (TRUE);
-
-	    edge_start_or_continue_box (sweep,
-					left, right, top,
-					do_traps, container);
-
-	    pos = right->next;
-	} while (pos != &sweep->tail);
-    } else {
-	do {
-	    edge_t *right = pos->next;
-	    int count = 0;
-
-	    do {
-		/* End all subsumed traps */
-		if (unlikely (right->right != NULL)) {
-		    edge_end_box (sweep,
-				  right, top, do_traps, container);
-		}
-
-		if (++count & 1) {
-		    /* skip co-linear edges */
-		    if (likely (right->x != right->next->x))
-			break;
-		}
-
-		right = right->next;
-	    } while (TRUE);
-
-	    edge_start_or_continue_box (sweep,
-					pos, right, top,
-					do_traps, container);
-
-	    pos = right->next;
-	} while (pos != &sweep->tail);
-    }
-
+out:
     sweep->last_y = sweep->current_y;
 }
 
 static inline void
-sweep_line_delete_edge (sweep_line_t *sweep_line,
-			edge_t *edge,
-			cairo_bool_t do_traps,
-			void *container)
+sweep_line_delete_edge (sweep_line_t *sweep_line, edge_t *edge, cairo_boxes_t *out)
 {
     if (edge->right != NULL) {
 	edge_t *next = edge->next;
@@ -480,10 +408,7 @@ sweep_line_delete_edge (sweep_line_t *sweep_line,
 	    next->top = edge->top;
 	    next->right = edge->right;
 	} else {
-	    edge_end_box (sweep_line,
-			  edge,
-			  sweep_line->current_y,
-			  do_traps, container);
+	    end_box (sweep_line, edge, sweep_line->current_y, out);
 	}
     }
 
@@ -496,31 +421,15 @@ sweep_line_delete_edge (sweep_line_t *sweep_line,
     edge->next->prev = edge->prev;
 }
 
-static inline cairo_bool_t
+static inline void
 sweep_line_delete (sweep_line_t	*sweep,
 		   rectangle_t	*rectangle,
-		   cairo_bool_t		 do_traps,
-		   void			*container)
+		   cairo_boxes_t *out)
 {
-    cairo_bool_t update;
-
-    update = TRUE;
-    if (sweep->fill_rule == CAIRO_FILL_RULE_WINDING &&
-	rectangle->left.prev->dir == rectangle->left.dir)
-    {
-	update = rectangle->left.next != &rectangle->right;
-    }
-
-    sweep_line_delete_edge (sweep,
-			    &rectangle->left,
-			    do_traps, container);
-
-    sweep_line_delete_edge (sweep,
-			    &rectangle->right,
-			    do_traps, container);
+    sweep_line_delete_edge (sweep, &rectangle->left, out);
+    sweep_line_delete_edge (sweep, &rectangle->right, out);
 
     pqueue_pop (&sweep->pq);
-    return update;
 }
 
 static inline void
@@ -552,9 +461,8 @@ insert_edge (edge_t *edge, edge_t *pos)
     pos->prev = edge;
 }
 
-static inline cairo_bool_t
-sweep_line_insert (sweep_line_t	*sweep,
-		   rectangle_t	*rectangle)
+static inline void
+sweep_line_insert (sweep_line_t	*sweep, rectangle_t	*rectangle)
 {
     edge_t *pos;
 
@@ -571,29 +479,16 @@ sweep_line_insert (sweep_line_t	*sweep,
     sweep->insert_left = &rectangle->left;
 
     pqueue_push (sweep, rectangle);
-
-    if (sweep->fill_rule == CAIRO_FILL_RULE_WINDING &&
-	rectangle->left.prev->dir == rectangle->left.dir)
-    {
-	return rectangle->left.next != &rectangle->right;
-    }
-
-    return TRUE;
 }
 
 static cairo_status_t
-_cairo_bentley_ottmann_tessellate_rectangular (rectangle_t	**rectangles,
-					       int			  num_rectangles,
-					       cairo_fill_rule_t	  fill_rule,
-					       cairo_bool_t		 do_traps,
-					       void			*container)
+intersect (rectangle_t **rectangles, int num_rectangles, cairo_boxes_t *out)
 {
     sweep_line_t sweep_line;
     rectangle_t *rectangle;
     cairo_status_t status;
-    cairo_bool_t update = FALSE;
 
-    sweep_line_init (&sweep_line, rectangles, num_rectangles, fill_rule);
+    sweep_line_init (&sweep_line, rectangles, num_rectangles);
     if ((status = setjmp (sweep_line.unwind)))
 	goto unwind;
 
@@ -605,42 +500,29 @@ _cairo_bentley_ottmann_tessellate_rectangular (rectangle_t	**rectangles,
 	    stop = rectangle_peek_stop (&sweep_line);
 	    while (stop != NULL && stop->bottom < rectangle->top) {
 		if (stop->bottom != sweep_line.current_y) {
-		    if (update) {
-			active_edges_to_traps (&sweep_line,
-					       do_traps, container);
-			update = FALSE;
-		    }
-
+		    active_edges (&sweep_line, out);
 		    sweep_line.current_y = stop->bottom;
 		}
 
-		update |= sweep_line_delete (&sweep_line, stop, do_traps, container);
+		sweep_line_delete (&sweep_line, stop, out);
 
 		stop = rectangle_peek_stop (&sweep_line);
 	    }
 
-	    if (update) {
-		active_edges_to_traps (&sweep_line, do_traps, container);
-		update = FALSE;
-	    }
-
+	    active_edges (&sweep_line, out);
 	    sweep_line.current_y = rectangle->top;
 	}
 
-	update |= sweep_line_insert (&sweep_line, rectangle);
+	sweep_line_insert (&sweep_line, rectangle);
     } while ((rectangle = rectangle_pop_start (&sweep_line)) != NULL);
 
     while ((rectangle = rectangle_peek_stop (&sweep_line)) != NULL) {
 	if (rectangle->bottom != sweep_line.current_y) {
-	    if (update) {
-		active_edges_to_traps (&sweep_line, do_traps, container);
-		update = FALSE;
-	    }
-
+	    active_edges (&sweep_line, out);
 	    sweep_line.current_y = rectangle->bottom;
 	}
 
-	update |= sweep_line_delete (&sweep_line, rectangle, do_traps, container);
+	sweep_line_delete (&sweep_line, rectangle, out);
     }
 
 unwind:
@@ -648,80 +530,34 @@ unwind:
     return status;
 }
 
-cairo_status_t
-_cairo_bentley_ottmann_tessellate_rectangular_traps (cairo_traps_t *traps,
-						     cairo_fill_rule_t fill_rule)
+static cairo_status_t
+_cairo_boxes_intersect_with_box (const cairo_boxes_t *boxes,
+				 const cairo_box_t *box,
+				 cairo_boxes_t *out)
 {
-    rectangle_t stack_rectangles[CAIRO_STACK_ARRAY_LENGTH (rectangle_t)];
-    rectangle_t *rectangles;
-    rectangle_t *stack_rectangles_ptrs[ARRAY_LENGTH (stack_rectangles) + 1];
-    rectangle_t **rectangles_ptrs;
+    const struct _cairo_boxes_chunk *chunk;
     cairo_status_t status;
     int i;
 
-    if (unlikely (traps->num_traps <= 1))
-	return CAIRO_STATUS_SUCCESS;
-
-    assert (traps->is_rectangular);
-
-    dump_traps (traps, "bo-rects-traps-in.txt");
-
-    rectangles = stack_rectangles;
-    rectangles_ptrs = stack_rectangles_ptrs;
-    if (traps->num_traps > ARRAY_LENGTH (stack_rectangles)) {
-	rectangles = _cairo_malloc_ab_plus_c (traps->num_traps,
-					  sizeof (rectangle_t) +
-					  sizeof (rectangle_t *),
-					  sizeof (rectangle_t *));
-	if (unlikely (rectangles == NULL))
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-	rectangles_ptrs = (rectangle_t **) (rectangles + traps->num_traps);
-    }
-
-    for (i = 0; i < traps->num_traps; i++) {
-	if (traps->traps[i].left.p1.x < traps->traps[i].right.p1.x) {
-	    rectangles[i].left.x = traps->traps[i].left.p1.x;
-	    rectangles[i].left.dir = 1;
-
-	    rectangles[i].right.x = traps->traps[i].right.p1.x;
-	    rectangles[i].right.dir = -1;
-	} else {
-	    rectangles[i].right.x = traps->traps[i].left.p1.x;
-	    rectangles[i].right.dir = 1;
-
-	    rectangles[i].left.x = traps->traps[i].right.p1.x;
-	    rectangles[i].left.dir = -1;
+    _cairo_boxes_clear (out);
+    _cairo_boxes_limit (out, box, 1);
+    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
+	for (i = 0; i < chunk->count; i++) {
+	    status = _cairo_boxes_add (out,
+				       CAIRO_ANTIALIAS_DEFAULT,
+				       &chunk->base[i]);
+	    if (unlikely (status))
+		return status;
 	}
-
-	rectangles[i].left.right = NULL;
-	rectangles[i].right.right = NULL;
-
-	rectangles[i].top = traps->traps[i].top;
-	rectangles[i].bottom = traps->traps[i].bottom;
-
-	rectangles_ptrs[i] = &rectangles[i];
     }
 
-    _cairo_traps_clear (traps);
-    status = _cairo_bentley_ottmann_tessellate_rectangular (rectangles_ptrs, i,
-							    fill_rule,
-							    TRUE, traps);
-    traps->is_rectilinear = TRUE;
-    traps->is_rectangular = TRUE;
-
-    if (rectangles != stack_rectangles)
-	free (rectangles);
-
-    dump_traps (traps, "bo-rects-traps-out.txt");
-
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
-_cairo_bentley_ottmann_tessellate_boxes (const cairo_boxes_t *in,
-					 cairo_fill_rule_t fill_rule,
-					 cairo_boxes_t *out)
+_cairo_boxes_intersect (const cairo_boxes_t *a,
+			const cairo_boxes_t *b,
+			cairo_boxes_t *out)
 {
     rectangle_t stack_rectangles[CAIRO_STACK_ARRAY_LENGTH (rectangle_t)];
     rectangle_t *rectangles;
@@ -729,43 +565,39 @@ _cairo_bentley_ottmann_tessellate_boxes (const cairo_boxes_t *in,
     rectangle_t **rectangles_ptrs;
     const struct _cairo_boxes_chunk *chunk;
     cairo_status_t status;
-    int i, j;
+    int i, j, count;
 
-    if (unlikely (in->num_boxes == 0)) {
+    if (unlikely (a->num_boxes == 0 || b->num_boxes == 0)) {
 	_cairo_boxes_clear (out);
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    if (unlikely (in->num_boxes == 1)) {
-	cairo_box_t box = in->chunks.base[0];
-	_cairo_boxes_clear (out);
-
-	if (box.p1.x > box.p2.x) {
-	    cairo_fixed_t tmp = box.p1.x;
-	    box.p1.x = box.p2.x;
-	    box.p2.x = tmp;
-	}
-
-	status = _cairo_boxes_add (out, CAIRO_ANTIALIAS_DEFAULT, &box);
-	assert (status == CAIRO_STATUS_SUCCESS);
-	return CAIRO_STATUS_SUCCESS;
+    if (unlikely (a->num_boxes == 1)) {
+	cairo_box_t box = a->chunks.base[0];
+	return _cairo_boxes_intersect_with_box (b, &box, out);
+    }
+    if (unlikely (b->num_boxes == 1)) {
+	cairo_box_t box = b->chunks.base[0];
+	return _cairo_boxes_intersect_with_box (a, &box, out);
+	/* XXX */
     }
 
     rectangles = stack_rectangles;
     rectangles_ptrs = stack_rectangles_ptrs;
-    if (in->num_boxes > ARRAY_LENGTH (stack_rectangles)) {
-	rectangles = _cairo_malloc_ab_plus_c (in->num_boxes,
-					  sizeof (rectangle_t) +
-					  sizeof (rectangle_t *),
-					  sizeof (rectangle_t *));
+    count = a->num_boxes + b->num_boxes;
+    if (count > ARRAY_LENGTH (stack_rectangles)) {
+	rectangles = _cairo_malloc_ab_plus_c (count,
+					      sizeof (rectangle_t) +
+					      sizeof (rectangle_t *),
+					      sizeof (rectangle_t *));
 	if (unlikely (rectangles == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-	rectangles_ptrs = (rectangle_t **) (rectangles + in->num_boxes);
+	rectangles_ptrs = (rectangle_t **) (rectangles + count);
     }
 
     j = 0;
-    for (chunk = &in->chunks; chunk != NULL; chunk = chunk->next) {
+    for (chunk = &a->chunks; chunk != NULL; chunk = chunk->next) {
 	const cairo_box_t *box = chunk->base;
 	for (i = 0; i < chunk->count; i++) {
 	    if (box[i].p1.x < box[i].p2.x) {
@@ -782,7 +614,9 @@ _cairo_bentley_ottmann_tessellate_boxes (const cairo_boxes_t *in,
 		rectangles[j].left.dir = -1;
 	    }
 
+	    rectangles[j].left.a_or_b = 0;
 	    rectangles[j].left.right = NULL;
+	    rectangles[j].right.a_or_b = 0;
 	    rectangles[j].right.right = NULL;
 
 	    rectangles[j].top = box[i].p1.y;
@@ -792,11 +626,39 @@ _cairo_bentley_ottmann_tessellate_boxes (const cairo_boxes_t *in,
 	    j++;
 	}
     }
+    for (chunk = &b->chunks; chunk != NULL; chunk = chunk->next) {
+	const cairo_box_t *box = chunk->base;
+	for (i = 0; i < chunk->count; i++) {
+	    if (box[i].p1.x < box[i].p2.x) {
+		rectangles[j].left.x = box[i].p1.x;
+		rectangles[j].left.dir = 1;
+
+		rectangles[j].right.x = box[i].p2.x;
+		rectangles[j].right.dir = -1;
+	    } else {
+		rectangles[j].right.x = box[i].p1.x;
+		rectangles[j].right.dir = 1;
+
+		rectangles[j].left.x = box[i].p2.x;
+		rectangles[j].left.dir = -1;
+	    }
+
+	    rectangles[j].left.a_or_b = 1;
+	    rectangles[j].left.right = NULL;
+	    rectangles[j].right.a_or_b = 1;
+	    rectangles[j].right.right = NULL;
+
+	    rectangles[j].top = box[i].p1.y;
+	    rectangles[j].bottom = box[i].p2.y;
+
+	    rectangles_ptrs[j] = &rectangles[j];
+	    j++;
+	}
+    }
+    assert (j == count);
 
     _cairo_boxes_clear (out);
-    status = _cairo_bentley_ottmann_tessellate_rectangular (rectangles_ptrs, j,
-							    fill_rule,
-							    FALSE, out);
+    status = intersect (rectangles_ptrs, j, out);
     if (rectangles != stack_rectangles)
 	free (rectangles);
 

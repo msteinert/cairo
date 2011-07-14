@@ -1960,8 +1960,8 @@ blit_with_span_renderer (struct cell_list *cells,
 			 int xmin, int xmax)
 {
     struct cell *cell = cells->head;
-    int prev_x = xmin;
-    int cover = 0;
+    int prev_x = xmin, last_x = -1;
+    int cover = 0, last_cover = -1;
     cairo_half_open_span_t *spans;
     unsigned num_spans;
 
@@ -2005,26 +2005,34 @@ blit_with_span_renderer (struct cell_list *cells,
 	if (x > prev_x) {
 	    spans[num_spans].x = prev_x;
 	    spans[num_spans].coverage = GRID_AREA_TO_ALPHA (cover);
+	    last_cover = cover;
+	    last_x = prev_x;
 	    ++num_spans;
 	}
 
 	cover += cell->covered_height*GRID_X*2;
 	area = cover - cell->uncovered_area;
 
-	spans[num_spans].x = x;
-	spans[num_spans].coverage = GRID_AREA_TO_ALPHA (area);
-	++num_spans;
+	if (area != last_cover) {
+	    spans[num_spans].x = x;
+	    spans[num_spans].coverage = GRID_AREA_TO_ALPHA (area);
+	    last_cover = area;
+	    last_x = x;
+	    ++num_spans;
+	}
 
 	prev_x = x+1;
     }
 
-    if (prev_x <= xmax) {
+    if (prev_x <= xmax && cover != last_cover) {
 	spans[num_spans].x = prev_x;
 	spans[num_spans].coverage = GRID_AREA_TO_ALPHA (cover);
+	last_cover = cover;
+	last_x = prev_x;
 	++num_spans;
     }
 
-    if (prev_x < xmax && cover) {
+    if (last_x < xmax && last_cover) {
 	spans[num_spans].x = xmax;
 	spans[num_spans].coverage = 0;
 	++num_spans;

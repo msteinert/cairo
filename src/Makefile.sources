@@ -118,9 +118,14 @@ cairo_sources = \
 	cairo-bentley-ottmann-rectilinear.c \
 	cairo-botor-scan-converter.c \
 	cairo-boxes.c \
+	cairo-boxes-intersect.c \
 	cairo.c \
 	cairo-cache.c \
 	cairo-clip.c \
+	cairo-clip-boxes.c \
+	cairo-clip-polygon.c \
+	cairo-clip-region.c \
+	cairo-clip-surface.c \
 	cairo-color.c \
 	cairo-composite-rectangles.c \
 	cairo-debug.c \
@@ -156,6 +161,8 @@ cairo_sources = \
 	cairo-pattern.c \
 	cairo-pen.c \
 	cairo-polygon.c \
+	cairo-polygon-intersect.c \
+	cairo-polygon-reduce.c \
 	cairo-recording-surface.c \
 	cairo-rectangle.c \
 	cairo-rectangular-scan-converter.c \

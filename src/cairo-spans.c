@@ -27,7 +27,10 @@
 #include "cairoint.h"
 
 #include "cairo-composite-rectangles-private.h"
+#include "cairo-clip-private.h"
+#include "cairo-error-private.h"
 #include "cairo-fixed-private.h"
+#include "cairo-types-private.h"
 
 static cairo_scan_converter_t *
 _create_scan_converter (cairo_fill_rule_t			 fill_rule,
@@ -62,6 +65,31 @@ _cairo_surface_composite_polygon (cairo_surface_t	*surface,
     cairo_span_renderer_t *renderer;
     cairo_scan_converter_t *converter;
     cairo_status_t status;
+    cairo_clip_path_t *clip_path = rects->clip->path;
+
+    if (rects->is_bounded) {
+	if (polygon->num_edges == 0)
+	    return CAIRO_STATUS_SUCCESS;
+
+	if (clip_path) { /* XXX */
+	    cairo_polygon_t clipper;
+	    cairo_fill_rule_t clipper_fill_rule;
+	    cairo_antialias_t clipper_antialias;
+
+	    if (_cairo_clip_get_polygon (rects->clip, &clipper,
+					 &clipper_fill_rule,
+					 &clipper_antialias) == CAIRO_INT_STATUS_SUCCESS) {
+		if (clipper_antialias != CAIRO_ANTIALIAS_NONE &&
+		    _cairo_polygon_intersect (polygon, fill_rule,
+					      &clipper, clipper_fill_rule) == CAIRO_STATUS_SUCCESS)
+		{
+		    rects->clip->path = NULL;
+		}
+
+		_cairo_polygon_fini (&clipper);
+	    }
+	}
+    }
 
     converter = _create_scan_converter (fill_rule, antialias, rects);
     status = converter->add_polygon (converter, polygon);
@@ -81,6 +109,7 @@ _cairo_surface_composite_polygon (cairo_surface_t	*surface,
     renderer->destroy (renderer);
  CLEANUP_CONVERTER:
     converter->destroy (converter);
+    rects->clip->path = clip_path;
     return status;
 }
 

@@ -745,7 +745,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
     cairo_image_surface_t *clone = NULL;
     cairo_gl_context_t *ctx;
     int cpp;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_int_status_t status = CAIRO_INT_STATUS_SUCCESS;
 
     status = _cairo_gl_context_acquire (dst->base.device, &ctx);
     if (unlikely (status))
@@ -851,7 +851,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	}
     } else {
         cairo_surface_t *tmp;
-        
+
         tmp = _cairo_gl_surface_create_scratch (ctx,
                                                 dst->base.content,
                                                 width, height);
@@ -864,7 +864,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
                                                src_x, src_y,
                                                width, height,
                                                0, 0);
-        if (status == CAIRO_STATUS_SUCCESS) {
+        if (status == CAIRO_INT_STATUS_SUCCESS) {
             cairo_surface_pattern_t tmp_pattern;
 
             _cairo_pattern_init_for_surface (&tmp_pattern, tmp);
@@ -1212,7 +1212,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 {
     cairo_gl_surface_t *dst = abstract_dst;
     cairo_gl_context_t *ctx;
-    cairo_status_t status;
+    cairo_int_status_t status;
     cairo_gl_composite_t setup;
     cairo_rectangle_int_t rect = { dst_x, dst_y, width, height };
     int dx, dy;
@@ -1634,7 +1634,7 @@ static cairo_int_status_t
 _cairo_gl_surface_paint (void *abstract_surface,
 			 cairo_operator_t	 op,
 			 const cairo_pattern_t *source,
-			 cairo_clip_t	    *clip)
+			 const cairo_clip_t    *clip)
 {
     /* simplify the common case of clearing the surface */
     if (clip == NULL) {
@@ -1658,22 +1658,12 @@ _cairo_gl_surface_polygon (cairo_gl_surface_t *dst,
                            cairo_polygon_t *polygon,
                            cairo_fill_rule_t fill_rule,
                            cairo_antialias_t antialias,
-                           const cairo_composite_rectangles_t *extents,
-                           cairo_clip_t *clip)
+                           const cairo_composite_rectangles_t *extents)
 {
-    cairo_status_t status;
-    cairo_region_t *clip_region = NULL;
+    cairo_region_t *clip_region = _cairo_clip_get_region (extents->clip);
 
-    if (clip != NULL) {
-	status = _cairo_clip_get_region (clip, &clip_region);
-	if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
-	    return CAIRO_STATUS_SUCCESS;
-	if (unlikely (_cairo_status_is_error (status)))
-	    return status;
-
-	if (status == CAIRO_INT_STATUS_UNSUPPORTED)
-            return UNSUPPORTED ("a clip surface would be required");
-    }
+    if (! _cairo_clip_is_region (extents->clip))
+	return UNSUPPORTED ("a clip surface would be required");
 
     if (! _cairo_surface_check_span_renderer (op, src, &dst->base, antialias))
         return UNSUPPORTED ("no span renderer");
@@ -1685,35 +1675,30 @@ _cairo_gl_surface_polygon (cairo_gl_surface_t *dst,
         src = &_cairo_pattern_white.base;
     }
 
-    status = _cairo_surface_composite_polygon (&dst->base,
-                                               op,
-                                               src,
-                                               fill_rule,
-                                               antialias,
-                                               extents,
-                                               polygon,
-                                               clip_region);
-    return status;
+    return _cairo_surface_composite_polygon (&dst->base,
+					     op,
+					     src,
+					     fill_rule,
+					     antialias,
+					     extents,
+					     polygon,
+					     clip_region);
 }
 
 static cairo_int_status_t
 _cairo_gl_surface_stroke (void			        *abstract_surface,
                           cairo_operator_t		 op,
                           const cairo_pattern_t	        *source,
-                          cairo_path_fixed_t		*path,
+                          const cairo_path_fixed_t		*path,
                           const cairo_stroke_style_t	*style,
                           const cairo_matrix_t	        *ctm,
                           const cairo_matrix_t	        *ctm_inverse,
                           double			 tolerance,
                           cairo_antialias_t		 antialias,
-                          cairo_clip_t		        *clip)
+                          const cairo_clip_t		        *clip)
 {
     cairo_gl_surface_t *surface = abstract_surface;
     cairo_composite_rectangles_t extents;
-    cairo_box_t boxes_stack[32], *clip_boxes = boxes_stack;
-    int num_boxes = ARRAY_LENGTH (boxes_stack);
-    cairo_clip_t local_clip;
-    cairo_bool_t have_clip = FALSE;
     cairo_polygon_t polygon;
     cairo_status_t status;
 
@@ -1726,24 +1711,7 @@ _cairo_gl_surface_stroke (void			        *abstract_surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_extents (clip, &extents))
-	clip = NULL;
-
-    if (clip != NULL) {
-	clip = _cairo_clip_init_copy (&local_clip, clip);
-	have_clip = TRUE;
-    }
-
-    status = _cairo_clip_to_boxes (&clip, &extents, &clip_boxes, &num_boxes);
-    if (unlikely (status)) {
-	if (have_clip)
-	    _cairo_clip_fini (&local_clip);
-
-	return status;
-    }
-
-    _cairo_polygon_init (&polygon, clip_boxes, num_boxes);
-
+    _cairo_polygon_init_with_clip (&polygon, extents.clip);
     status = _cairo_path_fixed_stroke_to_polygon (path,
                                                   style,
                                                   ctm, ctm_inverse,
@@ -1752,13 +1720,11 @@ _cairo_gl_surface_stroke (void			        *abstract_surface,
     if (likely (status == CAIRO_STATUS_SUCCESS)) {
         status = _cairo_gl_surface_polygon (surface, op, source, &polygon,
                                             CAIRO_FILL_RULE_WINDING, antialias,
-                                            &extents, clip);
+                                            &extents);
     }
-
     _cairo_polygon_fini (&polygon);
 
-    if (have_clip)
-	_cairo_clip_fini (&local_clip);
+    _cairo_composite_rectangles_fini (&extents);
 
     return status;
 }
@@ -1767,18 +1733,14 @@ static cairo_int_status_t
 _cairo_gl_surface_fill (void			*abstract_surface,
                         cairo_operator_t	 op,
                         const cairo_pattern_t	*source,
-                        cairo_path_fixed_t	*path,
+                        const cairo_path_fixed_t*path,
                         cairo_fill_rule_t	 fill_rule,
                         double			 tolerance,
                         cairo_antialias_t	 antialias,
-                        cairo_clip_t		*clip)
+                        const cairo_clip_t	*clip)
 {
     cairo_gl_surface_t *surface = abstract_surface;
     cairo_composite_rectangles_t extents;
-    cairo_box_t boxes_stack[32], *clip_boxes = boxes_stack;
-    cairo_clip_t local_clip;
-    cairo_bool_t have_clip = FALSE;
-    int num_boxes = ARRAY_LENGTH (boxes_stack);
     cairo_polygon_t polygon;
     cairo_status_t status;
 
@@ -1790,50 +1752,16 @@ _cairo_gl_surface_fill (void			*abstract_surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_clip_contains_extents (clip, &extents))
-	clip = NULL;
-
-#if 0
-    if (extents.is_bounded && clip != NULL) {
-	cairo_clip_path_t *clip_path;
-
-	if (((clip_path = _clip_get_single_path (clip)) != NULL) &&
-	    _cairo_path_fixed_equal (&clip_path->path, path))
-	{
-	    clip = NULL;
-	}
-    }
-#endif
-
-    if (clip != NULL) {
-	clip = _cairo_clip_init_copy (&local_clip, clip);
-	have_clip = TRUE;
-    }
-
-    status = _cairo_clip_to_boxes (&clip, &extents, &clip_boxes, &num_boxes);
-    if (unlikely (status)) {
-	if (have_clip)
-	    _cairo_clip_fini (&local_clip);
-
-	return status;
-    }
-
-    _cairo_polygon_init (&polygon, clip_boxes, num_boxes);
-
+    _cairo_polygon_init_with_clip (&polygon, extents.clip);
     status = _cairo_path_fixed_fill_to_polygon (path, tolerance, &polygon);
     if (likely (status == CAIRO_STATUS_SUCCESS)) {
         status = _cairo_gl_surface_polygon (surface, op, source, &polygon,
                                             fill_rule, antialias,
-                                            &extents, clip);
+                                            &extents);
     }
-
     _cairo_polygon_fini (&polygon);
 
-    if (clip_boxes != boxes_stack)
-	free (clip_boxes);
-
-    if (have_clip)
-	_cairo_clip_fini (&local_clip);
+    _cairo_composite_rectangles_fini (&extents);
 
     return status;
 }

@@ -1522,7 +1522,7 @@ _cairo_win32_surface_show_glyphs_internal (void			 *surface,
 					   cairo_glyph_t	 *glyphs,
 					   int			  num_glyphs,
 					   cairo_scaled_font_t	 *scaled_font,
-					   cairo_clip_t		 *clip,
+					   const cairo_clip_t	 *clip,
 					   int			 *remaining_glyphs,
 					   cairo_bool_t		  glyph_indexing)
 {
@@ -1674,11 +1674,11 @@ cairo_int_status_t
 _cairo_win32_surface_show_glyphs (void			*surface,
 				  cairo_operator_t	 op,
 				  const cairo_pattern_t *source,
-				  cairo_glyph_t	 	*glyphs,
+				  cairo_glyph_t		*glyphs,
 				  int			 num_glyphs,
 				  cairo_scaled_font_t	*scaled_font,
-				  cairo_clip_t          *clip,
-				  int		      	*remaining_glyphs)
+				  const cairo_clip_t          *clip,
+				  int			*remaining_glyphs)
 {
     return _cairo_win32_surface_show_glyphs_internal (surface,
 						      op,

@@ -37,6 +37,7 @@
 
 #include "cairoint.h"
 #include "cairo-box-private.h"
+#include "cairo-error-private.h"
 #include "cairo-path-fixed-private.h"
 
 
