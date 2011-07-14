@@ -28,6 +28,7 @@ test_sources = \
 	clear-source.c					\
 	clip-all.c					\
 	clip-contexts.c					\
+	clip-complex-shape.c				\
 	clip-disjoint.c					\
 	clip-device-offset.c				\
 	clip-draw-unbounded.c				\

@@ -92,6 +92,8 @@ REFERENCE_IMAGES = \
 	clear.svg12.argb32.xfail.png \
 	clear.svg12.rgb24.xfail.png \
 	clip-all.ref.png \
+	clip-complex-shape-eo-aa.ref.png \
+	clip-complex-shape-eo-mono.ref.png \
 	clip-contexts.ref.png \
 	clip-device-offset.argb32.ref.png \
 	clip-device-offset.rgb24.ref.png \
