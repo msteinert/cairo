@@ -491,9 +491,6 @@ _get_image (cairo_xcb_surface_t		 *surface,
 
     _cairo_xcb_connection_release (connection);
 
-    /* synchronisation point */
-    surface->marked_dirty = FALSE;
-
     *image_out = image;
     return CAIRO_STATUS_SUCCESS;
 
@@ -510,11 +507,6 @@ _cairo_xcb_surface_acquire_source_image (void *abstract_surface,
     cairo_xcb_surface_t *surface = abstract_surface;
     cairo_image_surface_t *image;
     cairo_status_t status;
-
-    if (surface->drm != NULL && ! surface->marked_dirty) {
-	return _cairo_surface_acquire_source_image (surface->drm,
-						    image_out, image_extra);
-    }
 
     if (surface->fallback != NULL) {
 	image = (cairo_image_surface_t *) cairo_surface_reference (surface->fallback);
@@ -546,12 +538,7 @@ _cairo_xcb_surface_release_source_image (void *abstract_surface,
 					 cairo_image_surface_t *image,
 					 void *image_extra)
 {
-    cairo_xcb_surface_t *surface = abstract_surface;
-
-    if (surface->drm != NULL && !surface->marked_dirty)
-	_cairo_surface_release_source_image (surface->drm, image, image_extra);
-    else
-	cairo_surface_destroy (&image->base);
+    cairo_surface_destroy (&image->base);
 }
 
 static cairo_bool_t
@@ -656,9 +643,6 @@ _cairo_xcb_surface_flush (void *abstract_surface)
     cairo_xcb_surface_t *surface = abstract_surface;
     cairo_status_t status;
 
-    if (surface->drm != NULL && ! surface->marked_dirty)
-	return surface->drm->backend->flush (surface->drm);
-
     if (likely (surface->fallback == NULL)) {
 	status = CAIRO_STATUS_SUCCESS;
 	if (! surface->base.finished && surface->deferred_clear)
@@ -689,16 +673,6 @@ _cairo_xcb_surface_flush (void *abstract_surface)
     return status;
 }
 
-static cairo_status_t
-_cairo_xcb_surface_mark_dirty (void *abstract_surface,
-			       int x, int y,
-			       int width, int height)
-{
-    cairo_xcb_surface_t *surface = abstract_surface;
-    surface->marked_dirty = TRUE;
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static cairo_surface_t *
 _cairo_xcb_surface_map_to_image (cairo_xcb_surface_t *surface)
 {
@@ -720,9 +694,6 @@ _cairo_xcb_surface_paint (void			*abstract_surface,
 {
     cairo_xcb_surface_t *surface = abstract_surface;
     cairo_status_t status;
-
-    if (surface->drm != NULL && ! surface->marked_dirty)
-	return _cairo_surface_paint (surface->drm, op, source, clip);
 
     if (surface->fallback == NULL) {
 	status = _cairo_xcb_surface_cairo_paint (surface, op, source, clip);
@@ -748,9 +719,6 @@ _cairo_xcb_surface_mask (void			*abstract_surface,
 {
     cairo_xcb_surface_t *surface = abstract_surface;
     cairo_status_t status;
-
-    if (surface->drm != NULL && ! surface->marked_dirty)
-	return _cairo_surface_mask (surface->drm, op, source, mask, clip);
 
     if (surface->fallback == NULL) {
 	status =  _cairo_xcb_surface_cairo_mask (surface,
@@ -785,15 +753,6 @@ _cairo_xcb_surface_stroke (void				*abstract_surface,
 {
     cairo_xcb_surface_t *surface = abstract_surface;
     cairo_status_t status;
-
-    if (surface->drm != NULL && ! surface->marked_dirty) {
-	return _cairo_surface_stroke (surface->drm,
-				      op, source,
-				      path, style,
-				      ctm, ctm_inverse,
-				      tolerance, antialias,
-				      clip);
-    }
 
     if (surface->fallback == NULL) {
 	status = _cairo_xcb_surface_cairo_stroke (surface, op, source,
@@ -838,14 +797,6 @@ _cairo_xcb_surface_fill (void			*abstract_surface,
     cairo_xcb_surface_t *surface = abstract_surface;
     cairo_status_t status;
 
-    if (surface->drm != NULL && ! surface->marked_dirty) {
-	return _cairo_surface_fill (surface->drm,
-				    op, source,
-				    path, fill_rule,
-				    tolerance, antialias,
-				    clip);
-    }
-
     if (surface->fallback == NULL) {
 	status = _cairo_xcb_surface_cairo_fill (surface, op, source,
 						path, fill_rule,
@@ -885,16 +836,6 @@ _cairo_xcb_surface_glyphs (void				*abstract_surface,
     cairo_status_t status;
 
     *num_remaining = 0;
-
-    if (surface->drm != NULL && ! surface->marked_dirty) {
-	return _cairo_surface_show_text_glyphs (surface->drm,
-						op, source,
-						NULL, 0,
-						glyphs, num_glyphs,
-						NULL, 0, 0,
-						scaled_font,
-						clip);
-    }
 
     if (surface->fallback == NULL) {
 	status = _cairo_xcb_surface_cairo_glyphs (surface,
@@ -946,7 +887,7 @@ const cairo_surface_backend_t _cairo_xcb_surface_backend = {
     _cairo_xcb_surface_get_font_options,
 
     _cairo_xcb_surface_flush,
-    _cairo_xcb_surface_mark_dirty,
+    NULL,
     _cairo_xcb_surface_scaled_font_fini,
     _cairo_xcb_surface_scaled_glyph_fini,
 
@@ -1000,8 +941,6 @@ _cairo_xcb_surface_create_internal (cairo_xcb_screen_t		*screen,
     surface->xrender_format = xrender_format;
 
     surface->flags = screen->connection->flags;
-
-    surface->marked_dirty = FALSE;
 
     return &surface->base;
 }

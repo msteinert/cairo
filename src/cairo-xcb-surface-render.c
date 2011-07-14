@@ -981,10 +981,6 @@ _copy_to_picture (cairo_xcb_surface_t *source)
 	    return (cairo_xcb_picture_t *) _cairo_surface_create_in_error (status);
     }
 
-    /* XXX two level device locking, ensure we release the xcb device mutex? */
-    if (source->drm != NULL)
-	cairo_surface_flush (source->drm);
-
     picture = _cairo_xcb_picture_create (source->screen,
 					 source->xrender_format,
 					 source->pixman_format,

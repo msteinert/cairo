@@ -85,9 +85,6 @@ struct _cairo_xcb_surface {
     cairo_xcb_connection_t *connection;
     cairo_xcb_screen_t *screen;
 
-    cairo_surface_t *drm;
-    cairo_bool_t marked_dirty;
-
     xcb_drawable_t drawable;
     cairo_bool_t owns_pixmap;
     int use_pixmap;
