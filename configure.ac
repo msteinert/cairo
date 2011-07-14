@@ -259,17 +259,6 @@ CAIRO_ENABLE_SURFACE_BACKEND(gallium, Gallium3D, no, [
   fi
 ])
 
-CAIRO_ENABLE_FUNCTIONS(xcb_drm, XCB/DRM, no, [
-  if test "x$use_xcb" = "xyes" -a "x$use_drm" = "xyes"; then
-      xcb_drm_REQUIRES="xcb-dri2"
-      PKG_CHECK_MODULES(xcb_drm, $xcb_drm_REQUIRES, ,
-			[AC_MSG_RESULT(no)
-			use_xcb_drm="no (requires $xcb_drm_REQUIRES http://xcb.freedesktop.org)"])
-  else
-    use_xcb_drm="no (requires both --enable-xcb and --enable-drm)"
-  fi
-])
-
 dnl ===========================================================================
 
 CAIRO_ENABLE_FUNCTIONS(png, PNG, yes, [

@@ -84,9 +84,6 @@ _cairo_xcb_screen_finish (cairo_xcb_screen_t *screen)
     _cairo_cache_fini (&screen->radial_pattern_cache);
     _cairo_freelist_fini (&screen->pattern_cache_entry_freelist);
 
-    cairo_device_finish (screen->device);
-    cairo_device_destroy (screen->device);
-
     free (screen);
 }
 
@@ -123,85 +120,6 @@ _pattern_cache_entry_destroy (void *closure)
     cairo_surface_destroy (entry->picture);
     _cairo_freelist_free (&entry->screen->pattern_cache_entry_freelist, entry);
 }
-
-#if CAIRO_HAS_DRM_SURFACE && CAIRO_HAS_XCB_DRM_FUNCTIONS
-#include "drm/cairo-drm-private.h"
-
-#include <drm/drm.h>
-#include <sys/ioctl.h>
-#include <xcb/dri2.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-
-static int drm_magic (int fd, uint32_t *magic)
-{
-    drm_auth_t auth;
-
-    if (ioctl (fd, DRM_IOCTL_GET_MAGIC, &auth))
-	return -errno;
-
-    *magic = auth.magic;
-    return 0;
-}
-
-static cairo_device_t *
-_xcb_drm_device (xcb_connection_t	*xcb_connection,
-		 xcb_screen_t		*xcb_screen)
-{
-    cairo_device_t *device = NULL;
-    xcb_dri2_connect_reply_t *connect;
-    drm_magic_t magic;
-    int fd;
-
-    connect = xcb_dri2_connect_reply (xcb_connection,
-				      xcb_dri2_connect (xcb_connection,
-							xcb_screen->root,
-							0),
-				      0);
-    if (connect == NULL)
-	return NULL;
-
-    fd = open (xcb_dri2_connect_device_name (connect), O_RDWR);
-    free (connect);
-
-    if (fd < 0)
-	return NULL;
-
-    device = cairo_drm_device_get_for_fd (fd);
-    close (fd);
-
-    if (device != NULL) {
-	xcb_dri2_authenticate_reply_t *authenticate;
-
-	if (drm_magic (((cairo_drm_device_t *) device)->fd, &magic) < 0) {
-	    cairo_device_destroy (device);
-	    return NULL;
-	}
-
-	authenticate = xcb_dri2_authenticate_reply (xcb_connection,
-						    xcb_dri2_authenticate (xcb_connection,
-									   xcb_screen->root,
-									   magic),
-						    0);
-	if (authenticate == NULL) {
-	    cairo_device_destroy (device);
-	    return NULL;
-	}
-
-	free (authenticate);
-    }
-
-    return device;
-}
-#else
-static cairo_device_t *
-_xcb_drm_device (xcb_connection_t	*xcb_connection,
-		 xcb_screen_t		*xcb_screen)
-{
-    return NULL;
-}
-#endif
 
 cairo_xcb_screen_t *
 _cairo_xcb_screen_get (xcb_connection_t *xcb_connection,
@@ -245,11 +163,6 @@ _cairo_xcb_screen_get (xcb_connection_t *xcb_connection,
     cairo_list_init (&screen->surfaces);
     cairo_list_init (&screen->pictures);
 
-    if (connection->flags & CAIRO_XCB_HAS_DRI2)
-	screen->device = _xcb_drm_device (xcb_connection, xcb_screen);
-    else
-	screen->device = NULL;
-
     screen->gc_depths = 0;
     memset (screen->gc, 0, sizeof (screen->gc));
 
@@ -284,7 +197,6 @@ error_linear:
     _cairo_cache_fini (&screen->linear_pattern_cache);
 error_screen:
     CAIRO_MUTEX_UNLOCK (connection->screens_mutex);
-    cairo_device_destroy (screen->device);
     free (screen);
 
     return NULL;

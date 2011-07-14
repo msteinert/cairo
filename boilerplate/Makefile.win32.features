@@ -211,18 +211,6 @@ enabled_cairo_boilerplate_cxx_sources += $(cairo_boilerplate_gallium_cxx_sources
 enabled_cairo_boilerplate_sources += $(cairo_boilerplate_gallium_sources)
 endif
 
-unsupported_cairo_boilerplate_headers += $(cairo_boilerplate_xcb_drm_headers)
-all_cairo_boilerplate_headers += $(cairo_boilerplate_xcb_drm_headers)
-all_cairo_boilerplate_private += $(cairo_boilerplate_xcb_drm_private)
-all_cairo_boilerplate_cxx_sources += $(cairo_boilerplate_xcb_drm_cxx_sources)
-all_cairo_boilerplate_sources += $(cairo_boilerplate_xcb_drm_sources)
-ifeq ($(CAIRO_HAS_XCB_DRM_FUNCTIONS),1)
-enabled_cairo_boilerplate_headers += $(cairo_boilerplate_xcb_drm_headers)
-enabled_cairo_boilerplate_private += $(cairo_boilerplate_xcb_drm_private)
-enabled_cairo_boilerplate_cxx_sources += $(cairo_boilerplate_xcb_drm_cxx_sources)
-enabled_cairo_boilerplate_sources += $(cairo_boilerplate_xcb_drm_sources)
-endif
-
 supported_cairo_boilerplate_headers += $(cairo_boilerplate_png_headers)
 all_cairo_boilerplate_headers += $(cairo_boilerplate_png_headers)
 all_cairo_boilerplate_private += $(cairo_boilerplate_png_private)

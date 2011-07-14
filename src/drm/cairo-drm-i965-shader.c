@@ -43,11 +43,6 @@
 
 #include "cairo-drm-intel-brw-eu.h"
 
-#if CAIRO_HAS_XCB_SURFACE && CAIRO_HAS_XCB_DRM_FUNCTIONS
-/* for DRI2/DRM interoperability */
-#include "cairo-xcb-private.h"
-#endif
-
 /* Theory of shaders:
  *
  * 3 types of rectangular inputs:
@@ -399,25 +394,6 @@ i965_shader_acquire_surface (i965_shader_t *shader,
 
     assert (src->type.fragment == FS_NONE);
     drm = surface = pattern->surface;
-
-#if CAIRO_HAS_XCB_SURFACE && CAIRO_HAS_XCB_DRM_FUNCTIONS
-    if (surface->type == CAIRO_SURFACE_TYPE_XCB) {
-	cairo_surface_t *xcb = surface;
-
-	if (xcb->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
-	    xcb = ((cairo_surface_subsurface_t *) surface)->target;
-	} else if (xcb->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT) {
-	    xcb = ((cairo_surface_snapshot_t *) surface)->target;
-	}
-
-	/* XXX copy windows (IncludeInferiors) to a pixmap/drm surface
-	 * xcb = _cairo_xcb_surface_to_drm (xcb)
-	 */
-	xcb = ((cairo_xcb_surface_t *) xcb)->drm;
-	if (xcb != NULL)
-	    drm = xcb;
-    }
-#endif
 
     if (surface->type == CAIRO_SURFACE_TYPE_DRM) {
 	if (surface->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {

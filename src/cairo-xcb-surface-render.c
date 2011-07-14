@@ -40,10 +40,6 @@
 #include "cairo-surface-subsurface-private.h"
 #include "cairo-xcb-private.h"
 
-#if CAIRO_HAS_XCB_DRM_FUNCTIONS && CAIRO_HAS_DRM_SURFACE
-#include "drm/cairo-drm-private.h"
-#endif
-
 #define PIXMAN_MAX_INT ((pixman_fixed_1 >> 1) - pixman_fixed_e) /* need to ensure deltas also fit */
 
 /**
@@ -1115,75 +1111,6 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 		    return picture;
 	    }
 	}
-    }
-#endif
-#if CAIRO_HAS_XCB_DRM_FUNCTIONS && CAIRO_HAS_DRM_SURFACE
-    else if (source->type == CAIRO_SURFACE_TYPE_DRM &&
-	     target->drm != NULL &&
-	     target->drm->device == source->device)
-    {
-	cairo_drm_surface_t *drm = (cairo_drm_surface_t *) source;
-	cairo_xcb_surface_t *tmp;
-	xcb_pixmap_t pixmap;
-	pixman_format_code_t pixman_format;
-	cairo_surface_pattern_t pattern;
-	cairo_status_t status;
-
-	/* XXX XRenderCreatePictureForNative:
-	 * Copy the source to a temporary pixmap if possible.
-	 * Still cheaper than pushing the image via the CPU.
-	 */
-
-	switch (drm->format) {
-	case CAIRO_FORMAT_A1:
-	    pixman_format = PIXMAN_a1;
-	    break;
-	case CAIRO_FORMAT_A8:
-	    pixman_format = PIXMAN_a8;
-	    break;
-	case CAIRO_FORMAT_RGB24:
-	    pixman_format = PIXMAN_x8r8g8b8;
-	    break;
-	default:
-	case CAIRO_FORMAT_ARGB32:
-	    pixman_format = PIXMAN_a8r8g8b8;
-	    break;
-	}
-
-	pixmap =
-	    _cairo_xcb_connection_create_pixmap (target->connection,
-						 PIXMAN_FORMAT_DEPTH (pixman_format),
-						 target->drawable,
-						 drm->width, drm->height);
-
-	tmp = (cairo_xcb_surface_t *)
-	    _cairo_xcb_surface_create_internal (target->screen,
-						pixmap, TRUE,
-						pixman_format,
-						target->connection->standard_formats[drm->format],
-						drm->width, drm->height);
-	if (unlikely (tmp->base.status)) {
-	    _cairo_xcb_connection_free_pixmap (target->connection, pixmap);
-	    return (cairo_xcb_picture_t *) tmp;
-	}
-
-	_cairo_pattern_init_for_surface (&pattern, source);
-	status = _cairo_surface_paint (&tmp->base,
-				       CAIRO_OPERATOR_SOURCE,
-				       &pattern.base,
-				       NULL);
-	_cairo_pattern_fini (&pattern.base);
-
-	if (unlikely (status)) {
-	    cairo_surface_destroy (&tmp->base);
-	    return (cairo_xcb_picture_t *) _cairo_surface_create_in_error (status);
-	}
-
-	picture = _copy_to_picture (tmp);
-	cairo_surface_destroy (&tmp->base);
-
-	if (unlikely (picture->base.status))
-	    return picture;
     }
 #endif
 #if CAIRO_HAS_GL_FUNCTIONS

@@ -39,11 +39,6 @@
 #include "cairo-surface-subsurface-private.h"
 #include "cairo-surface-snapshot-private.h"
 
-#if CAIRO_HAS_XCB_SURFACE && CAIRO_HAS_XCB_DRM_FUNCTIONS
-/* for DRI2/DRM interoperability */
-#include "cairo-xcb-private.h"
-#endif
-
 #if 0
 static cairo_status_t
 i915_packed_pixel_surface_finish (void *abstract_surface)
@@ -1530,25 +1525,6 @@ i915_shader_acquire_surface (i915_shader_t *shader,
     extend = pattern->base.extend;
     src->base.matrix = pattern->base.matrix;
     filter = sampled_area (pattern, extents, &sample);
-
-#if CAIRO_HAS_XCB_SURFACE && CAIRO_HAS_XCB_DRM_FUNCTIONS
-    if (surface->type == CAIRO_SURFACE_TYPE_XCB) {
-	cairo_surface_t *xcb = surface;
-
-	if (xcb->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
-	    xcb = ((cairo_surface_subsurface_t *) surface)->target;
-	} else if (xcb->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT) {
-	    xcb = ((cairo_surface_snapshot_t *) surface)->target;
-	}
-
-	/* XXX copy windows (IncludeInferiors) to a pixmap/drm surface
-	 * xcb = _cairo_xcb_surface_to_drm (xcb)
-	 */
-	xcb = ((cairo_xcb_surface_t *) xcb)->drm;
-	if (xcb != NULL)
-	    drm = xcb;
-    }
-#endif
 
     if (surface->type == CAIRO_SURFACE_TYPE_DRM) {
 	if (surface->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {

@@ -400,7 +400,6 @@ AC_DEFUN([CAIRO_REPORT],
 	echo "  WGL functions:   $use_wgl"
 	echo "  EGL functions:   $use_egl"
 	echo "  X11-xcb functions: $use_xlib_xcb"
-	echo "  XCB-drm functions: $use_xcb_drm"
 	echo "  XCB-shm functions: $use_xcb_shm"
 	echo ""
 	echo "The following features and utilities:"

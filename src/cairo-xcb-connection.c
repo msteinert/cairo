@@ -41,10 +41,6 @@
 #include <xcb/bigreq.h>
 #include <errno.h>
 
-#if CAIRO_HAS_XCB_DRM_FUNCTIONS
-#include <xcb/dri2.h>
-#endif
-
 #if CAIRO_HAS_XCB_SHM_FUNCTIONS
 #include <sys/ipc.h>
 #include <sys/shm.h>
@@ -446,32 +442,10 @@ _cairo_xcb_connection_query_shm (cairo_xcb_connection_t *connection)
 }
 #endif
 
-#if CAIRO_HAS_XCB_DRM_FUNCTIONS
-static void
-_cairo_xcb_connection_query_dri2 (cairo_xcb_connection_t *connection)
-{
-    xcb_connection_t *c = connection->xcb_connection;
-    xcb_dri2_query_version_reply_t *version;
-
-    version = xcb_dri2_query_version_reply (c,
-					    xcb_dri2_query_version (c,
-								    XCB_DRI2_MAJOR_VERSION,
-								    XCB_DRI2_MINOR_VERSION),
-					    0);
-    if (version == NULL)
-	return;
-
-    free (version);
-
-    connection->flags |= CAIRO_XCB_HAS_DRI2;
-}
-#endif
-
 static cairo_status_t
 _device_flush (void *device)
 {
     cairo_xcb_connection_t *connection = device;
-    cairo_xcb_screen_t *screen;
     cairo_status_t status;
 
     status = cairo_device_acquire (&connection->device);
@@ -481,15 +455,6 @@ _device_flush (void *device)
 #if CAIRO_HAS_XCB_SHM_FUNCTIONS
     _cairo_xcb_connection_shm_mem_pools_flush (connection);
 #endif
-
-    CAIRO_MUTEX_LOCK (connection->screens_mutex);
-    cairo_list_foreach_entry (screen, cairo_xcb_screen_t,
-			      &connection->screens, link)
-    {
-	if (screen->device != NULL)
-	    cairo_device_flush (screen->device);
-    }
-    CAIRO_MUTEX_UNLOCK (connection->screens_mutex);
 
     xcb_flush (connection->xcb_connection);
 
@@ -675,9 +640,6 @@ _cairo_xcb_connection_get (xcb_connection_t *xcb_connection)
 #if 0
     xcb_prefetch_extension_data (xcb_connection, &xcb_cairo_id);
 #endif
-#if CAIRO_HAS_XCB_DRM_FUNCTIONS
-    xcb_prefetch_extension_data (xcb_connection, &xcb_dri2_id);
-#endif
 
     xcb_prefetch_maximum_request_length (xcb_connection);
 
@@ -708,15 +670,6 @@ _cairo_xcb_connection_get (xcb_connection_t *xcb_connection)
     if (ext != NULL && ext->present) {
 	_cairo_xcb_connection_query_shm (connection);
 	connection->shm = ext;
-    }
-#endif
-
-    connection->dri2 = NULL;
-#if CAIRO_HAS_XCB_DRM_FUNCTIONS
-    ext = xcb_get_extension_data (xcb_connection, &xcb_dri2_id);
-    if (ext != NULL && ext->present) {
-	_cairo_xcb_connection_query_dri2 (connection);
-	connection->dri2 = ext;
     }
 #endif
 

@@ -173,7 +173,6 @@ struct _cairo_xcb_screen {
     cairo_xcb_connection_t *connection;
 
     xcb_screen_t	    *xcb_screen;
-    cairo_device_t	    *device;
 
     xcb_gcontext_t gc[4];
     int gc_depths; /* 4 x uint8_t */
@@ -211,7 +210,6 @@ struct _cairo_xcb_connection {
     const xcb_setup_t *root;
     const xcb_query_extension_reply_t *render;
     const xcb_query_extension_reply_t *shm;
-    const xcb_query_extension_reply_t *dri2;
 
     cairo_list_t free_xids;
     cairo_freepool_t xid_pool;

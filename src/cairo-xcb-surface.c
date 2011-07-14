@@ -43,10 +43,6 @@
 #include "cairo-xcb.h"
 #include "cairo-xcb-private.h"
 
-#if CAIRO_HAS_XCB_DRM_FUNCTIONS
-#include <xcb/dri2.h>
-#endif
-
 #define AllPlanes ((unsigned) -1)
 #define CAIRO_ASSUME_PIXMAP 20
 #define XLIB_COORD_MAX 32767
@@ -55,10 +51,6 @@
 slim_hidden_proto (cairo_xcb_surface_create);
 slim_hidden_proto (cairo_xcb_surface_create_for_bitmap);
 slim_hidden_proto (cairo_xcb_surface_create_with_xrender_format);
-#endif
-
-#if CAIRO_HAS_DRM_SURFACE && CAIRO_HAS_XCB_DRM_FUNCTIONS
-#include "drm/cairo-drm-private.h"
 #endif
 
 /**
@@ -191,16 +183,6 @@ _cairo_xcb_surface_create_similar (void			*abstract_other,
 		 height <= 0))
 	return _cairo_xcb_surface_create_similar_image (other, content, width, height);
 
-#if CAIRO_HAS_DRM_SURFACE && CAIRO_HAS_XCB_DRM_FUNCTIONS
-    if (other->drm != NULL) {
-	cairo_surface_t *drm;
-
-	drm = other->drm->backend->create_similar (other->drm, content, width, height);
-	if (drm != NULL)
-	    return drm;
-    }
-#endif
-
     if ((other->flags & CAIRO_XCB_HAS_RENDER) == 0)
 	return _cairo_xcb_surface_create_similar_image (other, content, width, height);
 
@@ -276,16 +258,6 @@ _cairo_xcb_surface_finish (void *abstract_surface)
     }
 
     cairo_list_del (&surface->link);
-
-#if CAIRO_HAS_DRM_SURFACE && CAIRO_HAS_XCB_DRM_FUNCTIONS
-    if (surface->drm != NULL) {
-	cairo_surface_finish (surface->drm);
-	cairo_surface_destroy (surface->drm);
-
-	xcb_dri2_destroy_drawable (surface->connection->xcb_connection,
-				   surface->drawable);
-    }
-#endif
 
     status = _cairo_xcb_connection_acquire (surface->connection);
     if (status == CAIRO_STATUS_SUCCESS) {
@@ -982,74 +954,6 @@ const cairo_surface_backend_t _cairo_xcb_surface_backend = {
     _cairo_xcb_surface_glyphs,
 };
 
-#if CAIRO_HAS_DRM_SURFACE && CAIRO_HAS_XCB_DRM_FUNCTIONS
-static cairo_surface_t *
-_xcb_drm_create_surface_for_drawable (cairo_xcb_connection_t *connection,
-				      cairo_xcb_screen_t *screen,
-				      xcb_drawable_t drawable,
-				      pixman_format_code_t pixman_format,
-				      int width, int height)
-{
-    uint32_t attachments[] = { XCB_DRI2_ATTACHMENT_BUFFER_FRONT_LEFT };
-    xcb_dri2_get_buffers_reply_t *buffers;
-    xcb_dri2_dri2_buffer_t *buffer;
-    cairo_surface_t *surface;
-
-    if (! _cairo_drm_size_is_valid (screen->device, width, height))
-	return NULL;
-
-    xcb_dri2_create_drawable (connection->xcb_connection,
-			      drawable);
-
-    buffers = xcb_dri2_get_buffers_reply (connection->xcb_connection,
-					  xcb_dri2_get_buffers (connection->xcb_connection,
-								drawable, 1,
-								ARRAY_LENGTH (attachments),
-								attachments),
-					  0);
-    if (buffers == NULL) {
-	xcb_dri2_destroy_drawable (connection->xcb_connection,
-				   drawable);
-	return NULL;
-    }
-
-    /* If the drawable is a window, we expect to receive an extra fake front,
-     * which would involve copying on each flush - contrary to the user
-     * expectations. But that is likely to be preferable to mixing drm/xcb
-     * operations.
-     */
-    buffer = xcb_dri2_get_buffers_buffers (buffers);
-    if (buffers->count == 1 && buffer[0].attachment == XCB_DRI2_ATTACHMENT_BUFFER_FRONT_LEFT) {
-	assert (buffer[0].cpp == PIXMAN_FORMAT_BPP (pixman_format) / 8);
-	surface = cairo_drm_surface_create_for_name (screen->device,
-						     buffer[0].name,
-						     _cairo_format_from_pixman_format (pixman_format),
-						     width, height,
-						     buffer[0].pitch);
-    } else {
-	xcb_dri2_destroy_drawable (connection->xcb_connection,
-				   drawable);
-	surface = NULL;
-    }
-    free (buffers);
-
-    return surface;
-}
-
-#else
-
-static cairo_surface_t *
-_xcb_drm_create_surface_for_drawable (cairo_xcb_connection_t *connection,
-				      cairo_xcb_screen_t *screen,
-				      xcb_drawable_t drawable,
-				      pixman_format_code_t pixman_format,
-				      int width, int height)
-{
-    return NULL;
-}
-
-#endif
-
 cairo_surface_t *
 _cairo_xcb_surface_create_internal (cairo_xcb_screen_t		*screen,
 				    xcb_drawable_t		 drawable,
@@ -1095,14 +999,6 @@ _cairo_xcb_surface_create_internal (cairo_xcb_screen_t		*screen,
     surface->flags = screen->connection->flags;
 
     surface->marked_dirty = FALSE;
-    surface->drm = NULL;
-    if (screen->device != NULL) {
-	surface->drm = _xcb_drm_create_surface_for_drawable (surface->connection,
-							     surface->screen,
-							     drawable,
-							     pixman_format,
-							     width, height);
-    }
 
     return &surface->base;
 }
