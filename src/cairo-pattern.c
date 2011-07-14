@@ -32,6 +32,7 @@
 #include "cairo-error-private.h"
 #include "cairo-freed-pool-private.h"
 #include "cairo-path-private.h"
+#include "cairo-pattern-private.h"
 
 #include <float.h>
 
@@ -111,6 +112,16 @@ const cairo_solid_pattern_t _cairo_pattern_white = {
     { 1., 1., 1., 1., 0xffff, 0xffff, 0xffff, 0xffff },/* color (double rgba, short rgba) */
 };
 
+static void
+_cairo_pattern_notify_observers (cairo_pattern_t *pattern,
+				 unsigned int flags)
+{
+    cairo_pattern_observer_t *pos;
+
+    cairo_list_foreach_entry (pos, cairo_pattern_observer_t, &pattern->observers, link)
+	pos->notify (pos, pattern, flags);
+}
+
 /**
  * _cairo_pattern_set_error:
  * @pattern: a pattern
@@ -180,10 +191,13 @@ _cairo_pattern_init (cairo_pattern_t *pattern, cairo_pattern_type_t type)
 	pattern->extend = CAIRO_EXTEND_GRADIENT_DEFAULT;
 
     pattern->filter    = CAIRO_FILTER_DEFAULT;
+    pattern->opacity   = 1.0;
 
     pattern->has_component_alpha = FALSE;
 
     cairo_matrix_init_identity (&pattern->matrix);
+
+    cairo_list_init (&pattern->observers);
 }
 
 static cairo_status_t
@@ -1916,6 +1930,7 @@ cairo_pattern_set_matrix (cairo_pattern_t      *pattern,
 	return;
 
     pattern->matrix = *matrix;
+    _cairo_pattern_notify_observers (pattern, CAIRO_PATTERN_NOTIFY_MATRIX);
 
     inverse = *matrix;
     status = cairo_matrix_invert (&inverse);
@@ -1964,6 +1979,7 @@ cairo_pattern_set_filter (cairo_pattern_t *pattern, cairo_filter_t filter)
 	return;
 
     pattern->filter = filter;
+    _cairo_pattern_notify_observers (pattern, CAIRO_PATTERN_NOTIFY_FILTER);
 }
 
 /**
@@ -2001,6 +2017,7 @@ cairo_pattern_set_extend (cairo_pattern_t *pattern, cairo_extend_t extend)
 	return;
 
     pattern->extend = extend;
+    _cairo_pattern_notify_observers (pattern, CAIRO_PATTERN_NOTIFY_EXTEND);
 }
 
 /**

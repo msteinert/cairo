@@ -43,6 +43,7 @@
 
 #include "cairo-error-private.h"
 #include "cairo-ft-private.h"
+#include "cairo-pattern-private.h"
 
 #include <float.h>
 

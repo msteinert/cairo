@@ -36,6 +36,8 @@
 
 #include "cairoint.h"
 
+#include "cairo-pattern-private.h"
+
 /*
  * Rasterizer for mesh patterns.
  *

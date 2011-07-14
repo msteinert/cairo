@@ -37,6 +37,7 @@
 
 #include "cairo-error-private.h"
 #include "cairo-composite-rectangles-private.h"
+#include "cairo-pattern-private.h"
 
 /* A collection of routines to facilitate writing compositors. */
 

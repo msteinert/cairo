@@ -2174,162 +2174,6 @@ _cairo_trapezoid_array_translate_and_scale (cairo_trapezoid_t *offset_traps,
 					    double tx, double ty,
 					    double sx, double sy);
 
-/* cairo-pattern.c */
-
-cairo_private cairo_pattern_t *
-_cairo_pattern_create_in_error (cairo_status_t status);
-
-cairo_private cairo_status_t
-_cairo_pattern_create_copy (cairo_pattern_t	  **pattern,
-			    const cairo_pattern_t  *other);
-
-cairo_private cairo_status_t
-_cairo_pattern_init_copy (cairo_pattern_t	*pattern,
-			  const cairo_pattern_t *other);
-
-cairo_private void
-_cairo_pattern_init_static_copy (cairo_pattern_t	*pattern,
-				 const cairo_pattern_t *other);
-
-cairo_private cairo_status_t
-_cairo_pattern_init_snapshot (cairo_pattern_t       *pattern,
-			      const cairo_pattern_t *other);
-
-cairo_private void
-_cairo_pattern_init_solid (cairo_solid_pattern_t	*pattern,
-			   const cairo_color_t		*color);
-
-cairo_private void
-_cairo_pattern_init_for_surface (cairo_surface_pattern_t *pattern,
-				 cairo_surface_t *surface);
-
-cairo_private void
-_cairo_pattern_fini (cairo_pattern_t *pattern);
-
-cairo_private cairo_pattern_t *
-_cairo_pattern_create_solid (const cairo_color_t	*color);
-
-cairo_private void
-_cairo_pattern_transform (cairo_pattern_t      *pattern,
-			  const cairo_matrix_t *ctm_inverse);
-
-cairo_private cairo_bool_t
-_cairo_mesh_pattern_coord_box (const cairo_mesh_pattern_t *mesh,
-			       double                     *out_xmin,
-			       double                     *out_ymin,
-			       double                     *out_xmax,
-			       double                     *out_ymax);
-
-cairo_private void
-_cairo_pattern_alpha_range (const cairo_pattern_t *gradient,
-			    double *out_min, double *out_max);
-
-cairo_private cairo_bool_t
-_cairo_gradient_pattern_is_solid (const cairo_gradient_pattern_t *gradient,
-				  const cairo_rectangle_int_t *extents,
-				  cairo_color_t *color);
-
-cairo_private void
-_cairo_gradient_pattern_box_to_parameter (const cairo_gradient_pattern_t *gradient,
-					  double x0, double y0,
-					  double x1, double y1,
-					  double tolerance,
-					  double out_range[2]);
-
-cairo_private void
-_cairo_gradient_pattern_interpolate (const cairo_gradient_pattern_t *gradient,
-                                     double			     t,
-                                     cairo_circle_double_t	    *out_circle);
-
-cairo_private void
-_cairo_gradient_pattern_fit_to_range (const cairo_gradient_pattern_t *gradient,
-				      double			      max_value,
-				      cairo_matrix_t                 *out_matrix,
-				      cairo_circle_double_t	      out_circle[2]);
-
-cairo_private cairo_bool_t
-_cairo_radial_pattern_focus_is_inside (const cairo_radial_pattern_t *radial);
-
-cairo_private cairo_bool_t
-_cairo_pattern_is_opaque_solid (const cairo_pattern_t *pattern);
-
-cairo_private cairo_bool_t
-_cairo_pattern_is_opaque (const cairo_pattern_t *pattern,
-			  const cairo_rectangle_int_t *extents);
-
-cairo_private cairo_bool_t
-_cairo_pattern_is_clear (const cairo_pattern_t *pattern);
-
-cairo_private_no_warn cairo_filter_t
-_cairo_pattern_analyze_filter (const cairo_pattern_t	*pattern,
-			       double			*pad_out);
-
-enum {
-    CAIRO_PATTERN_ACQUIRE_NONE = 0x0,
-    CAIRO_PATTERN_ACQUIRE_NO_REFLECT = 0x1
-};
-cairo_private cairo_int_status_t
-_cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
-				cairo_surface_t		   *dst,
-				int			   x,
-				int			   y,
-				unsigned int		   width,
-				unsigned int		   height,
-				unsigned int		   flags,
-				cairo_surface_t		   **surface_out,
-				cairo_surface_attributes_t *attributes);
-
-cairo_private void
-_cairo_pattern_release_surface (const cairo_pattern_t	   *pattern,
-				cairo_surface_t		   *surface,
-				cairo_surface_attributes_t *attributes);
-
-cairo_private cairo_int_status_t
-_cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
-				 const cairo_pattern_t	    *mask,
-				 cairo_surface_t	    *dst,
-				 int			    src_x,
-				 int			    src_y,
-				 int			    mask_x,
-				 int			    mask_y,
-				 unsigned int		    width,
-				 unsigned int		    height,
-				 unsigned int		    flags,
-				 cairo_surface_t	    **src_out,
-				 cairo_surface_t	    **mask_out,
-				 cairo_surface_attributes_t *src_attributes,
-				 cairo_surface_attributes_t *mask_attributes);
-
-cairo_private void
-_cairo_pattern_get_extents (const cairo_pattern_t	    *pattern,
-			    cairo_rectangle_int_t           *extents);
-
-cairo_private unsigned long
-_cairo_pattern_hash (const cairo_pattern_t *pattern);
-
-cairo_private unsigned long
-_cairo_linear_pattern_hash (unsigned long hash,
-			    const cairo_linear_pattern_t *linear);
-
-cairo_private unsigned long
-_cairo_radial_pattern_hash (unsigned long hash,
-			    const cairo_radial_pattern_t *radial);
-
-cairo_private cairo_bool_t
-_cairo_linear_pattern_equal (const cairo_linear_pattern_t *a,
-			     const cairo_linear_pattern_t *b);
-
-cairo_private cairo_bool_t
-_cairo_radial_pattern_equal (const cairo_radial_pattern_t *a,
-			     const cairo_radial_pattern_t *b);
-
-cairo_private cairo_bool_t
-_cairo_pattern_equal (const cairo_pattern_t *a,
-		      const cairo_pattern_t *b);
-
-cairo_private void
-_cairo_pattern_reset_static_data (void);
-
 #if CAIRO_HAS_DRM_SURFACE
 
 cairo_private void
@@ -2339,6 +2183,9 @@ _cairo_drm_device_reset_static_data (void);
 
 cairo_private void
 _cairo_clip_reset_static_data (void);
+
+cairo_private void
+_cairo_pattern_reset_static_data (void);
 
 /* cairo-unicode.c */
 
@@ -2366,18 +2213,6 @@ _cairo_utf8_to_utf16 (const char *str,
 		      uint16_t  **result,
 		      int	 *items_written);
 #endif
-
-/* cairo-mesh-pattern-rasterizer.c */
-
-cairo_private void
-_cairo_mesh_pattern_rasterize (const cairo_mesh_pattern_t *mesh,
-			       void                       *data,
-			       int                         width,
-			       int                         height,
-			       int                         stride,
-			       double                      x_offset,
-			       double                      y_offset);
-
 
 /* cairo-observer.c */
 

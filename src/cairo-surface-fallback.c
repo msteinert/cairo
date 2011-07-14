@@ -44,6 +44,7 @@
 #include "cairo-clip-private.h"
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-error-private.h"
+#include "cairo-pattern-private.h"
 #include "cairo-region-private.h"
 #include "cairo-spans-private.h"
 #include "cairo-surface-fallback-private.h"
