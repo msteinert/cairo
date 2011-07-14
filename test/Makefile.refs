@@ -857,6 +857,8 @@ REFERENCE_IMAGES = \
 	overlapping-glyphs.rgb24.ref.png \
 	overlapping-glyphs.svg.argb32.ref.png \
 	overlapping-glyphs.svg.rgb24.ref.png \
+	paint-clip-fill-aa.ref.png \
+	paint-clip-fill-mono.ref.png \
 	paint-repeat.ref.png \
 	paint-source-alpha.image16.ref.png \
 	paint-source-alpha.ref.png \
@@ -1338,6 +1340,7 @@ REFERENCE_IMAGES = \
 	user-font.svg.ref.png \
 	user-font.xlib.ref.png \
 	white-in-noop.ref.png \
+	xcb-snapshot-assert.ref.png \
 	xcb-stress-cache.ref.png \
 	xcb-surface-source.argb32.ref.png \
 	xcb-surface-source.image16.ref.png \
