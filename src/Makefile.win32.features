@@ -261,22 +261,6 @@ ifeq ($(CAIRO_HAS_DRM_SURFACE),1)
 enabled_cairo_pkgconf += cairo-drm.pc
 endif
 
-unsupported_cairo_headers += $(cairo_drm_xr_headers)
-all_cairo_headers += $(cairo_drm_xr_headers)
-all_cairo_private += $(cairo_drm_xr_private)
-all_cairo_cxx_sources += $(cairo_drm_xr_cxx_sources)
-all_cairo_sources += $(cairo_drm_xr_sources)
-ifeq ($(CAIRO_HAS_DRM_XR_FUNCTIONS),1)
-enabled_cairo_headers += $(cairo_drm_xr_headers)
-enabled_cairo_private += $(cairo_drm_xr_private)
-enabled_cairo_cxx_sources += $(cairo_drm_xr_cxx_sources)
-enabled_cairo_sources += $(cairo_drm_xr_sources)
-endif
-all_cairo_pkgconf += cairo-drm-xr.pc
-ifeq ($(CAIRO_HAS_DRM_XR_FUNCTIONS),1)
-enabled_cairo_pkgconf += cairo-drm-xr.pc
-endif
-
 unsupported_cairo_headers += $(cairo_gallium_headers)
 all_cairo_headers += $(cairo_gallium_headers)
 all_cairo_private += $(cairo_gallium_private)

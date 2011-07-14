@@ -364,11 +364,6 @@ cairo_drm_sources = drm/cairo-drm.c \
 		    drm/cairo-drm-radeon-surface.c
 cairo_gallium_sources = drm/cairo-drm-gallium-surface.c
 
-cairo_drm_xr_headers = cairo-drm-xr.h
-cairo_drm_xr_sources = \
-		    drm/cairo-drm-xr.c \
-		    $(NULL)
-
 cairo_script_headers = cairo-script.h
 cairo_script_sources = cairo-script-surface.c
 
