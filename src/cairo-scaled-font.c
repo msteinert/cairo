@@ -607,6 +607,7 @@ _cairo_scaled_font_init_key (cairo_scaled_font_t        *scaled_font,
     scaled_font->status = CAIRO_STATUS_SUCCESS;
     scaled_font->placeholder = FALSE;
     scaled_font->font_face = font_face;
+    scaled_font->original_font_face = font_face;
     scaled_font->font_matrix = *font_matrix;
     scaled_font->ctm = *ctm;
     /* ignore translation values in the ctm */
@@ -639,7 +640,7 @@ _cairo_scaled_font_keys_equal (const void *abstract_key_a,
     if (key_a->hash_entry.hash != key_b->hash_entry.hash)
 	return FALSE;
 
-    return key_a->font_face == key_b->font_face &&
+    return key_a->original_font_face == key_b->original_font_face &&
 	    memcmp ((unsigned char *)(&key_a->font_matrix.xx),
 		    (unsigned char *)(&key_b->font_matrix.xx),
 		    sizeof(cairo_matrix_t)) == 0 &&
