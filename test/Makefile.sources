@@ -212,6 +212,7 @@ test_sources = \
 	push-group-path-offset.c			\
 	radial-gradient.c				\
 	radial-gradient-extend.c			\
+	random-clips.c			\
 	random-intersections-eo.c			\
 	random-intersections-nonzero.c			\
 	random-intersections-curves-eo.c		\
