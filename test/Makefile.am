@@ -73,6 +73,8 @@ endif
 endif
 test_sources += $(test)
 
+noinst_PROGRAMS = cairo-test-suite # always build
+
 TESTS += cairo-test-suite$(EXEEXT)
 
 cairo-test-constructors.c: Makefile $(test_sources) make-cairo-test-constructors.sh
