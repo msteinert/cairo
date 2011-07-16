@@ -3584,6 +3584,12 @@ cairo_surface_mark_dirty (cairo_surface_t *surface)
 {
     _enter_trace ();
     _emit_line_info ();
+
+    /* Call cairo before emitting the trace since _emit_surface() might cause
+     * snapshots to be creates while mark_dirty assert()s that there are none.
+     */
+    DLCALL (cairo_surface_mark_dirty, surface);
+
     if (surface != NULL && _write_lock ()) {
 	if (_mark_dirty) {
 	    _emit_surface (surface);
@@ -3593,8 +3599,6 @@ cairo_surface_mark_dirty (cairo_surface_t *surface)
 	    _trace_printf ("%% s%ld mark-dirty\n", _get_surface_id (surface));
 	_write_unlock ();
     }
-
-    DLCALL (cairo_surface_mark_dirty, surface);
     _exit_trace ();
 }
 
@@ -3603,6 +3607,12 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 				    int x, int y, int width, int height)
 {
     _enter_trace ();
+
+    /* Call cairo before emitting the trace since _emit_surface() might cause
+     * snapshots to be creates while mark_dirty assert()s that there are none.
+     */
+    DLCALL (cairo_surface_mark_dirty_rectangle, surface, x, y, width, height);
+
     _emit_line_info ();
     if (surface != NULL && _write_lock ()) {
 	if (_mark_dirty) {
@@ -3615,8 +3625,6 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 		           _get_surface_id (surface), x, y, width, height);
 	_write_unlock ();
     }
-
-    DLCALL (cairo_surface_mark_dirty_rectangle, surface, x, y, width, height);
     _exit_trace ();
 }
 
