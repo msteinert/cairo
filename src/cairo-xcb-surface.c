@@ -45,8 +45,6 @@
 
 #include "cairo-default-context-private.h"
 
-#define AllPlanes ((unsigned) -1)
-#define CAIRO_ASSUME_PIXMAP 20
 #define XLIB_COORD_MAX 32767
 
 #if CAIRO_HAS_XLIB_XCB_FUNCTIONS
