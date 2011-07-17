@@ -278,6 +278,8 @@ _cairo_xlib_xcb_display_finish (void *abstract_display)
     display->xcb_device = NULL;
 
     XESetCloseDisplay (display->dpy, display->codes->extension, NULL);
+    /* Drop the reference from _cairo_xlib_xcb_device_create */
+    cairo_device_destroy (&display->base);
 }
 
 static int
@@ -301,6 +303,7 @@ _cairo_xlib_xcb_close_display(Display *dpy, XExtCodes *codes)
 	    /* Make sure the xcb and xlib-xcb devices are finished */
 	    cairo_device_finish (display->xcb_device);
 	    cairo_device_finish (&display->base);
+
 	    cairo_device_destroy (&display->base);
 	    return 0;
 	}
@@ -370,6 +373,12 @@ _cairo_xlib_xcb_device_create (Display *dpy, cairo_device_t *xcb_device)
     _cairo_device_init (&display->base, &_cairo_xlib_xcb_device_backend);
 
     XESetCloseDisplay (dpy, display->codes->extension, _cairo_xlib_xcb_close_display);
+    /* Add a reference for _cairo_xlib_xcb_display_finish. This basically means
+     * that the device's reference count never drops to zero
+     * as long as our Display* is alive. We need this because there is no
+     * "XDelExtension" to undo XAddExtension and having lots of registered
+     * extensions slows down libX11. */
+    cairo_device_reference (&display->base);
 
     display->dpy = dpy;
     display->xcb_device = cairo_device_reference(xcb_device);
