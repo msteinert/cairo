@@ -210,15 +210,22 @@ _render_operator (cairo_operator_t op)
     }
 }
 
-static void
+static cairo_status_t
 _cairo_xcb_surface_set_clip_region (cairo_xcb_surface_t *surface,
 				    cairo_region_t	*region)
 {
-    xcb_rectangle_t rects[CAIRO_STACK_ARRAY_LENGTH (xcb_rectangle_t)];
+    xcb_rectangle_t stack_rects[CAIRO_STACK_ARRAY_LENGTH (xcb_rectangle_t)];
+    xcb_rectangle_t *rects = stack_rects;
     int i, num_rects;
 
     num_rects = cairo_region_num_rectangles (region);
-    assert (num_rects < ARRAY_LENGTH (rects)); /* XXX somebody will! */
+
+    if (num_rects > ARRAY_LENGTH (stack_rects)) {
+	rects = _cairo_malloc_ab (num_rects, sizeof (xcb_rectangle_t));
+	if (unlikely (rects == NULL)) {
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	}
+    }
 
     for (i = 0; i < num_rects; i++) {
 	cairo_rectangle_int_t rect;
@@ -235,6 +242,11 @@ _cairo_xcb_surface_set_clip_region (cairo_xcb_surface_t *surface,
 							      surface->picture,
 							      0, 0,
 							      num_rects, rects);
+
+    if (rects != stack_rects)
+	free (rects);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -2214,8 +2226,13 @@ _clip_and_composite (cairo_xcb_surface_t	*dst,
 
     _cairo_xcb_surface_ensure_picture (dst);
 
-    if (clip_region != NULL)
-	_cairo_xcb_surface_set_clip_region (dst, clip_region);
+    if (clip_region != NULL) {
+	status = _cairo_xcb_surface_set_clip_region (dst, clip_region);
+	if (unlikely (status)) {
+	    _cairo_xcb_connection_release (dst->connection);
+	    return status;
+	}
+    }
 
     if (reduce_alpha_op (&dst->base, op, src)) {
 	op = CAIRO_OPERATOR_ADD;
@@ -2870,8 +2887,11 @@ _cairo_xcb_surface_render_composite_polygon (cairo_xcb_surface_t *dst,
 		    clip_region = NULL;
 
 	    if (clip_surface == FALSE) {
-		if (clip_region != NULL)
-		    _cairo_xcb_surface_set_clip_region (dst, clip_region);
+		if (clip_region != NULL) {
+		    status = _cairo_xcb_surface_set_clip_region (dst, clip_region);
+		    if (unlikely (status))
+			return status;
+		}
 
 		status = _cairo_xcb_surface_fixup_unbounded (dst, extents);
 
