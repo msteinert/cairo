@@ -535,6 +535,7 @@ const cairo_perf_case_t perf_cases[] = {
     { text,   64, 512},
     { glyphs, 64, 512},
     { mask,   64, 512},
+    { disjoint,   64, 512},
     { hatching,   64, 512},
     { tessellate, 100, 100},
     { subimage_copy, 16, 512},

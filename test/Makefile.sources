@@ -30,6 +30,7 @@ test_sources = \
 	clip-contexts.c					\
 	clip-complex-shape.c				\
 	clip-disjoint.c					\
+	clip-disjoint-hatching.c			\
 	clip-device-offset.c				\
 	clip-draw-unbounded.c				\
 	clip-empty.c					\

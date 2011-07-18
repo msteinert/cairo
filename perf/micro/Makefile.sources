@@ -2,6 +2,7 @@ libcairo_perf_micro_sources = \
 	cairo-perf-cover.c	\
 	box-outline.c		\
 	composite-checker.c	\
+	disjoint.c		\
 	fill.c			\
 	hatching.c		\
 	long-lines.c		\
