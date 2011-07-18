@@ -129,6 +129,7 @@ test_sources = \
 	group-unaligned.c				\
 	half-coverage.c					\
 	halo.c						\
+	hatchings.c					\
 	huge-linear.c					\
 	huge-radial.c					\
 	image-surface-source.c				\

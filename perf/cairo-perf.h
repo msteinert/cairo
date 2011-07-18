@@ -188,6 +188,7 @@ CAIRO_PERF_DECL (paint_with_alpha);
 CAIRO_PERF_DECL (mask);
 CAIRO_PERF_DECL (stroke);
 CAIRO_PERF_DECL (subimage_copy);
+CAIRO_PERF_DECL (hatching);
 CAIRO_PERF_DECL (tessellate);
 CAIRO_PERF_DECL (text);
 CAIRO_PERF_DECL (glyphs);

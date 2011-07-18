@@ -3,6 +3,7 @@ libcairo_perf_micro_sources = \
 	box-outline.c		\
 	composite-checker.c	\
 	fill.c			\
+	hatching.c		\
 	long-lines.c		\
 	mosaic.c		\
 	paint.c			\

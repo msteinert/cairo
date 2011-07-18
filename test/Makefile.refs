@@ -612,6 +612,8 @@ REFERENCE_IMAGES = \
 	halo.quartz.ref.png \
 	halo.ref.png \
 	halo.xlib.ref.png \
+	hatchings.ref.png \
+	hatchings.xlib.ref.png \
 	huge-linear.image16.ref.png \
 	huge-linear.pdf.ref.png \
 	huge-linear.ps3.ref.png \
