@@ -3674,7 +3674,7 @@ _cairo_pattern_is_clear (const cairo_pattern_t *abstract_pattern)
 	return FALSE;
 
     pattern = (cairo_pattern_union_t *) abstract_pattern;
-    switch (pattern->type) {
+    switch (abstract_pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
 	return CAIRO_COLOR_IS_CLEAR (&pattern->solid.color);
     case CAIRO_PATTERN_TYPE_SURFACE:

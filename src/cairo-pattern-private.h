@@ -165,7 +165,6 @@ typedef struct _cairo_mesh_pattern {
 } cairo_mesh_pattern_t;
 
 typedef union {
-    cairo_pattern_type_t	    type;
     cairo_pattern_t		    base;
 
     cairo_solid_pattern_t	    solid;
