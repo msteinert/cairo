@@ -165,13 +165,6 @@ _cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
     memset (font, 0, sizeof (*font));
     font->scaled_font_subset = scaled_font_subset;
     font->base.unscaled_font = _cairo_unscaled_font_reference (unscaled_font);
-    font->base.x_min = face->bbox.xMin / (double)face->units_per_EM;
-    font->base.y_min = face->bbox.yMin / (double)face->units_per_EM;
-    font->base.x_max = face->bbox.xMax / (double)face->units_per_EM;
-    font->base.y_max = face->bbox.yMax / (double)face->units_per_EM;
-    font->base.ascent = face->ascender / (double)face->units_per_EM;
-    font->base.descent = face->descender / (double)face->units_per_EM;
-    font->base.units_per_em = face->units_per_EM;
 
     if (face->family_name) {
 	font->base.base_font = strdup (face->family_name);
@@ -331,6 +324,89 @@ cairo_type1_font_erase_dict_key (cairo_type1_font_subset_t *font,
 	    start += strlen(key);
 	}
     } while (start);
+}
+
+static cairo_status_t
+cairo_type1_font_subset_get_matrix (cairo_type1_font_subset_t *font,
+				    const char                *name,
+				    double                    *a,
+				    double                    *b,
+				    double                    *c,
+				    double                    *d)
+{
+    const char *start, *end, *segment_end;
+    int ret;
+    char *s;
+
+    segment_end = font->header_segment + font->header_segment_size;
+    start = find_token (font->header_segment, segment_end, name);
+    if (start == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    end = find_token (start, segment_end, "def");
+    if (end == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    s = malloc (end - start + 1);
+    if (unlikely (s == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    strncpy (s, start, end - start);
+    s[end - start] = 0;
+
+    start = strpbrk (s, "{[");
+    if (!start) {
+	free (s);
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    start++;
+    ret = 0;
+    if (*start)
+	ret = sscanf(start, "%lf %lf %lf %lf", a, b, c, d);
+
+    free (s);
+
+    if (ret != 4)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+cairo_type1_font_subset_get_bbox (cairo_type1_font_subset_t *font)
+{
+    cairo_status_t status;
+    double x_min, y_min, x_max, y_max;
+    double xx, yx, xy, yy;
+
+    status = cairo_type1_font_subset_get_matrix (font, "/FontBBox",
+						 &x_min,
+						 &y_min,
+						 &x_max,
+						 &y_max);
+    if (unlikely (status))
+	return status;
+
+    status = cairo_type1_font_subset_get_matrix (font, "/FontMatrix",
+						 &xx, &yx, &xy, &yy);
+    if (unlikely (status))
+	return status;
+
+    if (yy == 0.0)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* Freetype uses 1/yy to get units per EM */
+    font->base.units_per_em = 1.0/yy;
+
+    font->base.x_min = x_min / font->base.units_per_em;
+    font->base.y_min = y_min / font->base.units_per_em;
+    font->base.x_max = x_max / font->base.units_per_em;
+    font->base.y_max = y_max / font->base.units_per_em;
+    font->base.ascent = font->base.y_max;
+    font->base.descent = font->base.y_min;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -1065,6 +1141,10 @@ cairo_type1_font_subset_write (cairo_type1_font_subset_t *font,
 
     font->eexec_key = CAIRO_TYPE1_PRIVATE_DICT_KEY;
     font->hex_column = 0;
+
+    status = cairo_type1_font_subset_get_bbox (font);
+    if (unlikely (status))
+	return status;
 
     status = cairo_type1_font_subset_write_private_dict (font, name);
     if (unlikely (status))
