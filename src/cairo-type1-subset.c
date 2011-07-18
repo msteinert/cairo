@@ -61,6 +61,13 @@
 
 #include <ctype.h>
 
+typedef struct {
+    int subset_index;
+    double width;
+    const char *encrypted_charstring;
+    int encrypted_charstring_length;
+} glyph_data_t;
+
 typedef struct _cairo_type1_font_subset {
     cairo_scaled_font_subset_t *scaled_font_subset;
 
@@ -88,13 +95,10 @@ typedef struct _cairo_type1_font_subset {
      * function is used to map the glyph index to the glyph order in
      * the Charstrings. */
 
-    struct {
-	int subset_index;
-	double width;
-	const char *encrypted_charstring;
-	int encrypted_charstring_length;
-    } *glyphs;
+    glyph_data_t *glyphs;
     char **glyph_names;
+    cairo_array_t glyphs_array;
+    cairo_array_t glyph_names_array;
 
     /* Indexed by subset_index this maps to the glyph order in the
      * glyph_names and glyphs arrays. Has font->num_golyphs
@@ -161,7 +165,6 @@ _cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
     memset (font, 0, sizeof (*font));
     font->scaled_font_subset = scaled_font_subset;
     font->base.unscaled_font = _cairo_unscaled_font_reference (unscaled_font);
-    font->base.num_glyphs = face->num_glyphs;
     font->base.x_min = face->bbox.xMin / (double)face->units_per_EM;
     font->base.y_min = face->bbox.yMin / (double)face->units_per_EM;
     font->base.x_max = face->bbox.xMax / (double)face->units_per_EM;
@@ -184,28 +187,13 @@ _cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
 	font->base.base_font[i] = '\0';
     }
 
-    font->glyphs = calloc (face->num_glyphs, sizeof font->glyphs[0]);
-    if (unlikely (font->glyphs == NULL)) {
-        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto fail3;
-    }
-
-    font->glyph_names = calloc (face->num_glyphs, sizeof font->glyph_names[0]);
-    if (unlikely (font->glyph_names == NULL)) {
-        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto fail4;
-    }
-
-    font->subset_index_to_glyphs = calloc (face->num_glyphs, sizeof font->subset_index_to_glyphs[0]);
-    if (unlikely (font->subset_index_to_glyphs == NULL)) {
-        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto fail5;
-    }
+    _cairo_array_init (&font->glyphs_array, sizeof (glyph_data_t));
+    _cairo_array_init (&font->glyph_names_array, sizeof (char *));
+    font->subset_index_to_glyphs = NULL;
+    font->base.num_glyphs = 0;
 
     font->hex_encode = hex_encode;
     font->num_glyphs = 0;
-    for (i = 0; i < face->num_glyphs; i++)
-	font->glyphs[i].subset_index = -1;
 
     _cairo_array_init (&font->contents, sizeof (char));
 
@@ -213,15 +201,6 @@ _cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
 
     return CAIRO_STATUS_SUCCESS;
 
- fail5:
-    if (font->glyph_names)
-	free (font->glyph_names);
- fail4:
-    if (font->glyphs)
-	free (font->glyphs);
- fail3:
-    if (font->base.base_font)
-	free (font->base.base_font);
  fail2:
     _cairo_unscaled_font_destroy (unscaled_font);
  fail1:
@@ -651,17 +630,28 @@ cairo_type1_font_subset_build_glyph_list (cairo_type1_font_subset_t *font,
 					  const char *name, int name_length,
 					  const char *encrypted_charstring, int encrypted_charstring_length)
 {
-    font->glyph_names[glyph_number] = malloc (name_length + 1);
-    if (unlikely (font->glyph_names[glyph_number] == NULL))
+    char *s;
+    glyph_data_t glyph;
+    cairo_status_t status;
+
+    s = malloc (name_length + 1);
+    if (unlikely (s == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    strncpy (font->glyph_names[glyph_number], name, name_length);
-    font->glyph_names[glyph_number][name_length] = 0;
+    strncpy (s, name, name_length);
+    s[name_length] = 0;
 
-    font->glyphs[glyph_number].encrypted_charstring = encrypted_charstring;
-    font->glyphs[glyph_number].encrypted_charstring_length = encrypted_charstring_length;
+    status = _cairo_array_append (&font->glyph_names_array, &s);
+    if (unlikely (status))
+	return status;
 
-    return CAIRO_STATUS_SUCCESS;
+    glyph.subset_index = -1;
+    glyph.width = 0;
+    glyph.encrypted_charstring = encrypted_charstring;
+    glyph.encrypted_charstring_length = encrypted_charstring_length;
+    status = _cairo_array_append (&font->glyphs_array, &glyph);
+
+    return status;
 }
 
 
@@ -906,6 +896,15 @@ cairo_type1_font_subset_write_private_dict (cairo_type1_font_subset_t *font,
 						     font->cleartext_end,
 						     cairo_type1_font_subset_build_glyph_list,
 						     &p);
+    if (unlikely(status))
+	return status;
+
+    font->glyphs = _cairo_array_index (&font->glyphs_array, 0);
+    font->glyph_names = _cairo_array_index (&font->glyph_names_array, 0);
+    font->base.num_glyphs = _cairo_array_num_elements (&font->glyphs_array);
+    font->subset_index_to_glyphs = calloc (font->base.num_glyphs, sizeof font->subset_index_to_glyphs[0]);
+    if (unlikely (font->subset_index_to_glyphs == NULL))
+        return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     backend = font->scaled_font_subset->scaled_font->backend;
     if (!backend->index_to_glyph_name)
@@ -1161,12 +1160,14 @@ _cairo_type1_font_subset_fini (cairo_type1_font_subset_t *font)
     _cairo_array_fini (&font->contents);
 
     free (font->type1_data);
-    if (font->glyph_names != NULL) {
-	for (i = 0; i < font->base.num_glyphs; i++)
-	    free (font->glyph_names[i]);
+    for (i = 0; i < _cairo_array_num_elements (&font->glyph_names_array); i++) {
+	char **s;
 
-	free (font->glyph_names);
+	s = _cairo_array_index (&font->glyph_names_array, i);
+	free (*s);
     }
+    _cairo_array_fini (&font->glyph_names_array);
+    _cairo_array_fini (&font->glyphs_array);
 
     _cairo_unscaled_font_destroy (font->base.unscaled_font);
 
@@ -1176,8 +1177,8 @@ _cairo_type1_font_subset_fini (cairo_type1_font_subset_t *font)
     if (font->base.base_font)
 	free (font->base.base_font);
 
-    free (font->glyphs);
-    free (font->subset_index_to_glyphs);
+    if (font->subset_index_to_glyphs)
+	free (font->subset_index_to_glyphs);
 
     return status;
 }
