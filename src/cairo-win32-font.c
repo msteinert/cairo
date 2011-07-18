@@ -132,6 +132,8 @@ typedef struct {
     cairo_bool_t is_bitmap;
     cairo_bool_t is_type1;
     cairo_bool_t delete_scaled_hfont;
+    cairo_bool_t has_type1_notdef_index;
+    unsigned long type1_notdef_index;
 } cairo_win32_scaled_font_t;
 
 static cairo_status_t
@@ -355,6 +357,7 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
     f->em_square = 0;
     f->scaled_hfont = NULL;
     f->unscaled_hfont = NULL;
+    f->has_type1_notdef_index = FALSE;
 
     if (f->quality == logfont->lfQuality ||
         (logfont->lfQuality == DEFAULT_QUALITY &&
@@ -1656,6 +1659,65 @@ _cairo_win32_scaled_font_is_synthetic (void	       *abstract_font)
     return FALSE;
 }
 
+static cairo_int_status_t
+_cairo_win32_scaled_font_index_to_glyph_name (void	      	*abstract_font,
+					      char             **glyph_names,
+					      int              	 num_glyph_names,
+					      unsigned long      glyph_index,
+					      unsigned long     *glyph_array_index)
+{
+    cairo_win32_scaled_font_t *scaled_font = abstract_font;
+    int i;
+
+    /* Windows puts .notdef at index 0 then numbers the remaining
+     * glyphs starting from 1 in the order they appear in the font. */
+
+    /* Find the position of .notdef in the list of glyph names. We
+     * only need to do this once per scaled font. */
+    if (! scaled_font->has_type1_notdef_index) {
+	for (i = 0; i < num_glyph_names; i++) {
+	    if (strcmp (glyph_names[i], ".notdef") == 0) {
+		scaled_font->type1_notdef_index = i;
+		scaled_font->has_type1_notdef_index = TRUE;
+		break;
+	    }
+	}
+	if (! scaled_font->has_type1_notdef_index)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    /* Once we know the position of .notdef the position of any glyph
+     * in the font can easily be obtained. */
+    if (glyph_index == 0)
+	*glyph_array_index = scaled_font->type1_notdef_index;
+    else if (glyph_index <= scaled_font->type1_notdef_index)
+	*glyph_array_index = glyph_index - 1;
+    else
+	*glyph_array_index = glyph_index;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_cairo_win32_scaled_font_load_type1_data (void	            *abstract_font,
+					  long               offset,
+					  unsigned char     *buffer,
+					  unsigned long     *length)
+{
+    cairo_win32_scaled_font_t *scaled_font = abstract_font;
+
+    if (! scaled_font->is_type1)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* Using the tag 0 retrieves the entire font file. This works with
+     * Type 1 fonts as well as TTF/OTF fonts. */
+    return _cairo_win32_scaled_font_load_truetype_table (scaled_font,
+							 0,
+							 offset,
+							 buffer,
+							 length);
+}
+
 static cairo_status_t
 _cairo_win32_scaled_font_init_glyph_surface (cairo_win32_scaled_font_t *scaled_font,
                                              cairo_scaled_glyph_t      *scaled_glyph)
@@ -1904,7 +1966,9 @@ const cairo_scaled_font_backend_t _cairo_win32_scaled_font_backend = {
     _cairo_win32_scaled_font_show_glyphs,
     _cairo_win32_scaled_font_load_truetype_table,
     _cairo_win32_scaled_font_index_to_ucs4,
-    _cairo_win32_scaled_font_is_synthetic
+    _cairo_win32_scaled_font_is_synthetic,
+    _cairo_win32_scaled_font_index_to_glyph_name,
+    _cairo_win32_scaled_font_load_type1_data
 };
 
 /* #cairo_win32_font_face_t */
