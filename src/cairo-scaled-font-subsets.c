@@ -907,10 +907,7 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 		return unscaled_font->status;
 
             subset_glyph->is_scaled = FALSE;
-            type1_font = FALSE;
-#if CAIRO_HAS_FT_FONT
             type1_font = _cairo_type1_scaled_font_is_type1 (unscaled_font);
-#endif
             if (subsets->type == CAIRO_SUBSETS_COMPOSITE && !type1_font) {
                 max_glyphs = MAX_GLYPHS_PER_COMPOSITE_FONT;
                 subset_glyph->is_composite = TRUE;

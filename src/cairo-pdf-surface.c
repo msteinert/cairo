@@ -4447,7 +4447,6 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
     return _cairo_array_append (&surface->fonts, &font);
 }
 
-#if CAIRO_HAS_FT_FONT
 static cairo_status_t
 _cairo_pdf_surface_emit_type1_font_subset (cairo_pdf_surface_t		*surface,
 					   cairo_scaled_font_subset_t	*font_subset)
@@ -4471,7 +4470,6 @@ _cairo_pdf_surface_emit_type1_font_subset (cairo_pdf_surface_t		*surface,
     _cairo_type1_subset_fini (&subset);
     return status;
 }
-#endif
 
 static cairo_status_t
 _cairo_pdf_surface_emit_type1_fallback_font (cairo_pdf_surface_t	*surface,
@@ -4983,11 +4981,9 @@ _cairo_pdf_surface_emit_unscaled_font_subset (cairo_scaled_font_subset_t *font_s
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
-#if CAIRO_HAS_FT_FONT
     status = _cairo_pdf_surface_emit_type1_font_subset (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
-#endif
 
     status = _cairo_pdf_surface_emit_cff_fallback_font (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)

@@ -49,16 +49,6 @@
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-output-stream-private.h"
 
-/* XXX: Eventually, we need to handle other font backends */
-#if CAIRO_HAS_FT_FONT
-
-#include "cairo-ft-private.h"
-
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_OUTLINE_H
-#include FT_TYPE1_TABLES_H
-
 #include <ctype.h>
 
 typedef struct {
@@ -72,7 +62,6 @@ typedef struct _cairo_type1_font_subset {
     cairo_scaled_font_subset_t *scaled_font_subset;
 
     struct {
-	cairo_unscaled_font_t *unscaled_font;
 	unsigned int font_id;
 	char *base_font;
 	unsigned int num_glyphs;
@@ -86,7 +75,6 @@ typedef struct _cairo_type1_font_subset {
 	unsigned long  trailer_size;
     } base;
 
-    FT_Face face;
     int num_glyphs;
 
     /* The glyphs and glyph_names arrays are indexed by the order of
@@ -133,37 +121,11 @@ typedef struct _cairo_type1_font_subset {
 
 static cairo_status_t
 _cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
-			       cairo_unscaled_font_t      *unscaled_font,
 			       cairo_scaled_font_subset_t *scaled_font_subset,
 			       cairo_bool_t                hex_encode)
 {
-    cairo_ft_unscaled_font_t *ft_unscaled_font;
-    cairo_status_t status;
-    FT_Face face;
-    PS_FontInfoRec font_info;
-
-    ft_unscaled_font = (cairo_ft_unscaled_font_t *) unscaled_font;
-
-    face = _cairo_ft_unscaled_font_lock_face (ft_unscaled_font);
-    if (unlikely (face == NULL))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    if (FT_Get_PS_Font_Info(face, &font_info) != 0) {
-	status = CAIRO_INT_STATUS_UNSUPPORTED;
-        goto fail1;
-    }
-
-    /* OpenType/CFF fonts also have a PS_FontInfoRec */
-#if HAVE_FT_LOAD_SFNT_TABLE
-    if (FT_IS_SFNT (face)) {
-	status = CAIRO_INT_STATUS_UNSUPPORTED;
-        goto fail1;
-    }
-#endif
-
     memset (font, 0, sizeof (*font));
     font->scaled_font_subset = scaled_font_subset;
-    font->base.unscaled_font = _cairo_unscaled_font_reference (unscaled_font);
 
     _cairo_array_init (&font->glyphs_array, sizeof (glyph_data_t));
     _cairo_array_init (&font->glyph_names_array, sizeof (char *));
@@ -175,15 +137,7 @@ _cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
 
     _cairo_array_init (&font->contents, sizeof (char));
 
-    _cairo_ft_unscaled_font_unlock_face (ft_unscaled_font);
-
     return CAIRO_STATUS_SUCCESS;
-
-    _cairo_unscaled_font_destroy (unscaled_font);
- fail1:
-    _cairo_ft_unscaled_font_unlock_face (ft_unscaled_font);
-
-    return status;
 }
 
 static void
@@ -1196,13 +1150,26 @@ cairo_type1_font_subset_write (cairo_type1_font_subset_t *font,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_bool_t
+check_fontdata_is_type1 (const unsigned char *data, long length)
+{
+    /* Test for  Type 1 Binary (PFB) */
+    if (length > 2 && data[0] == 0x80 && data[1] == 0x01)
+	return TRUE;
+
+    /* Test for Type 1 1 ASCII (PFA) */
+    if (length > 2 && data[0] == '%' && data[1] == '!')
+	return TRUE;
+
+    return FALSE;
+}
+
 static cairo_status_t
 cairo_type1_font_subset_generate (void       *abstract_font,
 				  const char *name)
 
 {
     cairo_type1_font_subset_t *font = abstract_font;
-    cairo_ft_unscaled_font_t *ft_unscaled_font;
     cairo_scaled_font_t *scaled_font;
     cairo_status_t status;
     unsigned long data_length;
@@ -1225,6 +1192,9 @@ cairo_type1_font_subset_generate (void       *abstract_font,
 						    &data_length);
     if (unlikely (status))
         return status;
+
+    if (!check_fontdata_is_type1 ((unsigned char *)font->type1_data, data_length))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     status = _cairo_array_grow_by (&font->contents, 4096);
     if (unlikely (status))
@@ -1264,8 +1234,6 @@ _cairo_type1_font_subset_fini (cairo_type1_font_subset_t *font)
     _cairo_array_fini (&font->glyph_names_array);
     _cairo_array_fini (&font->glyphs_array);
 
-    _cairo_unscaled_font_destroy (font->base.unscaled_font);
-
     if (font->output != NULL)
 	status = _cairo_output_stream_destroy (font->output);
 
@@ -1288,24 +1256,14 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
     cairo_status_t status, status_ignored;
     unsigned long length;
     unsigned int i;
-    cairo_unscaled_font_t *unscaled_font;
     char buf[30];
-
-    /* XXX: Need to fix this to work with a general cairo_unscaled_font_t. */
-    if (!_cairo_scaled_font_is_ft (scaled_font_subset->scaled_font))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    if (_cairo_ft_scaled_font_is_vertical (scaled_font_subset->scaled_font))
-        return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* We need to use a fallback font generated from the synthesized outlines. */
     if (scaled_font_subset->scaled_font->backend->is_synthetic &&
 	scaled_font_subset->scaled_font->backend->is_synthetic (scaled_font_subset->scaled_font))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    unscaled_font = _cairo_ft_scaled_font_get_unscaled_font (scaled_font_subset->scaled_font);
-
-    status = _cairo_type1_font_subset_init (&font, unscaled_font, scaled_font_subset, hex_encode);
+    status = _cairo_type1_font_subset_init (&font, scaled_font_subset, hex_encode);
     if (unlikely (status))
 	return status;
 
@@ -1377,32 +1335,26 @@ _cairo_type1_subset_fini (cairo_type1_subset_t *subset)
 cairo_bool_t
 _cairo_type1_scaled_font_is_type1 (cairo_scaled_font_t *scaled_font)
 {
-    cairo_ft_unscaled_font_t *unscaled;
-    FT_Face face;
-    PS_FontInfoRec font_info;
-    cairo_bool_t is_type1 = FALSE;
+    cairo_status_t status;
+    unsigned long length;
+    unsigned char buf[64];
 
-    if (!_cairo_scaled_font_is_ft (scaled_font))
-       return FALSE;
-    unscaled = (cairo_ft_unscaled_font_t *) _cairo_ft_scaled_font_get_unscaled_font (scaled_font);
-    face = _cairo_ft_unscaled_font_lock_face (unscaled);
-    if (!face)
-        return FALSE;
+    if (!scaled_font->backend->load_type1_data)
+	return FALSE;
 
-    if (FT_Get_PS_Font_Info(face, &font_info) == 0)
-        is_type1 = TRUE;
+    status = scaled_font->backend->load_type1_data (scaled_font, 0, NULL, &length);
+    if (status)
+	return FALSE;
 
-    /* OpenType/CFF fonts also have a PS_FontInfoRec */
-#if HAVE_FT_LOAD_SFNT_TABLE
-    if (FT_IS_SFNT (face))
-        is_type1 = FALSE;
-#endif
+    /* We only need a few bytes to test for Type 1 */
+    if (length > sizeof (buf))
+	length = sizeof (buf);
 
-    _cairo_ft_unscaled_font_unlock_face (unscaled);
+    status = scaled_font->backend->load_type1_data (scaled_font, 0, buf, &length);
+    if (status)
+	return FALSE;
 
-    return is_type1;
+    return check_fontdata_is_type1 (buf, length);
 }
-
-#endif /* CAIRO_HAS_FT_FONT */
 
 #endif /* CAIRO_HAS_FONT_SUBSET */
