@@ -565,6 +565,26 @@ struct _cairo_scaled_font_backend {
 			   int                   num_glyph_names,
 			   unsigned long         glyph_index,
 			   unsigned long        *glyph_array_index);
+
+    /* Read data from a PostScript font.
+     * @scaled_font: font
+     * @offset: offset into the table
+     * @buffer: buffer to write data into. Caller must ensure there is sufficient space.
+     *          If NULL, return the size of the table in @length.
+     * @length: If @buffer is NULL, the size of the table will be returned in @length.
+     *          If @buffer is not null, @length specifies the number of bytes to read.
+     *
+     * If less than @length bytes are available to read this function
+     * returns CAIRO_INT_STATUS_UNSUPPORTED. If an error occurs the
+     * output value of @length is undefined.
+     *
+     * Returns CAIRO_INT_STATUS_UNSUPPORTED if not a Type 1 font.
+     */
+    cairo_warn cairo_int_status_t
+    (*load_type1_data)    (void		        *scaled_font,
+                           long                  offset,
+                           unsigned char        *buffer,
+                           unsigned long        *length);
 };
 
 struct _cairo_font_face_backend {

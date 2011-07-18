@@ -54,6 +54,7 @@
 #include FT_OUTLINE_H
 #include FT_IMAGE_H
 #include FT_TRUETYPE_TABLES_H
+#include FT_XFREE86_H
 #if HAVE_FT_GLYPHSLOT_EMBOLDEN
 #include FT_SYNTHESIS_H
 #endif
@@ -2497,6 +2498,64 @@ _cairo_index_to_glyph_name (void	         *abstract_font,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
+static cairo_int_status_t
+_cairo_ft_load_type1_data (void	            *abstract_font,
+			   long              offset,
+			   unsigned char    *buffer,
+			   unsigned long    *length)
+{
+    cairo_ft_scaled_font_t *scaled_font = abstract_font;
+    cairo_ft_unscaled_font_t *unscaled = scaled_font->unscaled;
+    FT_Face face;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    unsigned long available_length;
+    unsigned long ret;
+    const char *font_format;
+
+    assert (length != NULL);
+
+    if (_cairo_ft_scaled_font_is_vertical (&scaled_font->base))
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    face = _cairo_ft_unscaled_font_lock_face (unscaled);
+    if (!face)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    font_format = FT_Get_X11_Font_Format (face);
+    if (!(font_format && strcmp (font_format, "Type 1") == 0)) {
+        status = CAIRO_INT_STATUS_UNSUPPORTED;
+	goto unlock;
+    }
+
+    available_length = MAX (face->stream->size - offset, 0);
+    if (!buffer) {
+	*length = available_length;
+    } else {
+	if (*length > available_length) {
+	    status = CAIRO_INT_STATUS_UNSUPPORTED;
+	} else if (face->stream->read != NULL) {
+	    /* Note that read() may be implemented as a macro, thanks POSIX!, so we
+	     * need to wrap the following usage in parentheses in order to
+	     * disambiguate it for the pre-processor - using the verbose function
+	     * pointer dereference for clarity.
+	     */
+	    ret = (* face->stream->read) (face->stream,
+					  offset,
+					  buffer,
+					  *length);
+	    if (ret != *length)
+		status = _cairo_error (CAIRO_STATUS_READ_ERROR);
+	} else {
+	    memcpy (buffer, face->stream->base + offset, *length);
+	}
+    }
+
+  unlock:
+    _cairo_ft_unscaled_font_unlock_face (unscaled);
+
+    return status;
+}
+
 static const cairo_scaled_font_backend_t _cairo_ft_scaled_font_backend = {
     CAIRO_FONT_TYPE_FT,
     _cairo_ft_scaled_font_fini,
@@ -2507,7 +2566,8 @@ static const cairo_scaled_font_backend_t _cairo_ft_scaled_font_backend = {
     _cairo_ft_load_truetype_table,
     _cairo_ft_index_to_ucs4,
     _cairo_ft_is_synthetic,
-    _cairo_index_to_glyph_name
+    _cairo_index_to_glyph_name,
+    _cairo_ft_load_type1_data
 };
 
 /* #cairo_ft_font_face_t */

@@ -1203,40 +1203,28 @@ cairo_type1_font_subset_generate (void       *abstract_font,
 {
     cairo_type1_font_subset_t *font = abstract_font;
     cairo_ft_unscaled_font_t *ft_unscaled_font;
-    unsigned long ret;
+    cairo_scaled_font_t *scaled_font;
     cairo_status_t status;
+    unsigned long data_length;
 
-    ft_unscaled_font = (cairo_ft_unscaled_font_t *) font->base.unscaled_font;
-    font->face = _cairo_ft_unscaled_font_lock_face (ft_unscaled_font);
-    if (unlikely (font->face == NULL))
+    scaled_font = font->scaled_font_subset->scaled_font;
+    if (!scaled_font->backend->load_type1_data)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    status = scaled_font->backend->load_type1_data (scaled_font, 0, NULL, &data_length);
+    if (status)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    font->type1_length = data_length;
+    font->type1_data = malloc (font->type1_length);
+    if (unlikely (font->type1_data == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    font->type1_length = font->face->stream->size;
-    font->type1_data = malloc (font->type1_length);
-    if (unlikely (font->type1_data == NULL)) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto fail;
-    }
-
-    if (font->face->stream->read != NULL) {
-	/* Note that read() may be implemented as a macro, thanks POSIX!, so we
-	 * need to wrap the following usage in parentheses in order to
-	 * disambiguate it for the pre-processor - using the verbose function
-	 * pointer dereference for clarity.
-	 */
-	ret = (* font->face->stream->read) (font->face->stream, 0,
-					    (unsigned char *) font->type1_data,
-					    font->type1_length);
-	if (ret != font->type1_length) {
-	    status = _cairo_error (CAIRO_STATUS_READ_ERROR);
-	    goto fail;
-	}
-    } else {
-	memcpy (font->type1_data,
-		font->face->stream->base, font->type1_length);
-    }
-
-    _cairo_ft_unscaled_font_unlock_face (ft_unscaled_font);
+    status = scaled_font->backend->load_type1_data (scaled_font, 0,
+						    (unsigned char *) font->type1_data,
+						    &data_length);
+    if (unlikely (status))
+        return status;
 
     status = _cairo_array_grow_by (&font->contents, 4096);
     if (unlikely (status))
@@ -1251,11 +1239,6 @@ cairo_type1_font_subset_generate (void       *abstract_font,
 	return status;
 
     font->base.data = _cairo_array_index (&font->contents, 0);
-
-    return status;
-
- fail:
-    _cairo_ft_unscaled_font_unlock_face (ft_unscaled_font);
 
     return status;
 }
