@@ -4368,7 +4368,7 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 				 "%d 0 obj\n"
 				 "<< /Type /FontDescriptor\n"
 				 "   /FontName /%s+%s\n"
-				 "   /Flags %d\n"
+				 "   /Flags 4\n"
 				 "   /FontBBox [ %ld %ld %ld %ld ]\n"
 				 "   /ItalicAngle 0\n"
 				 "   /Ascent %ld\n"
@@ -4382,7 +4382,6 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 				 descriptor.id,
 				 tag,
 				 subset->base_font,
-				 font_subset->is_latin ? 32 : 4,
 				 (long)(subset->x_min*PDF_UNITS_PER_EM),
 				 (long)(subset->y_min*PDF_UNITS_PER_EM),
 				 (long)(subset->x_max*PDF_UNITS_PER_EM),
@@ -4400,8 +4399,7 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 				 "   /BaseFont /%s+%s\n"
 				 "   /FirstChar %d\n"
 				 "   /LastChar %d\n"
-				 "   /FontDescriptor %d 0 R\n"
-				 "   /Widths [",
+				 "   /FontDescriptor %d 0 R\n",
 				 subset_resource.id,
 				 tag,
 				 subset->base_font,
@@ -4409,6 +4407,10 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 				 font_subset->is_latin ? last_glyph : font_subset->num_glyphs - 1,
 				 descriptor.id);
 
+    if (font_subset->is_latin)
+	_cairo_output_stream_printf (surface->output, "   /Encoding /WinAnsiEncoding\n");
+
+    _cairo_output_stream_printf (surface->output, "   /Widths [");
     if (font_subset->is_latin) {
 	for (i = 32; i < last_glyph + 1; i++) {
 	    int glyph = font_subset->latin_to_subset_glyph_index[i];
