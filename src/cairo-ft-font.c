@@ -2439,6 +2439,64 @@ _cairo_ft_is_synthetic (void	        *abstract_font)
 	return FALSE;
 }
 
+static cairo_int_status_t
+_cairo_index_to_glyph_name (void	         *abstract_font,
+			    char                **glyph_names,
+			    int                   num_glyph_names,
+			    unsigned long         glyph_index,
+			    unsigned long        *glyph_array_index)
+{
+    cairo_ft_scaled_font_t *scaled_font = abstract_font;
+    cairo_ft_unscaled_font_t *unscaled = scaled_font->unscaled;
+    FT_Face face;
+    char buffer[256]; /* PLRM spcifies max name length of 127 */
+    FT_Error error;
+    int i;
+
+    face = _cairo_ft_unscaled_font_lock_face (unscaled);
+    if (!face)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    error = FT_Get_Glyph_Name (face, glyph_index, buffer, sizeof buffer);
+
+    _cairo_ft_unscaled_font_unlock_face (unscaled);
+
+    if (error != FT_Err_Ok) {
+	/* propagate fatal errors from FreeType */
+	if (error == FT_Err_Out_Of_Memory)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    /* FT first numbers the glyphs in the order they are read from the
+     * Type 1 font. Then if .notdef is not the first glyph, the first
+     * glyph is swapped with .notdef to ensure that .notdef is at
+     * glyph index 0.
+     *
+     * As all but two glyphs in glyph_names already have the same
+     * index as the FT glyph index, we first check if
+     * glyph_names[glyph_index] is the name we are looking for. If not
+     * we fall back to searching the entire array.
+     */
+
+    if (strcmp (glyph_names[glyph_index], buffer) == 0) {
+	*glyph_array_index = glyph_index;
+
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    for (i = 0; i < num_glyph_names; i++) {
+	if (strcmp (glyph_names[i], buffer) == 0) {
+	    *glyph_array_index = i;
+
+	    return CAIRO_STATUS_SUCCESS;
+	}
+    }
+
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
 static const cairo_scaled_font_backend_t _cairo_ft_scaled_font_backend = {
     CAIRO_FONT_TYPE_FT,
     _cairo_ft_scaled_font_fini,
@@ -2448,7 +2506,8 @@ static const cairo_scaled_font_backend_t _cairo_ft_scaled_font_backend = {
     NULL,			/* show_glyphs */
     _cairo_ft_load_truetype_table,
     _cairo_ft_index_to_ucs4,
-    _cairo_ft_is_synthetic
+    _cairo_ft_is_synthetic,
+    _cairo_index_to_glyph_name
 };
 
 /* #cairo_ft_font_face_t */

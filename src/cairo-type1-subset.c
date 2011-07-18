@@ -71,6 +71,7 @@ typedef struct _cairo_type1_font_subset {
 	unsigned int num_glyphs;
 	double x_min, y_min, x_max, y_max;
 	double ascent, descent;
+	double units_per_em;
 
 	const char    *data;
 	unsigned long  header_size;
@@ -81,11 +82,24 @@ typedef struct _cairo_type1_font_subset {
     FT_Face face;
     int num_glyphs;
 
+    /* The glyphs and glyph_names arrays are indexed by the order of
+     * the Charstrings in the font. This is not necessarily the same
+     * order as the glyph index. The index_to_glyph_name() font backend
+     * function is used to map the glyph index to the glyph order in
+     * the Charstrings. */
+
     struct {
 	int subset_index;
 	double width;
-	char *name;
+	const char *encrypted_charstring;
+	int encrypted_charstring_length;
     } *glyphs;
+    char **glyph_names;
+
+    /* Indexed by subset_index this maps to the glyph order in the
+     * glyph_names and glyphs arrays. Has font->num_golyphs
+     * elements. */
+    int *subset_index_to_glyphs;
 
     cairo_output_stream_t *output;
     cairo_array_t contents;
@@ -154,6 +168,7 @@ _cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
     font->base.y_max = face->bbox.yMax / (double)face->units_per_EM;
     font->base.ascent = face->ascender / (double)face->units_per_EM;
     font->base.descent = face->descender / (double)face->units_per_EM;
+    font->base.units_per_em = face->units_per_EM;
 
     if (face->family_name) {
 	font->base.base_font = strdup (face->family_name);
@@ -175,6 +190,18 @@ _cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
 	goto fail3;
     }
 
+    font->glyph_names = calloc (face->num_glyphs, sizeof font->glyph_names[0]);
+    if (unlikely (font->glyph_names == NULL)) {
+        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto fail4;
+    }
+
+    font->subset_index_to_glyphs = calloc (face->num_glyphs, sizeof font->subset_index_to_glyphs[0]);
+    if (unlikely (font->subset_index_to_glyphs == NULL)) {
+        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto fail5;
+    }
+
     font->hex_encode = hex_encode;
     font->num_glyphs = 0;
     for (i = 0; i < face->num_glyphs; i++)
@@ -186,6 +213,12 @@ _cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
 
     return CAIRO_STATUS_SUCCESS;
 
+ fail5:
+    if (font->glyph_names)
+	free (font->glyph_names);
+ fail4:
+    if (font->glyphs)
+	free (font->glyphs);
  fail3:
     if (font->base.base_font)
 	free (font->base.base_font);
@@ -203,7 +236,9 @@ cairo_type1_font_subset_use_glyph (cairo_type1_font_subset_t *font, int glyph)
     if (font->glyphs[glyph].subset_index >= 0)
 	return;
 
-    font->glyphs[glyph].subset_index = font->num_glyphs++;
+    font->glyphs[glyph].subset_index = font->num_glyphs;
+    font->subset_index_to_glyphs[font->num_glyphs] = glyph;
+    font->num_glyphs++;
 }
 
 static cairo_bool_t
@@ -396,13 +431,13 @@ cairo_type1_font_subset_write_header (cairo_type1_font_subset_t *font,
     if (font->scaled_font_subset->is_latin) {
 	for (i = 1; i < 256; i++) {
 	    int subset_glyph = font->scaled_font_subset->latin_to_subset_glyph_index[i];
-	    int parent_glyph = font->scaled_font_subset->glyphs[subset_glyph];
+	    int glyph_num = font->subset_index_to_glyphs[subset_glyph];
 
 	    if (subset_glyph > 0) {
 		_cairo_output_stream_printf (font->output,
 					     "dup %d /%s put\n",
 					     i,
-					     font->glyphs[parent_glyph].name);
+					     font->glyph_names[glyph_num]);
 	    }
 	}
     } else {
@@ -412,7 +447,7 @@ cairo_type1_font_subset_write_header (cairo_type1_font_subset_t *font,
 	    _cairo_output_stream_printf (font->output,
 					 "dup %d /%s put\n",
 					 font->glyphs[i].subset_index,
-					 font->glyphs[i].name);
+					 font->glyph_names[i]);
 	}
     }
     _cairo_output_stream_printf (font->output, "readonly def");
@@ -547,64 +582,6 @@ skip_token (const char *p, const char *end)
     return p;
 }
 
-static int
-cairo_type1_font_subset_lookup_glyph (cairo_type1_font_subset_t *font,
-				      const char *glyph_name, int length)
-{
-    unsigned int i;
-
-    for (i = 0; i < font->base.num_glyphs; i++) {
-	if (font->glyphs[i].name &&
-	    strncmp (font->glyphs[i].name, glyph_name, length) == 0 &&
-	    font->glyphs[i].name[length] == '\0')
-	    return i;
-    }
-
-    return -1;
-}
-
-static cairo_status_t
-cairo_type1_font_subset_get_glyph_names_and_widths (cairo_type1_font_subset_t *font)
-{
-    unsigned int i;
-    char buffer[256];
-    FT_Error error;
-
-    /* Get glyph names and width using the freetype API */
-    for (i = 0; i < font->base.num_glyphs; i++) {
-	if (font->glyphs[i].name != NULL)
-	    continue;
-
-	error = FT_Load_Glyph (font->face, i,
-			       FT_LOAD_NO_SCALE | FT_LOAD_NO_HINTING |
-			       FT_LOAD_NO_BITMAP | FT_LOAD_IGNORE_TRANSFORM);
-	if (error != FT_Err_Ok) {
-	    /* propagate fatal errors from FreeType */
-	    if (error == FT_Err_Out_Of_Memory)
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-	}
-
-	font->glyphs[i].width = font->face->glyph->metrics.horiAdvance / (double)font->face->units_per_EM;
-
-	error = FT_Get_Glyph_Name(font->face, i, buffer, sizeof buffer);
-	if (error != FT_Err_Ok) {
-	    /* propagate fatal errors from FreeType */
-	    if (error == FT_Err_Out_Of_Memory)
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-	}
-
-	font->glyphs[i].name = strdup (buffer);
-	if (unlikely (font->glyphs[i].name == NULL))
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    }
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static void
 cairo_type1_font_subset_decrypt_charstring (const unsigned char *in, int size, unsigned char *out)
 {
@@ -642,6 +619,7 @@ static cairo_status_t
 use_standard_encoding_glyph (cairo_type1_font_subset_t *font, int index)
 {
     const char *glyph_name;
+    unsigned int i;
 
     if (index < 0 || index > 255)
 	return CAIRO_STATUS_SUCCESS;
@@ -650,24 +628,46 @@ use_standard_encoding_glyph (cairo_type1_font_subset_t *font, int index)
     if (glyph_name == NULL)
 	return CAIRO_STATUS_SUCCESS;
 
-    index = cairo_type1_font_subset_lookup_glyph (font,
-						  glyph_name,
-						  strlen(glyph_name));
-    if (index < 0)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    for (i = 0; i < font->base.num_glyphs; i++) {
+	if (font->glyph_names[i] &&  strcmp (font->glyph_names[i], glyph_name) == 0) {
+	    cairo_type1_font_subset_use_glyph (font, i);
 
-    cairo_type1_font_subset_use_glyph (font, index);
+	    return CAIRO_STATUS_SUCCESS;
+	}
+    }
+
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+#define TYPE1_CHARSTRING_COMMAND_ESCAPE		0x0c
+#define TYPE1_CHARSTRING_COMMAND_SEAC		0x0c06
+#define TYPE1_CHARSTRING_COMMAND_SBW		0x0c07
+#define TYPE1_CHARSTRING_COMMAND_HSBW		0x0d
+
+
+static cairo_status_t
+cairo_type1_font_subset_build_glyph_list (cairo_type1_font_subset_t *font,
+					  int glyph_number,
+					  const char *name, int name_length,
+					  const char *encrypted_charstring, int encrypted_charstring_length)
+{
+    font->glyph_names[glyph_number] = malloc (name_length + 1);
+    if (unlikely (font->glyph_names[glyph_number] == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    strncpy (font->glyph_names[glyph_number], name, name_length);
+    font->glyph_names[glyph_number][name_length] = 0;
+
+    font->glyphs[glyph_number].encrypted_charstring = encrypted_charstring;
+    font->glyphs[glyph_number].encrypted_charstring_length = encrypted_charstring_length;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
-#define TYPE1_CHARSTRING_COMMAND_ESCAPE		(12)
-#define TYPE1_CHARSTRING_COMMAND_SEAC		(32 + 6)
 
+/* Get glyph width and look for seac operatorParse charstring */
 static cairo_status_t
-cairo_type1_font_subset_look_for_seac(cairo_type1_font_subset_t *font,
-				      const char *name, int name_length,
-				      const char *encrypted_charstring, int encrypted_charstring_length)
+cairo_type1_font_subset_parse_charstring(cairo_type1_font_subset_t *font, int glyph)
 {
     cairo_status_t status;
     unsigned char *charstring;
@@ -675,6 +675,11 @@ cairo_type1_font_subset_look_for_seac(cairo_type1_font_subset_t *font,
     const unsigned char *p;
     int stack[5], sp, value;
     int command;
+    const char *encrypted_charstring;
+    int encrypted_charstring_length;
+
+    encrypted_charstring = font->glyphs[glyph].encrypted_charstring;
+    encrypted_charstring_length = font->glyphs[glyph].encrypted_charstring_length;
 
     charstring = malloc (encrypted_charstring_length);
     if (unlikely (charstring == NULL))
@@ -692,32 +697,42 @@ cairo_type1_font_subset_look_for_seac(cairo_type1_font_subset_t *font,
     while (p < end) {
         if (*p < 32) {
 	    command = *p++;
-
-	    if (command == TYPE1_CHARSTRING_COMMAND_ESCAPE)
-		command = 32 + *p++;
-
 	    switch (command) {
-	    case TYPE1_CHARSTRING_COMMAND_SEAC:
-		/* The seac command takes five integer arguments.  The
-		 * last two are glyph indices into the PS standard
-		 * encoding give the names of the glyphs that this
-		 * glyph is composed from.  All we need to do is to
-		 * make sure those glyphs are present in the subset
-		 * under their standard names. */
-		status = use_standard_encoding_glyph (font, stack[3]);
-		if (unlikely (status))
-		    return status;
+		case TYPE1_CHARSTRING_COMMAND_HSBW:
+		    font->glyphs[glyph].width = stack[1]/font->base.units_per_em;
+		    sp = 0;
+		    break;
 
-		status = use_standard_encoding_glyph (font, stack[4]);
-		if (unlikely (status))
-		    return status;
+		case TYPE1_CHARSTRING_COMMAND_ESCAPE:
+		    command = command << 8 | *p++;
+		    switch (command) {
+			case TYPE1_CHARSTRING_COMMAND_SEAC:
+			    /* The seac command takes five integer arguments.  The
+			     * last two are glyph indices into the PS standard
+			     * encoding give the names of the glyphs that this
+			     * glyph is composed from.  All we need to do is to
+			     * make sure those glyphs are present in the subset
+			     * under their standard names. */
+			    status = use_standard_encoding_glyph (font, stack[3]);
+			    if (unlikely (status))
+				return status;
 
-		sp = 0;
-		break;
+			    status = use_standard_encoding_glyph (font, stack[4]);
+			    if (unlikely (status))
+				return status;
 
-	    default:
-		sp = 0;
-		break;
+			    sp = 0;
+			    break;
+
+			case TYPE1_CHARSTRING_COMMAND_SBW:
+			    font->glyphs[glyph].width = stack[2]/font->base.units_per_em;
+			    sp = 0;
+			    break;
+
+			default:
+			    sp = 0;
+			    break;
+		    }
 	    }
         } else {
             /* integer argument */
@@ -734,12 +749,16 @@ cairo_type1_font_subset_look_for_seac(cairo_type1_font_subset_t *font,
 
 static cairo_status_t
 write_used_glyphs (cairo_type1_font_subset_t *font,
+		   int glyph_number,
 		   const char *name, int name_length,
 		   const char *charstring, int charstring_length)
 {
     cairo_status_t status;
     char buffer[256];
     int length;
+
+    if (font->glyphs[glyph_number].subset_index < 0)
+	return CAIRO_STATUS_SUCCESS;
 
     length = snprintf (buffer, sizeof buffer,
 		       "/%.*s %d %s ",
@@ -763,6 +782,7 @@ write_used_glyphs (cairo_type1_font_subset_t *font,
 }
 
 typedef cairo_status_t (*glyph_func_t) (cairo_type1_font_subset_t *font,
+					int glyph_number,
 			                const char *name, int name_length,
 			                const char *charstring, int charstring_length);
 
@@ -773,9 +793,11 @@ cairo_type1_font_subset_for_each_glyph (cairo_type1_font_subset_t *font,
 					glyph_func_t func,
 					const char **dict_out)
 {
-    int charstring_length, name_length, glyph_index;
+    int charstring_length, name_length;
     const char *p, *charstring, *name;
     char *end;
+    cairo_status_t status;
+    int glyph_count;
 
     /* We're looking at '/' in the name of the first glyph.  The glyph
      * definitions are on the form:
@@ -792,7 +814,7 @@ cairo_type1_font_subset_for_each_glyph (cairo_type1_font_subset_t *font,
      */
 
     p = dict_start;
-
+    glyph_count = 0;
     while (*p == '/') {
 	name = p + 1;
 	p = skip_token (p, dict_end);
@@ -816,15 +838,11 @@ cairo_type1_font_subset_for_each_glyph (cairo_type1_font_subset_t *font,
 	if (p == dict_end)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
-	glyph_index = cairo_type1_font_subset_lookup_glyph (font,
-							    name, name_length);
-	if (font->glyphs[glyph_index].subset_index >= 0) {
-	    cairo_status_t status = func (font,
-		                          name, name_length,
-					  charstring, charstring_length);
-	    if (unlikely (status))
-		return status;
-	}
+	status = func (font, glyph_count++,
+		       name, name_length,
+		       charstring, charstring_length);
+	if (unlikely (status))
+	    return status;
     }
 
     *dict_out = p;
@@ -842,6 +860,8 @@ cairo_type1_font_subset_write_private_dict (cairo_type1_font_subset_t *font,
     const char *closefile_token;
     char buffer[32], *glyph_count_end;
     int num_charstrings, length;
+    const cairo_scaled_font_backend_t *backend;
+    unsigned int i;
 
     /* The private dict holds hint information, common subroutines and
      * the actual glyph definitions (charstrings).
@@ -878,29 +898,48 @@ cairo_type1_font_subset_write_private_dict (cairo_type1_font_subset_t *font,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     dict_start = p;
 
-    status = cairo_type1_font_subset_get_glyph_names_and_widths (font);
-    if (unlikely (status))
-	return status;
-
     /* Now that we have the private dictionary broken down in
      * sections, do the first pass through the glyph definitions to
-     * figure out which subrs and othersubrs are use and which extra
-     * glyphs may be required by the seac operator. */
+     * build a list of glyph names and charstrings. */
     status = cairo_type1_font_subset_for_each_glyph (font,
 						     dict_start,
 						     font->cleartext_end,
-						     cairo_type1_font_subset_look_for_seac,
+						     cairo_type1_font_subset_build_glyph_list,
 						     &p);
-    if (unlikely (status))
-	return status;
+
+    backend = font->scaled_font_subset->scaled_font->backend;
+    if (!backend->index_to_glyph_name)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* Find the glyph number corresponding to each glyph in the subset
+     * and mark it as in use */
+
+    for (i = 0; i < font->scaled_font_subset->num_glyphs; i++) {
+	unsigned long index;
+
+	status = backend->index_to_glyph_name (font->scaled_font_subset->scaled_font,
+					       font->glyph_names,
+					       font->base.num_glyphs,
+					       font->scaled_font_subset->glyphs[i],
+					       &index);
+	if (unlikely(status))
+	    return status;
+
+	cairo_type1_font_subset_use_glyph (font, index);
+    }
+
+    /* Go through the charstring of each glyph in use, get the glyph
+     * width and figure out which extra glyphs may be required by the
+     * seac operator. */
+    for (i = 0; i < font->base.num_glyphs; i++) {
+	status = cairo_type1_font_subset_parse_charstring (font, i);
+	if (unlikely (status))
+	    return status;
+    }
 
     closefile_token = find_token (p, font->cleartext_end, "closefile");
     if (closefile_token == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    status = cairo_type1_font_subset_get_glyph_names_and_widths (font);
-    if (unlikely (status))
-	return status;
 
     /* We're ready to start outputting. First write the header,
      * i.e. the public part of the font dict.*/
@@ -1086,19 +1125,23 @@ cairo_type1_font_subset_generate (void       *abstract_font,
 		font->face->stream->base, font->type1_length);
     }
 
+    _cairo_ft_unscaled_font_unlock_face (ft_unscaled_font);
+
     status = _cairo_array_grow_by (&font->contents, 4096);
     if (unlikely (status))
-	goto fail;
+	return status;
 
     font->output = _cairo_output_stream_create (type1_font_write, NULL, font);
     if (unlikely ((status = font->output->status)))
-	goto fail;
+	return status;
 
     status = cairo_type1_font_subset_write (font, name);
     if (unlikely (status))
-	goto fail;
+	return status;
 
     font->base.data = _cairo_array_index (&font->contents, 0);
+
+    return status;
 
  fail:
     _cairo_ft_unscaled_font_unlock_face (ft_unscaled_font);
@@ -1118,9 +1161,11 @@ _cairo_type1_font_subset_fini (cairo_type1_font_subset_t *font)
     _cairo_array_fini (&font->contents);
 
     free (font->type1_data);
-    if (font->glyphs != NULL) {
+    if (font->glyph_names != NULL) {
 	for (i = 0; i < font->base.num_glyphs; i++)
-	    free (font->glyphs[i].name);
+	    free (font->glyph_names[i]);
+
+	free (font->glyph_names);
     }
 
     _cairo_unscaled_font_destroy (font->base.unscaled_font);
@@ -1130,7 +1175,9 @@ _cairo_type1_font_subset_fini (cairo_type1_font_subset_t *font)
 
     if (font->base.base_font)
 	free (font->base.base_font);
+
     free (font->glyphs);
+    free (font->subset_index_to_glyphs);
 
     return status;
 }
@@ -1143,7 +1190,7 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
 {
     cairo_type1_font_subset_t font;
     cairo_status_t status, status_ignored;
-    unsigned long parent_glyph, length;
+    unsigned long length;
     unsigned int i;
     cairo_unscaled_font_t *unscaled_font;
     char buf[30];
@@ -1165,11 +1212,6 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
     status = _cairo_type1_font_subset_init (&font, unscaled_font, scaled_font_subset, hex_encode);
     if (unlikely (status))
 	return status;
-
-    for (i = 0; i < scaled_font_subset->num_glyphs; i++) {
-	parent_glyph = scaled_font_subset->glyphs[i];
-	cairo_type1_font_subset_use_glyph (&font, parent_glyph);
-    }
 
     status = cairo_type1_font_subset_generate (&font, name);
     if (unlikely (status))

@@ -546,6 +546,25 @@ struct _cairo_scaled_font_backend {
 
     cairo_warn cairo_bool_t
     (*is_synthetic)(void                       *scaled_font);
+
+    /* For type 1 fonts, return the glyph name for a given glyph index.
+     * A glyph index and list of glyph names in the Type 1 fonts is provided.
+     * The function returns the index of the glyph in the list of glyph names.
+     * @scaled_font: font
+     * @glyph_names: the names of each glyph in the Type 1 font in the
+     *   order they appear in the CharStrings array
+     * @num_glyph_names: the number of names in the glyph_names array
+     * @glyph_index: the given glyph index
+     * @glyph_array_index: (index into glyph_names) the glyph name corresponding
+     *  to the glyph_index
+     */
+
+    cairo_warn cairo_int_status_t
+    (*index_to_glyph_name)(void                 *scaled_font,
+			   char                **glyph_names,
+			   int                   num_glyph_names,
+			   unsigned long         glyph_index,
+			   unsigned long        *glyph_array_index);
 };
 
 struct _cairo_font_face_backend {
