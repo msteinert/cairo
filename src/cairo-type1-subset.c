@@ -141,7 +141,6 @@ _cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
     cairo_status_t status;
     FT_Face face;
     PS_FontInfoRec font_info;
-    int i, j;
 
     ft_unscaled_font = (cairo_ft_unscaled_font_t *) unscaled_font;
 
@@ -166,20 +165,6 @@ _cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
     font->scaled_font_subset = scaled_font_subset;
     font->base.unscaled_font = _cairo_unscaled_font_reference (unscaled_font);
 
-    if (face->family_name) {
-	font->base.base_font = strdup (face->family_name);
-	if (unlikely (font->base.base_font == NULL)) {
-	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    goto fail2;
-	}
-	for (i = 0, j = 0; font->base.base_font[j]; j++) {
-	    if (font->base.base_font[j] == ' ')
-		continue;
-	    font->base.base_font[i++] = font->base.base_font[j];
-	}
-	font->base.base_font[i] = '\0';
-    }
-
     _cairo_array_init (&font->glyphs_array, sizeof (glyph_data_t));
     _cairo_array_init (&font->glyph_names_array, sizeof (char *));
     font->subset_index_to_glyphs = NULL;
@@ -194,7 +179,6 @@ _cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
 
     return CAIRO_STATUS_SUCCESS;
 
- fail2:
     _cairo_unscaled_font_destroy (unscaled_font);
  fail1:
     _cairo_ft_unscaled_font_unlock_face (ft_unscaled_font);
@@ -405,6 +389,50 @@ cairo_type1_font_subset_get_bbox (cairo_type1_font_subset_t *font)
     font->base.y_max = y_max / font->base.units_per_em;
     font->base.ascent = font->base.y_max;
     font->base.descent = font->base.y_min;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+cairo_type1_font_subset_get_fontname (cairo_type1_font_subset_t *font)
+{
+    const char *start, *end, *segment_end;
+    char *s;
+
+    segment_end = font->header_segment + font->header_segment_size;
+    start = find_token (font->header_segment, segment_end, "/FontName");
+    if (start == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    start += strlen ("/FontName");
+
+    end = find_token (start, segment_end, "def");
+    if (end == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    s = malloc (end - start + 1);
+    if (unlikely (s == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    strncpy (s, start, end - start);
+    s[end - start] = 0;
+
+    start = strchr (s, '/');
+    if (!start++ || !start) {
+	free (s);
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    font->base.base_font = strdup (start);
+    free (s);
+    if (unlikely (font->base.base_font == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    s = font->base.base_font;
+    while (*s && !is_ps_delimiter(*s))
+	s++;
+
+    *s = 0;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1143,6 +1171,10 @@ cairo_type1_font_subset_write (cairo_type1_font_subset_t *font,
     font->hex_column = 0;
 
     status = cairo_type1_font_subset_get_bbox (font);
+    if (unlikely (status))
+	return status;
+
+    status = cairo_type1_font_subset_get_fontname (font);
     if (unlikely (status))
 	return status;
 
