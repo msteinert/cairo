@@ -39,7 +39,9 @@
 
 #include "cairo-quartz-private.h"
 
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
+#include "cairo-pattern-private.h"
 #include "cairo-surface-clipper-private.h"
 
 #include <dlfcn.h>
@@ -2417,6 +2419,8 @@ _cairo_quartz_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clip
 
 static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
     CAIRO_SURFACE_TYPE_QUARTZ,
+    _cairo_default_context_create,
+
     _cairo_quartz_surface_create_similar,
     _cairo_quartz_surface_finish,
     _cairo_quartz_surface_acquire_source_image,

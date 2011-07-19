@@ -41,6 +41,7 @@
 #include "cairo-clip-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
+#include "cairo-pattern-private.h"
 
 #include <pixman.h>
 
