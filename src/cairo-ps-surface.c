@@ -339,8 +339,6 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
     }
 }
 
-#if CAIRO_HAS_FT_FONT
-
 static cairo_status_t
 _cairo_ps_surface_emit_type1_font_subset (cairo_ps_surface_t		*surface,
 					  cairo_scaled_font_subset_t	*font_subset)
@@ -403,23 +401,6 @@ _cairo_ps_surface_emit_type1_font_fallback (cairo_ps_surface_t		*surface,
 
     return CAIRO_STATUS_SUCCESS;
 }
-#else
-
-static cairo_status_t
-_cairo_ps_surface_emit_type1_font_subset (cairo_ps_surface_t		*surface,
-					  cairo_scaled_font_subset_t	*font_subset)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static cairo_status_t
-_cairo_ps_surface_emit_type1_font_fallback (cairo_ps_surface_t		*surface,
-                                            cairo_scaled_font_subset_t	*font_subset)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-#endif
 
 static cairo_status_t
 _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,

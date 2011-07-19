@@ -512,8 +512,6 @@ typedef struct _cairo_type1_subset {
 } cairo_type1_subset_t;
 
 
-#if CAIRO_HAS_FT_FONT
-
 /**
  * _cairo_type1_subset_init:
  * @type1_subset: a #cairo_type1_subset_t to initialize
@@ -546,9 +544,6 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type_subset,
  **/
 cairo_private void
 _cairo_type1_subset_fini (cairo_type1_subset_t *subset);
-
-#endif /* CAIRO_HAS_FT_FONT */
-
 
 /**
  * _cairo_type1_scaled_font_is_type1:
