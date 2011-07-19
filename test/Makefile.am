@@ -73,7 +73,7 @@ endif
 endif
 test_sources += $(test)
 
-noinst_PROGRAMS = cairo-test-suite # always build
+noinst_PROGRAMS = cairo-test-suite$(EXEEXT) # always build
 
 TESTS += cairo-test-suite$(EXEEXT)
 
