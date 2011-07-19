@@ -572,14 +572,13 @@ _cairo_boxes_intersect (const cairo_boxes_t *a,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    if (unlikely (a->num_boxes == 1)) {
+    if (a->num_boxes == 1) {
 	cairo_box_t box = a->chunks.base[0];
 	return _cairo_boxes_intersect_with_box (b, &box, out);
     }
-    if (unlikely (b->num_boxes == 1)) {
+    if (b->num_boxes == 1) {
 	cairo_box_t box = b->chunks.base[0];
 	return _cairo_boxes_intersect_with_box (a, &box, out);
-	/* XXX */
     }
 
     rectangles = stack_rectangles;

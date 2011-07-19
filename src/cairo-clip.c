@@ -176,6 +176,38 @@ _cairo_clip_copy (const cairo_clip_t *clip)
 }
 
 cairo_clip_t *
+_cairo_clip_copy_region (const cairo_clip_t *clip)
+{
+    cairo_clip_t *copy;
+    int i;
+
+    if (clip == NULL || _cairo_clip_is_all_clipped (clip))
+	return (cairo_clip_t *) clip;
+
+    assert (clip->num_boxes);
+
+    copy = _cairo_clip_create ();
+    copy->extents = clip->extents;
+
+    copy->boxes = _cairo_malloc_ab (clip->num_boxes, sizeof (cairo_box_t));
+    if (unlikely (copy->boxes == NULL))
+	return _cairo_clip_set_all_clipped (copy);
+
+    for (i = 0; i < clip->num_boxes; i++) {
+	copy->boxes[i].p1.x = _cairo_fixed_floor (clip->boxes[i].p1.x);
+	copy->boxes[i].p1.y = _cairo_fixed_floor (clip->boxes[i].p1.y);
+	copy->boxes[i].p2.x = _cairo_fixed_ceil (clip->boxes[i].p2.x);
+	copy->boxes[i].p2.y = _cairo_fixed_ceil (clip->boxes[i].p2.y);
+    }
+    copy->num_boxes = clip->num_boxes;
+
+    copy->region = cairo_region_reference (clip->region);
+    copy->is_region = TRUE;
+
+    return copy;
+}
+
+cairo_clip_t *
 _cairo_clip_intersect_path (cairo_clip_t       *clip,
 			    const cairo_path_fixed_t *path,
 			    cairo_fill_rule_t   fill_rule,

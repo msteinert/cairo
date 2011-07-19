@@ -104,6 +104,10 @@ _cairo_composite_rectangles_init_for_glyphs (cairo_composite_rectangles_t *exten
 					     const cairo_clip_t		*clip,
 					     cairo_bool_t		*overlap);
 
+cairo_private cairo_int_status_t
+_cairo_composite_rectangles_intersect_mask_extents (cairo_composite_rectangles_t *extents,
+						    const cairo_box_t *box);
+
 cairo_private void
 _cairo_composite_rectangles_fini (cairo_composite_rectangles_t *extents);
 

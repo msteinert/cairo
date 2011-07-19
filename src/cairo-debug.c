@@ -269,6 +269,16 @@ _cairo_debug_print_polygon (FILE *stream, cairo_polygon_t *polygon)
 	    _cairo_fixed_to_double (polygon->extents.p1.y),
 	    _cairo_fixed_to_double (polygon->extents.p2.x),
 	    _cairo_fixed_to_double (polygon->extents.p2.y));
+    if (polygon->num_limits) {
+	fprintf (stream,
+		 "       : limit=(%f, %f), (%f, %f) x %d\n",
+		 _cairo_fixed_to_double (polygon->limit.p1.x),
+		 _cairo_fixed_to_double (polygon->limit.p1.y),
+		 _cairo_fixed_to_double (polygon->limit.p2.x),
+		 _cairo_fixed_to_double (polygon->limit.p2.y),
+		 polygon->num_limits);
+    }
+
     for (n = 0; n < polygon->num_edges; n++) {
 	cairo_edge_t *edge = &polygon->edges[n];
 

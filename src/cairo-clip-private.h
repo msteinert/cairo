@@ -95,6 +95,9 @@ cairo_private cairo_clip_t *
 _cairo_clip_copy (const cairo_clip_t *clip);
 
 cairo_private cairo_clip_t *
+_cairo_clip_copy_region (const cairo_clip_t *clip);
+
+cairo_private cairo_clip_t *
 _cairo_clip_copy_with_translation (const cairo_clip_t *clip, int tx, int ty);
 
 cairo_private cairo_bool_t

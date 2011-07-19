@@ -90,6 +90,7 @@ struct _cairo_xcb_surface {
     int use_pixmap;
 
     cairo_bool_t deferred_clear;
+    cairo_color_t deferred_clear_color;
 
     int width;
     int height;

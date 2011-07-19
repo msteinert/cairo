@@ -927,6 +927,7 @@ _cairo_xcb_surface_create_internal (cairo_xcb_screen_t		*screen,
     surface->use_pixmap = 0;
 
     surface->deferred_clear = FALSE;
+    surface->deferred_clear_color = *CAIRO_COLOR_TRANSPARENT;
 
     surface->width  = width;
     surface->height = height;

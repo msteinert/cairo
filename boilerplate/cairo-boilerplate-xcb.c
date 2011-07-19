@@ -186,25 +186,40 @@ static void _destroy_similar (void *closure)
     free (similar);
 }
 
+struct xcb_info {
+	xcb_render_query_pict_formats_reply_t *formats;
+	xcb_render_pictforminfo_t *render_format[3];
+};
+
 static cairo_surface_t *
 _cairo_boilerplate_xcb_create_similar (cairo_surface_t *other,
 				       cairo_content_t content,
 				       int width, int height)
 {
+    cairo_device_t *device = cairo_surface_get_device (other);
+    struct xcb_info *info = cairo_device_get_user_data (device, &key);
     xcb_screen_t *root;
     cairo_surface_t *surface;
     struct similar *similar;
     xcb_render_pictforminfo_t *render_format;
     int depth;
-    void *formats;
 
     similar = malloc (sizeof (*similar));
 
     switch (content) {
     default:
-    case CAIRO_CONTENT_COLOR_ALPHA: depth = 32; break;
-    case CAIRO_CONTENT_COLOR: depth = 24; break;
-    case CAIRO_CONTENT_ALPHA: depth = 8; break;
+    case CAIRO_CONTENT_COLOR_ALPHA:
+	    depth = 32;
+	    render_format = info->render_format[0];
+	    break;
+    case CAIRO_CONTENT_COLOR:
+	    depth = 24;
+	    render_format = info->render_format[1];
+	    break;
+    case CAIRO_CONTENT_ALPHA:
+	    depth = 8;
+	    render_format = info->render_format[2];
+	    break;
     }
 
     similar->connection =
@@ -216,17 +231,12 @@ _cairo_boilerplate_xcb_create_similar (cairo_surface_t *other,
 		       similar->pixmap, root->root,
 		       width, height);
 
-    render_format = find_depth (similar->connection, depth, &formats);
-    if (render_format == NULL)
-	return NULL;
-
     surface = cairo_xcb_surface_create_with_xrender_format (similar->connection,
 							    root,
 							    similar->pixmap,
 							    render_format,
 							    width, height);
     cairo_surface_set_user_data (surface, &key, similar, _destroy_similar);
-    free(formats);
 
     return surface;
 }
@@ -245,14 +255,17 @@ _cairo_boilerplate_xcb_create_surface (const char		 *name,
     xcb_screen_t *root;
     xcb_target_closure_t *xtc;
     xcb_connection_t *c;
+    xcb_render_query_pict_formats_cookie_t formats_cookie;
     xcb_render_pictforminfo_t *render_format;
+    xcb_render_pictforminfo_iterator_t i;
+    struct xcb_info *info;
     int depth;
     xcb_void_cookie_t cookie;
     cairo_surface_t *surface;
     cairo_status_t status;
-    void *formats;
 
     *closure = xtc = xmalloc (sizeof (xcb_target_closure_t));
+    info = xcalloc (1, sizeof (struct xcb_info));
 
     if (width == 0)
 	width = 1;
@@ -266,6 +279,7 @@ _cairo_boilerplate_xcb_create_surface (const char		 *name,
     }
 
     root = xcb_setup_roots_iterator(xcb_get_setup(c)).data;
+    formats_cookie = xcb_render_query_pict_formats (c);
 
     xtc->surface = NULL;
     xtc->is_pixmap = TRUE;
@@ -273,16 +287,10 @@ _cairo_boilerplate_xcb_create_surface (const char		 *name,
     switch (content) {
     case CAIRO_CONTENT_COLOR:
 	depth = 24;
-	cookie = xcb_create_pixmap_checked (c, depth,
-					    xtc->drawable, root->root,
-					    width, height);
 	break;
 
     case CAIRO_CONTENT_COLOR_ALPHA:
 	depth = 32;
-	cookie = xcb_create_pixmap_checked (c, depth,
-					    xtc->drawable, root->root,
-					    width, height);
 	break;
 
     case CAIRO_CONTENT_ALPHA:  /* would be XCB_PICT_STANDARD_A_8 */
@@ -292,6 +300,10 @@ _cairo_boilerplate_xcb_create_surface (const char		 *name,
 	return NULL;
     }
 
+    cookie = xcb_create_pixmap_checked (c, depth,
+					xtc->drawable, root->root,
+					width, height);
+
     /* slow, but sure */
     if (xcb_request_check (c, cookie) != NULL) {
 	xcb_disconnect (c);
@@ -299,19 +311,53 @@ _cairo_boilerplate_xcb_create_surface (const char		 *name,
 	return NULL;
     }
 
-    render_format = find_depth (c, depth, &formats);
-    if (render_format == NULL) {
-	xcb_disconnect (c);
-	free (xtc);
+    info->formats = xcb_render_query_pict_formats_reply (c, formats_cookie, 0);
+    if (info->formats == NULL)
 	return NULL;
+
+    for (i = xcb_render_query_pict_formats_formats_iterator (info->formats);
+	 i.rem;
+	 xcb_render_pictforminfo_next (&i))
+    {
+	if (XCB_RENDER_PICT_TYPE_DIRECT != i.data->type)
+	    continue;
+
+	if (i.data->depth == 32) {
+		if (info->render_format[0] == 0)
+			info->render_format[0] = i.data;
+	} else if (i.data->depth == 24) {
+		if (info->render_format[1] == 0)
+			info->render_format[1] = i.data;
+	} else if (i.data->depth == 8) {
+		if (info->render_format[2] == 0)
+			info->render_format[2] = i.data;
+	}
+    }
+
+    assert (info->render_format[0]);
+    assert (info->render_format[1]);
+    assert (info->render_format[2]);
+
+    switch (content) {
+    default:
+    case CAIRO_CONTENT_COLOR_ALPHA:
+	    render_format = info->render_format[0];
+	    break;
+
+    case CAIRO_CONTENT_COLOR:
+	    render_format = info->render_format[1];
+	    break;
+
+    case CAIRO_CONTENT_ALPHA:  /* would be XCB_PICT_STANDARD_A_8 */
+	    render_format = info->render_format[2];
+	    break;
     }
 
     surface = cairo_xcb_surface_create_with_xrender_format (c, root,
 							    xtc->drawable,
 							    render_format,
 							    width, height);
-    free (formats);
-
+    cairo_device_set_user_data (cairo_surface_get_device (surface), &key, info, free);
     if (mode != CAIRO_BOILERPLATE_MODE_PERF)
 	_cairo_boilerplate_xcb_setup_test_surface(surface);
 
@@ -566,6 +612,7 @@ _cairo_boilerplate_xcb_create_render_0_0 (const char		    *name,
 	free (xtc);
 	return NULL;
     }
+    xcb_flush (c);
 
     render_format = find_depth (c, depth, &formats);
     if (render_format == NULL) {
@@ -593,7 +640,6 @@ _cairo_boilerplate_xcb_create_render_0_0 (const char		    *name,
 							    xtc->drawable,
 							    render_format,
 							    width, height);
-    free (formats);
     cairo_surface_destroy (tmp);
 
     assert (cairo_surface_get_device (surface) == xtc->device);
