@@ -80,6 +80,11 @@ _cairo_xcb_screen_finish (cairo_xcb_screen_t *screen)
     for (i = 0; i < ARRAY_LENGTH (screen->stock_colors); i++)
 	cairo_surface_destroy (screen->stock_colors[i]);
 
+    for (i = 0; i < ARRAY_LENGTH (screen->gc); i++) {
+	if (((screen->gc_depths >> (8*i)) & 0xff) != 0)
+	    _cairo_xcb_connection_free_gc (screen->connection, screen->gc[i]);
+    }
+
     _cairo_cache_fini (&screen->linear_pattern_cache);
     _cairo_cache_fini (&screen->radial_pattern_cache);
     _cairo_freelist_fini (&screen->pattern_cache_entry_freelist);
