@@ -934,7 +934,10 @@ _cairo_xcb_surface_create_internal (cairo_xcb_screen_t		*screen,
     surface->depth  = PIXMAN_FORMAT_DEPTH (pixman_format);
 
     surface->picture = XCB_NONE;
-    surface->precision = XCB_RENDER_POLY_MODE_PRECISE;
+    if (screen->connection->force_precision != -1)
+	surface->precision = screen->connection->force_precision;
+    else
+	surface->precision = XCB_RENDER_POLY_MODE_IMPRECISE;
 
     surface->pixman_format = pixman_format;
     surface->xrender_format = xrender_format;
