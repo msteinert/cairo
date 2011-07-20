@@ -1566,15 +1566,11 @@ _cairo_win32_surface_show_glyphs_internal (void			 *surface,
      * doing this for printing */
     if (clip != NULL) {
 	if ((dst->flags & CAIRO_WIN32_SURFACE_FOR_PRINTING) == 0) {
-	    cairo_region_t *clip_region;
-	    cairo_status_t status;
+	    if (! _cairo_clip_is_region (clip))
+		return CAIRO_INT_STATUS_UNSUPPORTED;
 
-	    clip_region = _cairo_clip_get_region (clip);
-	    assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
-	    if (status)
-		return status;
-
-	    _cairo_win32_surface_set_clip_region (surface, clip_region);
+	    _cairo_win32_surface_set_clip_region (surface,
+						  _cairo_clip_get_region (clip));
 	}
     }
 
