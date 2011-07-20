@@ -1569,7 +1569,7 @@ _cairo_win32_surface_show_glyphs_internal (void			 *surface,
 	    cairo_region_t *clip_region;
 	    cairo_status_t status;
 
-	    status = _cairo_clip_get_region (clip, &clip_region);
+	    clip_region = _cairo_clip_get_region (clip);
 	    assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
 	    if (status)
 		return status;
