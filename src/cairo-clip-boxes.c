@@ -259,8 +259,11 @@ _cairo_clip_intersect_boxes (cairo_clip_t *clip,
     cairo_boxes_t clip_boxes;
     cairo_rectangle_int_t extents;
 
-    if (boxes->num_boxes == 0)
+    if (_cairo_clip_is_all_clipped (clip))
 	return clip;
+
+    if (boxes->num_boxes == 0)
+	return _cairo_clip_set_all_clipped (clip);
 
     if (clip == NULL)
 	clip = _cairo_clip_create ();
