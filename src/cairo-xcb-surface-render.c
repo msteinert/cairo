@@ -1377,7 +1377,7 @@ _render_composite_boxes (cairo_xcb_surface_t	*dst,
 	} else {
 	    stack_extents.x = clip_boxes[0].x;
 	    stack_extents.y = clip_boxes[0].y;
-	    stack_extents.width = clip_boxes[0].width;
+	    stack_extents.width  = clip_boxes[0].width;
 	    stack_extents.height = clip_boxes[0].height;
 	    extents = &stack_extents;
 	}
@@ -1475,7 +1475,7 @@ typedef struct {
 
 COMPILE_TIME_ASSERT (sizeof (xcb_render_trapezoid_t) <= sizeof (cairo_trapezoid_t));
 
-static cairo_status_t
+static cairo_int_status_t
 _composite_traps (void *closure,
 		  cairo_xcb_surface_t	*dst,
 		  cairo_operator_t	 op,
@@ -1568,6 +1568,8 @@ _composite_traps (void *closure,
 	render_reference_x = xtraps[0].left.p2.x >> 16;
 	render_reference_y = xtraps[0].left.p2.y >> 16;
     }
+    render_reference_x += src->x + dst_x;
+    render_reference_y += src->y + dst_y;
 
     _cairo_xcb_surface_set_precision (dst, info->antialias);
     _cairo_xcb_connection_render_trapezoids (dst->connection,
@@ -1575,8 +1577,8 @@ _composite_traps (void *closure,
 					     src->picture,
 					     dst->picture,
 					     xrender_format,
-					     src->x + render_reference_x,
-					     src->y + render_reference_y,
+					     render_reference_x,
+					     render_reference_y,
 					     traps->num_traps, xtraps);
 
     cairo_surface_destroy (&src->base);
@@ -1586,7 +1588,7 @@ _composite_traps (void *closure,
 
 /* low-level composite driver */
 
-typedef cairo_status_t
+typedef cairo_int_status_t
 (*xcb_draw_func_t) (void				*closure,
 		    cairo_xcb_surface_t			*dst,
 		    cairo_operator_t			 op,
@@ -1603,7 +1605,7 @@ static void do_unaligned_row(void (*blt)(void *closure,
 			     void *closure,
 			     const cairo_box_t *b,
 			     int tx, int y, int h,
-			     int coverage)
+			     uint16_t coverage)
 {
     int x1 = _cairo_fixed_integer_part (b->p1.x) - tx;
     int x2 = _cairo_fixed_integer_part (b->p2.x) - tx;
@@ -1614,7 +1616,8 @@ static void do_unaligned_row(void (*blt)(void *closure,
 	    x1++;
 	}
 
-	blt(closure, x1, y, x2-x1, h, 256*coverage);
+	if (x2 > x1)
+	    blt(closure, x1, y, x2-x1, h, (coverage << 8) - (coverage >> 8));
 
 	if (! _cairo_fixed_is_integer (b->p2.x))
 	    blt(closure, x2, y, 1, h,
@@ -1640,7 +1643,8 @@ static void do_unaligned_box(void (*blt)(void *closure,
 	    y1++;
 	}
 
-	do_unaligned_row(blt, closure, b, tx, y1, y2-y1, 256);
+	if (y2 > y1)
+	    do_unaligned_row(blt, closure, b, tx, y1, y2-y1, 256);
 
 	if (! _cairo_fixed_is_integer (b->p2.y))
 	    do_unaligned_row(blt, closure, b, tx, y2, 1,
@@ -1665,7 +1669,7 @@ static void blt_in(void *closure,
 
     rect.x = x;
     rect.y = y;
-    rect.width = w;
+    rect.width  = w;
     rect.height = h;
 
     _cairo_xcb_connection_render_fill_rectangles (mask->connection,
@@ -1677,13 +1681,14 @@ static void blt_in(void *closure,
 static cairo_xcb_surface_t *
 _create_composite_mask (cairo_clip_t		*clip,
 			xcb_draw_func_t		 draw_func,
+			xcb_draw_func_t		 mask_func,
 			void			*draw_closure,
 			cairo_xcb_surface_t	*dst,
 			const cairo_rectangle_int_t*extents)
 {
     cairo_xcb_surface_t *surface;
     cairo_bool_t need_clip_combine;
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     surface = (cairo_xcb_surface_t *)
 	_cairo_xcb_surface_create_similar (dst, CAIRO_CONTENT_ALPHA,
@@ -1696,6 +1701,15 @@ _create_composite_mask (cairo_clip_t		*clip,
     surface->deferred_clear_color = *CAIRO_COLOR_TRANSPARENT;
     surface->deferred_clear = TRUE;
     surface->base.is_clear = TRUE;
+
+    if (mask_func) {
+	status = mask_func (draw_closure, surface,
+			    CAIRO_OPERATOR_ADD, NULL,
+			    extents->x, extents->y,
+			    extents, clip);
+	if (likely (status != CAIRO_INT_STATUS_UNSUPPORTED))
+	    return surface;
+    }
 
     /* Is it worth setting the clip region here? */
     status = draw_func (draw_closure, surface,
@@ -1746,6 +1760,7 @@ _clip_and_composite_with_mask (cairo_clip_t		*clip,
 			       cairo_operator_t		 op,
 			       const cairo_pattern_t	*pattern,
 			       xcb_draw_func_t		 draw_func,
+			       xcb_draw_func_t		 mask_func,
 			       void			*draw_closure,
 			       cairo_xcb_surface_t	*dst,
 			       const cairo_rectangle_int_t*extents)
@@ -1753,7 +1768,9 @@ _clip_and_composite_with_mask (cairo_clip_t		*clip,
     cairo_xcb_surface_t *mask;
     cairo_xcb_picture_t *src;
 
-    mask = _create_composite_mask (clip, draw_func, draw_closure, dst, extents);
+    mask = _create_composite_mask (clip,
+				   draw_func, mask_func, draw_closure,
+				   dst, extents);
     if (unlikely (mask->base.status))
 	return mask->base.status;
 
@@ -1915,6 +1932,7 @@ static cairo_status_t
 _clip_and_composite_source (cairo_clip_t		*clip,
 			    const cairo_pattern_t	*pattern,
 			    xcb_draw_func_t		 draw_func,
+			    xcb_draw_func_t		 mask_func,
 			    void			*draw_closure,
 			    cairo_xcb_surface_t		*dst,
 			    const cairo_rectangle_int_t	*extents)
@@ -1923,7 +1941,9 @@ _clip_and_composite_source (cairo_clip_t		*clip,
     cairo_xcb_picture_t *src;
 
     /* Create a surface that is mask IN clip */
-    mask = _create_composite_mask (clip, draw_func, draw_closure, dst, extents);
+    mask = _create_composite_mask (clip,
+				   draw_func, mask_func, draw_closure,
+				   dst, extents);
     if (unlikely (mask->base.status))
 	return mask->base.status;
 
@@ -2327,6 +2347,7 @@ _clip_and_composite (cairo_xcb_surface_t	*dst,
 		     cairo_operator_t		 op,
 		     const cairo_pattern_t	*src,
 		     xcb_draw_func_t		 draw_func,
+		     xcb_draw_func_t		 mask_func,
 		     void			*draw_closure,
 		     cairo_composite_rectangles_t*extents,
 		     unsigned int need_clip)
@@ -2368,7 +2389,7 @@ _clip_and_composite (cairo_xcb_surface_t	*dst,
 
     if (op == CAIRO_OPERATOR_SOURCE) {
 	status = _clip_and_composite_source (extents->clip, src,
-					     draw_func, draw_closure,
+					     draw_func, mask_func, draw_closure,
 					     dst, &extents->bounded);
     } else {
 	if (op == CAIRO_OPERATOR_CLEAR) {
@@ -2379,7 +2400,9 @@ _clip_and_composite (cairo_xcb_surface_t	*dst,
 	if (need_clip & NEED_CLIP_SURFACE) {
 	    if (extents->is_bounded) {
 		status = _clip_and_composite_with_mask (extents->clip, op, src,
-							draw_func, draw_closure,
+							draw_func,
+							mask_func,
+							draw_closure,
 							dst, &extents->bounded);
 	    } else {
 		status = _clip_and_composite_combine (extents->clip, op, src,
@@ -2823,6 +2846,31 @@ _composite_polygon (cairo_xcb_surface_t *dst,
 	return status;
     }
 
+    if (extents->clip->path != NULL && extents->is_bounded) {
+	cairo_polygon_t clipper;
+	cairo_fill_rule_t clipper_fill_rule;
+	cairo_antialias_t clipper_antialias;
+
+	status = _cairo_clip_get_polygon (extents->clip,
+					  &clipper,
+					  &clipper_fill_rule,
+					  &clipper_antialias);
+	if (likely (status == CAIRO_STATUS_SUCCESS)) {
+	    if (clipper_antialias == antialias) {
+		status = _cairo_polygon_intersect (polygon, fill_rule,
+						   &clipper, clipper_fill_rule);
+		if (likely (status == CAIRO_STATUS_SUCCESS)) {
+		    cairo_clip_t * clip = _cairo_clip_copy_region (extents->clip);
+		    _cairo_clip_destroy (extents->clip);
+		    extents->clip = clip;
+
+		    fill_rule = CAIRO_FILL_RULE_WINDING;
+		}
+		_cairo_polygon_fini (&clipper);
+	    }
+	}
+    }
+
     _cairo_traps_init (&traps.traps);
 
     status = _cairo_bentley_ottmann_tessellate_polygon (&traps.traps, polygon, fill_rule);
@@ -2852,8 +2900,7 @@ _composite_polygon (cairo_xcb_surface_t *dst,
 	cairo_boxes_t boxes;
 
 	_boxes_for_traps (&boxes, &traps.traps, antialias);
-	status = _clip_and_composite_boxes (dst, op, source,
-					    &boxes, extents);
+	status = _clip_and_composite_boxes (dst, op, source, &boxes, extents);
     }
     else
     {
@@ -2864,7 +2911,7 @@ _composite_polygon (cairo_xcb_surface_t *dst,
 	status = trim_extents_to_traps (extents, &traps.traps);
 	if (likely (status == CAIRO_STATUS_SUCCESS)) {
 	    status = _clip_and_composite (dst, op, source,
-					  _composite_traps, &traps,
+					  _composite_traps, NULL, &traps,
 					  extents, need_unbounded_clip (extents));
 	}
     }
@@ -2874,7 +2921,6 @@ CLEANUP_TRAPS:
 
     return status;
 }
-
 
 static cairo_status_t
 _clip_and_composite_boxes (cairo_xcb_surface_t *dst,
@@ -2911,7 +2957,7 @@ _clip_and_composite_boxes (cairo_xcb_surface_t *dst,
 	cairo_polygon_t polygon;
 	cairo_fill_rule_t fill_rule;
 	cairo_antialias_t antialias;
-	cairo_clip_t *clip ;
+	cairo_clip_t *clip;
 
 	clip = _cairo_clip_copy (extents->clip);
 	clip = _cairo_clip_intersect_boxes (clip, boxes);
@@ -2973,15 +3019,15 @@ _clip_and_composite_boxes (cairo_xcb_surface_t *dst,
     status = trim_extents_to_traps (extents, &info.traps);
     if (status == CAIRO_INT_STATUS_SUCCESS) {
 	status = _clip_and_composite (dst, op, src,
-				      _composite_traps, &info,
-					  extents, need_unbounded_clip (extents));
+				      _composite_traps, NULL, &info,
+				      extents, need_unbounded_clip (extents));
     }
 
     _cairo_traps_fini (&info.traps);
     return status;
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _composite_mask (void				*closure,
 		 cairo_xcb_surface_t		*dst,
 		 cairo_operator_t		 op,
@@ -3051,6 +3097,151 @@ _composite_mask (void				*closure,
     return CAIRO_STATUS_SUCCESS;
 }
 
+struct composite_box_info {
+    cairo_xcb_surface_t *dst;
+    cairo_xcb_picture_t *src;
+    uint8_t op;
+};
+
+static void composite_box(void *closure,
+			  int16_t x, int16_t y,
+			  int16_t w, int16_t h,
+			  uint16_t coverage)
+{
+    struct composite_box_info *info = closure;
+
+    if (coverage < 0xff00) {
+	cairo_solid_pattern_t mask_pattern;
+	cairo_xcb_picture_t *mask;
+	cairo_color_t color;
+
+	color.red = color.green = color.blue = 0;
+	color.alpha = coverage;
+	_cairo_pattern_init_solid (&mask_pattern, &color);
+
+	mask = _cairo_xcb_picture_for_pattern (info->dst, &mask_pattern.base, NULL);
+	if (likely (mask->base.status == CAIRO_STATUS_SUCCESS)) {
+	    _cairo_xcb_connection_render_composite (info->dst->connection,
+						    info->op,
+						    info->src->picture,
+						    mask->picture,
+						    info->dst->picture,
+						    x + info->src->x,  y + info->src->y,
+						    0,                 0,
+						    x,                 y,
+						    w,                 h);
+	}
+	cairo_surface_destroy (&mask->base);
+    } else {
+	_cairo_xcb_connection_render_composite (info->dst->connection,
+						info->op,
+						info->src->picture,
+						XCB_NONE,
+						info->dst->picture,
+						x + info->src->x,  y + info->src->y,
+						0,                 0,
+						x,                 y,
+						w,                 h);
+    }
+}
+
+static cairo_int_status_t
+_composite_mask_clip_boxes (void			*closure,
+			    cairo_xcb_surface_t		*dst,
+			    cairo_operator_t		 op,
+			    const cairo_pattern_t	*src_pattern,
+			    int				 dst_x,
+			    int				 dst_y,
+			    const cairo_rectangle_int_t	*extents,
+			    cairo_clip_t		*clip)
+{
+    struct composite_box_info info;
+    cairo_status_t status;
+    int i;
+
+    assert (src_pattern == NULL);
+    assert (op == CAIRO_OPERATOR_ADD);
+    assert (dst->base.is_clear);
+
+    if (clip->num_boxes > 1) {
+	status = _cairo_xcb_surface_clear (dst);
+	if (unlikely (status))
+	    return status;
+    }
+
+    info.op = XCB_RENDER_PICT_OP_SRC;
+    info.dst = dst;
+    info.src = _cairo_xcb_picture_for_pattern (dst, closure, extents);
+    if (unlikely (info.src->base.status))
+	return info.src->base.status;
+
+    info.src->x += dst_x;
+    info.src->y += dst_y;
+
+    for (i = 0; i < clip->num_boxes; i++)
+	do_unaligned_box(composite_box, &info, &clip->boxes[i], dst_x, dst_y);
+    cairo_surface_destroy (&info.src->base);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_composite_mask_clip (void				*closure,
+		      cairo_xcb_surface_t		*dst,
+		      cairo_operator_t			 op,
+		      const cairo_pattern_t		*src_pattern,
+		      int				 dst_x,
+		      int				 dst_y,
+		      const cairo_rectangle_int_t	*extents,
+		      cairo_clip_t			*clip)
+{
+    const cairo_pattern_t *mask_pattern = closure;
+    cairo_polygon_t polygon;
+    cairo_fill_rule_t fill_rule;
+    composite_traps_info_t info;
+    cairo_status_t status;
+
+    assert (src_pattern == NULL);
+    assert (op == CAIRO_OPERATOR_ADD);
+    assert (dst->base.is_clear);
+
+    status = _cairo_clip_get_polygon (clip, &polygon,
+				      &fill_rule, &info.antialias);
+    if (unlikely (status))
+	return status;
+
+    _cairo_traps_init (&info.traps);
+    status = _cairo_bentley_ottmann_tessellate_polygon (&info.traps,
+							&polygon,
+							fill_rule);
+    _cairo_polygon_fini (&polygon);
+    if (unlikely (status))
+	return status;
+
+    if (info.traps.has_intersections) {
+	if (info.traps.is_rectangular)
+	    status = _cairo_bentley_ottmann_tessellate_rectangular_traps (&info.traps, CAIRO_FILL_RULE_WINDING);
+	else if (info.traps.is_rectilinear)
+	    status = _cairo_bentley_ottmann_tessellate_rectilinear_traps (&info.traps, CAIRO_FILL_RULE_WINDING);
+	else
+	    status = _cairo_bentley_ottmann_tessellate_traps (&info.traps, CAIRO_FILL_RULE_WINDING);
+	if (unlikely (status)) {
+	    _cairo_traps_fini (&info.traps);
+	    return status;
+	}
+    }
+
+    dst->deferred_clear = FALSE; /* assert(trap extents == extents); */
+
+    status = _composite_traps (&info,
+			       dst, CAIRO_OPERATOR_SOURCE, mask_pattern,
+			       dst_x, dst_y,
+			       extents, NULL);
+    _cairo_traps_fini (&info.traps);
+
+    return status;
+}
+
 struct composite_opacity_info {
     uint8_t op;
     cairo_xcb_surface_t *dst;
@@ -3100,7 +3291,7 @@ static void composite_opacity(void *closure,
     cairo_surface_destroy (&mask->base);
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _composite_opacity_boxes (void				*closure,
 			  cairo_xcb_surface_t		*dst,
 			  cairo_operator_t		 op,
@@ -3234,11 +3425,16 @@ _cairo_xcb_surface_render_mask (cairo_xcb_surface_t	*surface,
 	extents.clip->path == NULL &&
 	! _cairo_clip_is_region (extents.clip)) {
 	status = _clip_and_composite (surface, op, source,
-				      _composite_opacity_boxes, (void *) mask,
+				      _composite_opacity_boxes, NULL,
+				      (void *) mask,
 				      &extents, need_unbounded_clip (&extents));
     } else {
+	xcb_draw_func_t mask_func = NULL;
+	if (surface->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS)
+	    mask_func = extents.clip->path ? _composite_mask_clip : _composite_mask_clip_boxes;
 	status = _clip_and_composite (surface, op, source,
-				      _composite_mask, (void *) mask,
+				      _composite_mask, mask_func,
+				      (void *) mask,
 				      &extents, need_bounded_clip (&extents));
     }
 
@@ -3331,7 +3527,7 @@ _cairo_xcb_surface_render_stroke_via_mask (cairo_xcb_surface_t		*dst,
 
 	cairo_matrix_init_translate (&mask.base.matrix, -x, -y);
 	status = _clip_and_composite (dst, op, source,
-				      _composite_mask, (void *) &mask.base,
+				      _composite_mask, NULL, &mask.base,
 				      extents, need_bounded_clip (extents));
 	_cairo_pattern_fini (&mask.base);
     }
@@ -3483,7 +3679,7 @@ _cairo_xcb_surface_render_fill_via_mask (cairo_xcb_surface_t	*dst,
 
 	cairo_matrix_init_translate (&mask.base.matrix, -x, -y);
 	status = _clip_and_composite (dst, op, source,
-				      _composite_mask, (void *) &mask.base,
+				      _composite_mask, NULL, &mask.base,
 				      extents, need_bounded_clip (extents));
 
 	_cairo_pattern_fini (&mask.base);
@@ -3606,7 +3802,7 @@ _cairo_xcb_surface_render_glyphs_via_mask (cairo_xcb_surface_t		*dst,
 
 	cairo_matrix_init_translate (&mask.base.matrix, -x, -y);
 	status = _clip_and_composite (dst, op, source,
-				      _composite_mask, (void *) &mask.base,
+				      _composite_mask, NULL, &mask.base,
 				      extents, need_bounded_clip (extents));
 
 	_cairo_pattern_fini (&mask.base);
@@ -4297,7 +4493,7 @@ _emit_glyphs_chunk (cairo_xcb_surface_t *dst,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _composite_glyphs (void				*closure,
 		  cairo_xcb_surface_t		*dst,
 		  cairo_operator_t		 op,
@@ -4530,8 +4726,9 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
 		    ! _cairo_clip_is_region(extents.clip);
 
 		status = _clip_and_composite (surface, op, source,
-					      _composite_glyphs, &info,
-					      &extents, need_bounded_clip (&extents));
+					      _composite_glyphs,
+					      NULL, &info, &extents,
+					      need_bounded_clip (&extents));
 	    }
 	}
 
