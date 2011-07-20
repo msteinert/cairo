@@ -145,7 +145,8 @@ _add_operation (cairo_analysis_surface_t *surface,
 	 * to not allow unsupported operations to be replayed to the
 	 * backend during CAIRO_PAGINATED_MODE_RENDER */
 	if (backend_status == CAIRO_INT_STATUS_SUCCESS ||
-	    backend_status == CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY)
+	    backend_status == CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY ||
+	    backend_status == CAIRO_INT_STATUS_NOTHING_TO_DO)
 	{
 	    return CAIRO_INT_STATUS_SUCCESS;
 	}
@@ -173,7 +174,8 @@ _add_operation (cairo_analysis_surface_t *surface,
 		 * replayed to the backend during
 		 * CAIRO_PAGINATED_MODE_RENDER */
 		if (backend_status == CAIRO_INT_STATUS_SUCCESS ||
-		    backend_status == CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY)
+		    backend_status == CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY ||
+		    backend_status == CAIRO_INT_STATUS_NOTHING_TO_DO)
 		{
 		    return CAIRO_INT_STATUS_SUCCESS;
 		}
