@@ -3782,8 +3782,12 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 							  glyphs, num_glyphs,
 							  clip,
 							  &overlap);
-    if (unlikely (status))
+    if (unlikely (status)) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    return CAIRO_INT_STATUS_SUCCESS;
+
 	return status;
+    }
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_ps_surface_analyze_operation (surface, op, source, &extents.bounded);
