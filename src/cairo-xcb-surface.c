@@ -692,6 +692,9 @@ _cairo_xcb_surface_map_to_image (cairo_xcb_surface_t *surface)
     if (unlikely (status))
 	return _cairo_surface_create_in_error (status);
 
+    /* If we had a pending clear, _get_image applied that */
+    surface->deferred_clear = FALSE;
+
     return &image->base;
 }
 
