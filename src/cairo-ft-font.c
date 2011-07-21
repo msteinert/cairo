@@ -2521,8 +2521,18 @@ _cairo_ft_load_type1_data (void	            *abstract_font,
     if (!face)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
+#if HAVE_FT_LOAD_SFNT_TABLE
+    if (FT_IS_SFNT (face)) {
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+	goto unlock;
+    }
+#endif
+
     font_format = FT_Get_X11_Font_Format (face);
-    if (!(font_format && strcmp (font_format, "Type 1") == 0)) {
+    if (!font_format ||
+	!(strcmp (font_format, "Type 1") == 0 ||
+	  strcmp (font_format, "CFF") == 0))
+    {
         status = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto unlock;
     }
