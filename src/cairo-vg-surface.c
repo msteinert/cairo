@@ -246,9 +246,9 @@ _vg_format_to_pixman (VGImageFormat format,
     *needs_premult_fixup = FALSE;
     switch (format) {
 	/* RGB{A,X} channel ordering */
-    case VG_sRGBX_8888: return 0; //PIXMAN_r8g8b8x8;
-    case VG_sRGBA_8888: return 0;
-    case VG_sRGBA_8888_PRE: return 0; //PIXMAN_r8b8g8a8;
+    case VG_sRGBX_8888: return PIXMAN_r8g8b8x8;
+    case VG_sRGBA_8888: *needs_premult_fixup = TRUE; return PIXMAN_r8g8b8a8;
+    case VG_sRGBA_8888_PRE: return PIXMAN_r8b8g8a8;
     case VG_sRGB_565: return PIXMAN_r5g6b5;
     case VG_sRGBA_5551: return 0;
     case VG_sRGBA_4444: return 0;

@@ -942,15 +942,11 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
     if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES) {
 	format = GL_RGBA;
 	if (!_cairo_is_little_endian ()) {
-	    ASSERT_NOT_REACHED;
-	    /* TODO: Add r8g8b8a8 support to pixman and enable this
-	       if (surface->base.content == CAIRO_CONTENT_COLOR)
-	       pixman_format = PIXMAN_r8g8b8x8;
-	       else
-	       pixman_format = PIXMAN_r8g8b8a8;
-	    */
-	}
-	else {
+	    if (surface->base.content == CAIRO_CONTENT_COLOR)
+		pixman_format = PIXMAN_r8g8b8x8;
+	    else
+		pixman_format = PIXMAN_r8g8b8a8;
+	} else {
 	    if (surface->base.content == CAIRO_CONTENT_COLOR)
 		pixman_format = PIXMAN_x8b8g8r8;
 	    else
