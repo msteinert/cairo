@@ -1291,6 +1291,9 @@ _cairo_gstate_in_clip (cairo_gstate_t	  *gstate,
     if (_cairo_clip_is_all_clipped (clip))
 	return FALSE;
 
+    if (clip == NULL)
+	return TRUE;
+
     _cairo_gstate_user_to_backend (gstate, &x, &y);
 
     if (x <  clip->extents.x ||
