@@ -673,6 +673,8 @@ _cairo_xcb_connection_get (xcb_connection_t *xcb_connection)
     }
 #endif
 
+    connection->original_flags = connection->flags;
+
     CAIRO_MUTEX_UNLOCK (connection->device.mutex);
 
     cairo_list_add (&connection->link, &connections);
@@ -780,6 +782,11 @@ cairo_xcb_device_debug_cap_xshm_version (cairo_device_t *device,
 	return;
     }
 
+    /* First reset all the SHM flags to their original value. This works
+     * because we only ever clear bits after the connection was created.
+     */
+    connection->flags |= (connection->original_flags & CAIRO_XCB_SHM_MASK);
+
     /* clear any flags that are inappropriate for the desired version */
     if (major_version < 0 && minor_version < 0) {
 	connection->flags &= ~(CAIRO_XCB_HAS_SHM);
@@ -811,6 +818,11 @@ cairo_xcb_device_debug_cap_xrender_version (cairo_device_t *device,
 	status = _cairo_device_set_error (device, CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
 	return;
     }
+
+    /* First reset all the RENDER flags to their original value. This works
+     * because we only ever clear bits after the connection was created.
+     */
+    connection->flags |= (connection->original_flags & CAIRO_XCB_RENDER_MASK);
 
     /* clear any flags that are inappropriate for the desired version */
     if (major_version < 0 && minor_version < 0) {
