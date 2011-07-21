@@ -2913,9 +2913,21 @@ _composite_polygon (cairo_xcb_surface_t *dst,
 	traps.antialias = antialias;
 	status = trim_extents_to_traps (extents, &traps.traps);
 	if (likely (status == CAIRO_STATUS_SUCCESS)) {
-	    status = _clip_and_composite (dst, op, source,
-					  _composite_traps, NULL, &traps,
-					  extents, need_unbounded_clip (extents));
+	    unsigned int flags = 0;
+
+	    /* For unbounded operations, the X11 server will estimate the
+	     * affected rectangle and apply the operation to that. However,
+	     * there are cases where this is an overestimate (e.g. the
+	     * clip-fill-{eo,nz}-unbounded test).
+	     *
+	     * The clip will trim that overestimate to our expectations.
+	     */
+	    if (! extents->is_bounded)
+		flags |= FORCE_CLIP_REGION;
+
+	    status = _clip_and_composite (dst, op, source, _composite_traps,
+					  NULL, &traps, extents,
+					  need_unbounded_clip (extents) | flags);
 	}
     }
 
