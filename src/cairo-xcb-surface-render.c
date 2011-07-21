@@ -2317,6 +2317,7 @@ _cairo_xcb_surface_clear (cairo_xcb_surface_t *dst)
 enum {
     NEED_CLIP_REGION = 0x1,
     NEED_CLIP_SURFACE = 0x2,
+    FORCE_CLIP_REGION = 0x4,
 };
 
 static cairo_bool_t
@@ -2371,7 +2372,9 @@ _clip_and_composite (cairo_xcb_surface_t	*dst,
 
     if (need_clip & NEED_CLIP_REGION) {
 	clip_region = _cairo_clip_get_region (extents->clip);
-	if (cairo_region_contains_rectangle (clip_region, &extents->unbounded) == CAIRO_REGION_OVERLAP_IN)
+	if ((need_clip & FORCE_CLIP_REGION) == 0 &&
+	    cairo_region_contains_rectangle (clip_region,
+					     &extents->unbounded) == CAIRO_REGION_OVERLAP_IN)
 	    clip_region = NULL;
 	if (clip_region != NULL) {
 	    status = _cairo_xcb_surface_set_clip_region (dst, clip_region);
@@ -4716,6 +4719,7 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
 					    scaled_font, glyphs, &num_glyphs);
 	    if (likely (status == CAIRO_INT_STATUS_SUCCESS)) {
 		composite_glyphs_info_t info;
+		unsigned flags = 0;
 
 		info.font = scaled_font;
 		info.glyphs = (cairo_xcb_glyph_t *) glyphs;
@@ -4725,10 +4729,21 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
 		    ! extents.is_bounded ||
 		    ! _cairo_clip_is_region(extents.clip);
 
+		if (extents.mask.width > extents.unbounded.width ||
+		    extents.mask.height > extents.unbounded.height)
+		{
+		    /* Glyphs are tricky since we do not directly control the
+		     * geometry and their inked extents depend on the
+		     * individual glyph-surface size. We must set a clip region
+		     * so that the X server can trim the glyphs appropriately.
+		     */
+		    flags |= FORCE_CLIP_REGION;
+		}
 		status = _clip_and_composite (surface, op, source,
-					      _composite_glyphs,
-					      NULL, &info, &extents,
-					      need_bounded_clip (&extents));
+					      _composite_glyphs, NULL,
+					      &info, &extents,
+					      need_bounded_clip (&extents) |
+					      flags);
 	    }
 	}
 
