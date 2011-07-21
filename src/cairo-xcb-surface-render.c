@@ -599,7 +599,7 @@ _solid_picture (cairo_xcb_surface_t *target,
     if (unlikely (picture->base.status))
 	return picture;
 
-    if (target->flags & CAIRO_XCB_RENDER_HAS_GRADIENTS) {
+    if (target->connection->flags & CAIRO_XCB_RENDER_HAS_GRADIENTS) {
 	_cairo_xcb_connection_render_create_solid_fill (target->connection,
 							picture->picture,
 							xcb_color);
@@ -615,7 +615,7 @@ _solid_picture (cairo_xcb_surface_t *target,
 						     xrender_format,
 						     XCB_RENDER_CP_REPEAT,
 						     values);
-	if (target->flags & CAIRO_XCB_RENDER_HAS_FILL_RECTANGLES) {
+	if (target->connection->flags & CAIRO_XCB_RENDER_HAS_FILL_RECTANGLES) {
 	    xcb_rectangle_t rect;
 
 	    rect.x = rect.y = 0;
@@ -1216,7 +1216,7 @@ _cairo_xcb_picture_for_pattern (cairo_xcb_surface_t *target,
     if (pattern == NULL)
 	return _cairo_xcb_white_picture (target);
 
-    if (! _pattern_is_supported (target->flags, pattern))
+    if (! _pattern_is_supported (target->connection->flags, pattern))
 	return _render_to_picture (target, pattern, extents);
 
     switch (pattern->type) {
@@ -1721,7 +1721,7 @@ _create_composite_mask (cairo_clip_t		*clip,
 	return (cairo_xcb_surface_t *) _cairo_surface_create_in_error (status);
     }
 
-    if (surface->flags & CAIRO_XCB_RENDER_HAS_FILL_RECTANGLES) {
+    if (surface->connection->flags & CAIRO_XCB_RENDER_HAS_FILL_RECTANGLES) {
 	int i;
 
 	for (i = 0; i < clip->num_boxes; i++) {
@@ -1842,7 +1842,7 @@ _clip_and_composite_combine (cairo_clip_t		*clip,
     } else {
 	/* Initialize the temporary surface from the destination surface */
 	if (! dst->base.is_clear ||
-	    (dst->flags & CAIRO_XCB_RENDER_HAS_FILL_RECTANGLES) == 0)
+	    (dst->connection->flags & CAIRO_XCB_RENDER_HAS_FILL_RECTANGLES) == 0)
 	{
 	    /* XCopyArea may actually be quicker here.
 	     * A good driver should translate if appropriate.
@@ -2072,7 +2072,7 @@ _cairo_xcb_surface_fixup_unbounded (cairo_xcb_surface_t *dst,
 	}
     }
 
-    if (dst->flags & CAIRO_XCB_RENDER_HAS_FILL_RECTANGLES) {
+    if (dst->connection->flags & CAIRO_XCB_RENDER_HAS_FILL_RECTANGLES) {
 	xcb_render_color_t color;
 
 	color.red   = 0;
@@ -2279,7 +2279,7 @@ _cairo_xcb_surface_clear (cairo_xcb_surface_t *dst)
     rect.width  = dst->width;
     rect.height = dst->height;
 
-    if (dst->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE) {
+    if (dst->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE) {
 	xcb_render_color_t color;
 	uint8_t op;
 
@@ -2494,7 +2494,7 @@ _composite_boxes (cairo_xcb_surface_t *dst,
 	return status;
 
     _cairo_xcb_surface_ensure_picture (dst);
-    if (dst->flags & CAIRO_XCB_RENDER_HAS_FILL_RECTANGLES && ! need_clip_mask &&
+    if (dst->connection->flags & CAIRO_XCB_RENDER_HAS_FILL_RECTANGLES && ! need_clip_mask &&
 	(op == CAIRO_OPERATOR_CLEAR || src->type == CAIRO_PATTERN_TYPE_SOLID))
     {
 	const cairo_color_t *color;
@@ -2999,7 +2999,7 @@ _clip_and_composite_boxes (cairo_xcb_surface_t *dst,
 	    return status;
     }
 
-    if ((dst->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE) == 0)
+    if ((dst->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE) == 0)
 	return _core_boxes (dst, op, src, boxes, extents);
 
     /* Use a fast path if the boxes are pixel aligned */
@@ -3007,7 +3007,7 @@ _clip_and_composite_boxes (cairo_xcb_surface_t *dst,
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
-    if ((dst->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS) == 0)
+    if ((dst->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS) == 0)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* Otherwise render via a mask and composite in the usual fashion.  */
@@ -3353,11 +3353,11 @@ _cairo_xcb_surface_render_paint (cairo_xcb_surface_t	*surface,
     cairo_boxes_t boxes;
     cairo_status_t status;
 
-    if (unlikely (! _operator_is_supported (surface->flags, op)))
+    if (unlikely (! _operator_is_supported (surface->connection->flags, op)))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if ((surface->flags & (CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS |
-			   CAIRO_XCB_RENDER_HAS_COMPOSITE)) == 0)
+    if ((surface->connection->flags & (CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS |
+				       CAIRO_XCB_RENDER_HAS_COMPOSITE)) == 0)
     {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
@@ -3409,10 +3409,10 @@ _cairo_xcb_surface_render_mask (cairo_xcb_surface_t	*surface,
     cairo_composite_rectangles_t extents;
     cairo_status_t status;
 
-    if (unlikely (! _operator_is_supported (surface->flags, op)))
+    if (unlikely (! _operator_is_supported (surface->connection->flags, op)))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if ((surface->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE) == 0)
+    if ((surface->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE) == 0)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     status = _cairo_composite_rectangles_init_for_mask (&extents,
@@ -3430,7 +3430,7 @@ _cairo_xcb_surface_render_mask (cairo_xcb_surface_t	*surface,
 				      &extents, need_unbounded_clip (&extents));
     } else {
 	xcb_draw_func_t mask_func = NULL;
-	if (surface->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS)
+	if (surface->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS)
 	    mask_func = extents.clip->path ? _composite_mask_clip : _composite_mask_clip_boxes;
 	status = _clip_and_composite (surface, op, source,
 				      _composite_mask, mask_func,
@@ -3553,10 +3553,10 @@ _cairo_xcb_surface_render_stroke (cairo_xcb_surface_t	*surface,
     cairo_composite_rectangles_t extents;
     cairo_int_status_t status;
 
-    if (unlikely (! _operator_is_supported (surface->flags, op)))
+    if (unlikely (! _operator_is_supported (surface->connection->flags, op)))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if ((surface->flags & (CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS |
+    if ((surface->connection->flags & (CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS |
 			   CAIRO_XCB_RENDER_HAS_COMPOSITE)) == 0)
     {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -3589,13 +3589,13 @@ _cairo_xcb_surface_render_stroke (cairo_xcb_surface_t	*surface,
     }
 
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
-	if (surface->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS) {
+	if (surface->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS) {
 	    status = _cairo_xcb_surface_render_stroke_as_polygon (surface, op, source,
 								  path, style,
 								  ctm, ctm_inverse,
 								  tolerance, antialias,
 								  &extents);
-	} else if (surface->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE) {
+	} else if (surface->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE) {
 	    status = _cairo_xcb_surface_render_stroke_via_mask (surface, op, source,
 								path, style,
 								ctm, ctm_inverse,
@@ -3704,11 +3704,11 @@ _cairo_xcb_surface_render_fill (cairo_xcb_surface_t	*surface,
     cairo_composite_rectangles_t extents;
     cairo_int_status_t status;
 
-    if (unlikely (! _operator_is_supported (surface->flags, op)))
+    if (unlikely (! _operator_is_supported (surface->connection->flags, op)))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if ((surface->flags & (CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS |
-			   CAIRO_XCB_RENDER_HAS_COMPOSITE)) == 0)
+    if ((surface->connection->flags & (CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS |
+				       CAIRO_XCB_RENDER_HAS_COMPOSITE)) == 0)
     {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
@@ -3738,11 +3738,11 @@ _cairo_xcb_surface_render_fill (cairo_xcb_surface_t	*surface,
     }
 
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
-	if (surface->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS) {
+	if (surface->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS) {
 	    status = _cairo_xcb_surface_render_fill_as_polygon (surface, op, source, path,
 								fill_rule, tolerance, antialias,
 								&extents);
-	} else if (surface->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE) {
+	} else if (surface->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE) {
 	    status = _cairo_xcb_surface_render_fill_via_mask (surface, op, source, path,
 							      fill_rule, tolerance, antialias,
 							      &extents);
@@ -4691,10 +4691,10 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
     cairo_int_status_t status;
     cairo_bool_t overlap;
 
-    if (unlikely (! _operator_is_supported (surface->flags, op)))
+    if (unlikely (! _operator_is_supported (surface->connection->flags, op)))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if ((surface->flags & (CAIRO_XCB_RENDER_HAS_COMPOSITE_GLYPHS | CAIRO_XCB_RENDER_HAS_COMPOSITE)) == 0)
+    if ((surface->connection->flags & (CAIRO_XCB_RENDER_HAS_COMPOSITE_GLYPHS | CAIRO_XCB_RENDER_HAS_COMPOSITE)) == 0)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     status = _cairo_composite_rectangles_init_for_glyphs (&extents,
@@ -4708,7 +4708,7 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
 	return status;
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
-    if (surface->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_GLYPHS) {
+    if (surface->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_GLYPHS) {
 	_cairo_scaled_font_freeze_cache (scaled_font);
 
 	if (_surface_owns_font (surface, scaled_font)) {
@@ -4736,7 +4736,7 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
     }
 
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
-	assert (surface->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE);
+	assert (surface->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE);
 	status =
 	    _cairo_xcb_surface_render_glyphs_via_mask (surface, op, source,
 						       scaled_font, glyphs, num_glyphs,

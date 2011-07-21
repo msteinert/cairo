@@ -96,7 +96,6 @@ struct _cairo_xcb_surface {
     int height;
     int depth;
 
-    unsigned int flags;
     xcb_render_picture_t picture;
     xcb_render_pictformat_t xrender_format;
     pixman_format_code_t pixman_format;

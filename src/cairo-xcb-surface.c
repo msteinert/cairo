@@ -144,7 +144,7 @@ _cairo_xcb_surface_create_similar_image (cairo_xcb_surface_t *other,
     }
 
 #if CAIRO_HAS_XCB_SHM_FUNCTIONS
-    if (other->flags & CAIRO_XCB_HAS_SHM) {
+    if (other->connection->flags & CAIRO_XCB_HAS_SHM) {
 	cairo_status_t status;
 
 	status = _cairo_xcb_surface_create_similar_shm (other,
@@ -183,7 +183,7 @@ _cairo_xcb_surface_create_similar (void			*abstract_other,
 		 height <= 0))
 	return _cairo_xcb_surface_create_similar_image (other, content, width, height);
 
-    if ((other->flags & CAIRO_XCB_HAS_RENDER) == 0)
+    if ((other->connection->flags & CAIRO_XCB_HAS_RENDER) == 0)
 	return _cairo_xcb_surface_create_similar_image (other, content, width, height);
 
     connection = other->connection;
@@ -293,14 +293,14 @@ _cairo_xcb_surface_create_shm_image (cairo_xcb_surface_t *target,
     cairo_status_t status;
     size_t size, stride;
 
-    if ((target->flags & CAIRO_XCB_HAS_SHM) == 0)
+    if ((target->connection->flags & CAIRO_XCB_HAS_SHM) == 0)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     stride = CAIRO_STRIDE_FOR_WIDTH_BPP (target->width,
 					 PIXMAN_FORMAT_BPP (target->pixman_format));
     size = stride * target->height;
     if (size < CAIRO_XCB_SHM_SMALL_IMAGE) {
-	target->flags &= ~CAIRO_XCB_HAS_SHM;
+	target->connection->flags &= ~CAIRO_XCB_HAS_SHM;
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
@@ -941,8 +941,6 @@ _cairo_xcb_surface_create_internal (cairo_xcb_screen_t		*screen,
 
     surface->pixman_format = pixman_format;
     surface->xrender_format = xrender_format;
-
-    surface->flags = screen->connection->flags;
 
     return &surface->base;
 }

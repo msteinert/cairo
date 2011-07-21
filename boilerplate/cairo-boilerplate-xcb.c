@@ -562,7 +562,7 @@ _cairo_boilerplate_xcb_create_render_0_0 (const char		    *name,
     xcb_render_pictforminfo_t *render_format;
     int depth;
     xcb_void_cookie_t cookie;
-    cairo_surface_t *surface, *tmp;
+    cairo_surface_t *surface;
     cairo_status_t status;
     void *formats;
 
@@ -621,26 +621,19 @@ _cairo_boilerplate_xcb_create_render_0_0 (const char		    *name,
 	return NULL;
     }
 
-    tmp = cairo_xcb_surface_create_with_xrender_format (c, root,
-							xtc->drawable,
-							render_format,
-							width, height);
-    if (cairo_surface_status (tmp)) {
-	free (formats);
-	xcb_disconnect (c);
-	free (xtc);
-	return tmp;
-    }
-
-    xtc->device = cairo_device_reference (cairo_surface_get_device (tmp));
-    cairo_xcb_device_debug_cap_xrender_version (xtc->device, 0, 0);
-
-    /* recreate with impaired connection */
     surface = cairo_xcb_surface_create_with_xrender_format (c, root,
 							    xtc->drawable,
 							    render_format,
 							    width, height);
-    cairo_surface_destroy (tmp);
+    if (cairo_surface_status (surface)) {
+	free (formats);
+	xcb_disconnect (c);
+	free (xtc);
+	return surface;
+    }
+
+    xtc->device = cairo_device_reference (cairo_surface_get_device (surface));
+    cairo_xcb_device_debug_cap_xrender_version (xtc->device, 0, 0);
 
     assert (cairo_surface_get_device (surface) == xtc->device);
 
@@ -669,7 +662,7 @@ _cairo_boilerplate_xcb_create_fallback (const char		  *name,
     xcb_connection_t *c;
     xcb_screen_t *s;
     xcb_void_cookie_t cookie;
-    cairo_surface_t *tmp, *surface;
+    cairo_surface_t *surface;
     cairo_status_t status;
     uint32_t values[] = { 1 };
 
@@ -714,24 +707,18 @@ _cairo_boilerplate_xcb_create_fallback (const char		  *name,
 	return NULL;
     }
 
-    tmp = cairo_xcb_surface_create (c,
-				    xtc->drawable,
-				    lookup_visual (s, s->root_visual),
-				    width, height);
-    if (cairo_surface_status (tmp)) {
-	xcb_disconnect (c);
-	free (xtc);
-	return tmp;
-    }
-
-    cairo_xcb_device_debug_cap_xrender_version (cairo_surface_get_device (tmp),
-						-1, -1);
-    /* recreate with impaired connection */
     surface = cairo_xcb_surface_create (c,
 					xtc->drawable,
 					lookup_visual (s, s->root_visual),
 					width, height);
-    cairo_surface_destroy (tmp);
+    if (cairo_surface_status (surface)) {
+	xcb_disconnect (c);
+	free (xtc);
+	return surface;
+    }
+
+    cairo_xcb_device_debug_cap_xrender_version (cairo_surface_get_device (surface),
+						-1, -1);
 
     xtc->device = cairo_device_reference (cairo_surface_get_device (surface));
     status = cairo_surface_set_user_data (surface, &xcb_closure_key, xtc, NULL);
