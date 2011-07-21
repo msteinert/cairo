@@ -382,12 +382,23 @@ _get_image (cairo_xcb_surface_t		 *surface,
     cairo_int_status_t status;
 
     if (surface->base.is_clear || surface->deferred_clear) {
+	cairo_color_t color;
+
+	color = surface->deferred_clear_color;
 	image = (cairo_image_surface_t *)
 	    _cairo_image_surface_create_with_pixman_format (NULL,
 							    surface->pixman_format,
 							    surface->width,
 							    surface->height,
 							    0);
+
+	if (surface->deferred_clear && color.alpha > 0) {
+	    cairo_t *cr = cairo_create (&image->base);
+	    cairo_set_source_rgba (cr, color.red, color.green,
+				   color.blue, color.alpha);
+	    cairo_paint (cr);
+	    cairo_destroy (cr);
+	}
 	*image_out = image;
 	return image->base.status;
     }
