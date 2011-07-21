@@ -3620,6 +3620,67 @@ _matrix (csi_t *ctx)
 }
 
 static csi_status_t
+_map_to_image (csi_t *ctx)
+{
+    csi_object_t obj;
+    csi_array_t *array;
+    csi_status_t status;
+    cairo_rectangle_t extents;
+    cairo_rectangle_t *r;
+    cairo_surface_t *surface;
+
+    check (2);
+
+    status = _csi_ostack_get_array (ctx, 0, &array);
+    if (_csi_unlikely (status))
+	return status;
+
+    status = _csi_ostack_get_surface (ctx, 1, &surface);
+    if (_csi_unlikely (status))
+	return status;
+
+    switch (array->stack.len) {
+    case 0:
+	r = NULL;
+    case 4:
+	extents.x = _csi_object_as_real (&array->stack.objects[0]);
+	extents.y = _csi_object_as_real (&array->stack.objects[1]);
+	extents.width = _csi_object_as_real (&array->stack.objects[2]);
+	extents.height = _csi_object_as_real (&array->stack.objects[3]);
+	r = &extents;
+	break;
+    default:
+	return _csi_error (CSI_STATUS_INVALID_SCRIPT);
+    }
+
+    obj.type = CSI_OBJECT_TYPE_SURFACE;
+    obj.datum.surface = cairo_surface_map_to_image (surface, r);
+    pop (2);
+    return push (&obj);
+}
+
+static csi_status_t
+_unmap_image (csi_t *ctx)
+{
+    cairo_surface_t *surface, *image;
+    csi_status_t status;
+
+    check (2);
+
+    status = _csi_ostack_get_surface (ctx, 0, &image);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_surface (ctx, 1, &surface);
+    if (_csi_unlikely (status))
+	return status;
+
+    cairo_surface_unmap_image (surface, image);
+
+    pop (2);
+    return CSI_STATUS_SUCCESS;
+}
+
+static csi_status_t
 _mesh (csi_t *ctx)
 {
     csi_object_t obj;
@@ -5521,6 +5582,38 @@ _similar (csi_t *ctx)
 }
 
 static csi_status_t
+_similar_image (csi_t *ctx)
+{
+    csi_object_t obj;
+    long format;
+    double width, height;
+    cairo_surface_t *other;
+    csi_status_t status;
+
+    check (4);
+
+    status = _csi_ostack_get_number (ctx, 0, &height);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_number (ctx, 1, &width);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_integer (ctx, 2, &format);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_surface (ctx, 3, &other);
+    if (_csi_unlikely (status))
+	return status;
+
+    obj.type = CSI_OBJECT_TYPE_SURFACE;
+    obj.datum.surface = cairo_surface_create_similar_image (other,
+							    format,
+							    width, height);
+    pop (4);
+    return push (&obj);
+}
+
+static csi_status_t
 _subsurface (csi_t *ctx)
 {
     csi_object_t obj;
@@ -6301,6 +6394,7 @@ _defs[] = {
     { "lt", _lt },
     { "m", _move_to },
     { "M", _rel_move_to },
+    { "map-to-image", _map_to_image },
     { "mark", _mark },
     { "mask", _mask },
     { "matrix", _matrix },
@@ -6381,6 +6475,7 @@ _defs[] = {
     { "show-text-glyphs", _show_text_glyphs },
     { "show-page", _show_page },
     { "similar", _similar },
+    { "similar-image", _similar_image },
     { "sin", NULL },
     { "sqrt", NULL },
     { "sub", _sub },
@@ -6399,6 +6494,7 @@ _defs[] = {
     { "true", _true },
     { "type", NULL },
     { "undef", _undef },
+    { "unmap-image", _unmap_image },
     { "unset", _unset },
     { "user-to-device", NULL },
     { "user-to-device-distance", NULL },

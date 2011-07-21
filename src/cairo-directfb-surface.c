@@ -1829,10 +1829,15 @@ _cairo_directfb_surface_is_similar (void *surface_a, void *surface_b)
 static cairo_surface_backend_t
 _cairo_directfb_surface_backend = {
          CAIRO_SURFACE_TYPE_DIRECTFB, /*type*/
+        _cairo_directfb_surface_finish, /*finish*/
+
 	 _cairo_default_context_create,
 
         _cairo_directfb_surface_create_similar,/*create_similar*/
-        _cairo_directfb_surface_finish, /*finish*/
+	NULL, /* create similar image */
+	NULL, /* map to image */
+	NULL, /* unmap image */
+
         _cairo_directfb_surface_acquire_source_image,/*acquire_source_image*/
         _cairo_directfb_surface_release_source_image,/*release_source_image*/
         _cairo_directfb_surface_acquire_dest_image,/*acquire_dest_image*/

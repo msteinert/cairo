@@ -354,6 +354,46 @@ typedef enum _cairo_content {
 } cairo_content_t;
 
 /**
+ * cairo_format_t:
+ * @CAIRO_FORMAT_INVALID: no such format exists or is supported.
+ * @CAIRO_FORMAT_ARGB32: each pixel is a 32-bit quantity, with
+ *   alpha in the upper 8 bits, then red, then green, then blue.
+ *   The 32-bit quantities are stored native-endian. Pre-multiplied
+ *   alpha is used. (That is, 50% transparent red is 0x80800000,
+ *   not 0x80ff0000.)
+ * @CAIRO_FORMAT_RGB24: each pixel is a 32-bit quantity, with
+ *   the upper 8 bits unused. Red, Green, and Blue are stored
+ *   in the remaining 24 bits in that order.
+ * @CAIRO_FORMAT_A8: each pixel is a 8-bit quantity holding
+ *   an alpha value.
+ * @CAIRO_FORMAT_A1: each pixel is a 1-bit quantity holding
+ *   an alpha value. Pixels are packed together into 32-bit
+ *   quantities. The ordering of the bits matches the
+ *   endianess of the platform. On a big-endian machine, the
+ *   first pixel is in the uppermost bit, on a little-endian
+ *   machine the first pixel is in the least-significant bit.
+ * @CAIRO_FORMAT_RGB16_565: each pixel is a 16-bit quantity
+ *   with red in the upper 5 bits, then green in the middle
+ *   6 bits, and blue in the lower 5 bits.
+ * @CAIRO_FORMAT_RGB30: like RGB24 but with 10bpc
+ *
+ * #cairo_format_t is used to identify the memory format of
+ * image data.
+ *
+ * New entries may be added in future versions.
+ **/
+typedef enum _cairo_format {
+    CAIRO_FORMAT_INVALID   = -1,
+    CAIRO_FORMAT_ARGB32    = 0,
+    CAIRO_FORMAT_RGB24     = 1,
+    CAIRO_FORMAT_A8        = 2,
+    CAIRO_FORMAT_A1        = 3,
+    CAIRO_FORMAT_RGB16_565 = 4,
+    CAIRO_FORMAT_RGB30     = 5
+} cairo_format_t;
+
+
+/**
  * cairo_write_func_t:
  * @closure: the output closure
  * @data: the buffer containing the data to write
@@ -2034,6 +2074,20 @@ cairo_surface_create_similar (cairo_surface_t  *other,
 			      int		height);
 
 cairo_public cairo_surface_t *
+cairo_surface_create_similar_image (cairo_surface_t  *other,
+				    cairo_format_t    format,
+				    int		width,
+				    int		height);
+
+cairo_public cairo_surface_t *
+cairo_surface_map_to_image (cairo_surface_t  *surface,
+			    const cairo_rectangle_t *extents);
+
+cairo_public void
+cairo_surface_unmap_image (cairo_surface_t *surface,
+			   cairo_surface_t *image);
+
+cairo_public cairo_surface_t *
 cairo_surface_create_for_rectangle (cairo_surface_t	*target,
                                     double		 x,
                                     double		 y,
@@ -2233,45 +2287,6 @@ cairo_public cairo_bool_t
 cairo_surface_has_show_text_glyphs (cairo_surface_t *surface);
 
 /* Image-surface functions */
-
-/**
- * cairo_format_t:
- * @CAIRO_FORMAT_INVALID: no such format exists or is supported.
- * @CAIRO_FORMAT_ARGB32: each pixel is a 32-bit quantity, with
- *   alpha in the upper 8 bits, then red, then green, then blue.
- *   The 32-bit quantities are stored native-endian. Pre-multiplied
- *   alpha is used. (That is, 50% transparent red is 0x80800000,
- *   not 0x80ff0000.)
- * @CAIRO_FORMAT_RGB24: each pixel is a 32-bit quantity, with
- *   the upper 8 bits unused. Red, Green, and Blue are stored
- *   in the remaining 24 bits in that order.
- * @CAIRO_FORMAT_A8: each pixel is a 8-bit quantity holding
- *   an alpha value.
- * @CAIRO_FORMAT_A1: each pixel is a 1-bit quantity holding
- *   an alpha value. Pixels are packed together into 32-bit
- *   quantities. The ordering of the bits matches the
- *   endianess of the platform. On a big-endian machine, the
- *   first pixel is in the uppermost bit, on a little-endian
- *   machine the first pixel is in the least-significant bit.
- * @CAIRO_FORMAT_RGB16_565: each pixel is a 16-bit quantity
- *   with red in the upper 5 bits, then green in the middle
- *   6 bits, and blue in the lower 5 bits.
- * @CAIRO_FORMAT_RGB30: like RGB24 but with 10bpc
- *
- * #cairo_format_t is used to identify the memory format of
- * image data.
- *
- * New entries may be added in future versions.
- **/
-typedef enum _cairo_format {
-    CAIRO_FORMAT_INVALID   = -1,
-    CAIRO_FORMAT_ARGB32    = 0,
-    CAIRO_FORMAT_RGB24     = 1,
-    CAIRO_FORMAT_A8        = 2,
-    CAIRO_FORMAT_A1        = 3,
-    CAIRO_FORMAT_RGB16_565 = 4,
-    CAIRO_FORMAT_RGB30     = 5
-} cairo_format_t;
 
 cairo_public cairo_surface_t *
 cairo_image_surface_create (cairo_format_t	format,

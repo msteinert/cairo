@@ -41,6 +41,8 @@
 #include "cairo.h"
 #include "cairo-compiler-private.h"
 
+#include <assert.h>
+
 CAIRO_BEGIN_DECLS
 
 enum _cairo_int_status {
@@ -99,6 +101,13 @@ enum _cairo_int_status {
 
 #define _cairo_int_status_is_error(status) \
     (status != CAIRO_INT_STATUS_SUCCESS && status <= CAIRO_INT_STATUS_LAST_STATUS)
+
+static inline cairo_status_t
+_cairo_public_status (cairo_int_status_t status)
+{
+    assert (status <= CAIRO_INT_STATUS_LAST_STATUS);
+    return status;
+}
 
 cairo_private cairo_status_t
 _cairo_error (cairo_status_t status);

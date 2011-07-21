@@ -208,10 +208,14 @@ _test_fallback_surface_get_extents (void		  *abstract_surface,
 
 static const cairo_surface_backend_t test_fallback_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
+    _test_fallback_surface_finish,
     _cairo_default_context_create,
 
     _test_fallback_surface_create_similar,
-    _test_fallback_surface_finish,
+    NULL, /* create similar image */
+    NULL, /* map_to_image */
+    NULL, /* unmap_image */
+
     _test_fallback_surface_acquire_source_image,
     _test_fallback_surface_release_source_image,
     _test_fallback_surface_acquire_dest_image,

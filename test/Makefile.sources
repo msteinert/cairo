@@ -167,6 +167,7 @@ test_sources = \
 	linear-uniform.c				\
 	long-dashed-lines.c				\
 	long-lines.c					\
+	map-to-image.c					\
 	mask.c						\
 	mask-alpha.c					\
 	mask-ctm.c					\

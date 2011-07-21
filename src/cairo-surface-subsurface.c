@@ -61,6 +61,48 @@ _cairo_surface_subsurface_create_similar (void *other,
     return surface->target->backend->create_similar (surface->target, content, width, height);
 }
 
+static cairo_surface_t *
+_cairo_surface_subsurface_create_similar_image (void *other,
+						cairo_format_t format,
+						int width, int height)
+{
+    cairo_surface_subsurface_t *surface = other;
+    return surface->target->backend->create_similar_image (surface->target,
+							   format,
+							   width, height);
+}
+
+static cairo_surface_t *
+_cairo_surface_subsurface_map_to_image (void *abstract_surface,
+					const cairo_rectangle_int_t *extents)
+{
+    cairo_surface_subsurface_t *surface = abstract_surface;
+    cairo_rectangle_int_t target_extents;
+
+    if (surface->target->backend->map_to_image == NULL)
+	return NULL;
+
+    target_extents.x = extents->x + surface->extents.x;
+    target_extents.y = extents->y + surface->extents.y;
+    target_extents.width  = extents->width;
+    target_extents.height = extents->height;
+
+    return surface->target->backend->map_to_image (surface->target,
+						   &target_extents);
+}
+
+static cairo_int_status_t
+_cairo_surface_subsurface_unmap_image (void *abstract_surface,
+				       cairo_image_surface_t *image)
+{
+    cairo_surface_subsurface_t *surface = abstract_surface;
+
+    if (surface->target->backend->unmap_image == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    return surface->target->backend->unmap_image (surface->target, image);
+}
+
 static cairo_int_status_t
 _cairo_surface_subsurface_paint (void *abstract_surface,
 				 cairo_operator_t op,
@@ -426,10 +468,14 @@ _cairo_surface_subsurface_create_context(void *target)
 
 static const cairo_surface_backend_t _cairo_surface_subsurface_backend = {
     CAIRO_SURFACE_TYPE_SUBSURFACE,
+    _cairo_surface_subsurface_finish,
+
     _cairo_surface_subsurface_create_context,
 
     _cairo_surface_subsurface_create_similar,
-    _cairo_surface_subsurface_finish,
+    _cairo_surface_subsurface_create_similar_image,
+    _cairo_surface_subsurface_map_to_image,
+    _cairo_surface_subsurface_unmap_image,
 
     _cairo_surface_subsurface_acquire_source_image,
     _cairo_surface_subsurface_release_source_image,
@@ -529,6 +575,38 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
 	target = sub->target;
     }
 
+    surface->target = cairo_surface_reference (target);
+
+    return &surface->base;
+}
+
+cairo_surface_t *
+_cairo_surface_create_for_rectangle_int (cairo_surface_t *target,
+					 cairo_rectangle_int_t *extents)
+{
+    cairo_surface_subsurface_t *surface;
+
+    if (unlikely (target->status))
+	return _cairo_surface_create_in_error (target->status);
+    if (unlikely (target->finished))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
+
+    assert (target->backend->type != CAIRO_SURFACE_TYPE_SUBSURFACE);
+
+    surface = malloc (sizeof (cairo_surface_subsurface_t));
+    if (unlikely (surface == NULL))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+
+    assert (_cairo_matrix_is_translation (&target->device_transform));
+
+    _cairo_surface_init (&surface->base,
+			 &_cairo_surface_subsurface_backend,
+			 NULL, /* device */
+			 target->content);
+
+    surface->extents = *extents;
+    surface->extents.x += target->device_transform.x0;
+    surface->extents.y += target->device_transform.y0;
     surface->target = cairo_surface_reference (target);
 
     return &surface->base;

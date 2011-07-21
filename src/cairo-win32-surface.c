@@ -549,6 +549,65 @@ _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_surface_t *
+_cairo_win32_surface_map_to_image (void                    *abstract_surface,
+				   const cairo_rectangle_int_t   *extents)
+{
+    cairo_win32_surface_t *surface = abstract_surface;
+    cairo_win32_surface_t *local = NULL;
+    cairo_status_t status;
+
+    if (surface->image) {
+	GdiFlush();
+	return _cairo_surface_create_for_rectangle_int (surface->image,
+							extents);
+    }
+
+    status = _cairo_win32_surface_get_subimage (abstract_surface,
+						extents->x,
+						extents->y,
+						extents->width,
+						extents->height,
+						&local);
+    if (unlikely (status))
+	return _cairo_surface_create_in_error (status);
+
+    status = _cairo_surface_set_user_data (&local->image->user_data,
+					   (const cairo_user_data_key_t *)surface->image,
+					   local, NULL);
+    if (unlikely (status)) {
+	cairo_surface_destroy (&local->base);
+	return _cairo_surface_create_in_error (status);
+    }
+
+    cairo_surface_set_device_offset (local->image, -extents->x, -extents->y);
+    return local->image;
+}
+
+static cairo_int_status_t
+_cairo_win32_surface_release_unmap_image (void                    *abstract_surface,
+					  cairo_image_surface_t   *image)
+{
+    cairo_win32_surface_t *surface = abstract_surface;
+    cairo_win32_surface_t *local;
+
+    local = _cairo_surface_set_user_data (&image->base.user_data,
+					   (const cairo_user_data_key_t *)surface->image);
+    if (!local)
+	return CAIRO_INT_STATUS_SUCCESS;
+
+    if (!BitBlt (surface->dc,
+		 image->device_transform.x0,
+		 image->device_transform.y0,
+		 image->width, image->height,
+		 local->dc,
+		 0, 0,
+		 SRCCOPY))
+	_cairo_win32_print_gdi_error ("_cairo_win32_surface_release_dest_image");
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_status_t
 _cairo_win32_surface_acquire_source_image (void                    *abstract_surface,
 					   cairo_image_surface_t  **image_out,
@@ -2087,10 +2146,15 @@ _cairo_win32_surface_create_span_renderer (cairo_operator_t	 op,
 
 static const cairo_surface_backend_t cairo_win32_surface_backend = {
     CAIRO_SURFACE_TYPE_WIN32,
+    _cairo_win32_surface_finish,
+
     _cairo_default_context_create,
 
     _cairo_win32_surface_create_similar,
-    _cairo_win32_surface_finish,
+    NULL,
+    _cairo_win32_surface_map_to_image,
+    _cairo_win32_surface_unmap_image,
+
     _cairo_win32_surface_acquire_source_image,
     _cairo_win32_surface_release_source_image,
     _cairo_win32_surface_acquire_dest_image,

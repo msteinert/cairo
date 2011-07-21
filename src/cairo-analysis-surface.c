@@ -643,10 +643,14 @@ _cairo_analysis_surface_show_text_glyphs (void			    *abstract_surface,
 
 static const cairo_surface_backend_t cairo_analysis_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_ANALYSIS,
+
+    _cairo_analysis_surface_finish,
     NULL,
 
     NULL, /* create_similar */
-    _cairo_analysis_surface_finish,
+    NULL, /* create_similar_image */
+    NULL, /* map_to_image */
+    NULL, /* unmap */
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
     NULL, /* acquire_dest_image */
@@ -842,10 +846,14 @@ typedef cairo_int_status_t
 
 static const cairo_surface_backend_t cairo_null_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_NULL,
+    NULL, /* finish */
+
     _cairo_default_context_create, /* XXX */
 
     NULL, /* create_similar */
-    NULL, /* finish */
+    NULL, /* create similar image */
+    NULL, /* map to image */
+    NULL, /* unmap image*/
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
     NULL, /* acquire_dest_image */

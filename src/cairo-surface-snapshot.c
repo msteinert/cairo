@@ -89,10 +89,13 @@ _cairo_surface_snapshot_get_extents (void                  *abstract_surface,
 
 static const cairo_surface_backend_t _cairo_surface_snapshot_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT,
+    _cairo_surface_snapshot_finish,
     NULL,
 
     NULL, /* create similar */
-    _cairo_surface_snapshot_finish,
+    NULL, /* create similar image  */
+    NULL, /* map to image */
+    NULL, /* unmap image  */
 
     _cairo_surface_snapshot_acquire_source_image,
     _cairo_surface_snapshot_release_source_image,

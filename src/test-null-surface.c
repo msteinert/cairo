@@ -134,10 +134,14 @@ _cairo_null_surface_has_show_text_glyphs (void *surface)
 
 static const cairo_surface_backend_t null_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_NULL,
+    NULL, /* finish */
     _cairo_default_context_create,
 
     _cairo_null_surface_create_similar,
-    NULL, /* finish */
+    NULL, /* create similar image */
+    NULL, /* map_to_image */
+    NULL, /* unmap image */
+
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
     NULL, /* acquire_dest_image */

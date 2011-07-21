@@ -241,13 +241,17 @@ _test_paginated_surface_set_paginated_mode (void			*abstract_surface,
 
 static const cairo_surface_backend_t test_paginated_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
+    _test_paginated_surface_finish,
     _cairo_default_context_create,
 
     /* Since we are a paginated user, we get to regard most of the
      * surface backend interface as historical cruft and ignore it. */
 
     NULL, /* create_similar */
-    _test_paginated_surface_finish,
+    NULL, /* create similar image */
+    NULL, /* map to image */
+    NULL, /* unmap image */
+
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
     NULL, /* acquire_dest_image */

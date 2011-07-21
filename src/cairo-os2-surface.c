@@ -1439,10 +1439,14 @@ _cairo_os2_surface_mark_dirty_rectangle (void *surface,
 
 static const cairo_surface_backend_t cairo_os2_surface_backend = {
     CAIRO_SURFACE_TYPE_OS2,
+    _cairo_os2_surface_finish,
     _cairo_default_context_create,
 
     NULL, /* create_similar */
-    _cairo_os2_surface_finish,
+    NULL, /* create_similar_image */
+    NULL, /* map_to_image */
+    NULL, /* unmap_image */
+
     _cairo_os2_surface_acquire_source_image,
     _cairo_os2_surface_release_source_image,
     _cairo_os2_surface_acquire_dest_image,

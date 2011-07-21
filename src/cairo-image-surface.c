@@ -728,6 +728,36 @@ _cairo_image_surface_create_similar (void	       *abstract_other,
 						     width, height);
 }
 
+static cairo_surface_t *
+_cairo_image_surface_map_to_image (void *abstract_other,
+				   const cairo_rectangle_int_t *extents)
+{
+    cairo_image_surface_t *other = abstract_other;
+    cairo_surface_t *surface;
+    uint8_t *data;
+
+    data = other->data;
+    data += extents->y * other->stride;
+    data += extents->x * PIXMAN_FORMAT_BPP (other->pixman_format)/ 8;
+
+    surface =
+	_cairo_image_surface_create_with_pixman_format (data,
+							other->pixman_format,
+							extents->width,
+							extents->height,
+							other->stride);
+
+    cairo_surface_set_device_offset (surface, -extents->x, -extents->y);
+    return surface;
+}
+
+static cairo_int_status_t
+_cairo_image_surface_unmap_image (void *abstract_surface,
+				  cairo_image_surface_t *image)
+{
+    return CAIRO_INT_STATUS_SUCCESS;
+}
+
 static cairo_status_t
 _cairo_image_surface_finish (void *abstract_surface)
 {
@@ -4655,10 +4685,15 @@ _cairo_surface_is_image (const cairo_surface_t *surface)
 
 const cairo_surface_backend_t _cairo_image_surface_backend = {
     CAIRO_SURFACE_TYPE_IMAGE,
+    _cairo_image_surface_finish,
+
     _cairo_default_context_create,
 
     _cairo_image_surface_create_similar,
-    _cairo_image_surface_finish,
+    NULL, /* create similar image */
+    _cairo_image_surface_map_to_image,
+    _cairo_image_surface_unmap_image,
+
     _cairo_image_surface_acquire_source_image,
     _cairo_image_surface_release_source_image,
     _cairo_image_surface_acquire_dest_image,

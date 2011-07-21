@@ -235,10 +235,14 @@ _test_wrapping_surface_show_text_glyphs (void			    *abstract_surface,
 
 static const cairo_surface_backend_t test_wrapping_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_WRAPPING,
+    _test_wrapping_surface_finish,
     _cairo_default_context_create,
 
     _test_wrapping_surface_create_similar,
-    _test_wrapping_surface_finish,
+    NULL, /* create similar image */
+    NULL, /* map to image */
+    NULL, /* unmap image */
+
     _test_wrapping_surface_acquire_source_image,
     _test_wrapping_surface_release_source_image,
     NULL, NULL, /* dest_image */

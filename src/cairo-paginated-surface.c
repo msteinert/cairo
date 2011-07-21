@@ -649,10 +649,15 @@ _cairo_paginated_context_create (void *target)
 
 static const cairo_surface_backend_t cairo_paginated_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED,
+    _cairo_paginated_surface_finish,
+
     _cairo_paginated_context_create,
 
     _cairo_paginated_surface_create_similar,
-    _cairo_paginated_surface_finish,
+    NULL, /* create simlar image */
+    NULL, /* map to image */
+    NULL, /* unmap image */
+
     _cairo_paginated_surface_acquire_source_image,
     _cairo_paginated_surface_release_source_image,
     NULL, /* acquire_dest_image */

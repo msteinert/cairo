@@ -805,10 +805,15 @@ _cairo_surface_is_recording (const cairo_surface_t *surface)
 
 static const cairo_surface_backend_t cairo_recording_surface_backend = {
     CAIRO_SURFACE_TYPE_RECORDING,
+    _cairo_recording_surface_finish,
+
     _cairo_default_context_create,
 
     _cairo_recording_surface_create_similar,
-    _cairo_recording_surface_finish,
+    NULL, /* create similar image */
+    NULL, /* map to image */
+    NULL, /* unmap image */
+
     _cairo_recording_surface_acquire_source_image,
     _cairo_recording_surface_release_source_image,
     NULL, /* acquire_dest_image */

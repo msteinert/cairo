@@ -2575,10 +2575,15 @@ _cairo_svg_surface_get_font_options (void                  *abstract_surface,
 
 static const cairo_surface_backend_t cairo_svg_surface_backend = {
 	CAIRO_SURFACE_TYPE_SVG,
+	_cairo_svg_surface_finish,
+
 	_cairo_default_context_create,
 
 	NULL, /* create_similar: handled by wrapper */
-	_cairo_svg_surface_finish,
+	NULL, /* create_similar_image */
+	NULL, /* map to image */
+	NULL, /* unmap image */
+
 	NULL, /* acquire_source_image */
 	NULL, /* release_source_image */
 	NULL, /* acquire_dest_image */

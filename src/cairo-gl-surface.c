@@ -1764,10 +1764,13 @@ _cairo_gl_surface_fill (void			*abstract_surface,
 
 const cairo_surface_backend_t _cairo_gl_surface_backend = {
     CAIRO_SURFACE_TYPE_GL,
+    _cairo_gl_surface_finish,
     _cairo_default_context_create,
 
     _cairo_gl_surface_create_similar,
-    _cairo_gl_surface_finish,
+    NULL, /* similar image */
+    NULL, /* map to image */
+    NULL, /* unmap image */
 
     _cairo_gl_surface_acquire_source_image,
     _cairo_gl_surface_release_source_image,

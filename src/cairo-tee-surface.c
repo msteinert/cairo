@@ -396,10 +396,15 @@ _cairo_tee_surface_show_text_glyphs (void		    *abstract_surface,
 
 static const cairo_surface_backend_t cairo_tee_surface_backend = {
     CAIRO_SURFACE_TYPE_TEE,
+    _cairo_tee_surface_finish,
+
     _cairo_default_context_create, /* XXX */
 
     _cairo_tee_surface_create_similar,
-    _cairo_tee_surface_finish,
+    NULL, /* create similar image */
+    NULL, /* map to image */
+    NULL, /* unmap image */
+
     _cairo_tee_surface_acquire_source_image,
     _cairo_tee_surface_release_source_image,
     NULL, NULL, /* dest_image */

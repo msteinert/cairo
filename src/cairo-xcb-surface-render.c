@@ -101,8 +101,6 @@ _cairo_xcb_picture_finish (void *abstract_surface)
 
 static const cairo_surface_backend_t _cairo_xcb_picture_backend = {
     CAIRO_SURFACE_TYPE_XCB,
-    NULL,
-    NULL,
     _cairo_xcb_picture_finish,
 };
 

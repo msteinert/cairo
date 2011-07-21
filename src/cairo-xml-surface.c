@@ -991,10 +991,14 @@ _cairo_xml_surface_glyphs (void			    *abstract_surface,
 static const cairo_surface_backend_t
 _cairo_xml_surface_backend = {
     CAIRO_SURFACE_TYPE_XML,
+    NULL,
     _cairo_default_context_create,
 
     _cairo_xml_surface_create_similar,
-    NULL,
+    NULL, /* create_similar_image */
+    NULL, /* map_to_image */
+    NULL, /* unmap_image */
+
     NULL, NULL, /* source image */
     NULL, NULL, /* dst image */
     NULL, /* clone_similar */

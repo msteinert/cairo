@@ -3511,6 +3511,98 @@ cairo_surface_create_similar (cairo_surface_t *other,
 }
 
 cairo_surface_t *
+cairo_surface_create_similar_image (cairo_surface_t *other,
+				    cairo_format_t format,
+				    int width, int height)
+{
+    cairo_surface_t *ret;
+
+    _enter_trace ();
+
+    ret = DLCALL (cairo_surface_create_similar_image,
+		  other, format, width, height);
+
+    _emit_line_info ();
+    if (other != NULL && _write_lock ()) {
+	Object *other_obj = _get_object(SURFACE, other);
+	Object *new_obj = _create_surface (ret);
+
+	if (other_obj->defined)
+	    _trace_printf ("s%ld ", other_obj->token);
+	else if (current_stack_depth == other_obj->operand + 1)
+	    _trace_printf ("dup ");
+	else
+	    _trace_printf ("%d index ",
+			   current_stack_depth - other_obj->operand - 1);
+	_trace_printf ("s%ld //%s %d %d similar-image %% s%ld\n",
+		       _get_surface_id (other),
+		       _format_to_string (format),
+		       width, height,
+		       new_obj->token);
+
+	_push_object (new_obj);
+	_write_unlock ();
+    }
+
+    _exit_trace ();
+    return ret;
+}
+
+cairo_surface_t *
+cairo_surface_map_to_image (cairo_surface_t *surface,
+			    const cairo_rectangle_t *extents)
+{
+    cairo_surface_t *ret;
+
+    _enter_trace ();
+
+    ret = DLCALL (cairo_surface_map_to_image, surface, extents);
+
+    _emit_line_info ();
+    if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
+	if (extents) {
+	    _trace_printf ("[ %f %f %f %f ] map-to-image dup /s%ld exch def\n",
+			   extents->x, extents->y,
+			   extents->width,
+			   extents->height,
+			   obj->token);
+	    obj->width = extents->width;
+	    obj->height = extents->height;
+	} else {
+	    _trace_printf ("[ ] map-to-image dup /s%ld exch def\n",
+			   obj->token);
+	}
+	obj->defined = TRUE;
+	_push_object (obj);
+	_write_unlock ();
+    }
+
+    _exit_trace ();
+    return ret;
+}
+
+void
+cairo_surface_unmap_image (cairo_surface_t *surface,
+			   cairo_surface_t *image)
+{
+    _enter_trace ();
+
+    _emit_line_info ();
+    if (_write_lock ()) {
+	_trace_printf ("/s%ld /s%ld  unmap-image\n",
+		       _get_surface_id (surface),
+		       _get_surface_id (image));
+	_write_unlock ();
+    }
+
+    DLCALL (cairo_surface_unmap_image, surface, image);
+
+    _exit_trace ();
+}
+
+cairo_surface_t *
 cairo_surface_create_for_rectangle (cairo_surface_t *target,
                                     double x, double y,
                                     double width, double height)

@@ -519,6 +519,188 @@ cairo_surface_create_similar (cairo_surface_t  *other,
     return surface;
 }
 
+
+/**
+ * cairo_surface_create_similar_image:
+ * @other: an existing surface used to select the preference of the new surface
+ * @format: the format for the new surface
+ * @width: width of the new surface, (in device-space units)
+ * @height: height of the new surface (in device-space units)
+ *
+ * Create a new image surface that is as compatible as possible for uploading
+ * to and the use in conjunction with an existing surface.
+ *
+ * Initially the surface contents are all 0 (transparent if contents
+ * have transparency, black otherwise.)
+ *
+ * Return value: a pointer to the newly allocated image surface. The caller
+ * owns the surface and should call cairo_surface_destroy() when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if @other is already in an error state
+ * or any other error occurs.
+ **/
+cairo_surface_t *
+cairo_surface_create_similar_image (cairo_surface_t  *other,
+				    cairo_format_t    format,
+				    int		width,
+				    int		height)
+{
+    if (other->status)
+	return _cairo_surface_create_in_error (other->status);
+    if (unlikely (other->finished))
+	return _cairo_surface_create_in_error (CAIRO_STATUS_SURFACE_FINISHED);
+
+    if (unlikely (width < 0 || height < 0))
+	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_SIZE);
+    if (unlikely (! CAIRO_FORMAT_VALID (format)))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
+
+    if (other->backend->create_similar_image)
+	return other->backend->create_similar_image (other,
+						    format, width, height);
+
+    return cairo_image_surface_create (format, width, height);
+}
+
+/**
+ * cairo_surface_map_to_image:
+ * @surface: an existing surface used to extract the image from
+ * @extents: limit the extraction to an rectangular region
+ *
+ * Returns an image surface that is the most efficient mechanism for
+ * modifying the backing store of the target surface. The region retrieved
+ * may be limited to the @extents or %NULL for the whole surface
+ *
+ * Note, the use of the original surface as a target or source whilst it is
+ * mapped is undefined. The result of mapping the surface multiple times is
+ * undefined.
+ *
+ * Return value: a pointer to the newly allocated image surface. The caller
+ * owns the surface and should call cairo_surface_destroy() when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if @other is already in an error state
+ * or any other error occurs.
+ **/
+cairo_surface_t *
+cairo_surface_map_to_image (cairo_surface_t  *surface,
+			    const cairo_rectangle_t *extents)
+{
+    cairo_rectangle_int_t rect;
+    cairo_surface_t *image;
+
+    if (unlikely (surface->status))
+	return _cairo_surface_create_in_error (surface->status);
+    if (unlikely (surface->finished))
+	return _cairo_surface_create_in_error (CAIRO_STATUS_SURFACE_FINISHED);
+
+    if (extents == NULL) {
+	if (unlikely (! surface->backend->get_extents (surface, &rect)))
+	    return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_SIZE);
+    } else {
+	_cairo_rectangle_int_from_double (&rect, extents);
+    }
+
+    image = NULL;
+    if (surface->backend->map_to_image)
+	image = surface->backend->map_to_image (surface, &rect);
+
+    if (image == NULL) {
+	cairo_surface_pattern_t pattern;
+	cairo_status_t status;
+
+	image = cairo_image_surface_create (_cairo_format_from_content (surface->content),
+					    rect.width, rect.height);
+	cairo_surface_set_device_offset (image, -rect.y, -rect.y);
+
+	_cairo_pattern_init_for_surface (&pattern, surface);
+	pattern.base.filter = CAIRO_FILTER_NEAREST;
+
+	status = _cairo_surface_paint (image,
+				       CAIRO_OPERATOR_SOURCE,
+				       &pattern.base,
+				       NULL);
+
+	_cairo_pattern_fini (&pattern.base);
+
+	if (unlikely (status)) {
+	    cairo_surface_destroy (image);
+	    image = _cairo_surface_create_in_error (status);
+	}
+    }
+
+    return image;
+}
+
+/**
+ * cairo_surface_unmap_image:
+ * @surface: an existing surface used to extract the image from
+ * @image: the currently mapped image
+ *
+ * Unmaps the image surface as returned from #cairo_surface_map_to_image().
+ * Returns an image surface that is the most efficient mechanism for
+ * modifying the backing store of the target surface. The region retrieved
+ * may be limited to the @extents or %NULL for the whole surface
+ *
+ * Return value: a pointer to the newly allocated image surface. The caller
+ * owns the surface and should call cairo_surface_destroy() when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if @other is already in an error state
+ * or any other error occurs.
+ **/
+void
+cairo_surface_unmap_image (cairo_surface_t *surface,
+			   cairo_surface_t *image)
+{
+    cairo_int_status_t status;
+
+    if (unlikely (surface->status)) {
+	status = surface->status;
+	goto error;
+    }
+    if (unlikely (surface->finished)) {
+	status = _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
+	goto error;
+    }
+
+    if (unlikely (image->status)) {
+	status = image->status;
+	goto error;
+    }
+    if (unlikely (image->finished)) {
+	status = _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
+	goto error;
+    }
+
+    status = CAIRO_INT_STATUS_UNSUPPORTED;
+    if (surface->backend->unmap_image)
+	status = surface->backend->unmap_image (surface, image);
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	cairo_surface_pattern_t pattern;
+
+	_cairo_pattern_init_for_surface (&pattern, image);
+	pattern.base.filter = CAIRO_FILTER_NEAREST;
+
+	status = _cairo_surface_paint (surface,
+				       CAIRO_OPERATOR_SOURCE,
+				       &pattern.base,
+				       NULL);
+
+	_cairo_pattern_fini (&pattern.base);
+    }
+
+error:
+    cairo_surface_finish (image);
+    cairo_surface_destroy (image);
+    if (status)
+	_cairo_status_set_error (&surface->status, status);
+}
+
 cairo_surface_t *
 _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
 				     cairo_content_t	  content,

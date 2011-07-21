@@ -160,10 +160,15 @@ _cairo_quartz_image_surface_flush (void *asurface)
 
 static const cairo_surface_backend_t cairo_quartz_image_surface_backend = {
     CAIRO_SURFACE_TYPE_QUARTZ_IMAGE,
+    _cairo_quartz_image_surface_finish,
+
     _cairo_default_context_create,
 
     _cairo_quartz_image_surface_create_similar,
-    _cairo_quartz_image_surface_finish,
+    NULL, /* create_similar_image */
+    NULL, /* map_to_image */
+    NULL, /* unmap_image */
+
     _cairo_quartz_image_surface_acquire_source_image,
     NULL, /* release_source_image */
     _cairo_quartz_image_surface_acquire_dest_image,

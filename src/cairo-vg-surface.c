@@ -1548,10 +1548,13 @@ _vg_surface_finish (void *abstract_surface)
 
 static const cairo_surface_backend_t cairo_vg_surface_backend = {
     CAIRO_SURFACE_TYPE_VG,
+    _vg_surface_finish,
     _cairo_default_context_create, /* XXX */
 
     _vg_surface_create_similar,
-    _vg_surface_finish,
+    NULL, /* create similar image */
+    NULL, /* map to image */
+    NULL, /* unmap image */
 
     _vg_surface_acquire_source_image,
     _vg_surface_release_source_image,

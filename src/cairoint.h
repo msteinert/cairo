@@ -310,6 +310,10 @@ _cairo_rectangle_intersects (const cairo_rectangle_int_t *dst,
 	     src->y + (int) src->height <= dst->y);
 }
 
+cairo_private void
+_cairo_rectangle_int_from_double (cairo_rectangle_int_t *recti,
+				  const cairo_rectangle_t *rectf);
+
 /* Extends the dst rectangle to also contain src.
  * If one of the rectangles is empty, the result is undefined
  */
@@ -650,6 +654,9 @@ extern const cairo_private struct _cairo_font_face_backend _cairo_quartz_font_fa
 struct _cairo_surface_backend {
     cairo_surface_type_t type;
 
+    cairo_warn cairo_status_t
+    (*finish)			(void			*surface);
+
     cairo_t *
     (*create_context)		(void			*surface);
 
@@ -658,9 +665,18 @@ struct _cairo_surface_backend {
 				 cairo_content_t	 content,
 				 int			 width,
 				 int			 height);
+    cairo_surface_t *
+    (*create_similar_image)	(void			*surface,
+				 cairo_format_t		format,
+				 int			 width,
+				 int			 height);
 
-    cairo_warn cairo_status_t
-    (*finish)			(void			*surface);
+    cairo_surface_t *
+    (*map_to_image)		(void			*surface,
+				 const cairo_rectangle_int_t  *extents);
+    cairo_int_status_t
+    (*unmap_image)		(void			*surface,
+				 cairo_image_surface_t	*image);
 
     cairo_warn cairo_status_t
     (*acquire_source_image)	(void                    *abstract_surface,
@@ -1618,6 +1634,10 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
 				       cairo_content_t	content,
 				       int		width,
 				       int		height);
+
+cairo_private cairo_surface_t *
+_cairo_surface_create_for_rectangle_int (cairo_surface_t *target,
+					 cairo_rectangle_int_t *extents);
 
 cairo_private cairo_surface_t *
 _cairo_surface_create_similar_solid (cairo_surface_t	    *other,
