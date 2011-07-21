@@ -3336,9 +3336,11 @@ _composite_opacity_boxes (void				*closure,
     info.opacity = mask_pattern->color.alpha;
 
     /* XXX for lots of boxes create a clip region for the fully opaque areas */
-    for (i = 0; i < clip->num_boxes; i++)
-	do_unaligned_box(composite_opacity, &info,
-			 &clip->boxes[i], dst_x, dst_y);
+    if (clip) {
+	for (i = 0; i < clip->num_boxes; i++)
+	    do_unaligned_box(composite_opacity, &info,
+			     &clip->boxes[i], dst_x, dst_y);
+    }
     cairo_surface_destroy (&info.src->base);
 
     return CAIRO_STATUS_SUCCESS;
