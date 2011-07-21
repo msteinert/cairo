@@ -644,7 +644,7 @@ static cairo_t *
 _cairo_paginated_context_create (void *target)
 {
     cairo_paginated_surface_t *surface = target;
-    return cairo_create (surface->recording_surface);
+    return surface->recording_surface->backend->create_context (surface);
 }
 
 static const cairo_surface_backend_t cairo_paginated_surface_backend = {

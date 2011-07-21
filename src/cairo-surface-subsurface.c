@@ -421,7 +421,7 @@ static cairo_t *
 _cairo_surface_subsurface_create_context(void *target)
 {
     cairo_surface_subsurface_t *surface = target;
-    return cairo_create (surface->target);
+    return surface->target->backend->create_context (&surface->base);
 }
 
 static const cairo_surface_backend_t _cairo_surface_subsurface_backend = {
