@@ -749,8 +749,15 @@ void
 cairo_xlib_device_debug_set_precision (cairo_device_t *device,
 				       int precision)
 {
-    if (device->status)
-	    return;
+    if (device == NULL || device->status)
+	return;
+    if (device->backend->type != CAIRO_DEVICE_TYPE_XLIB) {
+	cairo_status_t status;
+
+	status = _cairo_device_set_error (device, CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
+	(void) status;
+	return;
+    }
 
     ((cairo_xlib_display_t *) device)->force_precision = precision;
 }
@@ -758,8 +765,15 @@ cairo_xlib_device_debug_set_precision (cairo_device_t *device,
 int
 cairo_xlib_device_debug_get_precision (cairo_device_t *device)
 {
-    if (device->status)
-	    return -1;
+    if (device == NULL || device->status)
+	return -1;
+    if (device->backend->type != CAIRO_DEVICE_TYPE_XLIB) {
+	cairo_status_t status;
+
+	status = _cairo_device_set_error (device, CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
+	(void) status;
+	return -1;
+    }
 
     return ((cairo_xlib_display_t *) device)->force_precision;
 }
