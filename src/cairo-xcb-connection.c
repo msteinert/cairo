@@ -312,6 +312,41 @@ has_required_depths (cairo_xcb_connection_t *connection)
     return TRUE;
 }
 
+static xcb_render_query_version_reply_t *
+_render_restrict_env(xcb_render_query_version_reply_t *version)
+{
+    const char *env;
+
+    if (version == NULL)
+	return NULL;
+
+    env = getenv ("CAIRO_DEBUG");
+    if (env != NULL)
+	env = strstr (env, "xrender-version=");
+    if (env != NULL) {
+	int max_render_major, max_render_minor;
+
+	env += sizeof ("xrender-version=") - 1;
+	if (sscanf (env, "%d.%d", &max_render_major, &max_render_minor) != 2)
+	    max_render_major = max_render_minor = -1;
+
+	if (max_render_major < 0 || max_render_minor < 0) {
+	    free (version);
+	    return NULL;
+	}
+
+	if (max_render_major < (int) version->major_version ||
+	    (max_render_major == (int) version->major_version &&
+	     max_render_minor < (int) version->minor_version))
+	{
+	    version->major_version = max_render_major;
+	    version->minor_version = max_render_minor;
+	}
+    }
+
+    return version;
+}
+
 static cairo_status_t
 _cairo_xcb_connection_query_render (cairo_xcb_connection_t *connection)
 {
@@ -329,6 +364,9 @@ _cairo_xcb_connection_query_render (cairo_xcb_connection_t *connection)
     present = has_required_depths (connection);
     version = xcb_render_query_version_reply (c, version_cookie, 0);
     formats = xcb_render_query_pict_formats_reply (c, formats_cookie, 0);
+
+    version = _render_restrict_env (version);
+
     if (! present || version == NULL || formats == NULL) {
 	free (version);
 	free (formats);
