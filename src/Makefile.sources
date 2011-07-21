@@ -427,3 +427,13 @@ cairo_xml_sources = cairo-xml-surface.c
 
 cairo_vg_headers = cairo-vg.h
 cairo_vg_sources = cairo-vg-surface.c
+
+cairo_cogl_headers = cairo-cogl.h
+cairo_cogl_private = cairo-cogl-private.h \
+		     cairo-cogl-gradient-private.h \
+		     cairo-cogl-context-private.h \
+		     cairo-cogl-utils-private.h
+cairo_cogl_sources = cairo-cogl-surface.c \
+		     cairo-cogl-gradient.c \
+		     cairo-cogl-context.c \
+		     cairo-cogl-utils.c

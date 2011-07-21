@@ -73,6 +73,9 @@ struct _cairo_clip {
 cairo_private cairo_clip_t *
 _cairo_clip_create (void);
 
+cairo_private cairo_clip_path_t *
+_cairo_clip_path_reference (cairo_clip_path_t *clip_path);
+
 cairo_private void
 _cairo_clip_path_destroy (cairo_clip_path_t *clip_path);
 

@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2005 Red Hat, Inc.
+ * Copyright © 2011 Intel Corporation.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,38 +27,43 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is Red Hat, Inc.
+ * The Initial Developer of the Original Code is Mozilla Corporation.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@redhat.com>
+ *      Robert Bragg <robert@linux.intel.com>
  */
 
-#ifndef CAIRO_DEFAULT_CONTEXT_PRIVATE_H
-#define CAIRO_DEFAULT_CONTEXT_PRIVATE_H
+#ifndef CAIRO_VG_H
+#define CAIRO_VG_H
 
-#include "cairo-private.h"
-#include "cairo-gstate-private.h"
-#include "cairo-path-fixed-private.h"
+#include "cairo.h"
 
-typedef struct _cairo_default_context cairo_default_context_t;
+#if CAIRO_HAS_COGL_SURFACE
 
-struct _cairo_default_context {
-    cairo_t base;
+#include <cogl/cogl2-experimental.h>
 
-    cairo_gstate_t *gstate;
-    cairo_gstate_t  gstate_tail[2];
-    cairo_gstate_t *gstate_freelist;
+CAIRO_BEGIN_DECLS
 
-    cairo_path_fixed_t path[1];
-};
+cairo_public cairo_device_t *
+cairo_cogl_device_create (CoglContext *context);
 
-cairo_private cairo_t *
-_cairo_default_context_create (void *target);
+cairo_public cairo_surface_t *
+cairo_cogl_surface_create (cairo_device_t *device,
+			   CoglFramebuffer *framebuffer);
 
-cairo_status_t
-_cairo_default_context_init (cairo_default_context_t *cr, void *target);
+cairo_public CoglFramebuffer *
+cairo_cogl_surface_get_framebuffer (cairo_surface_t *surface);
 
-void
-_cairo_default_context_fini (cairo_default_context_t *cr);
+cairo_public CoglTexture *
+cairo_cogl_surface_get_texture (cairo_surface_t *surface);
 
-#endif /* CAIRO_DEFAULT_CONTEXT_PRIVATE_H */
+cairo_public void
+cairo_cogl_surface_end_frame (cairo_surface_t *surface);
+
+CAIRO_END_DECLS
+
+#else  /* CAIRO_HAS_COGL_SURFACE*/
+# error Cairo was not compiled with support for the Cogl backend
+#endif /* CAIRO_HAS_COGL_SURFACE*/
+
+#endif /* CAIRO_COGL_H */
