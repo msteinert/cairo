@@ -1693,8 +1693,10 @@ _cairo_win32_scaled_font_index_to_glyph_name (void	      	*abstract_font,
 	*glyph_array_index = scaled_font->type1_notdef_index;
     else if (glyph_index <= scaled_font->type1_notdef_index)
 	*glyph_array_index = glyph_index - 1;
-    else
+    else if (glyph_index < num_glyph_names)
 	*glyph_array_index = glyph_index;
+    else
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     return CAIRO_STATUS_SUCCESS;
 }

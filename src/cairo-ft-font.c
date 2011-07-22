@@ -2481,7 +2481,9 @@ _cairo_index_to_glyph_name (void	         *abstract_font,
      * we fall back to searching the entire array.
      */
 
-    if (strcmp (glyph_names[glyph_index], buffer) == 0) {
+    if (glyph_index < num_glyph_names &&
+	strcmp (glyph_names[glyph_index], buffer) == 0)
+    {
 	*glyph_array_index = glyph_index;
 
 	return CAIRO_STATUS_SUCCESS;
