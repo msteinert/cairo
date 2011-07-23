@@ -865,6 +865,9 @@ REFERENCE_IMAGES = \
 	paint-source-alpha.image16.ref.png \
 	paint-source-alpha.ref.png \
 	paint-source-alpha.svg.ref.png \
+	paint-with-alpha-clip.ref.png \
+	paint-with-alpha-clip.xlib.ref.png \
+	paint-with-alpha-solid-clip.ref.png \
 	paint-with-alpha.image16.ref.png \
 	paint-with-alpha.ref.png \
 	paint-with-alpha.svg.ref.png \
@@ -1002,7 +1005,6 @@ REFERENCE_IMAGES = \
 	recording-surface-over.svg.rgb24.ref.png \
 	recording-surface-over.xlib.argb32.ref.png \
 	recording-surface-over.xlib.rgb24.ref.png \
-	recording-surface-pattern.ref.png \
 	rectangle-rounding-error.ref.png \
 	rectilinear-dash.quartz.xfail.png \
 	rectilinear-dash.ref.png \

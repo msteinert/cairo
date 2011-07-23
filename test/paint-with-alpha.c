@@ -26,22 +26,61 @@
 
 #include "cairo-test.h"
 
+static uint32_t data[16] = {
+    0xffffffff, 0xffffffff,		0xffff0000, 0xffff0000,
+    0xffffffff, 0xffffffff,		0xffff0000, 0xffff0000,
+
+    0xff00ff00, 0xff00ff00,		0xff0000ff, 0xff0000ff,
+    0xff00ff00, 0xff00ff00,		0xff0000ff, 0xff0000ff
+};
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     cairo_surface_t *surface;
-    uint32_t data[16] = {
-	0xffffffff, 0xffffffff,		0xffff0000, 0xffff0000,
-	0xffffffff, 0xffffffff,		0xffff0000, 0xffff0000,
-
-	0xff00ff00, 0xff00ff00,		0xff0000ff, 0xff0000ff,
-	0xff00ff00, 0xff00ff00,		0xff0000ff, 0xff0000ff
-    };
 
     surface = cairo_image_surface_create_for_data ((unsigned char *) data,
 						   CAIRO_FORMAT_RGB24, 4, 4, 16);
 
     cairo_test_paint_checkered (cr);
+
+    cairo_scale (cr, 4, 4);
+
+    cairo_set_source_surface (cr, surface, 2 , 2);
+    cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_NEAREST);
+    cairo_paint_with_alpha (cr, 0.5);
+
+    cairo_surface_finish (surface); /* data will go out of scope */
+    cairo_surface_destroy (surface);
+
+    return CAIRO_TEST_SUCCESS;
+}
+
+static cairo_test_status_t
+draw_solid_clip (cairo_t *cr, int width, int height)
+{
+    cairo_test_paint_checkered (cr);
+
+    cairo_rectangle (cr, 2.5, 2.5, 27, 27);
+    cairo_clip (cr);
+
+    cairo_set_source_rgb (cr, 1., 0.,0.);
+    cairo_paint_with_alpha (cr, 0.5);
+
+    return CAIRO_TEST_SUCCESS;
+}
+
+static cairo_test_status_t
+draw_clip (cairo_t *cr, int width, int height)
+{
+    cairo_surface_t *surface;
+
+    surface = cairo_image_surface_create_for_data ((unsigned char *) data,
+						   CAIRO_FORMAT_RGB24, 4, 4, 16);
+
+    cairo_test_paint_checkered (cr);
+
+    cairo_rectangle (cr, 10.5, 10.5, 11, 11);
+    cairo_clip (cr);
 
     cairo_scale (cr, 4, 4);
 
@@ -61,3 +100,15 @@ CAIRO_TEST (paint_with_alpha,
 	    NULL, /* requirements */
 	    32, 32,
 	    NULL, draw)
+CAIRO_TEST (paint_with_alpha_solid_clip,
+	    "Simple test of cairo_paint_with_alpha+unaligned clip",
+	    "paint, alpha, clip", /* keywords */
+	    NULL, /* requirements */
+	    32, 32,
+	    NULL, draw_solid_clip)
+CAIRO_TEST (paint_with_alpha_clip,
+	    "Simple test of cairo_paint_with_alpha+unaligned clip",
+	    "paint, alpha, clip", /* keywords */
+	    NULL, /* requirements */
+	    32, 32,
+	    NULL, draw_clip)
