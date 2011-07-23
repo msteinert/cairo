@@ -869,10 +869,13 @@ REFERENCE_IMAGES = \
 	paint-with-alpha.ref.png \
 	paint-with-alpha.svg.ref.png \
 	paint.ref.png \
-	partial-clip-text.ps.ref.png \
-	partial-clip-text.quartz.ref.png \
-	partial-clip-text.ref.png \
-	partial-clip-text.svg.ref.png \
+	partial-clip-text-bottom.ref.png \
+	partial-clip-text-left.ref.png \
+	partial-clip-text-right.ref.png \
+	partial-clip-text-top.ps.ref.png \
+	partial-clip-text-top.quartz.ref.png \
+	partial-clip-text-top.ref.png \
+	partial-clip-text-top.svg.ref.png \
 	partial-coverage-half-reference.ref.png \
 	partial-coverage-half-triangles.ref.png \
 	partial-coverage-intersecting-quads.ref.png \
