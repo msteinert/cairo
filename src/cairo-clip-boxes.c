@@ -560,3 +560,20 @@ _cairo_clip_to_boxes (cairo_clip_t *clip,
     return CAIRO_STATUS_SUCCESS;
 
 }
+
+cairo_clip_t *
+_cairo_clip_from_boxes (const cairo_boxes_t *boxes)
+{
+    cairo_clip_t *clip = _cairo_clip_create ();
+    if (clip == NULL)
+	return _cairo_clip_set_all_clipped (clip);
+
+    /* XXX cow-boxes? */
+    clip->boxes = _cairo_boxes_to_array (boxes, &clip->num_boxes, TRUE);
+    if (clip->boxes == NULL)
+	return _cairo_clip_set_all_clipped (clip);
+
+    _cairo_boxes_extents (boxes, &clip->extents);
+
+    return clip;
+}

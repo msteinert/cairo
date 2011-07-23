@@ -44,6 +44,7 @@
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
+#include "cairo-recording-surface-private.h"
 #include "cairo-region-private.h"
 #include "cairo-pattern-private.h"
 #include "cairo-scaled-font-private.h"
@@ -2878,6 +2879,27 @@ _composite_unaligned_boxes (cairo_image_surface_t *dst,
     return status;
 }
 
+static cairo_bool_t
+is_recording_pattern (const cairo_pattern_t *pattern)
+{
+    const cairo_surface_pattern_t *surface_pattern;
+
+    if (pattern->type != CAIRO_PATTERN_TYPE_SURFACE)
+	return FALSE;
+
+   surface_pattern = (const cairo_surface_pattern_t *) pattern;
+   return _cairo_surface_is_recording (surface_pattern->surface);
+}
+
+static cairo_surface_t *
+pattern_get_surface (const cairo_pattern_t *pattern)
+{
+    const cairo_surface_pattern_t *surface_pattern;
+
+   surface_pattern = (const cairo_surface_pattern_t *) pattern;
+   return surface_pattern->surface;
+}
+
 static cairo_status_t
 _composite_boxes (cairo_image_surface_t *dst,
 		  cairo_operator_t op,
@@ -2914,6 +2936,47 @@ _composite_boxes (cairo_image_surface_t *dst,
 	{
 	    return _composite_unaligned_boxes (dst, op, pattern, boxes, extents);
 	}
+    }
+
+    /* Are we just copying a recording surface? */
+    if (! need_clip_mask &&
+	op == CAIRO_OPERATOR_SOURCE &&
+	pattern->extend == CAIRO_EXTEND_NONE && /* or if sample is contained */
+	is_recording_pattern (pattern))
+    {
+	cairo_clip_t *recording_clip;
+
+	/* first clear the area about to be overwritten */
+	if (! dst->base.is_clear) {
+	    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
+		cairo_box_t *box = chunk->base;
+
+		for (i = 0; i < chunk->count; i++) {
+		    int x1 = _cairo_fixed_integer_round_down (box[i].p1.x);
+		    int y1 = _cairo_fixed_integer_round_down (box[i].p1.y);
+		    int x2 = _cairo_fixed_integer_round_down (box[i].p2.x);
+		    int y2 = _cairo_fixed_integer_round_down (box[i].p2.y);
+
+		    if (x2 == x1 || y2 == y1)
+			continue;
+
+		    pixman_fill ((uint32_t *) dst->data,
+				 dst->stride / sizeof (uint32_t),
+				 PIXMAN_FORMAT_BPP (dst->pixman_format),
+				 x1, y1, x2 - x1, y2 - y1,
+				 0);
+		}
+	    }
+	}
+
+	recording_clip = _cairo_clip_from_boxes (boxes);
+	status = _cairo_recording_surface_replay_with_clip (pattern_get_surface (pattern),
+							    &pattern->matrix,
+							    &dst->base,
+							    recording_clip);
+	_cairo_clip_destroy (recording_clip);
+
+	return status;
     }
 
     status = CAIRO_STATUS_SUCCESS;
@@ -4476,7 +4539,6 @@ _cairo_image_surface_coerce (cairo_image_surface_t *surface)
 {
     return _cairo_image_surface_coerce_to_format (surface,
 		                                  _cairo_format_from_content (surface->base.content));
-        
 }
 
 /* A convenience function for when one needs to coerce an image

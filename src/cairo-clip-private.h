@@ -116,6 +116,18 @@ _cairo_clip_copy_intersect_rectangle (const cairo_clip_t       *clip,
 }
 
 cairo_private cairo_clip_t *
+_cairo_clip_intersect_clip (cairo_clip_t *clip,
+			    const cairo_clip_t *other);
+
+static inline cairo_clip_t *
+_cairo_clip_copy_intersect_clip (const cairo_clip_t *clip,
+				 const cairo_clip_t *other)
+{
+    return _cairo_clip_intersect_clip (_cairo_clip_copy (clip), other);
+}
+
+
+cairo_private cairo_clip_t *
 _cairo_clip_intersect_box (cairo_clip_t       *clip,
 			   const cairo_box_t *box);
 
@@ -150,6 +162,9 @@ _cairo_clip_combine_with_surface (const cairo_clip_t *clip,
 cairo_private cairo_status_t
 _cairo_clip_to_boxes (cairo_clip_t *clip,
 		      cairo_boxes_t *boxes);
+
+cairo_private cairo_clip_t *
+_cairo_clip_from_boxes (const cairo_boxes_t *boxes);
 
 cairo_private cairo_region_t *
 _cairo_clip_get_region (const cairo_clip_t *clip);

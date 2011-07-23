@@ -251,14 +251,6 @@ _cairo_recording_surface_acquire_source_image_transformed (void			   *abstract_s
     double width;
     double height;
 
-    image = _cairo_surface_has_snapshot (&surface->base,
-					 &_cairo_image_surface_backend);
-    if (image != NULL) {
-	*image_out = (cairo_image_surface_t *) cairo_surface_reference (image);
-	*image_extra = NULL;
-	return CAIRO_STATUS_SUCCESS;
-    }
-
     width = surface->extents.width * device_transform->xx;
     height = surface->extents.height * device_transform->yy;
     image = _cairo_image_surface_create_with_content (surface->content,
@@ -278,8 +270,6 @@ _cairo_recording_surface_acquire_source_image_transformed (void			   *abstract_s
 	return status;
     }
 
-    _cairo_surface_attach_snapshot (&surface->base, image, NULL);
-
     *image_out = (cairo_image_surface_t *) image;
     *image_extra = NULL;
     return CAIRO_STATUS_SUCCESS;
@@ -291,11 +281,29 @@ _cairo_recording_surface_acquire_source_image (void			 *abstract_surface,
 					       void			**image_extra)
 {
     cairo_matrix_t identity;
+    cairo_surface_t *image;
+    cairo_status_t status;
+
+    image = _cairo_surface_has_snapshot (abstract_surface,
+					 &_cairo_image_surface_backend);
+    if (image != NULL) {
+	*image_out = (cairo_image_surface_t *) cairo_surface_reference (image);
+	*image_extra = NULL;
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     cairo_matrix_init_identity (&identity);
 
-    return _cairo_recording_surface_acquire_source_image_transformed (
-	abstract_surface, &identity, image_out, image_extra);
+    status =
+	_cairo_recording_surface_acquire_source_image_transformed (abstract_surface, &identity, image_out, image_extra);
+    if (unlikely (status))
+	return status;
+
+    _cairo_surface_attach_snapshot (abstract_surface,
+				    &(*image_out)->base,
+				    NULL);
+    return CAIRO_STATUS_SUCCESS;
+
 }
 
 static void
@@ -817,7 +825,9 @@ _cairo_recording_surface_get_path (cairo_surface_t    *surface,
 static cairo_status_t
 _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 					  const cairo_rectangle_int_t *surface_extents,
+					  const cairo_matrix_t *surface_transform,
 					  cairo_surface_t	     *target,
+					  const cairo_clip_t *target_clip,
 					  cairo_recording_replay_type_t type,
 					  cairo_recording_region_type_t region)
 {
@@ -843,6 +853,8 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 
     _cairo_surface_wrapper_init (&wrapper, target);
     _cairo_surface_wrapper_set_extents (&wrapper, surface_extents);
+    _cairo_surface_wrapper_set_inverse_transform (&wrapper, surface_transform);
+    _cairo_surface_wrapper_set_clip (&wrapper, target_clip);
 
     recording_surface = (cairo_recording_surface_t *) surface;
     status = CAIRO_STATUS_SUCCESS;
@@ -854,7 +866,8 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 	cairo_command_t *command = elements[i];
 	cairo_clip_t *clip = command->header.clip;
 
-	if (type == CAIRO_RECORDING_REPLAY && region != CAIRO_RECORDING_REGION_ALL) {
+	if (type == CAIRO_RECORDING_REPLAY &&
+	    region != CAIRO_RECORDING_REGION_ALL) {
 	    if (command->header.region != region)
 		continue;
         }
@@ -881,7 +894,6 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 	    break;
 
 	case CAIRO_COMMAND_STROKE:
-	{
 	    status = _cairo_surface_wrapper_stroke (&wrapper,
 						    command->header.op,
 						    &command->stroke.source.base,
@@ -893,7 +905,7 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 						    command->stroke.antialias,
 						    clip);
 	    break;
-	}
+
 	case CAIRO_COMMAND_FILL:
 	{
 	    cairo_command_t *stroke_command;
@@ -945,6 +957,7 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 	    }
 	    break;
 	}
+
 	case CAIRO_COMMAND_SHOW_TEXT_GLYPHS:
 	{
 	    cairo_glyph_t *glyphs = command->show_text_glyphs.glyphs;
@@ -975,6 +988,7 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 	    free (glyphs_copy);
 	    break;
 	}
+
 	default:
 	    ASSERT_NOT_REACHED;
 	}
@@ -1017,8 +1031,20 @@ cairo_status_t
 _cairo_recording_surface_replay (cairo_surface_t *surface,
 				 cairo_surface_t *target)
 {
-    return _cairo_recording_surface_replay_internal (surface, NULL,
-						     target,
+    return _cairo_recording_surface_replay_internal (surface, NULL, NULL,
+						     target, NULL,
+						     CAIRO_RECORDING_REPLAY,
+						     CAIRO_RECORDING_REGION_ALL);
+}
+
+cairo_status_t
+_cairo_recording_surface_replay_with_clip (cairo_surface_t *surface,
+					   const cairo_matrix_t *surface_transform,
+					   cairo_surface_t *target,
+					   const cairo_clip_t *target_clip)
+{
+    return _cairo_recording_surface_replay_internal (surface, NULL, surface_transform,
+						     target, target_clip,
 						     CAIRO_RECORDING_REPLAY,
 						     CAIRO_RECORDING_REGION_ALL);
 }
@@ -1033,8 +1059,8 @@ cairo_status_t
 _cairo_recording_surface_replay_and_create_regions (cairo_surface_t *surface,
 						    cairo_surface_t *target)
 {
-    return _cairo_recording_surface_replay_internal (surface, NULL,
-						     target,
+    return _cairo_recording_surface_replay_internal (surface, NULL, NULL,
+						     target, NULL,
 						     CAIRO_RECORDING_CREATE_REGIONS,
 						     CAIRO_RECORDING_REGION_ALL);
 }
@@ -1045,8 +1071,8 @@ _cairo_recording_surface_replay_region (cairo_surface_t          *surface,
 					cairo_surface_t          *target,
 					cairo_recording_region_type_t  region)
 {
-    return _cairo_recording_surface_replay_internal (surface, surface_extents,
-						     target,
+    return _cairo_recording_surface_replay_internal (surface, surface_extents, NULL,
+						     target, NULL,
 						     CAIRO_RECORDING_REPLAY,
 						     region);
 }

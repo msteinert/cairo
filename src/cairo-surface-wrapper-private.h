@@ -46,8 +46,13 @@ CAIRO_BEGIN_DECLS
 struct _cairo_surface_wrapper {
     cairo_surface_t *target;
 
+    cairo_matrix_t transform;
+
     cairo_bool_t has_extents;
     cairo_rectangle_int_t extents;
+    const cairo_clip_t *clip;
+
+    cairo_bool_t needs_transform;
 };
 
 cairo_private void
@@ -57,6 +62,14 @@ _cairo_surface_wrapper_init (cairo_surface_wrapper_t *wrapper,
 cairo_private void
 _cairo_surface_wrapper_set_extents (cairo_surface_wrapper_t *wrapper,
 				    const cairo_rectangle_int_t *extents);
+
+cairo_private void
+_cairo_surface_wrapper_set_inverse_transform (cairo_surface_wrapper_t *wrapper,
+					      const cairo_matrix_t *transform);
+
+cairo_private void
+_cairo_surface_wrapper_set_clip (cairo_surface_wrapper_t *wrapper,
+				 const cairo_clip_t *clip);
 
 cairo_private void
 _cairo_surface_wrapper_fini (cairo_surface_wrapper_t *wrapper);

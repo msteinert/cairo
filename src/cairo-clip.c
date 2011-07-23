@@ -250,14 +250,14 @@ _cairo_clip_intersect_path (cairo_clip_t       *clip,
     if (clip == NULL) {
 	clip = _cairo_clip_create ();
 	if (unlikely (clip == NULL))
-		return _cairo_clip_set_all_clipped (clip);
+	    return _cairo_clip_set_all_clipped (clip);
 
 	clip->extents = extents;
     }
 
     clip_path = _cairo_clip_path_create (clip);
     if (unlikely (clip_path == NULL))
-	    return _cairo_clip_set_all_clipped (clip);
+	return _cairo_clip_set_all_clipped (clip);
 
     status = _cairo_path_fixed_init_copy (&clip_path->path, path);
     if (unlikely (status))
@@ -267,7 +267,70 @@ _cairo_clip_intersect_path (cairo_clip_t       *clip,
     clip_path->tolerance = tolerance;
     clip_path->antialias = antialias;
 
+    if (clip->region) {
+	cairo_region_destroy (clip->region);
+	clip->region = NULL;
+    }
+
     clip->is_region = FALSE;
+    return clip;
+}
+
+static cairo_clip_t *
+_cairo_clip_intersect_clip_path (cairo_clip_t *clip,
+				 const cairo_clip_path_t *clip_path)
+{
+    if (clip_path->prev)
+	clip = _cairo_clip_intersect_clip_path (clip, clip_path->prev);
+
+    return _cairo_clip_intersect_path (clip,
+				       &clip_path->path,
+				       clip_path->fill_rule,
+				       clip_path->tolerance,
+				       clip_path->antialias);
+}
+
+cairo_clip_t *
+_cairo_clip_intersect_clip (cairo_clip_t *clip,
+			    const cairo_clip_t *other)
+{
+    if (_cairo_clip_is_all_clipped (clip))
+	return clip;
+
+    if (other == NULL)
+	return clip;
+
+    if (clip == NULL)
+	return _cairo_clip_copy (other);
+
+    if (_cairo_clip_is_all_clipped (other))
+	return _cairo_clip_set_all_clipped (clip);
+
+    if (! _cairo_rectangle_intersect (&clip->extents, &other->extents))
+	return _cairo_clip_set_all_clipped (clip);
+
+    if (other->num_boxes) {
+	cairo_boxes_t boxes;
+
+	_cairo_boxes_init_for_array (&boxes, other->boxes, other->num_boxes);
+	clip = _cairo_clip_intersect_boxes (clip, &boxes);
+    }
+
+    if (! _cairo_clip_is_all_clipped (clip)) {
+	if (other->path) {
+	    if (clip->path == NULL)
+		clip->path = _cairo_clip_path_reference (other->path);
+	    else
+		clip = _cairo_clip_intersect_clip_path (clip, other->path);
+	}
+    }
+
+    if (clip->region) {
+	cairo_region_destroy (clip->region);
+	clip->region = NULL;
+    }
+    clip->is_region = FALSE;
+
     return clip;
 }
 

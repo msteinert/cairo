@@ -54,18 +54,6 @@ _copy_transformed_pattern (cairo_pattern_t *pattern,
 	_cairo_pattern_transform (pattern, ctm_inverse);
 }
 
-static inline cairo_bool_t
-_cairo_surface_wrapper_needs_device_transform (cairo_surface_wrapper_t *wrapper)
-{
-    return ! _cairo_matrix_is_identity (&wrapper->target->device_transform);
-}
-
-static cairo_bool_t
-_cairo_surface_wrapper_needs_extents_transform (cairo_surface_wrapper_t *wrapper)
-{
-    return wrapper->has_extents && (wrapper->extents.x | wrapper->extents.y);
-}
-
 cairo_status_t
 _cairo_surface_wrapper_acquire_source_image (cairo_surface_wrapper_t *wrapper,
 					     cairo_image_surface_t  **image_out,
@@ -85,6 +73,24 @@ _cairo_surface_wrapper_release_source_image (cairo_surface_wrapper_t *wrapper,
 {
     _cairo_surface_release_source_image (wrapper->target, image, image_extra);
 }
+
+static void
+_cairo_surface_wrapper_get_transform (cairo_surface_wrapper_t *wrapper,
+				      cairo_matrix_t *m)
+{
+    cairo_matrix_init_identity (m);
+
+    if (wrapper->has_extents && (wrapper->extents.x || wrapper->extents.y))
+	cairo_matrix_translate (m, -wrapper->extents.x, -wrapper->extents.y);
+
+    if (! _cairo_matrix_is_identity (&wrapper->transform))
+	cairo_matrix_multiply (m, &wrapper->transform, m);
+
+
+    if (! _cairo_matrix_is_identity (&wrapper->target->device_transform))
+	cairo_matrix_multiply (m, &wrapper->target->device_transform, m);
+}
+
 
 cairo_status_t
 _cairo_surface_wrapper_paint (cairo_surface_wrapper_t *wrapper,
@@ -108,21 +114,15 @@ _cairo_surface_wrapper_paint (cairo_surface_wrapper_t *wrapper,
 	goto FINISH;
     }
 
-    if (_cairo_surface_wrapper_needs_device_transform (wrapper) ||
-	_cairo_surface_wrapper_needs_extents_transform (wrapper))
-    {
+    if (wrapper->needs_transform) {
 	cairo_matrix_t m;
 
-	cairo_matrix_init_identity (&m);
-
-	if (_cairo_surface_wrapper_needs_extents_transform (wrapper))
-	    cairo_matrix_translate (&m, -wrapper->extents.x, -wrapper->extents.y);
-
-	if (_cairo_surface_wrapper_needs_device_transform (wrapper))
-	    cairo_matrix_multiply (&m, &wrapper->target->device_transform, &m);
+	_cairo_surface_wrapper_get_transform (wrapper, &m);
 
 	/* XXX */
-	dev_clip = _cairo_clip_copy_with_translation (clip, wrapper->extents.x, wrapper->extents.y);
+	dev_clip = _cairo_clip_copy_with_translation (dev_clip,
+						      wrapper->extents.x,
+						      wrapper->extents.y);
 
 	status = cairo_matrix_invert (&m);
 	assert (status == CAIRO_STATUS_SUCCESS);
@@ -130,6 +130,9 @@ _cairo_surface_wrapper_paint (cairo_surface_wrapper_t *wrapper,
 	_copy_transformed_pattern (&source_copy.base, source, &m);
 	source = &source_copy.base;
     }
+
+    if (wrapper->clip)
+	dev_clip = _cairo_clip_copy_intersect_clip (dev_clip, wrapper->clip);
 
     status = _cairo_surface_paint (wrapper->target, op, source, dev_clip);
 
@@ -164,21 +167,14 @@ _cairo_surface_wrapper_mask (cairo_surface_wrapper_t *wrapper,
 	goto FINISH;
     }
 
-    if (_cairo_surface_wrapper_needs_device_transform (wrapper) ||
-	_cairo_surface_wrapper_needs_extents_transform (wrapper))
-    {
+    if (wrapper->needs_transform) {
 	cairo_matrix_t m;
 
-	cairo_matrix_init_identity (&m);
+	_cairo_surface_wrapper_get_transform (wrapper, &m);
 
-	if (_cairo_surface_wrapper_needs_extents_transform (wrapper))
-	    cairo_matrix_translate (&m, -wrapper->extents.x, -wrapper->extents.y);
-
-	if (_cairo_surface_wrapper_needs_device_transform (wrapper))
-	    cairo_matrix_multiply (&m, &wrapper->target->device_transform, &m);
-
-	/* XXX */
-	dev_clip = _cairo_clip_copy_with_translation (clip, wrapper->extents.x, wrapper->extents.y);
+	dev_clip = _cairo_clip_copy_with_translation (dev_clip,
+						      wrapper->extents.x,
+						      wrapper->extents.y);
 
 	status = cairo_matrix_invert (&m);
 	assert (status == CAIRO_STATUS_SUCCESS);
@@ -189,6 +185,9 @@ _cairo_surface_wrapper_mask (cairo_surface_wrapper_t *wrapper,
 	_copy_transformed_pattern (&mask_copy.base, mask, &m);
 	mask = &mask_copy.base;
     }
+
+    if (wrapper->clip)
+	dev_clip = _cairo_clip_copy_intersect_clip (dev_clip, wrapper->clip);
 
     status = _cairo_surface_mask (wrapper->target, op, source, mask, dev_clip);
 
@@ -230,18 +229,10 @@ _cairo_surface_wrapper_stroke (cairo_surface_wrapper_t *wrapper,
 	goto FINISH;
     }
 
-    if (_cairo_surface_wrapper_needs_device_transform (wrapper) ||
-	_cairo_surface_wrapper_needs_extents_transform (wrapper))
-    {
+    if (wrapper->needs_transform) {
 	cairo_matrix_t m;
 
-	cairo_matrix_init_identity (&m);
-
-	if (_cairo_surface_wrapper_needs_extents_transform (wrapper))
-	    cairo_matrix_translate (&m, -wrapper->extents.x, -wrapper->extents.y);
-
-	if (_cairo_surface_wrapper_needs_device_transform (wrapper))
-	    cairo_matrix_multiply (&m, &wrapper->target->device_transform, &m);
+	_cairo_surface_wrapper_get_transform (wrapper, &m);
 
 	status = _cairo_path_fixed_init_copy (&path_copy, dev_path);
 	if (unlikely (status))
@@ -251,7 +242,9 @@ _cairo_surface_wrapper_stroke (cairo_surface_wrapper_t *wrapper,
 	dev_path = &path_copy;
 
 	/* XXX */
-	dev_clip = _cairo_clip_copy_with_translation (clip, wrapper->extents.x, wrapper->extents.y);
+	dev_clip = _cairo_clip_copy_with_translation (dev_clip,
+						      wrapper->extents.x,
+						      wrapper->extents.y);
 
 	cairo_matrix_multiply (&dev_ctm, &dev_ctm, &m);
 
@@ -263,6 +256,9 @@ _cairo_surface_wrapper_stroke (cairo_surface_wrapper_t *wrapper,
 	_copy_transformed_pattern (&source_copy.base, source, &m);
 	source = &source_copy.base;
     }
+
+    if (wrapper->clip)
+	dev_clip = _cairo_clip_copy_intersect_clip (dev_clip, wrapper->clip);
 
     status = _cairo_surface_stroke (wrapper->target, op, source,
 				    dev_path, stroke_style,
@@ -316,18 +312,10 @@ _cairo_surface_wrapper_fill_stroke (cairo_surface_wrapper_t *wrapper,
 	goto FINISH;
     }
 
-    if (_cairo_surface_wrapper_needs_device_transform (wrapper) ||
-	_cairo_surface_wrapper_needs_extents_transform (wrapper))
-    {
+    if (wrapper->needs_transform) {
 	cairo_matrix_t m;
 
-	cairo_matrix_init_identity (&m);
-
-	if (_cairo_surface_wrapper_needs_extents_transform (wrapper))
-	    cairo_matrix_translate (&m, -wrapper->extents.x, -wrapper->extents.y);
-
-	if (_cairo_surface_wrapper_needs_device_transform (wrapper))
-	    cairo_matrix_multiply (&m, &wrapper->target->device_transform, &m);
+	_cairo_surface_wrapper_get_transform (wrapper, &m);
 
 	status = _cairo_path_fixed_init_copy (&path_copy, dev_path);
 	if (unlikely (status))
@@ -337,7 +325,9 @@ _cairo_surface_wrapper_fill_stroke (cairo_surface_wrapper_t *wrapper,
 	dev_path = &path_copy;
 
 	/* XXX */
-	dev_clip = _cairo_clip_copy_with_translation (clip, wrapper->extents.x, wrapper->extents.y);
+	dev_clip = _cairo_clip_copy_with_translation (dev_clip,
+						      wrapper->extents.x,
+						      wrapper->extents.y);
 
 	cairo_matrix_multiply (&dev_ctm, &dev_ctm, &m);
 
@@ -352,6 +342,9 @@ _cairo_surface_wrapper_fill_stroke (cairo_surface_wrapper_t *wrapper,
 	_copy_transformed_pattern (&fill_source_copy.base, fill_source, &m);
 	fill_source = &fill_source_copy.base;
     }
+
+    if (wrapper->clip)
+	dev_clip = _cairo_clip_copy_intersect_clip (dev_clip, wrapper->clip);
 
     status = _cairo_surface_fill_stroke (wrapper->target,
 					 fill_op, fill_source, fill_rule,
@@ -399,18 +392,10 @@ _cairo_surface_wrapper_fill (cairo_surface_wrapper_t	*wrapper,
 	goto FINISH;
     }
 
-    if (_cairo_surface_wrapper_needs_device_transform (wrapper) ||
-	_cairo_surface_wrapper_needs_extents_transform (wrapper))
-    {
+    if (wrapper->needs_transform) {
 	cairo_matrix_t m;
 
-	cairo_matrix_init_identity (&m);
-
-	if (_cairo_surface_wrapper_needs_extents_transform (wrapper))
-	    cairo_matrix_translate (&m, -wrapper->extents.x, -wrapper->extents.y);
-
-	if (_cairo_surface_wrapper_needs_device_transform (wrapper))
-	    cairo_matrix_multiply (&m, &wrapper->target->device_transform, &m);
+	_cairo_surface_wrapper_get_transform (wrapper, &m);
 
 	status = _cairo_path_fixed_init_copy (&path_copy, dev_path);
 	if (unlikely (status))
@@ -420,7 +405,9 @@ _cairo_surface_wrapper_fill (cairo_surface_wrapper_t	*wrapper,
 	dev_path = &path_copy;
 
 	/* XXX */
-	dev_clip = _cairo_clip_copy_with_translation (clip, wrapper->extents.x, wrapper->extents.y);
+	dev_clip = _cairo_clip_copy_with_translation (dev_clip,
+						      wrapper->extents.x,
+						      wrapper->extents.y);
 
 	status = cairo_matrix_invert (&m);
 	assert (status == CAIRO_STATUS_SUCCESS);
@@ -428,6 +415,9 @@ _cairo_surface_wrapper_fill (cairo_surface_wrapper_t	*wrapper,
 	_copy_transformed_pattern (&source_copy.base, source, &m);
 	source = &source_copy.base;
     }
+
+    if (wrapper->clip)
+	dev_clip = _cairo_clip_copy_intersect_clip (dev_clip, wrapper->clip);
 
     status = _cairo_surface_fill (wrapper->target, op, source,
 				  dev_path, fill_rule,
@@ -477,22 +467,16 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 	goto FINISH;
     }
 
-    if (_cairo_surface_wrapper_needs_device_transform (wrapper) ||
-	_cairo_surface_wrapper_needs_extents_transform (wrapper))
-    {
+    if (wrapper->needs_transform) {
 	cairo_matrix_t m;
 	int i;
 
-	cairo_matrix_init_identity (&m);
-
-	if (_cairo_surface_wrapper_needs_extents_transform (wrapper))
-	    cairo_matrix_translate (&m, -wrapper->extents.x, -wrapper->extents.y);
-
-	if (_cairo_surface_wrapper_needs_device_transform (wrapper))
-	    cairo_matrix_multiply (&m, &wrapper->target->device_transform, &m);
+	_cairo_surface_wrapper_get_transform (wrapper, &m);
 
 	/* XXX */
-	dev_clip = _cairo_clip_copy_with_translation (clip, wrapper->extents.x, wrapper->extents.y);
+	dev_clip = _cairo_clip_copy_with_translation (dev_clip,
+						      wrapper->extents.x,
+						      wrapper->extents.y);
 
 	dev_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
 	if (dev_glyphs == NULL) {
@@ -511,6 +495,9 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 	_copy_transformed_pattern (&source_copy.base, source, &m);
 	source = &source_copy.base;
     }
+
+    if (wrapper->clip)
+	dev_clip = _cairo_clip_copy_intersect_clip (dev_clip, wrapper->clip);
 
     status = _cairo_surface_show_text_glyphs (wrapper->target, op, source,
 					      utf8, utf8_len,
@@ -555,6 +542,15 @@ _cairo_surface_wrapper_get_extents (cairo_surface_wrapper_t *wrapper,
     }
 }
 
+static cairo_bool_t
+_cairo_surface_wrapper_needs_device_transform (cairo_surface_wrapper_t *wrapper)
+{
+    return
+	(wrapper->has_extents && (wrapper->extents.x | wrapper->extents.y)) ||
+	! _cairo_matrix_is_identity (&wrapper->transform) ||
+	! _cairo_matrix_is_identity (&wrapper->target->device_transform);
+}
+
 void
 _cairo_surface_wrapper_set_extents (cairo_surface_wrapper_t *wrapper,
 				    const cairo_rectangle_int_t *extents)
@@ -565,6 +561,38 @@ _cairo_surface_wrapper_set_extents (cairo_surface_wrapper_t *wrapper,
     } else {
 	wrapper->has_extents = FALSE;
     }
+
+    wrapper->needs_transform =
+	_cairo_surface_wrapper_needs_device_transform (wrapper);
+}
+
+void
+_cairo_surface_wrapper_set_inverse_transform (cairo_surface_wrapper_t *wrapper,
+					      const cairo_matrix_t *transform)
+{
+    cairo_status_t status;
+
+    if (transform == NULL || _cairo_matrix_is_identity (transform)) {
+	cairo_matrix_init_identity (&wrapper->transform);
+
+	wrapper->needs_transform =
+	    _cairo_surface_wrapper_needs_device_transform (wrapper);
+    } else {
+	wrapper->transform = *transform;
+	status = cairo_matrix_invert (&wrapper->transform);
+	/* should always be invertible unless given pathological input */
+	assert (status == CAIRO_STATUS_SUCCESS);
+
+	wrapper->needs_transform = TRUE;
+    }
+
+}
+
+void
+_cairo_surface_wrapper_set_clip (cairo_surface_wrapper_t *wrapper,
+				 const cairo_clip_t *clip)
+{
+    wrapper->clip = clip;
 }
 
 void
@@ -590,8 +618,12 @@ void
 _cairo_surface_wrapper_init (cairo_surface_wrapper_t *wrapper,
 			     cairo_surface_t *target)
 {
+    _cairo_surface_wrapper_set_inverse_transform (wrapper, NULL);
+
     wrapper->target = cairo_surface_reference (target);
     wrapper->has_extents = FALSE;
+    wrapper->needs_transform =
+	! _cairo_matrix_is_identity (&wrapper->target->device_transform);
 }
 
 void

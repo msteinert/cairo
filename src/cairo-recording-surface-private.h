@@ -145,6 +145,12 @@ _cairo_recording_surface_replay (cairo_surface_t *surface,
 				 cairo_surface_t *target);
 
 cairo_private cairo_status_t
+_cairo_recording_surface_replay_with_clip (cairo_surface_t *surface,
+					   const cairo_matrix_t *surface_transform,
+					   cairo_surface_t *target,
+					   const cairo_clip_t *target_clip);
+
+cairo_private cairo_status_t
 _cairo_recording_surface_replay_and_create_regions (cairo_surface_t *surface,
 						    cairo_surface_t *target);
 cairo_private cairo_status_t
