@@ -278,6 +278,24 @@ _csi_ostack_get_number (csi_t *ctx, unsigned int i, double *out)
     return CSI_STATUS_SUCCESS;
 }
 
+static double
+_csi_object_as_real (csi_object_t *obj)
+{
+    int type;
+
+    type = csi_object_get_type (obj);
+    switch (type) {
+    case CSI_OBJECT_TYPE_BOOLEAN:
+	return obj->datum.boolean;
+    case CSI_OBJECT_TYPE_INTEGER:
+	return obj->datum.integer;
+    case CSI_OBJECT_TYPE_REAL:
+	return obj->datum.real;
+    default:
+	return 0;
+    }
+}
+
 static csi_status_t
 _csi_ostack_get_name (csi_t *ctx, unsigned int i, csi_name_t *out)
 {
@@ -5947,6 +5965,51 @@ _surface (csi_t *ctx)
 }
 
 static csi_status_t
+_record (csi_t *ctx)
+{
+    csi_object_t obj;
+    long content;
+    csi_array_t *array;
+    csi_status_t status;
+    cairo_rectangle_t extents;
+    cairo_rectangle_t *r;
+
+    check (2);
+
+    status = _csi_ostack_get_array (ctx, 0, &array);
+    if (_csi_unlikely (status))
+	return status;
+
+    status = _csi_ostack_get_integer (ctx, 1, &content);
+    if (_csi_unlikely (status))
+	return status;
+
+    switch (array->stack.len) {
+    case 0:
+	r = NULL;
+    case 2:
+	extents.x = extents.y = 0;
+	extents.width = _csi_object_as_real (&array->stack.objects[0]);
+	extents.height = _csi_object_as_real (&array->stack.objects[1]);
+	break;
+    case 4:
+	extents.x = _csi_object_as_real (&array->stack.objects[0]);
+	extents.y = _csi_object_as_real (&array->stack.objects[1]);
+	extents.width = _csi_object_as_real (&array->stack.objects[2]);
+	extents.height = _csi_object_as_real (&array->stack.objects[3]);
+	r = &extents;
+	break;
+    default:
+	return _csi_error (CSI_STATUS_INVALID_SCRIPT);
+    }
+
+    obj.type = CSI_OBJECT_TYPE_SURFACE;
+    obj.datum.surface = cairo_recording_surface_create (content, r);
+    pop (2);
+    return push (&obj);
+}
+
+static csi_status_t
 _text_path (csi_t *ctx)
 {
     csi_status_t status;
@@ -6270,6 +6333,7 @@ _defs[] = {
     { "push-group", _push_group },
     { "radial", _radial },
     { "rand", NULL },
+    { "record", _record },
     { "rectangle", _rectangle },
     { "repeat", _repeat },
     { "restore", _restore },

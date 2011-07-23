@@ -4836,11 +4836,7 @@ cairo_recording_surface_create (cairo_content_t content,
 	Object *obj = _create_surface (ret);
 
 	if (extents) {
-	    _trace_printf ("dict\n"
-			   "  /type /recording set\n"
-			   "  /content //%s set\n"
-			   "  /extents [%f %f %f %f] set\n"
-			   "  surface dup /s%ld exch def\n",
+	    _trace_printf ("//%s [ %f %f %f %f ] record dup /s%ld exch def\n",
 			   _content_to_string (content),
 			   extents->x, extents->y,
 			   extents->width, extents->height,
@@ -4848,10 +4844,7 @@ cairo_recording_surface_create (cairo_content_t content,
 	    obj->width = extents->width;
 	    obj->height = extents->height;
 	} else {
-	    _trace_printf ("dict\n"
-			   "  /type /recording set\n"
-			   "  /content //%s set\n"
-			   "  surface dup /s%ld exch def\n",
+	    _trace_printf ("//%s [ ] record dup /s%ld exch def\n",
 			   _content_to_string (content),
 			   obj->token);
 	}
