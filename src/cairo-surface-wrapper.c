@@ -618,10 +618,10 @@ void
 _cairo_surface_wrapper_init (cairo_surface_wrapper_t *wrapper,
 			     cairo_surface_t *target)
 {
-    _cairo_surface_wrapper_set_inverse_transform (wrapper, NULL);
-
     wrapper->target = cairo_surface_reference (target);
+    cairo_matrix_init_identity (&wrapper->transform);
     wrapper->has_extents = FALSE;
+
     wrapper->needs_transform =
 	! _cairo_matrix_is_identity (&wrapper->target->device_transform);
 }
