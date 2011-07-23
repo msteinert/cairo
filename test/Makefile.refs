@@ -97,6 +97,7 @@ REFERENCE_IMAGES = \
 	clip-contexts.ref.png \
 	clip-device-offset.argb32.ref.png \
 	clip-device-offset.rgb24.ref.png \
+	clip-disjoint-hatching.ref.png \
 	clip-disjoint.image16.ref.png \
 	clip-disjoint.ps.ref.png \
 	clip-disjoint.quartz.ref.png \
