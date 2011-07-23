@@ -2212,25 +2212,59 @@ _clip_and_composite_source (cairo_clip_t                  *clip,
     return CAIRO_STATUS_SUCCESS;
 }
 
+enum {
+    NEED_CLIP_REGION = 0x1,
+    NEED_CLIP_SURFACE = 0x2,
+    FORCE_CLIP_REGION = 0x4,
+};
+
+static cairo_bool_t
+need_bounded_clip (cairo_composite_rectangles_t *extents)
+{
+    unsigned int flags = NEED_CLIP_REGION;
+    if (! _cairo_clip_is_region (extents->clip))
+	flags |= NEED_CLIP_SURFACE;
+    return flags;
+}
+
+static cairo_bool_t
+need_unbounded_clip (cairo_composite_rectangles_t *extents)
+{
+    unsigned int flags = 0;
+    if (! extents->is_bounded) {
+	flags |= NEED_CLIP_REGION;
+	if (! _cairo_clip_is_region (extents->clip))
+	    flags |= NEED_CLIP_SURFACE;
+    }
+    if (extents->clip->path != NULL)
+	flags |= NEED_CLIP_SURFACE;
+    return flags;
+}
+
+
 static cairo_status_t
 _clip_and_composite (cairo_image_surface_t	*dst,
 		     cairo_operator_t		 op,
 		     const cairo_pattern_t	*src,
 		     image_draw_func_t		 draw_func,
 		     void			*draw_closure,
-		     cairo_composite_rectangles_t*extents)
+		     cairo_composite_rectangles_t*extents,
+		     unsigned int need_clip)
 {
-    cairo_region_t *clip_region = _cairo_clip_get_region (extents->clip);
-    cairo_bool_t need_clip_surface = ! _cairo_clip_is_region (extents->clip);
+    cairo_region_t *clip_region = NULL;
     cairo_status_t status;
 
-    if (cairo_region_num_rectangles (clip_region) == 1)
-	clip_region = NULL;
-
-    if (clip_region != NULL) {
-	status = _cairo_image_surface_set_clip_region (dst, clip_region);
-	if (unlikely (status))
-	    return status;
+    if (need_clip & NEED_CLIP_REGION) {
+	clip_region = _cairo_clip_get_region (extents->clip);
+	if ((need_clip & FORCE_CLIP_REGION) == 0 &&
+	    cairo_region_contains_rectangle (clip_region,
+					     &extents->unbounded) == CAIRO_REGION_OVERLAP_IN)
+	    clip_region = NULL;
+	if (clip_region != NULL) {
+	    status = _cairo_image_surface_set_clip_region (dst, clip_region);
+	    if (unlikely (status))
+		return status;
+	}
     }
 
     if (reduce_alpha_op (dst, op, src)) {
@@ -2248,7 +2282,7 @@ _clip_and_composite (cairo_image_surface_t	*dst,
 	    op = CAIRO_OPERATOR_DEST_OUT;
 	}
 
-	if (need_clip_surface) {
+	if (need_clip & NEED_CLIP_SURFACE) {
 	    if (extents->is_bounded) {
 		status = _clip_and_composite_with_mask (extents->clip, op, src,
 							draw_func, draw_closure,
@@ -2271,7 +2305,7 @@ _clip_and_composite (cairo_image_surface_t	*dst,
 
     if (status == CAIRO_STATUS_SUCCESS && ! extents->is_bounded) {
 	status = _cairo_image_surface_fixup_unbounded (dst, extents,
-						       need_clip_surface ? extents->clip : NULL);
+						       need_clip & NEED_CLIP_SURFACE ? extents->clip : NULL);
     }
 
     if (clip_region != NULL)
@@ -3011,7 +3045,7 @@ _clip_and_composite_boxes (cairo_image_surface_t *dst,
     info.antialias = CAIRO_ANTIALIAS_DEFAULT;
     status = _clip_and_composite (dst, op, src,
 				  _composite_traps, &info,
-				  extents);
+				  extents, need_unbounded_clip (extents));
 
     _cairo_traps_fini (&traps);
     return status;
@@ -3160,7 +3194,7 @@ _clip_and_composite_trapezoids (cairo_image_surface_t *dst,
     info.antialias = antialias;
     return _clip_and_composite (dst, op, src,
 				_composite_traps, &info,
-				extents);
+				extents, need_unbounded_clip (extents));
 }
 
 /* high level image interface */
@@ -3276,7 +3310,7 @@ _cairo_image_surface_mask (void				*abstract_surface,
 
     status = _clip_and_composite (surface, op, source,
 				  _composite_mask, (void *) mask,
-				  &extents);
+				  &extents, need_bounded_clip (&extents));
 
     _cairo_composite_rectangles_fini (&extents);
 
@@ -3449,7 +3483,7 @@ _clip_and_composite_polygon (cairo_image_surface_t *dst,
 
 	status = _clip_and_composite (dst, op, src,
 				      _composite_spans, &info,
-				      extents);
+				      extents, need_unbounded_clip (extents));
     } else {
 	cairo_traps_t traps;
 
@@ -3744,7 +3778,7 @@ _composite_glyphs (void				*closure,
 		   const cairo_pattern_t	*pattern,
 		   int				 dst_x,
 		   int				 dst_y,
-		   cairo_matrix_t 		*dst_device_transform,
+		   cairo_matrix_t		*dst_device_transform,
 		   const cairo_rectangle_int_t	*extents,
 		   cairo_region_t		*clip_region)
 {
@@ -3848,6 +3882,7 @@ _cairo_image_surface_glyphs (void			*abstract_surface,
     composite_glyphs_info_t glyph_info;
     cairo_status_t status;
     cairo_bool_t overlap;
+    unsigned int flags;
 
     status = _cairo_composite_rectangles_init_for_glyphs (&extents,
 							  surface->width,
@@ -3864,10 +3899,19 @@ _cairo_image_surface_glyphs (void			*abstract_surface,
     glyph_info.glyphs = glyphs;
     glyph_info.num_glyphs = num_glyphs;
 
+    flags = 0;
+    if (extents.mask.width > extents.unbounded.width ||
+	extents.mask.height > extents.unbounded.height)
+    {
+	flags |= FORCE_CLIP_REGION;
+    }
     status = _clip_and_composite (surface, op, source,
-				  overlap || extents.is_bounded == 0 ? _composite_glyphs_via_mask : _composite_glyphs,
+				  overlap || extents.is_bounded == 0 ?
+				  _composite_glyphs_via_mask :
+				  _composite_glyphs,
 				  &glyph_info,
-				  &extents);
+				  &extents,
+				  need_bounded_clip (&extents) | flags);
 
     _cairo_composite_rectangles_fini (&extents);
 
