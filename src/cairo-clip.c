@@ -139,7 +139,8 @@ _cairo_clip_destroy (cairo_clip_t *clip)
     if (clip->path != NULL)
 	_cairo_clip_path_destroy (clip->path);
 
-    free (clip->boxes);
+    if (clip->boxes != &clip->embedded_box)
+	free (clip->boxes);
     cairo_region_destroy (clip->region);
 
     _freed_pool_put (&clip_pool, clip);
@@ -159,9 +160,13 @@ _cairo_clip_copy (const cairo_clip_t *clip)
 	copy->path = _cairo_clip_path_reference (clip->path);
 
     if (clip->num_boxes) {
-	copy->boxes = _cairo_malloc_ab (clip->num_boxes, sizeof (cairo_box_t));
-	if (unlikely (copy->boxes == NULL))
-	    return _cairo_clip_set_all_clipped (copy);
+	if (clip->num_boxes == 1) {
+	    copy->boxes = &copy->embedded_box;
+	} else {
+	    copy->boxes = _cairo_malloc_ab (clip->num_boxes, sizeof (cairo_box_t));
+	    if (unlikely (copy->boxes == NULL))
+		return _cairo_clip_set_all_clipped (copy);
+	}
 
 	memcpy (copy->boxes, clip->boxes,
 		clip->num_boxes * sizeof (cairo_box_t));
@@ -189,9 +194,13 @@ _cairo_clip_copy_region (const cairo_clip_t *clip)
     copy = _cairo_clip_create ();
     copy->extents = clip->extents;
 
-    copy->boxes = _cairo_malloc_ab (clip->num_boxes, sizeof (cairo_box_t));
-    if (unlikely (copy->boxes == NULL))
-	return _cairo_clip_set_all_clipped (copy);
+    if (clip->num_boxes == 1) {
+	copy->boxes = &copy->embedded_box;
+    } else {
+	copy->boxes = _cairo_malloc_ab (clip->num_boxes, sizeof (cairo_box_t));
+	if (unlikely (copy->boxes == NULL))
+	    return _cairo_clip_set_all_clipped (copy);
+    }
 
     for (i = 0; i < clip->num_boxes; i++) {
 	copy->boxes[i].p1.x = _cairo_fixed_floor (clip->boxes[i].p1.x);
@@ -397,9 +406,13 @@ _cairo_clip_copy_with_translation (const cairo_clip_t *clip, int tx, int ty)
     fy = _cairo_fixed_from_int (ty);
 
     if (clip->num_boxes) {
-	copy->boxes = _cairo_malloc_ab (clip->num_boxes, sizeof (cairo_box_t));
-	if (unlikely (copy->boxes == NULL))
-	    return _cairo_clip_set_all_clipped (copy);
+	if (clip->num_boxes == 1) {
+	    copy->boxes = &copy->embedded_box;
+	} else {
+	    copy->boxes = _cairo_malloc_ab (clip->num_boxes, sizeof (cairo_box_t));
+	    if (unlikely (copy->boxes == NULL))
+		return _cairo_clip_set_all_clipped (copy);
+	}
 
 	for (i = 0; i < clip->num_boxes; i++) {
 	    copy->boxes[i].p1.x = clip->boxes[i].p1.x + fx;

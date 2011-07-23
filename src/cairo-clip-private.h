@@ -66,6 +66,8 @@ struct _cairo_clip {
 
     cairo_region_t *region;
     cairo_bool_t is_region;
+
+    cairo_box_t embedded_box;
 };
 
 cairo_private cairo_clip_t *

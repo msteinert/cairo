@@ -163,26 +163,22 @@ _cairo_clip_intersect_rectangle_box (cairo_clip_t *clip,
 	clip = _cairo_clip_create ();
 	if (clip == NULL)
 	    return _cairo_clip_set_all_clipped (clip);
-
-	clip->boxes = _cairo_malloc (sizeof (cairo_box_t));
-	if (clip->boxes == NULL)
-	    return _cairo_clip_set_all_clipped (clip);
-
-	clip->extents = *r;
-	clip->num_boxes = 1;
-	clip->boxes[0] = *box;
-
-	return clip;
     }
 
     if (clip->num_boxes == 0) {
-	clip->boxes = _cairo_malloc (sizeof (cairo_box_t));
-	if (clip->boxes == NULL)
-	    return _cairo_clip_set_all_clipped (clip);
-
-	j = 1;
+	clip->boxes = &clip->embedded_box;
 	clip->boxes[0] = *box;
-    } else for (i = j = 0; i < clip->num_boxes; i++) {
+	clip->num_boxes = 1;
+	if (clip->path == NULL) {
+	    clip->extents = *r;
+	} else {
+	    if (! _cairo_rectangle_intersect (&clip->extents, r))
+		clip = _cairo_clip_set_all_clipped (clip);
+	}
+	return clip;
+    }
+
+    for (i = j = 0; i < clip->num_boxes; i++) {
 	cairo_box_t *b = &clip->boxes[j];
 
 	if (j != i)
@@ -268,18 +264,27 @@ _cairo_clip_intersect_boxes (cairo_clip_t *clip,
     if (clip == NULL)
 	clip = _cairo_clip_create ();
 
-    if (clip->num_boxes == 0) {
-	clip->boxes = _cairo_boxes_to_array (boxes, &clip->num_boxes, TRUE);
-	_cairo_boxes_extents (boxes, &extents);
-    } else {
+    if (clip->num_boxes) {
 	_cairo_boxes_init_for_array (&clip_boxes, clip->boxes, clip->num_boxes);
 	if (unlikely (_cairo_boxes_intersect (&clip_boxes, boxes, &clip_boxes)))
 	    return _cairo_clip_set_all_clipped (clip);
 
-	free (clip->boxes);
-	clip->boxes = _cairo_boxes_to_array (&clip_boxes, &clip->num_boxes, TRUE);
-	_cairo_boxes_extents (&clip_boxes, &extents);
+	if (clip->boxes != &clip->embedded_box)
+	    free (clip->boxes);
+
+	boxes = &clip_boxes;
     }
+
+    if(boxes->num_boxes == 1) {
+	clip->boxes = &clip->embedded_box;
+	clip->boxes[0] = boxes->chunks.base[0];
+	clip->num_boxes = 1;
+    } else {
+	clip->boxes = _cairo_boxes_to_array (boxes, &clip->num_boxes, TRUE);
+    }
+    _cairo_boxes_extents (boxes, &extents);
+    if (boxes == &clip_boxes)
+	_cairo_boxes_fini (&clip_boxes);
 
     if (clip->path == NULL)
 	clip->extents = extents;
@@ -569,9 +574,15 @@ _cairo_clip_from_boxes (const cairo_boxes_t *boxes)
 	return _cairo_clip_set_all_clipped (clip);
 
     /* XXX cow-boxes? */
-    clip->boxes = _cairo_boxes_to_array (boxes, &clip->num_boxes, TRUE);
-    if (clip->boxes == NULL)
-	return _cairo_clip_set_all_clipped (clip);
+    if(boxes->num_boxes == 1) {
+	clip->boxes = &clip->embedded_box;
+	clip->boxes[0] = boxes->chunks.base[0];
+	clip->num_boxes = 1;
+    } else {
+	clip->boxes = _cairo_boxes_to_array (boxes, &clip->num_boxes, TRUE);
+	if (clip->boxes == NULL)
+	    return _cairo_clip_set_all_clipped (clip);
+    }
 
     _cairo_boxes_extents (boxes, &clip->extents);
 
