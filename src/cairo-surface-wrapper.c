@@ -398,7 +398,8 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 {
     cairo_status_t status;
     cairo_clip_t *dev_clip;
-    cairo_glyph_t *dev_glyphs = glyphs;
+    cairo_glyph_t stack_glyphs [CAIRO_STACK_ARRAY_LENGTH(cairo_glyph_t)];
+    cairo_glyph_t *dev_glyphs = stack_glyphs;
     cairo_pattern_union_t source_copy;
 
     if (unlikely (wrapper->target->status))
@@ -417,10 +418,12 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 
 	_cairo_surface_wrapper_get_transform (wrapper, &m);
 
-	dev_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
-	if (dev_glyphs == NULL) {
-	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    goto FINISH;
+	if (num_glyphs > ARRAY_LENGTH (stack_glyphs)) {
+	    dev_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
+	    if (dev_glyphs == NULL) {
+		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+		goto FINISH;
+	    }
 	}
 
 	for (i = 0; i < num_glyphs; i++) {
@@ -438,10 +441,12 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 	 * to modify the glyph array that's passed in.  We must always
 	 * copy the array before handing it to the backend.
 	 */
-	dev_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
-	if (unlikely (dev_glyphs == NULL)) {
-	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    goto FINISH;
+	if (num_glyphs > ARRAY_LENGTH (stack_glyphs)) {
+	    dev_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
+	    if (unlikely (dev_glyphs == NULL)) {
+		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+		goto FINISH;
+	    }
 	}
 
 	memcpy (dev_glyphs, glyphs, sizeof (cairo_glyph_t) * num_glyphs);
@@ -456,7 +461,7 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 					      dev_clip);
  FINISH:
     _cairo_clip_destroy (dev_clip);
-    if (dev_glyphs != glyphs)
+    if (dev_glyphs != stack_glyphs)
 	free (dev_glyphs);
     return status;
 }
