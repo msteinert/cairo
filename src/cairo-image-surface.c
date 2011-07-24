@@ -3671,17 +3671,22 @@ _clip_and_composite_polygon (cairo_image_surface_t *dst,
 {
     cairo_status_t status;
 
-    if (polygon->num_edges == 0) {
-	cairo_traps_t traps;
+    if (_cairo_polygon_is_empty (polygon)) {
+	cairo_boxes_t boxes;
 
 	if (extents->is_bounded)
 	    return CAIRO_STATUS_SUCCESS;
 
-	_cairo_traps_init (&traps);
-	status = _clip_and_composite_trapezoids (dst, op, src,
-						 &traps, antialias,
-						 extents);
-	_cairo_traps_fini (&traps);
+	status = _cairo_clip_to_boxes (extents->clip, &boxes);
+	if (likely (status == CAIRO_STATUS_SUCCESS)) {
+	    extents->is_bounded = _cairo_operator_bounded_by_either (op);
+	    extents->mask = extents->bounded = extents->unbounded;
+	    status = _clip_and_composite_boxes (dst,
+						CAIRO_OPERATOR_CLEAR,
+						&_cairo_pattern_clear.base,
+						&boxes, extents);
+	    _cairo_boxes_fini (&boxes);
+	}
 
 	return status;
     }

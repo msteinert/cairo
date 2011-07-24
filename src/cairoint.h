@@ -2070,6 +2070,14 @@ cairo_private cairo_status_t
 _cairo_polygon_intersect (cairo_polygon_t *a, int winding_a,
 			  cairo_polygon_t *b, int winding_b);
 
+static inline cairo_bool_t
+_cairo_polygon_is_empty (const cairo_polygon_t *polygon)
+{
+    return
+	polygon->num_edges == 0 ||
+	polygon->extents.p2.x <= polygon->extents.p1.x;
+}
+
 #define _cairo_polygon_status(P) ((cairo_polygon_t *) (P))->status
 
 /* cairo-spline.c */
