@@ -44,7 +44,7 @@
 /* Keep a stash of recently freed clip_paths, since we need to
  * reallocate them frequently.
  */
-#define MAX_FREED_POOL_SIZE 4
+#define MAX_FREED_POOL_SIZE 16
 typedef struct {
     void *pool[MAX_FREED_POOL_SIZE];
     int top;
