@@ -959,35 +959,16 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 	    break;
 
 	case CAIRO_COMMAND_SHOW_TEXT_GLYPHS:
-	{
-	    cairo_glyph_t *glyphs = command->show_text_glyphs.glyphs;
-	    cairo_glyph_t *glyphs_copy;
-	    int num_glyphs = command->show_text_glyphs.num_glyphs;
-
-            /* show_text_glyphs is special because _cairo_surface_show_text_glyphs is allowed
-	     * to modify the glyph array that's passed in.  We must always
-	     * copy the array before handing it to the backend.
-	     */
-	    glyphs_copy = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
-	    if (unlikely (glyphs_copy == NULL)) {
-		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-		break;
-	    }
-
-	    memcpy (glyphs_copy, glyphs, sizeof (cairo_glyph_t) * num_glyphs);
-
 	    status = _cairo_surface_wrapper_show_text_glyphs (&wrapper,
 							      command->header.op,
 							      &command->show_text_glyphs.source.base,
 							      command->show_text_glyphs.utf8, command->show_text_glyphs.utf8_len,
-							      glyphs_copy, num_glyphs,
+							      command->show_text_glyphs.glyphs, command->show_text_glyphs.num_glyphs,
 							      command->show_text_glyphs.clusters, command->show_text_glyphs.num_clusters,
 							      command->show_text_glyphs.cluster_flags,
 							      command->show_text_glyphs.scaled_font,
 							      clip);
-	    free (glyphs_copy);
 	    break;
-	}
 
 	default:
 	    ASSERT_NOT_REACHED;

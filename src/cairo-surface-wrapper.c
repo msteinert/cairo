@@ -134,7 +134,9 @@ _cairo_surface_wrapper_paint (cairo_surface_wrapper_t *wrapper,
     if (wrapper->clip)
 	dev_clip = _cairo_clip_copy_intersect_clip (dev_clip, wrapper->clip);
 
-    status = _cairo_surface_paint (wrapper->target, op, source, dev_clip);
+    status = CAIRO_INT_STATUS_NOTHING_TO_DO;
+    if (! _cairo_clip_is_all_clipped (dev_clip))
+	status = _cairo_surface_paint (wrapper->target, op, source, dev_clip);
 
   FINISH:
     _cairo_clip_destroy (target_clip);
@@ -189,7 +191,9 @@ _cairo_surface_wrapper_mask (cairo_surface_wrapper_t *wrapper,
     if (wrapper->clip)
 	dev_clip = _cairo_clip_copy_intersect_clip (dev_clip, wrapper->clip);
 
-    status = _cairo_surface_mask (wrapper->target, op, source, mask, dev_clip);
+    status = CAIRO_INT_STATUS_NOTHING_TO_DO;
+    if (! _cairo_clip_is_all_clipped (dev_clip))
+	status = _cairo_surface_mask (wrapper->target, op, source, mask, dev_clip);
 
   FINISH:
     _cairo_clip_destroy (target_clip);
@@ -260,11 +264,14 @@ _cairo_surface_wrapper_stroke (cairo_surface_wrapper_t *wrapper,
     if (wrapper->clip)
 	dev_clip = _cairo_clip_copy_intersect_clip (dev_clip, wrapper->clip);
 
-    status = _cairo_surface_stroke (wrapper->target, op, source,
-				    dev_path, stroke_style,
-				    &dev_ctm, &dev_ctm_inverse,
-				    tolerance, antialias,
-				    dev_clip);
+    status = CAIRO_INT_STATUS_NOTHING_TO_DO;
+    if (! _cairo_clip_is_all_clipped (dev_clip)) {
+	status = _cairo_surface_stroke (wrapper->target, op, source,
+					dev_path, stroke_style,
+					&dev_ctm, &dev_ctm_inverse,
+					tolerance, antialias,
+					dev_clip);
+    }
 
  FINISH:
     if (dev_path != path)
@@ -346,15 +353,18 @@ _cairo_surface_wrapper_fill_stroke (cairo_surface_wrapper_t *wrapper,
     if (wrapper->clip)
 	dev_clip = _cairo_clip_copy_intersect_clip (dev_clip, wrapper->clip);
 
-    status = _cairo_surface_fill_stroke (wrapper->target,
-					 fill_op, fill_source, fill_rule,
-					 fill_tolerance, fill_antialias,
-					 dev_path,
-					 stroke_op, stroke_source,
-					 stroke_style,
-					 &dev_ctm, &dev_ctm_inverse,
-					 stroke_tolerance, stroke_antialias,
-					 dev_clip);
+    status = CAIRO_INT_STATUS_NOTHING_TO_DO;
+    if (! _cairo_clip_is_all_clipped (dev_clip)) {
+	status = _cairo_surface_fill_stroke (wrapper->target,
+					     fill_op, fill_source, fill_rule,
+					     fill_tolerance, fill_antialias,
+					     dev_path,
+					     stroke_op, stroke_source,
+					     stroke_style,
+					     &dev_ctm, &dev_ctm_inverse,
+					     stroke_tolerance, stroke_antialias,
+					     dev_clip);
+    }
 
   FINISH:
     if (dev_path != path)
@@ -419,10 +429,13 @@ _cairo_surface_wrapper_fill (cairo_surface_wrapper_t	*wrapper,
     if (wrapper->clip)
 	dev_clip = _cairo_clip_copy_intersect_clip (dev_clip, wrapper->clip);
 
-    status = _cairo_surface_fill (wrapper->target, op, source,
-				  dev_path, fill_rule,
-				  tolerance, antialias,
-				  dev_clip);
+    status = CAIRO_INT_STATUS_NOTHING_TO_DO;
+    if (! _cairo_clip_is_all_clipped (dev_clip)) {
+	status = _cairo_surface_fill (wrapper->target, op, source,
+				      dev_path, fill_rule,
+				      tolerance, antialias,
+				      dev_clip);
+    }
 
  FINISH:
     if (dev_path != path)
@@ -467,16 +480,25 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 	goto FINISH;
     }
 
+    if (wrapper->extents.x | wrapper->extents.y) {
+	/* XXX */
+	dev_clip = _cairo_clip_copy_with_translation (dev_clip,
+						      wrapper->extents.x,
+						      wrapper->extents.y);
+
+    }
+
+    if (wrapper->clip)
+	dev_clip = _cairo_clip_copy_intersect_clip (dev_clip, wrapper->clip);
+
+    if (_cairo_clip_is_all_clipped (dev_clip))
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
     if (wrapper->needs_transform) {
 	cairo_matrix_t m;
 	int i;
 
 	_cairo_surface_wrapper_get_transform (wrapper, &m);
-
-	/* XXX */
-	dev_clip = _cairo_clip_copy_with_translation (dev_clip,
-						      wrapper->extents.x,
-						      wrapper->extents.y);
 
 	dev_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
 	if (dev_glyphs == NULL) {
@@ -494,10 +516,19 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 
 	_copy_transformed_pattern (&source_copy.base, source, &m);
 	source = &source_copy.base;
-    }
+    } else {
+	/* show_text_glyphs is special because _cairo_surface_show_text_glyphs is allowed
+	 * to modify the glyph array that's passed in.  We must always
+	 * copy the array before handing it to the backend.
+	 */
+	dev_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
+	if (unlikely (dev_glyphs == NULL)) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto FINISH;
+	}
 
-    if (wrapper->clip)
-	dev_clip = _cairo_clip_copy_intersect_clip (dev_clip, wrapper->clip);
+	memcpy (dev_glyphs, glyphs, sizeof (cairo_glyph_t) * num_glyphs);
+    }
 
     status = _cairo_surface_show_text_glyphs (wrapper->target, op, source,
 					      utf8, utf8_len,
@@ -506,7 +537,6 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 					      cluster_flags,
 					      scaled_font,
 					      dev_clip);
-
  FINISH:
     if (dev_clip != clip)
 	_cairo_clip_destroy (dev_clip);
