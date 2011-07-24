@@ -60,8 +60,8 @@ _cairo_surface_wrapper_init (cairo_surface_wrapper_t *wrapper,
 			     cairo_surface_t *target);
 
 cairo_private void
-_cairo_surface_wrapper_set_extents (cairo_surface_wrapper_t *wrapper,
-				    const cairo_rectangle_int_t *extents);
+_cairo_surface_wrapper_intersect_extents (cairo_surface_wrapper_t *wrapper,
+					  const cairo_rectangle_int_t *extents);
 
 cairo_private void
 _cairo_surface_wrapper_set_inverse_transform (cairo_surface_wrapper_t *wrapper,
@@ -123,7 +123,7 @@ _cairo_surface_wrapper_fill_stroke (cairo_surface_wrapper_t *wrapper,
 				    cairo_fill_rule_t	     fill_rule,
 				    double		     fill_tolerance,
 				    cairo_antialias_t	     fill_antialias,
-				    cairo_path_fixed_t	    *path,
+				    const cairo_path_fixed_t*path,
 				    cairo_operator_t	     stroke_op,
 				    const cairo_pattern_t   *stroke_source,
 				    const cairo_stroke_style_t    *stroke_style,

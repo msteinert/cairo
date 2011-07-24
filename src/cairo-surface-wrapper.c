@@ -256,7 +256,7 @@ _cairo_surface_wrapper_fill_stroke (cairo_surface_wrapper_t *wrapper,
 				    cairo_fill_rule_t	     fill_rule,
 				    double		     fill_tolerance,
 				    cairo_antialias_t	     fill_antialias,
-				    cairo_path_fixed_t	    *path,
+				    const cairo_path_fixed_t*path,
 				    cairo_operator_t	     stroke_op,
 				    const cairo_pattern_t   *stroke_source,
 				    const cairo_stroke_style_t    *stroke_style,
@@ -267,7 +267,7 @@ _cairo_surface_wrapper_fill_stroke (cairo_surface_wrapper_t *wrapper,
 				    const cairo_clip_t	    *clip)
 {
     cairo_status_t status;
-    cairo_path_fixed_t path_copy, *dev_path = path;
+    cairo_path_fixed_t path_copy, *dev_path = (cairo_path_fixed_t *)path;
     cairo_matrix_t dev_ctm = *stroke_ctm;
     cairo_matrix_t dev_ctm_inverse = *stroke_ctm_inverse;
     cairo_clip_t *dev_clip;
@@ -494,15 +494,14 @@ _cairo_surface_wrapper_needs_device_transform (cairo_surface_wrapper_t *wrapper)
 }
 
 void
-_cairo_surface_wrapper_set_extents (cairo_surface_wrapper_t *wrapper,
-				    const cairo_rectangle_int_t *extents)
+_cairo_surface_wrapper_intersect_extents (cairo_surface_wrapper_t *wrapper,
+					  const cairo_rectangle_int_t *extents)
 {
-    if (extents != NULL) {
+    if (! wrapper->has_extents) {
 	wrapper->extents = *extents;
 	wrapper->has_extents = TRUE;
-    } else {
-	wrapper->has_extents = FALSE;
-    }
+    } else
+	_cairo_rectangle_intersect (&wrapper->extents, extents);
 
     wrapper->needs_transform =
 	_cairo_surface_wrapper_needs_device_transform (wrapper);
