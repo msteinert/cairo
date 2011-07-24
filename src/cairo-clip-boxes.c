@@ -277,6 +277,9 @@ _cairo_clip_intersect_boxes (cairo_clip_t *clip,
     if (boxes->num_boxes == 0)
 	return _cairo_clip_set_all_clipped (clip);
 
+    if (boxes->num_boxes == 1)
+	return _cairo_clip_intersect_box (clip, boxes->chunks.base);
+
     if (clip == NULL)
 	clip = _cairo_clip_create ();
 
@@ -291,7 +294,7 @@ _cairo_clip_intersect_boxes (cairo_clip_t *clip,
 	boxes = &clip_boxes;
     }
 
-    if(boxes->num_boxes == 1) {
+    if (boxes->num_boxes == 1) {
 	clip->boxes = &clip->embedded_box;
 	clip->boxes[0] = boxes->chunks.base[0];
 	clip->num_boxes = 1;
