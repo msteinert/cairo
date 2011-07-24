@@ -149,13 +149,13 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 					 const cairo_pattern_t	    *source,
 					 const char		    *utf8,
 					 int			     utf8_len,
-					 cairo_glyph_t		    *glyphs,
+					 const cairo_glyph_t	    *glyphs,
 					 int			     num_glyphs,
 					 const cairo_text_cluster_t *clusters,
 					 int			     num_clusters,
 					 cairo_text_cluster_flags_t  cluster_flags,
 					 cairo_scaled_font_t	    *scaled_font,
-					 const cairo_clip_t		    *clip);
+					 const cairo_clip_t	    *clip);
 
 cairo_private cairo_surface_t *
 _cairo_surface_wrapper_create_similar (cairo_surface_wrapper_t *wrapper,
