@@ -3322,7 +3322,10 @@ _composite_opacity_boxes (void				*closure,
 	    op = CAIRO_OPERATOR_SOURCE;
     }
 
-    if (op == CAIRO_OPERATOR_SOURCE && clip == NULL)
+    if (op == CAIRO_OPERATOR_SOURCE &&
+	(clip == NULL ||
+	 (clip->extents.width >= extents->width &&
+	  clip->extents.height >= extents->height)))
 	dst->deferred_clear = FALSE;
 
     if (dst->deferred_clear) {
@@ -3348,6 +3351,13 @@ _composite_opacity_boxes (void				*closure,
 	for (i = 0; i < clip->num_boxes; i++)
 	    do_unaligned_box(composite_opacity, &info,
 			     &clip->boxes[i], dst_x, dst_y);
+    } else {
+	composite_opacity(&info,
+			  extents->x - dst_x,
+			  extents->y - dst_y,
+			  extents->width,
+			  extents->height,
+			  0xffff);
     }
     cairo_surface_destroy (&info.src->base);
 
@@ -3438,7 +3448,8 @@ _cairo_xcb_surface_render_mask (cairo_xcb_surface_t	*surface,
 	extents.clip->path == NULL &&
 	! _cairo_clip_is_region (extents.clip)) {
 	status = _clip_and_composite (surface, op, source,
-				      _composite_opacity_boxes, NULL,
+				      _composite_opacity_boxes,
+				      _composite_opacity_boxes,
 				      (void *) mask,
 				      &extents, need_unbounded_clip (&extents));
     } else {
