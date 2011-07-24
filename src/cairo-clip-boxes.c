@@ -157,6 +157,7 @@ _cairo_clip_intersect_rectangle_box (cairo_clip_t *clip,
 				     const cairo_box_t *box)
 {
     cairo_box_t extents_box;
+    cairo_bool_t changed = FALSE;
     int i, j;
 
     if (clip == NULL) {
@@ -178,6 +179,18 @@ _cairo_clip_intersect_rectangle_box (cairo_clip_t *clip,
 	return clip;
     }
 
+    /* Does the new box wholly subsume the clip? Perform a cheap check
+     * for the common condition of a single clip rectangle.
+     */
+    if (clip->num_boxes == 1 &&
+	clip->boxes[0].p1.x >= box->p1.x &&
+	clip->boxes[0].p1.y >= box->p1.y &&
+	clip->boxes[0].p2.x <= box->p2.x &&
+	clip->boxes[0].p2.y <= box->p2.y)
+    {
+	return clip;
+    }
+
     for (i = j = 0; i < clip->num_boxes; i++) {
 	cairo_box_t *b = &clip->boxes[j];
 
@@ -185,14 +198,14 @@ _cairo_clip_intersect_rectangle_box (cairo_clip_t *clip,
 	    *b = clip->boxes[i];
 
 	if (box->p1.x > b->p1.x)
-	    b->p1.x = box->p1.x;
+	    b->p1.x = box->p1.x, changed = TRUE;
 	if (box->p2.x < b->p2.x)
-	    b->p2.x = box->p2.x;
+	    b->p2.x = box->p2.x, changed = TRUE;
 
 	if (box->p1.y > b->p1.y)
-	    b->p1.y = box->p1.y;
+	    b->p1.y = box->p1.y, changed = TRUE;
 	if (box->p2.y < b->p2.y)
-	    b->p2.y = box->p2.y;
+	    b->p2.y = box->p2.y, changed = TRUE;
 
 	j += b->p2.x > b->p1.x && b->p2.y > b->p1.y;
     }
@@ -200,6 +213,9 @@ _cairo_clip_intersect_rectangle_box (cairo_clip_t *clip,
 
     if (clip->num_boxes == 0)
 	return _cairo_clip_set_all_clipped (clip);
+
+    if (! changed)
+	return clip;
 
     extents_box = clip->boxes[0];
     for (i = 1; i < clip->num_boxes; i++) {
