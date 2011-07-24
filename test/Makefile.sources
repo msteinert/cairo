@@ -219,6 +219,7 @@ test_sources = \
 	random-intersections-nonzero.c			\
 	random-intersections-curves-eo.c		\
 	random-intersections-curves-nz.c		\
+	record.c					\
 	recording-surface-pattern.c			\
 	rectangle-rounding-error.c			\
 	rectilinear-fill.c				\

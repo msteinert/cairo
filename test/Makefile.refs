@@ -866,6 +866,7 @@ REFERENCE_IMAGES = \
 	paint-source-alpha.image16.ref.png \
 	paint-source-alpha.ref.png \
 	paint-source-alpha.svg.ref.png \
+	paint-with-alpha-clip-mask.ref.png \
 	paint-with-alpha-clip.ref.png \
 	paint-with-alpha-clip.xlib.ref.png \
 	paint-with-alpha-solid-clip.ref.png \
@@ -993,6 +994,15 @@ REFERENCE_IMAGES = \
 	random-intersections-nonzero.quartz.ref.png \
 	random-intersections-nonzero.ref.png \
 	random-intersections-nonzero.xlib.ref.png \
+	record-fill-alpha.ref.png \
+	record-paint-alpha-clip-mask.ref.png \
+	record-paint-alpha-clip.ref.png \
+	record-paint-alpha-solid-clip.ref.png \
+	record-paint-alpha.ref.png \
+	record-paint.ref.png \
+	record-select-font-face.ref.png \
+	record-self-intersecting.ref.png \
+	record-text-transform.ref.png \
 	recording-surface-over.gl.argb32.ref.png \
 	recording-surface-over.image16.ref.png \
 	recording-surface-over.pdf.argb32.ref.png \

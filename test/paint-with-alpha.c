@@ -94,6 +94,34 @@ draw_clip (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
+static cairo_test_status_t
+draw_clip_mask (cairo_t *cr, int width, int height)
+{
+    cairo_surface_t *surface;
+
+    surface = cairo_image_surface_create_for_data ((unsigned char *) data,
+						   CAIRO_FORMAT_RGB24, 4, 4, 16);
+
+    cairo_test_paint_checkered (cr);
+
+    cairo_move_to (cr, 16, 5);
+    cairo_line_to (cr, 5, 16);
+    cairo_line_to (cr, 16, 27);
+    cairo_line_to (cr, 27, 16);
+    cairo_clip (cr);
+
+    cairo_scale (cr, 4, 4);
+
+    cairo_set_source_surface (cr, surface, 2 , 2);
+    cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_NEAREST);
+    cairo_paint_with_alpha (cr, 0.5);
+
+    cairo_surface_finish (surface); /* data will go out of scope */
+    cairo_surface_destroy (surface);
+
+    return CAIRO_TEST_SUCCESS;
+}
+
 CAIRO_TEST (paint_with_alpha,
 	    "Simple test of cairo_paint_with_alpha",
 	    "paint, alpha", /* keywords */
@@ -112,3 +140,9 @@ CAIRO_TEST (paint_with_alpha_clip,
 	    NULL, /* requirements */
 	    32, 32,
 	    NULL, draw_clip)
+CAIRO_TEST (paint_with_alpha_clip_mask,
+	    "Simple test of cairo_paint_with_alpha+unaligned clip",
+	    "paint, alpha, clip", /* keywords */
+	    NULL, /* requirements */
+	    32, 32,
+	    NULL, draw_clip_mask)
