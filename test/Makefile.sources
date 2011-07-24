@@ -42,6 +42,7 @@ test_sources = \
 	clip-fill-rule-pixel-aligned.c			\
 	clip-group-shapes.c				\
 	clip-image.c					\
+	clip-intersect.c				\
 	clip-nesting.c					\
 	clip-operator.c					\
 	clip-push-group.c				\

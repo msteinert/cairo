@@ -152,6 +152,7 @@ REFERENCE_IMAGES = \
 	clip-image.image16.ref.png \
 	clip-image.ps.ref.png \
 	clip-image.ref.png \
+	clip-intersect.ref.png \
 	clip-nesting.pdf.argb32.ref.png \
 	clip-nesting.ps.argb32.ref.png \
 	clip-nesting.ps.rgb24.ref.png \
