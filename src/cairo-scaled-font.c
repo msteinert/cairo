@@ -2059,6 +2059,43 @@ _range_contains_glyph (const cairo_box_t *extents,
 	   top < extents->p2.y;
 }
 
+static cairo_status_t
+_cairo_scaled_font_single_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
+						const cairo_glyph_t	 *glyph,
+						cairo_rectangle_int_t   *extents)
+{
+    cairo_round_glyph_positions_t round_xy;
+    cairo_scaled_glyph_t *scaled_glyph;
+    cairo_status_t status;
+    cairo_box_t box;
+    cairo_fixed_t v;
+
+    status = _cairo_scaled_glyph_lookup (scaled_font,
+					 glyph->index,
+					 CAIRO_SCALED_GLYPH_INFO_METRICS,
+					 &scaled_glyph);
+    if (unlikely (status))
+	return status;
+
+    round_xy = _cairo_font_options_get_round_glyph_positions (&scaled_font->options);
+    if (round_xy == CAIRO_ROUND_GLYPH_POS_ON)
+	v = _cairo_fixed_from_int (_cairo_lround (glyph->x));
+    else
+	v = _cairo_fixed_from_double (glyph->x);
+    box.p1.x = v + scaled_glyph->bbox.p1.x;
+    box.p2.x = v + scaled_glyph->bbox.p2.x;
+
+    if (round_xy == CAIRO_ROUND_GLYPH_POS_ON)
+	v = _cairo_fixed_from_int (_cairo_lround (glyph->y));
+    else
+	v = _cairo_fixed_from_double (glyph->y);
+    box.p1.y = v + scaled_glyph->bbox.p1.y;
+    box.p2.y = v + scaled_glyph->bbox.p2.y;
+
+    _cairo_box_round_to_rectangle (&box, extents);
+    return CAIRO_STATUS_SUCCESS;
+}
+
 /*
  * Compute a device-space bounding box for the glyphs.
  */
@@ -2078,6 +2115,14 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 
     if (unlikely (scaled_font->status))
 	return scaled_font->status;
+
+    if (num_glyphs == 1) {
+	if (overlap_out)
+	    *overlap_out = FALSE;
+	return _cairo_scaled_font_single_glyph_device_extents (scaled_font,
+							       glyphs,
+							       extents);
+    }
 
     _cairo_scaled_font_freeze_cache (scaled_font);
 
