@@ -2193,11 +2193,14 @@ _cairo_scaled_font_glyph_approximate_extents (cairo_scaled_font_t	 *scaled_font,
 					      int                      num_glyphs,
 					      cairo_rectangle_int_t   *extents)
 {
-    double x0 = HUGE_VAL, x1 = -HUGE_VAL;
-    double y0 = HUGE_VAL, y1 = -HUGE_VAL;
+    double x0, x1, y0, y1, pad;
     int i;
 
-    for (i = 0; i < num_glyphs; i++) {
+    assert (num_glyphs);
+
+    x0 = x1 = glyphs[0].x;
+    y0 = y1 = glyphs[0].y;
+    for (i = 1; i < num_glyphs; i++) {
 	double g;
 
 	g = glyphs[i].x;
@@ -2209,18 +2212,14 @@ _cairo_scaled_font_glyph_approximate_extents (cairo_scaled_font_t	 *scaled_font,
 	if (g > y1) y1 = g;
     }
 
-    if (x0 <= x1 && y0 <= y1) {
-	extents->x = floor (x0 - scaled_font->extents.max_x_advance);
-	extents->width = ceil (x1 + scaled_font->extents.max_x_advance);
-	extents->width -= extents->x;
+    pad = MAX(scaled_font->fs_extents.max_x_advance,
+	      scaled_font->fs_extents.height);
+    pad *= scaled_font->max_scale;
 
-	extents->y = floor (y0 - scaled_font->extents.ascent);
-	extents->height = ceil (y1 + scaled_font->extents.descent);
-	extents->height -= extents->y;
-    } else {
-	extents->x = extents->y = 0;
-	extents->width = extents->height = 0;
-    }
+    extents->x = floor (x0 - pad);
+    extents->width = ceil (x1 + pad) - extents->x;
+    extents->y = floor (y0 - pad);
+    extents->height = ceil (y1 + pad) - extents->y;
 }
 
 cairo_status_t

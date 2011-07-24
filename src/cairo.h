@@ -1060,7 +1060,7 @@ typedef struct {
  *           portions below the baseline. Note that this is not always
  *           exactly equal to the maximum of the extents of all the
  *           glyphs in the font, but rather is picked to express the
- *           font designer's intent as to how the the font should
+ *           font designer's intent as to how the font should
  *           align with elements below it.
  * @height: the recommended vertical distance between baselines when
  *          setting consecutive lines of text with the font. This
@@ -1070,10 +1070,10 @@ typedef struct {
  *          is at a premium, most fonts can be set with only
  *          a distance of @ascent+@descent between lines.
  * @max_x_advance: the maximum distance in the X direction that
- *         the the origin is advanced for any glyph in the font.
+ *         the origin is advanced for any glyph in the font.
  * @max_y_advance: the maximum distance in the Y direction that
- *         the the origin is advanced for any glyph in the font.
- *         this will be zero for normal fonts used for horizontal
+ *         the origin is advanced for any glyph in the font.
+ *         This will be zero for normal fonts used for horizontal
  *         writing. (The scripts of East Asia are sometimes written
  *         vertically.)
  *
