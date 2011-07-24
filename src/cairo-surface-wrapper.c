@@ -98,18 +98,13 @@ _cairo_surface_wrapper_get_clip (cairo_surface_wrapper_t *wrapper,
 {
     cairo_clip_t *copy;
 
-    copy = _cairo_clip_copy_with_translation (clip,
-					      -wrapper->extents.x,
-					      -wrapper->extents.y);
-    if (wrapper->has_extents) { /* XXX broken. */
-	cairo_rectangle_int_t extents;
-
-	extents.x = extents.y = 0;
-	extents.width  = wrapper->extents.width;
-	extents.height = wrapper->extents.height;
-
-	copy = _cairo_clip_intersect_rectangle (copy, &extents);
-    }
+    copy = _cairo_clip_copy (clip);
+    if (wrapper->has_extents)
+	copy = _cairo_clip_intersect_rectangle (copy, &wrapper->extents);
+    if (wrapper->extents.x | wrapper->extents.y)
+	copy = _cairo_clip_translate (copy,
+				      -wrapper->extents.x,
+				      -wrapper->extents.y);
     if (wrapper->clip)
 	copy = _cairo_clip_intersect_clip (copy, wrapper->clip);
 
@@ -405,9 +400,6 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
     if (unlikely (wrapper->target->status))
 	return wrapper->target->status;
 
-    if (glyphs == NULL || num_glyphs == 0)
-	return CAIRO_STATUS_SUCCESS;
-
     dev_clip = _cairo_surface_wrapper_get_clip (wrapper, clip);
     if (_cairo_clip_is_all_clipped (dev_clip))
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
@@ -571,6 +563,7 @@ _cairo_surface_wrapper_init (cairo_surface_wrapper_t *wrapper,
     wrapper->target = cairo_surface_reference (target);
     cairo_matrix_init_identity (&wrapper->transform);
     wrapper->has_extents = FALSE;
+    wrapper->extents.x = wrapper->extents.y = 0;
 
     wrapper->needs_transform =
 	! _cairo_matrix_is_identity (&wrapper->target->device_transform);

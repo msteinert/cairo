@@ -387,6 +387,42 @@ _cairo_clip_path_copy_with_translation (cairo_clip_t      *clip,
 }
 
 cairo_clip_t *
+_cairo_clip_translate (cairo_clip_t *clip, int tx, int ty)
+{
+    int fx, fy, i;
+    cairo_clip_path_t *clip_path;
+
+    if (clip == NULL || _cairo_clip_is_all_clipped (clip))
+	return (cairo_clip_t *)clip;
+
+    if (tx == 0 && ty == 0)
+	return clip;
+
+    fx = _cairo_fixed_from_int (tx);
+    fy = _cairo_fixed_from_int (ty);
+
+    for (i = 0; i < clip->num_boxes; i++) {
+	clip->boxes[i].p1.x += fx;
+	clip->boxes[i].p2.x += fx;
+	clip->boxes[i].p1.y += fy;
+	clip->boxes[i].p2.y += fy;
+    }
+
+    clip->extents.x += tx;
+    clip->extents.y += ty;
+
+    if (clip->path == NULL)
+	return clip;
+
+    clip_path = clip->path;
+    clip->path = NULL;
+    clip = _cairo_clip_path_copy_with_translation (clip, clip_path, fx, fy);
+    _cairo_clip_path_destroy (clip_path);
+
+    return clip;
+}
+
+cairo_clip_t *
 _cairo_clip_copy_with_translation (const cairo_clip_t *clip, int tx, int ty)
 {
     cairo_clip_t *copy;
