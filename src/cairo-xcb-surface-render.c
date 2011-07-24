@@ -3126,15 +3126,13 @@ static void composite_box(void *closure,
     struct composite_box_info *info = closure;
 
     if (coverage < 0xff00) {
-	cairo_solid_pattern_t mask_pattern;
 	cairo_xcb_picture_t *mask;
 	cairo_color_t color;
 
-	color.red = color.green = color.blue = 0;
-	color.alpha = coverage;
-	_cairo_pattern_init_solid (&mask_pattern, &color);
+	color.red_short = color.green_short = color.blue_short = 0;
+	color.alpha_short = coverage;
 
-	mask = _cairo_xcb_picture_for_pattern (info->dst, &mask_pattern.base, NULL);
+	mask = _solid_picture (info->dst, &color);
 	if (likely (mask->base.status == CAIRO_STATUS_SUCCESS)) {
 	    _cairo_xcb_connection_render_composite (info->dst->connection,
 						    info->op,
@@ -3270,15 +3268,13 @@ static void composite_opacity(void *closure,
 			      uint16_t coverage)
 {
     struct composite_opacity_info *info = closure;
-    cairo_solid_pattern_t mask_pattern;
     cairo_xcb_picture_t *mask;
     cairo_color_t color;
 
-    color.red = color.green = color.blue = 0;
-    color.alpha = info->opacity * coverage;
-    _cairo_pattern_init_solid (&mask_pattern, &color);
+    color.red_short = color.green_short = color.blue_short = 0;
+    color.alpha_short = info->opacity * coverage;
 
-    mask = _cairo_xcb_picture_for_pattern (info->dst, &mask_pattern.base, NULL);
+    mask = _solid_picture (info->dst, &color);
     if (likely (mask->base.status == CAIRO_STATUS_SUCCESS)) {
 	if (info->src) {
 	    _cairo_xcb_connection_render_composite (info->dst->connection,
