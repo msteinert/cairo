@@ -907,45 +907,46 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 	    break;
 
 	case CAIRO_COMMAND_FILL:
-	{
-	    cairo_command_t *stroke_command;
+	    status = CAIRO_INT_STATUS_UNSUPPORTED;
+	    if (_cairo_surface_wrapper_has_fill_stroke (&wrapper)) {
+		cairo_command_t *stroke_command;
 
-	    stroke_command = NULL;
-	    if (type != CAIRO_RECORDING_CREATE_REGIONS && i < num_elements - 1)
-		stroke_command = elements[i + 1];
+		stroke_command = NULL;
+		if (type != CAIRO_RECORDING_CREATE_REGIONS && i < num_elements - 1)
+		    stroke_command = elements[i + 1];
 
-	    if (stroke_command != NULL &&
-		type == CAIRO_RECORDING_REPLAY &&
-		region != CAIRO_RECORDING_REGION_ALL)
-	    {
-		if (stroke_command->header.region != region)
-		    stroke_command = NULL;
+		if (stroke_command != NULL &&
+		    type == CAIRO_RECORDING_REPLAY &&
+		    region != CAIRO_RECORDING_REGION_ALL)
+		{
+		    if (stroke_command->header.region != region)
+			stroke_command = NULL;
+		}
+
+		if (stroke_command != NULL &&
+		    stroke_command->header.type == CAIRO_COMMAND_STROKE &&
+		    _cairo_path_fixed_equal (&command->fill.path,
+					     &stroke_command->stroke.path))
+		{
+		    status = _cairo_surface_wrapper_fill_stroke (&wrapper,
+								 command->header.op,
+								 &command->fill.source.base,
+								 command->fill.fill_rule,
+								 command->fill.tolerance,
+								 command->fill.antialias,
+								 &command->fill.path,
+								 stroke_command->header.op,
+								 &stroke_command->stroke.source.base,
+								 &stroke_command->stroke.style,
+								 &stroke_command->stroke.ctm,
+								 &stroke_command->stroke.ctm_inverse,
+								 stroke_command->stroke.tolerance,
+								 stroke_command->stroke.antialias,
+								 clip);
+		    i++;
+		}
 	    }
-
-	    if (stroke_command != NULL &&
-		stroke_command->header.type == CAIRO_COMMAND_STROKE &&
-		_cairo_path_fixed_equal (&command->fill.path,
-					 &stroke_command->stroke.path))
-	    {
-		status = _cairo_surface_wrapper_fill_stroke (&wrapper,
-							     command->header.op,
-							     &command->fill.source.base,
-							     command->fill.fill_rule,
-							     command->fill.tolerance,
-							     command->fill.antialias,
-							     &command->fill.path,
-							     stroke_command->header.op,
-							     &stroke_command->stroke.source.base,
-							     &stroke_command->stroke.style,
-							     &stroke_command->stroke.ctm,
-							     &stroke_command->stroke.ctm_inverse,
-							     stroke_command->stroke.tolerance,
-							     stroke_command->stroke.antialias,
-							     clip);
-		i++;
-	    }
-	    else
-	    {
+	    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 		status = _cairo_surface_wrapper_fill (&wrapper,
 						      command->header.op,
 						      &command->fill.source.base,
@@ -956,7 +957,6 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 						      clip);
 	    }
 	    break;
-	}
 
 	case CAIRO_COMMAND_SHOW_TEXT_GLYPHS:
 	{

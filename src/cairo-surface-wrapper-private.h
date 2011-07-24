@@ -74,6 +74,12 @@ _cairo_surface_wrapper_set_clip (cairo_surface_wrapper_t *wrapper,
 cairo_private void
 _cairo_surface_wrapper_fini (cairo_surface_wrapper_t *wrapper);
 
+static inline cairo_bool_t
+_cairo_surface_wrapper_has_fill_stroke (cairo_surface_wrapper_t *wrapper)
+{
+    return wrapper->target->backend->fill_stroke != NULL;
+}
+
 cairo_private cairo_status_t
 _cairo_surface_wrapper_acquire_source_image (cairo_surface_wrapper_t *wrapper,
 					     cairo_image_surface_t  **image_out,
