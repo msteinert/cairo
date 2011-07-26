@@ -54,13 +54,6 @@ static freed_pool_t clip_pool;
 
 const cairo_clip_t __cairo_clip_all;
 
-static const cairo_rectangle_int_t _cairo_empty_rectangle = { 0, 0, 0, 0 };
-static const cairo_rectangle_int_t _cairo_unbounded_rectangle = {
-     CAIRO_RECT_INT_MIN, CAIRO_RECT_INT_MIN,
-     CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN,
-     CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN,
-};
-
 static cairo_clip_path_t *
 _cairo_clip_path_create (cairo_clip_t *clip)
 {

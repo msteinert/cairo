@@ -58,8 +58,9 @@ typedef enum {
 
 typedef struct _cairo_command_header {
     cairo_command_type_t	 type;
-    cairo_recording_region_type_t     region;
+    cairo_recording_region_type_t region;
     cairo_operator_t		 op;
+    cairo_rectangle_int_t	 extents;
     cairo_clip_t		*clip;
 } cairo_command_header_t;
 

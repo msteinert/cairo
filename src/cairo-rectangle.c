@@ -41,6 +41,13 @@
 
 #include "cairo-box-private.h"
 
+const cairo_rectangle_int_t _cairo_empty_rectangle = { 0, 0, 0, 0 };
+const cairo_rectangle_int_t _cairo_unbounded_rectangle = {
+     CAIRO_RECT_INT_MIN, CAIRO_RECT_INT_MIN,
+     CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN,
+     CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN,
+};
+
 cairo_private void
 _cairo_box_from_doubles (cairo_box_t *box,
 			 double *x1, double *y1,
