@@ -2419,10 +2419,15 @@ _cairo_quartz_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clip
 
 static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
     CAIRO_SURFACE_TYPE_QUARTZ,
+    _cairo_quartz_surface_finish,
+
     _cairo_default_context_create,
 
     _cairo_quartz_surface_create_similar,
-    _cairo_quartz_surface_finish,
+    NULL, /* similar image */
+    NULL, /* map to image */
+    NULL, /* unmap image */
+
     _cairo_quartz_surface_acquire_source_image,
     _cairo_quartz_surface_release_source_image,
     _cairo_quartz_surface_acquire_dest_image,
