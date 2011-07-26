@@ -304,18 +304,10 @@ static inline cairo_bool_t
 _cairo_rectangle_intersects (const cairo_rectangle_int_t *dst,
 			     const cairo_rectangle_int_t *src)
 {
-    int v1, v2;
-
-    v1 = MAX (dst->x, src->x);
-    v2 = MIN (dst->x + (int) dst->width,  src->x + (int) src->width);
-
-    if (v1 >= v2)
-	return FALSE;
-
-    v1 = MAX (dst->y, src->y);
-    v2 = MIN (dst->y + (int) dst->height, src->y + (int) src->height);
-
-    return v1 < v2;
+    return !(src->x >= dst->x + (int) dst->width ||
+	     src->x + (int) src->width <= dst->x ||
+	     src->y >= dst->y + (int) dst->height ||
+	     src->y + (int) src->height <= dst->y);
 }
 
 /* Extends the dst rectangle to also contain src.
