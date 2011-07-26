@@ -86,11 +86,32 @@ _cairo_surface_wrapper_get_transform (cairo_surface_wrapper_t *wrapper,
     if (! _cairo_matrix_is_identity (&wrapper->transform))
 	cairo_matrix_multiply (m, &wrapper->transform, m);
 
-
     if (! _cairo_matrix_is_identity (&wrapper->target->device_transform))
 	cairo_matrix_multiply (m, &wrapper->target->device_transform, m);
 }
 
+static void
+_cairo_surface_wrapper_get_inverse_transform (cairo_surface_wrapper_t *wrapper,
+					      cairo_matrix_t *m)
+{
+    cairo_matrix_init_identity (m);
+
+    if (! _cairo_matrix_is_identity (&wrapper->target->device_transform_inverse))
+	cairo_matrix_multiply (m, &wrapper->target->device_transform_inverse, m);
+
+    if (! _cairo_matrix_is_identity (&wrapper->transform)) {
+	cairo_matrix_t inv;
+	cairo_status_t status;
+
+	inv = wrapper->transform;
+	status = cairo_matrix_invert (&inv);
+	assert (status == CAIRO_STATUS_SUCCESS);
+	cairo_matrix_multiply (m, &inv, m);
+    }
+
+    if (wrapper->has_extents && (wrapper->extents.x || wrapper->extents.y))
+	cairo_matrix_translate (m, wrapper->extents.x, wrapper->extents.y);
+}
 
 static cairo_clip_t *
 _cairo_surface_wrapper_get_clip (cairo_surface_wrapper_t *wrapper,
@@ -586,7 +607,7 @@ _cairo_surface_wrapper_get_target_extents (cairo_surface_wrapper_t *wrapper,
 	    cairo_matrix_t m;
 	    double x1, y1, x2, y2;
 
-	    _cairo_surface_wrapper_get_transform (wrapper, &m);
+	    _cairo_surface_wrapper_get_inverse_transform (wrapper, &m);
 
 	    x1 = r->x;
 	    y1 = r->y;
