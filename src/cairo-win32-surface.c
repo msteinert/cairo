@@ -572,9 +572,9 @@ _cairo_win32_surface_map_to_image (void                    *abstract_surface,
     if (unlikely (status))
 	return _cairo_surface_create_in_error (status);
 
-    status = _cairo_surface_set_user_data (&local->image->user_data,
-					   (const cairo_user_data_key_t *)surface->image,
-					   local, NULL);
+    status = cairo_surface_set_user_data (local->image,
+					  (const cairo_user_data_key_t *)surface->image,
+					  local, NULL);
     if (unlikely (status)) {
 	cairo_surface_destroy (&local->base);
 	return _cairo_surface_create_in_error (status);
@@ -585,20 +585,20 @@ _cairo_win32_surface_map_to_image (void                    *abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_win32_surface_release_unmap_image (void                    *abstract_surface,
-					  cairo_image_surface_t   *image)
+_cairo_win32_surface_unmap_image (void                    *abstract_surface,
+				  cairo_image_surface_t   *image)
 {
     cairo_win32_surface_t *surface = abstract_surface;
     cairo_win32_surface_t *local;
 
-    local = _cairo_surface_set_user_data (&image->base.user_data,
-					   (const cairo_user_data_key_t *)surface->image);
+    local = cairo_surface_get_user_data (&image->base,
+					 (const cairo_user_data_key_t *) surface->image);
     if (!local)
 	return CAIRO_INT_STATUS_SUCCESS;
 
     if (!BitBlt (surface->dc,
-		 image->device_transform.x0,
-		 image->device_transform.y0,
+		 image->base.device_transform.x0,
+		 image->base.device_transform.y0,
 		 image->width, image->height,
 		 local->dc,
 		 0, 0,
