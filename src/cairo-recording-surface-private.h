@@ -62,6 +62,9 @@ typedef struct _cairo_command_header {
     cairo_operator_t		 op;
     cairo_rectangle_int_t	 extents;
     cairo_clip_t		*clip;
+
+    int index;
+    struct _cairo_command_header *chain;
 } cairo_command_header_t;
 
 typedef struct _cairo_command_paint {
@@ -131,6 +134,14 @@ typedef struct _cairo_recording_surface {
     cairo_bool_t unbounded;
 
     cairo_array_t commands;
+    int *indices;
+    int num_indices;
+
+    struct bbtree {
+	cairo_box_t extents;
+	struct bbtree *left, *right;
+	cairo_command_header_t *chain;
+    } bbtree;
 
     int replay_start_idx;
 } cairo_recording_surface_t;

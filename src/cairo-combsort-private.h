@@ -69,3 +69,26 @@ NAME (TYPE *base, unsigned int nmemb) \
       } \
   } while (swapped); \
 }
+
+#define CAIRO_COMBSORT_DECLARE_WITH_DATA(NAME, TYPE, CMP) \
+static void \
+NAME (TYPE *base, unsigned int nmemb, void *data) \
+{ \
+  unsigned int gap = nmemb; \
+  unsigned int i, j; \
+  int swapped; \
+  do { \
+      gap = _cairo_combsort_newgap (gap); \
+      swapped = gap > 1; \
+      for (i = 0; i < nmemb-gap ; i++) { \
+	  j = i + gap; \
+	  if (CMP (base[i], base[j], data) > 0 ) { \
+	      TYPE tmp; \
+	      tmp = base[i]; \
+	      base[i] = base[j]; \
+	      base[j] = tmp; \
+	      swapped = 1; \
+	  } \
+      } \
+  } while (swapped); \
+}
