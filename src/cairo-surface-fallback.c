@@ -829,9 +829,7 @@ _cairo_surface_fallback_paint (cairo_surface_t		*surface,
     if (!_cairo_surface_get_extents (surface, &rect))
         ASSERT_NOT_REACHED;
 
-    status = _cairo_composite_rectangles_init_for_paint (&extents,
-							 rect.width,
-							 rect.height,
+    status = _cairo_composite_rectangles_init_for_paint (&extents, &rect,
 							 op, source,
 							 clip);
     if (unlikely (status))
@@ -918,8 +916,7 @@ _cairo_surface_fallback_mask (cairo_surface_t		*surface,
     if (!_cairo_surface_get_extents (surface, &rect))
         ASSERT_NOT_REACHED;
 
-    status = _cairo_composite_rectangles_init_for_mask (&extents,
-							rect.width, rect.height,
+    status = _cairo_composite_rectangles_init_for_mask (&extents, &rect,
 							op, source, mask, clip);
     if (unlikely (status))
 	return status;
@@ -956,9 +953,7 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
     if (!_cairo_surface_get_extents (surface, &rect))
         ASSERT_NOT_REACHED;
 
-    status = _cairo_composite_rectangles_init_for_stroke (&extents,
-							  rect.width,
-							  rect.height,
+    status = _cairo_composite_rectangles_init_for_stroke (&extents, &rect,
 							  op, source,
 							  path, stroke_style, ctm,
 							  clip);
@@ -1039,9 +1034,7 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
     if (!_cairo_surface_get_extents (surface, &rect))
         ASSERT_NOT_REACHED;
 
-    status = _cairo_composite_rectangles_init_for_fill (&extents,
-							rect.width,
-							rect.height,
+    status = _cairo_composite_rectangles_init_for_fill (&extents, &rect,
 							op, source, path,
 							clip);
     if (unlikely (status))
@@ -1187,9 +1180,7 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
     if (!_cairo_surface_get_extents (surface, &rect))
         ASSERT_NOT_REACHED;
 
-    status = _cairo_composite_rectangles_init_for_glyphs (&extents,
-							  rect.width,
-							  rect.height,
+    status = _cairo_composite_rectangles_init_for_glyphs (&extents, &rect,
 							  op, source,
 							  scaled_font,
 							  glyphs, num_glyphs,

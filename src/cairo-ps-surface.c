@@ -110,6 +110,10 @@
 static const cairo_surface_backend_t cairo_ps_surface_backend;
 static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backend;
 
+static cairo_bool_t
+_cairo_ps_surface_get_extents (void		       *abstract_surface,
+			       cairo_rectangle_int_t   *rectangle);
+
 static void
 _cairo_ps_surface_release_surface (cairo_ps_surface_t      *surface,
 				   cairo_surface_pattern_t *pattern);
@@ -3556,15 +3560,16 @@ static cairo_int_status_t
 _cairo_ps_surface_paint (void			*abstract_surface,
 			 cairo_operator_t	 op,
 			 const cairo_pattern_t	*source,
-			 const cairo_clip_t		*clip)
+			 const cairo_clip_t	*clip)
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->stream;
     cairo_composite_rectangles_t extents;
+    cairo_rectangle_int_t unbounded;
     cairo_status_t status;
 
-    status = _cairo_composite_rectangles_init_for_paint (&extents,
-							 surface->width, surface->height,
+    _cairo_ps_surface_get_extents (surface, &unbounded);
+    status = _cairo_composite_rectangles_init_for_paint (&extents, &unbounded,
 							 op, source, clip);
     if (unlikely (status))
 	return status;
@@ -3625,11 +3630,11 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_composite_rectangles_t extents;
+    cairo_rectangle_int_t unbounded;
     cairo_int_status_t status;
 
-    status = _cairo_composite_rectangles_init_for_stroke (&extents,
-							  surface->width,
-							  surface->height,
+    _cairo_ps_surface_get_extents (surface, &unbounded);
+    status = _cairo_composite_rectangles_init_for_stroke (&extents, &unbounded,
 							  op, source,
 							  path, style, ctm,
 							  clip);
@@ -3687,11 +3692,11 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_composite_rectangles_t extents;
+    cairo_rectangle_int_t unbounded;
     cairo_int_status_t status;
 
-    status = _cairo_composite_rectangles_init_for_fill (&extents,
-							surface->width,
-							surface->height,
+    _cairo_ps_surface_get_extents (surface, &unbounded);
+    status = _cairo_composite_rectangles_init_for_fill (&extents, &unbounded,
 							op, source, path,
 							clip);
     if (unlikely (status))
@@ -3771,12 +3776,12 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_composite_rectangles_t extents;
+    cairo_rectangle_int_t unbounded;
     cairo_bool_t overlap;
     cairo_status_t status;
 
-    status = _cairo_composite_rectangles_init_for_glyphs (&extents,
-							  surface->width,
-							  surface->height,
+    _cairo_ps_surface_get_extents (surface, &unbounded);
+    status = _cairo_composite_rectangles_init_for_glyphs (&extents, &unbounded,
 							  op, source,
 							  scaled_font,
 							  glyphs, num_glyphs,

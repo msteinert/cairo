@@ -3371,6 +3371,7 @@ _cairo_xcb_surface_render_paint (cairo_xcb_surface_t	*surface,
 				 const cairo_clip_t	*clip)
 {
     cairo_composite_rectangles_t extents;
+    cairo_rectangle_int_t unbounded;
     cairo_boxes_t boxes;
     cairo_status_t status;
 
@@ -3401,9 +3402,8 @@ _cairo_xcb_surface_render_paint (cairo_xcb_surface_t	*surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    status = _cairo_composite_rectangles_init_for_paint (&extents,
-							 surface->width,
-							 surface->height,
+    _cairo_xcb_surface_get_extents (surface, &unbounded);
+    status = _cairo_composite_rectangles_init_for_paint (&extents, &unbounded,
 							 op, source,
 							 clip);
     if (unlikely (status))
@@ -3428,6 +3428,7 @@ _cairo_xcb_surface_render_mask (cairo_xcb_surface_t	*surface,
 				const cairo_clip_t	*clip)
 {
     cairo_composite_rectangles_t extents;
+    cairo_rectangle_int_t unbounded;
     cairo_status_t status;
 
     if (unlikely (! _operator_is_supported (surface->connection->flags, op)))
@@ -3436,8 +3437,8 @@ _cairo_xcb_surface_render_mask (cairo_xcb_surface_t	*surface,
     if ((surface->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE) == 0)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = _cairo_composite_rectangles_init_for_mask (&extents,
-							surface->width, surface->height,
+    _cairo_xcb_surface_get_extents (surface, &unbounded);
+    status = _cairo_composite_rectangles_init_for_mask (&extents, &unbounded,
 							op, source, mask, clip);
     if (unlikely (status))
 	return status;
@@ -3573,6 +3574,7 @@ _cairo_xcb_surface_render_stroke (cairo_xcb_surface_t	*surface,
 				  const cairo_clip_t		*clip)
 {
     cairo_composite_rectangles_t extents;
+    cairo_rectangle_int_t unbounded;
     cairo_int_status_t status;
 
     if (unlikely (! _operator_is_supported (surface->connection->flags, op)))
@@ -3584,9 +3586,8 @@ _cairo_xcb_surface_render_stroke (cairo_xcb_surface_t	*surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    status = _cairo_composite_rectangles_init_for_stroke (&extents,
-							  surface->width,
-							  surface->height,
+    _cairo_xcb_surface_get_extents (surface, &unbounded);
+    status = _cairo_composite_rectangles_init_for_stroke (&extents, &unbounded,
 							  op, source,
 							  path, style, ctm,
 							  clip);
@@ -3724,6 +3725,7 @@ _cairo_xcb_surface_render_fill (cairo_xcb_surface_t	*surface,
 			       const cairo_clip_t	*clip)
 {
     cairo_composite_rectangles_t extents;
+    cairo_rectangle_int_t unbounded;
     cairo_int_status_t status;
 
     if (unlikely (! _operator_is_supported (surface->connection->flags, op)))
@@ -3735,9 +3737,8 @@ _cairo_xcb_surface_render_fill (cairo_xcb_surface_t	*surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    status = _cairo_composite_rectangles_init_for_fill (&extents,
-							surface->width,
-							surface->height,
+    _cairo_xcb_surface_get_extents (surface, &unbounded);
+    status = _cairo_composite_rectangles_init_for_fill (&extents, &unbounded,
 							op, source, path,
 							clip);
     if (unlikely (status))
@@ -4710,6 +4711,7 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
 				  const cairo_clip_t	*clip)
 {
     cairo_composite_rectangles_t extents;
+    cairo_rectangle_int_t unbounded;
     cairo_int_status_t status;
     cairo_bool_t overlap;
 
@@ -4719,9 +4721,8 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
     if ((surface->connection->flags & (CAIRO_XCB_RENDER_HAS_COMPOSITE_GLYPHS | CAIRO_XCB_RENDER_HAS_COMPOSITE)) == 0)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = _cairo_composite_rectangles_init_for_glyphs (&extents,
-							  surface->width,
-							  surface->height,
+    _cairo_xcb_surface_get_extents (surface, &unbounded);
+    status = _cairo_composite_rectangles_init_for_glyphs (&extents, &unbounded,
 							  op, source,
 							  scaled_font,
 							  glyphs, num_glyphs,

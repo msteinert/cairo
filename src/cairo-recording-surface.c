@@ -359,9 +359,7 @@ _cairo_recording_surface_paint (void			  *abstract_surface,
     const cairo_rectangle_int_t *extents;
 
     extents = _cairo_recording_surface_extents (surface);
-    status = _cairo_composite_rectangles_init_for_paint (&composite,
-							 extents->width,
-							 extents->height,
+    status = _cairo_composite_rectangles_init_for_paint (&composite, extents,
 							 op, source,
 							 clip);
     if (unlikely (status))
@@ -420,9 +418,7 @@ _cairo_recording_surface_mask (void			*abstract_surface,
     const cairo_rectangle_int_t *extents;
 
     extents = _cairo_recording_surface_extents (surface);
-    status = _cairo_composite_rectangles_init_for_mask (&composite,
-							extents->width,
-							extents->height,
+    status = _cairo_composite_rectangles_init_for_mask (&composite, extents,
 							op, source, mask,
 							clip);
     if (unlikely (status))
@@ -486,9 +482,7 @@ _cairo_recording_surface_stroke (void			*abstract_surface,
     const cairo_rectangle_int_t *extents;
 
     extents = _cairo_recording_surface_extents (surface);
-    status = _cairo_composite_rectangles_init_for_stroke (&composite,
-							  extents->width,
-							  extents->height,
+    status = _cairo_composite_rectangles_init_for_stroke (&composite, extents,
 							  op, source,
 							  path, style, ctm,
 							  clip);
@@ -562,9 +556,7 @@ _cairo_recording_surface_fill (void			*abstract_surface,
     const cairo_rectangle_int_t *extents;
 
     extents = _cairo_recording_surface_extents (surface);
-    status = _cairo_composite_rectangles_init_for_fill (&composite,
-							extents->width,
-							extents->height,
+    status = _cairo_composite_rectangles_init_for_fill (&composite, extents,
 							op, source, path,
 							clip);
     if (unlikely (status))
@@ -640,9 +632,7 @@ _cairo_recording_surface_show_text_glyphs (void				*abstract_surface,
     const cairo_rectangle_int_t *extents;
 
     extents = _cairo_recording_surface_extents (surface);
-    status = _cairo_composite_rectangles_init_for_glyphs (&composite,
-							  extents->width,
-							  extents->height,
+    status = _cairo_composite_rectangles_init_for_glyphs (&composite, extents,
 							  op, source,
 							  scaled_font,
 							  glyphs, num_glyphs,
@@ -961,7 +951,6 @@ _cairo_recording_surface_replay_internal (cairo_recording_surface_t	*surface,
 	return CAIRO_STATUS_SUCCESS;
 
     assert (_cairo_surface_is_recording (&surface->base));
-    surface = (cairo_recording_surface_t *) surface;
 
     _cairo_surface_wrapper_init (&wrapper, target);
     if (surface_extents)

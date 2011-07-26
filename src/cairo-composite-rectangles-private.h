@@ -62,22 +62,22 @@ struct _cairo_composite_rectangles {
 
 cairo_private cairo_int_status_t
 _cairo_composite_rectangles_init_for_paint (cairo_composite_rectangles_t *extents,
-					 int surface_width, int surface_height,
-					 cairo_operator_t	 op,
-					 const cairo_pattern_t	*source,
-					 const cairo_clip_t		*clip);
+					    const cairo_rectangle_int_t *unbounded,
+					    cairo_operator_t	 op,
+					    const cairo_pattern_t	*source,
+					    const cairo_clip_t		*clip);
 
 cairo_private cairo_int_status_t
 _cairo_composite_rectangles_init_for_mask (cairo_composite_rectangles_t *extents,
-					int surface_width, int surface_height,
-					cairo_operator_t	 op,
-					const cairo_pattern_t	*source,
-					const cairo_pattern_t	*mask,
-					const cairo_clip_t		*clip);
+					   const cairo_rectangle_int_t *unbounded,
+					   cairo_operator_t	 op,
+					   const cairo_pattern_t	*source,
+					   const cairo_pattern_t	*mask,
+					   const cairo_clip_t		*clip);
 
 cairo_private cairo_int_status_t
 _cairo_composite_rectangles_init_for_stroke (cairo_composite_rectangles_t *extents,
-					     int surface_width, int surface_height,
+					     const cairo_rectangle_int_t *unbounded,
 					     cairo_operator_t	 op,
 					     const cairo_pattern_t	*source,
 					     const cairo_path_fixed_t	*path,
@@ -87,7 +87,7 @@ _cairo_composite_rectangles_init_for_stroke (cairo_composite_rectangles_t *exten
 
 cairo_private cairo_int_status_t
 _cairo_composite_rectangles_init_for_fill (cairo_composite_rectangles_t *extents,
-					   int surface_width, int surface_height,
+					   const cairo_rectangle_int_t *unbounded,
 					   cairo_operator_t	 op,
 					   const cairo_pattern_t	*source,
 					   const cairo_path_fixed_t	*path,
@@ -95,7 +95,7 @@ _cairo_composite_rectangles_init_for_fill (cairo_composite_rectangles_t *extents
 
 cairo_private cairo_int_status_t
 _cairo_composite_rectangles_init_for_glyphs (cairo_composite_rectangles_t *extents,
-					     int surface_width, int surface_height,
+					     const cairo_rectangle_int_t *unbounded,
 					     cairo_operator_t		 op,
 					     const cairo_pattern_t	*source,
 					     cairo_scaled_font_t	*scaled_font,

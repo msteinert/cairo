@@ -48,19 +48,17 @@ void _cairo_composite_rectangles_fini (cairo_composite_rectangles_t *extents)
 
 static inline cairo_bool_t
 _cairo_composite_rectangles_init (cairo_composite_rectangles_t *extents,
-				  int width, int height,
+				  const cairo_rectangle_int_t *unbounded,
 				  cairo_operator_t op,
 				  const cairo_pattern_t *source,
 				  const cairo_clip_t *clip)
 {
-    extents->unbounded.x = extents->unbounded.y = 0;
-    extents->unbounded.width  = width;
-    extents->unbounded.height = height;
     extents->clip = NULL;
 
     if (_cairo_clip_is_all_clipped (clip))
 	return FALSE;
 
+    extents->unbounded = *unbounded;
     if (clip != NULL) {
 	if (! _cairo_rectangle_intersect (&extents->unbounded,
 					  _cairo_clip_get_extents (clip)))
@@ -81,13 +79,12 @@ _cairo_composite_rectangles_init (cairo_composite_rectangles_t *extents,
 
 cairo_int_status_t
 _cairo_composite_rectangles_init_for_paint (cairo_composite_rectangles_t *extents,
-					    int surface_width, int surface_height,
+					    const cairo_rectangle_int_t *unbounded,
 					    cairo_operator_t		 op,
 					    const cairo_pattern_t	*source,
 					    const cairo_clip_t		*clip)
 {
-    if (! _cairo_composite_rectangles_init (extents,
-					    surface_width, surface_height,
+    if (! _cairo_composite_rectangles_init (extents, unbounded,
 					    op, source, clip))
     {
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
@@ -124,7 +121,7 @@ _cairo_composite_rectangles_intersect (cairo_composite_rectangles_t *extents,
 
 cairo_int_status_t
 _cairo_composite_rectangles_intersect_mask_extents (cairo_composite_rectangles_t *extents,
-					      const cairo_box_t *box)
+						    const cairo_box_t *box)
 {
     cairo_rectangle_int_t mask;
     cairo_int_status_t status;
@@ -154,14 +151,13 @@ _cairo_composite_rectangles_intersect_mask_extents (cairo_composite_rectangles_t
 
 cairo_int_status_t
 _cairo_composite_rectangles_init_for_mask (cairo_composite_rectangles_t *extents,
-					   int surface_width, int surface_height,
+					   const cairo_rectangle_int_t *unbounded,
 					   cairo_operator_t		 op,
 					   const cairo_pattern_t	*source,
 					   const cairo_pattern_t	*mask,
 					   const cairo_clip_t		*clip)
 {
-    if (! _cairo_composite_rectangles_init (extents,
-					    surface_width, surface_height,
+    if (! _cairo_composite_rectangles_init (extents, unbounded,
 					    op, source, clip))
     {
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
@@ -174,7 +170,7 @@ _cairo_composite_rectangles_init_for_mask (cairo_composite_rectangles_t *extents
 
 cairo_int_status_t
 _cairo_composite_rectangles_init_for_stroke (cairo_composite_rectangles_t *extents,
-					     int surface_width, int surface_height,
+					     const cairo_rectangle_int_t *unbounded,
 					     cairo_operator_t		 op,
 					     const cairo_pattern_t	*source,
 					     const cairo_path_fixed_t		*path,
@@ -182,8 +178,7 @@ _cairo_composite_rectangles_init_for_stroke (cairo_composite_rectangles_t *exten
 					     const cairo_matrix_t	*ctm,
 					     const cairo_clip_t		*clip)
 {
-    if (! _cairo_composite_rectangles_init (extents,
-					    surface_width, surface_height,
+    if (! _cairo_composite_rectangles_init (extents, unbounded,
 					    op, source, clip))
     {
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
@@ -196,14 +191,13 @@ _cairo_composite_rectangles_init_for_stroke (cairo_composite_rectangles_t *exten
 
 cairo_int_status_t
 _cairo_composite_rectangles_init_for_fill (cairo_composite_rectangles_t *extents,
-					   int surface_width, int surface_height,
+					   const cairo_rectangle_int_t *unbounded,
 					   cairo_operator_t		 op,
 					   const cairo_pattern_t	*source,
 					   const cairo_path_fixed_t		*path,
 					   const cairo_clip_t		*clip)
 {
-    if (! _cairo_composite_rectangles_init (extents,
-					    surface_width, surface_height,
+    if (! _cairo_composite_rectangles_init (extents, unbounded,
 					    op, source, clip))
     {
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
@@ -216,7 +210,7 @@ _cairo_composite_rectangles_init_for_fill (cairo_composite_rectangles_t *extents
 
 cairo_int_status_t
 _cairo_composite_rectangles_init_for_glyphs (cairo_composite_rectangles_t *extents,
-					     int surface_width, int surface_height,
+					     const cairo_rectangle_int_t *unbounded,
 					     cairo_operator_t		 op,
 					     const cairo_pattern_t	*source,
 					     cairo_scaled_font_t	*scaled_font,
@@ -227,8 +221,7 @@ _cairo_composite_rectangles_init_for_glyphs (cairo_composite_rectangles_t *exten
 {
     cairo_status_t status;
 
-    if (! _cairo_composite_rectangles_init (extents,
-					    surface_width, surface_height,
+    if (! _cairo_composite_rectangles_init (extents, unbounded,
 					    op, source, clip))
     {
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
