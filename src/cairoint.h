@@ -300,6 +300,24 @@ cairo_private_no_warn cairo_bool_t
 _cairo_rectangle_intersect (cairo_rectangle_int_t *dst,
 			    const cairo_rectangle_int_t *src);
 
+static inline cairo_bool_t
+_cairo_rectangle_intersects (const cairo_rectangle_int_t *dst,
+			     const cairo_rectangle_int_t *src)
+{
+    int v1, v2;
+
+    v1 = MAX (dst->x, src->x);
+    v2 = MIN (dst->x + (int) dst->width,  src->x + (int) src->width);
+
+    if (v1 >= v2)
+	return FALSE;
+
+    v1 = MAX (dst->y, src->y);
+    v2 = MIN (dst->y + (int) dst->height, src->y + (int) src->height);
+
+    return v1 < v2;
+}
+
 /* Extends the dst rectangle to also contain src.
  * If one of the rectangles is empty, the result is undefined
  */

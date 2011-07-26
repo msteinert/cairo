@@ -573,3 +573,47 @@ _cairo_surface_wrapper_fini (cairo_surface_wrapper_t *wrapper)
 {
     cairo_surface_destroy (wrapper->target);
 }
+
+cairo_bool_t
+_cairo_surface_wrapper_get_target_extents (cairo_surface_wrapper_t *wrapper,
+					   cairo_rectangle_int_t *extents)
+{
+    cairo_rectangle_int_t tmp;
+
+    if (wrapper->clip) {
+	const cairo_rectangle_int_t *r = _cairo_clip_get_extents (wrapper->clip);
+	if (wrapper->needs_transform) {
+	    cairo_matrix_t m;
+	    double x1, y1, x2, y2;
+
+	    _cairo_surface_wrapper_get_transform (wrapper, &m);
+
+	    x1 = r->x;
+	    y1 = r->y;
+	    x2 = r->x + r->width;
+	    y2 = r->y + r->height;
+
+	    _cairo_matrix_transform_bounding_box (&m, &x1, &y1, &x2, &y2, NULL);
+
+	    tmp.x = floor (x1);
+	    tmp.y = floor (y1);
+	    tmp.width  = ceil (x2) - tmp.x;
+	    tmp.height = ceil (y2) - tmp.y;
+	    r = &tmp;
+	}
+
+	if (wrapper->has_extents) {
+	    *extents = wrapper->extents;
+	    return _cairo_rectangle_intersect (extents, r);
+	} else {
+	    *extents = *r;
+	    return TRUE;
+	}
+    } else if (wrapper->has_extents) {
+	*extents = wrapper->extents;
+	return TRUE;
+    } else {
+	_cairo_unbounded_rectangle_init (extents);
+	return TRUE;
+    }
+}

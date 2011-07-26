@@ -939,8 +939,9 @@ _cairo_recording_surface_replay_internal (cairo_recording_surface_t	*surface,
 	type == CAIRO_RECORDING_REPLAY &&
 	region != CAIRO_RECORDING_REGION_ALL;
     int i, num_elements;
-    cairo_int_status_t status;
+    cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_surface_wrapper_t wrapper;
+    cairo_rectangle_int_t extents;
 
     if (unlikely (surface->base.status))
 	return surface->base.status;
@@ -967,7 +968,9 @@ _cairo_recording_surface_replay_internal (cairo_recording_surface_t	*surface,
     _cairo_surface_wrapper_set_inverse_transform (&wrapper, surface_transform);
     _cairo_surface_wrapper_set_clip (&wrapper, target_clip);
 
-    status = CAIRO_STATUS_SUCCESS;
+    /* Compute the extents of the target clip in recorded device space */
+    if (! _cairo_surface_wrapper_get_target_extents (&wrapper, &extents))
+	goto done;
 
     num_elements = surface->commands.num_elements;
     elements = _cairo_array_index (&surface->commands, 0);
@@ -976,6 +979,9 @@ _cairo_recording_surface_replay_internal (cairo_recording_surface_t	*surface,
 	cairo_command_t *command = elements[i];
 
 	if (! replay_all && command->header.region != region)
+	    continue;
+
+	if (! _cairo_rectangle_intersects (&extents, &command->header.extents))
 	    continue;
 
 	switch (command->header.type) {
@@ -1090,6 +1096,7 @@ _cairo_recording_surface_replay_internal (cairo_recording_surface_t	*surface,
 	    break;
     }
 
+done:
     _cairo_surface_wrapper_fini (&wrapper);
     return _cairo_surface_set_error (&surface->base, status);
 }

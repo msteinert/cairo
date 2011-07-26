@@ -182,6 +182,10 @@ _cairo_surface_wrapper_is_active (cairo_surface_wrapper_t *wrapper)
     return wrapper->target != (cairo_surface_t *) 0;
 }
 
+cairo_private cairo_bool_t
+_cairo_surface_wrapper_get_target_extents (cairo_surface_wrapper_t *wrapper,
+					   cairo_rectangle_int_t *extents);
+
 CAIRO_END_DECLS
 
 #endif /* CAIRO_SURFACE_WRAPPER_PRIVATE_H */
