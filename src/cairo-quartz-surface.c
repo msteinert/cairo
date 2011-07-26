@@ -339,7 +339,7 @@ _cairo_path_to_quartz_context_close_path (void *closure)
 }
 
 static void
-_cairo_quartz_cairo_path_to_quartz_context (cairo_path_fixed_t *path,
+_cairo_quartz_cairo_path_to_quartz_context (const cairo_path_fixed_t *path,
 					    CGContextRef closure)
 {
     cairo_status_t status;
@@ -1086,7 +1086,7 @@ _cairo_quartz_setup_state (cairo_quartz_drawing_state_t *state,
 			   cairo_quartz_surface_t       *surface,
 			   cairo_operator_t              op,
 			   const cairo_pattern_t        *source,
-			   cairo_clip_t                 *clip)
+			   const cairo_clip_t           *clip)
 {
     cairo_bool_t needs_temp;
     cairo_status_t status;
@@ -2168,7 +2168,7 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
 					 cairo_surface_t        *mask_surf,
 					 const cairo_matrix_t   *mask_mat,
 					 CGInterpolationQuality filter,
-					 cairo_clip_t           *clip)
+					 const cairo_clip_t     *clip)
 {
     CGRect rect;
     CGImageRef img;
@@ -2225,7 +2225,7 @@ _cairo_quartz_surface_mask_with_solid (cairo_quartz_surface_t *surface,
 				       cairo_operator_t        op,
 				       const cairo_pattern_t  *source,
 				       double                  alpha,
-				       cairo_clip_t *clip)
+				       const cairo_clip_t *clip)
 {
     cairo_quartz_drawing_state_t state;
     cairo_status_t status;
