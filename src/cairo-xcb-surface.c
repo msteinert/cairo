@@ -346,6 +346,11 @@ _get_image (cairo_xcb_surface_t		 *surface,
     xcb_get_image_reply_t *reply;
     cairo_int_status_t status;
 
+    assert (x >= 0);
+    assert (y >= 0);
+    assert (x + width <= surface->width);
+    assert (y + height <= surface->height);
+
     if (surface->deferred_clear) {
 	image = (cairo_image_surface_t *)
 	    _cairo_image_surface_create_with_pixman_format (NULL,
