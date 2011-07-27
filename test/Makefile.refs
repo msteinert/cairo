@@ -616,6 +616,7 @@ REFERENCE_IMAGES = \
 	halo.xlib.ref.png \
 	hatchings.ref.png \
 	hatchings.xlib.ref.png \
+	horizontal-clip.ref.png \
 	huge-linear.image16.ref.png \
 	huge-linear.pdf.ref.png \
 	huge-linear.ps3.ref.png \
@@ -715,6 +716,9 @@ REFERENCE_IMAGES = \
 	long-dashed-lines.ps3.ref.png \
 	long-dashed-lines.quartz.ref.png \
 	long-dashed-lines.ref.png \
+	map-all-to-image.ref.png \
+	map-bit-to-image.ref.png \
+	map-to-image-fill.ref.png \
 	mask-alpha.image16.ref.png \
 	mask-alpha.quartz.argb32.ref.png \
 	mask-alpha.ref.png \
