@@ -1084,8 +1084,8 @@ _cairo_win32_printing_surface_path_close_path (void *closure)
 }
 
 static cairo_status_t
-_cairo_win32_printing_surface_emit_path (cairo_win32_surface_t *surface,
-                                         cairo_path_fixed_t    *path)
+_cairo_win32_printing_surface_emit_path (cairo_win32_surface_t    *surface,
+					 const cairo_path_fixed_t *path)
 {
     win32_path_info_t path_info;
 
@@ -1440,7 +1440,7 @@ _cairo_win32_printing_surface_emit_win32_glyphs (cairo_win32_surface_t 	*surface
 						 cairo_glyph_t        	*glyphs,
 						 int			 num_glyphs,
 						 cairo_scaled_font_t  	*scaled_font,
-						 cairo_clip_t		*clip,
+						 const cairo_clip_t	*clip,
 						 int			*remaining_glyphs)
 {
     cairo_matrix_t ctm;

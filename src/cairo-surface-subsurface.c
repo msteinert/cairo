@@ -582,7 +582,7 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
 
 cairo_surface_t *
 _cairo_surface_create_for_rectangle_int (cairo_surface_t *target,
-					 cairo_rectangle_int_t *extents)
+					 const cairo_rectangle_int_t *extents)
 {
     cairo_surface_subsurface_t *surface;
 

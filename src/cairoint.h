@@ -1637,7 +1637,7 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
 
 cairo_private cairo_surface_t *
 _cairo_surface_create_for_rectangle_int (cairo_surface_t *target,
-					 cairo_rectangle_int_t *extents);
+					 const cairo_rectangle_int_t *extents);
 
 cairo_private cairo_surface_t *
 _cairo_surface_create_similar_solid (cairo_surface_t	    *other,
