@@ -333,97 +333,72 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 	} else {
 	    /* The edge and the box intersect in a generic way */
 	    cairo_fixed_t left_y, right_y;
-	    int p1_y, p2_y;
-	    cairo_point_t p[2];
+	    cairo_bool_t top_left_to_bottom_right;
 
 	    left_y = _cairo_edge_compute_intersection_y_for_x (p1, p2,
 							       limits->p1.x);
 	    right_y = _cairo_edge_compute_intersection_y_for_x (p1, p2,
 								limits->p2.x);
 
-	    p1_y = top;
-	    p2_y = bottom;
+	    /*
+	     * The edge intersects the lines corresponding to the left
+	     * and right sides of the limit box at left_y and right_y,
+	     * but we need to add edges for the range from top_y to
+	     * bot_y.
+	     *
+	     * For both intersections, there are three cases:
+	     *
+	     *  1) It is outside the vertical range of the limit
+	     *     box. In this case we can simply further clip the
+	     *     edge we will be emitting (i.e. restrict its
+	     *     top/bottom limits to those of the limit box).
+	     *
+	     *  2) It is inside the vertical range of the limit
+	     *     box. In this case, we need to add the vertical edge
+	     *     connecting the correct vertex to the intersection,
+	     *     in order to preserve the winding count.
+	     *
+	     *  3) It is exactly on the box. In this case, do nothing.
+	     *
+	     * These operations restrict the active range (stored in
+	     * top_y/bot_y) so that the p1-p2 edge is completely
+	     * inside the box if it is clipped to this vertical range.
+	     */
 
-	    if (left_y < right_y) {
-		if (p1->x < limits->p1.x && left_y > top) {
-		    p[0].x = limits->p1.x;
-		    p[0].y = limits->p1.y;
-		    top_y = p1_y;
-		    if (top_y < p[0].y)
-			top_y = p[0].y;
+	    top_left_to_bottom_right = (p1->x < p2->x) == (p1->y < p2->y);
 
-		    p[1].x = limits->p1.x;
-		    p[1].y = limits->p2.y;
-		    bot_y = left_y;
-		    if (bot_y > p[1].y)
-			bot_y = p[1].y;
-
-		    if (bot_y > top_y)
-			_add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-		    p1_y = bot_y;
+	    if (top_left_to_bottom_right) {
+		left_y = MIN (left_y, bot_y);
+		if (top_y < left_y) {
+		    _add_edge (polygon, &limits->p1, &bot_left,
+			       top_y, left_y, dir);
+		    top_y = left_y;
 		}
 
-		if (p2->x > limits->p2.x && right_y < bottom) {
-		    p[0].x = limits->p2.x;
-		    p[0].y = limits->p1.y;
-		    top_y = right_y;
-		    if (top_y < p[0].y)
-			top_y = p[0].y;
-
-		    p[1].x = limits->p2.x;
-		    p[1].y = limits->p2.y;
-		    bot_y = p2_y;
-		    if (bot_y > p[1].y)
-			bot_y = p[1].y;
-
-		    if (bot_y > top_y)
-			_add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-		    p2_y = top_y;
+		right_y = MAX (right_y, top_y);
+		if (bot_y > right_y) {
+		    _add_edge (polygon, &top_right, &limits->p2,
+			       right_y, bot_y, dir);
+		    bot_y = right_y;
 		}
 	    } else {
-		if (p1->x > limits->p2.x && right_y > top) {
-		    p[0].x = limits->p2.x;
-		    p[0].y = limits->p1.y;
-		    top_y = p1_y;
-		    if (top_y < p[0].y)
-			top_y = p[0].y;
-
-		    p[1].x = limits->p2.x;
-		    p[1].y = limits->p2.y;
-		    bot_y = right_y;
-		    if (bot_y > p[1].y)
-			bot_y = p[1].y;
-
-		    if (bot_y > top_y)
-			_add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-		    p1_y = bot_y;
+		right_y = MIN (right_y, bot_y);
+		if (top_y < right_y) {
+		    _add_edge (polygon, &top_right, &limits->p2,
+			       top_y, right_y, dir);
+		    top_y = right_y;
 		}
 
-		if (p2->x < limits->p1.x && left_y < bottom) {
-		    p[0].x = limits->p1.x;
-		    p[0].y = limits->p1.y;
-		    top_y = left_y;
-		    if (top_y < p[0].y)
-			top_y = p[0].y;
-
-		    p[1].x = limits->p1.x;
-		    p[1].y = limits->p2.y;
-		    bot_y = p2_y;
-		    if (bot_y > p[1].y)
-			bot_y = p[1].y;
-
-		    if (bot_y > top_y)
-			_add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-		    p2_y = top_y;
+		left_y = MAX (left_y, top_y);
+		if (bot_y > left_y) {
+		    _add_edge (polygon, &limits->p1, &bot_left,
+			       left_y, bot_y, dir);
+		    bot_y = left_y;
 		}
 	    }
 
-	    if (p1_y < limits->p1.y)
-		p1_y = limits->p1.y;
-	    if (p2_y > limits->p2.y)
-		p2_y = limits->p2.y;
-	    if (p2_y > p1_y)
-		_add_edge (polygon, p1, p2, p1_y, p2_y, dir);
+	    if (top_y != bot_y)
+		_add_edge (polygon, p1, p2, top_y, bot_y, dir);
 	}
     }
 }
