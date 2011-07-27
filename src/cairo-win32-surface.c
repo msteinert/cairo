@@ -1832,12 +1832,12 @@ cairo_win32_surface_create_with_dib (cairo_format_t format,
 
 /**
  * cairo_win32_surface_create_with_ddb:
- * @hdc: the DC to create a surface for
+ * @hdc: a DC compatible with the surface to create
  * @format: format of pixels in the surface to create
  * @width: width of the surface, in pixels
  * @height: height of the surface, in pixels
  *
- * Creates a device-independent-bitmap surface not associated with
+ * Creates a device-dependent-bitmap surface not associated with
  * any particular existing surface or device context. The created
  * bitmap will be uninitialized.
  *
