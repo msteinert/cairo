@@ -359,7 +359,7 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 	    p2_y = bottom;
 
 	    if (left_y < right_y) {
-		if (p1->x < limits->p1.x && left_y > limits->p1.y) {
+		if (p1->x < limits->p1.x && left_y > top) {
 		    p[0].x = limits->p1.x;
 		    p[0].y = limits->p1.y;
 		    top_y = p1_y;
@@ -377,7 +377,7 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 		    p1_y = bot_y;
 		}
 
-		if (p2->x > limits->p2.x && right_y < limits->p2.y) {
+		if (p2->x > limits->p2.x && right_y < bottom) {
 		    p[0].x = limits->p2.x;
 		    p[0].y = limits->p1.y;
 		    top_y = right_y;
@@ -395,7 +395,7 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 		    p2_y = top_y;
 		}
 	    } else {
-		if (p1->x > limits->p2.x && right_y > limits->p1.y) {
+		if (p1->x > limits->p2.x && right_y > top) {
 		    p[0].x = limits->p2.x;
 		    p[0].y = limits->p1.y;
 		    top_y = p1_y;
@@ -413,7 +413,7 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 		    p1_y = bot_y;
 		}
 
-		if (p2->x < limits->p1.x && left_y < limits->p2.y) {
+		if (p2->x < limits->p1.x && left_y < bottom) {
 		    p[0].x = limits->p1.x;
 		    p[0].y = limits->p1.y;
 		    top_y = left_y;
