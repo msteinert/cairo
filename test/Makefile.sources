@@ -132,6 +132,7 @@ test_sources = \
 	half-coverage.c					\
 	halo.c						\
 	hatchings.c					\
+	horizontal-clip.c				\
 	huge-linear.c					\
 	huge-radial.c					\
 	image-surface-source.c				\
