@@ -1581,7 +1581,7 @@ FAIL:
     return _cairo_span_renderer_create_in_error (status);
 }
 
-static cairo_bool_t
+cairo_private cairo_bool_t
 _cairo_gl_surface_get_extents (void		     *abstract_surface,
 			       cairo_rectangle_int_t *rectangle)
 {
@@ -1695,12 +1695,13 @@ _cairo_gl_surface_stroke (void			        *abstract_surface,
 {
     cairo_gl_surface_t *surface = abstract_surface;
     cairo_composite_rectangles_t extents;
+    cairo_rectangle_int_t unbounded;
     cairo_polygon_t polygon;
     cairo_status_t status;
 
+    _cairo_gl_surface_get_extents (surface, &unbounded);
     status = _cairo_composite_rectangles_init_for_stroke (&extents,
-							  surface->width,
-							  surface->height,
+							  &unbounded,
 							  op, source,
 							  path, style, ctm,
 							  clip);
@@ -1737,12 +1738,13 @@ _cairo_gl_surface_fill (void			*abstract_surface,
 {
     cairo_gl_surface_t *surface = abstract_surface;
     cairo_composite_rectangles_t extents;
+    cairo_rectangle_int_t unbounded;
     cairo_polygon_t polygon;
     cairo_status_t status;
 
+    _cairo_gl_surface_get_extents (surface, &unbounded);
     status = _cairo_composite_rectangles_init_for_fill (&extents,
-							surface->width,
-							surface->height,
+							&unbounded,
 							op, source, path,
 							clip);
     if (unlikely (status))

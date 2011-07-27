@@ -437,6 +437,11 @@ _cairo_gl_surface_show_glyphs_via_mask (cairo_gl_surface_t	*dst,
     return status;
 }
 
+
+cairo_private cairo_bool_t
+_cairo_gl_surface_get_extents (void		     *abstract_surface,
+			       cairo_rectangle_int_t *rectangle);
+
 cairo_int_status_t
 _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 			       cairo_operator_t		 op,
@@ -449,6 +454,7 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 {
     cairo_gl_surface_t *dst = abstract_dst;
     cairo_composite_rectangles_t extents;
+    cairo_rectangle_int_t unbounded;
     cairo_bool_t overlap, use_mask = FALSE;
     cairo_bool_t has_component_alpha;
     cairo_status_t status;
@@ -534,9 +540,9 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     if (! _cairo_gl_surface_owns_font (dst, scaled_font))
 	return UNSUPPORTED ("do not control font");
 
+    _cairo_gl_surface_get_extents (dst, &unbounded);
     status = _cairo_composite_rectangles_init_for_glyphs (&extents,
-							  dst->width,
-							  dst->height,
+							  &unbounded,
 							  op, source,
 							  scaled_font,
 							  glyphs, num_glyphs,
