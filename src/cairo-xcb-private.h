@@ -373,7 +373,7 @@ _cairo_xcb_surface_create_internal (cairo_xcb_screen_t		*screen,
 				    int				 width,
 				    int				 height);
 
-cairo_private cairo_bool_t
+cairo_private_no_warn cairo_bool_t
 _cairo_xcb_surface_get_extents (void *abstract_surface,
 				cairo_rectangle_int_t *extents);
 
