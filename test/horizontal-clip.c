@@ -29,10 +29,11 @@
 
 #include "cairo-test.h"
 
-#define WIDTH 20
-#define HEIGHT 20
+#define WIDTH 16
+#define HEIGHT 26
 
-#define BUG 1
+#define BUGY 1
+#define BUGX (4 * BUGY * WIDTH * 256)
 
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
@@ -41,28 +42,28 @@ draw (cairo_t *cr, int width, int height)
     cairo_paint (cr);
     cairo_set_source_rgb (cr, 0, 0, 0);
 
-    cairo_move_to (cr, 0-256, 4 - BUG);
-    cairo_line_to (cr, WIDTH + 256, 4 + BUG);
-    cairo_line_to (cr, WIDTH + 256, 2 - BUG);
-    cairo_line_to (cr, 0-256, 2 + BUG);
+    cairo_move_to (cr,       - BUGX, 6 - BUGY);
+    cairo_line_to (cr,       + BUGX, 6 + BUGY);
+    cairo_line_to (cr, WIDTH + BUGX, 2 - BUGY);
+    cairo_line_to (cr, WIDTH - BUGX, 2 + BUGY);
     cairo_fill (cr);
 
-    cairo_move_to (cr, 0-256, 6 - BUG);
-    cairo_line_to (cr, WIDTH + 256, 6 + BUG);
-    cairo_line_to (cr, WIDTH + 256, 8 - BUG);
-    cairo_line_to (cr, 0-256, 8 + BUG);
+    cairo_move_to (cr, WIDTH + BUGX, 8  - BUGY);
+    cairo_line_to (cr, WIDTH - BUGX, 8  + BUGY);
+    cairo_line_to (cr,       - BUGX, 12 - BUGY);
+    cairo_line_to (cr,       + BUGX, 12 + BUGY);
     cairo_fill (cr);
 
-    cairo_move_to (cr, WIDTH+256, 12 - BUG);
-    cairo_line_to (cr, 0-256, 12 + BUG);
-    cairo_line_to (cr, 0-256, 14 - BUG);
-    cairo_line_to (cr, WIDTH+256, 14 + BUG);
+    cairo_move_to (cr,       - BUGX, 14 - BUGY);
+    cairo_line_to (cr,       + BUGX, 14 + BUGY);
+    cairo_line_to (cr, WIDTH + BUGX, 18 - BUGY);
+    cairo_line_to (cr, WIDTH - BUGX, 18 + BUGY);
     cairo_fill (cr);
 
-    cairo_move_to (cr, WIDTH+256, 18 - BUG);
-    cairo_line_to (cr, 0-256, 18 + BUG);
-    cairo_line_to (cr, 0-256, 16 - BUG);
-    cairo_line_to (cr, WIDTH+256, 16 + BUG);
+    cairo_move_to (cr, WIDTH + BUGX, 24 - BUGY);
+    cairo_line_to (cr, WIDTH - BUGX, 24 + BUGY);
+    cairo_line_to (cr,       - BUGX, 20 - BUGY);
+    cairo_line_to (cr,       + BUGX, 20 + BUGY);
     cairo_fill (cr);
 
     return CAIRO_TEST_SUCCESS;
