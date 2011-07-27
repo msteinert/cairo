@@ -676,10 +676,14 @@ cairo_surface_unmap_image (cairo_surface_t *surface,
 	status = _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 	goto error;
     }
+    if (unlikely (! _cairo_surface_is_image (image))) {
+	status = _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	goto error;
+    }
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
     if (surface->backend->unmap_image)
-	status = surface->backend->unmap_image (surface, image);
+	status = surface->backend->unmap_image (surface, (cairo_image_surface_t *) image);
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	cairo_surface_pattern_t pattern;
 
