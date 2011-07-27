@@ -43,6 +43,9 @@ _cairo_xcb_connection_create_pixmap (cairo_xcb_connection_t *connection,
 				     uint16_t height)
 {
     xcb_pixmap_t pixmap = _cairo_xcb_connection_get_xid (connection);
+
+    assert (width > 0);
+    assert (height > 0);
     xcb_create_pixmap (connection->xcb_connection,
 		       depth, pixmap, drawable,
 		       width, height);
