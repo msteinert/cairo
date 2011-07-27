@@ -288,67 +288,53 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 		   const int top, const int bottom,
 		   const int dir)
 {
-    cairo_point_t p[2];
-    int top_y, bot_y;
+    cairo_point_t bot_left, top_right;
+    cairo_fixed_t top_y, bot_y;
     int n;
 
     for (n = 0; n < polygon->num_limits; n++) {
 	const cairo_box_t *limits = &polygon->limits[n];
+	cairo_fixed_t pleft, pright;
 
 	if (top >= limits->p2.y)
 	    continue;
 	if (bottom <= limits->p1.y)
 	    continue;
 
-	if (p1->x >= limits->p1.x && p2->x >= limits->p1.x &&
-	    p1->x <= limits->p2.x && p2->x <= limits->p2.x)
-	{
-	    top_y = top;
-	    if (top_y < limits->p1.y)
-		top_y = limits->p1.y;
+	bot_left.x = limits->p1.x;
+	bot_left.y = limits->p2.y;
 
-	    bot_y = bottom;
-	    if (bot_y > limits->p2.y)
-		bot_y = limits->p2.y;
+	top_right.x = limits->p2.x;
+	top_right.y = limits->p1.y;
+
+	/* The useful region */
+	top_y = MAX (top, limits->p1.y);
+	bot_y = MIN (bottom, limits->p2.y);
+
+	/* The projection of the edge on the horizontal axis */
+	pleft = MIN (p1->x, p2->x);
+	pright = MAX (p1->x, p2->x);
+
+	if (limits->p1.x <= pleft && pright <= limits->p2.x) {
+	    /* Projection of the edge completely contained in the box:
+	     * clip vertically by restricting top and bottom */
 
 	    _add_edge (polygon, p1, p2, top_y, bot_y, dir);
-	}
-	else if (p1->x <= limits->p1.x && p2->x <= limits->p1.x)
-	{
-	    p[0].x = limits->p1.x;
-	    p[0].y = limits->p1.y;
-	    top_y = top;
-	    if (top_y < p[0].y)
-		top_y = p[0].y;
+	} else if (pright <= limits->p1.x) {
+	    /* Projection of the edge to the left of the box:
+	     * replace with the left side of the box (clipped top/bottom) */
 
-	    p[1].x = limits->p1.x;
-	    p[1].y = limits->p2.y;
-	    bot_y = bottom;
-	    if (bot_y > p[1].y)
-		bot_y = p[1].y;
+	    _add_edge (polygon, &limits->p1, &bot_left, top_y, bot_y, dir);
+	} else if (limits->p2.x <= pleft) {
+	    /* Projection of the edge to the right of the box:
+	     * replace with the right side of the box (clipped top/bottom) */
 
-	    _add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-	}
-	else if (p1->x >= limits->p2.x && p2->x >= limits->p2.x)
-	{
-	    p[0].x = limits->p2.x;
-	    p[0].y = limits->p1.y;
-	    top_y = top;
-	    if (top_y < p[0].y)
-		top_y = p[0].y;
-
-	    p[1].x = limits->p2.x;
-	    p[1].y = limits->p2.y;
-	    bot_y = bottom;
-	    if (bot_y > p[1].y)
-		bot_y = p[1].y;
-
-	    _add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-	}
-	else
-	{
-	    int left_y, right_y;
+	    _add_edge (polygon, &top_right, &limits->p2, top_y, bot_y, dir);
+	} else {
+	    /* The edge and the box intersect in a generic way */
+	    cairo_fixed_t left_y, right_y;
 	    int p1_y, p2_y;
+	    cairo_point_t p[2];
 
 	    left_y = _cairo_edge_compute_intersection_y_for_x (p1, p2,
 							       limits->p1.x);
