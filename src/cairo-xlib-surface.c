@@ -1377,7 +1377,7 @@ _cairo_xlib_surface_acquire_source_image (void                    *abstract_surf
 
     extents.x = extents.y = 0;
     extents.width = surface->width;
-    extents.height = surface->width;
+    extents.height = surface->height;
 
     *image_extra = NULL;
     *image_out = (cairo_image_surface_t*)_get_image_surface (surface, &extents);
