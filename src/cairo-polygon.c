@@ -355,9 +355,6 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 	    right_y = _cairo_edge_compute_intersection_y_for_x (p1, p2,
 								limits->p2.x);
 
-	    if (left_y == right_y) /* horizontal within bounds */
-		continue;
-
 	    p1_y = top;
 	    p2_y = bottom;
 
