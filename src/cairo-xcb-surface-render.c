@@ -328,6 +328,11 @@ _picture_from_image (cairo_xcb_surface_t *target,
     xcb_gcontext_t gc;
     cairo_xcb_picture_t *picture;
 
+    /* FIXME: Can we somehow optimize this away at a higher layer? */
+    if (unlikely (image->width <= 0 || image->height <= 0))
+	return (cairo_xcb_picture_t *)
+	    _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+
     pixmap = _cairo_xcb_connection_create_pixmap (target->connection,
 						  image->depth,
 						  target->drawable,
