@@ -1239,7 +1239,7 @@ _cairo_recording_surface_replay_internal (cairo_recording_surface_t	*surface,
     if (unlikely (surface->base.finished))
 	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
-    if (surface->base.is_clear)
+    if (surface->base.is_clear && target->is_clear)
 	return CAIRO_STATUS_SUCCESS;
 
     assert (_cairo_surface_is_recording (&surface->base));
