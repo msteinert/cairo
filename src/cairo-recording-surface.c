@@ -1269,7 +1269,7 @@ _cairo_recording_surface_replay_internal (cairo_recording_surface_t	*surface,
     }
 
     for (i = 0; i < num_elements; i++) {
-	cairo_command_t *command = elements[use_indices ? surface->indices[i] : i];
+	cairo_command_t *command = elements[use_indices ? surface->indices[i] : i + surface->replay_start_idx];
 
 	if (! replay_all && command->header.region != region)
 	    continue;
