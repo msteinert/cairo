@@ -407,7 +407,7 @@ cairo_recording_surface_create (cairo_content_t		 content,
     _cairo_array_init (&surface->commands, sizeof (cairo_command_t *));
 
     surface->replay_start_idx = 0;
-    surface->base.is_clear = TRUE;
+    surface->base.is_clear = FALSE;
 
     surface->bbtree.left = surface->bbtree.right = NULL;
     surface->bbtree.chain = INVALID_CHAIN;
