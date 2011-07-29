@@ -1323,7 +1323,9 @@ _cairo_recording_surface_replay_internal (cairo_recording_surface_t	*surface,
 		if (stroke_command != NULL &&
 		    stroke_command->header.type == CAIRO_COMMAND_STROKE &&
 		    _cairo_path_fixed_equal (&command->fill.path,
-					     &stroke_command->stroke.path))
+					     &stroke_command->stroke.path) &&
+		    _cairo_clip_equal (command->header.clip,
+				       stroke_command->header.clip))
 		{
 		    status = _cairo_surface_wrapper_fill_stroke (&wrapper,
 								 command->header.op,
