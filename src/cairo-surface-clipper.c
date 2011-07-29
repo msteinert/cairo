@@ -133,7 +133,7 @@ _cairo_surface_clipper_set_clip (cairo_surface_clipper_t *clipper,
     assert (!_cairo_clip_is_all_clipped (clip));
 
     /* XXX Is this an incremental clip? */
-    if (clipper->clip &&
+    if (clipper->clip && clip &&
 	clip->num_boxes == clipper->clip->num_boxes &&
 	memcmp (clip->boxes, clipper->clip->boxes,
 		sizeof (cairo_box_t) * clip->num_boxes) == 0)
