@@ -1465,6 +1465,25 @@ _format_to_string (cairo_format_t format)
 }
 
 static const char *
+_format_to_content_string (cairo_format_t format)
+{
+    switch (format) {
+    case CAIRO_FORMAT_INVALID:
+	return "INVALID";
+    case CAIRO_FORMAT_ARGB32:
+	return "COLOR_ALPHA";
+    case CAIRO_FORMAT_RGB30:
+    case CAIRO_FORMAT_RGB24:
+    case CAIRO_FORMAT_RGB16_565:
+	return "COLOR";
+    case CAIRO_FORMAT_A8:
+    case CAIRO_FORMAT_A1:
+	return "ALPHA";
+    }
+    return "UNKNOWN";
+}
+
+static const char *
 _status_to_string (cairo_status_t status)
 {
 #define f(name) case CAIRO_STATUS_ ## name: return "STATUS_" #name
@@ -3406,13 +3425,15 @@ cairo_image_surface_create (cairo_format_t format, int width, int height)
     if (_write_lock ()) {
 	Object *obj = _create_surface (ret);
 	const char *format_str = _format_to_string (format);
+	const char *content_str = _format_to_content_string (format);
 
 	_trace_printf ("dict\n"
 		       "  /width %d set\n"
 		       "  /height %d set\n"
 		       "  /format //%s set\n"
+		       "  /content //%s set\n"
 		       "  image dup /s%ld exch def\n",
-		       width, height, format_str, obj->token);
+		       width, height, format_str, content_str, obj->token);
 	obj->width = width;
 	obj->height = height;
 	obj->defined = TRUE;
