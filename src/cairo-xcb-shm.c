@@ -271,7 +271,7 @@ merge_buddies (cairo_xcb_shm_mem_pool_t *pi,
 	       cairo_xcb_shm_mem_block_t *block,
 	       unsigned int max_bits)
 {
-    size_t block_offset = block_offset = block - pi->blocks;
+    size_t block_offset = block - pi->blocks;
     unsigned int bits = block->bits;
 
     while (bits < max_bits - 1) {
@@ -477,6 +477,10 @@ _cairo_xcb_shm_process_pending (cairo_xcb_connection_t *connection, shm_wait_typ
 		 * larger sequence number and thus don't have to be checked. */
 		return;
 	    break;
+	default:
+	    /* silence Clang static analyzer warning */
+	    ASSERT_NOT_REACHED;
+	    reply = NULL;
 	}
 
 	free (reply);

@@ -302,11 +302,10 @@ _cairo_xcb_surface_ensure_picture (cairo_xcb_surface_t *surface)
     if (surface->picture == XCB_NONE) {
 	uint32_t values[1];
 	uint32_t flags = 0;
-	int n = 0;
 
 	if (surface->precision != XCB_RENDER_POLY_MODE_PRECISE) {
 	    flags |= XCB_RENDER_CP_POLY_MODE;
-	    values[n++] = surface->precision;
+	    values[0] = surface->precision;
 	}
 
 	surface->picture = _cairo_xcb_connection_get_xid (surface->connection);

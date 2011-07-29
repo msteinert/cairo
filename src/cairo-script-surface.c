@@ -1343,7 +1343,9 @@ _emit_image_surface (cairo_script_surface_t *surface,
 	    len = clone->width * 4;
 	    break;
 	case CAIRO_FORMAT_INVALID:
+	default:
 	    ASSERT_NOT_REACHED;
+	    len = 0;
 	    break;
 	}
 	len *= clone->height;

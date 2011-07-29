@@ -163,10 +163,10 @@ _cairo_xcb_surface_create_similar_image (void			*abstract_other,
 					 int			 width,
 					 int			 height)
 {
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
     cairo_xcb_surface_t *other = abstract_other;
     cairo_xcb_connection_t *connection = other->connection;
 
-#if CAIRO_HAS_XCB_SHM_FUNCTIONS
     cairo_surface_t *image;
     cairo_xcb_shm_info_t *shm_info;
     cairo_status_t status;
