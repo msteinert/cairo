@@ -3463,10 +3463,6 @@ _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface,
 {
     cairo_status_t status;
 
-    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
-    if (unlikely (status))
-	return status;
-
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
 	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) pattern;
 
