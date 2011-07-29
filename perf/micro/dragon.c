@@ -167,7 +167,6 @@ do_dragon_solid (cairo_t *cr, int width, int height, int loops)
     double cx, cy, r;
 
     cx = cy = .5 * MAX (width, height);
-    r = .5 * MIN (width, height);
 
     cairo_perf_timer_start ();
 
