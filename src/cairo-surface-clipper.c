@@ -98,14 +98,16 @@ _cairo_surface_clipper_intersect_clip_boxes (cairo_surface_clipper_t *clipper,
 
 static cairo_status_t
 _cairo_surface_clipper_intersect_clip_path_recursive (cairo_surface_clipper_t *clipper,
-						      cairo_clip_path_t *clip_path)
+						      cairo_clip_path_t *clip_path,
+						      cairo_clip_path_t *end)
 {
     cairo_status_t status;
 
-    if (clip_path->prev != NULL) {
+    if (clip_path->prev != end) {
 	status =
 	    _cairo_surface_clipper_intersect_clip_path_recursive (clipper,
-								  clip_path->prev);
+								  clip_path->prev,
+								  end);
 	if (unlikely (status))
 	    return status;
     }
@@ -122,6 +124,7 @@ _cairo_surface_clipper_set_clip (cairo_surface_clipper_t *clipper,
 				 const cairo_clip_t *clip)
 {
     cairo_status_t status;
+    cairo_bool_t incremental = FALSE;
 
     if (_cairo_clip_equal (clip, clipper->clip))
 	return CAIRO_STATUS_SUCCESS;
@@ -129,8 +132,30 @@ _cairo_surface_clipper_set_clip (cairo_surface_clipper_t *clipper,
     /* all clipped out state should never propagate this far */
     assert (!_cairo_clip_is_all_clipped (clip));
 
+    /* XXX Is this an incremental clip? */
+    if (clipper->clip &&
+	clip->num_boxes == clipper->clip->num_boxes &&
+	memcmp (clip->boxes, clipper->clip->boxes,
+		sizeof (cairo_box_t) * clip->num_boxes) == 0)
+    {
+	cairo_clip_path_t *clip_path = clip->path;
+	while (clip_path != clipper->clip->path)
+	    clip_path = clip_path->prev;
+
+	if (clip_path) {
+	    assert (clip_path != clipper->clip->path);
+	    incremental = TRUE;
+	    status = _cairo_surface_clipper_intersect_clip_path_recursive (clipper,
+									   clip->path,
+									   clipper->clip->path);
+	}
+    }
+
     _cairo_clip_destroy (clipper->clip);
     clipper->clip = _cairo_clip_copy (clip);
+
+    if (incremental)
+	return status;
 
     status = clipper->intersect_clip_path (clipper, NULL, 0, 0, 0);
     if (unlikely (status))
@@ -145,7 +170,8 @@ _cairo_surface_clipper_set_clip (cairo_surface_clipper_t *clipper,
 
     if (clip->path != NULL) {
 	    status = _cairo_surface_clipper_intersect_clip_path_recursive (clipper,
-									   clip->path);
+									   clip->path,
+									   NULL);
     }
 
     return status;
