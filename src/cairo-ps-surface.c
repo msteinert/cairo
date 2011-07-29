@@ -3557,6 +3557,34 @@ _cairo_ps_surface_get_font_options (void                  *abstract_surface,
 }
 
 static cairo_int_status_t
+_cairo_ps_surface_set_clip (cairo_ps_surface_t *surface,
+			    cairo_composite_rectangles_t *composite)
+{
+    cairo_clip_t *clip = composite->clip;
+
+    if (_cairo_clip_is_region (clip) &&
+	cairo_region_contains_rectangle (_cairo_clip_get_region (clip),
+					 &composite->unbounded) == CAIRO_REGION_OVERLAP_IN)
+    {
+	    clip = NULL;
+    }
+
+    if (clip == NULL) {
+	cairo_clip_t *current = surface->clipper.clip;
+
+	if (current && _cairo_clip_is_region (current) &&
+	    cairo_region_contains_rectangle (_cairo_clip_get_region (current),
+					     &composite->unbounded) == CAIRO_REGION_OVERLAP_IN)
+	{
+	    return CAIRO_STATUS_SUCCESS;
+	}
+    }
+
+    return _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+}
+
+
+static cairo_int_status_t
 _cairo_ps_surface_paint (void			*abstract_surface,
 			 cairo_operator_t	 op,
 			 const cairo_pattern_t	*source,
@@ -3584,7 +3612,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 				 "%% _cairo_ps_surface_paint\n");
 #endif
 
-    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    status = _cairo_ps_surface_set_clip (surface, &extents);
     if (unlikely (status))
 	return status;
 
@@ -3665,7 +3693,7 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 				 "%% _cairo_ps_surface_stroke\n");
 #endif
 
-    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    status = _cairo_ps_surface_set_clip (surface, &extents);
     if (unlikely (status))
 	return status;
 
@@ -3727,7 +3755,7 @@ _cairo_ps_surface_fill (void		*abstract_surface,
     if (unlikely (status))
 	return status;
 
-    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    status = _cairo_ps_surface_set_clip (surface, &extents);
     if (unlikely (status))
 	return status;
 
@@ -3804,7 +3832,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 				 "%% _cairo_ps_surface_show_glyphs\n");
 #endif
 
-    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    status = _cairo_ps_surface_set_clip (surface, &extents);
     if (unlikely (status))
 	return status;
 
