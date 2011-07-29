@@ -655,6 +655,9 @@ _cairo_xcb_surface_map_to_image (void *abstract_surface,
     cairo_xcb_surface_t *surface = abstract_surface;
     cairo_image_surface_t *image;
 
+    if (surface->fallback)
+	return surface->fallback->base.backend->map_to_image (surface->fallback, extents);
+
     image = _get_image (surface, TRUE,
 			extents->x, extents->y,
 			extents->width, extents->height);
@@ -686,6 +689,10 @@ static cairo_int_status_t
 _cairo_xcb_surface_unmap (void *abstract_surface,
 			  cairo_image_surface_t *image)
 {
+    cairo_xcb_surface_t *surface = abstract_surface;
+
+    if (surface->fallback)
+	return surface->fallback->base.backend->unmap_image (surface->fallback, image);
     return _put_image (abstract_surface, image);
 }
 
