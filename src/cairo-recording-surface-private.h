@@ -142,8 +142,6 @@ typedef struct _cairo_recording_surface {
 	struct bbtree *left, *right;
 	cairo_command_header_t *chain;
     } bbtree;
-
-    int replay_start_idx;
 } cairo_recording_surface_t;
 
 slim_hidden_proto (cairo_recording_surface_create);

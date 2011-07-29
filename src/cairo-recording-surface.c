@@ -303,7 +303,7 @@ _cairo_recording_surface_destroy_bbtree (cairo_recording_surface_t *surface)
 
     elements = _cairo_array_index (&surface->commands, 0);
     num_elements = surface->commands.num_elements;
-    for (i = surface->replay_start_idx; i < num_elements; i++)
+    for (i = 0; i < num_elements; i++)
 	elements[i]->header.chain = NULL;
 
     surface->bbtree.chain = INVALID_CHAIN;
@@ -317,7 +317,7 @@ _cairo_recording_surface_create_bbtree (cairo_recording_surface_t *surface)
     int i, count;
     int *indices;
 
-    count = surface->commands.num_elements - surface->replay_start_idx;
+    count = surface->commands.num_elements;
     if (count > surface->num_indices) {
 	free (surface->indices);
 	surface->indices = _cairo_malloc_ab (count, sizeof (int));
@@ -329,7 +329,7 @@ _cairo_recording_surface_create_bbtree (cairo_recording_surface_t *surface)
 
     indices = surface->indices;
     for (i = 0; i < count; i++)
-	indices[i] = i + surface->replay_start_idx;
+	indices[i] = i;
 
     sort_commands (indices, count, elements);
 
@@ -406,8 +406,7 @@ cairo_recording_surface_create (cairo_content_t		 content,
 
     _cairo_array_init (&surface->commands, sizeof (cairo_command_t *));
 
-    surface->replay_start_idx = 0;
-    surface->base.is_clear = FALSE;
+    surface->base.is_clear = TRUE;
 
     surface->bbtree.left = surface->bbtree.right = NULL;
     surface->bbtree.chain = INVALID_CHAIN;
@@ -613,6 +612,15 @@ _cairo_recording_surface_paint (void			  *abstract_surface,
     cairo_composite_rectangles_t composite;
     const cairo_rectangle_int_t *extents;
 
+    /* An optimisation that takes care to not replay what was done
+     * before surface is cleared. We don't erase recorded commands
+     * since we may have earlier snapshots of this surface. */
+    if (op == CAIRO_OPERATOR_CLEAR && clip == NULL) {
+	_cairo_recording_surface_destroy_bbtree (surface);
+	surface->commands.num_elements = 0;
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     extents = _cairo_recording_surface_extents (surface);
     status = _cairo_composite_rectangles_init_for_paint (&composite, extents,
 							 op, source,
@@ -641,12 +649,6 @@ _cairo_recording_surface_paint (void			  *abstract_surface,
 	goto CLEANUP_SOURCE;
 
     _cairo_recording_surface_destroy_bbtree (surface);
-
-    /* An optimisation that takes care to not replay what was done
-     * before surface is cleared. We don't erase recorded commands
-     * since we may have earlier snapshots of this surface. */
-    if (op == CAIRO_OPERATOR_CLEAR && clip == NULL)
-	surface->replay_start_idx = surface->commands.num_elements;
 
     _cairo_composite_rectangles_fini (&composite);
     return CAIRO_STATUS_SUCCESS;
@@ -1013,11 +1015,7 @@ _cairo_recording_surface_snapshot (void *abstract_other)
     surface->unbounded = other->unbounded;
     surface->content = other->content;
 
-    /* XXX We should in theory be able to reuse the original array, but we
-     * need to handle reference cycles during subsurface and self-copy.
-     */
-    surface->replay_start_idx = 0;
-    surface->base.is_clear = FALSE;
+    surface->base.is_clear = TRUE;
 
     surface->bbtree.left = surface->bbtree.right = NULL;
     surface->bbtree.chain = INVALID_CHAIN;
@@ -1133,7 +1131,7 @@ _cairo_recording_surface_get_path (cairo_surface_t    *abstract_surface,
 
     num_elements = surface->commands.num_elements;
     elements = _cairo_array_index (&surface->commands, 0);
-    for (i = surface->replay_start_idx; i < num_elements; i++) {
+    for (i = 0; i < num_elements; i++) {
 	cairo_command_t *command = elements[i];
 
 	switch (command->header.type) {
@@ -1239,11 +1237,10 @@ _cairo_recording_surface_replay_internal (cairo_recording_surface_t	*surface,
     if (unlikely (surface->base.finished))
 	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
-    if (surface->base.is_clear && target->is_clear)
+    if (surface->base.is_clear)
 	return CAIRO_STATUS_SUCCESS;
 
     assert (_cairo_surface_is_recording (&surface->base));
-    assert ((int)surface->commands.num_elements > surface->replay_start_idx);
 
     _cairo_surface_wrapper_init (&wrapper, target);
     if (surface_extents)
@@ -1260,7 +1257,7 @@ _cairo_recording_surface_replay_internal (cairo_recording_surface_t	*surface,
     if (! _cairo_surface_wrapper_get_target_extents (&wrapper, &extents))
 	goto done;
 
-    num_elements = surface->commands.num_elements - surface->replay_start_idx;
+    num_elements = surface->commands.num_elements;
     elements = _cairo_array_index (&surface->commands, 0);
     if (extents.width < r->width || extents.height < r->height) {
 	num_elements =
@@ -1269,7 +1266,7 @@ _cairo_recording_surface_replay_internal (cairo_recording_surface_t	*surface,
     }
 
     for (i = 0; i < num_elements; i++) {
-	cairo_command_t *command = elements[use_indices ? surface->indices[i] : i + surface->replay_start_idx];
+	cairo_command_t *command = elements[use_indices ? surface->indices[i] : i];
 
 	if (! replay_all && command->header.region != region)
 	    continue;
