@@ -5756,6 +5756,17 @@ _cairo_pdf_surface_set_clip (cairo_pdf_surface_t *surface,
 	    clip = NULL;
     }
 
+    if (clip == NULL) {
+	cairo_clip_t *current = surface->clipper.clip;
+
+	if (current && _cairo_clip_is_region (current) &&
+	    cairo_region_contains_rectangle (_cairo_clip_get_region (current),
+					     &composite->unbounded) == CAIRO_REGION_OVERLAP_IN)
+	{
+	    return CAIRO_STATUS_SUCCESS;
+	}
+    }
+
     return _cairo_surface_clipper_set_clip (&surface->clipper, clip);
 }
 
