@@ -1681,12 +1681,13 @@ _cairo_image_surface_fixup_unbounded (cairo_image_surface_t *dst,
 				      const cairo_composite_rectangles_t *rects,
 				      cairo_clip_t *clip)
 {
+    cairo_surface_t *clip_surface = NULL;
     pixman_image_t *mask = NULL;
     pixman_box32_t boxes[4];
     int i, mask_x = 0, mask_y = 0, n_boxes = 0;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     if (clip != NULL) {
-	cairo_surface_t *clip_surface;
 	int clip_x, clip_y;
 
 	clip_surface = _cairo_clip_get_surface (clip, &dst->base, &clip_x, &clip_y);
@@ -1726,10 +1727,11 @@ _cairo_image_surface_fixup_unbounded (cairo_image_surface_t *dst,
 					   dst->pixman_image,
 					   &color,
 					   1, &box))
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
 
-	return CAIRO_STATUS_SUCCESS;
+	cairo_surface_destroy (clip_surface);
+	return status;
     }
 
     /* top */
@@ -1786,11 +1788,12 @@ _cairo_image_surface_fixup_unbounded (cairo_image_surface_t *dst,
 				       n_boxes,
 				       boxes))
 	{
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
     }
 
-    return CAIRO_STATUS_SUCCESS;
+    cairo_surface_destroy (clip_surface);
+    return status;
 }
 
 static cairo_status_t
@@ -2155,6 +2158,7 @@ _clip_and_composite_combine (cairo_composite_rectangles_t	*extents,
                                   extents->bounded.width, extents->bounded.height);
     }
 
+    cairo_surface_destroy (clip_surface);
  CLEANUP_SURFACE:
     pixman_image_unref (tmp);
 
@@ -3083,12 +3087,12 @@ _composite_boxes (cairo_image_surface_t *dst,
     }
     else
     {
+	cairo_surface_t *clip_surface = NULL;
 	pixman_image_t *src = NULL, *mask = NULL;
 	int src_x, src_y, mask_x = 0, mask_y = 0;
 	pixman_op_t pixman_op = _pixman_operator (op);
 
 	if (need_clip_mask) {
-	    cairo_surface_t *clip_surface;
 	    int clip_x, clip_y;
 
 	    clip_surface = _cairo_clip_get_surface (extents->clip,
@@ -3106,16 +3110,16 @@ _composite_boxes (cairo_image_surface_t *dst,
 	    }
 
 	    mask = ((cairo_image_surface_t *) clip_surface)->pixman_image;
-	    pixman_image_ref (mask);
-	    cairo_surface_destroy (clip_surface);
 	}
 
 	if (pattern != NULL) {
 	    src = _pixman_image_for_pattern (pattern, FALSE, &extents->bounded,
 					     &dst->base.device_transform,
 					     &src_x, &src_y);
-	    if (unlikely (src == NULL))
+	    if (unlikely (src == NULL)) {
+		cairo_surface_destroy (clip_surface);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    }
 	} else {
 	    src = mask;
 	    src_x = mask_x;
@@ -3144,6 +3148,7 @@ _composite_boxes (cairo_image_surface_t *dst,
 	    }
 	}
 
+	cairo_surface_destroy (clip_surface);
 	if (pattern != NULL)
 	    pixman_image_unref (src);
 
