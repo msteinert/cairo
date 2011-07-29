@@ -1008,6 +1008,14 @@ REFERENCE_IMAGES = \
 	record-select-font-face.ref.png \
 	record-self-intersecting.ref.png \
 	record-text-transform.ref.png \
+	recording-surface-extend-none.argb32.ref.png \
+	recording-surface-extend-none.rgb24.ref.png \
+	recording-surface-extend-pad.argb32.ref.png \
+	recording-surface-extend-pad.rgb24.ref.png \
+	recording-surface-extend-reflect.argb32.ref.png \
+	recording-surface-extend-reflect.rgb24.ref.png \
+	recording-surface-extend-repeat.argb32.ref.png \
+	recording-surface-extend-repeat.rgb24.ref.png \
 	recording-surface-over.gl.argb32.ref.png \
 	recording-surface-over.image16.ref.png \
 	recording-surface-over.pdf.argb32.ref.png \

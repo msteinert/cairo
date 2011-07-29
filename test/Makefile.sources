@@ -224,6 +224,7 @@ test_sources = \
 	random-intersections-curves-nz.c		\
 	record.c					\
 	recording-surface-pattern.c			\
+	recording-surface-extend.c			\
 	rectangle-rounding-error.c			\
 	rectilinear-fill.c				\
 	rectilinear-grid.c				\
