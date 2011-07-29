@@ -315,12 +315,9 @@ _paint_fallback_image (cairo_paginated_surface_t *surface,
     pattern.base.filter = CAIRO_FILTER_NEAREST;
 
     clip = _cairo_clip_intersect_rectangle (NULL, rect);
-    if (likely (status == CAIRO_STATUS_SUCCESS)) {
-	status = _cairo_surface_paint (surface->target,
-				       CAIRO_OPERATOR_SOURCE,
-				       &pattern.base, clip);
-    }
-
+    status = _cairo_surface_paint (surface->target,
+				   CAIRO_OPERATOR_SOURCE,
+				   &pattern.base, clip);
     _cairo_clip_destroy (clip);
     _cairo_pattern_fini (&pattern.base);
 
