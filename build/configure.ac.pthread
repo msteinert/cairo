@@ -135,11 +135,11 @@ dnl   <program> with the given flags and libs.  Execute <true-action> on
 dnl   success and <false-action> on failure.
 AC_DEFUN([CAIRO_CHECK_PTHREAD],[dnl
 	CAIRO_CC_TRY_LINK_WITH_ENV_SILENT(
-		[CFLAGS="$2";
-		 LIBS="$3"],
+		[CFLAGS="$CFLAGS $2";
+		 LIBS="$LIBS $3"],
 		[$4],
-		[$1_CFLAGS="$CFLAGS";
-		 $1_LIBS="$LIBS";
+		[$1_CFLAGS="$2";
+		 $1_LIBS="$3";
 		 $5],
 		[$1_CFLAGS="";
 		 $1_LIBS="";
