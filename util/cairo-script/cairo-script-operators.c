@@ -6084,6 +6084,7 @@ _record (csi_t *ctx)
 	extents.x = extents.y = 0;
 	extents.width = _csi_object_as_real (&array->stack.objects[0]);
 	extents.height = _csi_object_as_real (&array->stack.objects[1]);
+	r = &extents;
 	break;
     case 4:
 	extents.x = _csi_object_as_real (&array->stack.objects[0]);
