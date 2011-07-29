@@ -1724,7 +1724,7 @@ _cairo_directfb_surface_show_glyphs (void		    *abstract_dst,
                                      cairo_glyph_t	    *glyphs,
                                      int		     num_glyphs,
                                      cairo_scaled_font_t    *scaled_font,
-				     cairo_clip_t	    *clip,
+				     const cairo_clip_t	    *clip,
 				     int		    *remaining_glyphs)
 {
     cairo_directfb_surface_t    *dst = abstract_dst;
@@ -1751,10 +1751,9 @@ _cairo_directfb_surface_show_glyphs (void		    *abstract_dst,
 
     /* Fallback if we need to emulate clip regions */
     if (clip != NULL) {
-	status = _cairo_clip_get_region (clip, &clip_region);
-	assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
-	if (status)
-	    return status;
+	clip_region = _cairo_clip_get_region (clip);
+	if (unlikely (clip_region == NULL))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     /* XXX Unbounded operators are not handled correctly */
