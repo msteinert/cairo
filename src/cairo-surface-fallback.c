@@ -119,6 +119,84 @@ typedef cairo_status_t
 		      const cairo_rectangle_int_t   *extents,
 		      cairo_region_t		    *clip_region);
 
+static void do_unaligned_row(void (*blt)(void *closure,
+					 int16_t x, int16_t y,
+					 int16_t w, int16_t h,
+					 uint16_t coverage),
+			     void *closure,
+			     const cairo_box_t *b,
+			     int tx, int y, int h,
+			     uint16_t coverage)
+{
+    int x1 = _cairo_fixed_integer_part (b->p1.x) - tx;
+    int x2 = _cairo_fixed_integer_part (b->p2.x) - tx;
+    if (x2 > x1) {
+	if (! _cairo_fixed_is_integer (b->p1.x)) {
+	    blt(closure, x1, y, 1, h,
+		coverage * (256 - _cairo_fixed_fractional_part (b->p1.x)));
+	    x1++;
+	}
+
+	if (x2 > x1)
+	    blt(closure, x1, y, x2-x1, h, (coverage << 8) - (coverage >> 8));
+
+	if (! _cairo_fixed_is_integer (b->p2.x))
+	    blt(closure, x2, y, 1, h,
+		coverage * _cairo_fixed_fractional_part (b->p2.x));
+    } else
+	blt(closure, x1, y, 1, h,
+	    coverage * (b->p2.x - b->p1.x));
+}
+
+static void do_unaligned_box(void (*blt)(void *closure,
+					 int16_t x, int16_t y,
+					 int16_t w, int16_t h,
+					 uint16_t coverage),
+			     void *closure,
+			     const cairo_box_t *b, int tx, int ty)
+{
+    int y1 = _cairo_fixed_integer_part (b->p1.y) - ty;
+    int y2 = _cairo_fixed_integer_part (b->p2.y) - ty;
+    if (y2 > y1) {
+	if (! _cairo_fixed_is_integer (b->p1.y)) {
+	    do_unaligned_row(blt, closure, b, tx, y1, 1,
+			     256 - _cairo_fixed_fractional_part (b->p1.y));
+	    y1++;
+	}
+
+	if (y2 > y1)
+	    do_unaligned_row(blt, closure, b, tx, y1, y2-y1, 256);
+
+	if (! _cairo_fixed_is_integer (b->p2.y))
+	    do_unaligned_row(blt, closure, b, tx, y2, 1,
+			     _cairo_fixed_fractional_part (b->p2.y));
+    } else
+	do_unaligned_row(blt, closure, b, tx, y1, 1,
+			 b->p2.y - b->p1.y);
+}
+
+static void blt_in(void *closure,
+		   int16_t x, int16_t y,
+		   int16_t w, int16_t h,
+		   uint16_t coverage)
+{
+    cairo_color_t color;
+    cairo_rectangle_int_t rect;
+
+    if (coverage == 0xffff)
+	return;
+
+    _cairo_color_init_rgba (&color, 0, 0, 0, coverage / (double) 0xffff);
+
+    rect.x = x;
+    rect.y = y;
+    rect.width  = w;
+    rect.height = h;
+
+    _cairo_surface_fill_rectangles (closure, CAIRO_OPERATOR_IN,
+				    &color, &rect, 1);
+}
+
 static cairo_status_t
 _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
 				cairo_clip_t                  *clip,
@@ -129,9 +207,8 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
 {
     cairo_surface_t *mask;
     cairo_status_t status;
-    cairo_region_t *clip_region = _cairo_clip_get_region (clip);
-    cairo_bool_t clip_surface = ! _cairo_clip_is_region (clip);
-    cairo_region_t *fallback_region = NULL;
+    cairo_region_t *clip_region;
+    int i;
 
     /* We need to use solid here, because to use CAIRO_OPERATOR_SOURCE with
      * a mask (as called via _cairo_surface_mask) triggers assertion failures.
@@ -145,34 +222,46 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
     if (unlikely (mask->status))
 	return mask->status;
 
-    if (clip_region && (extents->x || extents->y)) {
-	fallback_region = cairo_region_copy (clip_region);
-	status = fallback_region->status;
-	if (unlikely (status))
-	    goto CLEANUP_SURFACE;
-
-	cairo_region_translate (fallback_region,
-				-extents->x,
-				-extents->y);
-	clip_region = fallback_region;
-    }
+    clip_region = _cairo_clip_get_region (clip);
+    if (clip_region && (extents->x | extents->y))
+	cairo_region_translate (clip_region, -extents->x, -extents->y);
 
     status = draw_func (draw_closure, CAIRO_OPERATOR_ADD,
 			&_cairo_pattern_white.base, mask,
 			extents->x, extents->y,
 			extents,
 			clip_region);
-    if (unlikely (status))
-	goto CLEANUP_SURFACE;
 
-    if (clip_surface)
-	status = _cairo_clip_combine_with_surface (clip, mask, extents->x, extents->y);
+    if (clip_region && (extents->x | extents->y))
+	cairo_region_translate (clip_region, extents->x, extents->y);
+
+    if (unlikely (status))
+	goto CLEANUP;
+
+    if (clip) {
+	for (i = 0; i < clip->num_boxes; i++) {
+	    cairo_box_t *b = &clip->boxes[i];
+
+	    if (! _cairo_fixed_is_integer (b->p1.x) ||
+		! _cairo_fixed_is_integer (b->p1.y) ||
+		! _cairo_fixed_is_integer (b->p2.x) ||
+		! _cairo_fixed_is_integer (b->p2.y))
+	    {
+		do_unaligned_box(blt_in, mask, b, extents->x, extents->y);
+	    }
+	}
+
+	if (clip->path != NULL) {
+	    status = _cairo_clip_combine_with_surface (clip, mask,
+						       extents->x, extents->y);
+	    if (unlikely (status))
+		goto CLEANUP;
+	}
+    }
 
     _cairo_pattern_init_for_surface (mask_pattern, mask);
 
- CLEANUP_SURFACE:
-    if (fallback_region)
-        cairo_region_destroy (fallback_region);
+ CLEANUP:
     cairo_surface_destroy (mask);
 
     return status;
