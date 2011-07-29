@@ -152,15 +152,15 @@ static void quartz_ensure_symbols (void)
 }
 
 CGImageRef
-_cairo_quartz_create_cgimage (cairo_format_t format,
-			      unsigned int width,
-			      unsigned int height,
-			      unsigned int stride,
-			      void *data,
-			      cairo_bool_t interpolate,
-			      CGColorSpaceRef colorSpaceOverride,
-			      CGDataProviderReleaseDataCallback releaseCallback,
-			      void *releaseInfo)
+CairoQuartzCreateCGImage (cairo_format_t format,
+			  unsigned int width,
+			  unsigned int height,
+			  unsigned int stride,
+			  void *data,
+			  cairo_bool_t interpolate,
+			  CGColorSpaceRef colorSpaceOverride,
+			  CGDataProviderReleaseDataCallback releaseCallback,
+			  void *releaseInfo)
 {
     CGImageRef image = NULL;
     CGDataProviderRef dataProvider = NULL;
@@ -701,10 +701,10 @@ static const CGFunctionCallbacks gradient_callbacks = {
 #define MAX_GRADIENT_RANGE 1024
 
 static CGFunctionRef
-_cairo_quartz_create_gradient_function (const cairo_gradient_pattern_t *gradient,
-					const cairo_rectangle_int_t *extents,
-					cairo_circle_double_t       *start,
-					cairo_circle_double_t       *end)
+CairoQuartzCreateGradientFunction (const cairo_gradient_pattern_t *gradient,
+				   const cairo_rectangle_int_t    *extents,
+				   cairo_circle_double_t          *start,
+				   cairo_circle_double_t          *end)
 {
     cairo_pattern_t *pat;
     cairo_quartz_float_t input_value_range[2];
@@ -821,15 +821,15 @@ _cairo_surface_to_cgimage (cairo_surface_t *source,
 				     source_img->image_out->data,
 				     source_img->image_out->height * source_img->image_out->stride);
     } else {
-	*image_out = _cairo_quartz_create_cgimage (source_img->image_out->format,
-						   source_img->image_out->width,
-						   source_img->image_out->height,
-						   source_img->image_out->stride,
-						   source_img->image_out->data,
-						   TRUE,
-						   NULL,
-						   DataProviderReleaseCallback,
-						   source_img);
+	*image_out = CairoQuartzCreateCGImage (source_img->image_out->format,
+					       source_img->image_out->width,
+					       source_img->image_out->height,
+					       source_img->image_out->stride,
+					       source_img->image_out->data,
+					       TRUE,
+					       NULL,
+					       DataProviderReleaseCallback,
+					       source_img);
 
 	/* TODO: differentiate memory error and unsupported surface type */
 	if (unlikely (*image_out == NULL))
@@ -1044,10 +1044,8 @@ _cairo_quartz_setup_gradient_source (cairo_quartz_drawing_state_t *state,
     cairo_matrix_invert (&mat);
     _cairo_quartz_cairo_matrix_to_quartz (&mat, &state->transform);
 
-    gradFunc = _cairo_quartz_create_gradient_function (gradient,
-						       extents,
-						       &start,
-						       &end);
+    gradFunc = CairoQuartzCreateGradientFunction (gradient, extents,
+						  &start, &end);
 
     if (unlikely (gradFunc == NULL))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
