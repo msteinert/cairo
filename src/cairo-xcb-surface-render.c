@@ -2578,23 +2578,24 @@ cairo_boxes_for_each_box (cairo_boxes_t *boxes,
     return TRUE;
 }
 
-struct image_contains_box {
+struct _image_contains_box {
     int width, height;
     int tx, ty;
 };
 
 static cairo_bool_t image_contains_box (cairo_box_t *box, void *closure)
 {
-    struct image_contains_box *data = closure;
+    struct _image_contains_box *data = closure;
 
+    /* The box is pixel-aligned so the truncation is safe. */
     return
-	box->p1.x + data->tx >= 0 &&
-	box->p1.y + data->ty >= 0 &&
-	box->p2.x + data->tx <= data->width &&
-	box->p2.y + data->ty <= data->height;
+	_cairo_fixed_integer_part (box->p1.x) + data->tx >= 0 &&
+	_cairo_fixed_integer_part (box->p1.y) + data->ty >= 0 &&
+	_cairo_fixed_integer_part (box->p2.x) + data->tx <= data->width &&
+	_cairo_fixed_integer_part (box->p2.y) + data->ty <= data->height;
 }
 
-struct image_upload_box {
+struct _image_upload_box {
     cairo_xcb_surface_t *surface;
     cairo_image_surface_t *image;
     xcb_gcontext_t gc;
@@ -2603,9 +2604,12 @@ struct image_upload_box {
 
 static cairo_bool_t image_upload_box (cairo_box_t *box, void *closure)
 {
-    const struct image_upload_box *iub = closure;
-    int width = box->p2.x - box->p1.x;
-    int height = box->p2.y - box->p1.y;
+    const struct _image_upload_box *iub = closure;
+    /* The box is pixel-aligned so the truncation is safe. */
+    int x = _cairo_fixed_integer_part (box->p1.x);
+    int y = _cairo_fixed_integer_part (box->p1.y);
+    int width  = _cairo_fixed_integer_part (box->p2.x - box->p1.x);
+    int height = _cairo_fixed_integer_part (box->p2.y - box->p1.y);
     int bpp = PIXMAN_FORMAT_BPP (iub->image->pixman_format);
     int len = CAIRO_STRIDE_FOR_WIDTH_BPP (width, bpp);
     if (len == iub->image->stride) {
@@ -2613,22 +2617,22 @@ static cairo_bool_t image_upload_box (cairo_box_t *box, void *closure)
 					 iub->surface->drawable,
 					 iub->gc,
 					 width, height,
-					 box->p1.x, box->p2.y,
+					 x, y,
 					 iub->image->depth,
 					 iub->image->stride,
 					 iub->image->data +
-					 (box->p1.y + iub->ty) * iub->image->stride +
-					 (box->p1.x + iub->tx) * bpp/8);
+					 (y + iub->ty) * iub->image->stride +
+					 (x + iub->tx) * bpp/8);
     } else {
 	_cairo_xcb_connection_put_subimage (iub->surface->connection,
 					    iub->surface->drawable,
 					    iub->gc,
-					    box->p1.x + iub->tx,
-					    box->p1.y + iub->ty,
+					    x + iub->tx,
+					    y + iub->ty,
 					    width, height,
 					    bpp / 8,
 					    iub->image->stride,
-					    box->p1.x, box->p2.y,
+					    x, y,
 					    iub->image->depth,
 					    iub->image->data);
     }
@@ -2642,8 +2646,8 @@ _upload_image_inplace (cairo_xcb_surface_t *surface,
 		       cairo_boxes_t *boxes)
 {
     const cairo_surface_pattern_t *pattern;
-    struct image_contains_box icb;
-    struct image_upload_box iub;
+    struct _image_contains_box icb;
+    struct _image_upload_box iub;
     cairo_image_surface_t *image;
     cairo_status_t status;
     int tx, ty;
