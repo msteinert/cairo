@@ -1078,10 +1078,10 @@ cairo_cff_font_read_font_metrics (cairo_cff_font_t *font, cairo_hash_table_t  *t
     double x_min, y_min, x_max, y_max;
     double xx, yx, xy, yy;
 
-    font->x_min = 0.0;
-    font->y_min = 0.0;
-    font->x_max = 0.0;
-    font->y_max = 0.0;
+    x_min = 0.0;
+    y_min = 0.0;
+    x_max = 0.0;
+    y_max = 0.0;
     p = cff_dict_get_operands (font->top_dict, FONTBBOX_OP, &size);
     if (p) {
         end = p + size;
