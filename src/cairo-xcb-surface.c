@@ -346,6 +346,7 @@ _get_image (cairo_xcb_surface_t		 *surface,
     xcb_get_image_reply_t *reply;
     cairo_int_status_t status;
 
+    assert (surface->fallback == NULL);
     assert (x >= 0);
     assert (y >= 0);
     assert (x + width <= surface->width);
