@@ -340,11 +340,45 @@ cairo_bool_t
 _cairo_clip_equal (const cairo_clip_t *clip_a,
 		   const cairo_clip_t *clip_b)
 {
+    const cairo_clip_path_t *cp_a, *cp_b;
+
     /* are both all-clipped or no-clip? */
     if (clip_a == clip_b)
 	return TRUE;
 
-    return FALSE;
+    if (clip_a->num_boxes != clip_b->num_boxes)
+	return FALSE;
+
+    if (memcmp (clip_a->boxes, clip_b->boxes,
+		sizeof (cairo_box_t) * clip_a->num_boxes))
+	return FALSE;
+
+    cp_a = clip_a->path;
+    cp_b = clip_b->path;
+    while (cp_a && cp_b) {
+	if (cp_a == cp_b)
+	    return TRUE;
+
+	/* XXX compare reduced polygons? */
+
+	if (cp_a->antialias != cp_b->antialias)
+	    return FALSE;
+
+	if (cp_a->tolerance != cp_b->tolerance)
+	    return FALSE;
+
+	if (cp_a->fill_rule != cp_b->fill_rule)
+	    return FALSE;
+
+	if (! _cairo_path_fixed_equal (&cp_a->path,
+				       &cp_b->path))
+	    return FALSE;
+
+	cp_a = cp_a->prev;
+	cp_b = cp_b->prev;
+    }
+
+    return cp_a == NULL && cp_b == NULL;
 }
 
 static cairo_clip_t *
