@@ -1666,6 +1666,9 @@ static void blt_in(void *closure,
     xcb_render_color_t color;
     xcb_rectangle_t rect;
 
+    if (coverage == 0xffff)
+	return;
+
     color.red = color.green = color.blue = 0;
     color.alpha = coverage;
 
