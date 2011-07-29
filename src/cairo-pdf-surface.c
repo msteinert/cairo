@@ -5743,6 +5743,21 @@ cleanup:
     return status;
 }
 
+static cairo_int_status_t
+_cairo_pdf_surface_set_clip (cairo_pdf_surface_t *surface,
+			     cairo_composite_rectangles_t *composite)
+{
+    cairo_clip_t *clip = composite->clip;
+
+    if (_cairo_clip_is_region (clip) &&
+	cairo_region_contains_rectangle (_cairo_clip_get_region (clip),
+					 &composite->unbounded) == CAIRO_REGION_OVERLAP_IN)
+    {
+	    clip = NULL;
+    }
+
+    return _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+}
 
 static cairo_int_status_t
 _cairo_pdf_surface_paint (void			*abstract_surface,
@@ -5777,7 +5792,7 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
 
     assert (_cairo_pdf_surface_operation_supported (surface, op, source, &extents.bounded));
 
-    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    status = _cairo_pdf_surface_set_clip (surface, &extents);
     if (unlikely (status))
 	return status;
 
@@ -5910,7 +5925,7 @@ _cairo_pdf_surface_mask (void			*abstract_surface,
     assert (_cairo_pdf_surface_operation_supported (surface, op, source, &extents.bounded));
     assert (_cairo_pdf_surface_operation_supported (surface, op, mask, &extents.bounded));
 
-    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    status = _cairo_pdf_surface_set_clip (surface, &extents);
     if (unlikely (status))
 	return status;
 
@@ -6019,7 +6034,7 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 
     assert (_cairo_pdf_surface_operation_supported (surface, op, source, &extents.bounded));
 
-    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    status = _cairo_pdf_surface_set_clip (surface, &extents);
     if (unlikely (status))
 	return status;
 
@@ -6150,7 +6165,7 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 
     assert (_cairo_pdf_surface_operation_supported (surface, op, source, &extents.bounded));
 
-    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    status = _cairo_pdf_surface_set_clip (surface, &extents);
     if (unlikely (status))
 	return status;
 
@@ -6297,7 +6312,7 @@ _cairo_pdf_surface_fill_stroke (void			*abstract_surface,
     if (fill_op != stroke_op)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    status = _cairo_pdf_surface_set_clip (surface, &extents);
     if (unlikely (status))
 	return status;
 
@@ -6443,7 +6458,7 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 
     assert (_cairo_pdf_surface_operation_supported (surface, op, source, &extents.bounded));
 
-    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    status = _cairo_pdf_surface_set_clip (surface, &extents);
     if (unlikely (status))
 	return status;
 
