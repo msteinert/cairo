@@ -44,9 +44,10 @@
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
+#include "cairo-paginated-private.h"
+#include "cairo-pattern-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-region-private.h"
-#include "cairo-pattern-private.h"
 #include "cairo-scaled-font-private.h"
 #include "cairo-surface-snapshot-private.h"
 #include "cairo-surface-subsurface-private.h"
@@ -2912,22 +2913,68 @@ _composite_unaligned_boxes (cairo_image_surface_t *dst,
 static cairo_bool_t
 is_recording_pattern (const cairo_pattern_t *pattern)
 {
-    const cairo_surface_pattern_t *surface_pattern;
+    cairo_surface_t *surface;
 
     if (pattern->type != CAIRO_PATTERN_TYPE_SURFACE)
 	return FALSE;
 
-   surface_pattern = (const cairo_surface_pattern_t *) pattern;
-   return _cairo_surface_is_recording (surface_pattern->surface);
+    surface = ((const cairo_surface_pattern_t *) pattern)->surface;
+    if (_cairo_surface_is_paginated (surface))
+	surface = _cairo_paginated_surface_get_recording (surface);
+    return _cairo_surface_is_recording (surface);
 }
 
 static cairo_surface_t *
-pattern_get_surface (const cairo_pattern_t *pattern)
+recording_pattern_get_surface (const cairo_pattern_t *pattern)
 {
-    const cairo_surface_pattern_t *surface_pattern;
+    cairo_surface_t *surface;
 
-   surface_pattern = (const cairo_surface_pattern_t *) pattern;
-   return surface_pattern->surface;
+    surface = ((const cairo_surface_pattern_t *) pattern)->surface;
+    if (_cairo_surface_is_paginated (surface))
+	surface = _cairo_paginated_surface_get_recording (surface);
+    return surface;
+}
+
+static cairo_bool_t
+op_reduces_to_source (cairo_operator_t op,
+		      cairo_image_surface_t *dst)
+{
+    if (op == CAIRO_OPERATOR_SOURCE)
+	return TRUE;
+
+    if (dst->base.is_clear)
+	return op == CAIRO_OPERATOR_OVER || op == CAIRO_OPERATOR_ADD;
+
+    return FALSE;
+}
+
+static cairo_bool_t
+recording_pattern_contains_sample (const cairo_pattern_t *pattern,
+				   const cairo_rectangle_int_t *extents)
+{
+    cairo_rectangle_int_t area;
+    cairo_recording_surface_t *surface;
+
+    if (! is_recording_pattern (pattern))
+	return FALSE;
+
+    if (pattern->extend == CAIRO_EXTEND_NONE)
+	return TRUE;
+
+    surface = (cairo_recording_surface_t *) recording_pattern_get_surface (pattern);
+    if (surface->unbounded)
+	return TRUE;
+
+    sampled_area ((cairo_surface_pattern_t *) pattern, extents, &area);
+    if (area.x >= surface->extents.x &&
+	area.y >= surface->extents.y &&
+	area.x + area.width <= surface->extents.x + surface->extents.width &&
+	area.y + area.height <= surface->extents.y + surface->extents.height)
+    {
+	return TRUE;
+    }
+
+    return FALSE;
 }
 
 static cairo_status_t
@@ -2970,11 +3017,12 @@ _composite_boxes (cairo_image_surface_t *dst,
 
     /* Are we just copying a recording surface? */
     if (! need_clip_mask &&
-	op == CAIRO_OPERATOR_SOURCE &&
-	pattern->extend == CAIRO_EXTEND_NONE && /* or if sample is contained */
-	is_recording_pattern (pattern))
+	op_reduces_to_source (op, dst) &&
+	recording_pattern_contains_sample (pattern, &extents->bounded))
     {
 	cairo_clip_t *recording_clip;
+
+	/* XXX could also do tiling repeat modes... */
 
 	/* first clear the area about to be overwritten */
 	if (! dst->base.is_clear) {
@@ -3000,7 +3048,7 @@ _composite_boxes (cairo_image_surface_t *dst,
 	}
 
 	recording_clip = _cairo_clip_from_boxes (boxes);
-	status = _cairo_recording_surface_replay_with_clip (pattern_get_surface (pattern),
+	status = _cairo_recording_surface_replay_with_clip (recording_pattern_get_surface (pattern),
 							    &pattern->matrix,
 							    &dst->base,
 							    recording_clip);

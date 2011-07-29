@@ -147,8 +147,18 @@ _cairo_paginated_surface_get_target (cairo_surface_t *surface)
     assert (_cairo_surface_is_paginated (surface));
 
     paginated_surface = (cairo_paginated_surface_t *) surface;
-
     return paginated_surface->target;
+}
+
+cairo_surface_t *
+_cairo_paginated_surface_get_recording (cairo_surface_t *surface)
+{
+    cairo_paginated_surface_t *paginated_surface;
+
+    assert (_cairo_surface_is_paginated (surface));
+
+    paginated_surface = (cairo_paginated_surface_t *) surface;
+    return paginated_surface->recording_surface;
 }
 
 cairo_status_t
