@@ -183,17 +183,8 @@
 #endif
 
 #if defined(__GNUC__) && (__GNUC__ > 2) && defined(__OPTIMIZE__)
-#define _CAIRO_BOOLEAN_EXPR(expr)                   \
- __extension__ ({                               \
-   int _cairo_boolean_var_;                         \
-   if (expr)                                    \
-      _cairo_boolean_var_ = 1;                      \
-   else                                         \
-      _cairo_boolean_var_ = 0;                      \
-   _cairo_boolean_var_;                             \
-})
-#define likely(expr) (__builtin_expect (_CAIRO_BOOLEAN_EXPR(expr), 1))
-#define unlikely(expr) (__builtin_expect (_CAIRO_BOOLEAN_EXPR(expr), 0))
+#define likely(expr) (__builtin_expect (!!(expr), 1))
+#define unlikely(expr) (__builtin_expect (!!(expr), 0))
 #else
 #define likely(expr) (expr)
 #define unlikely(expr) (expr)

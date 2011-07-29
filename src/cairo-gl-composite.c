@@ -42,6 +42,8 @@
 
 #include "cairoint.h"
 
+#include "cairo-composite-rectangles-private.h"
+#include "cairo-clip-private.h"
 #include "cairo-error-private.h"
 #include "cairo-gl-private.h"
 
@@ -1226,3 +1228,332 @@ _cairo_gl_composite_init (cairo_gl_composite_t *setup,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_bool_t
+cairo_boxes_for_each_box (cairo_boxes_t *boxes,
+			  cairo_bool_t (*func) (cairo_box_t *box,
+						void *data),
+			  void *data)
+{
+    struct _cairo_boxes_chunk *chunk;
+    int i;
+
+    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
+	for (i = 0; i < chunk->count; i++)
+	    if (! func (&chunk->base[i], data))
+		return FALSE;
+    }
+
+    return TRUE;
+}
+
+struct image_contains_box {
+    int width, height;
+    int tx, ty;
+};
+
+static cairo_bool_t image_contains_box (cairo_box_t *box, void *closure)
+{
+    struct image_contains_box *data = closure;
+
+    return
+	_cairo_fixed_integer_part (box->p1.x) + data->tx >= 0 &&
+	_cairo_fixed_integer_part (box->p1.y) + data->ty >= 0 &&
+	_cairo_fixed_integer_part (box->p2.x) + data->tx <= data->width &&
+	_cairo_fixed_integer_part (box->p2.y) + data->ty <= data->height;
+}
+
+struct image_upload_box {
+    cairo_gl_surface_t *surface;
+    cairo_image_surface_t *image;
+    int tx, ty;
+};
+
+static cairo_bool_t image_upload_box (cairo_box_t *box, void *closure)
+{
+    const struct image_upload_box *iub = closure;
+    int x = _cairo_fixed_integer_part (box->p1.x);
+    int y = _cairo_fixed_integer_part (box->p1.y);
+    int w = _cairo_fixed_integer_part (box->p2.x - box->p1.x);
+    int h = _cairo_fixed_integer_part (box->p2.y - box->p1.y);
+
+    return _cairo_gl_surface_draw_image (iub->surface,
+				  iub->image,
+				  x + iub->tx, y + iub->ty,
+				  w, h,
+				  x, y) == CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_upload_image_inplace (cairo_gl_surface_t *surface,
+		       const cairo_pattern_t *source,
+		       cairo_boxes_t *boxes)
+{
+    const cairo_surface_pattern_t *pattern;
+    struct image_contains_box icb;
+    struct image_upload_box iub;
+    cairo_image_surface_t *image;
+    int tx, ty;
+
+    if (! boxes->is_pixel_aligned)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (source->type != CAIRO_PATTERN_TYPE_SURFACE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    pattern = (const cairo_surface_pattern_t *) source;
+    if (pattern->surface->type != CAIRO_SURFACE_TYPE_IMAGE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    image = (cairo_image_surface_t *) pattern->surface;
+    if (image->format == CAIRO_FORMAT_INVALID)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (! _cairo_matrix_is_integer_translation (&source->matrix, &tx, &ty))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* Check that the data is entirely within the image */
+    icb.width  = image->width;
+    icb.height = image->height;
+    icb.tx = tx;
+    icb.ty = ty;
+    if (! cairo_boxes_for_each_box (boxes, image_contains_box, &icb))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    iub.surface = surface;
+    iub.image = image;
+    iub.tx = tx;
+    iub.ty = ty;
+    cairo_boxes_for_each_box (boxes, image_upload_box, &iub);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_bool_t composite_box (cairo_box_t *box, void *closure)
+{
+    _cairo_gl_composite_emit_rect (closure,
+				   _cairo_fixed_integer_part (box->p1.x),
+				   _cairo_fixed_integer_part (box->p1.y),
+				   _cairo_fixed_integer_part (box->p2.x),
+				   _cairo_fixed_integer_part (box->p2.y),
+				   0);
+    return TRUE;
+}
+
+static cairo_status_t
+_composite_boxes (cairo_gl_surface_t *dst,
+		  cairo_operator_t op,
+		  const cairo_pattern_t *src,
+		  cairo_boxes_t *boxes,
+		  const cairo_composite_rectangles_t *extents)
+{
+    cairo_bool_t need_clip_mask = FALSE;
+    cairo_gl_composite_t setup;
+    cairo_gl_context_t *ctx;
+    cairo_surface_pattern_t mask;
+    cairo_status_t status;
+
+    /* If the boxes are not pixel-aligned, we will need to compute a real mask */
+    if (! boxes->is_pixel_aligned)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (extents->clip->path &&
+	(! extents->is_bounded || op == CAIRO_OPERATOR_SOURCE))
+    {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    if (! extents->is_bounded)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    status = _cairo_gl_composite_init (&setup, op, dst, FALSE,
+				       &extents->bounded);
+    if (unlikely (status))
+        goto CLEANUP;
+
+    status = _cairo_gl_composite_set_source (&setup, src,
+					     extents->bounded.x,
+					     extents->bounded.y,
+					     extents->bounded.x,
+					     extents->bounded.y,
+					     extents->bounded.width,
+					     extents->bounded.height);
+    if (unlikely (status))
+        goto CLEANUP;
+
+    need_clip_mask = extents->clip->path != NULL;
+    if (need_clip_mask) {
+	cairo_surface_t *clip_surface;
+	int clip_x, clip_y;
+
+	clip_surface = _cairo_clip_get_surface (extents->clip,
+						&dst->base,
+						&clip_x, &clip_y);
+	if (unlikely (clip_surface->status)) {
+	    status = clip_surface->status;
+	    need_clip_mask = FALSE;
+	    goto CLEANUP;
+	}
+
+	_cairo_pattern_init_for_surface (&mask, clip_surface);
+	mask.base.filter = CAIRO_FILTER_NEAREST;
+	cairo_matrix_init_translate (&mask.base.matrix,
+				     -clip_x,
+				     -clip_y);
+	cairo_surface_destroy (clip_surface);
+
+	if (op == CAIRO_OPERATOR_CLEAR) {
+	    src = NULL;
+	    op = CAIRO_OPERATOR_DEST_OUT;
+	}
+
+	status = _cairo_gl_composite_set_mask (&setup, &mask.base,
+					       extents->bounded.x,
+					       extents->bounded.y,
+					       extents->bounded.x,
+					       extents->bounded.y,
+					       extents->bounded.width,
+					       extents->bounded.height);
+	if (unlikely (status))
+	    goto CLEANUP;
+    }
+
+    status = _cairo_gl_composite_begin (&setup, &ctx);
+    if (unlikely (status))
+	goto CLEANUP;
+
+    cairo_boxes_for_each_box (boxes, composite_box, ctx);
+
+    status = _cairo_gl_context_release (ctx, status);
+
+  CLEANUP:
+    if (need_clip_mask)
+	_cairo_pattern_fini (&mask.base);
+
+    _cairo_gl_composite_fini (&setup);
+
+    return status;
+}
+
+/* XXX _cairo_gl_clip_and_composite_polygon() */
+cairo_int_status_t
+_cairo_gl_surface_polygon (cairo_gl_surface_t *dst,
+                           cairo_operator_t op,
+                           const cairo_pattern_t *src,
+                           cairo_polygon_t *polygon,
+                           cairo_fill_rule_t fill_rule,
+                           cairo_antialias_t antialias,
+                           const cairo_composite_rectangles_t *extents)
+{
+    cairo_region_t *clip_region = _cairo_clip_get_region (extents->clip);
+
+    if (! _cairo_clip_is_region (extents->clip))
+	return UNSUPPORTED ("a clip surface would be required");
+
+    if (! _cairo_surface_check_span_renderer (op, src, &dst->base, antialias))
+        return UNSUPPORTED ("no span renderer");
+
+    if (op == CAIRO_OPERATOR_SOURCE)
+        return UNSUPPORTED ("SOURCE compositing doesn't work in GL");
+    if (op == CAIRO_OPERATOR_CLEAR) {
+        op = CAIRO_OPERATOR_DEST_OUT;
+        src = &_cairo_pattern_white.base;
+    }
+
+    return _cairo_surface_composite_polygon (&dst->base,
+					     op,
+					     src,
+					     fill_rule,
+					     antialias,
+					     extents,
+					     polygon,
+					     clip_region);
+}
+
+cairo_int_status_t
+_cairo_gl_clip_and_composite_boxes (cairo_gl_surface_t *dst,
+				    cairo_operator_t op,
+				    const cairo_pattern_t *src,
+				    cairo_boxes_t *boxes,
+				    cairo_composite_rectangles_t *extents)
+{
+    cairo_int_status_t status;
+
+    if (boxes->num_boxes == 0 && extents->is_bounded)
+	return CAIRO_STATUS_SUCCESS;
+
+    if (boxes->is_pixel_aligned && _cairo_clip_is_region (extents->clip) &&
+	(op == CAIRO_OPERATOR_SOURCE ||
+	 (dst->base.is_clear && (op == CAIRO_OPERATOR_OVER || op == CAIRO_OPERATOR_ADD))))
+    {
+	if (boxes->num_boxes == 1 &&
+	    extents->bounded.width  == dst->width &&
+	    extents->bounded.height == dst->height)
+	{
+	    op = CAIRO_OPERATOR_SOURCE;
+#if 0
+	    dst->deferred_clear = FALSE;
+#endif
+	}
+
+	status = _upload_image_inplace (dst, src, boxes);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+
+    /* Can we reduce drawing through a clip-mask to simply drawing the clip? */
+    if (extents->clip->path != NULL && extents->is_bounded) {
+	cairo_polygon_t polygon;
+	cairo_fill_rule_t fill_rule;
+	cairo_antialias_t antialias;
+	cairo_clip_t *clip;
+
+	clip = _cairo_clip_copy (extents->clip);
+	clip = _cairo_clip_intersect_boxes (clip, boxes);
+	status = _cairo_clip_get_polygon (clip, &polygon,
+					  &fill_rule, &antialias);
+	_cairo_clip_path_destroy (clip->path);
+	clip->path = NULL;
+	if (likely (status == CAIRO_INT_STATUS_SUCCESS)) {
+	    cairo_clip_t *saved_clip = extents->clip;
+	    extents->clip = clip;
+	    status = _cairo_gl_surface_polygon (dst, op, src,
+						&polygon,
+						fill_rule,
+						antialias,
+						extents);
+	    if (extents->clip != clip)
+		clip = NULL;
+	    extents->clip = saved_clip;
+	    _cairo_polygon_fini (&polygon);
+	}
+	if (clip)
+	    _cairo_clip_destroy (clip);
+
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+
+#if 0
+    if (dst->deferred_clear) {
+	status = _cairo_gl_surface_clear (dst);
+	if (unlikely (status))
+	    return status;
+    }
+#endif
+
+    if (boxes->is_pixel_aligned &&
+	_cairo_clip_is_region (extents->clip) &&
+	op == CAIRO_OPERATOR_SOURCE) {
+	status = _upload_image_inplace (dst, src, boxes);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+
+    /* Use a fast path if the boxes are pixel aligned */
+    status = _composite_boxes (dst, op, src, boxes, extents);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
+
+    /* Otherwise XXX */
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}

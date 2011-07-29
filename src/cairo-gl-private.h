@@ -594,6 +594,26 @@ _cairo_gl_operand_get_gl_filter (cairo_gl_operand_t *operand);
 cairo_private cairo_extend_t
 _cairo_gl_operand_get_extend (cairo_gl_operand_t *operand);
 
+cairo_private cairo_bool_t
+_cairo_gl_surface_get_extents (void		     *abstract_surface,
+			       cairo_rectangle_int_t *rectangle);
+
+cairo_private cairo_int_status_t
+_cairo_gl_surface_polygon (cairo_gl_surface_t *dst,
+                           cairo_operator_t op,
+                           const cairo_pattern_t *src,
+                           cairo_polygon_t *polygon,
+                           cairo_fill_rule_t fill_rule,
+                           cairo_antialias_t antialias,
+                           const cairo_composite_rectangles_t *extents);
+
+cairo_private cairo_int_status_t
+_cairo_gl_clip_and_composite_boxes (cairo_gl_surface_t *dst,
+				    cairo_operator_t op,
+				    const cairo_pattern_t *src,
+				    cairo_boxes_t *boxes,
+				    cairo_composite_rectangles_t *extents);
+
 slim_hidden_proto (cairo_gl_surface_create);
 slim_hidden_proto (cairo_gl_surface_create_for_texture);
 
