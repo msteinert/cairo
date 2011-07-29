@@ -346,6 +346,16 @@ _cairo_clip_equal (const cairo_clip_t *clip_a,
     if (clip_a == clip_b)
 	return TRUE;
 
+    /* or just one of them? */
+    if (clip_a == NULL || clip_b == NULL ||
+	_cairo_clip_is_all_clipped (clip_a) ||
+	_cairo_clip_is_all_clipped (clip_b))
+    {
+	return FALSE;
+    }
+
+    /* We have a pair of normal clips, check their contents */
+
     if (clip_a->num_boxes != clip_b->num_boxes)
 	return FALSE;
 
