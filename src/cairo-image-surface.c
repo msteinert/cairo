@@ -3163,6 +3163,15 @@ _composite_boxes (cairo_image_surface_t *dst,
 }
 
 static cairo_status_t
+_clip_and_composite_polygon (cairo_image_surface_t *dst,
+			     cairo_operator_t op,
+			     const cairo_pattern_t *src,
+			     cairo_polygon_t *polygon,
+			     cairo_fill_rule_t fill_rule,
+			     cairo_antialias_t antialias,
+			     cairo_composite_rectangles_t *extents);
+
+static cairo_status_t
 _clip_and_composite_boxes (cairo_image_surface_t *dst,
 			   cairo_operator_t op,
 			   const cairo_pattern_t *src,
@@ -3175,6 +3184,39 @@ _clip_and_composite_boxes (cairo_image_surface_t *dst,
 
     if (boxes->num_boxes == 0 && extents->is_bounded)
 	return CAIRO_STATUS_SUCCESS;
+
+    /* Can we reduce drawing through a clip-mask to simply drawing the clip? */
+    if (extents->clip->path != NULL && extents->is_bounded) {
+	cairo_polygon_t polygon;
+	cairo_fill_rule_t fill_rule;
+	cairo_antialias_t antialias;
+	cairo_clip_t *clip;
+
+	clip = _cairo_clip_copy (extents->clip);
+	clip = _cairo_clip_intersect_boxes (clip, boxes);
+	status = _cairo_clip_get_polygon (clip, &polygon,
+					  &fill_rule, &antialias);
+	_cairo_clip_path_destroy (clip->path);
+	clip->path = NULL;
+	if (likely (status == CAIRO_INT_STATUS_SUCCESS)) {
+	    cairo_clip_t *saved_clip = extents->clip;
+	    extents->clip = clip;
+	    status = _clip_and_composite_polygon (dst, op, src,
+						  &polygon,
+						  fill_rule,
+						  antialias,
+						  extents);
+	    if (extents->clip != clip)
+		clip = NULL;
+	    extents->clip = saved_clip;
+	    _cairo_polygon_fini (&polygon);
+	}
+	if (clip)
+	    _cairo_clip_destroy (clip);
+
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
 
     /* Use a fast path if the boxes are pixel aligned */
     status = _composite_boxes (dst, op, src, boxes, extents);
