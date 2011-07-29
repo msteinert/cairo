@@ -660,6 +660,23 @@ _cairo_xcb_surface_map_to_image (void *abstract_surface,
     if (unlikely (image->base.status))
 	return &image->base;
 
+    /* Do we have a deferred clear and this image surface does NOT cover the
+     * whole xcb surface? Have to apply the clear in that case, else
+     * uploading the image will handle the problem for us.
+     */
+    if (surface->deferred_clear &&
+	    ! (extents->x == 0 &&
+	       extents->y == 0 &&
+	       extents->width == surface->width &&
+	       extents->height == surface->height)) {
+	cairo_status_t status = _cairo_xcb_surface_clear (surface);
+	if (unlikely (status)) {
+	    cairo_surface_destroy(&image->base);
+	    return _cairo_surface_create_in_error (status);
+	}
+    }
+    surface->deferred_clear = FALSE;
+
     cairo_surface_set_device_offset (&image->base, -extents->x, -extents->y);
     return &image->base;
 }
@@ -674,7 +691,14 @@ _cairo_xcb_surface_unmap (void *abstract_surface,
 static cairo_image_surface_t *
 _cairo_xcb_surface_fallback (cairo_xcb_surface_t *surface)
 {
-    return _get_image (surface, TRUE, 0, 0, surface->width, surface->height);
+    cairo_image_surface_t *image;
+    image = _get_image (surface, TRUE, 0, 0, surface->width, surface->height);
+
+    /* If there was a deferred clear, _get_image applied it */
+    if (image->base.status == CAIRO_STATUS_SUCCESS)
+	surface->deferred_clear = FALSE;
+
+    return image;
 }
 
 static cairo_int_status_t
