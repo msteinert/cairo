@@ -282,7 +282,7 @@ _cairo_gl_operand_init (cairo_gl_operand_t *operand,
 		        int dst_x, int dst_y,
 		        int width, int height)
 {
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
@@ -1430,7 +1430,184 @@ _composite_boxes (cairo_gl_surface_t *dst,
 	_cairo_pattern_fini (&mask.base);
 
     _cairo_gl_composite_fini (&setup);
+    return status;
+}
 
+static cairo_bool_t converter_add_box (cairo_box_t *box, void *closure)
+{
+    return _cairo_rectangular_scan_converter_add_box (closure, box, 1) == CAIRO_STATUS_SUCCESS;
+}
+
+typedef struct _cairo_gl_surface_span_renderer {
+    cairo_span_renderer_t base;
+
+    cairo_gl_composite_t setup;
+
+    int xmin, xmax;
+    int ymin, ymax;
+
+    cairo_gl_context_t *ctx;
+} cairo_gl_surface_span_renderer_t;
+
+static cairo_status_t
+_cairo_gl_render_bounded_spans (void *abstract_renderer,
+				int y, int height,
+				const cairo_half_open_span_t *spans,
+				unsigned num_spans)
+{
+    cairo_gl_surface_span_renderer_t *renderer = abstract_renderer;
+
+    if (num_spans == 0)
+	return CAIRO_STATUS_SUCCESS;
+
+    do {
+	if (spans[0].coverage) {
+            _cairo_gl_composite_emit_rect (renderer->ctx,
+                                           spans[0].x, y,
+                                           spans[1].x, y + height,
+                                           spans[0].coverage);
+	}
+
+	spans++;
+    } while (--num_spans > 1);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_gl_render_unbounded_spans (void *abstract_renderer,
+				  int y, int height,
+				  const cairo_half_open_span_t *spans,
+				  unsigned num_spans)
+{
+    cairo_gl_surface_span_renderer_t *renderer = abstract_renderer;
+
+    if (y > renderer->ymin) {
+        _cairo_gl_composite_emit_rect (renderer->ctx,
+                                       renderer->xmin, renderer->ymin,
+                                       renderer->xmax, y,
+                                       0);
+    }
+
+    if (num_spans == 0) {
+        _cairo_gl_composite_emit_rect (renderer->ctx,
+                                       renderer->xmin, y,
+                                       renderer->xmax, y + height,
+                                       0);
+    } else {
+        if (spans[0].x != renderer->xmin) {
+            _cairo_gl_composite_emit_rect (renderer->ctx,
+                                           renderer->xmin, y,
+                                           spans[0].x,     y + height,
+                                           0);
+        }
+
+        do {
+            _cairo_gl_composite_emit_rect (renderer->ctx,
+                                           spans[0].x, y,
+                                           spans[1].x, y + height,
+                                           spans[0].coverage);
+            spans++;
+        } while (--num_spans > 1);
+
+        if (spans[0].x != renderer->xmax) {
+            _cairo_gl_composite_emit_rect (renderer->ctx,
+                                           spans[0].x,     y,
+                                           renderer->xmax, y + height,
+                                           0);
+        }
+    }
+
+    renderer->ymin = y + height;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_gl_finish_unbounded_spans (void *abstract_renderer)
+{
+    cairo_gl_surface_span_renderer_t *renderer = abstract_renderer;
+
+    if (renderer->ymax > renderer->ymin) {
+        _cairo_gl_composite_emit_rect (renderer->ctx,
+                                       renderer->xmin, renderer->ymin,
+                                       renderer->xmax, renderer->ymax,
+                                       0);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_gl_finish_bounded_spans (void *abstract_renderer)
+{
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_composite_unaligned_boxes (cairo_gl_surface_t *dst,
+			    cairo_operator_t op,
+			    const cairo_pattern_t *pattern,
+			    cairo_boxes_t *boxes,
+			    const cairo_composite_rectangles_t *composite)
+{
+    cairo_rectangular_scan_converter_t converter;
+    cairo_gl_surface_span_renderer_t renderer;
+    const cairo_rectangle_int_t *extents;
+    cairo_status_t status;
+
+    if (composite->clip->path)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* XXX for ADD or if we know the boxes are disjoint we can do a simpler
+     * pass, but for now... */
+
+    _cairo_rectangular_scan_converter_init (&converter, &composite->bounded);
+    cairo_boxes_for_each_box (boxes, converter_add_box, &converter);
+
+    if (composite->is_bounded) {
+	renderer.base.render_rows = _cairo_gl_render_bounded_spans;
+        renderer.base.finish =      _cairo_gl_finish_bounded_spans;
+	extents = &composite->bounded;
+    } else {
+	renderer.base.render_rows = _cairo_gl_render_unbounded_spans;
+        renderer.base.finish =      _cairo_gl_finish_unbounded_spans;
+	extents = &composite->unbounded;
+    }
+    renderer.xmin = extents->x;
+    renderer.xmax = extents->x + extents->width;
+    renderer.ymin = extents->y;
+    renderer.ymax = extents->y + extents->height;
+
+    status = _cairo_gl_composite_init (&renderer.setup,
+                                       op, dst,
+                                       FALSE, extents);
+    if (unlikely (status))
+        goto FAIL;
+
+    status = _cairo_gl_composite_set_source (&renderer.setup, pattern,
+                                             extents->x, extents->y,
+                                             extents->x, extents->y,
+                                             extents->width, extents->height);
+    if (unlikely (status))
+        goto FAIL;
+
+    _cairo_gl_composite_set_mask_spans (&renderer.setup);
+    if (! composite->is_bounded)
+	_cairo_gl_composite_set_clip_region (&renderer.setup,
+					     _cairo_clip_get_region (composite->clip));
+
+    status = _cairo_gl_composite_begin (&renderer.setup, &renderer.ctx);
+    if (unlikely (status))
+        goto FAIL;
+
+    status = converter.base.generate (&converter.base, &renderer.base);
+
+    converter.base.destroy (&converter.base);
+    renderer.base.finish (&renderer.base);
+
+    status = _cairo_gl_context_release (renderer.ctx, status);
+FAIL:
+    _cairo_gl_composite_fini (&renderer.setup);
     return status;
 }
 
@@ -1480,6 +1657,9 @@ _cairo_gl_clip_and_composite_boxes (cairo_gl_surface_t *dst,
 
     if (boxes->num_boxes == 0 && extents->is_bounded)
 	return CAIRO_STATUS_SUCCESS;
+
+    if (! _cairo_gl_operator_is_supported (op))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (boxes->is_pixel_aligned && _cairo_clip_is_region (extents->clip) &&
 	(op == CAIRO_OPERATOR_SOURCE ||
@@ -1551,6 +1731,10 @@ _cairo_gl_clip_and_composite_boxes (cairo_gl_surface_t *dst,
 
     /* Use a fast path if the boxes are pixel aligned */
     status = _composite_boxes (dst, op, src, boxes, extents);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
+
+    status = _composite_unaligned_boxes (dst, op, src, boxes, extents);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
