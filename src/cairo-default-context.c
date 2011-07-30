@@ -119,6 +119,9 @@ _cairo_default_context_restore (void *abstract_cr)
 {
     cairo_default_context_t *cr = abstract_cr;
 
+    if (unlikely (_cairo_gstate_is_group (cr->gstate)))
+	return _cairo_error (CAIRO_STATUS_INVALID_RESTORE);
+
     return _cairo_gstate_restore (&cr->gstate, &cr->gstate_freelist);
 }
 
