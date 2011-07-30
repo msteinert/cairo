@@ -702,7 +702,7 @@ error:
     cairo_surface_finish (image);
     cairo_surface_destroy (image);
     if (status)
-	_cairo_status_set_error (&surface->status, status);
+	_cairo_surface_set_error (surface, status);
 }
 
 cairo_surface_t *
