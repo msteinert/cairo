@@ -348,10 +348,6 @@ _cairo_toy_font_face_destroy (void *abstract_face)
     cairo_toy_font_face_t *font_face = abstract_face;
     cairo_hash_table_t *hash_table;
 
-    if (font_face == NULL ||
-	    CAIRO_REFERENCE_COUNT_IS_INVALID (&font_face->base.ref_count))
-	return;
-
     hash_table = _cairo_toy_font_face_hash_table_lock ();
     /* All created objects must have been mapped in the hash table. */
     assert (hash_table != NULL);
