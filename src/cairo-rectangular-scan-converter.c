@@ -586,6 +586,74 @@ generate (cairo_rectangular_scan_converter_t *self,
 
     return status;
 }
+static void generate_row(cairo_span_renderer_t *renderer,
+			 const rectangle_t *r,
+			 int y, int h,
+			 uint16_t coverage)
+{
+    cairo_half_open_span_t spans[4];
+    unsigned int num_spans = 0;
+    int x1 = _cairo_fixed_integer_part (r->left);
+    int x2 = _cairo_fixed_integer_part (r->right);
+    if (x2 > x1) {
+	if (! _cairo_fixed_is_integer (r->left)) {
+	    spans[num_spans].x = x1;
+	    spans[num_spans].coverage =
+		coverage * (256 - _cairo_fixed_fractional_part (r->left)) >> 8;
+	    num_spans++;
+	    x1++;
+	}
+
+	if (x2 > x1) {
+	    spans[num_spans].x = x1;
+	    spans[num_spans].coverage = coverage - (coverage >> 8);
+	    num_spans++;
+	}
+
+	if (! _cairo_fixed_is_integer (r->right)) {
+	    spans[num_spans].x = x2;
+	    spans[num_spans].coverage =
+		coverage * _cairo_fixed_fractional_part (r->right) >> 8;
+	    num_spans++;
+	}
+    } else {
+	spans[num_spans].x = x1;
+	spans[num_spans].coverage = coverage * (r->right - r->left) >> 8;
+	num_spans++;
+    }
+
+    spans[num_spans].x = x2 + 1;
+    spans[num_spans].coverage = 0;
+    num_spans++;
+
+    renderer->render_rows (renderer, y, h, spans, num_spans);
+}
+
+static cairo_status_t
+generate_box (cairo_rectangular_scan_converter_t *self,
+	      cairo_span_renderer_t	*renderer)
+{
+    const rectangle_t *r = self->chunks.base;
+    int y1 = _cairo_fixed_integer_part (r->top);
+    int y2 = _cairo_fixed_integer_part (r->bottom);
+    if (y2 > y1) {
+	if (! _cairo_fixed_is_integer (r->top)) {
+	    generate_row(renderer, r, y1, 1,
+			 256 - _cairo_fixed_fractional_part (r->top));
+	    y1++;
+	}
+
+	if (y2 > y1)
+	    generate_row(renderer, r, y1, y2-y1, 256);
+
+	if (! _cairo_fixed_is_integer (r->bottom))
+	    generate_row(renderer, r, y2, 1,
+			 _cairo_fixed_fractional_part (r->bottom));
+    } else
+	generate_row(renderer, r, y1, 1, r->bottom - r->top);
+
+    return CAIRO_STATUS_SUCCESS;
+}
 
 static cairo_status_t
 _cairo_rectangular_scan_converter_generate (void			*converter,
@@ -603,6 +671,9 @@ _cairo_rectangular_scan_converter_generate (void			*converter,
 				      self->ymin, self->ymax - self->ymin,
 				      NULL, 0);
     }
+
+    if (self->num_rectangles == 1)
+	return generate_box (self, renderer);
 
     rectangles = rectangles_stack;
     if (unlikely (self->num_rectangles >= ARRAY_LENGTH (rectangles_stack))) {
