@@ -269,8 +269,7 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     free (font->base.ps_name);
  fail3:
     free (font->parent_to_subset);
-    if (font->base.font_name)
-	free (font->base.font_name);
+    free (font->base.font_name);
  fail2:
     free (font->glyphs);
  fail1:
@@ -286,8 +285,7 @@ cairo_truetype_font_destroy (cairo_truetype_font_t *font)
     _cairo_array_fini (&font->string_offsets);
     free (font->base.widths);
     free (font->base.ps_name);
-    if (font->base.font_name)
-	free (font->base.font_name);
+    free (font->base.font_name);
     free (font->parent_to_subset);
     free (font->glyphs);
     _cairo_array_fini (&font->output);
@@ -1201,8 +1199,7 @@ cairo_truetype_subset_init_internal (cairo_truetype_subset_t     *truetype_subse
  fail4:
     free (truetype_subset->widths);
  fail3:
-    if (truetype_subset->font_name)
-	free (truetype_subset->font_name);
+    free (truetype_subset->font_name);
  fail2:
     free (truetype_subset->ps_name);
  fail1:
@@ -1229,8 +1226,7 @@ void
 _cairo_truetype_subset_fini (cairo_truetype_subset_t *subset)
 {
     free (subset->ps_name);
-    if (subset->font_name)
-	free (subset->font_name);
+    free (subset->font_name);
     free (subset->widths);
     free (subset->data);
     free (subset->string_offsets);
@@ -1493,11 +1489,9 @@ _cairo_truetype_read_font_name (cairo_scaled_font_t  	 *scaled_font,
 fail:
     free (name);
 
-    if (ps_name != NULL)
-	free (ps_name);
+    free (ps_name);
 
-    if (font_name != NULL)
-	free (font_name);
+    free (font_name);
 
     *ps_name_out = NULL;
     *font_name_out = NULL;

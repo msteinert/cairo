@@ -614,8 +614,7 @@ read_excludes (cairo_perf_t *perf,
 	    perf->num_exclude_names++;
 	}
     }
-    if (line != NULL)
-	free (line);
+    free (line);
 
     fclose (file);
 

@@ -825,8 +825,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 						    data_start);
 
 
-	if (data_start_gles2)
-	    free (data_start_gles2);
+	free (data_start_gles2);
 
 	/* If we just treated some rgb-only data as rgba, then we have to
 	 * go back and fix up the alpha channel where we filled in this

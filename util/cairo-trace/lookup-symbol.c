@@ -85,8 +85,7 @@ struct symbol {
 static void
 _symtab_fini (struct symtab *symtab)
 {
-    if (symtab->syms != NULL)
-	free (symtab->syms);
+    free (symtab->syms);
     if (symtab->bfd != NULL)
 	bfd_close (symtab->bfd);
 }

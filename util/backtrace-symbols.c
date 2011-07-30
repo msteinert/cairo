@@ -273,10 +273,8 @@ static char **process_file(const char *file_name, bfd_vma *addr, int naddr)
 
 	ret_buf = translate_addresses_buf(abfd, addr, naddr);
 
-	if (syms != NULL) {
-		free(syms);
-		syms = NULL;
-	}
+	free (syms);
+	syms = NULL;
 
 	bfd_close(abfd);
 	return ret_buf;

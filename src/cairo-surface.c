@@ -1170,8 +1170,7 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
 					      mime_data,
 					      _cairo_mime_data_destroy);
     if (unlikely (status)) {
-	if (mime_data != NULL)
-	    free (mime_data);
+	free (mime_data);
 
 	return _cairo_surface_set_error (surface, status);
     }

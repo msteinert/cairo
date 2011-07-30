@@ -198,8 +198,7 @@ _cairo_sub_font_glyph_create (unsigned long	scaled_font_glyph_index,
 static void
 _cairo_sub_font_glyph_destroy (cairo_sub_font_glyph_t *sub_font_glyph)
 {
-    if (sub_font_glyph->utf8 != NULL)
-	free (sub_font_glyph->utf8);
+    free (sub_font_glyph->utf8);
 
     free (sub_font_glyph);
 }
@@ -1028,14 +1027,10 @@ _cairo_scaled_font_subsets_foreach_internal (cairo_scaled_font_subsets_t        
 		  collection.utf8 == NULL ||
 		  collection.to_latin_char == NULL ||
 		  collection.latin_to_subset_glyph_index == NULL)) {
-	if (collection.glyphs != NULL)
-	    free (collection.glyphs);
-	if (collection.utf8 != NULL)
-	    free (collection.utf8);
-	if (collection.to_latin_char != NULL)
-	    free (collection.to_latin_char);
-	if (collection.latin_to_subset_glyph_index != NULL)
-	    free (collection.latin_to_subset_glyph_index);
+	free (collection.glyphs);
+	free (collection.utf8);
+	free (collection.to_latin_char);
+	free (collection.latin_to_subset_glyph_index);
 
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
@@ -1205,8 +1200,7 @@ _cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset
 	} else {
 	    snprintf (buf, sizeof (buf), "g%d", i);
 	}
-	if (utf16)
-	    free (utf16);
+	free (utf16);
 
 	subset->glyph_names[i] = strdup (buf);
 	if (unlikely (subset->glyph_names[i] == NULL)) {
@@ -1234,8 +1228,7 @@ CLEANUP_HASH:
 
     if (subset->glyph_names != NULL) {
 	for (i = 0; i < subset->num_glyphs; i++) {
-	    if (subset->glyph_names[i] != NULL)
-		free (subset->glyph_names[i]);
+	    free (subset->glyph_names[i]);
 	}
 
 	free (subset->glyph_names);

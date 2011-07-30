@@ -207,8 +207,7 @@ slim_hidden_def (cairo_glyph_allocate);
 void
 cairo_glyph_free (cairo_glyph_t *glyphs)
 {
-    if (glyphs)
-	free (glyphs);
+    free (glyphs);
 }
 slim_hidden_def (cairo_glyph_free);
 
@@ -258,8 +257,7 @@ slim_hidden_def (cairo_text_cluster_allocate);
 void
 cairo_text_cluster_free (cairo_text_cluster_t *clusters)
 {
-    if (clusters)
-	free (clusters);
+    free (clusters);
 }
 slim_hidden_def (cairo_text_cluster_free);
 

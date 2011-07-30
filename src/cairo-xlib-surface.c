@@ -3941,8 +3941,7 @@ _cairo_xlib_surface_remove_scaled_font (cairo_xlib_display_t	*display,
 	    if (glyphset_info->glyphset)
 		XRenderFreeGlyphSet (display->display, glyphset_info->glyphset);
 
-	    if (glyphset_info->pending_free_glyphs != NULL)
-		free (glyphset_info->pending_free_glyphs);
+	    free (glyphset_info->pending_free_glyphs);
 	}
 
 	cairo_device_destroy (font_private->device);
@@ -4013,8 +4012,7 @@ _cairo_xlib_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font)
 
 	    glyphset_info = &font_private->glyphset_info[i];
 
-	    if (glyphset_info->pending_free_glyphs != NULL)
-		free (glyphset_info->pending_free_glyphs);
+	    free (glyphset_info->pending_free_glyphs);
 
 	    if (glyphset_info->glyphset) {
 		status = _cairo_xlib_display_queue_resource (display,

@@ -86,10 +86,9 @@ _cairo_stroke_style_init_copy (cairo_stroke_style_t *style,
 void
 _cairo_stroke_style_fini (cairo_stroke_style_t *style)
 {
-    if (style->dash) {
-	free (style->dash);
-	style->dash = NULL;
-    }
+    free (style->dash);
+    style->dash = NULL;
+
     style->num_dashes = 0;
 
     VG (VALGRIND_MAKE_MEM_NOACCESS (style, sizeof (cairo_stroke_style_t)));

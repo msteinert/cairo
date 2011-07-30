@@ -2702,10 +2702,8 @@ fail3:
     free (font->subset_font_name);
 fail2:
     free (font->data);
-    if (font->font_name)
-	free (font->font_name);
-    if (font->ps_name)
-	free (font->ps_name);
+    free (font->font_name);
+    free (font->ps_name);
     _cairo_array_fini (&font->output);
 fail1:
     free (font);
@@ -2719,8 +2717,7 @@ cairo_cff_font_destroy (cairo_cff_font_t *font)
     unsigned int i;
 
     free (font->widths);
-    if (font->font_name)
-	free (font->font_name);
+    free (font->font_name);
     free (font->ps_name);
     free (font->subset_font_name);
     _cairo_array_fini (&font->output);
@@ -2742,20 +2739,14 @@ cairo_cff_font_destroy (cairo_cff_font_t *font)
         }
         free (font->fd_dict);
     }
-    if (font->global_subs_used)
-	free (font->global_subs_used);
-    if (font->local_subs_used)
-	free (font->local_subs_used);
-    if (font->fd_subset_map)
-        free (font->fd_subset_map);
-    if (font->private_dict_offset)
-        free (font->private_dict_offset);
+    free (font->global_subs_used);
+    free (font->local_subs_used);
+    free (font->fd_subset_map);
+    free (font->private_dict_offset);
 
     if (font->is_cid) {
-        if (font->fdselect)
-            free (font->fdselect);
-        if (font->fdselect_subset)
-            free (font->fdselect_subset);
+	free (font->fdselect);
+	free (font->fdselect_subset);
         if (font->fd_private_dict) {
             for (i = 0; i < font->num_fontdicts; i++) {
                 if (font->fd_private_dict[i])
@@ -2768,23 +2759,18 @@ cairo_cff_font_destroy (cairo_cff_font_t *font)
                 cff_index_fini (&font->fd_local_sub_index[i]);
             free (font->fd_local_sub_index);
         }
-        if (font->fd_local_sub_bias)
-            free (font->fd_local_sub_bias);
+	free (font->fd_local_sub_bias);
         if (font->fd_local_subs_used) {
             for (i = 0; i < font->num_fontdicts; i++) {
-                if (font->fd_local_subs_used[i])
-                    free (font->fd_local_subs_used[i]);
+		free (font->fd_local_subs_used[i]);
             }
             free (font->fd_local_subs_used);
         }
-        if (font->fd_default_width)
-            free (font->fd_default_width);
-        if (font->fd_nominal_width)
-            free (font->fd_nominal_width);
+	free (font->fd_default_width);
+	free (font->fd_nominal_width);
     }
 
-    if (font->data)
-        free (font->data);
+    free (font->data);
 
     free (font);
 }
@@ -2855,8 +2841,7 @@ _cairo_cff_subset_init (cairo_cff_subset_t          *cff_subset,
  fail4:
     free (cff_subset->widths);
  fail3:
-    if (cff_subset->font_name)
-	free (cff_subset->font_name);
+    free (cff_subset->font_name);
  fail2:
     free (cff_subset->ps_name);
  fail1:
@@ -2869,8 +2854,7 @@ void
 _cairo_cff_subset_fini (cairo_cff_subset_t *subset)
 {
     free (subset->ps_name);
-    if (subset->font_name)
-	free (subset->font_name);
+    free (subset->font_name);
     free (subset->widths);
     free (subset->data);
 }
@@ -2977,8 +2961,7 @@ fail2:
     cff_index_fini (&index);
 
 fail1:
-    if (data)
-	free (data);
+    free (data);
 
     return is_cid;
 }
@@ -3066,8 +3049,7 @@ fail5:
 fail4:
     free (font->widths);
 fail3:
-    if (font->font_name)
-	free (font->font_name);
+    free (font->font_name);
     free (font->ps_name);
 fail2:
     free (font->subset_font_name);

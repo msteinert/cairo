@@ -780,14 +780,11 @@ _cairo_win32_scaled_font_text_to_glyphs (void		*abstract_font,
 	goto FAIL1;
 
     while (TRUE) {
-	if (glyph_indices) {
-	    free (glyph_indices);
-	    glyph_indices = NULL;
-	}
-	if (dx) {
-	    free (dx);
-	    dx = NULL;
-	}
+	free (glyph_indices);
+	glyph_indices = NULL;
+
+	free (dx);
+	dx = NULL;
 
 	glyph_indices = _cairo_malloc_ab (buffer_size, sizeof (WCHAR));
 	dx = _cairo_malloc_ab (buffer_size, sizeof (int));
@@ -840,10 +837,8 @@ _cairo_win32_scaled_font_text_to_glyphs (void		*abstract_font,
     }
 
  FAIL2:
-    if (glyph_indices)
-	free (glyph_indices);
-    if (dx)
-	free (dx);
+    free (glyph_indices);
+    free (dx);
 
     cairo_win32_scaled_font_done_font (&scaled_font->base);
 
@@ -1624,10 +1619,8 @@ _cairo_win32_scaled_font_index_to_ucs4 (void		*abstract_font,
     }
 
 exit2:
-    if (glyph_indices)
-	free (glyph_indices);
-    if (utf16)
-	free (utf16);
+    free (glyph_indices);
+    free (utf16);
     free (glyph_set);
 exit1:
     cairo_win32_scaled_font_done_font (&scaled_font->base);

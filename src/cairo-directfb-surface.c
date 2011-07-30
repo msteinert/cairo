@@ -1711,10 +1711,8 @@ _cairo_directfb_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
                  "%s( scaled_glyph=%p, scaled_font=%p ).\n",
                  __FUNCTION__, scaled_glyph, scaled_font);
 
-     if (scaled_glyph->surface_private != NULL) {
-          free (scaled_glyph->surface_private);
-          scaled_glyph->surface_private = NULL;
-     }
+     free (scaled_glyph->surface_private);
+     scaled_glyph->surface_private = NULL;
 }
 
 static cairo_int_status_t

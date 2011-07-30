@@ -1500,10 +1500,8 @@ _cairo_quartz_surface_finish (void *abstract_surface)
 	surface->imageSurfaceEquiv = NULL;
     }
 
-    if (surface->imageData) {
-	free (surface->imageData);
-	surface->imageData = NULL;
-    }
+    free (surface->imageData);
+    surface->imageData = NULL;
 
     return CAIRO_STATUS_SUCCESS;
 }

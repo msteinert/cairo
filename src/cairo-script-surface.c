@@ -778,10 +778,8 @@ _emit_dash (cairo_script_surface_t *surface,
 	memcpy (surface->cr.current_style.dash, dash,
 		sizeof (double) * num_dashes);
     } else {
-	if (surface->cr.current_style.dash != NULL) {
-	    free (surface->cr.current_style.dash);
-	    surface->cr.current_style.dash = NULL;
-	}
+	free (surface->cr.current_style.dash);
+	surface->cr.current_style.dash = NULL;
     }
 
     surface->cr.current_style.num_dashes = num_dashes;
@@ -1989,10 +1987,9 @@ _cairo_script_surface_finish (void *abstract_surface)
 
     _cairo_surface_wrapper_fini (&surface->wrapper);
 
-    if (surface->cr.current_style.dash != NULL) {
-	free (surface->cr.current_style.dash);
-	surface->cr.current_style.dash = NULL;
-    }
+    free (surface->cr.current_style.dash);
+    surface->cr.current_style.dash = NULL;
+
     _cairo_pattern_fini (&surface->cr.current_source.base);
     _cairo_path_fixed_fini (&surface->cr.current_path);
     _cairo_surface_clipper_reset (&surface->clipper);
@@ -3482,10 +3479,9 @@ _cairo_script_implicit_context_init (cairo_script_implicit_context_t *cr)
 static void
 _cairo_script_implicit_context_reset (cairo_script_implicit_context_t *cr)
 {
-    if (cr->current_style.dash != NULL) {
-	free (cr->current_style.dash);
-	cr->current_style.dash = NULL;
-    }
+    free (cr->current_style.dash);
+    cr->current_style.dash = NULL;
+
     _cairo_pattern_fini (&cr->current_source.base);
     _cairo_path_fixed_fini (&cr->current_path);
 

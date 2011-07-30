@@ -517,8 +517,7 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, const double *dash, int num_dash
     unsigned int i;
     double dash_total;
 
-    if (gstate->stroke_style.dash)
-	free (gstate->stroke_style.dash);
+    free (gstate->stroke_style.dash);
 
     gstate->stroke_style.num_dashes = num_dashes;
 

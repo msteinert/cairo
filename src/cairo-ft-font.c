@@ -431,10 +431,8 @@ _cairo_ft_unscaled_font_fini (cairo_ft_unscaled_font_t *unscaled)
 {
     assert (unscaled->face == NULL);
 
-    if (unscaled->filename) {
-	free (unscaled->filename);
-	unscaled->filename = NULL;
-    }
+    free (unscaled->filename);
+    unscaled->filename = NULL;
 
     CAIRO_MUTEX_FINI (unscaled->mutex);
 }

@@ -1159,10 +1159,8 @@ _cairo_scaled_font_reset_static_data (void)
 	 status <= CAIRO_STATUS_LAST_STATUS;
 	 status++)
     {
-	if (_cairo_scaled_font_nil_objects[status] != NULL) {
-	    free (_cairo_scaled_font_nil_objects[status]);
-	    _cairo_scaled_font_nil_objects[status] = NULL;
-	}
+	free (_cairo_scaled_font_nil_objects[status]);
+	_cairo_scaled_font_nil_objects[status] = NULL;
     }
     CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_error_mutex);
 

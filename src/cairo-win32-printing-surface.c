@@ -1363,8 +1363,7 @@ _cairo_win32_printing_surface_stroke (void			*abstract_surface,
     }
     RestoreDC (surface->dc, -1);
     DeleteObject (pen);
-    if (dash_array)
-	free (dash_array);
+    free (dash_array);
 
     return status;
 }

@@ -365,8 +365,7 @@ cairo_path_destroy (cairo_path_t *path)
     if (path == NULL || path == &_cairo_path_nil)
 	return;
 
-    if (path->data)
-	free (path->data);
+    free (path->data);
 
     free (path);
 }

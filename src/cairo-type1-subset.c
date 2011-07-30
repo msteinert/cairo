@@ -1492,17 +1492,14 @@ _cairo_type1_font_subset_fini (cairo_type1_font_subset_t *font)
     _cairo_array_fini (&font->glyph_names_array);
     _cairo_array_fini (&font->glyphs_array);
 
-    if (font->subrs)
-	free (font->subrs);
+    free (font->subrs);
 
     if (font->output != NULL)
 	status = _cairo_output_stream_destroy (font->output);
 
-    if (font->base.base_font)
-	free (font->base.base_font);
+    free (font->base.base_font);
 
-    if (font->subset_index_to_glyphs)
-	free (font->subset_index_to_glyphs);
+    free (font->subset_index_to_glyphs);
 
     return status;
 }

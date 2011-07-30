@@ -1496,8 +1496,7 @@ read_excludes (test_trace_t *test, const char *filename)
 	    test->num_exclude_names++;
 	}
     }
-    if (line != NULL)
-	free (line);
+    free (line);
 
     fclose (file);
 
@@ -1583,8 +1582,7 @@ test_fini (test_trace_t *test)
     test_reset (test);
 
     cairo_boilerplate_free_targets (test->targets);
-    if (test->exclude_names)
-	free (test->exclude_names);
+    free (test->exclude_names);
 }
 
 static cairo_bool_t

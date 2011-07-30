@@ -4056,8 +4056,7 @@ _cairo_xcb_font_destroy (cairo_xcb_font_t *font)
 
 	glyphset_info = &font->glyphset_info[i];
 
-	if (glyphset_info->pending_free_glyphs != NULL)
-	    free (glyphset_info->pending_free_glyphs);
+	free (glyphset_info->pending_free_glyphs);
     }
 
     cairo_list_del (&font->link);

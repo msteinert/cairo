@@ -505,8 +505,7 @@ cairo_perf_report_load (cairo_perf_report_t *report,
 	/* Do nothing on TEST_REPORT_STATUS_COMMENT */
     }
 
-    if (line)
-	free (line);
+    free (line);
 
     if (filename != NULL)
 	fclose (file);

@@ -262,8 +262,7 @@ _cairo_xcb_connection_get_image (cairo_xcb_connection_t *connection,
     if (error) {
 	free (error);
 
-	if (*reply)
-	    free (*reply);
+	free (*reply);
 	*reply = NULL;
     }
 

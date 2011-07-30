@@ -1021,12 +1021,9 @@ _cairo_pdf_smask_group_destroy (cairo_pdf_smask_group_t *group)
 	cairo_pattern_destroy (group->source);
     if (group->mask)
 	cairo_pattern_destroy (group->mask);
-    if (group->utf8)
-	free (group->utf8);
-    if (group->glyphs)
-	free (group->glyphs);
-    if (group->clusters)
-	free (group->clusters);
+    free (group->utf8);
+    free (group->glyphs);
+    free (group->clusters);
     if (group->scaled_font)
 	cairo_scaled_font_destroy (group->scaled_font);
     free (group);
@@ -1662,8 +1659,7 @@ _cairo_pdf_source_surface_entry_pluck (void *entry, void *closure)
     cairo_hash_table_t *patterns = closure;
 
     _cairo_hash_table_remove (patterns, &surface_entry->base);
-    if (surface_entry->unique_id)
-	free (surface_entry->unique_id);
+    free (surface_entry->unique_id);
 
     free (surface_entry);
 }
@@ -3877,8 +3873,7 @@ _cairo_pdf_surface_emit_unicode_for_glyph (cairo_pdf_surface_t	*surface,
     }
     _cairo_output_stream_printf (surface->output, ">");
 
-    if (utf16)
-	free (utf16);
+    free (utf16);
 
     return CAIRO_STATUS_SUCCESS;
 }

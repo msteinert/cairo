@@ -709,10 +709,8 @@ read_png (struct png_read_closure_t *png_closure)
     }
 
  BAIL:
-    if (row_pointers != NULL)
-	free (row_pointers);
-    if (data != NULL)
-	free (data);
+    free (row_pointers);
+    free (data);
     if (png != NULL)
 	png_destroy_read_struct (&png, &info, NULL);
     if (png_closure->png_data != NULL) {
