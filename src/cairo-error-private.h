@@ -98,10 +98,10 @@ enum _cairo_int_status {
 };
 
 #define _cairo_status_is_error(status) \
-    (status != CAIRO_STATUS_SUCCESS && status <= CAIRO_STATUS_LAST_STATUS)
+    (status != CAIRO_STATUS_SUCCESS && status < CAIRO_STATUS_LAST_STATUS)
 
 #define _cairo_int_status_is_error(status) \
-    (status != CAIRO_INT_STATUS_SUCCESS && status <= CAIRO_INT_STATUS_LAST_STATUS)
+    (status != CAIRO_INT_STATUS_SUCCESS && status < CAIRO_INT_STATUS_LAST_STATUS)
 
 static inline cairo_status_t
 _cairo_public_status (cairo_int_status_t status)
