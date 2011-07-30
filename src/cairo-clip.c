@@ -639,6 +639,9 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
     if (_cairo_clip_is_all_clipped (clip))
 	goto DONE;
 
+    if (! _cairo_clip_is_region (clip))
+	return ERROR_LIST (CAIRO_STATUS_CLIP_NOT_REPRESENTABLE);
+
     region = _cairo_clip_get_region (clip);
     if (region == NULL)
 	return ERROR_LIST (CAIRO_STATUS_NO_MEMORY);
