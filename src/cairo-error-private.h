@@ -40,6 +40,7 @@
 
 #include "cairo.h"
 #include "cairo-compiler-private.h"
+#include "cairo-types-private.h"
 
 #include <assert.h>
 

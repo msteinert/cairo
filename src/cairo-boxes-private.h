@@ -37,6 +37,9 @@
 #include "cairo-types-private.h"
 #include "cairo-compiler-private.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 struct _cairo_boxes_t {
     cairo_status_t status;
     cairo_box_t limit;

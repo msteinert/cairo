@@ -976,7 +976,7 @@ extern const cairo_private cairo_solid_pattern_t _cairo_pattern_clear;
 extern const cairo_private cairo_solid_pattern_t _cairo_pattern_black;
 extern const cairo_private cairo_solid_pattern_t _cairo_pattern_white;
 
-typedef struct _cairo_surface_attributes {
+struct _cairo_surface_attributes {
     cairo_matrix_t matrix;
     cairo_extend_t extend;
     cairo_filter_t filter;
@@ -984,7 +984,7 @@ typedef struct _cairo_surface_attributes {
     int		   x_offset;
     int		   y_offset;
     void	   *extra;
-} cairo_surface_attributes_t;
+};
 
 typedef struct _cairo_traps {
     cairo_status_t status;

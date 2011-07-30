@@ -78,6 +78,7 @@ typedef struct _cairo_rectangle_int16 cairo_glyph_size_t;
 typedef struct _cairo_scaled_font_backend   cairo_scaled_font_backend_t;
 typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
 typedef struct _cairo_solid_pattern cairo_solid_pattern_t;
+typedef struct _cairo_surface_attributes cairo_surface_attributes_t;
 typedef struct _cairo_surface_backend cairo_surface_backend_t;
 typedef struct _cairo_surface_snapshot cairo_surface_snapshot_t;
 typedef struct _cairo_surface_subsurface cairo_surface_subsurface_t;
