@@ -683,16 +683,12 @@ cairo_boilerplate_get_image_target (cairo_content_t content)
     if (cairo_boilerplate_targets == NULL)
 	_cairo_boilerplate_register_all ();
 
-    for (list = cairo_boilerplate_targets; list != NULL; list = list->next) {
-	const cairo_boilerplate_target_t *target = list->target;
-	if (target->expected_type == CAIRO_SURFACE_TYPE_IMAGE &&
-	    target->content == content)
-	{
-	    return target;
-	}
+    switch (content) {
+    default:
+    case CAIRO_CONTENT_ALPHA: return NULL;
+    case CAIRO_CONTENT_COLOR: return &builtin_targets[1];
+    case CAIRO_CONTENT_COLOR_ALPHA: return &builtin_targets[0];
     }
-
-    return NULL;
 }
 
 const cairo_boilerplate_target_t *

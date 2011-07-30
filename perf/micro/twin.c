@@ -43,14 +43,17 @@ do_twin (cairo_t *cr,
     return cairo_perf_timer_elapsed ();
 }
 
+cairo_bool_t
+twin_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "twin", NULL);
+}
+
 void
 twin (cairo_perf_t *perf,
       cairo_t      *cr,
       int           width,
       int           height)
 {
-    if (! cairo_perf_can_run (perf, "twin", NULL))
-	return;
-
     cairo_perf_run (perf, "twin", do_twin, NULL);
 }

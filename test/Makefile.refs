@@ -6,6 +6,8 @@ REFERENCE_IMAGES = \
 	a1-bug.ref.png \
 	a1-bug.xlib.ref.png \
 	a1-clip-fill-equal.ref.png \
+	a1-clip-fill-rule.argb32.ref.png \
+	a1-clip-fill-rule.rgb24.ref.png \
 	a1-clip-fill.ref.png \
 	a1-clip-paint.ref.png \
 	a1-clip-stroke.ref.png \
@@ -18,6 +20,7 @@ REFERENCE_IMAGES = \
 	a1-rasterisation-rectangles.ref.png \
 	a1-rasterisation-triangles.quartz.xfail.png \
 	a1-rasterisation-triangles.ref.png \
+	a1-rectilinear-grid.ref.png \
 	a1-sample.ref.png \
 	a1-traps-sample.quartz.xfail.png \
 	a1-traps-sample.ref.png \
@@ -885,6 +888,8 @@ REFERENCE_IMAGES = \
 	over-between-source.svg12.rgb24.xfail.png \
 	over-between-source.xlib.ref.png \
 	over-between-source.xlib.rgb24.ref.png \
+	overlapping-boxes.argb32.ref.png \
+	overlapping-boxes.rgb24.ref.png \
 	overlapping-dash-caps.ref.png \
 	overlapping-glyphs.argb32.ref.png \
 	overlapping-glyphs.pdf.argb32.xfail.png \
@@ -1155,6 +1160,7 @@ REFERENCE_IMAGES = \
 	set-source.ref.png \
 	set-source.rgb24.ref.png \
 	shape-general-convex.ref.png \
+	shape-sierpinski.ref.png \
 	show-glyphs-advance.image16.ref.png \
 	show-glyphs-advance.ps.ref.png \
 	show-glyphs-advance.quartz.ref.png \
@@ -1299,9 +1305,6 @@ REFERENCE_IMAGES = \
 	svg-surface-source.rgb24.ref.png \
 	svg-surface-source.svg12.argb32.xfail.png \
 	svg-surface-source.svg12.rgb24.xfail.png \
-	test-fallback16-surface-source.ps.ref.png \
-	test-fallback16-surface-source.svg12.argb32.xfail.png \
-	test-fallback16-surface-source.svg12.rgb24.xfail.png \
 	text-antialias-gray.image16.ref.png \
 	text-antialias-gray.quartz.ref.png \
 	text-antialias-gray.ref.png \

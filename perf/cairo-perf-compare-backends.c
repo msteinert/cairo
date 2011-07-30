@@ -73,7 +73,7 @@ print_change_bar (double change,
 		  double max_change,
 		  int	 use_utf)
 {
-    int units_per_cell = (int) ceil (max_change / CHANGE_BAR_WIDTH);
+    int units_per_cell = ceil (max_change / CHANGE_BAR_WIDTH);
     static char const *ascii_boxes[8] = {
 	"****","***" ,"***", "**",
 	"**",  "*",   "*",   ""
@@ -369,7 +369,7 @@ main (int	  argc,
     if (args.num_filenames) {
 	reports = xcalloc (args.num_filenames, sizeof (cairo_perf_report_t));
 	for (i = 0; i < args.num_filenames; i++) {
-	    cairo_perf_report_load (&reports[i], args.filenames[i],
+	    cairo_perf_report_load (&reports[i], args.filenames[i], i,
 				    test_report_cmp_name);
 	    printf ("loaded: %s, %d tests\n",
 		    args.filenames[i], reports[i].tests_count);
@@ -377,7 +377,7 @@ main (int	  argc,
     } else {
 	args.num_filenames = 1;
 	reports = xcalloc (args.num_filenames, sizeof (cairo_perf_report_t));
-	cairo_perf_report_load (&reports[0], NULL, test_report_cmp_name);
+	cairo_perf_report_load (&reports[0], NULL, 0, test_report_cmp_name);
     }
 
     cairo_perf_reports_compare (reports, args.num_filenames, &args.options);

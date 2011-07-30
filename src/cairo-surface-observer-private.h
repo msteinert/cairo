@@ -33,14 +33,16 @@
  *      Chris Wilson <chris@chris-wilson.co.uk>
  */
 
-#ifndef CAIRO_SURFACE_SNAPSHOT_PRIVATE_H
-#define CAIRO_SURFACE_SNAPSHOT_PRIVATE_H
+#ifndef CAIRO_SURFACE_OBSERVER_PRIVATE_H
+#define CAIRO_SURFACE_OBSERVER_PRIVATE_H
 
-#include "cairoint.h" /* cairo_surface_backend_t */
+#include "cairoint.h"
 
 #include "cairo-device-private.h"
+#include "cairo-list-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-surface-private.h"
+#include "cairo-surface-backend-private.h"
 #include "cairo-time-private.h"
 
 struct stat {
@@ -180,11 +182,27 @@ struct _cairo_device_observer {
     cairo_observation_t log;
 };
 
+struct callback_list {
+    cairo_list_t link;
+
+    cairo_surface_observer_callback_t func;
+    void *data;
+};
+
 struct _cairo_surface_observer {
     cairo_surface_t base;
     cairo_surface_t *target;
 
     cairo_observation_t log;
+
+    cairo_list_t paint_callbacks;
+    cairo_list_t mask_callbacks;
+    cairo_list_t fill_callbacks;
+    cairo_list_t stroke_callbacks;
+    cairo_list_t glyphs_callbacks;
+
+    cairo_list_t flush_callbacks;
+    cairo_list_t finish_callbacks;
 };
 
 static inline cairo_surface_t *

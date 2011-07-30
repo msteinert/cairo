@@ -89,7 +89,7 @@ static cairo_test_status_t
 bit (cairo_t *cr, int width, int height)
 {
     cairo_surface_t *surface;
-    cairo_rectangle_t extents;
+    cairo_rectangle_int_t extents;
     cairo_format_t format;
     uint8_t *data;
 
@@ -117,7 +117,7 @@ static cairo_test_status_t
 fill (cairo_t *cr, int width, int height)
 {
     cairo_surface_t *surface;
-    cairo_rectangle_t extents;
+    cairo_rectangle_int_t extents;
     cairo_t *cr2;
 
     extents.x = extents.y = extents.width = extents.height = 1;

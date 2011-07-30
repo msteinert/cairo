@@ -101,6 +101,7 @@ _cairo_stroke_style_fini (cairo_stroke_style_t *style)
  */
 void
 _cairo_stroke_style_max_distance_from_path (const cairo_stroke_style_t *style,
+					    const cairo_path_fixed_t *path,
                                             const cairo_matrix_t *ctm,
                                             double *dx, double *dy)
 {
@@ -110,6 +111,7 @@ _cairo_stroke_style_max_distance_from_path (const cairo_stroke_style_t *style,
 	style_expansion = M_SQRT1_2;
 
     if (style->line_join == CAIRO_LINE_JOIN_MITER &&
+	! path->stroke_is_rectilinear &&
 	style_expansion < M_SQRT2 * style->miter_limit)
     {
 	style_expansion = M_SQRT2 * style->miter_limit;
@@ -117,8 +119,12 @@ _cairo_stroke_style_max_distance_from_path (const cairo_stroke_style_t *style,
 
     style_expansion *= style->line_width;
 
-    *dx = style_expansion * hypot (ctm->xx, ctm->xy);
-    *dy = style_expansion * hypot (ctm->yy, ctm->yx);
+    if (_cairo_matrix_has_unity_scale (ctm)) {
+	*dx = *dy = style_expansion;
+    } else {
+	*dx = style_expansion * hypot (ctm->xx, ctm->xy);
+	*dy = style_expansion * hypot (ctm->yy, ctm->yx);
+    }
 }
 
 /*

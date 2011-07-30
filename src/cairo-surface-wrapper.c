@@ -446,7 +446,7 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 
 	if (num_glyphs > ARRAY_LENGTH (stack_glyphs)) {
 	    dev_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
-	    if (dev_glyphs == NULL) {
+	    if (unlikely (dev_glyphs == NULL)) {
 		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 		goto FINISH;
 	    }
@@ -454,7 +454,9 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 
 	for (i = 0; i < num_glyphs; i++) {
 	    dev_glyphs[i] = glyphs[i];
-	    cairo_matrix_transform_point (&m, &dev_glyphs[i].x, &dev_glyphs[i].y);
+	    cairo_matrix_transform_point (&m,
+					  &dev_glyphs[i].x,
+					  &dev_glyphs[i].y);
 	}
 
 	status = cairo_matrix_invert (&m);

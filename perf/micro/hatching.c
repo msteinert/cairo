@@ -170,12 +170,15 @@ F(clip_alpha_aligned_mono, clip_alpha, aligned, mono)
 F(clip_alpha_misaligned_mono, clip_alpha, misaligned, mono)
 F(clip_alpha_rotated_mono, clip_alpha, rotated, mono)
 
+cairo_bool_t
+hatching_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "hatching", NULL);
+}
+
 void
 hatching (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "hatching", NULL))
-	return;
-
     cairo_perf_run (perf, "hatching-aligned-aa", draw_aligned_aa, NULL);
     cairo_perf_run (perf, "hatching-misaligned-aa", draw_misaligned_aa, NULL);
     cairo_perf_run (perf, "hatching-rotated-aa", draw_rotated_aa, NULL);

@@ -170,12 +170,15 @@ do_wide_fills (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
+cairo_bool_t
+wide_fills_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "wide-fills", NULL);
+}
+
 void
 wide_fills (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "wide-fills", NULL))
-	return;
-
     cairo_perf_run (perf, "wide-fills-halign", do_wide_fills_ha, NULL);
     cairo_perf_run (perf, "wide-fills-valign", do_wide_fills_va, NULL);
     cairo_perf_run (perf, "wide-fills-horizontal", do_wide_fills_h, NULL);

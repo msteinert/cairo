@@ -40,6 +40,7 @@
 #include "cairo-types-private.h"
 
 #include "cairo-boxes-private.h"
+#include "cairo-error-private.h"
 #include "cairo-compiler-private.h"
 #include "cairo-error-private.h"
 #include "cairo-path-fixed-private.h"
@@ -160,14 +161,30 @@ _cairo_clip_get_extents (const cairo_clip_t *clip);
 cairo_private cairo_surface_t *
 _cairo_clip_get_surface (const cairo_clip_t *clip, cairo_surface_t *dst, int *tx, int *ty);
 
+cairo_private cairo_surface_t *
+_cairo_clip_get_image (const cairo_clip_t *clip,
+		       cairo_surface_t *target,
+		       const cairo_rectangle_int_t *extents);
+
 cairo_private cairo_status_t
 _cairo_clip_combine_with_surface (const cairo_clip_t *clip,
 				  cairo_surface_t *dst,
 				  int dst_x, int dst_y);
 
-cairo_private cairo_status_t
-_cairo_clip_to_boxes (cairo_clip_t *clip,
-		      cairo_boxes_t *boxes);
+static inline void
+_cairo_clip_steal_boxes (cairo_clip_t *clip, cairo_boxes_t *boxes)
+{
+    _cairo_boxes_init_for_array (boxes, clip->boxes, clip->num_boxes);
+    clip->boxes = NULL;
+    clip->num_boxes = 0;
+}
+
+static inline void
+_cairo_clip_unsteal_boxes (cairo_clip_t *clip, cairo_boxes_t *boxes)
+{
+    clip->boxes = boxes->chunks.base;
+    clip->num_boxes = boxes->num_boxes;
+}
 
 cairo_private cairo_clip_t *
 _cairo_clip_from_boxes (const cairo_boxes_t *boxes);

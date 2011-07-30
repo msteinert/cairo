@@ -60,13 +60,22 @@ _cairo_quartz_image_surface_create_similar (void *asurface,
 					    int width,
 					    int height)
 {
-    cairo_surface_t *result;
     cairo_surface_t *isurf =
 	_cairo_image_surface_create_with_content (content, width, height);
-    if (cairo_surface_status(isurf))
-	return isurf;
+    cairo_surface_t *result = cairo_quartz_image_surface_create (isurf);
+    cairo_surface_destroy (isurf);
 
-    result = cairo_quartz_image_surface_create (isurf);
+    return result;
+}
+
+static cairo_surface_t *
+_cairo_quartz_image_surface_create_similar_image (void *asurface,
+						  cairo_format_t format,
+						  int width,
+						  int height)
+{
+    cairo_surface_t *isurf = cairo_image_surface_create (format, width, height);
+    cairo_surface_t *result = cairo_quartz_image_surface_create (isurf);
     cairo_surface_destroy (isurf);
 
     return result;
@@ -96,23 +105,19 @@ _cairo_quartz_image_surface_acquire_source_image (void *asurface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
-_cairo_quartz_image_surface_acquire_dest_image (void *asurface,
-						cairo_rectangle_int_t *interest_rect,
-						cairo_image_surface_t **image_out,
-						cairo_rectangle_int_t *image_rect,
-						void **image_extra)
+static cairo_surface_t *
+_cairo_quartz_image_surface_map_to_image (void *asurface,
+					  const cairo_rectangle_int_t *extents)
 {
     cairo_quartz_image_surface_t *surface = (cairo_quartz_image_surface_t *) asurface;
+    return _cairo_surface_create_for_rectangle_int (surface->imageSurface, extents);
+}
 
-    *image_out = surface->imageSurface;
-    image_rect->x = 0;
-    image_rect->y = 0;
-    image_rect->width = surface->width;
-    image_rect->height = surface->height;
-    *image_extra = NULL;
-
-    return CAIRO_STATUS_SUCCESS;
+static cairo_int_status_t
+_cairo_quartz_image_surface_unmap_image (void *asurface,
+					 cairo_image_surface_t *image)
+{
+    cairo_surface_destroy (&image->base);
 }
 
 static cairo_bool_t
@@ -123,7 +128,7 @@ _cairo_quartz_image_surface_get_extents (void *asurface,
 
     extents->x = 0;
     extents->y = 0;
-    extents->width = surface->width;
+    extents->width  = surface->width;
     extents->height = surface->height;
     return TRUE;
 }
@@ -138,6 +143,8 @@ _cairo_quartz_image_surface_flush (void *asurface)
     cairo_quartz_image_surface_t *surface = (cairo_quartz_image_surface_t *) asurface;
     CGImageRef oldImage = surface->image;
     CGImageRef newImage = NULL;
+
+    /* XXX only flush if the image has been modified. */
 
     /* To be released by the ReleaseCallback */
     cairo_surface_reference ((cairo_surface_t*) surface->imageSurface);
@@ -158,6 +165,82 @@ _cairo_quartz_image_surface_flush (void *asurface)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_int_status_t
+_cairo_quartz_image_surface_paint (void			*abstract_surface,
+				   cairo_operator_t		 op,
+				   const cairo_pattern_t	*source,
+				   const cairo_clip_t		*clip)
+{
+    cairo_quartz_image_surface_t *surface = abstract_surface;
+    return _cairo_surface_paint (&surface->imageSurface->base,
+				 op, source, clip);
+}
+
+static cairo_int_status_t
+_cairo_quartz_image_surface_mask (void				*abstract_surface,
+				  cairo_operator_t		 op,
+				  const cairo_pattern_t		*source,
+				  const cairo_pattern_t		*mask,
+				  const cairo_clip_t		*clip)
+{
+    cairo_quartz_image_surface_t *surface = abstract_surface;
+    return _cairo_surface_mask (&surface->imageSurface->base,
+				op, source, mask, clip);
+}
+
+static cairo_int_status_t
+_cairo_quartz_image_surface_stroke (void			*abstract_surface,
+				    cairo_operator_t		 op,
+				    const cairo_pattern_t	*source,
+				    const cairo_path_fixed_t	*path,
+				    const cairo_stroke_style_t	*style,
+				    const cairo_matrix_t	*ctm,
+				    const cairo_matrix_t	*ctm_inverse,
+				    double			 tolerance,
+				    cairo_antialias_t		 antialias,
+				    const cairo_clip_t		*clip)
+{
+    cairo_quartz_image_surface_t *surface = abstract_surface;
+    return _cairo_surface_stroke (&surface->imageSurface->base,
+				  op, source, path,
+				  style, ctm, ctm_inverse,
+				  tolerance, antialias, clip);
+}
+
+static cairo_int_status_t
+_cairo_quartz_image_surface_fill (void				*abstract_surface,
+			   cairo_operator_t		 op,
+			   const cairo_pattern_t	*source,
+			   const cairo_path_fixed_t	*path,
+			   cairo_fill_rule_t		 fill_rule,
+			   double			 tolerance,
+			   cairo_antialias_t		 antialias,
+			   const cairo_clip_t		*clip)
+{
+    cairo_quartz_image_surface_t *surface = abstract_surface;
+    return _cairo_surface_fill (&surface->imageSurface->base,
+				op, source, path,
+				fill_rule, tolerance, antialias,
+				clip);
+}
+
+static cairo_int_status_t
+_cairo_quartz_image_surface_glyphs (void			*abstract_surface,
+				    cairo_operator_t		 op,
+				    const cairo_pattern_t	*source,
+				    cairo_glyph_t		*glyphs,
+				    int				 num_glyphs,
+				    cairo_scaled_font_t		*scaled_font,
+				    const cairo_clip_t		*clip)
+{
+    cairo_quartz_image_surface_t *surface = abstract_surface;
+    return _cairo_surface_show_glyphs (&surface->imageSurface->base,
+				       op, source,
+				       glyphs, num_glyphs, scaled_font,
+				       clip, num_remaining);
+}
+
+
 static const cairo_surface_backend_t cairo_quartz_image_surface_backend = {
     CAIRO_SURFACE_TYPE_QUARTZ_IMAGE,
     _cairo_quartz_image_surface_finish,
@@ -165,39 +248,29 @@ static const cairo_surface_backend_t cairo_quartz_image_surface_backend = {
     _cairo_default_context_create,
 
     _cairo_quartz_image_surface_create_similar,
-    NULL, /* create_similar_image */
-    NULL, /* map_to_image */
-    NULL, /* unmap_image */
+    _cairo_quartz_image_surface_create_similar_image,
+    _cairo_quartz_image_surface_map_to_image,
+    _cairo_quartz_image_surface_unmap_image,
 
     _cairo_quartz_image_surface_acquire_source_image,
     NULL, /* release_source_image */
-    _cairo_quartz_image_surface_acquire_dest_image,
-    NULL, /* release_dest_image */
-    NULL, /* clone_similar */
-    NULL, /* composite */
-    NULL, /* fill_rectangles */
-    NULL, /* composite_trapezoids */
-    NULL, /* create_span_renderer */
-    NULL, /* check_span_renderer */
+    NULL, /* snapshot */
+
     NULL, /* copy_page */
     NULL, /* show_page */
+
     _cairo_quartz_image_surface_get_extents,
-    NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
+
     _cairo_quartz_image_surface_flush,
     NULL, /* mark_dirty_rectangle */
-    NULL, /* scaled_font_fini */
-    NULL, /* scaled_glyph_fini */
 
-    NULL, /* paint */
-    NULL, /* mask */
-    NULL, /* stroke */
-    NULL, /* fill */
-    NULL, /* surface_show_glyphs */
-    NULL, /* snapshot */
-    NULL, /* is_similar */
-    NULL  /* fill_stroke */
-
+    _cairo_quartz_image_surface_paint,
+    _cairo_quartz_image_surface_mask,
+    _cairo_quartz_image_surface_stroke,
+    _cairo_quartz_image_surface_fill,
+    NULL  /* fill-stroke */
+    _cairo_quartz_image_surface_glyphs,
 };
 
 /**
@@ -226,6 +299,9 @@ cairo_quartz_image_surface_create (cairo_surface_t *surface)
     int width, height, stride;
     cairo_format_t format;
     unsigned char *data;
+
+    if (surface->status)
+	return surface;
 
     if (cairo_surface_get_type(surface) != CAIRO_SURFACE_TYPE_IMAGE)
 	return SURFACE_ERROR_TYPE_MISMATCH;

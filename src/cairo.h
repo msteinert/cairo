@@ -2123,7 +2123,7 @@ cairo_surface_create_similar_image (cairo_surface_t  *other,
 
 cairo_public cairo_surface_t *
 cairo_surface_map_to_image (cairo_surface_t  *surface,
-			    const cairo_rectangle_t *extents);
+			    const cairo_rectangle_int_t *extents);
 
 cairo_public void
 cairo_surface_unmap_image (cairo_surface_t *surface,
@@ -2144,6 +2144,45 @@ typedef enum {
 cairo_public cairo_surface_t *
 cairo_surface_create_observer (cairo_surface_t *target,
 			       cairo_surface_observer_mode_t mode);
+
+typedef void (*cairo_surface_observer_callback_t) (cairo_surface_t *observer,
+						   cairo_surface_t *target,
+						   void *data);
+
+cairo_public cairo_status_t
+cairo_surface_observer_add_paint_callback (cairo_surface_t *abstract_surface,
+					   cairo_surface_observer_callback_t func,
+					   void *data);
+
+cairo_public cairo_status_t
+cairo_surface_observer_add_mask_callback (cairo_surface_t *abstract_surface,
+					  cairo_surface_observer_callback_t func,
+					  void *data);
+
+cairo_public cairo_status_t
+cairo_surface_observer_add_fill_callback (cairo_surface_t *abstract_surface,
+					  cairo_surface_observer_callback_t func,
+					  void *data);
+
+cairo_public cairo_status_t
+cairo_surface_observer_add_stroke_callback (cairo_surface_t *abstract_surface,
+					    cairo_surface_observer_callback_t func,
+					    void *data);
+
+cairo_public cairo_status_t
+cairo_surface_observer_add_glyphs_callback (cairo_surface_t *abstract_surface,
+					    cairo_surface_observer_callback_t func,
+					    void *data);
+
+cairo_public cairo_status_t
+cairo_surface_observer_add_flush_callback (cairo_surface_t *abstract_surface,
+					   cairo_surface_observer_callback_t func,
+					   void *data);
+
+cairo_public cairo_status_t
+cairo_surface_observer_add_finish_callback (cairo_surface_t *abstract_surface,
+					    cairo_surface_observer_callback_t func,
+					    void *data);
 
 cairo_public void
 cairo_surface_observer_print (cairo_surface_t *surface,
@@ -2425,6 +2464,10 @@ cairo_recording_surface_ink_extents (cairo_surface_t *surface,
                                      double *y0,
                                      double *width,
                                      double *height);
+
+cairo_public cairo_bool_t
+cairo_recording_surface_get_extents (cairo_surface_t *surface,
+				     cairo_rectangle_t *extents);
 
 /* Mime-surface (callback) functions */
 

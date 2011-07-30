@@ -2586,7 +2586,6 @@ static const cairo_scaled_font_backend_t _cairo_ft_scaled_font_backend = {
     _cairo_ft_scaled_glyph_init,
     NULL,			/* text_to_glyphs */
     _cairo_ft_ucs4_to_index,
-    NULL,			/* show_glyphs */
     _cairo_ft_load_truetype_table,
     _cairo_ft_index_to_ucs4,
     _cairo_ft_is_synthetic,

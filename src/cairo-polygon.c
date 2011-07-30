@@ -127,19 +127,19 @@ _cairo_polygon_init_boxes (cairo_polygon_t *polygon,
     polygon->num_limits = 0;
 
     for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
-	    for (i = 0; i < chunk->count; i++) {
-		    cairo_point_t p1, p2;
+	for (i = 0; i < chunk->count; i++) {
+	    cairo_point_t p1, p2;
 
-		    p1 = chunk->base[i].p1;
-		    p2.x = p1.x;
-		    p2.y = chunk->base[i].p2.y;
-		    _cairo_polygon_add_edge (polygon, &p1, &p2, 1);
+	    p1 = chunk->base[i].p1;
+	    p2.x = p1.x;
+	    p2.y = chunk->base[i].p2.y;
+	    _cairo_polygon_add_edge (polygon, &p1, &p2, 1);
 
-		    p1 = chunk->base[i].p2;
-		    p2.x = p1.x;
-		    p2.y = chunk->base[i].p1.y;
-		    _cairo_polygon_add_edge (polygon, &p1, &p2, 1);
-	    }
+	    p1 = chunk->base[i].p2;
+	    p2.x = p1.x;
+	    p2.y = chunk->base[i].p1.y;
+	    _cairo_polygon_add_edge (polygon, &p1, &p2, 1);
+	}
     }
 
     return polygon->status;
@@ -490,4 +490,30 @@ _cairo_polygon_add_contour (cairo_polygon_t *polygon,
     }
 
     return polygon->status;
+}
+
+void
+_cairo_polygon_translate (cairo_polygon_t *polygon, int dx, int dy)
+{
+    int n;
+
+    dx = _cairo_fixed_from_int (dx);
+    dy = _cairo_fixed_from_int (dy);
+
+    polygon->extents.p1.x += dx;
+    polygon->extents.p2.x += dx;
+    polygon->extents.p1.y += dy;
+    polygon->extents.p2.y += dy;
+
+    for (n = 0; n < polygon->num_edges; n++) {
+	cairo_edge_t *e = &polygon->edges[n];
+
+	e->top += dy;
+	e->bottom += dy;
+
+	e->line.p1.x += dx;
+	e->line.p2.x += dx;
+	e->line.p1.y += dy;
+	e->line.p2.y += dy;
+    }
 }

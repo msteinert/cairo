@@ -1397,6 +1397,7 @@ render_rows (cairo_botor_scan_converter_t *self,
 
 	if (x > prev_x) {
 	    spans[num_spans].x = prev_x;
+	    spans[num_spans].inverse = 0;
 	    spans[num_spans].coverage = AREA_TO_ALPHA (cover);
 	    ++num_spans;
 	}
@@ -1413,12 +1414,14 @@ render_rows (cairo_botor_scan_converter_t *self,
 
     if (prev_x <= self->xmax) {
 	spans[num_spans].x = prev_x;
+	spans[num_spans].inverse = 0;
 	spans[num_spans].coverage = AREA_TO_ALPHA (cover);
 	++num_spans;
     }
 
     if (cover && prev_x < self->xmax) {
 	spans[num_spans].x = self->xmax;
+	spans[num_spans].inverse = 1;
 	spans[num_spans].coverage = 0;
 	++num_spans;
     }
@@ -2179,8 +2182,6 @@ _cairo_botor_scan_converter_init (cairo_botor_scan_converter_t *self,
 				  cairo_fill_rule_t fill_rule)
 {
     self->base.destroy     = _cairo_botor_scan_converter_destroy;
-    self->base.add_edge    = _cairo_botor_scan_converter_add_edge;
-    self->base.add_polygon = _cairo_botor_scan_converter_add_polygon;
     self->base.generate    = _cairo_botor_scan_converter_generate;
 
     self->extents   = *extents;

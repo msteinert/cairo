@@ -170,12 +170,15 @@ DECL(48ca, 48, CAIRO_ANTIALIAS_SUBPIXEL)
 DECL(8mono, 8, CAIRO_ANTIALIAS_NONE)
 DECL(48mono, 48, CAIRO_ANTIALIAS_NONE)
 
+cairo_bool_t
+glyphs_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "glyphs", NULL);
+}
+
 void
 glyphs (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "glyphs", NULL))
-	return;
-
     cairo_perf_cover_sources_and_operators (perf, "glyphs8mono", do_glyphs8mono, count_glyphs8mono);
     cairo_perf_cover_sources_and_operators (perf, "glyphs8", do_glyphs8, count_glyphs8);
     cairo_perf_cover_sources_and_operators (perf, "glyphs8ca", do_glyphs8ca, count_glyphs8ca);

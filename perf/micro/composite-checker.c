@@ -75,6 +75,12 @@ do_composite_checker (cairo_t *cr,
     return cairo_perf_timer_elapsed ();
 }
 
+cairo_bool_t
+composite_checker_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "composite-checker", NULL);
+}
+
 void
 composite_checker (cairo_perf_t *perf,
                    cairo_t      *cr,
@@ -82,9 +88,6 @@ composite_checker (cairo_perf_t *perf,
                    int           height)
 {
     cairo_surface_t *image;
-
-    if (! cairo_perf_can_run (perf, "composite-checker", NULL))
-	return;
 
     /* Create the checker pattern. We don't actually need to draw
      * anything on it since that wouldn't affect performance.

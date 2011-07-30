@@ -36,9 +36,8 @@
 #ifndef CAIRO_SURFACE_SUBSURFACE_PRIVATE_H
 #define CAIRO_SURFACE_SUBSURFACE_PRIVATE_H
 
-#include "cairoint.h" /* for cairo_surface_backend_t */
-
 #include "cairo-surface-private.h"
+#include "cairo-surface-backend-private.h"
 
 struct _cairo_surface_subsurface {
     cairo_surface_t base;
@@ -52,6 +51,25 @@ static inline cairo_surface_t *
 _cairo_surface_subsurface_get_target (cairo_surface_t *surface)
 {
     return ((cairo_surface_subsurface_t *) surface)->target;
+}
+
+static inline void
+_cairo_surface_subsurface_offset (cairo_surface_t *surface,
+				  int *x, int *y)
+{
+    cairo_surface_subsurface_t *ss = (cairo_surface_subsurface_t *) surface;
+    *x += ss->extents.x;
+    *y += ss->extents.y;
+}
+
+static inline cairo_surface_t *
+_cairo_surface_subsurface_get_target_with_offset (cairo_surface_t *surface,
+						  int *x, int *y)
+{
+    cairo_surface_subsurface_t *ss = (cairo_surface_subsurface_t *) surface;
+    *x += ss->extents.x;
+    *y += ss->extents.y;
+    return ss->target;
 }
 
 static inline cairo_bool_t

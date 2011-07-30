@@ -47,110 +47,13 @@
 typedef int (*cairo_xlib_error_func_t) (Display     *display,
 					XErrorEvent *event);
 
-struct _cairo_xlib_job {
-    cairo_xlib_job_t *next;
-    enum {
-	RESOURCE,
-	WORK
-    } type;
-    union {
-	struct {
-	    cairo_xlib_notify_resource_func notify;
-	    XID xid;
-	} resource;
-	struct {
-	    cairo_xlib_notify_func notify;
-	    void *data;
-	    void (*destroy) (void *);
-	} work;
-    } func;
-};
-
 static cairo_xlib_display_t *_cairo_xlib_display_list;
-
-static void
-_cairo_xlib_remove_close_display_hook_internal (cairo_xlib_display_t *display,
-						cairo_xlib_hook_t *hook);
-
-static void
-_cairo_xlib_call_close_display_hooks (cairo_xlib_display_t *display)
-{
-    cairo_xlib_screen_t *screen;
-    cairo_xlib_hook_t *hook;
-
-    cairo_list_foreach_entry (screen, cairo_xlib_screen_t, &display->screens, link)
-	_cairo_xlib_screen_close_display (display, screen);
-
-    while (TRUE) {
-	hook = display->close_display_hooks;
-	if (hook == NULL)
-	    break;
-
-	_cairo_xlib_remove_close_display_hook_internal (display, hook);
-
-	hook->func (display, hook);
-    }
-    display->closed = TRUE;
-}
 
 static int
 _noop_error_handler (Display     *display,
 		     XErrorEvent *event)
 {
     return False;		/* return value is ignored */
-}
-
-static void
-_cairo_xlib_display_notify (cairo_xlib_display_t *display)
-{
-    cairo_xlib_job_t *jobs, *job, *freelist;
-    Display *dpy = display->display;
-
-    /* Optimistic atomic pointer read -- don't care if it is wrong due to
-     * contention as we will check again very shortly.
-     */
-    if (display->workqueue == NULL)
-	return;
-
-    jobs = display->workqueue;
-    while (jobs != NULL) {
-	display->workqueue = NULL;
-
-	/* reverse the list to obtain FIFO order */
-	job = NULL;
-	do {
-	    cairo_xlib_job_t *next = jobs->next;
-	    jobs->next = job;
-	    job = jobs;
-	    jobs = next;
-	} while (jobs != NULL);
-	freelist = jobs = job;
-
-	do {
-	    job = jobs;
-	    jobs = job->next;
-
-	    switch (job->type){
-	    case WORK:
-		job->func.work.notify (dpy, job->func.work.data);
-		if (job->func.work.destroy != NULL)
-		    job->func.work.destroy (job->func.work.data);
-		break;
-
-	    case RESOURCE:
-		job->func.resource.notify (dpy, job->func.resource.xid);
-		break;
-	    }
-	} while (jobs != NULL);
-
-	do {
-	    job = freelist;
-	    freelist = job->next;
-	    _cairo_freelist_free (&display->wq_freelist, job);
-	} while (freelist != NULL);
-
-	jobs = display->workqueue;
-    }
 }
 
 static void
@@ -166,11 +69,18 @@ _cairo_xlib_display_finish (void *abstract_display)
 	XSync (dpy, False);
 	old_handler = XSetErrorHandler (_noop_error_handler);
 
-	_cairo_xlib_display_notify (display);
-	_cairo_xlib_call_close_display_hooks (display);
+	while (! cairo_list_is_empty (&display->fonts)) {
+	    _cairo_xlib_font_close (cairo_list_first_entry (&display->fonts,
+							    cairo_xlib_font_t,
+							    link));
+	}
 
-	/* catch any that arrived before marking the display as closed */
-	_cairo_xlib_display_notify (display);
+	while (! cairo_list_is_empty (&display->screens)) {
+	    _cairo_xlib_screen_destroy (display,
+					cairo_list_first_entry (&display->screens,
+								cairo_xlib_screen_t,
+								link));
+	}
 
 	XSync (dpy, False);
 	XSetErrorHandler (old_handler);
@@ -183,24 +93,6 @@ static void
 _cairo_xlib_display_destroy (void *abstract_display)
 {
     cairo_xlib_display_t *display = abstract_display;
-
-    /* destroy all outstanding notifies */
-    while (display->workqueue != NULL) {
-	cairo_xlib_job_t *job = display->workqueue;
-	display->workqueue = job->next;
-
-	if (job->type == WORK && job->func.work.destroy != NULL)
-	    job->func.work.destroy (job->func.work.data);
-
-	_cairo_freelist_free (&display->wq_freelist, job);
-    }
-    _cairo_freelist_fini (&display->wq_freelist);
-
-    while (! cairo_list_is_empty (&display->screens)) {
-	_cairo_xlib_screen_destroy (cairo_list_first_entry (&display->screens,
-                                                            cairo_xlib_screen_t,
-                                                            link));
-    }
 
     free (display);
 }
@@ -340,14 +232,17 @@ _cairo_xlib_device_create (Display *dpy)
 
     XESetCloseDisplay (dpy, codes->extension, _cairo_xlib_close_display);
 
-    _cairo_freelist_init (&display->wq_freelist, sizeof (cairo_xlib_job_t));
-
     cairo_device_reference (&display->base); /* add one for the CloseDisplay */
     display->display = dpy;
     cairo_list_init (&display->screens);
-    display->workqueue = NULL;
-    display->close_display_hooks = NULL;
+    cairo_list_init (&display->fonts);
     display->closed = FALSE;
+
+    display->white = NULL;
+    memset (display->alpha, 0, sizeof (display->alpha));
+    memset (display->solid, 0, sizeof (display->solid));
+    memset (display->solid_cache, 0, sizeof (display->solid_cache));
+    memset (display->last_solid_cache, 0, sizeof (display->last_solid_cache));
 
     memset (display->cached_xrender_formats, 0,
 	    sizeof (display->cached_xrender_formats));
@@ -436,6 +331,13 @@ _cairo_xlib_device_create (Display *dpy)
 	display->buggy_pad_reflect = TRUE;
     }
 
+    if (display->render_major > 0 || display->render_minor >= 4)
+	display->compositor = _cairo_xlib_traps_compositor_get ();
+    else if (display->render_major > 0 || display->render_minor >= 0)
+	display->compositor = _cairo_xlib_mask_compositor_get ();
+    else
+	display->compositor = _cairo_xlib_core_compositor_get ();
+
     display->next = _cairo_xlib_display_list;
     _cairo_xlib_display_list = display;
 
@@ -444,92 +346,6 @@ _cairo_xlib_device_create (Display *dpy)
 UNLOCK:
     CAIRO_MUTEX_UNLOCK (_cairo_xlib_display_mutex);
     return device;
-}
-
-void
-_cairo_xlib_add_close_display_hook (cairo_xlib_display_t	*display,
-				    cairo_xlib_hook_t		*hook)
-{
-    hook->prev = NULL;
-    hook->next = display->close_display_hooks;
-    if (hook->next != NULL)
-	hook->next->prev = hook;
-    display->close_display_hooks = hook;
-}
-
-static void
-_cairo_xlib_remove_close_display_hook_internal (cairo_xlib_display_t *display,
-						cairo_xlib_hook_t *hook)
-{
-    if (display->close_display_hooks == hook)
-	display->close_display_hooks = hook->next;
-    else if (hook->prev != NULL)
-	hook->prev->next = hook->next;
-
-    if (hook->next != NULL)
-	hook->next->prev = hook->prev;
-
-    hook->prev = NULL;
-    hook->next = NULL;
-}
-
-void
-_cairo_xlib_remove_close_display_hook (cairo_xlib_display_t	*display,
-				       cairo_xlib_hook_t	*hook)
-{
-    _cairo_xlib_remove_close_display_hook_internal (display, hook);
-}
-
-cairo_status_t
-_cairo_xlib_display_queue_resource (cairo_xlib_display_t *display,
-	                            cairo_xlib_notify_resource_func notify,
-				    XID xid)
-{
-    cairo_xlib_job_t *job;
-    cairo_status_t status = CAIRO_STATUS_NO_MEMORY;
-
-    if (display->closed == FALSE) {
-	job = _cairo_freelist_alloc (&display->wq_freelist);
-	if (job != NULL) {
-	    job->type = RESOURCE;
-	    job->func.resource.xid = xid;
-	    job->func.resource.notify = notify;
-
-	    job->next = display->workqueue;
-	    display->workqueue = job;
-
-	    status = CAIRO_STATUS_SUCCESS;
-	}
-    }
-
-    return status;
-}
-
-cairo_status_t
-_cairo_xlib_display_queue_work (cairo_xlib_display_t *display,
-	                        cairo_xlib_notify_func notify,
-				void *data,
-				void (*destroy) (void *))
-{
-    cairo_xlib_job_t *job;
-    cairo_status_t status = CAIRO_STATUS_NO_MEMORY;
-
-    if (display->closed == FALSE) {
-	job = _cairo_freelist_alloc (&display->wq_freelist);
-	if (job != NULL) {
-	    job->type = WORK;
-	    job->func.work.data    = data;
-	    job->func.work.notify  = notify;
-	    job->func.work.destroy = destroy;
-
-	    job->next = display->workqueue;
-	    display->workqueue = job;
-
-	    status = CAIRO_STATUS_SUCCESS;
-	}
-    }
-
-    return status;
 }
 
 cairo_status_t
@@ -542,7 +358,6 @@ _cairo_xlib_display_acquire (cairo_device_t *device, cairo_xlib_display_t **disp
         return status;
 
     *display = (cairo_xlib_display_t *) device;
-    _cairo_xlib_display_notify (*display);
     return status;
 }
 
@@ -717,14 +532,6 @@ _cairo_xlib_display_get_screen (cairo_xlib_display_t *display,
     }
 
     return NULL;
-}
-
-void
-_cairo_xlib_display_get_xrender_version (cairo_xlib_display_t *display,
-					 int *major, int *minor)
-{
-    *major = display->render_major;
-    *minor = display->render_minor;
 }
 
 cairo_bool_t

@@ -287,8 +287,7 @@ _cairo_type3_glyph_surface_show_glyphs (void		     *abstract_surface,
 					cairo_glyph_t        *glyphs,
 					int		      num_glyphs,
 					cairo_scaled_font_t  *scaled_font,
-					const cairo_clip_t     *clip,
-					int		     *remaining_glyphs)
+					const cairo_clip_t     *clip)
 {
     cairo_type3_glyph_surface_t *surface = abstract_surface;
     cairo_int_status_t status;
@@ -325,38 +324,32 @@ static const cairo_surface_backend_t cairo_type3_glyph_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_TYPE3_GLYPH,
     _cairo_type3_glyph_surface_finish,
 
-    _cairo_default_context_create,
+    _cairo_default_context_create, /* XXX usable through a context? */
 
-    NULL, /* _cairo_type3_glyph_surface_create_similar */
-    NULL, /* _cairo_type3_glyph_surface_create_similar_image */
-    NULL, /* _cairo_type3_glyph_surface_create_map_to_image */
-    NULL, /* _cairo_type3_glyph_surface_create_unmap_image */
+    NULL, /* create similar */
+    NULL, /* create similar image */
+    NULL, /* map to image */
+    NULL, /* unmap image */
 
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
-    NULL, /* acquire_dest_image */
-    NULL, /* release_dest_image */
-    NULL, /* clone_similar */
-    NULL, /* composite */
-    NULL, /* fill_rectangles */
-    NULL, /* composite_trapezoids */
-    NULL, /* create_span_renderer */
-    NULL, /* check_span_renderer */
-    NULL, /* cairo_type3_glyph_surface_copy_page */
-    NULL, /* _cairo_type3_glyph_surface_show_page */
+    NULL, /* snapshot */
+
+    NULL, /* copy page */
+    NULL, /* show page */
+
     NULL, /* _cairo_type3_glyph_surface_get_extents */
-    NULL, /* old_show_glyphs */
     NULL, /* _cairo_type3_glyph_surface_get_font_options */
+
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
-    NULL, /* scaled_font_fini */
-    NULL, /* scaled_glyph_fini */
+
     _cairo_type3_glyph_surface_paint,
     _cairo_type3_glyph_surface_mask,
     _cairo_type3_glyph_surface_stroke,
     _cairo_type3_glyph_surface_fill,
+    NULL, /* fill-stroke */
     _cairo_type3_glyph_surface_show_glyphs,
-    NULL, /* snapshot */
 };
 
 static void

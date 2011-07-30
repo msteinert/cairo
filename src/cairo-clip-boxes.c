@@ -40,6 +40,8 @@
  */
 
 #include "cairoint.h"
+
+#include "cairo-box-private.h"
 #include "cairo-clip-private.h"
 #include "cairo-error-private.h"
 #include "cairo-freed-pool-private.h"
@@ -61,7 +63,6 @@ pot (int v)
     v++;
     return v;
 }
-
 
 static cairo_bool_t
 _cairo_clip_contains_rectangle_box (const cairo_clip_t *clip,
@@ -90,7 +91,6 @@ _cairo_clip_contains_rectangle_box (const cairo_clip_t *clip,
     }
 
     /* Check for a clip-box that wholly contains the rectangle */
-    assert (clip->num_boxes);
     for (i = 0; i < clip->num_boxes; i++) {
 	if (box->p1.x >= clip->boxes[i].p1.x &&
 	    box->p1.y >= clip->boxes[i].p1.y &&
@@ -176,6 +176,8 @@ _cairo_clip_intersect_rectangle_box (cairo_clip_t *clip,
 	    if (! _cairo_rectangle_intersect (&clip->extents, r))
 		clip = _cairo_clip_set_all_clipped (clip);
 	}
+	if (clip->path == NULL)
+	    clip->is_region = _cairo_box_is_pixel_aligned (box);
 	return clip;
     }
 
@@ -269,6 +271,7 @@ _cairo_clip_intersect_boxes (cairo_clip_t *clip,
 			     const cairo_boxes_t *boxes)
 {
     cairo_boxes_t clip_boxes;
+    cairo_box_t limits;
     cairo_rectangle_int_t extents;
 
     if (_cairo_clip_is_all_clipped (clip))
@@ -301,10 +304,11 @@ _cairo_clip_intersect_boxes (cairo_clip_t *clip,
     } else {
 	clip->boxes = _cairo_boxes_to_array (boxes, &clip->num_boxes, TRUE);
     }
-    _cairo_boxes_extents (boxes, &extents);
+    _cairo_boxes_extents (boxes, &limits);
     if (boxes == &clip_boxes)
 	_cairo_boxes_fini (&clip_boxes);
 
+    _cairo_box_round_to_rectangle (&limits, &extents);
     if (clip->path == NULL)
 	clip->extents = extents;
     else if (! _cairo_rectangle_intersect (&clip->extents, &extents))
@@ -557,37 +561,10 @@ _cairo_clip_reduce_for_composite (const cairo_clip_t *clip,
     return _cairo_clip_reduce_to_rectangle (clip, r);
 }
 
-cairo_status_t
-_cairo_clip_to_boxes (cairo_clip_t *clip,
-		      cairo_boxes_t *boxes)
-{
-    _cairo_boxes_init_for_array (boxes, clip->boxes, clip->num_boxes);
-
-    if (clip->path == NULL) {
-	cairo_box_t *src = clip->boxes;
-	int i;
-
-	clip->boxes = _cairo_malloc_ab (clip->num_boxes, sizeof (cairo_box_t));
-	if (clip->boxes == NULL) {
-	    clip->boxes = src;
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	}
-
-	for (i = 0; i < clip->num_boxes; i++) {
-	    clip->boxes[i].p1.x = _cairo_fixed_floor (src[i].p1.x);
-	    clip->boxes[i].p1.y = _cairo_fixed_floor (src[i].p1.y);
-	    clip->boxes[i].p2.x = _cairo_fixed_ceil (src[i].p2.x);
-	    clip->boxes[i].p2.y = _cairo_fixed_ceil (src[i].p2.y);
-	}
-    }
-
-    return CAIRO_STATUS_SUCCESS;
-
-}
-
 cairo_clip_t *
 _cairo_clip_from_boxes (const cairo_boxes_t *boxes)
 {
+    cairo_box_t extents;
     cairo_clip_t *clip = _cairo_clip_create ();
     if (clip == NULL)
 	return _cairo_clip_set_all_clipped (clip);
@@ -603,7 +580,8 @@ _cairo_clip_from_boxes (const cairo_boxes_t *boxes)
 	    return _cairo_clip_set_all_clipped (clip);
     }
 
-    _cairo_boxes_extents (boxes, &clip->extents);
+    _cairo_boxes_extents (boxes, &extents);
+    _cairo_box_round_to_rectangle (&extents, &clip->extents);
 
     return clip;
 }

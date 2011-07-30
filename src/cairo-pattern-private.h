@@ -40,6 +40,8 @@
 #include "cairo-types-private.h"
 #include "cairo-list-private.h"
 
+#include <stdio.h> /* FILE* */
+
 CAIRO_BEGIN_DECLS
 
 typedef struct _cairo_pattern_observer cairo_pattern_observer_t;
@@ -59,19 +61,19 @@ struct _cairo_pattern_observer {
 };
 
 struct _cairo_pattern {
-    cairo_pattern_type_t	type;
     cairo_reference_count_t	ref_count;
     cairo_status_t		status;
     cairo_user_data_array_t	user_data;
+    cairo_list_t		observers;
 
-    cairo_matrix_t		matrix;
+    cairo_pattern_type_t	type;
+
     cairo_filter_t		filter;
     cairo_extend_t		extend;
-    double			opacity;
-
     cairo_bool_t		has_component_alpha;
 
-    cairo_list_t		observers;
+    cairo_matrix_t		matrix;
+    double			opacity;
 };
 
 struct _cairo_solid_pattern {
@@ -265,45 +267,18 @@ _cairo_mesh_pattern_coord_box (const cairo_mesh_pattern_t *mesh,
 			       double                     *out_xmax,
 			       double                     *out_ymax);
 
-enum {
-    CAIRO_PATTERN_ACQUIRE_NONE = 0x0,
-    CAIRO_PATTERN_ACQUIRE_NO_REFLECT = 0x1,
-};
-cairo_private cairo_int_status_t
-_cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
-				cairo_surface_t		   *dst,
-				int			   x,
-				int			   y,
-				unsigned int		   width,
-				unsigned int		   height,
-				unsigned int		   flags,
-				cairo_surface_t		   **surface_out,
-				cairo_surface_attributes_t *attributes);
-
-cairo_private void
-_cairo_pattern_release_surface (const cairo_pattern_t	   *pattern,
-				cairo_surface_t		   *surface,
-				cairo_surface_attributes_t *attributes);
-
-cairo_private cairo_int_status_t
-_cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
-				 const cairo_pattern_t	    *mask,
-				 cairo_surface_t	    *dst,
-				 int			    src_x,
-				 int			    src_y,
-				 int			    mask_x,
-				 int			    mask_y,
-				 unsigned int		    width,
-				 unsigned int		    height,
-				 unsigned int		    flags,
-				 cairo_surface_t	    **src_out,
-				 cairo_surface_t	    **mask_out,
-				 cairo_surface_attributes_t *src_attributes,
-				 cairo_surface_attributes_t *mask_attributes);
+cairo_private_no_warn cairo_filter_t
+_cairo_pattern_sampled_area (const cairo_pattern_t *pattern,
+			     const cairo_rectangle_int_t *extents,
+			     cairo_rectangle_int_t *sample);
 
 cairo_private void
 _cairo_pattern_get_extents (const cairo_pattern_t	    *pattern,
 			    cairo_rectangle_int_t           *extents);
+
+cairo_private cairo_int_status_t
+_cairo_pattern_get_ink_extents (const cairo_pattern_t	    *pattern,
+				cairo_rectangle_int_t       *extents);
 
 cairo_private unsigned long
 _cairo_pattern_hash (const cairo_pattern_t *pattern);
@@ -353,7 +328,8 @@ _cairo_mesh_pattern_rasterize (const cairo_mesh_pattern_t *mesh,
 			       double                      x_offset,
 			       double                      y_offset);
 
-
+cairo_private void
+_cairo_debug_print_pattern (FILE *file, const cairo_pattern_t *pattern);
 
 CAIRO_END_DECLS
 

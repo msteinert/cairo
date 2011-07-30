@@ -95,12 +95,15 @@ do_curve_fill (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
+cairo_bool_t
+curve_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "curve", NULL);
+}
+
 void
 curve (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "curve", NULL))
-	return;
-
     cairo_set_source_rgb (cr, 1., 1., 1.);
 
     cairo_perf_run (perf, "curve-stroked", do_curve_stroke, NULL);

@@ -326,12 +326,15 @@ draw_spiral_stroke_na (cairo_t *cr, int width, int height, int loops)
 			       width, height, loops);
 }
 
+cairo_bool_t
+spiral_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "spiral", NULL);
+}
+
 void
 spiral (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "spiral", NULL))
-	return;
-
     cairo_perf_run (perf, "spiral-box-nonalign-evenodd-fill", draw_spiral_eo_na_box, NULL);
     cairo_perf_run (perf, "spiral-box-nonalign-nonzero-fill", draw_spiral_nz_na_box, NULL);
     cairo_perf_run (perf, "spiral-box-pixalign-evenodd-fill", draw_spiral_eo_pa_box, NULL);

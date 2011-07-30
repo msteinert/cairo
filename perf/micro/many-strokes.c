@@ -45,7 +45,7 @@ do_many_strokes_ha (cairo_t *cr, int width, int height, int loops)
 
     state = 0xc0ffee;
     for (count = 0; count < 1000; count++) {
-	double h = floor (uniform_random (0, height));
+	double h = floor (uniform_random (0, height)) + .5;
 	cairo_move_to (cr, floor (uniform_random (0, width)), h);
 	cairo_line_to (cr, ceil (uniform_random (0, width)), h);
     }
@@ -97,7 +97,7 @@ do_many_strokes_va (cairo_t *cr, int width, int height, int loops)
 
     state = 0xc0ffee;
     for (count = 0; count < 1000; count++) {
-	double v = floor (uniform_random (0, width));
+	double v = floor (uniform_random (0, width)) + .5;
 	cairo_move_to (cr, v, floor (uniform_random (0, height)));
 	cairo_line_to (cr, v, ceil (uniform_random (0, height)));
     }
@@ -169,12 +169,15 @@ do_many_strokes (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
+cairo_bool_t
+many_strokes_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "many-strokes", NULL);
+}
+
 void
 many_strokes (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "many-strokes", NULL))
-	return;
-
     cairo_perf_run (perf, "many-strokes-halign", do_many_strokes_ha, NULL);
     cairo_perf_run (perf, "many-strokes-valign", do_many_strokes_va, NULL);
     cairo_perf_run (perf, "many-strokes-horizontal", do_many_strokes_h, NULL);

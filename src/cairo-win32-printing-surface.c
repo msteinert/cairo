@@ -56,6 +56,7 @@
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-image-info-private.h"
 #include "cairo-image-surface-private.h"
+#include "cairo-surface-backend-private.h"
 #include "cairo-surface-clipper-private.h"
 
 #include <windows.h>
@@ -1873,21 +1874,17 @@ static const cairo_surface_backend_t cairo_win32_printing_surface_backend = {
 
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
-    NULL, /* acquire_dest_image */
-    NULL, /* release_dest_image */
-    NULL, /* clone_similar */
-    NULL, /* composite */
-    NULL, /* fill_rectangles */
-    NULL, /* composite_trapezoids */
-    NULL, /* create_span_renderer */
-    NULL, /* check_span_renderer */
+    NULL, /* snapshot */
+
     NULL, /* copy_page */
     _cairo_win32_printing_surface_show_page,
+
     _cairo_win32_surface_get_extents,
-    NULL, /* old_show_glyphs */
     _cairo_win32_printing_surface_get_font_options,
+
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
+
     NULL, /* scaled_font_fini */
     NULL, /* scaled_glyph_fini */
 
@@ -1895,10 +1892,8 @@ static const cairo_surface_backend_t cairo_win32_printing_surface_backend = {
     NULL, /* mask */
     _cairo_win32_printing_surface_stroke,
     _cairo_win32_printing_surface_fill,
+    NULL, /* fill/stroke */
     _cairo_win32_printing_surface_show_glyphs,
-    NULL, /* snapshot */
-    NULL, /* is_similar */
-    NULL, /* fill_stroke */
 };
 
 static const cairo_paginated_surface_backend_t cairo_win32_surface_paginated_backend = {

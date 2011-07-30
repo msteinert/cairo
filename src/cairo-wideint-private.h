@@ -56,6 +56,9 @@ _cairo_uint64_divrem (cairo_uint64_t num, cairo_uint64_t den);
 
 cairo_uint64_t I	_cairo_double_to_uint64 (double i);
 double	       I	_cairo_uint64_to_double (uint64_t i);
+cairo_int64_t  I	_cairo_double_to_int64 (double i);
+double	       I	_cairo_int64_to_double (uint64_t i);
+
 cairo_uint64_t I	_cairo_uint32_to_uint64 (uint32_t i);
 #define			_cairo_uint64_to_uint32(a)  ((a).lo)
 cairo_uint64_t I	_cairo_uint64_add (cairo_uint64_t a, cairo_uint64_t b);
@@ -114,6 +117,9 @@ _cairo_uint64_divrem (cairo_uint64_t num, cairo_uint64_t den)
  */
 static cairo_always_inline cairo_const cairo_uint64_t _cairo_double_to_uint64 (double i) { return i; }
 static cairo_always_inline cairo_const double _cairo_uint64_to_double (cairo_uint64_t i) { return i; }
+
+static cairo_always_inline cairo_int64_t I _cairo_double_to_int64 (double i) { return i; }
+static cairo_always_inline double I _cairo_int64_to_double (cairo_int64_t i) { return i; }
 
 #define			_cairo_uint32_to_uint64(i)  ((uint64_t) (i))
 #define			_cairo_uint64_to_uint32(i)  ((uint32_t) (i))

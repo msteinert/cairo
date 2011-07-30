@@ -33,15 +33,16 @@
 #include "cairo-compiler-private.h"
 #include "cairo-wideint-private.h"
 
-typedef cairo_uint64_t cairo_time_t;
+/* Make the base type signed for easier arithmetic */
+typedef cairo_int64_t cairo_time_t;
 
-#define _cairo_time_add _cairo_uint64_add
-#define _cairo_time_sub _cairo_uint64_sub
-#define _cairo_time_gt  _cairo_uint64_gt
-#define _cairo_time_lt  _cairo_uint64_lt
+#define _cairo_time_add _cairo_int64_add
+#define _cairo_time_sub _cairo_int64_sub
+#define _cairo_time_gt  _cairo_int64_gt
+#define _cairo_time_lt  _cairo_int64_lt
 
-#define _cairo_time_to_double   _cairo_uint64_to_double
-#define _cairo_time_from_double _cairo_double_to_uint64
+#define _cairo_time_to_double   _cairo_int64_to_double
+#define _cairo_time_from_double _cairo_double_to_int64
 
 cairo_private int
 _cairo_time_cmp (const void *a,
@@ -75,7 +76,7 @@ _cairo_time_to_ns (cairo_time_t t)
 static cairo_always_inline cairo_time_t
 _cairo_time_max (cairo_time_t a, cairo_time_t b)
 {
-    if (_cairo_uint64_gt (a, b))
+    if (_cairo_int64_gt (a, b))
 	return a;
     else
 	return b;
@@ -84,7 +85,7 @@ _cairo_time_max (cairo_time_t a, cairo_time_t b)
 static cairo_always_inline cairo_time_t
 _cairo_time_min (cairo_time_t a, cairo_time_t b)
 {
-    if (_cairo_uint64_lt (a, b))
+    if (_cairo_int64_lt (a, b))
 	return a;
     else
 	return b;

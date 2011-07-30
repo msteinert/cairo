@@ -2213,7 +2213,7 @@ _cairo_win32_save_initial_clip (HDC hdc, cairo_win32_surface_t *surface)
      * set.  GetClipBox returns values in logical (transformed) coordinates;
      * it's unclear what GetClipRgn returns, because the region is empty in the
      * case of a SIMPLEREGION clip, but I assume device (untransformed) coordinates.
-     * Similarily, IntersectClipRect works in logical units, whereas SelectClipRgn
+     * Similarly, IntersectClipRect works in logical units, whereas SelectClipRgn
      * works in device units.
      *
      * So, avoid the whole mess and get rid of the world transform

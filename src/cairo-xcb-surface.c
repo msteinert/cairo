@@ -45,6 +45,7 @@
 
 #include "cairo-default-context-private.h"
 #include "cairo-image-surface-private.h"
+#include "cairo-surface-backend-private.h"
 
 #if CAIRO_HAS_XLIB_XCB_FUNCTIONS
 slim_hidden_proto (cairo_xcb_surface_create);
@@ -822,13 +823,10 @@ _cairo_xcb_surface_glyphs (void				*abstract_surface,
 			   cairo_glyph_t		*glyphs,
 			   int				 num_glyphs,
 			   cairo_scaled_font_t		*scaled_font,
-			   const cairo_clip_t		*clip,
-			   int *num_remaining)
+			   const cairo_clip_t		*clip)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
     cairo_int_status_t status;
-
-    *num_remaining = 0;
 
     if (surface->fallback == NULL) {
 	status = _cairo_xcb_surface_cairo_glyphs (surface,
@@ -864,36 +862,28 @@ const cairo_surface_backend_t _cairo_xcb_surface_backend = {
 
     _cairo_xcb_surface_create_similar,
     _cairo_xcb_surface_create_similar_image,
-
     _cairo_xcb_surface_map_to_image,
     _cairo_xcb_surface_unmap,
 
     _cairo_xcb_surface_acquire_source_image,
     _cairo_xcb_surface_release_source_image,
+    NULL, /* snapshot */
 
-    NULL, NULL, NULL, /* dest acquire/release/clone */
-
-    NULL, /* composite */
-    NULL, /* fill */
-    NULL, /* trapezoids */
-    NULL, /* span */
-    NULL, /* check-span */
 
     NULL, /* copy_page */
     NULL, /* show_page */
+
     _cairo_xcb_surface_get_extents,
-    NULL, /* old-glyphs */
     _cairo_xcb_surface_get_font_options,
 
     _cairo_xcb_surface_flush,
     NULL,
-    _cairo_xcb_surface_scaled_font_fini,
-    _cairo_xcb_surface_scaled_glyph_fini,
 
     _cairo_xcb_surface_paint,
     _cairo_xcb_surface_mask,
     _cairo_xcb_surface_stroke,
     _cairo_xcb_surface_fill,
+    NULL, /* fill-stroke */
     _cairo_xcb_surface_glyphs,
 };
 
@@ -1231,26 +1221,25 @@ cairo_xcb_surface_set_size (cairo_surface_t *abstract_surface,
 			    int              height)
 {
     cairo_xcb_surface_t *surface;
-    cairo_status_t status_ignored;
 
     if (unlikely (abstract_surface->status))
 	return;
     if (unlikely (abstract_surface->finished)) {
-	status_ignored = _cairo_surface_set_error (abstract_surface,
-						   _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
+	_cairo_surface_set_error (abstract_surface,
+				  _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 	return;
     }
 
 
     if (abstract_surface->type != CAIRO_SURFACE_TYPE_XCB) {
-	status_ignored = _cairo_surface_set_error (abstract_surface,
-						   _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
+	_cairo_surface_set_error (abstract_surface,
+				  _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
 	return;
     }
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX || width <= 0 || height <= 0) {
-	status_ignored = _cairo_surface_set_error (abstract_surface,
-						   _cairo_error (CAIRO_STATUS_INVALID_SIZE));
+	_cairo_surface_set_error (abstract_surface,
+				  _cairo_error (CAIRO_STATUS_INVALID_SIZE));
 	return;
     }
 

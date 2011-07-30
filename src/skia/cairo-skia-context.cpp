@@ -50,6 +50,7 @@
 #include "cairo-path-private.h"
 #include "cairo-pattern-private.h"
 #include "cairo-skia-private.h"
+#include "cairo-surface-backend-private.h"
 
 #include <SkShader.h>
 #include <SkColorShader.h>

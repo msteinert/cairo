@@ -132,12 +132,15 @@ long_lines_cropped_once (cairo_t *cr, int width, int height, int loops)
     return do_long_lines (cr, width, height, loops, LONG_LINES_CROPPED | LONG_LINES_ONCE);
 }
 
+cairo_bool_t
+long_lines_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "long-lines", NULL);
+}
+
 void
 long_lines (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "long-lines", NULL))
-	return;
-
     cairo_perf_run (perf, "long-lines-uncropped", long_lines_uncropped, NULL);
     cairo_perf_run (perf, "long-lines-uncropped-once", long_lines_uncropped_once, NULL);
     cairo_perf_run (perf, "long-lines-cropped", long_lines_cropped, NULL);

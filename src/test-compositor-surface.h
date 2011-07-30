@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2005 Red Hat, Inc
+ * Copyright © 2011 Intel Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,24 +27,45 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is Red Hat, Inc.
+ * The Initial Developer of the Original Code is Intel Corporation
  *
  * Contributor(s):
- *	Carl Worth <cworth@cworth.org>
+ *	Chris Wilson <chris@chris-wilson.co.uk>
  */
 
-#ifndef TEST_FALLBACK_SURFACE_H
-#define TEST_FALLBACK_SURFACE_H
+#ifndef TEST_COMPOSITOR_SURFACE_H
+#define TEST_COMPOSITOR_SURFACE_H
 
 #include "cairo.h"
 
 CAIRO_BEGIN_DECLS
 
 cairo_surface_t *
-_cairo_test_fallback_surface_create (cairo_content_t	content,
-			       int		width,
-			       int		height);
+_cairo_test_fallback_compositor_surface_create (cairo_content_t	content,
+						int		width,
+						int		height);
+
+
+cairo_surface_t *
+_cairo_test_mask_compositor_surface_create (cairo_content_t	content,
+					     int		width,
+					     int		height);
+
+cairo_surface_t *
+_cairo_test_traps_compositor_surface_create (cairo_content_t	content,
+					     int		width,
+					     int		height);
+
+cairo_surface_t *
+_cairo_test_spans_compositor_surface_create (cairo_content_t	content,
+					     int		width,
+					     int		height);
+
+cairo_surface_t *
+_cairo_test_base_compositor_surface_create (cairo_content_t	content,
+					    int			width,
+					    int			height);
 
 CAIRO_END_DECLS
 
-#endif /* TEST_FALLBACK_SURFACE_H */
+#endif /* TEST_COMPOSITOR_SURFACE_H */

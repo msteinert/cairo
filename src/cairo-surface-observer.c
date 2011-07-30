@@ -37,6 +37,7 @@
 
 #include "cairo-surface-observer-private.h"
 
+#include "cairo-array-private.h"
 #include "cairo-combsort-private.h"
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-error-private.h"
@@ -385,10 +386,28 @@ _cairo_surface_create_observer_internal (cairo_device_t *device,
     surface->base.type = surface->target->type;
     surface->base.is_clear = surface->target->is_clear;
 
+    cairo_list_init (&surface->paint_callbacks);
+    cairo_list_init (&surface->mask_callbacks);
+    cairo_list_init (&surface->fill_callbacks);
+    cairo_list_init (&surface->stroke_callbacks);
+    cairo_list_init (&surface->glyphs_callbacks);
+
+    cairo_list_init (&surface->flush_callbacks);
+    cairo_list_init (&surface->finish_callbacks);
+
     surface->log.num_surfaces++;
     to_device (surface)->log.num_surfaces++;
 
     return &surface->base;
+}
+
+static inline void
+do_callbacks (cairo_surface_observer_t *surface, cairo_list_t *head)
+{
+    struct callback_list *cb;
+
+    cairo_list_foreach_entry (cb, struct callback_list, head, link)
+	cb->func (&surface->base, surface->target, cb->data);
 }
 
 
@@ -396,6 +415,8 @@ static cairo_status_t
 _cairo_surface_observer_finish (void *abstract_surface)
 {
     cairo_surface_observer_t *surface = abstract_surface;
+
+    do_callbacks (surface, &surface->finish_callbacks);
 
     cairo_surface_destroy (surface->target);
     log_fini (&surface->log);
@@ -630,11 +651,11 @@ add_record (cairo_observation_t *log,
 static void
 sync (cairo_surface_t *target, int x, int y)
 {
-    cairo_rectangle_t extents;
+    cairo_rectangle_int_t extents;
 
     extents.x = x;
     extents.y = y;
-    extents.width = 1;
+    extents.width  = 1;
     extents.height = 1;
 
     cairo_surface_unmap_image (target,
@@ -687,7 +708,6 @@ _cairo_surface_observer_paint (void *abstract_surface,
     cairo_surface_observer_t *surface = abstract_surface;
     cairo_device_observer_t *device = to_device (surface);
     cairo_composite_rectangles_t composite;
-    cairo_rectangle_int_t extents;
     cairo_int_status_t status;
     cairo_time_t t;
     int x, y;
@@ -704,9 +724,8 @@ _cairo_surface_observer_paint (void *abstract_surface,
     add_pattern (&device->log.paint.source, source, surface->target);
     add_clip (&device->log.paint.clip, clip);
 
-    _cairo_surface_get_extents (surface->target, &extents);
     status = _cairo_composite_rectangles_init_for_paint (&composite,
-							 &extents,
+							 surface->target,
 							 op, source,
 							 clip);
     if (unlikely (status)) {
@@ -722,9 +741,9 @@ _cairo_surface_observer_paint (void *abstract_surface,
     _cairo_composite_rectangles_fini (&composite);
 
     t = _cairo_time_get ();
-    status =  _cairo_surface_paint (surface->target,
-				    op, source,
-				    clip);
+    status = _cairo_surface_paint (surface->target,
+				   op, source,
+				   clip);
     if (unlikely (status))
 	return status;
 
@@ -733,6 +752,8 @@ _cairo_surface_observer_paint (void *abstract_surface,
 
     add_record_paint (&surface->log, surface->target, op, source, clip, t);
     add_record_paint (&device->log, surface->target, op, source, clip, t);
+
+    do_callbacks (surface, &surface->paint_callbacks);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -773,7 +794,6 @@ _cairo_surface_observer_mask (void *abstract_surface,
     cairo_surface_observer_t *surface = abstract_surface;
     cairo_device_observer_t *device = to_device (surface);
     cairo_composite_rectangles_t composite;
-    cairo_rectangle_int_t extents;
     cairo_int_status_t status;
     cairo_time_t t;
     int x, y;
@@ -790,9 +810,8 @@ _cairo_surface_observer_mask (void *abstract_surface,
     add_pattern (&device->log.mask.mask, mask, surface->target);
     add_clip (&device->log.mask.clip, clip);
 
-    _cairo_surface_get_extents (surface->target, &extents);
     status = _cairo_composite_rectangles_init_for_mask (&composite,
-							&extents,
+							surface->target,
 							op, source, mask,
 							clip);
     if (unlikely (status)) {
@@ -823,6 +842,8 @@ _cairo_surface_observer_mask (void *abstract_surface,
     add_record_mask (&device->log,
 		     surface->target, op, source, mask, clip,
 		     t);
+
+    do_callbacks (surface, &surface->mask_callbacks);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -875,7 +896,6 @@ _cairo_surface_observer_fill (void			*abstract_surface,
     cairo_surface_observer_t *surface = abstract_surface;
     cairo_device_observer_t *device = to_device (surface);
     cairo_composite_rectangles_t composite;
-    cairo_rectangle_int_t extents;
     cairo_int_status_t status;
     cairo_time_t t;
     int x, y;
@@ -896,9 +916,8 @@ _cairo_surface_observer_fill (void			*abstract_surface,
     add_path (&device->log.fill.path, path, TRUE);
     add_clip (&device->log.fill.clip, clip);
 
-    _cairo_surface_get_extents (surface->target, &extents);
     status = _cairo_composite_rectangles_init_for_fill (&composite,
-							&extents,
+							surface->target,
 							op, source, path,
 							clip);
     if (unlikely (status)) {
@@ -933,6 +952,8 @@ _cairo_surface_observer_fill (void			*abstract_surface,
 		     surface->target, op, source, path,
 		     fill_rule, tolerance, antialias,
 		     clip, t);
+
+    do_callbacks (surface, &surface->fill_callbacks);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -990,7 +1011,6 @@ _cairo_surface_observer_stroke (void				*abstract_surface,
     cairo_surface_observer_t *surface = abstract_surface;
     cairo_device_observer_t *device = to_device (surface);
     cairo_composite_rectangles_t composite;
-    cairo_rectangle_int_t extents;
     cairo_int_status_t status;
     cairo_time_t t;
     int x, y;
@@ -1013,9 +1033,8 @@ _cairo_surface_observer_stroke (void				*abstract_surface,
     add_path (&device->log.stroke.path, path, FALSE);
     add_clip (&device->log.stroke.clip, clip);
 
-    _cairo_surface_get_extents (surface->target, &extents);
     status = _cairo_composite_rectangles_init_for_stroke (&composite,
-							  &extents,
+							  surface->target,
 							  op, source,
 							  path, style, ctm,
 							  clip);
@@ -1054,6 +1073,8 @@ _cairo_surface_observer_stroke (void				*abstract_surface,
 		       style, ctm,ctm_inverse,
 		       tolerance, antialias,
 		       clip, t);
+
+    do_callbacks (surface, &surface->stroke_callbacks);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1101,13 +1122,11 @@ _cairo_surface_observer_glyphs (void			*abstract_surface,
 				cairo_glyph_t		*glyphs,
 				int			 num_glyphs,
 				cairo_scaled_font_t	*scaled_font,
-				const cairo_clip_t		*clip,
-				int *remaining_glyphs)
+				const cairo_clip_t		*clip)
 {
     cairo_surface_observer_t *surface = abstract_surface;
     cairo_device_observer_t *device = to_device (surface);
     cairo_composite_rectangles_t composite;
-    cairo_rectangle_int_t extents;
     cairo_int_status_t status;
     cairo_glyph_t *dev_glyphs;
     cairo_time_t t;
@@ -1123,9 +1142,8 @@ _cairo_surface_observer_glyphs (void			*abstract_surface,
     add_pattern (&device->log.glyphs.source, source, surface->target);
     add_clip (&device->log.glyphs.clip, clip);
 
-    _cairo_surface_get_extents (surface->target, &extents);
     status = _cairo_composite_rectangles_init_for_glyphs (&composite,
-							  &extents,
+							  surface->target,
 							  op, source,
 							  scaled_font,
 							  glyphs, num_glyphs,
@@ -1150,7 +1168,6 @@ _cairo_surface_observer_glyphs (void			*abstract_surface,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     memcpy (dev_glyphs, glyphs, num_glyphs * sizeof (cairo_glyph_t));
 
-    *remaining_glyphs = 0;
     t = _cairo_time_get ();
     status = _cairo_surface_show_text_glyphs (surface->target, op, source,
 					      NULL, 0,
@@ -1175,6 +1192,8 @@ _cairo_surface_observer_glyphs (void			*abstract_surface,
 		       glyphs, num_glyphs, scaled_font,
 		       clip, t);
 
+    do_callbacks (surface, &surface->glyphs_callbacks);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1182,6 +1201,8 @@ static cairo_status_t
 _cairo_surface_observer_flush (void *abstract_surface)
 {
     cairo_surface_observer_t *surface = abstract_surface;
+
+    do_callbacks (surface, &surface->flush_callbacks);
 
     cairo_surface_flush (surface->target);
     return surface->target->status;
@@ -1314,33 +1335,23 @@ static const cairo_surface_backend_t _cairo_surface_observer_backend = {
 
     _cairo_surface_observer_acquire_source_image,
     _cairo_surface_observer_release_source_image,
-
-    NULL, NULL, /* acquire, release dest */
-    NULL, /* clone similar */
-    NULL, /* composite */
-    NULL, /* fill rectangles */
-    NULL, /* composite trapezoids */
-    NULL, /* create span renderer */
-    NULL, /* check span renderer */
+    _cairo_surface_observer_snapshot,
 
     _cairo_surface_observer_copy_page,
     _cairo_surface_observer_show_page,
 
     _cairo_surface_observer_get_extents,
-    NULL, /* old_show_glyphs */
     _cairo_surface_observer_get_font_options,
+
     _cairo_surface_observer_flush,
     _cairo_surface_observer_mark_dirty,
-    NULL, /* font_fini */
-    NULL, /* glyph_fini */
 
     _cairo_surface_observer_paint,
     _cairo_surface_observer_mask,
     _cairo_surface_observer_stroke,
     _cairo_surface_observer_fill,
+    NULL, /* fill-stroke */
     _cairo_surface_observer_glyphs,
-
-    _cairo_surface_observer_snapshot,
 };
 
 /**
@@ -1383,6 +1394,150 @@ cairo_surface_create_observer (cairo_surface_t *target,
     cairo_device_destroy (device);
 
     return surface;
+}
+
+static cairo_status_t
+_cairo_surface_observer_add_callback (cairo_list_t *head,
+				      cairo_surface_observer_callback_t func,
+				      void *data)
+{
+    struct callback_list *cb;
+
+    cb = malloc (sizeof (*cb));
+    if (unlikely (cb == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    cairo_list_add (&cb->link, head);
+    cb->func = func;
+    cb->data = data;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+cairo_surface_observer_add_paint_callback (cairo_surface_t *abstract_surface,
+					    cairo_surface_observer_callback_t func,
+					    void *data)
+{
+    cairo_surface_observer_t *surface;
+
+    if (unlikely (CAIRO_REFERENCE_COUNT_IS_INVALID (&abstract_surface->ref_count)))
+	return abstract_surface->status;
+
+    if (! _cairo_surface_is_observer (abstract_surface))
+	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+
+    surface = (cairo_surface_observer_t *)abstract_surface;
+    return _cairo_surface_observer_add_callback (&surface->paint_callbacks,
+						 func, data);
+}
+
+cairo_status_t
+cairo_surface_observer_add_mask_callback (cairo_surface_t *abstract_surface,
+					  cairo_surface_observer_callback_t func,
+					  void *data)
+{
+    cairo_surface_observer_t *surface;
+
+    if (unlikely (CAIRO_REFERENCE_COUNT_IS_INVALID (&abstract_surface->ref_count)))
+	return abstract_surface->status;
+
+    if (! _cairo_surface_is_observer (abstract_surface))
+	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+
+    surface = (cairo_surface_observer_t *)abstract_surface;
+    return _cairo_surface_observer_add_callback (&surface->mask_callbacks,
+						 func, data);
+}
+
+cairo_status_t
+cairo_surface_observer_add_fill_callback (cairo_surface_t *abstract_surface,
+					  cairo_surface_observer_callback_t func,
+					  void *data)
+{
+    cairo_surface_observer_t *surface;
+
+    if (unlikely (CAIRO_REFERENCE_COUNT_IS_INVALID (&abstract_surface->ref_count)))
+	return abstract_surface->status;
+
+    if (! _cairo_surface_is_observer (abstract_surface))
+	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+
+    surface = (cairo_surface_observer_t *)abstract_surface;
+    return _cairo_surface_observer_add_callback (&surface->fill_callbacks,
+						 func, data);
+}
+
+cairo_status_t
+cairo_surface_observer_add_stroke_callback (cairo_surface_t *abstract_surface,
+					    cairo_surface_observer_callback_t func,
+					    void *data)
+{
+    cairo_surface_observer_t *surface;
+
+    if (unlikely (CAIRO_REFERENCE_COUNT_IS_INVALID (&abstract_surface->ref_count)))
+	return abstract_surface->status;
+
+    if (! _cairo_surface_is_observer (abstract_surface))
+	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+
+    surface = (cairo_surface_observer_t *)abstract_surface;
+    return _cairo_surface_observer_add_callback (&surface->stroke_callbacks,
+						 func, data);
+}
+
+cairo_status_t
+cairo_surface_observer_add_glyphs_callback (cairo_surface_t *abstract_surface,
+					    cairo_surface_observer_callback_t func,
+					    void *data)
+{
+    cairo_surface_observer_t *surface;
+
+    if (unlikely (CAIRO_REFERENCE_COUNT_IS_INVALID (&abstract_surface->ref_count)))
+	return abstract_surface->status;
+
+    if (! _cairo_surface_is_observer (abstract_surface))
+	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+
+    surface = (cairo_surface_observer_t *)abstract_surface;
+    return _cairo_surface_observer_add_callback (&surface->glyphs_callbacks,
+						 func, data);
+}
+
+cairo_status_t
+cairo_surface_observer_add_flush_callback (cairo_surface_t *abstract_surface,
+					   cairo_surface_observer_callback_t func,
+					   void *data)
+{
+    cairo_surface_observer_t *surface;
+
+    if (unlikely (CAIRO_REFERENCE_COUNT_IS_INVALID (&abstract_surface->ref_count)))
+	return abstract_surface->status;
+
+    if (! _cairo_surface_is_observer (abstract_surface))
+	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+
+    surface = (cairo_surface_observer_t *)abstract_surface;
+    return _cairo_surface_observer_add_callback (&surface->flush_callbacks,
+						 func, data);
+}
+
+cairo_status_t
+cairo_surface_observer_add_finish_callback (cairo_surface_t *abstract_surface,
+					    cairo_surface_observer_callback_t func,
+					    void *data)
+{
+    cairo_surface_observer_t *surface;
+
+    if (unlikely (CAIRO_REFERENCE_COUNT_IS_INVALID (&abstract_surface->ref_count)))
+	return abstract_surface->status;
+
+    if (! _cairo_surface_is_observer (abstract_surface))
+	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+
+    surface = (cairo_surface_observer_t *)abstract_surface;
+    return _cairo_surface_observer_add_callback (&surface->finish_callbacks,
+						 func, data);
 }
 
 static void

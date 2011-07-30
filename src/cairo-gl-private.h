@@ -48,15 +48,16 @@
 
 #include "cairoint.h"
 
+#include "cairo-gl.h"
 #include "cairo-gl-gradient-private.h"
 
 #include "cairo-device-private.h"
 #include "cairo-error-private.h"
 #include "cairo-rtree-private.h"
+#include "cairo-scaled-font-private.h"
+#include "cairo-spans-compositor-private.h"
 
 #include <assert.h>
-
-#include "cairo-gl.h"
 
 #if CAIRO_HAS_GL_SURFACE
 #include <GL/gl.h>
@@ -138,7 +139,6 @@ typedef enum cairo_gl_operand_type {
     CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0,
     CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE,
     CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT,
-    CAIRO_GL_OPERAND_SPANS,
 
     CAIRO_GL_OPERAND_COUNT
 } cairo_gl_operand_type_t;
@@ -161,11 +161,10 @@ typedef enum cairo_gl_shader_in {
 typedef enum cairo_gl_var_type {
   CAIRO_GL_VAR_NONE,
   CAIRO_GL_VAR_TEXCOORDS,
-  CAIRO_GL_VAR_COVERAGE
 } cairo_gl_var_type_t;
 
-#define cairo_gl_var_type_hash(src,mask,dest) ((mask) << 2 | (src << 1) | (dest))
-#define CAIRO_GL_VAR_TYPE_MAX ((CAIRO_GL_VAR_COVERAGE << 2) | (CAIRO_GL_VAR_TEXCOORDS << 1) | CAIRO_GL_VAR_TEXCOORDS)
+#define cairo_gl_var_type_hash(src,mask,spans,dest) ((spans) << 3) | ((mask) << 2 | (src << 1) | (dest))
+#define CAIRO_GL_VAR_TYPE_MAX ((CAIRO_GL_VAR_TEXCOORDS << 3) | (CAIRO_GL_VAR_TEXCOORDS << 2) | (CAIRO_GL_VAR_TEXCOORDS << 1) | CAIRO_GL_VAR_TEXCOORDS)
 
 /* This union structure describes a potential source or mask operand to the
  * compositing equation.
@@ -259,6 +258,8 @@ typedef struct _cairo_gl_dispatch {
 struct _cairo_gl_context {
     cairo_device_t base;
 
+    const cairo_compositor_t *compositor;
+
     GLuint texture_load_pbo;
     GLuint vbo;
     GLint max_framebuffer_size;
@@ -283,6 +284,7 @@ struct _cairo_gl_context {
     cairo_gl_shader_t *current_shader;
 
     cairo_gl_operand_t operands[2];
+    cairo_bool_t spans;
 
     char *vb;
     char *vb_mem;
@@ -311,7 +313,14 @@ typedef struct _cairo_gl_composite {
 
     cairo_gl_operand_t src;
     cairo_gl_operand_t mask;
+    cairo_bool_t spans;
 } cairo_gl_composite_t;
+
+typedef struct _cairo_gl_font {
+    cairo_scaled_font_private_t		base;
+    cairo_device_t			*device;
+    cairo_list_t			link;
+} cairo_gl_font_t;
 
 cairo_private extern const cairo_surface_backend_t _cairo_gl_surface_backend;
 
@@ -432,6 +441,13 @@ _cairo_gl_composite_set_source (cairo_gl_composite_t *setup,
                                 int src_x, int src_y,
                                 int dst_x, int dst_y,
                                 int width, int height);
+cairo_private void
+_cairo_gl_composite_set_solid_source (cairo_gl_composite_t *setup,
+				      const cairo_color_t *color);
+
+cairo_private void
+_cairo_gl_composite_set_source_operand (cairo_gl_composite_t *setup,
+					const cairo_gl_operand_t *source);
 
 cairo_private cairo_int_status_t
 _cairo_gl_composite_set_mask (cairo_gl_composite_t *setup,
@@ -441,7 +457,11 @@ _cairo_gl_composite_set_mask (cairo_gl_composite_t *setup,
                               int width, int height);
 
 cairo_private void
-_cairo_gl_composite_set_mask_spans (cairo_gl_composite_t *setup);
+_cairo_gl_composite_set_mask_operand (cairo_gl_composite_t *setup,
+				      const cairo_gl_operand_t *mask);
+
+cairo_private void
+_cairo_gl_composite_set_spans (cairo_gl_composite_t *setup);
 
 cairo_private cairo_status_t
 _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
@@ -479,13 +499,6 @@ _cairo_gl_get_image_format_and_type (cairo_gl_flavor_t flavor,
 				     GLenum *internal_format, GLenum *format,
 				     GLenum *type, cairo_bool_t *has_alpha,
 				     cairo_bool_t *needs_swap);
-
-cairo_private void
-_cairo_gl_surface_scaled_font_fini ( cairo_scaled_font_t  *scaled_font);
-
-cairo_private void
-_cairo_gl_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
-				     cairo_scaled_font_t  *scaled_font);
 
 cairo_private void
 _cairo_gl_glyph_cache_init (cairo_gl_glyph_cache_t *cache);
@@ -529,6 +542,7 @@ cairo_private cairo_status_t
 _cairo_gl_get_shader_by_type (cairo_gl_context_t *ctx,
                               cairo_gl_operand_t *source,
                               cairo_gl_operand_t *mask,
+			      cairo_bool_t use_coverage,
                               cairo_gl_shader_in_t in,
                               cairo_gl_shader_t **shader);
 
@@ -585,6 +599,17 @@ cairo_private cairo_status_t
 _cairo_gl_dispatch_init(cairo_gl_dispatch_t *dispatch,
 			cairo_gl_get_proc_addr_func_t get_proc_addr);
 
+cairo_private cairo_int_status_t
+_cairo_gl_operand_init (cairo_gl_operand_t *operand,
+		        const cairo_pattern_t *pattern,
+		        cairo_gl_surface_t *dst,
+		        int src_x, int src_y,
+		        int dst_x, int dst_y,
+		        int width, int height);
+cairo_private void
+_cairo_gl_solid_operand_init (cairo_gl_operand_t *operand,
+	                      const cairo_color_t *color);
+
 cairo_private cairo_filter_t
 _cairo_gl_operand_get_filter (cairo_gl_operand_t *operand);
 
@@ -594,25 +619,50 @@ _cairo_gl_operand_get_gl_filter (cairo_gl_operand_t *operand);
 cairo_private cairo_extend_t
 _cairo_gl_operand_get_extend (cairo_gl_operand_t *operand);
 
+cairo_private unsigned int
+_cairo_gl_operand_get_vertex_size (cairo_gl_operand_type_t type);
+
 cairo_private cairo_bool_t
-_cairo_gl_surface_get_extents (void		     *abstract_surface,
-			       cairo_rectangle_int_t *rectangle);
+_cairo_gl_operand_needs_setup (cairo_gl_operand_t *dest,
+                               cairo_gl_operand_t *source,
+                               unsigned int        vertex_offset);
+
+cairo_private void
+_cairo_gl_operand_bind_to_shader (cairo_gl_context_t *ctx,
+                                  cairo_gl_operand_t *operand,
+                                  cairo_gl_tex_t      tex_unit);
+
+cairo_private void
+_cairo_gl_operand_emit (cairo_gl_operand_t *operand,
+                        GLfloat ** vb,
+                        GLfloat x,
+                        GLfloat y,
+                        uint8_t alpha);
+
+cairo_private void
+_cairo_gl_operand_destroy (cairo_gl_operand_t *operand);
+
+cairo_private const cairo_compositor_t *
+_cairo_gl_span_compositor_get (void);
+
+cairo_private const cairo_compositor_t *
+_cairo_gl_traps_compositor_get (void);
 
 cairo_private cairo_int_status_t
-_cairo_gl_surface_polygon (cairo_gl_surface_t *dst,
-                           cairo_operator_t op,
-                           const cairo_pattern_t *src,
-                           cairo_polygon_t *polygon,
-                           cairo_fill_rule_t fill_rule,
-                           cairo_antialias_t antialias,
-                           const cairo_composite_rectangles_t *extents);
+_cairo_gl_check_composite_glyphs (const cairo_composite_rectangles_t *extents,
+				  cairo_scaled_font_t *scaled_font,
+				  cairo_glyph_t *glyphs,
+				  int *num_glyphs);
 
 cairo_private cairo_int_status_t
-_cairo_gl_clip_and_composite_boxes (cairo_gl_surface_t *dst,
-				    cairo_operator_t op,
-				    const cairo_pattern_t *src,
-				    cairo_boxes_t *boxes,
-				    cairo_composite_rectangles_t *extents);
+_cairo_gl_composite_glyphs (void			*_dst,
+			    cairo_operator_t		 op,
+			    cairo_surface_t		*_src,
+			    int				 src_x,
+			    int				 src_y,
+			    int				 dst_x,
+			    int				 dst_y,
+			    cairo_composite_glyphs_info_t *info);
 
 slim_hidden_proto (cairo_gl_surface_create);
 slim_hidden_proto (cairo_gl_surface_create_for_texture);

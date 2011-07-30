@@ -49,6 +49,8 @@ typedef struct _PolygonViewClass {
 
 G_DEFINE_TYPE (PolygonView, polygon_view, GTK_TYPE_WIDGET)
 
+double highlight = -1;
+
 static void draw_edges (cairo_t *cr, polygon_t *p, gdouble sf, int dir)
 {
     int n;
@@ -59,8 +61,8 @@ static void draw_edges (cairo_t *cr, polygon_t *p, gdouble sf, int dir)
 	if (e->dir != dir)
 	    continue;
 
-	cairo_arc (cr, e->p1.x, e->p1.y, 3/sf, 0, 2*M_PI);
-	cairo_arc (cr, e->p2.x, e->p2.y, 3/sf, 0, 2*M_PI);
+	cairo_arc (cr, e->p1.x, e->p1.y, 2/sf, 0, 2*M_PI);
+	cairo_arc (cr, e->p2.x, e->p2.y, 2/sf, 0, 2*M_PI);
 	cairo_fill (cr);
     }
 
@@ -139,6 +141,17 @@ pixmap_create (PolygonView *self, cairo_surface_t *target)
 		continue;
 
 	    draw_polygon (cr, polygon, sf);
+	}
+
+	if (highlight != -1) {
+	    cairo_move_to (cr, extents.p1.x, highlight);
+	    cairo_line_to (cr, extents.p2.x, highlight);
+	    cairo_set_source_rgb (cr, 0, .7, 0);
+	    cairo_save (cr);
+	    cairo_identity_matrix (cr);
+	    cairo_set_line_width (cr, 1.);
+	    cairo_stroke (cr);
+	    cairo_restore (cr);
 	}
     } cairo_restore (cr);
 
@@ -227,6 +240,17 @@ polygon_view_draw (PolygonView *self, cairo_t *cr)
 			continue;
 
 		    draw_polygon (cr, polygon, zoom);
+		}
+
+		if (highlight != -1) {
+		    cairo_move_to (cr, extents.p1.x, highlight);
+		    cairo_line_to (cr, extents.p2.x, highlight);
+		    cairo_set_source_rgb (cr, 0, .7, 0);
+		    cairo_save (cr);
+		    cairo_identity_matrix (cr);
+		    cairo_set_line_width (cr, 1.);
+		    cairo_stroke (cr);
+		    cairo_restore (cr);
 		}
 	    } cairo_restore (cr);
 
@@ -562,6 +586,9 @@ main (int argc, char **argv)
 		 view->extents.p2.x, view->extents.p2.y);
 	fclose (file);
     }
+
+    if (argc > 2)
+	highlight = atof (argv[2]);
 
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     g_signal_connect (window, "delete-event",

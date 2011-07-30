@@ -769,7 +769,7 @@ _cairo_pdf_operators_emit_stroke (cairo_pdf_operators_t		*pdf_operators,
 				  const cairo_matrix_t		*ctm_inverse,
 				  const char			*pdf_operator)
 {
-    cairo_status_t status;
+    cairo_int_status_t status;
     cairo_matrix_t m, path_transform;
     cairo_bool_t has_ctm = TRUE;
     double scale = 1.0;

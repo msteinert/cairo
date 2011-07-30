@@ -141,12 +141,15 @@ tessellate_256 (cairo_t *cr, int width, int height, int loops)
     return do_tessellate (cr, 256, loops);
 }
 
+cairo_bool_t
+tessellate_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "tessellate", NULL);
+}
+
 void
 tessellate (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "tessellate", NULL))
-	return;
-
     cairo_perf_run (perf, "tessellate-16", tessellate_16, NULL);
     cairo_perf_run (perf, "tessellate-64", tessellate_64, NULL);
     cairo_perf_run (perf, "tessellate-256", tessellate_256, NULL);

@@ -34,7 +34,7 @@
 
 #include "cairo-time-private.h"
 
-#if HAVE_CLOCKGETTIME
+#if HAVE_CLOCK_GETTIME
 #if defined(CLOCK_MONOTONIC_RAW)
 #define CAIRO_CLOCK CLOCK_MONOTONIC_RAW
 #elif defined(CLOCK_MONOTONIC)
@@ -79,12 +79,12 @@ cairo_time_t
 _cairo_time_get (void)
 {
     QWORD t;
-    cairo_uint64_t r;
+    cairo_int64_t r;
 
     DosTmrQueryTime (&t);
 
-    r = _cairo_uint64_lsl (_cairo_uint32_to_uint64 (t.ulHi), 32);
-    r = _cairo_uint64_add (r, _cairo_uint32_to_uint64 (t.ulLo));
+    r = _cairo_int64_lsl (_cairo_int32_to_int64 (t.ulHi), 32);
+    r = _cairo_int64_add (r, _cairo_int32_to_int64 (t.ulLo));
 
     return r;
 }
@@ -130,9 +130,9 @@ _cairo_time_get (void)
 
     clock_gettime (CAIRO_CLOCK, &t);
 
-    r = _cairo_double_to_uint64 (_cairo_time_1s ());
-    r = _cairo_uint64_mul (r, _cairo_uint32_to_uint64 (t.tv_sec));
-    r = _cairo_uint64_add (r, _cairo_uint32_to_uint64 (t.tv_nsec));
+    r = _cairo_double_to_int64 (_cairo_time_1s ());
+    r = _cairo_int64_mul (r, _cairo_int32_to_int64 (t.tv_sec));
+    r = _cairo_int64_add (r, _cairo_int32_to_int64 (t.tv_nsec));
 
     return r;
 }
@@ -154,9 +154,9 @@ _cairo_time_get (void)
 
     gettimeofday (&t, NULL);
 
-    r = _cairo_double_to_uint64 (_cairo_time_1s ());
-    r = _cairo_uint64_mul (r, _cairo_uint32_to_uint64 (t.tv_sec));
-    r = _cairo_uint64_add (r, _cairo_uint32_to_uint64 (t.tv_usec));
+    r = _cairo_double_to_int64 (_cairo_time_1s ());
+    r = _cairo_int64_mul (r, _cairo_int32_to_int64 (t.tv_sec));
+    r = _cairo_int64_add (r, _cairo_int32_to_int64 (t.tv_usec));
 
     return r;
 }
@@ -167,17 +167,8 @@ int
 _cairo_time_cmp (const void *a,
 		 const void *b)
 {
-    const cairo_time_t *ta, *tb;
-
-    ta = a;
-    tb = b;
-
-    if (_cairo_time_gt (*ta, *tb))
-	return 1;
-    else if (_cairo_time_lt (*ta, *tb))
-	return -1;
-    else
-	return 0;
+    const cairo_time_t *ta = a, *tb = b;
+    return _cairo_int64_cmp (*ta, *tb);
 }
 
 static double
@@ -205,11 +196,11 @@ _cairo_time_s_per_tick (void)
 double
 _cairo_time_to_s (cairo_time_t t)
 {
-    return _cairo_uint64_to_double (t) * _cairo_time_s_per_tick ();
+    return _cairo_int64_to_double (t) * _cairo_time_s_per_tick ();
 }
 
 cairo_time_t
 _cairo_time_from_s (double t)
 {
-    return _cairo_double_to_uint64 (t * _cairo_time_ticks_per_sec ());
+    return _cairo_double_to_int64 (t * _cairo_time_ticks_per_sec ());
 }

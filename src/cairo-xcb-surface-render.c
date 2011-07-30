@@ -31,6 +31,8 @@
 
 #include "cairoint.h"
 
+#include "cairo-xcb-private.h"
+
 #include "cairo-boxes-private.h"
 #include "cairo-clip-private.h"
 #include "cairo-composite-rectangles-private.h"
@@ -39,7 +41,7 @@
 #include "cairo-surface-offset-private.h"
 #include "cairo-surface-snapshot-private.h"
 #include "cairo-surface-subsurface-private.h"
-#include "cairo-xcb-private.h"
+#include "cairo-traps-private.h"
 
 #define PIXMAN_MAX_INT ((pixman_fixed_1 >> 1) - pixman_fixed_e) /* need to ensure deltas also fit */
 
@@ -2501,10 +2503,10 @@ _composite_boxes (cairo_xcb_surface_t *dst,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    if (cairo_region_contains_rectangle (clip_region, &extents->bounded) == CAIRO_REGION_OVERLAP_IN) {
-	clip = NULL;
+    if (clip_region != NULL &&
+	cairo_region_contains_rectangle (clip_region,
+					 &extents->bounded) == CAIRO_REGION_OVERLAP_IN)
 	clip_region = NULL;
-    }
 
     status = _cairo_xcb_connection_acquire (dst->connection);
     if (unlikely (status))
@@ -3396,7 +3398,6 @@ _cairo_xcb_surface_render_paint (cairo_xcb_surface_t	*surface,
 				 const cairo_clip_t	*clip)
 {
     cairo_composite_rectangles_t extents;
-    cairo_rectangle_int_t unbounded;
     cairo_boxes_t boxes;
     cairo_status_t status;
 
@@ -3427,18 +3428,16 @@ _cairo_xcb_surface_render_paint (cairo_xcb_surface_t	*surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    _cairo_xcb_surface_get_extents (surface, &unbounded);
-    status = _cairo_composite_rectangles_init_for_paint (&extents, &unbounded,
+    status = _cairo_composite_rectangles_init_for_paint (&extents,
+							 &surface->base,
 							 op, source,
 							 clip);
     if (unlikely (status))
 	return status;
 
-    status = _cairo_clip_to_boxes(extents.clip, &boxes);
-    if (likely (status == CAIRO_STATUS_SUCCESS)) {
-	status = _clip_and_composite_boxes (surface, op, source,
-					    &boxes, &extents);
-    }
+     _cairo_clip_steal_boxes(extents.clip, &boxes);
+     status = _clip_and_composite_boxes (surface, op, source, &boxes, &extents);
+     _cairo_clip_unsteal_boxes (extents.clip, &boxes);
 
     _cairo_composite_rectangles_fini (&extents);
 
@@ -3453,7 +3452,6 @@ _cairo_xcb_surface_render_mask (cairo_xcb_surface_t	*surface,
 				const cairo_clip_t	*clip)
 {
     cairo_composite_rectangles_t extents;
-    cairo_rectangle_int_t unbounded;
     cairo_status_t status;
 
     if (unlikely (! _operator_is_supported (surface->connection->flags, op)))
@@ -3462,8 +3460,7 @@ _cairo_xcb_surface_render_mask (cairo_xcb_surface_t	*surface,
     if ((surface->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE) == 0)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    _cairo_xcb_surface_get_extents (surface, &unbounded);
-    status = _cairo_composite_rectangles_init_for_mask (&extents, &unbounded,
+    status = _cairo_composite_rectangles_init_for_mask (&extents, &surface->base,
 							op, source, mask, clip);
     if (unlikely (status))
 	return status;
@@ -3599,7 +3596,6 @@ _cairo_xcb_surface_render_stroke (cairo_xcb_surface_t	*surface,
 				  const cairo_clip_t		*clip)
 {
     cairo_composite_rectangles_t extents;
-    cairo_rectangle_int_t unbounded;
     cairo_int_status_t status;
 
     if (unlikely (! _operator_is_supported (surface->connection->flags, op)))
@@ -3611,8 +3607,8 @@ _cairo_xcb_surface_render_stroke (cairo_xcb_surface_t	*surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    _cairo_xcb_surface_get_extents (surface, &unbounded);
-    status = _cairo_composite_rectangles_init_for_stroke (&extents, &unbounded,
+    status = _cairo_composite_rectangles_init_for_stroke (&extents,
+							  &surface->base,
 							  op, source,
 							  path, style, ctm,
 							  clip);
@@ -3750,7 +3746,6 @@ _cairo_xcb_surface_render_fill (cairo_xcb_surface_t	*surface,
 			       const cairo_clip_t	*clip)
 {
     cairo_composite_rectangles_t extents;
-    cairo_rectangle_int_t unbounded;
     cairo_int_status_t status;
 
     if (unlikely (! _operator_is_supported (surface->connection->flags, op)))
@@ -3762,8 +3757,7 @@ _cairo_xcb_surface_render_fill (cairo_xcb_surface_t	*surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    _cairo_xcb_surface_get_extents (surface, &unbounded);
-    status = _cairo_composite_rectangles_init_for_fill (&extents, &unbounded,
+    status = _cairo_composite_rectangles_init_for_fill (&extents, &surface->base,
 							op, source, path,
 							clip);
     if (unlikely (status))
@@ -3916,7 +3910,7 @@ _can_composite_glyphs (cairo_xcb_surface_t *dst,
     valid_glyphs = glyphs;
     for (glyphs_end = glyphs + *num_glyphs; glyphs != glyphs_end; glyphs++) {
 	double x1, y1, x2, y2;
-	cairo_scaled_glyph_t *scaled_glyph;
+	cairo_scaled_glyph_t *glyph;
 	cairo_box_t *bbox;
 	int width, height, len;
 	int g;
@@ -3926,12 +3920,12 @@ _can_composite_glyphs (cairo_xcb_surface_t *dst,
 	    status = _cairo_scaled_glyph_lookup (scaled_font,
 						 glyphs->index,
 						 CAIRO_SCALED_GLYPH_INFO_METRICS,
-						 &scaled_glyph);
+						 &glyph);
 	    if (unlikely (status))
 		break;
 
 	    glyph_cache[g] = glyphs->index;
-	    bbox_cache[g] = scaled_glyph->bbox;
+	    bbox_cache[g] = glyph->bbox;
 	}
 	bbox = &bbox_cache[g];
 
@@ -4013,99 +4007,35 @@ typedef struct {
 } x_glyph_elt_t;
 #define _cairo_sz_x_glyph_elt_t (sizeof (x_glyph_elt_t) + 4)
 
-static cairo_xcb_font_glyphset_info_t *
-_cairo_xcb_scaled_glyph_get_glyphset_info (cairo_scaled_glyph_t *scaled_glyph)
-{
-    return scaled_glyph->surface_private;
-}
-
-static void
-_cairo_xcb_scaled_glyph_set_glyphset_info (cairo_scaled_glyph_t            *scaled_glyph,
-					   cairo_xcb_font_glyphset_info_t *glyphset_info)
-{
-    scaled_glyph->surface_private = glyphset_info;
-}
-
-static cairo_status_t
-_cairo_xcb_surface_font_init (cairo_xcb_connection_t *connection,
-			      cairo_scaled_font_t  *scaled_font)
-{
-    cairo_xcb_font_t	*font_private;
-    int i;
-
-    font_private = malloc (sizeof (cairo_xcb_font_t));
-    if (unlikely (font_private == NULL))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    font_private->scaled_font = scaled_font;
-    font_private->connection = _cairo_xcb_connection_reference (connection);
-    for (i = 0; i < NUM_GLYPHSETS; i++) {
-	cairo_xcb_font_glyphset_info_t *glyphset_info = &font_private->glyphset_info[i];
-	switch (i) {
-	case GLYPHSET_INDEX_ARGB32: glyphset_info->format = CAIRO_FORMAT_ARGB32; break;
-	case GLYPHSET_INDEX_A8:     glyphset_info->format = CAIRO_FORMAT_A8;     break;
-	case GLYPHSET_INDEX_A1:     glyphset_info->format = CAIRO_FORMAT_A1;     break;
-	default:                    ASSERT_NOT_REACHED;                          break;
-	}
-	glyphset_info->xrender_format = 0;
-	glyphset_info->glyphset = XCB_NONE;
-	glyphset_info->pending_free_glyphs = NULL;
-    }
-
-    scaled_font->surface_private = font_private;
-    scaled_font->surface_backend = &_cairo_xcb_surface_backend;
-
-    cairo_list_add (&font_private->link, &connection->fonts);
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static void
 _cairo_xcb_font_destroy (cairo_xcb_font_t *font)
 {
     int i;
 
     for (i = 0; i < NUM_GLYPHSETS; i++) {
-	cairo_xcb_font_glyphset_info_t *glyphset_info;
+	cairo_xcb_font_glyphset_info_t *info;
 
-	glyphset_info = &font->glyphset_info[i];
-
-	free (glyphset_info->pending_free_glyphs);
+	info = &font->glyphset_info[i];
+	free (info->pending_free_glyphs);
     }
 
+    cairo_list_del (&font->base.link);
     cairo_list_del (&font->link);
+
     _cairo_xcb_connection_destroy (font->connection);
 
     free (font);
 }
 
-void
-_cairo_xcb_font_finish (cairo_xcb_font_t *font)
+static void
+_cairo_xcb_font_fini (cairo_scaled_font_private_t *abstract_private,
+		      cairo_scaled_font_t *scaled_font)
 {
-    cairo_scaled_font_t	*scaled_font;
-
-    scaled_font = font->scaled_font;
-
-    CAIRO_MUTEX_LOCK (scaled_font->mutex);
-    scaled_font->surface_private = NULL;
-    _cairo_scaled_font_reset_cache (scaled_font);
-    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
-
-    _cairo_xcb_font_destroy (font);
-}
-
-void
-_cairo_xcb_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font)
-{
-    cairo_xcb_font_t *font_private;
+    cairo_xcb_font_t *font_private = (cairo_xcb_font_t *)abstract_private;
     cairo_xcb_connection_t *connection;
     cairo_bool_t have_connection;
     cairo_status_t status;
     int i;
-
-    font_private = scaled_font->surface_private;
-    if (font_private == NULL)
-	return;
 
     connection = font_private->connection;
 
@@ -4113,20 +4043,69 @@ _cairo_xcb_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font)
     have_connection = status == CAIRO_STATUS_SUCCESS;
 
     for (i = 0; i < NUM_GLYPHSETS; i++) {
-	cairo_xcb_font_glyphset_info_t *glyphset_info;
+	cairo_xcb_font_glyphset_info_t *info;
 
-	glyphset_info = &font_private->glyphset_info[i];
-	if (glyphset_info->glyphset && status == CAIRO_STATUS_SUCCESS) {
+	info = &font_private->glyphset_info[i];
+	if (info->glyphset && status == CAIRO_STATUS_SUCCESS) {
 	    _cairo_xcb_connection_render_free_glyph_set (connection,
-							 glyphset_info->glyphset);
+							 info->glyphset);
 	}
     }
 
     if (have_connection)
 	_cairo_xcb_connection_release (connection);
 
-
     _cairo_xcb_font_destroy (font_private);
+}
+
+
+static cairo_xcb_font_t *
+_cairo_xcb_font_create (cairo_xcb_connection_t *connection,
+			cairo_scaled_font_t  *font)
+{
+    cairo_xcb_font_t	*priv;
+    int i;
+
+    priv = malloc (sizeof (cairo_xcb_font_t));
+    if (unlikely (priv == NULL))
+	return NULL;
+
+    _cairo_scaled_font_attach_private (font, &priv->base, connection,
+				       _cairo_xcb_font_fini);
+
+    priv->scaled_font = font;
+    priv->connection = _cairo_xcb_connection_reference (connection);
+    cairo_list_add (&priv->link, &connection->fonts);
+
+    for (i = 0; i < NUM_GLYPHSETS; i++) {
+	cairo_xcb_font_glyphset_info_t *info = &priv->glyphset_info[i];
+	switch (i) {
+	case GLYPHSET_INDEX_ARGB32: info->format = CAIRO_FORMAT_ARGB32; break;
+	case GLYPHSET_INDEX_A8:     info->format = CAIRO_FORMAT_A8;     break;
+	case GLYPHSET_INDEX_A1:     info->format = CAIRO_FORMAT_A1;     break;
+	default:                    ASSERT_NOT_REACHED;                          break;
+	}
+	info->xrender_format = 0;
+	info->glyphset = XCB_NONE;
+	info->pending_free_glyphs = NULL;
+    }
+
+    return priv;
+}
+
+void
+_cairo_xcb_font_close (cairo_xcb_font_t *font)
+{
+    cairo_scaled_font_t	*scaled_font;
+
+    scaled_font = font->scaled_font;
+
+    CAIRO_MUTEX_LOCK (scaled_font->mutex);
+    //scaled_font->surface_private = NULL;
+    _cairo_scaled_font_reset_cache (scaled_font);
+    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
+
+    _cairo_xcb_font_destroy (font);
 }
 
 static void
@@ -4137,46 +4116,6 @@ _cairo_xcb_render_free_glyphs (cairo_xcb_connection_t *connection,
 					      to_free->glyphset,
 					      to_free->glyph_count,
 					      to_free->glyph_indices);
-}
-
-void
-_cairo_xcb_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
-				      cairo_scaled_font_t  *scaled_font)
-{
-    cairo_xcb_font_t *font_private;
-    cairo_xcb_font_glyphset_info_t *glyphset_info;
-
-    if (scaled_font->finished)
-	return;
-
-    font_private = scaled_font->surface_private;
-    glyphset_info = _cairo_xcb_scaled_glyph_get_glyphset_info (scaled_glyph);
-    if (font_private != NULL && glyphset_info != NULL) {
-	cairo_xcb_font_glyphset_free_glyphs_t *to_free;
-
-	to_free = glyphset_info->pending_free_glyphs;
-	if (to_free != NULL &&
-	    to_free->glyph_count == ARRAY_LENGTH (to_free->glyph_indices))
-	{
-	    _cairo_xcb_render_free_glyphs (font_private->connection, to_free);
-	    to_free = glyphset_info->pending_free_glyphs = NULL;
-	}
-
-	if (to_free == NULL) {
-	    to_free = malloc (sizeof (cairo_xcb_font_glyphset_free_glyphs_t));
-	    if (unlikely (to_free == NULL)) {
-		_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-		return; /* XXX cannot propagate failure */
-	    }
-
-	    to_free->glyphset = glyphset_info->glyphset;
-	    to_free->glyph_count = 0;
-	    glyphset_info->pending_free_glyphs = to_free;
-	}
-
-	to_free->glyph_indices[to_free->glyph_count++] =
-	    _cairo_scaled_glyph_index (scaled_glyph);
-    }
 }
 
 static int
@@ -4191,42 +4130,57 @@ _cairo_xcb_get_glyphset_index_for_format (cairo_format_t format)
     return GLYPHSET_INDEX_ARGB32;
 }
 
+
+
+static inline cairo_xcb_font_t *
+_cairo_xcb_font_get (const cairo_xcb_connection_t *c,
+		     cairo_scaled_font_t *font)
+{
+    return (cairo_xcb_font_t *)_cairo_scaled_font_find_private (font, c);
+}
+
+
 static cairo_xcb_font_glyphset_info_t *
-_cairo_xcb_scaled_font_get_glyphset_info_for_format (cairo_scaled_font_t *scaled_font,
+_cairo_xcb_scaled_font_get_glyphset_info_for_format (cairo_xcb_connection_t *c,
+						     cairo_scaled_font_t *font,
 						     cairo_format_t       format)
 {
-    cairo_xcb_font_t *font_private;
-    cairo_xcb_font_glyphset_info_t *glyphset_info;
+    cairo_xcb_font_t *priv;
+    cairo_xcb_font_glyphset_info_t *info;
     int glyphset_index;
 
     glyphset_index = _cairo_xcb_get_glyphset_index_for_format (format);
-    font_private = scaled_font->surface_private;
-    glyphset_info = &font_private->glyphset_info[glyphset_index];
-    if (glyphset_info->glyphset == XCB_NONE) {
-	cairo_xcb_connection_t *connection = font_private->connection;
 
-	glyphset_info->glyphset = _cairo_xcb_connection_get_xid (font_private->connection);
-	glyphset_info->xrender_format =
-	    connection->standard_formats[glyphset_info->format];
-
-	_cairo_xcb_connection_render_create_glyph_set (font_private->connection,
-						       glyphset_info->glyphset,
-						       glyphset_info->xrender_format);
+    priv = _cairo_xcb_font_get (c, font);
+    if (priv == NULL) {
+	priv = _cairo_xcb_font_create (c, font);
+	if (priv == NULL)
+	    return NULL;
     }
 
-    return glyphset_info;
+    info = &priv->glyphset_info[glyphset_index];
+    if (info->glyphset == XCB_NONE) {
+	info->glyphset = _cairo_xcb_connection_get_xid (c);
+	info->xrender_format = c->standard_formats[info->format];
+
+	_cairo_xcb_connection_render_create_glyph_set (c,
+						       info->glyphset,
+						       info->xrender_format);
+    }
+
+    return info;
 }
 
 static cairo_bool_t
 _cairo_xcb_glyphset_info_has_pending_free_glyph (
-				cairo_xcb_font_glyphset_info_t *glyphset_info,
+				cairo_xcb_font_glyphset_info_t *info,
 				unsigned long glyph_index)
 {
-    if (glyphset_info->pending_free_glyphs != NULL) {
+    if (info->pending_free_glyphs != NULL) {
 	cairo_xcb_font_glyphset_free_glyphs_t *to_free;
 	int i;
 
-	to_free = glyphset_info->pending_free_glyphs;
+	to_free = info->pending_free_glyphs;
 	for (i = 0; i < to_free->glyph_count; i++) {
 	    if (to_free->glyph_indices[i] == glyph_index) {
 		to_free->glyph_count--;
@@ -4241,44 +4195,115 @@ _cairo_xcb_glyphset_info_has_pending_free_glyph (
     return FALSE;
 }
 
+typedef struct {
+    cairo_scaled_glyph_private_t base;
+
+    cairo_xcb_font_glyphset_info_t *glyphset;
+} cairo_xcb_glyph_private_t;
+
 static cairo_xcb_font_glyphset_info_t *
-_cairo_xcb_scaled_font_get_glyphset_info_for_pending_free_glyph (
-					       cairo_scaled_font_t *scaled_font,
+_cairo_xcb_scaled_font_get_glyphset_info_for_pending_free_glyph (cairo_xcb_connection_t *c,
+					       cairo_scaled_font_t *font,
 					       unsigned long glyph_index,
 					       cairo_image_surface_t *surface)
 {
-    cairo_xcb_font_t *font_private;
+    cairo_xcb_font_t *priv;
     int i;
 
-    font_private = scaled_font->surface_private;
-    if (font_private == NULL)
+    priv = _cairo_xcb_font_get (c, font);
+    if (priv == NULL)
 	return NULL;
 
     if (surface != NULL) {
         i = _cairo_xcb_get_glyphset_index_for_format (surface->format);
 
 	if (_cairo_xcb_glyphset_info_has_pending_free_glyph (
-						&font_private->glyphset_info[i],
+						&priv->glyphset_info[i],
 						glyph_index))
 	{
-	    return &font_private->glyphset_info[i];
+	    return &priv->glyphset_info[i];
 	}
     } else {
 	for (i = 0; i < NUM_GLYPHSETS; i++) {
 	    if (_cairo_xcb_glyphset_info_has_pending_free_glyph (
-						&font_private->glyphset_info[i],
+						&priv->glyphset_info[i],
 						glyph_index))
 	    {
-		return &font_private->glyphset_info[i];
+		return &priv->glyphset_info[i];
 	    }
 	}
     }
 
     return NULL;
 }
+
+static void
+_cairo_xcb_glyph_fini (cairo_scaled_glyph_private_t *glyph_private,
+		       cairo_scaled_glyph_t *glyph,
+		       cairo_scaled_font_t  *font)
+{
+    cairo_xcb_glyph_private_t *priv = (cairo_xcb_glyph_private_t *)glyph_private;
+
+    if (! font->finished) {
+	cairo_xcb_font_glyphset_info_t *info = priv->glyphset;
+	cairo_xcb_font_glyphset_free_glyphs_t *to_free;
+	cairo_xcb_font_t *font_private;
+
+	font_private = _cairo_xcb_font_get (glyph_private->key, font);
+	assert (font_private);
+
+	to_free = info->pending_free_glyphs;
+	if (to_free != NULL &&
+	    to_free->glyph_count == ARRAY_LENGTH (to_free->glyph_indices))
+	{
+	    _cairo_xcb_render_free_glyphs (font_private->connection, to_free);
+	    to_free = info->pending_free_glyphs = NULL;
+	}
+
+	if (to_free == NULL) {
+	    to_free = malloc (sizeof (cairo_xcb_font_glyphset_free_glyphs_t));
+	    if (unlikely (to_free == NULL)) {
+		_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+		return; /* XXX cannot propagate failure */
+	    }
+
+	    to_free->glyphset = info->glyphset;
+	    to_free->glyph_count = 0;
+	    info->pending_free_glyphs = to_free;
+	}
+
+	to_free->glyph_indices[to_free->glyph_count++] =
+	    _cairo_scaled_glyph_index (glyph);
+    }
+
+    cairo_list_del (&glyph_private->link);
+    free (glyph_private);
+}
+
+
+static cairo_status_t
+_cairo_xcb_glyph_attach (cairo_xcb_connection_t  *c,
+			 cairo_scaled_glyph_t  *glyph,
+			 cairo_xcb_font_glyphset_info_t *info)
+{
+    cairo_xcb_glyph_private_t *priv;
+
+    priv = malloc (sizeof (*priv));
+    if (unlikely (priv == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    _cairo_scaled_glyph_attach_private (glyph, &priv->base, c,
+					_cairo_xcb_glyph_fini);
+    priv->glyphset = info;
+
+    glyph->dev_private = info;
+    glyph->dev_private_key = c;
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_status_t
 _cairo_xcb_surface_add_glyph (cairo_xcb_connection_t *connection,
-			       cairo_scaled_font_t   *scaled_font,
+			       cairo_scaled_font_t   *font,
 			       cairo_scaled_glyph_t **scaled_glyph_out)
 {
     xcb_render_glyphinfo_t glyph_info;
@@ -4288,19 +4313,17 @@ _cairo_xcb_surface_add_glyph (cairo_xcb_connection_t *connection,
     cairo_scaled_glyph_t *scaled_glyph = *scaled_glyph_out;
     cairo_image_surface_t *glyph_surface = scaled_glyph->surface;
     cairo_bool_t already_had_glyph_surface;
-    cairo_xcb_font_glyphset_info_t *glyphset_info;
+    cairo_xcb_font_glyphset_info_t *info;
 
     glyph_index = _cairo_scaled_glyph_index (scaled_glyph);
 
     /* check to see if we have a pending XRenderFreeGlyph for this glyph */
-    glyphset_info = _cairo_xcb_scaled_font_get_glyphset_info_for_pending_free_glyph (scaled_font, glyph_index, glyph_surface);
-    if (glyphset_info != NULL) {
-	_cairo_xcb_scaled_glyph_set_glyphset_info (scaled_glyph, glyphset_info);
-	return CAIRO_STATUS_SUCCESS;
-    }
+    info = _cairo_xcb_scaled_font_get_glyphset_info_for_pending_free_glyph (connection, font, glyph_index, glyph_surface);
+    if (info != NULL)
+	return _cairo_xcb_glyph_attach (connection, scaled_glyph, info);
 
     if (glyph_surface == NULL) {
-	status = _cairo_scaled_glyph_lookup (scaled_font,
+	status = _cairo_scaled_glyph_lookup (font,
 					     glyph_index,
 					     CAIRO_SCALED_GLYPH_INFO_METRICS |
 					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
@@ -4315,22 +4338,22 @@ _cairo_xcb_surface_add_glyph (cairo_xcb_connection_t *connection,
 	already_had_glyph_surface = TRUE;
     }
 
-    if (scaled_font->surface_private == NULL) {
-	status = _cairo_xcb_surface_font_init (connection, scaled_font);
-	if (unlikely (status))
-	    return status;
+    info = _cairo_xcb_scaled_font_get_glyphset_info_for_format (connection,
+								font,
+								glyph_surface->format);
+    if (unlikely (info == NULL)) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto BAIL;
     }
 
-    glyphset_info = _cairo_xcb_scaled_font_get_glyphset_info_for_format (scaled_font,
-									 glyph_surface->format);
-
+#if 0
     /* If the glyph surface has zero height or width, we create
      * a clear 1x1 surface, to avoid various X server bugs.
      */
     if (glyph_surface->width == 0 || glyph_surface->height == 0) {
 	cairo_surface_t *tmp_surface;
 
-	tmp_surface = cairo_image_surface_create (glyphset_info->format, 1, 1);
+	tmp_surface = cairo_image_surface_create (info->format, 1, 1);
 	status = tmp_surface->status;
 	if (unlikely (status))
 	    goto BAIL;
@@ -4340,14 +4363,15 @@ _cairo_xcb_surface_add_glyph (cairo_xcb_connection_t *connection,
 
 	glyph_surface = (cairo_image_surface_t *) tmp_surface;
     }
+#endif
 
     /* If the glyph format does not match the font format, then we
      * create a temporary surface for the glyph image with the font's
      * format.
      */
-    if (glyph_surface->format != glyphset_info->format) {
+    if (glyph_surface->format != info->format) {
 	glyph_surface = _cairo_image_surface_coerce_to_format (glyph_surface,
-						               glyphset_info->format);
+						               info->format);
 	status = glyph_surface->base.status;
 	if (unlikely (status))
 	    goto BAIL;
@@ -4423,7 +4447,7 @@ _cairo_xcb_surface_add_glyph (cairo_xcb_connection_t *connection,
     /* XXX assume X server wants pixman padding. Xft assumes this as well */
 
     _cairo_xcb_connection_render_add_glyphs (connection,
-					     glyphset_info->glyphset,
+					     info->glyphset,
 					     1, &glyph_index, &glyph_info,
 					     glyph_surface->stride * glyph_surface->height,
 					     data);
@@ -4431,7 +4455,7 @@ _cairo_xcb_surface_add_glyph (cairo_xcb_connection_t *connection,
     if (data != glyph_surface->data)
 	free (data);
 
-    _cairo_xcb_scaled_glyph_set_glyphset_info (scaled_glyph, glyphset_info);
+    status = _cairo_xcb_glyph_attach (connection, scaled_glyph, info);
 
  BAIL:
     if (glyph_surface != scaled_glyph->surface)
@@ -4444,7 +4468,7 @@ _cairo_xcb_surface_add_glyph (cairo_xcb_connection_t *connection,
      * the cache
      */
     if (! already_had_glyph_surface)
-	_cairo_scaled_glyph_set_surface (scaled_glyph, scaled_font, NULL);
+	_cairo_scaled_glyph_set_surface (scaled_glyph, font, NULL);
 
     return status;
 }
@@ -4471,7 +4495,7 @@ _emit_glyphs_chunk (cairo_xcb_surface_t *dst,
 		    int num_glyphs,
 		    int width,
 		    int estimated_req_size,
-		    cairo_xcb_font_glyphset_info_t *glyphset_info,
+		    cairo_xcb_font_glyphset_info_t *info,
 		    xcb_render_pictformat_t mask_format)
 {
     cairo_xcb_render_composite_text_func_t composite_text_func;
@@ -4529,7 +4553,7 @@ _emit_glyphs_chunk (cairo_xcb_surface_t *dst,
 			 src->picture,
 			 dst->picture,
 			 mask_format,
-			 glyphset_info->glyphset,
+			 info->glyphset,
 			 src->x + glyphs[0].i.x,
 			 src->y + glyphs[0].i.y,
 			 len, buf);
@@ -4577,43 +4601,43 @@ _composite_glyphs (void				*closure,
     memset (glyph_cache, 0, sizeof (glyph_cache));
 
     for (i = 0; i < info->num_glyphs; i++) {
-	cairo_scaled_glyph_t *scaled_glyph;
+	cairo_scaled_glyph_t *glyph;
 	unsigned long glyph_index = info->glyphs[i].index;
 	int cache_index = glyph_index % ARRAY_LENGTH (glyph_cache);
 	int old_width = width;
 	int this_x, this_y;
 
-	scaled_glyph = glyph_cache[cache_index];
-	if (scaled_glyph == NULL ||
-	    _cairo_scaled_glyph_index (scaled_glyph) != glyph_index)
+	glyph = glyph_cache[cache_index];
+	if (glyph == NULL ||
+	    _cairo_scaled_glyph_index (glyph) != glyph_index)
 	{
 	    status = _cairo_scaled_glyph_lookup (info->font,
 						 glyph_index,
 						 CAIRO_SCALED_GLYPH_INFO_METRICS,
-						 &scaled_glyph);
+						 &glyph);
 	    if (unlikely (status)) {
 		cairo_surface_destroy (&src->base);
 		return status;
 	    }
 
 	    /* Send unseen glyphs to the server */
-	    if (_cairo_xcb_scaled_glyph_get_glyphset_info (scaled_glyph) == NULL) {
+	    if (glyph->dev_private_key != dst->connection) {
 		status = _cairo_xcb_surface_add_glyph (dst->connection,
 						       info->font,
-						       &scaled_glyph);
+						       &glyph);
 		if (unlikely (status)) {
 		    cairo_surface_destroy (&src->base);
 		    return status;
 		}
 	    }
 
-	    glyph_cache[cache_index] = scaled_glyph;
+	    glyph_cache[cache_index] = glyph;
 	}
 
 	this_x = _cairo_lround (info->glyphs[i].d.x) - dst_x;
 	this_y = _cairo_lround (info->glyphs[i].d.y) - dst_y;
 
-	this_glyphset_info = _cairo_xcb_scaled_glyph_get_glyphset_info (scaled_glyph);
+	this_glyphset_info = glyph->dev_private;
 	if (glyphset_info == NULL)
 	    glyphset_info = this_glyphset_info;
 
@@ -4689,8 +4713,8 @@ _composite_glyphs (void				*closure,
 	    request_size += _cairo_sz_x_glyph_elt_t;
 
 	/* adjust current-position */
-	x = this_x + scaled_glyph->x_advance;
-	y = this_y + scaled_glyph->y_advance;
+	x = this_x + glyph->x_advance;
+	y = this_y + glyph->y_advance;
 
 	request_size += width;
     }
@@ -4708,23 +4732,6 @@ _composite_glyphs (void				*closure,
     return status;
 }
 
-static cairo_bool_t
-_surface_owns_font (cairo_xcb_surface_t *dst,
-		    cairo_scaled_font_t *scaled_font)
-{
-    cairo_xcb_font_t *font_private;
-
-    font_private = scaled_font->surface_private;
-    if ((scaled_font->surface_backend != NULL &&
-	 scaled_font->surface_backend != dst->base.backend) ||
-	(font_private != NULL && font_private->connection != dst->connection))
-    {
-	return FALSE;
-    }
-
-    return TRUE;
-}
-
 cairo_int_status_t
 _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
 				  cairo_operator_t	 op,
@@ -4735,7 +4742,6 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
 				  const cairo_clip_t	*clip)
 {
     cairo_composite_rectangles_t extents;
-    cairo_rectangle_int_t unbounded;
     cairo_int_status_t status;
     cairo_bool_t overlap;
 
@@ -4745,8 +4751,7 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
     if ((surface->connection->flags & (CAIRO_XCB_RENDER_HAS_COMPOSITE_GLYPHS | CAIRO_XCB_RENDER_HAS_COMPOSITE)) == 0)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    _cairo_xcb_surface_get_extents (surface, &unbounded);
-    status = _cairo_composite_rectangles_init_for_glyphs (&extents, &unbounded,
+    status = _cairo_composite_rectangles_init_for_glyphs (&extents, &surface->base,
 							  op, source,
 							  scaled_font,
 							  glyphs, num_glyphs,
@@ -4755,40 +4760,38 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
 	return status;
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
-    if (surface->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_GLYPHS) {
+    if (surface->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_GLYPHS && 0) {
 	_cairo_scaled_font_freeze_cache (scaled_font);
 
-	if (_surface_owns_font (surface, scaled_font)) {
-	    status = _can_composite_glyphs (surface, &extents.bounded,
-					    scaled_font, glyphs, &num_glyphs);
-	    if (likely (status == CAIRO_INT_STATUS_SUCCESS)) {
-		composite_glyphs_info_t info;
-		unsigned flags = 0;
+	status = _can_composite_glyphs (surface, &extents.bounded,
+					scaled_font, glyphs, &num_glyphs);
+	if (likely (status == CAIRO_INT_STATUS_SUCCESS)) {
+	    composite_glyphs_info_t info;
+	    unsigned flags = 0;
 
-		info.font = scaled_font;
-		info.glyphs = (cairo_xcb_glyph_t *) glyphs;
-		info.num_glyphs = num_glyphs;
-		info.use_mask =
-		    overlap ||
-		    ! extents.is_bounded ||
-		    ! _cairo_clip_is_region(extents.clip);
+	    info.font = scaled_font;
+	    info.glyphs = (cairo_xcb_glyph_t *) glyphs;
+	    info.num_glyphs = num_glyphs;
+	    info.use_mask =
+		overlap ||
+		! extents.is_bounded ||
+		! _cairo_clip_is_region(extents.clip);
 
-		if (extents.mask.width > extents.unbounded.width ||
-		    extents.mask.height > extents.unbounded.height)
-		{
-		    /* Glyphs are tricky since we do not directly control the
-		     * geometry and their inked extents depend on the
-		     * individual glyph-surface size. We must set a clip region
-		     * so that the X server can trim the glyphs appropriately.
-		     */
-		    flags |= FORCE_CLIP_REGION;
-		}
-		status = _clip_and_composite (surface, op, source,
-					      _composite_glyphs, NULL,
-					      &info, &extents,
-					      need_bounded_clip (&extents) |
-					      flags);
+	    if (extents.mask.width > extents.unbounded.width ||
+		extents.mask.height > extents.unbounded.height)
+	    {
+		/* Glyphs are tricky since we do not directly control the
+		 * geometry and their inked extents depend on the
+		 * individual glyph-surface size. We must set a clip region
+		 * so that the X server can trim the glyphs appropriately.
+		 */
+		flags |= FORCE_CLIP_REGION;
 	    }
+	    status = _clip_and_composite (surface, op, source,
+					  _composite_glyphs, NULL,
+					  &info, &extents,
+					  need_bounded_clip (&extents) |
+					  flags);
 	}
 
 	_cairo_scaled_font_thaw_cache (scaled_font);

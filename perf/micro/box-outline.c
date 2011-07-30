@@ -65,6 +65,55 @@ box_outline_stroke (cairo_t *cr, int width, int height, int loops)
 }
 
 static cairo_time_t
+box_outline_alpha_stroke (cairo_t *cr, int width, int height, int loops)
+{
+    cairo_set_source_rgb (cr, 0, 0, 1); /* blue */
+    cairo_paint (cr);
+
+    cairo_rectangle (cr,
+		     1.5, 1.5,
+		     width - 3, height - 3);
+    cairo_set_line_width (cr, 1.0);
+    cairo_set_source_rgba (cr, 1, 0, 0, .5); /* red */
+
+    cairo_perf_timer_start ();
+
+    while (loops--)
+	cairo_stroke_preserve (cr);
+
+    cairo_perf_timer_stop ();
+
+    cairo_new_path (cr);
+
+    return cairo_perf_timer_elapsed ();
+}
+
+static cairo_time_t
+box_outline_aa_stroke (cairo_t *cr, int width, int height, int loops)
+{
+    cairo_set_source_rgb (cr, 0, 0, 1); /* blue */
+    cairo_paint (cr);
+
+    cairo_translate (cr, .5, .5);
+    cairo_rectangle (cr,
+		     1.5, 1.5,
+		     width - 3, height - 3);
+    cairo_set_line_width (cr, 1.0);
+    cairo_set_source_rgb (cr, 1, 0, 0); /* red */
+
+    cairo_perf_timer_start ();
+
+    while (loops--)
+	cairo_stroke_preserve (cr);
+
+    cairo_perf_timer_stop ();
+
+    cairo_new_path (cr);
+
+    return cairo_perf_timer_elapsed ();
+}
+
+static cairo_time_t
 box_outline_fill (cairo_t *cr, int width, int height, int loops)
 {
     cairo_set_source_rgb (cr, 0, 0, 1); /* blue */
@@ -91,12 +140,76 @@ box_outline_fill (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
+static cairo_time_t
+box_outline_alpha_fill (cairo_t *cr, int width, int height, int loops)
+{
+    cairo_set_source_rgb (cr, 0, 0, 1); /* blue */
+    cairo_paint (cr);
+
+    cairo_rectangle (cr,
+		     1.0, 1.0,
+		     width - 2, height - 2);
+    cairo_rectangle (cr,
+		     2.0, 2.0,
+		     width - 4, height - 4);
+    cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
+    cairo_set_source_rgba (cr, 0, 1, 0, .5); /* green */
+
+    cairo_perf_timer_start ();
+
+    while (loops--)
+	cairo_fill_preserve (cr);
+
+    cairo_perf_timer_stop ();
+
+    cairo_new_path (cr);
+
+    return cairo_perf_timer_elapsed ();
+}
+
+static cairo_time_t
+box_outline_aa_fill (cairo_t *cr, int width, int height, int loops)
+{
+    cairo_set_source_rgb (cr, 0, 0, 1); /* blue */
+    cairo_paint (cr);
+
+    cairo_translate (cr, .5, .5);
+    cairo_rectangle (cr,
+		     1.0, 1.0,
+		     width - 2, height - 2);
+    cairo_rectangle (cr,
+		     2.0, 2.0,
+		     width - 4, height - 4);
+    cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
+    cairo_set_source_rgb (cr, 0, 1, 0); /* green */
+
+    cairo_perf_timer_start ();
+
+    while (loops--)
+	cairo_fill_preserve (cr);
+
+    cairo_perf_timer_stop ();
+
+    cairo_new_path (cr);
+
+    return cairo_perf_timer_elapsed ();
+}
+
+cairo_bool_t
+box_outline_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "box-outline", NULL);
+}
+
 void
 box_outline (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "box-outline", NULL))
-	return;
-
     cairo_perf_run (perf, "box-outline-stroke", box_outline_stroke, NULL);
     cairo_perf_run (perf, "box-outline-fill", box_outline_fill, NULL);
+
+    cairo_perf_run (perf, "box-outline-alpha-stroke", box_outline_alpha_stroke, NULL);
+    cairo_perf_run (perf, "box-outline-alpha-fill", box_outline_alpha_fill, NULL);
+
+    cairo_perf_run (perf, "box-outline-aa-stroke", box_outline_aa_stroke, NULL);
+    cairo_perf_run (perf, "box-outline-aa-fill", box_outline_aa_fill, NULL);
 }

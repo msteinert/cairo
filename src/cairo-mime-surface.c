@@ -97,6 +97,7 @@
 #include "cairoint.h"
 #include "cairo-error-private.h"
 #include "cairo-image-surface-private.h"
+#include "cairo-surface-backend-private.h"
 
 typedef struct _cairo_mime_surface {
     cairo_surface_t base;
@@ -221,32 +222,25 @@ static const cairo_surface_backend_t cairo_mime_surface_backend = {
 
     _cairo_mime_surface_acquire_source_image,
     _cairo_mime_surface_release_source_image,
-    NULL, /* acquire_dest_image */
-    NULL, /* release_dest_image */
-    NULL, /* clone_similar */
-    NULL, /* composite */
-    NULL, /* fill_rectangles */
-    NULL, /* composite_trapezoids */
-    NULL, /* create_span_renderer */
-    NULL, /* check_span_renderer */
+    _cairo_mime_surface_snapshot,
+
     NULL, /* copy_page */
     NULL, /* show_page */
+
     _cairo_mime_surface_get_extents,
-    NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
+
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
+
     NULL, /* scaled_font_fini */
     NULL, /* scaled_glyph_fini */
-
 
     NULL, /* paint */
     NULL, /* mask */
     NULL, /* stroke */
     NULL, /* fill */
     NULL, /* glyphs */
-
-    _cairo_mime_surface_snapshot,
 };
 
 cairo_surface_t *

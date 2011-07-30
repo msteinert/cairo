@@ -211,6 +211,7 @@ test_sources = \
 	over-around-source.c				\
 	over-below-source.c				\
 	over-between-source.c				\
+	overlapping-boxes.c				\
 	overlapping-glyphs.c				\
 	overlapping-dash-caps.c				\
 	paint.c						\
@@ -273,6 +274,7 @@ test_sources = \
 	show-glyphs-many.c				\
 	show-text-current-point.c			\
 	shape-general-convex.c				\
+	shape-sierpinski.c				\
 	skew-extreme.c					\
 	smask.c						\
 	smask-fill.c					\
@@ -372,9 +374,6 @@ svg_surface_test_sources = \
 	svg-surface.c \
 	svg-clip.c \
 	svg-surface-source.c
-
-test_fallback16_surface_test_sources = \
-	test-fallback16-surface-source.c
 
 xcb_surface_test_sources = \
 	xcb-surface-source.c

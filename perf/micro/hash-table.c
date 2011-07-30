@@ -101,12 +101,15 @@ do_hash_table (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
+cairo_bool_t
+hash_table_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "hash-table", NULL);
+}
+
 void
 hash_table (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "hash-table", NULL))
-	return;
-
     cairo_perf_cover_sources_and_operators (perf, "hash-table",
 					    do_hash_table, NULL);
 }

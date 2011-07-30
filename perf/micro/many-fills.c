@@ -170,12 +170,15 @@ do_many_fills (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
+cairo_bool_t
+many_fills_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "many-fills", NULL);
+}
+
 void
 many_fills (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "many-fills", NULL))
-	return;
-
     cairo_perf_run (perf, "many-fills-halign", do_many_fills_ha, NULL);
     cairo_perf_run (perf, "many-fills-valign", do_many_fills_va, NULL);
     cairo_perf_run (perf, "many-fills-horizontal", do_many_fills_h, NULL);

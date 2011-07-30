@@ -46,6 +46,7 @@
 #include "cairo-path-private.h"
 #include "cairo-pattern-private.h"
 #include "cairo-surface-private.h"
+#include "cairo-surface-backend-private.h"
 
 #include <assert.h>
 

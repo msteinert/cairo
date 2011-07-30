@@ -118,12 +118,15 @@ do_many_curves_filled (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
+cairo_bool_t
+many_curves_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "many-curves", NULL);
+}
+
 void
 many_curves (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "many-curves", NULL))
-	return;
-
     cairo_set_source_rgb (cr, 1., 1., 1.);
 
     cairo_perf_run (perf, "many-curves-hair-stroked", do_many_curves_hair_stroked, NULL);

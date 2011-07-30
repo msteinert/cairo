@@ -61,6 +61,7 @@ struct _cairo_surface {
     cairo_reference_count_t ref_count;
     cairo_status_t status;
     unsigned int unique_id;
+    unsigned int serial;
 
     unsigned finished : 1;
     unsigned is_clear : 1;

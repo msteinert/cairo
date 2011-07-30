@@ -46,56 +46,92 @@ void _cairo_composite_rectangles_fini (cairo_composite_rectangles_t *extents)
     _cairo_clip_destroy (extents->clip);
 }
 
+static void
+_cairo_composite_reduce_pattern (const cairo_pattern_t *src,
+				 cairo_pattern_union_t *dst)
+{
+    int tx, ty;
+
+    _cairo_pattern_init_static_copy (&dst->base, src);
+    if (dst->base.type == CAIRO_PATTERN_TYPE_SOLID)
+	return;
+
+    dst->base.filter = _cairo_pattern_analyze_filter (&dst->base, NULL),
+
+    tx = ty = 0;
+    if (_cairo_matrix_is_pixman_translation (&dst->base.matrix,
+					     dst->base.filter,
+					     &tx, &ty))
+    {
+	dst->base.matrix.x0 = tx;
+	dst->base.matrix.y0 = ty;
+    }
+}
+
 static inline cairo_bool_t
 _cairo_composite_rectangles_init (cairo_composite_rectangles_t *extents,
-				  const cairo_rectangle_int_t *unbounded,
+				  cairo_surface_t *surface,
 				  cairo_operator_t op,
 				  const cairo_pattern_t *source,
 				  const cairo_clip_t *clip)
 {
-    extents->clip = NULL;
-    extents->destination = *unbounded;
-
     if (_cairo_clip_is_all_clipped (clip))
 	return FALSE;
 
+    extents->surface = surface;
+    extents->op = op;
+
+    _cairo_surface_get_extents (surface, &extents->destination);
+    extents->clip = NULL;
+
     extents->unbounded = extents->destination;
-    if (clip != NULL) {
-	if (! _cairo_rectangle_intersect (&extents->unbounded,
-					  _cairo_clip_get_extents (clip)))
-	    return FALSE;
-    }
+    if (clip && ! _cairo_rectangle_intersect (&extents->unbounded,
+					      _cairo_clip_get_extents (clip)))
+	return FALSE;
 
     extents->bounded = extents->unbounded;
     extents->is_bounded = _cairo_operator_bounded_by_either (op);
 
-    _cairo_pattern_get_extents (source, &extents->source);
+    extents->original_source_pattern = source;
+    _cairo_composite_reduce_pattern (source, &extents->source_pattern);
+
+    _cairo_pattern_get_extents (&extents->source_pattern.base,
+				&extents->source);
     if (extents->is_bounded & CAIRO_OPERATOR_BOUND_BY_SOURCE) {
 	if (! _cairo_rectangle_intersect (&extents->bounded, &extents->source))
 	    return FALSE;
     }
+
+    extents->original_mask_pattern = NULL;
+    extents->mask_pattern.base.type = CAIRO_PATTERN_TYPE_SOLID;
+    extents->mask_pattern.solid.color.alpha = 1.; /* XXX full initialisation? */
 
     return TRUE;
 }
 
 cairo_int_status_t
 _cairo_composite_rectangles_init_for_paint (cairo_composite_rectangles_t *extents,
-					    const cairo_rectangle_int_t *unbounded,
+					    cairo_surface_t *surface,
 					    cairo_operator_t		 op,
 					    const cairo_pattern_t	*source,
 					    const cairo_clip_t		*clip)
 {
-    if (! _cairo_composite_rectangles_init (extents, unbounded,
-					    op, source, clip))
+    if (! _cairo_composite_rectangles_init (extents,
+					    surface, op, source, clip))
     {
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
     }
 
-    extents->mask = *unbounded;
+    extents->mask = extents->destination;
 
     extents->clip = _cairo_clip_reduce_for_composite (clip, extents);
     if (_cairo_clip_is_all_clipped (extents->clip))
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
+    if (extents->source_pattern.base.type != CAIRO_PATTERN_TYPE_SOLID)
+	_cairo_pattern_sampled_area (&extents->source_pattern.base,
+				     &extents->bounded,
+				     &extents->source_sample_area);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -117,6 +153,21 @@ _cairo_composite_rectangles_intersect (cairo_composite_rectangles_t *extents,
     if (_cairo_clip_is_all_clipped (extents->clip))
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
+    if (extents->source_pattern.base.type != CAIRO_PATTERN_TYPE_SOLID)
+	_cairo_pattern_sampled_area (&extents->source_pattern.base,
+				     &extents->bounded,
+				     &extents->source_sample_area);
+    if (extents->mask_pattern.base.type != CAIRO_PATTERN_TYPE_SOLID) {
+	_cairo_pattern_sampled_area (&extents->mask_pattern.base,
+				     &extents->bounded,
+				     &extents->mask_sample_area);
+	if (extents->mask_sample_area.width == 0 ||
+	    extents->mask_sample_area.height == 0) {
+	    _cairo_composite_rectangles_fini (extents);
+	    return CAIRO_INT_STATUS_NOTHING_TO_DO;
+	}
+    }
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -125,7 +176,6 @@ _cairo_composite_rectangles_intersect_mask_extents (cairo_composite_rectangles_t
 						    const cairo_box_t *box)
 {
     cairo_rectangle_int_t mask;
-    cairo_int_status_t status;
     cairo_clip_t *clip;
 
     _cairo_box_round_to_rectangle (box, &mask);
@@ -139,39 +189,70 @@ _cairo_composite_rectangles_intersect_mask_extents (cairo_composite_rectangles_t
 
     _cairo_rectangle_intersect (&extents->mask, &mask);
 
+    mask = extents->bounded;
+    if (! _cairo_rectangle_intersect (&extents->bounded, &extents->mask) &&
+	extents->is_bounded & CAIRO_OPERATOR_BOUND_BY_MASK)
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
+    if (mask.width  == extents->bounded.width &&
+	mask.height == extents->bounded.height)
+	return CAIRO_INT_STATUS_SUCCESS;
+
+    if (extents->is_bounded == (CAIRO_OPERATOR_BOUND_BY_MASK | CAIRO_OPERATOR_BOUND_BY_SOURCE))
+	extents->unbounded = extents->bounded;
+
     extents->mask = mask;
     clip = extents->clip;
 
-    status = _cairo_composite_rectangles_intersect (extents, clip);
+    extents->clip = _cairo_clip_reduce_for_composite (clip, extents);
 
     if (clip != extents->clip)
 	_cairo_clip_destroy (clip);
 
-    return status;
+    if (_cairo_clip_is_all_clipped (extents->clip))
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
+    if (extents->source_pattern.base.type != CAIRO_PATTERN_TYPE_SOLID)
+	_cairo_pattern_sampled_area (&extents->source_pattern.base,
+				     &extents->bounded,
+				     &extents->source_sample_area);
+    if (extents->mask_pattern.base.type != CAIRO_PATTERN_TYPE_SOLID) {
+	_cairo_pattern_sampled_area (&extents->mask_pattern.base,
+				     &extents->bounded,
+				     &extents->mask_sample_area);
+	if (extents->mask_sample_area.width == 0 ||
+	    extents->mask_sample_area.height == 0)
+	    return CAIRO_INT_STATUS_NOTHING_TO_DO;
+    }
+
+    return CAIRO_INT_STATUS_SUCCESS;
 }
 
 cairo_int_status_t
 _cairo_composite_rectangles_init_for_mask (cairo_composite_rectangles_t *extents,
-					   const cairo_rectangle_int_t *unbounded,
+					   cairo_surface_t*surface,
 					   cairo_operator_t		 op,
 					   const cairo_pattern_t	*source,
 					   const cairo_pattern_t	*mask,
 					   const cairo_clip_t		*clip)
 {
-    if (! _cairo_composite_rectangles_init (extents, unbounded,
-					    op, source, clip))
+    if (! _cairo_composite_rectangles_init (extents,
+					    surface, op, source, clip))
     {
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
     }
 
-    _cairo_pattern_get_extents (mask, &extents->mask);
+
+    extents->original_mask_pattern = mask;
+    _cairo_composite_reduce_pattern (mask, &extents->mask_pattern);
+    _cairo_pattern_get_extents (&extents->mask_pattern.base, &extents->mask);
 
     return _cairo_composite_rectangles_intersect (extents, clip);
 }
 
 cairo_int_status_t
 _cairo_composite_rectangles_init_for_stroke (cairo_composite_rectangles_t *extents,
-					     const cairo_rectangle_int_t *unbounded,
+					     cairo_surface_t *surface,
 					     cairo_operator_t		 op,
 					     const cairo_pattern_t	*source,
 					     const cairo_path_fixed_t		*path,
@@ -179,8 +260,8 @@ _cairo_composite_rectangles_init_for_stroke (cairo_composite_rectangles_t *exten
 					     const cairo_matrix_t	*ctm,
 					     const cairo_clip_t		*clip)
 {
-    if (! _cairo_composite_rectangles_init (extents, unbounded,
-					    op, source, clip))
+    if (! _cairo_composite_rectangles_init (extents,
+					    surface, op, source, clip))
     {
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
     }
@@ -192,14 +273,14 @@ _cairo_composite_rectangles_init_for_stroke (cairo_composite_rectangles_t *exten
 
 cairo_int_status_t
 _cairo_composite_rectangles_init_for_fill (cairo_composite_rectangles_t *extents,
-					   const cairo_rectangle_int_t *unbounded,
+					   cairo_surface_t *surface,
 					   cairo_operator_t		 op,
 					   const cairo_pattern_t	*source,
 					   const cairo_path_fixed_t		*path,
 					   const cairo_clip_t		*clip)
 {
-    if (! _cairo_composite_rectangles_init (extents, unbounded,
-					    op, source, clip))
+    if (! _cairo_composite_rectangles_init (extents,
+					    surface, op, source, clip))
     {
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
     }
@@ -210,8 +291,47 @@ _cairo_composite_rectangles_init_for_fill (cairo_composite_rectangles_t *extents
 }
 
 cairo_int_status_t
+_cairo_composite_rectangles_init_for_polygon (cairo_composite_rectangles_t *extents,
+					      cairo_surface_t		*surface,
+					      cairo_operator_t		 op,
+					      const cairo_pattern_t	*source,
+					      const cairo_polygon_t	*polygon,
+					      const cairo_clip_t		*clip)
+{
+    if (! _cairo_composite_rectangles_init (extents,
+					    surface, op, source, clip))
+    {
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+    }
+
+    _cairo_box_round_to_rectangle (&polygon->extents, &extents->mask);
+    return _cairo_composite_rectangles_intersect (extents, clip);
+}
+
+cairo_int_status_t
+_cairo_composite_rectangles_init_for_boxes (cairo_composite_rectangles_t *extents,
+					      cairo_surface_t		*surface,
+					      cairo_operator_t		 op,
+					      const cairo_pattern_t	*source,
+					      const cairo_boxes_t	*boxes,
+					      const cairo_clip_t		*clip)
+{
+    cairo_box_t box;
+
+    if (! _cairo_composite_rectangles_init (extents,
+					    surface, op, source, clip))
+    {
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+    }
+
+    _cairo_boxes_extents (boxes, &box);
+    _cairo_box_round_to_rectangle (&box, &extents->mask);
+    return _cairo_composite_rectangles_intersect (extents, clip);
+}
+
+cairo_int_status_t
 _cairo_composite_rectangles_init_for_glyphs (cairo_composite_rectangles_t *extents,
-					     const cairo_rectangle_int_t *unbounded,
+					     cairo_surface_t *surface,
 					     cairo_operator_t		 op,
 					     const cairo_pattern_t	*source,
 					     cairo_scaled_font_t	*scaled_font,
@@ -222,8 +342,7 @@ _cairo_composite_rectangles_init_for_glyphs (cairo_composite_rectangles_t *exten
 {
     cairo_status_t status;
 
-    if (! _cairo_composite_rectangles_init (extents, unbounded,
-					    op, source, clip))
+    if (! _cairo_composite_rectangles_init (extents, surface, op, source, clip))
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
     /* Computing the exact bbox and the overlap is expensive.

@@ -119,13 +119,16 @@ do_rectangles_once (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
+cairo_bool_t
+rounded_rectangles_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "rounded-rectangles", NULL);
+}
+
 void
 rounded_rectangles (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
     int i;
-
-    if (! cairo_perf_can_run (perf, "rounded-rectangles", NULL))
-	return;
 
     srand (8478232);
     for (i = 0; i < RECTANGLE_COUNT; i++) {

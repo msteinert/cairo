@@ -265,12 +265,15 @@ do_dragon_solid_circle_clip (cairo_t *cr, int width, int height, int loops)
     return do_dragon_solid (cr, width, height, loops);
 }
 
+cairo_bool_t
+dragon_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "dragon", NULL);
+}
+
 void
 dragon (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "dragon", NULL))
-	return;
-
     cairo_perf_run (perf, "dragon-solid", do_dragon_solid, NULL);
     cairo_perf_run (perf, "dragon-unaligned-solid", do_dragon_solid_unaligned, NULL);
     cairo_perf_run (perf, "dragon-solid-aligned-clip", do_dragon_solid_aligned_clip, NULL);

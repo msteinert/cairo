@@ -161,16 +161,14 @@ test_diff_print_binary (test_diff_t		    *diff,
     else
 	printf ("%5s %26s", diff->tests[0]->backend, diff->tests[0]->name);
 
-    if (diff->tests[0]->size) {
-	printf ("  %6.2f (%.2f %4.2f%%) -> %6.2f (%.2f %4.2f%%): %5.2fx ",
-		diff->tests[0]->stats.min_ticks / diff->tests[0]->stats.ticks_per_ms,
-		diff->tests[0]->stats.median_ticks / diff->tests[0]->stats.ticks_per_ms,
-		diff->tests[0]->stats.std_dev * 100,
-		diff->tests[1]->stats.min_ticks / diff->tests[1]->stats.ticks_per_ms,
-		diff->tests[1]->stats.median_ticks / diff->tests[1]->stats.ticks_per_ms,
-		diff->tests[1]->stats.std_dev * 100,
-		fabs (diff->change));
-    }
+    printf ("  %6.2f (%.2f %4.2f%%) -> %6.2f (%.2f %4.2f%%): %5.2fx ",
+	    diff->tests[0]->stats.min_ticks / diff->tests[0]->stats.ticks_per_ms,
+	    diff->tests[0]->stats.median_ticks / diff->tests[0]->stats.ticks_per_ms,
+	    diff->tests[0]->stats.std_dev * 100,
+	    diff->tests[1]->stats.min_ticks / diff->tests[1]->stats.ticks_per_ms,
+	    diff->tests[1]->stats.median_ticks / diff->tests[1]->stats.ticks_per_ms,
+	    diff->tests[1]->stats.std_dev * 100,
+	    fabs (diff->change));
 
     if (diff->change > 1.0)
 	printf ("speedup\n");
@@ -191,24 +189,32 @@ test_diff_print_multi (test_diff_t		   *diff,
     double test_time;
     double change;
 
-    printf ("%s (backend: %s-%s, size: %d)\n",
-	    diff->tests[0]->name,
-	    diff->tests[0]->backend,
-	    diff->tests[0]->content,
-	    diff->tests[0]->size);
+    if (diff->tests[0]->size) {
+	printf ("%s (backend: %s-%s, size: %d)\n",
+		diff->tests[0]->name,
+		diff->tests[0]->backend,
+		diff->tests[0]->content,
+		diff->tests[0]->size);
+    } else {
+	printf ("%s (backend: %s)\n",
+		diff->tests[0]->name,
+		diff->tests[0]->backend);
+    }
 
     for (i = 0; i < diff->num_tests; i++) {
 	test_time = diff->tests[i]->stats.min_ticks;
 	if (! options->use_ticks)
 	    test_time /= diff->tests[i]->stats.ticks_per_ms;
 	change = diff->max / test_time;
-	printf ("%8s %6.2f: %5.2fx ",
-		diff->tests[i]->configuration,
+	printf ("[%d] %6.2f: %5.2fx ",
+		diff->tests[i]->fileno,
 		diff->tests[i]->stats.min_ticks / diff->tests[i]->stats.ticks_per_ms,
 		change);
 
 	if (options->print_change_bars)
 	    print_change_bar (change, max_change, options->use_utf);
+	else
+	    printf("\n");
     }
 
     printf("\n");
@@ -476,8 +482,11 @@ main (int	  argc,
 
     reports = xmalloc (args.num_filenames * sizeof (cairo_perf_report_t));
 
-    for (i = 0; i < args.num_filenames; i++ )
-	cairo_perf_report_load (&reports[i], args.filenames[i], NULL);
+    for (i = 0; i < args.num_filenames; i++ ) {
+	cairo_perf_report_load (&reports[i], args.filenames[i], i, NULL);
+	printf ("[%d] %s\n", i, args.filenames[i]);
+    }
+    printf ("\n");
 
     cairo_perf_reports_compare (reports, args.num_filenames, &args.options);
 

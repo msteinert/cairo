@@ -52,6 +52,7 @@
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-paginated-private.h"
+#include "cairo-surface-backend-private.h"
 
 typedef struct _test_paginated_surface {
     cairo_surface_t base;
@@ -254,23 +255,16 @@ static const cairo_surface_backend_t test_paginated_surface_backend = {
 
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
-    NULL, /* acquire_dest_image */
-    NULL, /* release_dest_image */
-    NULL, /* clone_similar */
-    NULL, /* composite */
-    NULL, /* fill_rectangles */
-    NULL, /* composite_trapezoids */
-    NULL, /* create_span_renderer */
-    NULL, /* check_span_renderer */
+    NULL, /* snapshot */
+
     NULL, /* copy_page */
     NULL, /* show_page */
+
     _test_paginated_surface_get_extents,
-    NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
+
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
-    NULL, /* scaled_font_fini */
-    NULL, /* scaled_glyph_fini */
 
     /* Here is the more "modern" section of the surface backend
      * interface which is mostly just drawing functions */
@@ -279,14 +273,8 @@ static const cairo_surface_backend_t test_paginated_surface_backend = {
     _test_paginated_surface_mask,
     _test_paginated_surface_stroke,
     _test_paginated_surface_fill,
+    NULL, /* fill-stroke */
     NULL, /* replaced by show_text_glyphs */
-
-    NULL, /* snapshot */
-    NULL, /* is_similar */
-    NULL, /* fill_stroke */
-    NULL, /* create_solid_pattern_surface */
-    NULL, /* can_repaint_solid_pattern_surface */
-
     _test_paginated_surface_has_show_text_glyphs,
     _test_paginated_surface_show_text_glyphs
 };

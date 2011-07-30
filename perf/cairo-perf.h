@@ -83,6 +83,8 @@ typedef struct _cairo_perf {
     double ms_per_iteration;
     cairo_bool_t fast_and_sloppy;
 
+    unsigned int tile_size;
+
     /* Stuff used internally */
     cairo_time_t *times;
     const cairo_boilerplate_target_t **targets;
@@ -121,6 +123,7 @@ cairo_perf_cover_sources_and_operators (cairo_perf_t	   *perf,
 
 typedef struct _test_report {
     int id;
+    int fileno;
     const char *configuration;
     char *backend;
     char *content;
@@ -149,6 +152,7 @@ typedef struct _test_diff {
 typedef struct _cairo_perf_report {
     char *configuration;
     const char *name;
+    int fileno;
     test_report_t *tests;
     int tests_size;
     int tests_count;
@@ -162,7 +166,7 @@ typedef enum {
 
 void
 cairo_perf_report_load (cairo_perf_report_t *report,
-			const char *filename,
+			const char *filename, int id,
 			int (*cmp) (const void *, const void *));
 
 void
@@ -177,7 +181,10 @@ int
 test_report_cmp_name (const void *a,
 		      const void *b);
 
-#define CAIRO_PERF_DECL(func) void (func) (cairo_perf_t *perf, cairo_t *cr, int width, int height)
+#define CAIRO_PERF_ENABLED_DECL(func) cairo_bool_t (func ## _enabled) (cairo_perf_t *perf)
+#define CAIRO_PERF_RUN_DECL(func) void (func) (cairo_perf_t *perf, cairo_t *cr, int width, int height)
+
+#define CAIRO_PERF_DECL(func) CAIRO_PERF_RUN_DECL(func); CAIRO_PERF_ENABLED_DECL(func)
 
 CAIRO_PERF_DECL (fill);
 CAIRO_PERF_DECL (paint);
@@ -214,6 +221,11 @@ CAIRO_PERF_DECL (many_fills);
 CAIRO_PERF_DECL (wide_fills);
 CAIRO_PERF_DECL (many_curves);
 CAIRO_PERF_DECL (curve);
+CAIRO_PERF_DECL (a1_curve);
 CAIRO_PERF_DECL (line);
+CAIRO_PERF_DECL (a1_line);
+CAIRO_PERF_DECL (pixel);
+CAIRO_PERF_DECL (sierpinski);
+CAIRO_PERF_DECL (fill_clip);
 
 #endif

@@ -39,6 +39,8 @@
 #if CAIRO_HAS_PDF_OPERATORS
 
 #include "cairo-pdf-shading-private.h"
+
+#include "cairo-array-private.h"
 #include "cairo-error-private.h"
 #include <float.h>
 

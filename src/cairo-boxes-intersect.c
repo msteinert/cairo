@@ -535,19 +535,44 @@ _cairo_boxes_intersect_with_box (const cairo_boxes_t *boxes,
 				 const cairo_box_t *box,
 				 cairo_boxes_t *out)
 {
-    const struct _cairo_boxes_chunk *chunk;
     cairo_status_t status;
-    int i;
+    int i, j;
 
-    _cairo_boxes_clear (out);
-    _cairo_boxes_limit (out, box, 1);
-    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
-	for (i = 0; i < chunk->count; i++) {
-	    status = _cairo_boxes_add (out,
-				       CAIRO_ANTIALIAS_DEFAULT,
-				       &chunk->base[i]);
-	    if (unlikely (status))
-		return status;
+    if (out == boxes) { /* inplace update */
+	struct _cairo_boxes_chunk *chunk;
+
+	out->num_boxes = 0;
+	for (chunk = &out->chunks; chunk != NULL; chunk = chunk->next) {
+	    for (i = j = 0; i < chunk->count; i++) {
+		cairo_box_t *b = &chunk->base[i];
+
+		b->p1.x = MAX (b->p1.x, box->p1.x);
+		b->p1.y = MAX (b->p1.y, box->p1.y);
+		b->p2.x = MIN (b->p2.x, box->p2.x);
+		b->p2.y = MIN (b->p2.y, box->p2.y);
+		if (b->p1.x < b->p2.x && b->p1.y < b->p2.y) {
+		    if (i != j)
+			chunk->base[j] = *b;
+		    j++;
+		}
+	    }
+	    /* XXX unlink empty chains? */
+	    chunk->count = j;
+	    out->num_boxes += j;
+	}
+    } else {
+	const struct _cairo_boxes_chunk *chunk;
+
+	_cairo_boxes_clear (out);
+	_cairo_boxes_limit (out, box, 1);
+	for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
+	    for (i = 0; i < chunk->count; i++) {
+		status = _cairo_boxes_add (out,
+					   CAIRO_ANTIALIAS_DEFAULT,
+					   &chunk->base[i]);
+		if (unlikely (status))
+		    return status;
+	    }
 	}
     }
 

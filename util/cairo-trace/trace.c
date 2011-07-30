@@ -3625,7 +3625,7 @@ cairo_surface_create_similar_image (cairo_surface_t *other,
 
 cairo_surface_t *
 cairo_surface_map_to_image (cairo_surface_t *surface,
-			    const cairo_rectangle_t *extents)
+			    const cairo_rectangle_int_t *extents)
 {
     cairo_surface_t *ret;
 
@@ -3638,18 +3638,14 @@ cairo_surface_map_to_image (cairo_surface_t *surface,
 	Object *obj = _create_surface (ret);
 
 	if (extents) {
-	    _trace_printf ("[ %f %f %f %f ] map-to-image dup /s%ld exch def\n",
+	    _trace_printf ("[%d %d %d %d] map-to-image\n",
 			   extents->x, extents->y,
-			   extents->width,
-			   extents->height,
-			   obj->token);
-	    obj->width = extents->width;
+			   extents->width, extents->height);
+	    obj->width  = extents->width;
 	    obj->height = extents->height;
 	} else {
-	    _trace_printf ("[ ] map-to-image dup /s%ld exch def\n",
-			   obj->token);
+	    _trace_printf ("[ ] map-to-image\n");
 	}
-	obj->defined = TRUE;
 	_push_object (obj);
 	_write_unlock ();
     }
@@ -3669,6 +3665,7 @@ cairo_surface_unmap_image (cairo_surface_t *surface,
 	_trace_printf ("/s%ld /s%ld  unmap-image\n",
 		       _get_surface_id (surface),
 		       _get_surface_id (image));
+	_consume_operand ();
 	_write_unlock ();
     }
 
@@ -4892,42 +4889,6 @@ cairo_script_surface_create_for_target (cairo_device_t *device,
 #endif
 
 #if CAIRO_HAS_TEST_SURFACES
-#include <test-fallback-surface.h>
-cairo_surface_t *
-_cairo_test_fallback_surface_create (cairo_content_t	content,
-				     int		width,
-				     int		height)
-{
-    cairo_surface_t *ret;
-
-    _enter_trace ();
-
-    ret = DLCALL (_cairo_test_fallback_surface_create, content, width, height);
-
-    _emit_line_info ();
-    if (_write_lock ()) {
-	Object *obj = _create_surface (ret);
-
-	_trace_printf ("dict\n"
-		       "  /type /test-fallback set\n"
-		       "  /content //%s set\n"
-		       "  /width %d set\n"
-		       "  /height %d set\n"
-		       "  surface dup /s%ld exch def\n",
-		       _content_to_string (content),
-		       width, height,
-		       obj->token);
-	obj->width = width;
-	obj->height = height;
-	obj->defined = TRUE;
-	_push_object (obj);
-	_write_unlock ();
-    }
-
-    _exit_trace ();
-    return ret;
-}
-
 #include <test-paginated-surface.h>
 cairo_surface_t *
 _cairo_test_paginated_surface_create (cairo_surface_t *surface)
@@ -4957,26 +4918,29 @@ _cairo_test_paginated_surface_create (cairo_surface_t *surface)
     return ret;
 }
 
+#include <test-compositor-surface.h>
 
-#include <test-null-surface.h>
 cairo_surface_t *
-_cairo_test_null_surface_create (cairo_content_t	content)
+_cairo_test_fallback_compositor_surface_create (cairo_content_t content, int width, int height)
 {
     cairo_surface_t *ret;
 
     _enter_trace ();
 
-    ret = DLCALL (_cairo_test_null_surface_create, content);
+    ret = DLCALL (_cairo_test_fallback_compositor_surface_create, content, width, height);
 
     _emit_line_info ();
     if (_write_lock ()) {
 	Object *obj = _create_surface (ret);
 
 	_trace_printf ("dict\n"
-		       "  /type /test-null set\n"
+		       "  /type /test-fallback-compositor set\n"
 		       "  /content //%s set\n"
+		       "  /width %d set\n"
+		       "  /height %d set\n"
 		       "  surface dup /s%ld exch def\n",
 		       _content_to_string (content),
+		       width, height,
 		       obj->token);
 	obj->defined = TRUE;
 	_push_object (obj);
@@ -4986,6 +4950,100 @@ _cairo_test_null_surface_create (cairo_content_t	content)
     _exit_trace ();
     return ret;
 }
+
+cairo_surface_t *
+_cairo_test_mask_compositor_surface_create (cairo_content_t content, int width, int height)
+{
+    cairo_surface_t *ret;
+
+    _enter_trace ();
+
+    ret = DLCALL (_cairo_test_mask_compositor_surface_create, content, width, height);
+
+    _emit_line_info ();
+    if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
+	_trace_printf ("dict\n"
+		       "  /type /test-mask-compositor set\n"
+		       "  /content //%s set\n"
+		       "  /width %d set\n"
+		       "  /height %d set\n"
+		       "  surface dup /s%ld exch def\n",
+		       _content_to_string (content),
+		       width, height,
+		       obj->token);
+	obj->defined = TRUE;
+	_push_object (obj);
+	_write_unlock ();
+    }
+
+    _exit_trace ();
+    return ret;
+}
+
+cairo_surface_t *
+_cairo_test_spans_compositor_surface_create (cairo_content_t content, int width, int height)
+{
+    cairo_surface_t *ret;
+
+    _enter_trace ();
+
+    ret = DLCALL (_cairo_test_spans_compositor_surface_create, content, width, height);
+
+    _emit_line_info ();
+    if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
+	_trace_printf ("dict\n"
+		       "  /type /test-spans-compositor set\n"
+		       "  /content //%s set\n"
+		       "  /width %d set\n"
+		       "  /height %d set\n"
+		       "  surface dup /s%ld exch def\n",
+		       _content_to_string (content),
+		       width, height,
+		       obj->token);
+	obj->defined = TRUE;
+	_push_object (obj);
+	_write_unlock ();
+    }
+
+    _exit_trace ();
+    return ret;
+}
+
+cairo_surface_t *
+_cairo_test_traps_compositor_surface_create (cairo_content_t content, int width, int height)
+{
+    cairo_surface_t *ret;
+
+    _enter_trace ();
+
+    ret = DLCALL (_cairo_test_traps_compositor_surface_create, content, width, height);
+
+    _emit_line_info ();
+    if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
+	_trace_printf ("dict\n"
+		       "  /type /test-traps-compositor set\n"
+		       "  /content //%s set\n"
+		       "  /width %d set\n"
+		       "  /height %d set\n"
+		       "  surface dup /s%ld exch def\n",
+		       _content_to_string (content),
+		       width, height,
+		       obj->token);
+	obj->defined = TRUE;
+	_push_object (obj);
+	_write_unlock ();
+    }
+
+    _exit_trace ();
+    return ret;
+}
+
 #endif
 
 cairo_surface_t *

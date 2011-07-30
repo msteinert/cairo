@@ -246,16 +246,9 @@ _cairo_clip_intersect_path (cairo_clip_t       *clip,
     if (extents.width == 0 || extents.height == 0)
 	return _cairo_clip_set_all_clipped (clip);
 
-    if (clip && ! _cairo_rectangle_intersect (&clip->extents, &extents))
-	return _cairo_clip_set_all_clipped (clip);
-
-    if (clip == NULL) {
-	clip = _cairo_clip_create ();
-	if (unlikely (clip == NULL))
-	    return _cairo_clip_set_all_clipped (clip);
-
-	clip->extents = extents;
-    }
+    clip = _cairo_clip_intersect_rectangle (clip, &extents);
+    if (_cairo_clip_is_all_clipped (clip))
+	return clip;
 
     clip_path = _cairo_clip_path_create (clip);
     if (unlikely (clip_path == NULL))
@@ -263,7 +256,7 @@ _cairo_clip_intersect_path (cairo_clip_t       *clip,
 
     status = _cairo_path_fixed_init_copy (&clip_path->path, path);
     if (unlikely (status))
-	    return _cairo_clip_set_all_clipped (clip);
+	return _cairo_clip_set_all_clipped (clip);
 
     clip_path->fill_rule = fill_rule;
     clip_path->tolerance = tolerance;
@@ -532,9 +525,10 @@ _cairo_debug_print_clip (FILE *stream, const cairo_clip_t *clip)
     }
 
     fprintf (stream, "clip:\n");
-    fprintf (stream, "  extents: (%d, %d) x (%d, %d)",
+    fprintf (stream, "  extents: (%d, %d) x (%d, %d), is-region? %d",
 	     clip->extents.x, clip->extents.y,
-	     clip->extents.width, clip->extents.height);
+	     clip->extents.width, clip->extents.height,
+	     clip->is_region);
 
     fprintf (stream, "  num_boxes = %d\n", clip->num_boxes);
     for (i = 0; i < clip->num_boxes; i++) {

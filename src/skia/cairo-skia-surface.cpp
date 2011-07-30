@@ -41,6 +41,8 @@
 
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-error-private.h"
+#include "cairo-surface-backend-private.h"
+#include "cairo-surface-fallback-private.h"
 
 static cairo_skia_surface_t *
 _cairo_skia_surface_create_internal (SkBitmap::Config config,
@@ -161,198 +163,6 @@ _cairo_skia_surface_get_font_options (void                  *abstract_surface,
     _cairo_font_options_set_round_glyph_positions (options, CAIRO_ROUND_GLYPH_POS_ON);
 }
 
-static cairo_rectangle_t *
-to_rectangle (cairo_rectangle_t *rf,
-	      cairo_rectangle_int_t *ri)
-{
-    rf->x = ri->x;
-    rf->y = ri->y;
-    rf->width = ri->width;
-    rf->height = ri->height;
-    return rf;
-}
-
-static cairo_int_status_t
-_cairo_foreign_surface_paint (void			*abstract_surface,
-			      cairo_operator_t		 op,
-			      const cairo_pattern_t	*source,
-			      const cairo_clip_t	*clip)
-{
-    cairo_surface_t *surface = (cairo_surface_t *) abstract_surface;
-    cairo_surface_t *image;
-    cairo_rectangle_int_t extents;
-    cairo_rectangle_t rect;
-    cairo_composite_rectangles_t composite;
-    cairo_int_status_t status;
-
-    _cairo_surface_get_extents (surface, &extents);
-    status = _cairo_composite_rectangles_init_for_paint (&composite, &extents,
-							 op, source,
-							 clip);
-    if (unlikely (status))
-	return status;
-
-    image = cairo_surface_map_to_image (surface,
-					to_rectangle(&rect, &composite.unbounded));
-    status = (cairo_int_status_t)
-	_cairo_surface_paint (image, op, source, clip);
-    cairo_surface_unmap_image (surface, image);
-
-    _cairo_composite_rectangles_fini (&composite);
-
-    return status;
-}
-
-static cairo_int_status_t
-_cairo_foreign_surface_mask (void			*abstract_surface,
-			      cairo_operator_t		 op,
-			      const cairo_pattern_t	*source,
-			      const cairo_pattern_t	*mask,
-			      const cairo_clip_t	*clip)
-{
-    cairo_surface_t *surface =(cairo_surface_t *) abstract_surface;
-    cairo_surface_t *image;
-    cairo_rectangle_int_t extents;
-    cairo_rectangle_t rect;
-    cairo_composite_rectangles_t composite;
-    cairo_int_status_t status;
-
-    _cairo_surface_get_extents (surface, &extents);
-    status = _cairo_composite_rectangles_init_for_mask (&composite, &extents,
-							op, source, mask,
-							clip);
-    if (unlikely (status))
-	return status;
-
-    image = cairo_surface_map_to_image (surface,
-					to_rectangle(&rect, &composite.unbounded));
-    status = (cairo_int_status_t)
-	_cairo_surface_mask (image, op, source, mask, clip);
-    cairo_surface_unmap_image (surface, image);
-
-    _cairo_composite_rectangles_fini (&composite);
-
-    return status;
-}
-
-static cairo_int_status_t
-_cairo_foreign_surface_stroke (void			*abstract_surface,
-			       cairo_operator_t		 op,
-			       const cairo_pattern_t	*source,
-			       const cairo_path_fixed_t	*path,
-			       const cairo_stroke_style_t*style,
-			       const cairo_matrix_t	*ctm,
-			       const cairo_matrix_t	*ctm_inverse,
-			       double			 tolerance,
-			       cairo_antialias_t	 antialias,
-			       const cairo_clip_t	*clip)
-{
-    cairo_surface_t *surface =(cairo_surface_t *) abstract_surface;
-    cairo_surface_t *image;
-    cairo_composite_rectangles_t composite;
-    cairo_rectangle_int_t extents;
-    cairo_rectangle_t rect;
-    cairo_int_status_t status;
-
-    _cairo_surface_get_extents (surface, &extents);
-    status = _cairo_composite_rectangles_init_for_stroke (&composite, &extents,
-							  op, source,
-							  path, style, ctm,
-							  clip);
-    if (unlikely (status))
-	return status;
-
-    image = cairo_surface_map_to_image (surface,
-					to_rectangle(&rect, &composite.unbounded));
-    status = (cairo_int_status_t)
-	_cairo_surface_stroke (image, op, source, path, style, ctm, ctm_inverse, tolerance, antialias, clip);
-    cairo_surface_unmap_image (surface, image);
-
-    _cairo_composite_rectangles_fini (&composite);
-
-    return status;
-}
-
-static cairo_int_status_t
-_cairo_foreign_surface_fill (void				*abstract_surface,
-			     cairo_operator_t		 op,
-			     const cairo_pattern_t	*source,
-			     const cairo_path_fixed_t	*path,
-			     cairo_fill_rule_t		 fill_rule,
-			     double			 tolerance,
-			     cairo_antialias_t		 antialias,
-			     const cairo_clip_t		*clip)
-{
-    cairo_surface_t *surface =(cairo_surface_t *) abstract_surface;
-    cairo_surface_t *image;
-    cairo_composite_rectangles_t composite;
-    cairo_rectangle_int_t extents;
-    cairo_rectangle_t rect;
-    cairo_int_status_t status;
-
-    _cairo_surface_get_extents (surface, &extents);
-    status = _cairo_composite_rectangles_init_for_fill (&composite, &extents,
-							op, source, path,
-							clip);
-    if (unlikely (status))
-	return status;
-
-    image = cairo_surface_map_to_image (surface,
-					to_rectangle(&rect, &composite.unbounded));
-    status = (cairo_int_status_t)
-	_cairo_surface_fill (image, op, source, path, fill_rule, tolerance, antialias, clip);
-    cairo_surface_unmap_image (surface, image);
-
-    _cairo_composite_rectangles_fini (&composite);
-
-    return status;
-}
-
-static cairo_int_status_t
-_cairo_foreign_surface_glyphs (void			*abstract_surface,
-			       cairo_operator_t		 op,
-			       const cairo_pattern_t	*source,
-			       cairo_glyph_t		*glyphs,
-			       int			 num_glyphs,
-			       cairo_scaled_font_t	*scaled_font,
-			       const cairo_clip_t	*clip,
-			       int *num_remaining)
-{
-    cairo_surface_t *surface =(cairo_surface_t *) abstract_surface;
-    cairo_surface_t *image;
-    cairo_composite_rectangles_t composite;
-    cairo_rectangle_int_t extents;
-    cairo_rectangle_t rect;
-    cairo_int_status_t status;
-    cairo_bool_t overlap;
-
-    _cairo_surface_get_extents (surface, &extents);
-    status = _cairo_composite_rectangles_init_for_glyphs (&composite, &extents,
-							  op, source,
-							  scaled_font,
-							  glyphs, num_glyphs,
-							  clip,
-							  &overlap);
-    if (unlikely (status))
-	return status;
-
-    image = cairo_surface_map_to_image (surface,
-					to_rectangle(&rect, &composite.unbounded));
-    status = (cairo_int_status_t)
-	_cairo_surface_show_text_glyphs (image,
-					 op, source,
-					 NULL, 0,
-					 glyphs, num_glyphs,
-					 NULL, 0, (cairo_text_cluster_flags_t)0,
-					 scaled_font,
-					 clip);
-    cairo_surface_unmap_image (surface, image);
-    _cairo_composite_rectangles_fini (&composite);
-
-    *num_remaining = 0;
-    return status;
-}
-
 static const struct _cairo_surface_backend
 cairo_skia_surface_backend = {
     CAIRO_SURFACE_TYPE_SKIA,
@@ -366,33 +176,26 @@ cairo_skia_surface_backend = {
     _cairo_skia_surface_unmap_image,
 
     _cairo_skia_surface_acquire_source_image,
+    NULL, /* acquire transformed */
     _cairo_skia_surface_release_source_image,
-
-    NULL, NULL,
-    NULL, /* clone similar */
-    NULL, /* composite */
-    NULL, /* fill_rectangles */
-    NULL, /* composite_trapezoids */
-    NULL, /* create_span_renderer */
-    NULL, /* check_span_renderer */
+    NULL, /* snapshot */
 
     NULL, /* copy_page */
     NULL, /* show_page */
 
     _cairo_skia_surface_get_extents,
-    NULL, /* old_show_glyphs */
     _cairo_skia_surface_get_font_options,
+
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
-    NULL, /* scaled_font_fini */
-    NULL, /* scaled_glyph_fini */
 
     /* XXX native surface functions? */
-    _cairo_foreign_surface_paint,
-    _cairo_foreign_surface_mask,
-    _cairo_foreign_surface_stroke,
-    _cairo_foreign_surface_fill,
-    _cairo_foreign_surface_glyphs
+    _cairo_surface_fallback_paint,
+    _cairo_surface_fallback_mask,
+    _cairo_surface_fallback_stroke,
+    _cairo_surface_fallback_fill,
+    NULL, /* fill/stroke */
+    _cairo_surface_fallback_glyphs
 };
 
 /*
@@ -426,6 +229,7 @@ sk_config_to_pixman_format_code (SkBitmap::Config config,
 	return (pixman_format_code_t) -1;
     }
 }
+
 static cairo_skia_surface_t *
 _cairo_skia_surface_create_internal (SkBitmap::Config config,
 				     bool opaque,

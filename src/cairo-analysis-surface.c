@@ -144,7 +144,7 @@ _analyze_recording_surface_pattern (cairo_analysis_surface_t *surface,
     cairo_analysis_surface_t *tmp;
     cairo_surface_t *source, *proxy;
     cairo_matrix_t p2d;
-    cairo_status_t status;
+    cairo_status_t status, analysis_status;
 
     assert (pattern->type == CAIRO_PATTERN_TYPE_SURFACE);
     surface_pattern = (const cairo_surface_pattern_t *) pattern;
@@ -175,11 +175,16 @@ _analyze_recording_surface_pattern (cairo_analysis_surface_t *surface,
     if (_cairo_surface_is_subsurface (source))
 	source = _cairo_surface_subsurface_get_target (source);
 
-    status = _cairo_recording_surface_replay_and_create_regions (source, &tmp->base);
+    status = _cairo_recording_surface_replay_and_create_regions (source,
+								 &tmp->base);
+    analysis_status = tmp->has_unsupported ? CAIRO_INT_STATUS_IMAGE_FALLBACK : CAIRO_INT_STATUS_SUCCESS;
     detach_proxy (proxy);
     cairo_surface_destroy (&tmp->base);
 
-    return status;
+    if (unlikely (status))
+	return status;
+
+    return analysis_status;
 }
 
 static cairo_int_status_t
@@ -548,8 +553,7 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 				     cairo_glyph_t	  *glyphs,
 				     int		   num_glyphs,
 				     cairo_scaled_font_t  *scaled_font,
-				     const cairo_clip_t         *clip,
-				     int                  *remaining_glyphs)
+				     const cairo_clip_t         *clip)
 {
     cairo_analysis_surface_t *surface = abstract_surface;
     cairo_int_status_t	     status, backend_status;
@@ -562,8 +566,7 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 						   source,
 						   glyphs, num_glyphs,
 						   scaled_font,
-						   clip,
-						   remaining_glyphs);
+						   clip);
 	if (_cairo_int_status_is_error (backend_status))
 	    return backend_status;
     }
@@ -652,21 +655,14 @@ _cairo_analysis_surface_show_text_glyphs (void			    *abstract_surface,
     if (backend_status == CAIRO_INT_STATUS_UNSUPPORTED &&
 	surface->target->backend->show_glyphs != NULL)
     {
-	int remaining_glyphs = num_glyphs;
 	backend_status =
 	    surface->target->backend->show_glyphs (surface->target, op,
 						   source,
 						   glyphs, num_glyphs,
 						   scaled_font,
-						   clip,
-						   &remaining_glyphs);
+						   clip);
 	if (_cairo_int_status_is_error (backend_status))
 	    return backend_status;
-
-	glyphs += num_glyphs - remaining_glyphs;
-	num_glyphs = remaining_glyphs;
-	if (remaining_glyphs == 0)
-	    backend_status = CAIRO_STATUS_SUCCESS;
     }
 
     if (backend_status == CAIRO_INT_STATUS_ANALYZE_RECORDING_SURFACE_PATTERN)
@@ -701,35 +697,26 @@ static const cairo_surface_backend_t cairo_analysis_surface_backend = {
     NULL, /* create_similar_image */
     NULL, /* map_to_image */
     NULL, /* unmap */
+
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
-    NULL, /* acquire_dest_image */
-    NULL, /* release_dest_image */
-    NULL, /* clone_similar */
-    NULL, /* composite */
-    NULL, /* fill_rectangles */
-    NULL, /* composite_trapezoids */
-    NULL, /* create_span_renderer */
-    NULL, /* check_span_renderer */
+    NULL, /* snapshot */
+
     NULL, /* copy_page */
     NULL, /* show_page */
+
     _cairo_analysis_surface_get_extents,
-    NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
+
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
-    NULL, /* scaled_font_fini */
-    NULL, /* scaled_glyph_fini */
+
     _cairo_analysis_surface_paint,
     _cairo_analysis_surface_mask,
     _cairo_analysis_surface_stroke,
     _cairo_analysis_surface_fill,
-    _cairo_analysis_surface_show_glyphs,
-    NULL, /* snapshot */
-    NULL, /* is_similar */
     NULL, /* fill_stroke */
-    NULL, /* create_solid_pattern_surface */
-    NULL, /* can_repaint_solid_pattern_surface */
+    _cairo_analysis_surface_show_glyphs,
     _cairo_analysis_surface_has_show_text_glyphs,
     _cairo_analysis_surface_show_text_glyphs
 };
@@ -891,48 +878,38 @@ typedef cairo_int_status_t
 				 cairo_glyph_t		*glyphs,
 				 int			 num_glyphs,
 				 cairo_scaled_font_t	*scaled_font,
-				 const cairo_clip_t		*clip,
-				 int			*remaining_glyphs);
+				 const cairo_clip_t		*clip);
 
 static const cairo_surface_backend_t cairo_null_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_NULL,
     NULL, /* finish */
 
-    _cairo_default_context_create, /* XXX */
+    NULL, /* only accessed through the surface functions */
 
     NULL, /* create_similar */
     NULL, /* create similar image */
     NULL, /* map to image */
     NULL, /* unmap image*/
+
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
-    NULL, /* acquire_dest_image */
-    NULL, /* release_dest_image */
-    NULL, /* clone_similar */
-    NULL, /* composite */
-    NULL, /* fill_rectangles */
-    NULL, /* composite_trapezoids */
-    NULL, /* create_span_renderer */
-    NULL, /* check_span_renderer */
+    NULL, /* snapshot */
+
     NULL, /* copy_page */
     NULL, /* show_page */
+
     NULL, /* get_extents */
-    NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
+
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
-    NULL, /* scaled_font_fini */
-    NULL, /* scaled_glyph_fini */
+
     (_paint_func) _return_success,	    /* paint */
     (_mask_func) _return_success,	    /* mask */
     (_stroke_func) _return_success,	    /* stroke */
     (_fill_func) _return_success,	    /* fill */
-    (_show_glyphs_func) _return_success,    /* show_glyphs */
-    NULL, /* snapshot */
-    NULL, /* is_similar */
     NULL, /* fill_stroke */
-    NULL, /* create_solid_pattern_surface */
-    NULL, /* can_repaint_solid_pattern_surface */
+    (_show_glyphs_func) _return_success,    /* show_glyphs */
     NULL, /* has_show_text_glyphs */
     NULL  /* show_text_glyphs */
 };

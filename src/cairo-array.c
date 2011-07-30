@@ -37,6 +37,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-array-private.h"
 #include "cairo-error-private.h"
 
 /**
@@ -385,11 +386,11 @@ _cairo_user_data_array_fini (cairo_user_data_array_t *array)
 	cairo_user_data_slot_t *slots;
 
 	slots = _cairo_array_index (array, 0);
-	do {
-	    if (slots->user_data != NULL && slots->destroy != NULL)
-		slots->destroy (slots->user_data);
-	    slots++;
-	} while (--num_slots);
+	while (num_slots--) {
+	    cairo_user_data_slot_t *s = &slots[num_slots];
+	    if (s->user_data != NULL && s->destroy != NULL)
+		s->destroy (s->user_data);
+	}
     }
 
     _cairo_array_fini (array);

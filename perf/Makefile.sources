@@ -1,5 +1,6 @@
 libcairoperf_sources = \
-	cairo-perf.c	\
+	cairo-perf.c		\
+	cairo-perf-report.c	\
 	cairo-stats.c		\
 	$(NULL)
 

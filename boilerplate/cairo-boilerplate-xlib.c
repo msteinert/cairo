@@ -31,7 +31,6 @@
 #if CAIRO_HAS_XLIB_XRENDER_SURFACE
 #include <cairo-xlib-xrender.h>
 #endif
-#include <cairo-xlib-surface-private.h>
 
 #include <X11/Xutil.h> /* for XDestroyImage */
 
@@ -412,6 +411,7 @@ _cairo_boilerplate_xlib_window_create_surface (const char		 *name,
 cairo_status_t
 cairo_boilerplate_xlib_surface_disable_render (cairo_surface_t *abstract_surface)
 {
+#if 0
     /* The following stunt doesn't work with xlib-xcb because it doesn't use
      * cairo_xlib_surface_t for its surfaces. Sadly, there is no sane
      * alternative, so we can't disable render with xlib-xcb.
@@ -438,6 +438,7 @@ cairo_boilerplate_xlib_surface_disable_render (cairo_surface_t *abstract_surface
 #endif
 #if CAIRO_XLIB_SURFACE_HAS_BUGGY_REPEAT
     surface->buggy_repeat = TRUE;
+#endif
 #endif
 #endif
 

@@ -182,4 +182,8 @@ _cairo_path_fixed_fill_maybe_region (const cairo_path_fixed_t *path)
 	   path->current_point.y == path->last_move_point.y;
 }
 
+cairo_private cairo_bool_t
+_cairo_path_fixed_is_stroke_box (const cairo_path_fixed_t *path,
+				 cairo_box_t *box);
+
 #endif /* CAIRO_PATH_FIXED_PRIVATE_H */

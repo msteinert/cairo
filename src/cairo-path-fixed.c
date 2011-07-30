@@ -584,6 +584,18 @@ _cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
     cairo_status_t status;
     cairo_point_t point[3];
 
+    /* If this curves does not move, replace it with a line-to.
+     * This frequently happens with rounded-rectangles and r==0.
+    */
+    if (path->current_point.x == x2 && path->current_point.y == y2) {
+	if (x1 == x2 && x0 == x2 && y1 == y2 && y0 == y2)
+	    return _cairo_path_fixed_line_to (path, x2, y2);
+
+	/* We may want to check for the absence of a cusp, in which case
+	 * we can also replace the curve-to with a line-to.
+	 */
+    }
+
     /* make sure subpaths are started properly */
     if (! path->has_current_point) {
 	status = _cairo_path_fixed_move_to (path, x0, y0);
@@ -1246,6 +1258,51 @@ _cairo_path_fixed_is_box (const cairo_path_fixed_t *path,
 		buf->op[5] != CAIRO_PATH_OP_CLOSE_PATH)
 		return FALSE;
 	}
+    }
+
+    /* Ok, we may have a box, if the points line up */
+    if (buf->points[0].y == buf->points[1].y &&
+	buf->points[1].x == buf->points[2].x &&
+	buf->points[2].y == buf->points[3].y &&
+	buf->points[3].x == buf->points[0].x)
+    {
+	_canonical_box (box, &buf->points[0], &buf->points[2]);
+	return TRUE;
+    }
+
+    if (buf->points[0].x == buf->points[1].x &&
+	buf->points[1].y == buf->points[2].y &&
+	buf->points[2].x == buf->points[3].x &&
+	buf->points[3].y == buf->points[0].y)
+    {
+	_canonical_box (box, &buf->points[0], &buf->points[2]);
+	return TRUE;
+    }
+
+    return FALSE;
+}
+
+cairo_bool_t
+_cairo_path_fixed_is_stroke_box (const cairo_path_fixed_t *path,
+				 cairo_box_t *box)
+{
+    const cairo_path_buf_t *buf = cairo_path_head (path);
+
+    if (! path->fill_is_rectilinear)
+	return FALSE;
+
+    /* Do we have the right number of ops? */
+    if (buf->num_ops != 5)
+	return FALSE;
+
+    /* Check whether the ops are those that would be used for a rectangle */
+    if (buf->op[0] != CAIRO_PATH_OP_MOVE_TO ||
+	buf->op[1] != CAIRO_PATH_OP_LINE_TO ||
+	buf->op[2] != CAIRO_PATH_OP_LINE_TO ||
+	buf->op[3] != CAIRO_PATH_OP_LINE_TO ||
+	buf->op[4] != CAIRO_PATH_OP_CLOSE_PATH)
+    {
+	return FALSE;
     }
 
     /* Ok, we may have a box, if the points line up */

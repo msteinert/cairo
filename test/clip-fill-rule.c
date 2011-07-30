@@ -66,9 +66,22 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
+static cairo_test_status_t
+a1_draw (cairo_t *cr, int width, int height)
+{
+    cairo_set_antialias (cr, CAIRO_ANTIALIAS_NONE);
+    return draw (cr, width, height);
+}
+
 CAIRO_TEST (clip_fill_rule,
 	    "Tests interaction of clipping with cairo_set_fill_rule",
 	    "clip", /* keywords */
 	    NULL, /* requirements */
 	    STAR_SIZE * 2 + 2, STAR_SIZE + 2,
 	    NULL, draw)
+CAIRO_TEST (a1_clip_fill_rule,
+	    "Tests interaction of clipping with cairo_set_fill_rule",
+	    "clip", /* keywords */
+	    NULL, /* requirements */
+	    STAR_SIZE * 2 + 2, STAR_SIZE + 2,
+	    NULL, a1_draw)

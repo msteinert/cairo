@@ -269,8 +269,8 @@ _cairo_xlib_init_screen_font_options (Display *dpy,
 }
 
 void
-_cairo_xlib_screen_close_display (cairo_xlib_display_t *display,
-                                  cairo_xlib_screen_t  *info)
+_cairo_xlib_screen_destroy (cairo_xlib_display_t *display,
+			    cairo_xlib_screen_t *info)
 {
     Display *dpy;
     int i;
@@ -292,11 +292,7 @@ _cairo_xlib_screen_close_display (cairo_xlib_display_t *display,
 	    info->gc_depths[i] = 0;
 	}
     }
-}
 
-void
-_cairo_xlib_screen_destroy (cairo_xlib_screen_t *info)
-{
     while (! cairo_list_is_empty (&info->visuals)) {
         _cairo_xlib_visual_info_destroy (cairo_list_first_entry (&info->visuals,
                                                                  cairo_xlib_visual_info_t,
@@ -403,19 +399,9 @@ _cairo_xlib_screen_put_gc (cairo_xlib_display_t *display,
     }
 
     if (i == ARRAY_LENGTH (info->gc)) {
-	cairo_status_t status;
-
 	/* perform random substitution to ensure fair caching over depths */
 	i = rand () % ARRAY_LENGTH (info->gc);
-	status =
-	    _cairo_xlib_display_queue_work (display,
-					    (cairo_xlib_notify_func) XFreeGC,
-					    info->gc[i],
-					    NULL);
-	if (unlikely (status)) {
-	    /* leak the server side resource... */
-	    XFree ((char *) info->gc[i]);
-	}
+	XFreeGC(display->display, info->gc[i]);
     }
 
     info->gc[i] = gc;

@@ -110,6 +110,7 @@ do {									\
 
 static test_report_status_t
 test_report_parse (test_report_t *report,
+		   int fileno,
 		   char 	 *line,
 		   char 	 *configuration)
 {
@@ -137,6 +138,7 @@ test_report_parse (test_report_t *report,
 
     skip_space ();
 
+    report->fileno = fileno;
     report->configuration = configuration;
     parse_string (report->backend);
     end = strrchr (report->backend, '.');
@@ -369,7 +371,7 @@ cairo_perf_report_sort_and_compute_stats (cairo_perf_report_t *report,
 
 void
 cairo_perf_report_load (cairo_perf_report_t *report,
-			const char *filename,
+			const char *filename, int id,
 			int (*cmp) (const void *, const void *))
 {
     FILE *file;
@@ -401,6 +403,7 @@ cairo_perf_report_load (cairo_perf_report_t *report,
     report->tests_size = 16;
     report->tests = xmalloc (report->tests_size * sizeof (test_report_t));
     report->tests_count = 0;
+    report->fileno = id;
 
     if (filename == NULL) {
 	file = stdin;
@@ -425,7 +428,7 @@ cairo_perf_report_load (cairo_perf_report_t *report,
 	    break;
 
 	status = test_report_parse (&report->tests[report->tests_count],
-				    line, report->configuration);
+				    id, line, report->configuration);
 	if (status == TEST_REPORT_STATUS_ERROR)
 	    fprintf (stderr, "Ignoring unrecognized line %d of %s:\n%s",
 		     line_number, filename, line);

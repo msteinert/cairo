@@ -196,12 +196,15 @@ diagonal_wide (cairo_t *cr, int width, int height, int loops)
     return diagonal (cr, width, height, loops);
 }
 
+cairo_bool_t
+line_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "line", NULL);
+}
+
 void
 line (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "line", NULL))
-	return;
-
     cairo_set_source_rgb (cr, 1., 1., 1.);
 
     cairo_perf_run (perf, "line-hh", horizontal_hair, NULL);

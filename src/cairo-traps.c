@@ -43,6 +43,7 @@
 #include "cairo-error-private.h"
 #include "cairo-region-private.h"
 #include "cairo-slope-private.h"
+#include "cairo-traps-private.h"
 
 /* private functions */
 
@@ -606,6 +607,66 @@ _cairo_traps_extract_region (cairo_traps_t   *traps,
 	free (rects);
 
     return status;
+}
+
+cairo_bool_t
+_cairo_traps_to_boxes (cairo_traps_t *traps,
+		       cairo_antialias_t antialias,
+		       cairo_boxes_t *boxes)
+{
+    int i;
+
+    for (i = 0; i < traps->num_traps; i++) {
+	if (traps->traps[i].left.p1.x  != traps->traps[i].left.p2.x ||
+	    traps->traps[i].right.p1.x != traps->traps[i].right.p2.x)
+	    return FALSE;
+    }
+
+    _cairo_boxes_init (boxes);
+
+    boxes->num_boxes    = traps->num_traps;
+    boxes->chunks.base  = (cairo_box_t *) traps->traps;
+    boxes->chunks.count = traps->num_traps;
+    boxes->chunks.size  = traps->num_traps;
+
+    if (antialias != CAIRO_ANTIALIAS_NONE) {
+	for (i = 0; i < traps->num_traps; i++) {
+	    /* Note the traps and boxes alias so we need to take the local copies first. */
+	    cairo_fixed_t x1 = traps->traps[i].left.p1.x;
+	    cairo_fixed_t x2 = traps->traps[i].right.p1.x;
+	    cairo_fixed_t y1 = traps->traps[i].top;
+	    cairo_fixed_t y2 = traps->traps[i].bottom;
+
+	    boxes->chunks.base[i].p1.x = x1;
+	    boxes->chunks.base[i].p1.y = y1;
+	    boxes->chunks.base[i].p2.x = x2;
+	    boxes->chunks.base[i].p2.y = y2;
+
+	    if (boxes->is_pixel_aligned) {
+		boxes->is_pixel_aligned =
+		    _cairo_fixed_is_integer (x1) && _cairo_fixed_is_integer (y1) &&
+		    _cairo_fixed_is_integer (x2) && _cairo_fixed_is_integer (y2);
+	    }
+	}
+    } else {
+	boxes->is_pixel_aligned = TRUE;
+
+	for (i = 0; i < traps->num_traps; i++) {
+	    /* Note the traps and boxes alias so we need to take the local copies first. */
+	    cairo_fixed_t x1 = traps->traps[i].left.p1.x;
+	    cairo_fixed_t x2 = traps->traps[i].right.p1.x;
+	    cairo_fixed_t y1 = traps->traps[i].top;
+	    cairo_fixed_t y2 = traps->traps[i].bottom;
+
+	    /* round down here to match Pixman's behavior when using traps. */
+	    boxes->chunks.base[i].p1.x = _cairo_fixed_round_down (x1);
+	    boxes->chunks.base[i].p1.y = _cairo_fixed_round_down (y1);
+	    boxes->chunks.base[i].p2.x = _cairo_fixed_round_down (x2);
+	    boxes->chunks.base[i].p2.y = _cairo_fixed_round_down (y2);
+	}
+    }
+
+    return TRUE;
 }
 
 /* moves trap points such that they become the actual corners of the trapezoid */

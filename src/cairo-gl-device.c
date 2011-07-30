@@ -113,18 +113,20 @@ static void
 _gl_destroy (void *device)
 {
     cairo_gl_context_t *ctx = device;
-    cairo_scaled_font_t *scaled_font, *next_scaled_font;
     int n;
 
     ctx->acquire (ctx);
 
-    cairo_list_foreach_entry_safe (scaled_font,
-				   next_scaled_font,
-				   cairo_scaled_font_t,
-				   &ctx->fonts,
-				   link)
-    {
-	_cairo_scaled_font_revoke_ownership (scaled_font);
+    while (! cairo_list_is_empty (&ctx->fonts)) {
+	cairo_gl_font_t *font;
+
+	font = cairo_list_first_entry (&ctx->fonts,
+				       cairo_gl_font_t,
+				       link);
+
+	cairo_list_del (&font->base.link);
+	cairo_list_del (&font->link);
+	free (font);
     }
 
     for (n = 0; n < ARRAY_LENGTH (ctx->glyph_cache); n++)
@@ -160,6 +162,8 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     int n;
 
     _cairo_device_init (&ctx->base, &_cairo_gl_device_backend);
+
+    ctx->compositor = _cairo_gl_span_compositor_get ();
 
     memset (ctx->glyph_cache, 0, sizeof (ctx->glyph_cache));
     cairo_list_init (&ctx->fonts);

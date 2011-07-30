@@ -40,6 +40,7 @@
 #include "cairoint.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-pattern-private.h"
+#include "cairo-surface-backend-private.h"
 
 typedef enum {
     /* The 5 basic drawing operations. */
@@ -177,6 +178,11 @@ cairo_private cairo_status_t
 _cairo_recording_surface_get_bbox (cairo_recording_surface_t *recording,
 				   cairo_box_t *bbox,
 				   const cairo_matrix_t *transform);
+
+cairo_private cairo_status_t
+_cairo_recording_surface_get_ink_bbox (cairo_recording_surface_t *surface,
+				       cairo_box_t *bbox,
+				       const cairo_matrix_t *transform);
 
 static inline cairo_bool_t
 _cairo_recording_surface_get_bounds (cairo_surface_t *surface,

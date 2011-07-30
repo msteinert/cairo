@@ -81,7 +81,7 @@
 typedef struct _cairo_script_context cairo_script_context_t;
 typedef struct _cairo_script_surface cairo_script_surface_t;
 typedef struct _cairo_script_implicit_context cairo_script_implicit_context_t;
-typedef struct _cairo_script_surface_font_private cairo_script_surface_font_private_t;
+typedef struct _cairo_script_font cairo_script_font_t;
 
 typedef struct _operand {
     enum {
@@ -121,8 +121,9 @@ struct _cairo_script_context {
     cairo_list_t defines;
 };
 
-struct _cairo_script_surface_font_private {
-    cairo_script_context_t *ctx;
+struct _cairo_script_font {
+    cairo_scaled_font_private_t base;
+
     cairo_bool_t has_sfnt;
     unsigned long id;
     unsigned long subset_glyph_index;
@@ -173,7 +174,8 @@ _cairo_script_surface_create_internal (cairo_script_context_t *ctx,
 				       cairo_surface_t *passthrough);
 
 static void
-_cairo_script_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font);
+_cairo_script_scaled_font_fini (cairo_scaled_font_private_t *abstract_private,
+				cairo_scaled_font_t *scaled_font);
 
 static void
 _cairo_script_implicit_context_init (cairo_script_implicit_context_t *cr);
@@ -2022,14 +2024,11 @@ _device_destroy (void *abstract_device)
     cairo_status_t status;
 
     while (! cairo_list_is_empty (&ctx->fonts)) {
-	cairo_script_surface_font_private_t *font;
+	cairo_script_font_t *font;
 
-	font = cairo_list_first_entry (&ctx->fonts,
-				       cairo_script_surface_font_private_t,
-				       link);
+	font = cairo_list_first_entry (&ctx->fonts, cairo_script_font_t, link);
+	cairo_list_del (&font->base.link);
 	cairo_list_del (&font->link);
-	if (font->parent->surface_private == font)
-	    font->parent->surface_private = NULL;
 	free (font);
     }
 
@@ -2733,31 +2732,39 @@ _emit_font_options (cairo_script_surface_t *surface,
 }
 
 static void
-_cairo_script_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font)
+_cairo_script_scaled_font_fini (cairo_scaled_font_private_t *abstract_private,
+				cairo_scaled_font_t *scaled_font)
 {
-    cairo_script_surface_font_private_t *font_private;
+    cairo_script_font_t *priv = (cairo_script_font_t *)abstract_private;
+    cairo_script_context_t *ctx = (cairo_script_context_t *)abstract_private->key;
+    cairo_status_t status;
 
-    font_private = scaled_font->surface_private;
-    if (font_private != NULL) {
-	cairo_status_t status;
-	cairo_device_t *device;
+    status = cairo_device_acquire (&ctx->base);
+    if (likely (status == CAIRO_STATUS_SUCCESS)) {
+	_cairo_output_stream_printf (ctx->stream,
+				     "/f%lu undef /sf%lu undef\n",
+				     priv->id,
+				     priv->id);
 
-	status = cairo_device_acquire (device = &font_private->ctx->base);
-	if (likely (status == CAIRO_STATUS_SUCCESS)) {
-	    _cairo_output_stream_printf (font_private->ctx->stream,
-					 "/f%lu undef /sf%lu undef\n",
-					 font_private->id,
-					 font_private->id);
-
-	    _bitmap_release_id (&font_private->ctx->font_id, font_private->id);
-	    cairo_list_del (&font_private->link);
-	    free (font_private);
-
-	    cairo_device_release (device);
-	}
-
-	scaled_font->surface_private = NULL;
+	_bitmap_release_id (&ctx->font_id, priv->id);
+	cairo_device_release (&ctx->base);
     }
+
+    cairo_list_del (&priv->link);
+    cairo_list_del (&priv->base.link);
+    free (priv);
+}
+
+static cairo_script_font_t *
+_cairo_script_font_get (cairo_script_context_t *ctx, cairo_scaled_font_t *font)
+{
+    return (cairo_script_font_t *) _cairo_scaled_font_find_private (font, ctx);
+}
+
+static long unsigned
+_cairo_script_font_id (cairo_script_context_t *ctx, cairo_scaled_font_t *font)
+{
+    return _cairo_script_font_get (ctx, font)->id;
 }
 
 static cairo_status_t
@@ -2766,7 +2773,6 @@ _emit_type42_font (cairo_script_surface_t *surface,
 {
     cairo_script_context_t *ctx = to_context (surface);
     const cairo_scaled_font_backend_t *backend;
-    cairo_script_surface_font_private_t *font_private;
     cairo_output_stream_t *base85_stream;
     cairo_output_stream_t *zlib_stream;
     cairo_status_t status, status2;
@@ -2824,27 +2830,29 @@ _emit_type42_font (cairo_script_surface_t *surface,
     if (status == CAIRO_STATUS_SUCCESS)
 	status = status2;
 
-    font_private = scaled_font->surface_private;
     _cairo_output_stream_printf (ctx->stream,
 				 "~> >> font dup /f%lu exch def set-font-face",
-				 font_private->id);
+				 _cairo_script_font_id (ctx, scaled_font));
 
     return status;
 }
 
 static cairo_status_t
 _emit_scaled_font_init (cairo_script_surface_t *surface,
-			cairo_scaled_font_t *scaled_font)
+			cairo_scaled_font_t *scaled_font,
+			cairo_script_font_t **font_out)
 {
     cairo_script_context_t *ctx = to_context (surface);
-    cairo_script_surface_font_private_t *font_private;
+    cairo_script_font_t *font_private;
     cairo_int_status_t status;
 
-    font_private = malloc (sizeof (cairo_script_surface_font_private_t));
+    font_private = malloc (sizeof (cairo_script_font_t));
     if (unlikely (font_private == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    font_private->ctx = ctx;
+    _cairo_scaled_font_attach_private (scaled_font, &font_private->base, ctx,
+				       _cairo_script_scaled_font_fini);
+
     font_private->parent = scaled_font;
     font_private->subset_glyph_index = 0;
     font_private->has_sfnt = TRUE;
@@ -2858,16 +2866,17 @@ _emit_scaled_font_init (cairo_script_surface_t *surface,
 	return status;
     }
 
-    scaled_font->surface_private = font_private;
-    scaled_font->surface_backend = &_cairo_script_surface_backend;
-
     status = _emit_context (surface);
-    if (unlikely (status))
+    if (unlikely (status)) {
+	free (font_private);
 	return status;
+    }
 
     status = _emit_type42_font (surface, scaled_font);
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
+	*font_out = font_private;
 	return status;
+    }
 
     font_private->has_sfnt = FALSE;
     _cairo_output_stream_printf (ctx->stream,
@@ -2883,6 +2892,7 @@ _emit_scaled_font_init (cairo_script_surface_t *surface,
 				 scaled_font->fs_extents.max_y_advance,
 				 font_private->id);
 
+    *font_out = font_private;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -2895,7 +2905,7 @@ _emit_scaled_font (cairo_script_surface_t *surface,
     cairo_font_options_t options;
     cairo_bool_t matrix_updated = FALSE;
     cairo_status_t status;
-    cairo_script_surface_font_private_t *font_private;
+    cairo_script_font_t *font_private;
 
     cairo_scaled_font_get_ctm (scaled_font, &matrix);
     status = _emit_scaling_matrix (surface, &matrix, &matrix_updated);
@@ -2907,13 +2917,7 @@ _emit_scaled_font (cairo_script_surface_t *surface,
 
     surface->cr.current_scaled_font = scaled_font;
 
-    if (! (scaled_font->surface_backend == NULL ||
-	   scaled_font->surface_backend == &_cairo_script_surface_backend))
-    {
-	_cairo_scaled_font_revoke_ownership (scaled_font);
-    }
-
-    font_private = scaled_font->surface_private;
+    font_private = _cairo_script_font_get (ctx, scaled_font);
     if (font_private == NULL) {
 	cairo_scaled_font_get_font_matrix (scaled_font, &matrix);
 	status = _emit_font_matrix (surface, &matrix);
@@ -2925,12 +2929,9 @@ _emit_scaled_font (cairo_script_surface_t *surface,
 	if (unlikely (status))
 	    return status;
 
-	status = _emit_scaled_font_init (surface, scaled_font);
+	status = _emit_scaled_font_init (surface, scaled_font, &font_private);
 	if (unlikely (status))
 	    return status;
-
-	font_private = scaled_font->surface_private;
-	assert (font_private != NULL);
 
 	assert (target_is_active (surface));
 	_cairo_output_stream_printf (ctx->stream,
@@ -2948,17 +2949,17 @@ _emit_scaled_font (cairo_script_surface_t *surface,
 static cairo_status_t
 _emit_scaled_glyph_vector (cairo_script_surface_t *surface,
 			   cairo_scaled_font_t *scaled_font,
+			   cairo_script_font_t *font_private,
 			   cairo_scaled_glyph_t *scaled_glyph)
 {
     cairo_script_context_t *ctx = to_context (surface);
-    cairo_script_surface_font_private_t *font_private;
     cairo_script_implicit_context_t old_cr;
     cairo_status_t status;
     unsigned long index;
 
-    font_private = scaled_font->surface_private;
     index = ++font_private->subset_glyph_index;
-    scaled_glyph->surface_private = (void *) index;
+    scaled_glyph->dev_private_key = ctx;
+    scaled_glyph->dev_private = (void *) index;
 
     _cairo_output_stream_printf (ctx->stream,
 				 "%lu <<\n"
@@ -2997,16 +2998,16 @@ _emit_scaled_glyph_vector (cairo_script_surface_t *surface,
 static cairo_status_t
 _emit_scaled_glyph_bitmap (cairo_script_surface_t *surface,
 			   cairo_scaled_font_t *scaled_font,
+			   cairo_script_font_t *font_private,
 			   cairo_scaled_glyph_t *scaled_glyph)
 {
     cairo_script_context_t *ctx = to_context (surface);
-    cairo_script_surface_font_private_t *font_private;
     cairo_status_t status;
     unsigned long index;
 
-    font_private = scaled_font->surface_private;
     index = ++font_private->subset_glyph_index;
-    scaled_glyph->surface_private = (void *) index;
+    scaled_glyph->dev_private_key = ctx;
+    scaled_glyph->dev_private = (void *) index;
 
     _cairo_output_stream_printf (ctx->stream,
 				 "%lu <<\n"
@@ -3049,15 +3050,10 @@ static cairo_status_t
 _emit_scaled_glyph_prologue (cairo_script_surface_t *surface,
 			     cairo_scaled_font_t *scaled_font)
 {
-    cairo_script_surface_font_private_t *font_private;
+    cairo_script_context_t *ctx = to_context (surface);
 
-    assert (scaled_font->surface_backend == &_cairo_script_surface_backend);
-
-    font_private = scaled_font->surface_private;
-
-    _cairo_output_stream_printf (to_context (surface)->stream,
-				 "f%lu /glyphs get\n",
-				 font_private->id);
+    _cairo_output_stream_printf (ctx->stream, "f%lu /glyphs get\n",
+				 _cairo_script_font_id (ctx, scaled_font));
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -3068,7 +3064,8 @@ _emit_scaled_glyphs (cairo_script_surface_t *surface,
 		     cairo_glyph_t *glyphs,
 		     unsigned int num_glyphs)
 {
-    cairo_script_surface_font_private_t *font_private;
+    cairo_script_context_t *ctx = to_context (surface);
+    cairo_script_font_t *font_private;
     cairo_status_t status;
     unsigned int n;
     cairo_bool_t have_glyph_prologue = FALSE;
@@ -3076,7 +3073,7 @@ _emit_scaled_glyphs (cairo_script_surface_t *surface,
     if (num_glyphs == 0)
 	return CAIRO_STATUS_SUCCESS;
 
-    font_private = scaled_font->surface_private;
+    font_private = _cairo_script_font_get (ctx, scaled_font);
     if (font_private->has_sfnt)
 	return CAIRO_STATUS_SUCCESS;
 
@@ -3091,7 +3088,7 @@ _emit_scaled_glyphs (cairo_script_surface_t *surface,
 	if (unlikely (status))
 	    break;
 
-	if (scaled_glyph->surface_private != NULL)
+	if (scaled_glyph->dev_private_key == ctx)
 	    continue;
 
 	status = _cairo_scaled_glyph_lookup (scaled_font,
@@ -3111,7 +3108,7 @@ _emit_scaled_glyphs (cairo_script_surface_t *surface,
 	    }
 
 	    status = _emit_scaled_glyph_vector (surface,
-						scaled_font,
+						scaled_font, font_private,
 						scaled_glyph);
 	    if (unlikely (status))
 		break;
@@ -3137,6 +3134,7 @@ _emit_scaled_glyphs (cairo_script_surface_t *surface,
 
 	    status = _emit_scaled_glyph_bitmap (surface,
 						scaled_font,
+						font_private,
 						scaled_glyph);
 	    if (unlikely (status))
 		break;
@@ -3234,7 +3232,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 {
     cairo_script_surface_t *surface = abstract_surface;
     cairo_script_context_t *ctx = to_context (surface);
-    cairo_script_surface_font_private_t *font_private;
+    cairo_script_font_t *font_private;
     cairo_scaled_glyph_t *scaled_glyph;
     cairo_matrix_t matrix;
     cairo_status_t status;
@@ -3289,7 +3287,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
     iy -= scaled_font->font_matrix.y0;
 
     _cairo_scaled_font_freeze_cache (scaled_font);
-    font_private = scaled_font->surface_private;
+    font_private = _cairo_script_font_get (ctx, scaled_font);
 
     _cairo_output_stream_printf (ctx->stream,
 				 "[%f %f ",
@@ -3309,7 +3307,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 		goto BAIL;
 	    }
 
-	    if ((long unsigned) scaled_glyph->surface_private > 256)
+	    if ((long unsigned) scaled_glyph->dev_private > 256)
 		break;
 	}
     }
@@ -3378,7 +3376,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 	    if (font_private->has_sfnt)
 		c = glyphs[n].index;
 	    else
-		c = (uint8_t) (long unsigned) scaled_glyph->surface_private;
+		c = (uint8_t) (long unsigned) scaled_glyph->dev_private;
 
 	    _cairo_output_stream_write (base85_stream, &c, 1);
 	} else {
@@ -3387,7 +3385,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 					     glyphs[n].index);
 	    else
 		_cairo_output_stream_printf (ctx->stream, " %lu",
-					     (long unsigned) scaled_glyph->surface_private);
+					     (long unsigned) scaled_glyph->dev_private);
 	}
 
         dx = scaled_glyph->metrics.x_advance;
@@ -3512,40 +3510,23 @@ _cairo_script_surface_backend = {
 
     _cairo_script_surface_acquire_source_image,
     _cairo_script_surface_release_source_image,
-    NULL, /* acquire_dest_image */
-    NULL, /* release_dest_image */
-    NULL, /* clone_similar */
-    NULL, /* composite */
-    NULL, /* fill_rectangles */
-    NULL, /* composite_trapezoids */
-    NULL, /* create_span_renderer */
-    NULL, /* check_span_renderer */
+    _cairo_script_surface_snapshot,
+
     _cairo_script_surface_copy_page,
     _cairo_script_surface_show_page,
+
     _cairo_script_surface_get_extents,
-    NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
+
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
-    _cairo_script_surface_scaled_font_fini,
-    NULL, /* scaled_glyph_fini */
 
-    /* The 5 high level operations */
     _cairo_script_surface_paint,
     _cairo_script_surface_mask,
     _cairo_script_surface_stroke,
     _cairo_script_surface_fill,
-    NULL,
-
-    _cairo_script_surface_snapshot,
-
-    NULL, /* is_similar */
-    /* XXX need fill-stroke for passthrough */
-    NULL, /* fill_stroke */
-    NULL, /* create_solid_pattern_surface */
-    NULL, /* can_repaint_solid_pattern_surface */
-
-    /* The alternate high-level text operation */
+    NULL, /* fill/stroke */
+    NULL, /* glyphs */
     _cairo_script_surface_has_show_text_glyphs,
     _cairo_script_surface_show_text_glyphs
 };

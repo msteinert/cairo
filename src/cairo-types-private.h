@@ -80,7 +80,6 @@ typedef struct _cairo_output_stream cairo_output_stream_t;
 typedef struct _cairo_paginated_surface_backend cairo_paginated_surface_backend_t;
 typedef struct _cairo_path_fixed cairo_path_fixed_t;
 typedef struct _cairo_rectangle_int16 cairo_glyph_size_t;
-typedef struct _cairo_scaled_font_backend   cairo_scaled_font_backend_t;
 typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
 typedef struct _cairo_solid_pattern cairo_solid_pattern_t;
 typedef struct _cairo_surface_attributes cairo_surface_attributes_t;
@@ -89,10 +88,23 @@ typedef struct _cairo_surface_observer cairo_surface_observer_t;
 typedef struct _cairo_surface_snapshot cairo_surface_snapshot_t;
 typedef struct _cairo_surface_subsurface cairo_surface_subsurface_t;
 typedef struct _cairo_surface_wrapper cairo_surface_wrapper_t;
+typedef struct _cairo_traps cairo_traps_t;
+typedef struct _cairo_tristrip cairo_tristrip_t;
 typedef struct _cairo_unscaled_font_backend cairo_unscaled_font_backend_t;
 typedef struct _cairo_xlib_screen_info cairo_xlib_screen_info_t;
 
 typedef cairo_array_t cairo_user_data_array_t;
+
+typedef struct _cairo_scaled_font_private cairo_scaled_font_private_t;
+typedef struct _cairo_scaled_font_backend   cairo_scaled_font_backend_t;
+typedef struct _cairo_scaled_glyph cairo_scaled_glyph_t;
+typedef struct _cairo_scaled_glyph_private cairo_scaled_glyph_private_t;
+
+typedef struct cairo_compositor cairo_compositor_t;
+typedef struct cairo_fallback_compositor cairo_fallback_compositor_t;
+typedef struct cairo_mask_compositor cairo_mask_compositor_t;
+typedef struct cairo_traps_compositor cairo_traps_compositor_t;
+typedef struct cairo_spans_compositor cairo_spans_compositor_t;
 
 struct _cairo_observer {
     cairo_list_t link;
@@ -248,8 +260,6 @@ typedef enum _cairo_internal_device_type {
 } cairo_device_surface_type_t;
 
 #define CAIRO_HAS_TEST_PAGINATED_SURFACE 1
-#define CAIRO_HAS_TEST_NULL_SURFACE 1
-#define CAIRO_HAS_TEST_WRAPPING_SURFACE 1
 
 typedef struct _cairo_slope {
     cairo_fixed_t dx;
@@ -413,24 +423,6 @@ typedef struct _cairo_unscaled_font {
     cairo_reference_count_t		 ref_count;
     const cairo_unscaled_font_backend_t	*backend;
 } cairo_unscaled_font_t;
-
-typedef struct _cairo_scaled_glyph {
-    cairo_hash_entry_t hash_entry;
-
-    cairo_text_extents_t    metrics;		/* user-space metrics */
-    cairo_text_extents_t    fs_metrics;		/* font-space metrics */
-    cairo_box_t		    bbox;		/* device-space bounds */
-    int16_t                 x_advance;		/* device-space rounded X advance */
-    int16_t                 y_advance;		/* device-space rounded Y advance */
-
-    unsigned int	    has_info;
-    cairo_image_surface_t   *surface;		/* device-space image */
-    cairo_path_fixed_t	    *path;		/* device-space outline */
-    cairo_surface_t         *recording_surface;	/* device-space recording-surface */
-
-    void		    *surface_private;	/* for the surface backend */
-} cairo_scaled_glyph_t;
-
 CAIRO_END_DECLS
 
 #endif /* CAIRO_TYPES_PRIVATE_H */

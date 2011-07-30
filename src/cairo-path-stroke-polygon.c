@@ -104,6 +104,7 @@ within_tolerance (const cairo_point_t *p1,
 	      const cairo_point_t *p2,
 	      cairo_uint64_t tolerance)
 {
+    return FALSE;
     return _cairo_int64_lt (point_distance_sq (p1, p2), tolerance);
 }
 
@@ -115,6 +116,7 @@ contour_add_point (struct stroker *stroker,
     if (! within_tolerance (point, _cairo_contour_last_point (&c->contour),
 			stroker->contour_tolerance))
 	_cairo_contour_add_point (&c->contour, point);
+    //*_cairo_contour_last_point (&c->contour) = *point;
 }
 
 static void
@@ -789,7 +791,7 @@ outer_join (struct stroker *stroker,
 	     * Make sure the miter point line lies between the two
 	     * faces by comparing the slopes
 	     */
-	    if (1 || slope_compare_sgn (fdx1, fdy1, mdx, mdy) !=
+	    if (slope_compare_sgn (fdx1, fdy1, mdx, mdy) !=
 		slope_compare_sgn (fdx2, fdy2, mdx, mdy))
 	    {
 		cairo_point_t p;
@@ -1091,6 +1093,7 @@ line_to (void *closure,
     cairo_stroke_face_t start;
     cairo_point_t *p1 = &stroker->current_face.point;
     cairo_slope_t dev_slope;
+    int move_last = 0;
 
     stroker->has_initial_sub_path = TRUE;
 
@@ -1105,15 +1108,21 @@ line_to (void *closure,
     compute_face (p1, &dev_slope, stroker, &start);
 
     if (stroker->has_current_face) {
-	int clockwise = join_is_clockwise (&stroker->current_face, &start);
-	/* Join with final face from previous segment */
-	if (! within_tolerance (&stroker->current_face.ccw, &start.ccw,
-				stroker->contour_tolerance) ||
-	    ! within_tolerance (&stroker->current_face.cw, &start.cw,
-				stroker->contour_tolerance))
-	{
-	    outer_join (stroker, &stroker->current_face, &start, clockwise);
-	    inner_join (stroker, &stroker->current_face, &start, clockwise);
+	int clockwise = _cairo_slope_compare (&stroker->current_face.dev_vector,
+					      &start.dev_vector);
+	if (clockwise == 0) {
+	    move_last = 1;
+	} else {
+	    clockwise = clockwise < 0;
+	    /* Join with final face from previous segment */
+	    if (! within_tolerance (&stroker->current_face.ccw, &start.ccw,
+				    stroker->contour_tolerance) ||
+		! within_tolerance (&stroker->current_face.cw, &start.cw,
+				    stroker->contour_tolerance))
+	    {
+		outer_join (stroker, &stroker->current_face, &start, clockwise);
+		inner_join (stroker, &stroker->current_face, &start, clockwise);
+	    }
 	}
     } else {
 	if (! stroker->has_first_face) {
@@ -1134,8 +1143,13 @@ line_to (void *closure,
     stroker->current_face.cw.x += dev_slope.dx;
     stroker->current_face.cw.y += dev_slope.dy;
 
-    contour_add_point (stroker, &stroker->cw, &stroker->current_face.cw);
-    contour_add_point (stroker, &stroker->ccw, &stroker->current_face.ccw);
+    if (move_last) {
+	*_cairo_contour_last_point (&stroker->cw.contour) = stroker->current_face.cw;
+	*_cairo_contour_last_point (&stroker->ccw.contour) = stroker->current_face.ccw;
+    } else {
+	contour_add_point (stroker, &stroker->cw, &stroker->current_face.cw);
+	contour_add_point (stroker, &stroker->ccw, &stroker->current_face.ccw);
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1186,6 +1200,37 @@ spline_to (void *closure,
 		 clockwise, outer);
     } else {
 	compute_face (point, tangent, stroker, &face);
+
+	if (face.dev_slope.x * stroker->current_face.dev_slope.x +
+	    face.dev_slope.y * stroker->current_face.dev_slope.y < 0)
+	{
+	    const cairo_point_t *inpt, *outpt;
+	    struct stroke_contour *outer;
+	    int clockwise = join_is_clockwise (&stroker->current_face, &face);
+
+	    stroker->current_face.cw.x += face.point.x - stroker->current_face.point.x;
+	    stroker->current_face.cw.y += face.point.y - stroker->current_face.point.y;
+	    contour_add_point (stroker, &stroker->cw, &stroker->current_face.cw);
+
+	    stroker->current_face.ccw.x += face.point.x - stroker->current_face.point.x;
+	    stroker->current_face.ccw.y += face.point.y - stroker->current_face.point.y;
+	    contour_add_point (stroker, &stroker->ccw, &stroker->current_face.ccw);
+
+	    if (clockwise) {
+		inpt = &stroker->current_face.cw;
+		outpt = &face.cw;
+		outer = &stroker->cw;
+	    } else {
+		inpt = &stroker->current_face.ccw;
+		outpt = &face.ccw;
+		outer = &stroker->ccw;
+	    }
+	    add_fan (stroker,
+		     &stroker->current_face.dev_vector,
+		     &face.dev_vector,
+		     &stroker->current_face.point, inpt, outpt,
+		     clockwise, outer);
+	}
 
 	contour_add_point (stroker, &stroker->cw, &face.cw);
 	contour_add_point (stroker, &stroker->ccw, &face.ccw);
@@ -1328,6 +1373,8 @@ _cairo_path_fixed_stroke_to_polygon (const cairo_path_fixed_t	*path,
     stroker.has_initial_sub_path = FALSE;
 
 #if DEBUG
+    remove ("contours.txt");
+    remove ("polygons.txt");
     _cairo_contour_init (&stroker.path, 0);
 #endif
     _cairo_contour_init (&stroker.cw.contour, 1);

@@ -82,11 +82,14 @@ do_pythagoras_tree (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
+cairo_bool_t
+pythagoras_tree_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "pythagoras-tree", NULL);
+}
+
 void
 pythagoras_tree (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "pythagoras-tree", NULL))
-	return;
-
     cairo_perf_run (perf, "pythagoras-tree", do_pythagoras_tree, NULL);
 }

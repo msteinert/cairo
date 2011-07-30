@@ -527,7 +527,7 @@ _device_finish (void *device)
 	font = cairo_list_first_entry (&connection->fonts,
 				       cairo_xcb_font_t,
 				       link);
-	_cairo_xcb_font_finish (font);
+	_cairo_xcb_font_close (font);
     }
 
     while (! cairo_list_is_empty (&connection->screens)) {

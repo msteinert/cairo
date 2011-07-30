@@ -7,6 +7,7 @@ libcairo_perf_micro_sources = \
 	hatching.c		\
 	hash-table.c		\
 	line.c			\
+	a1-line.c		\
 	long-lines.c		\
 	mosaic.c		\
 	paint.c			\
@@ -35,7 +36,11 @@ libcairo_perf_micro_sources = \
 	wide-fills.c		\
 	many-curves.c		\
 	curve.c			\
+	a1-curve.c		\
 	spiral.c		\
+	pixel.c			\
+	sierpinski.c		\
+	fill-clip.c		\
 	$(NULL)
 
 libcairo_perf_micro_headers = \

@@ -3630,8 +3630,7 @@ _map_to_image (csi_t *ctx)
     csi_object_t obj;
     csi_array_t *array;
     csi_status_t status;
-    cairo_rectangle_t extents;
-    cairo_rectangle_t *r;
+    cairo_rectangle_int_t extents, *r;
     cairo_surface_t *surface;
 
     check (2);
@@ -3647,11 +3646,12 @@ _map_to_image (csi_t *ctx)
     switch (array->stack.len) {
     case 0:
 	r = NULL;
+	break;
     case 4:
-	extents.x = _csi_object_as_real (&array->stack.objects[0]);
-	extents.y = _csi_object_as_real (&array->stack.objects[1]);
-	extents.width = _csi_object_as_real (&array->stack.objects[2]);
-	extents.height = _csi_object_as_real (&array->stack.objects[3]);
+	extents.x = floor (_csi_object_as_real (&array->stack.objects[0]));
+	extents.y = floor (_csi_object_as_real (&array->stack.objects[1]));
+	extents.width = ceil (_csi_object_as_real (&array->stack.objects[2]));
+	extents.height = ceil (_csi_object_as_real (&array->stack.objects[3]));
 	r = &extents;
 	break;
     default:

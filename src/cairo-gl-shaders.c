@@ -108,6 +108,7 @@ _cairo_gl_shader_compile (cairo_gl_context_t *ctx,
 			  cairo_gl_shader_t *shader,
 			  cairo_gl_var_type_t src,
 			  cairo_gl_var_type_t mask,
+			  cairo_bool_t use_coverage,
 			  const char *fragment_text);
 
 /* OpenGL Core 2.0 API. */
@@ -426,6 +427,7 @@ _cairo_gl_context_init_shaders (cairo_gl_context_t *ctx)
 				       &ctx->fill_rectangles_shader,
 				       CAIRO_GL_VAR_NONE,
 				       CAIRO_GL_VAR_NONE,
+				       FALSE,
 				       fill_fs_source);
     if (unlikely (status))
 	return status;
@@ -475,8 +477,6 @@ cairo_gl_operand_get_var_type (cairo_gl_operand_type_t type)
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
     case CAIRO_GL_OPERAND_TEXTURE:
         return CAIRO_GL_VAR_TEXCOORDS;
-    case CAIRO_GL_OPERAND_SPANS:
-        return CAIRO_GL_VAR_COVERAGE;
     }
 }
 
@@ -491,13 +491,8 @@ cairo_gl_shader_emit_variable (cairo_output_stream_t *stream,
     case CAIRO_GL_VAR_NONE:
         break;
     case CAIRO_GL_VAR_TEXCOORDS:
-        _cairo_output_stream_printf (stream, 
-                                     "varying vec2 %s_texcoords;\n", 
-                                     operand_names[name]);
-        break;
-    case CAIRO_GL_VAR_COVERAGE:
-        _cairo_output_stream_printf (stream, 
-                                     "varying float %s_coverage;\n", 
+        _cairo_output_stream_printf (stream,
+                                     "varying vec2 %s_texcoords;\n",
                                      operand_names[name]);
         break;
     }
@@ -514,21 +509,29 @@ cairo_gl_shader_emit_vertex (cairo_output_stream_t *stream,
     case CAIRO_GL_VAR_NONE:
         break;
     case CAIRO_GL_VAR_TEXCOORDS:
-        _cairo_output_stream_printf (stream, 
+        _cairo_output_stream_printf (stream,
                                      "    %s_texcoords = MultiTexCoord%d.xy;\n",
                                      operand_names[name], name);
         break;
-    case CAIRO_GL_VAR_COVERAGE:
-        _cairo_output_stream_printf (stream, 
-                                     "    %s_coverage = Color.a;\n",
-                                     operand_names[name]);
-        break;
     }
+}
+
+static void
+cairo_gl_shader_dcl_coverage (cairo_output_stream_t *stream)
+{
+    _cairo_output_stream_printf (stream, "varying float coverage;\n");
+}
+
+static void
+cairo_gl_shader_def_coverage (cairo_output_stream_t *stream)
+{
+    _cairo_output_stream_printf (stream, "    coverage = Color.a;\n");
 }
 
 static cairo_status_t
 cairo_gl_shader_get_vertex_source (cairo_gl_var_type_t src,
                                    cairo_gl_var_type_t mask,
+				   cairo_bool_t use_coverage,
                                    cairo_gl_var_type_t dest,
 				   char **out)
 {
@@ -539,6 +542,8 @@ cairo_gl_shader_get_vertex_source (cairo_gl_var_type_t src,
 
     cairo_gl_shader_emit_variable (stream, src, CAIRO_GL_TEX_SOURCE);
     cairo_gl_shader_emit_variable (stream, mask, CAIRO_GL_TEX_MASK);
+    if (use_coverage)
+	cairo_gl_shader_dcl_coverage (stream);
 
     _cairo_output_stream_printf (stream,
 				 "attribute vec4 Vertex;\n"
@@ -552,6 +557,8 @@ cairo_gl_shader_get_vertex_source (cairo_gl_var_type_t src,
 
     cairo_gl_shader_emit_vertex (stream, src, CAIRO_GL_TEX_SOURCE);
     cairo_gl_shader_emit_vertex (stream, mask, CAIRO_GL_TEX_MASK);
+    if (use_coverage)
+	cairo_gl_shader_def_coverage (stream);
 
     _cairo_output_stream_write (stream,
 				"}\n\0", 3);
@@ -774,15 +781,6 @@ cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
 	    namestr, namestr, namestr, namestr, namestr,
 	    namestr, namestr, namestr, rectstr, namestr);
 	break;
-    case CAIRO_GL_OPERAND_SPANS:
-        _cairo_output_stream_printf (stream, 
-            "varying float %s_coverage;\n"
-            "vec4 get_%s()\n"
-            "{\n"
-            "    return vec4(0, 0, 0, %s_coverage);\n"
-            "}\n",
-            namestr, namestr, namestr);
-        break;
     }
 }
 
@@ -842,6 +840,7 @@ cairo_gl_shader_get_fragment_source (cairo_gl_context_t *ctx,
                                      cairo_gl_shader_in_t in,
                                      cairo_gl_operand_t *src,
                                      cairo_gl_operand_t *mask,
+				     cairo_bool_t use_coverage,
                                      cairo_gl_operand_type_t dest_type,
 				     char **out)
 {
@@ -849,6 +848,7 @@ cairo_gl_shader_get_fragment_source (cairo_gl_context_t *ctx,
     unsigned char *source;
     unsigned long length;
     cairo_status_t status;
+    const char *coverage_str;
 
     _cairo_output_stream_printf (stream,
 	"#ifdef GL_ES\n"
@@ -865,6 +865,10 @@ cairo_gl_shader_get_fragment_source (cairo_gl_context_t *ctx,
     cairo_gl_shader_emit_color (stream, ctx, src, CAIRO_GL_TEX_SOURCE);
     cairo_gl_shader_emit_color (stream, ctx, mask, CAIRO_GL_TEX_MASK);
 
+    coverage_str = "";
+    if (use_coverage)
+	coverage_str = " * coverage.a";
+
     _cairo_output_stream_printf (stream,
         "void main()\n"
         "{\n");
@@ -874,15 +878,18 @@ cairo_gl_shader_get_fragment_source (cairo_gl_context_t *ctx,
         ASSERT_NOT_REACHED;
     case CAIRO_GL_SHADER_IN_NORMAL:
         _cairo_output_stream_printf (stream,
-            "    gl_FragColor = get_source() * get_mask().a;\n");
+            "    gl_FragColor = get_source() * get_mask().a%s;\n",
+	    coverage_str);
         break;
     case CAIRO_GL_SHADER_IN_CA_SOURCE:
         _cairo_output_stream_printf (stream,
-            "    gl_FragColor = get_source() * get_mask();\n");
+            "    gl_FragColor = get_source() * get_mask()%s;\n",
+	    coverage_str);
         break;
     case CAIRO_GL_SHADER_IN_CA_SOURCE_ALPHA:
         _cairo_output_stream_printf (stream,
-            "    gl_FragColor = get_source().a * get_mask();\n");
+            "    gl_FragColor = get_source().a * get_mask()%s;\n",
+	    coverage_str);
         break;
     }
 
@@ -902,6 +909,7 @@ _cairo_gl_shader_compile (cairo_gl_context_t *ctx,
 			  cairo_gl_shader_t *shader,
 			  cairo_gl_var_type_t src,
 			  cairo_gl_var_type_t mask,
+			  cairo_bool_t use_coverage,
 			  const char *fragment_text)
 {
     unsigned int vertex_shader;
@@ -909,12 +917,14 @@ _cairo_gl_shader_compile (cairo_gl_context_t *ctx,
 
     assert (shader->program == 0);
 
-    vertex_shader = cairo_gl_var_type_hash (src, mask, CAIRO_GL_VAR_NONE);
+    vertex_shader = cairo_gl_var_type_hash (src, mask, use_coverage,
+					    CAIRO_GL_VAR_NONE);
     if (ctx->vertex_shaders[vertex_shader] == 0) {
 	char *source;
 
 	status = cairo_gl_shader_get_vertex_source (src,
 						    mask,
+						    use_coverage,
 						    CAIRO_GL_VAR_NONE,
 						    &source);
         if (unlikely (status))
@@ -1042,6 +1052,7 @@ cairo_status_t
 _cairo_gl_get_shader_by_type (cairo_gl_context_t *ctx,
                               cairo_gl_operand_t *source,
                               cairo_gl_operand_t *mask,
+			      cairo_bool_t use_coverage,
                               cairo_gl_shader_in_t in,
                               cairo_gl_shader_t **shader)
 {
@@ -1071,6 +1082,7 @@ _cairo_gl_get_shader_by_type (cairo_gl_context_t *ctx,
 						  in,
 						  source,
 						  mask,
+						  use_coverage,
 						  CAIRO_GL_OPERAND_NONE,
 						  &fs_source);
     if (unlikely (status))
@@ -1090,6 +1102,7 @@ _cairo_gl_get_shader_by_type (cairo_gl_context_t *ctx,
 				       &entry->shader,
 				       cairo_gl_operand_get_var_type (source->type),
 				       cairo_gl_operand_get_var_type (mask->type),
+				       use_coverage,
 				       fs_source);
     free (fs_source);
 

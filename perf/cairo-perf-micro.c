@@ -50,12 +50,13 @@
 
 #define CAIRO_PERF_ITERATIONS_DEFAULT		100
 #define CAIRO_PERF_LOW_STD_DEV			0.03
-#define CAIRO_PERF_STABLE_STD_DEV_COUNT 	5
-#define CAIRO_PERF_ITERATION_MS_DEFAULT 	2000
+#define CAIRO_PERF_STABLE_STD_DEV_COUNT		5
+#define CAIRO_PERF_ITERATION_MS_DEFAULT		2000
 #define CAIRO_PERF_ITERATION_MS_FAST		5
 
 typedef struct _cairo_perf_case {
-    CAIRO_PERF_DECL (*run);
+    CAIRO_PERF_RUN_DECL (*run);
+    cairo_bool_t (*enabled) (cairo_perf_t *perf);
     unsigned int min_size;
     unsigned int max_size;
 } cairo_perf_case_t;
@@ -251,7 +252,7 @@ cairo_perf_run (cairo_perf_t	   *perf,
 					       cairo_boilerplate_content (perf->target->content));
 	    else
 		cairo_save (perf->cr);
-	    times[i] = perf_func (perf->cr, perf->size, perf->size, loops) / loops;
+	    times[i] = perf_func (perf->cr, perf->size, perf->size, loops) ;
 	    if (similar)
 		cairo_pattern_destroy (cairo_pop_group (perf->cr));
 	    else
@@ -263,7 +264,7 @@ cairo_perf_run (cairo_perf_t	   *perf,
 			    _content_to_string (perf->target->content, similar),
 			    name, perf->size,
 			    _cairo_time_to_double (_cairo_time_from_s (1.)) / 1000.);
-		printf (" %lld", (long long) times[i]);
+		printf (" %lld", (long long) (times[i] / (double) loops));
 	    } else if (! perf->exact_iterations) {
 		if (i > 0) {
 		    _cairo_stats_compute (&stats, times, i+1);
@@ -287,18 +288,18 @@ cairo_perf_run (cairo_perf_t	   *perf,
 	    if (count_func != NULL) {
 		double count = count_func (perf->cr, perf->size, perf->size);
 		fprintf (perf->summary,
-			 "%10lld %#8.3f %#8.3f %#5.2f%% %3d: %.2f\n",
-			 (long long) stats.min_ticks,
-			 _cairo_time_to_s (stats.min_ticks) * 1000.0,
-			 _cairo_time_to_s (stats.median_ticks) * 1000.0,
+			 "%10lld/%d %#8.3f %#8.3f %#5.2f%% %3d: %.2f\n",
+			 (long long) stats.min_ticks, loops,
+			 _cairo_time_to_s (stats.min_ticks) * 1000.0 / loops,
+			 _cairo_time_to_s (stats.median_ticks) * 1000.0 / loops,
 			 stats.std_dev * 100.0, stats.iterations,
 			 count / _cairo_time_to_s (stats.min_ticks));
 	    } else {
 		fprintf (perf->summary,
-			 "%10lld %#8.3f %#8.3f %#5.2f%% %3d\n",
-			 (long long) stats.min_ticks,
-			 _cairo_time_to_s (stats.min_ticks) * 1000.0,
-			 _cairo_time_to_s (stats.median_ticks) * 1000.0,
+			 "%10lld/%d %#8.3f %#8.3f %#5.2f%% %3d\n",
+			 (long long) stats.min_ticks, loops,
+			 _cairo_time_to_s (stats.min_ticks) * 1000.0 / loops,
+			 _cairo_time_to_s (stats.median_ticks) * 1000.0 / loops,
 			 stats.std_dev * 100.0, stats.iterations);
 	    }
 	    fflush (perf->summary);
@@ -491,6 +492,9 @@ main (int   argc,
 	for (j = 0; perf_cases[j].run; j++) {
 	    const cairo_perf_case_t *perf_case = &perf_cases[j];
 
+	    if (! perf_case->enabled (&perf))
+		continue;
+
 	    for (perf.size = perf_case->min_size;
 		 perf.size <= perf_case->max_size;
 		 perf.size *= 2)
@@ -536,42 +540,48 @@ main (int   argc,
     return 0;
 }
 
+#define FUNC(f) f, f##_enabled
 const cairo_perf_case_t perf_cases[] = {
-    { paint,  64, 512},
-    { paint_with_alpha,  64, 512},
-    { fill,   64, 512},
-    { stroke, 64, 512},
-    { text,   64, 512},
-    { glyphs, 64, 512},
-    { mask,   64, 512},
-    { line,  32, 512},
-    { curve,  32, 512},
-    { disjoint,   64, 512},
-    { hatching,   64, 512},
-    { tessellate, 100, 100},
-    { subimage_copy, 16, 512},
-    { hash_table, 16, 16},
-    { pattern_create_radial, 16, 16},
-    { zrusin, 415, 415},
-    { world_map, 800, 800},
-    { box_outline, 100, 100},
-    { mosaic, 800, 800 },
-    { long_lines, 100, 100},
-    { unaligned_clip, 100, 100},
-    { rectangles, 512, 512},
-    { rounded_rectangles, 512, 512},
-    { long_dashed_lines, 512, 512},
-    { composite_checker, 16, 512},
-    { twin, 800, 800},
-    { dragon, 1024, 1024 },
-    { pythagoras_tree, 768, 768 },
-    { intersections, 512, 512 },
-    { many_strokes, 32, 512 },
-    { wide_strokes, 32, 512 },
-    { many_fills, 32, 512 },
-    { wide_fills, 32, 512 },
-    { many_curves, 32, 512 },
-    { spiral, 512, 512 },
-    { wave, 500, 500 },
+    { FUNC(pixel),  1, 1 },
+    { FUNC(paint),  64, 512},
+    { FUNC(paint_with_alpha),  64, 512},
+    { FUNC(fill),   64, 512},
+    { FUNC(stroke), 64, 512},
+    { FUNC(text),   64, 512},
+    { FUNC(glyphs), 64, 512},
+    { FUNC(mask),   64, 512},
+    { FUNC(line),  32, 512},
+    { FUNC(a1_line),  32, 512},
+    { FUNC(curve),  32, 512},
+    { FUNC(a1_curve),  32, 512},
+    { FUNC(disjoint),   64, 512},
+    { FUNC(hatching),   64, 512},
+    { FUNC(tessellate), 100, 100},
+    { FUNC(subimage_copy), 16, 512},
+    { FUNC(hash_table), 16, 16},
+    { FUNC(pattern_create_radial), 16, 16},
+    { FUNC(zrusin), 415, 415},
+    { FUNC(world_map), 800, 800},
+    { FUNC(box_outline), 100, 100},
+    { FUNC(mosaic), 800, 800 },
+    { FUNC(long_lines), 100, 100},
+    { FUNC(unaligned_clip), 100, 100},
+    { FUNC(rectangles), 512, 512},
+    { FUNC(rounded_rectangles), 512, 512},
+    { FUNC(long_dashed_lines), 512, 512},
+    { FUNC(composite_checker), 16, 512},
+    { FUNC(twin), 800, 800},
+    { FUNC(dragon), 1024, 1024 },
+    { FUNC(sierpinski), 32, 1024 },
+    { FUNC(pythagoras_tree), 768, 768 },
+    { FUNC(intersections), 512, 512 },
+    { FUNC(many_strokes), 32, 512 },
+    { FUNC(wide_strokes), 32, 512 },
+    { FUNC(many_fills), 32, 512 },
+    { FUNC(wide_fills), 32, 512 },
+    { FUNC(many_curves), 32, 512 },
+    { FUNC(spiral), 512, 512 },
+    { FUNC(wave), 500, 500 },
+    { FUNC(fill_clip), 16, 512 },
     { NULL }
 };

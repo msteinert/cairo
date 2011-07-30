@@ -889,6 +889,9 @@ _cairo_matrix_transformed_circle_major_axis (const cairo_matrix_t *matrix,
 {
     double  a, b, c, d, f, g, h, i, j;
 
+    if (_cairo_matrix_has_unity_scale (matrix))
+	return radius;
+
     _cairo_matrix_get_affine (matrix,
                               &a, &b,
                               &c, &d,
@@ -1042,6 +1045,9 @@ _cairo_matrix_is_pixman_translation (const cairo_matrix_t     *matrix,
 
     if (!_cairo_matrix_is_translation (matrix))
 	return FALSE;
+
+    if (matrix->x0 == 0. && matrix->y0 == 0.)
+	return TRUE;
 
     tx = matrix->x0 + *x_offset;
     ty = matrix->y0 + *y_offset;

@@ -115,8 +115,10 @@ typedef cairo_status_t glitter_status_t;
 
 /* The input coordinate scale and the rasterisation grid scales. */
 #define GLITTER_INPUT_BITS CAIRO_FIXED_FRAC_BITS
-#define GRID_X_BITS CAIRO_FIXED_FRAC_BITS
-#define GRID_Y 15
+//#define GRID_X_BITS CAIRO_FIXED_FRAC_BITS
+//#define GRID_Y 15
+#define GRID_X_BITS 2
+#define GRID_Y_BITS 2
 
 /* Set glitter up to use a cairo span renderer to do the coverage
  * blitting. */
@@ -162,15 +164,6 @@ glitter_scan_converter_reset(
     glitter_scan_converter_t *converter,
     int xmin, int ymin,
     int xmax, int ymax);
-
-/* Add a new polygon edge from pixel (x1,y1) to (x2,y2) to the scan
- * converter.  The coordinates represent pixel positions scaled by
- * 2**GLITTER_PIXEL_BITS.  If this function fails then the scan
- * converter should be reset or destroyed.  Dir must be +1 or -1,
- * with the latter reversing the orientation of the edge. */
-I void
-glitter_scan_converter_add_edge (glitter_scan_converter_t *converter,
-				 const cairo_edge_t *edge);
 
 /* Render the polygon in the scan converter to the given A8 format
  * image raster.  Only the pixels accessible as pixels[y*stride+x] for
@@ -348,10 +341,7 @@ struct edge {
     grid_scaled_y_t dy;
 };
 
-/* Number of subsample rows per y-bucket. Must be GRID_Y. */
-#define EDGE_Y_BUCKET_HEIGHT GRID_Y
-
-#define EDGE_Y_BUCKET_INDEX(y, ymin) (((y) - (ymin))/EDGE_Y_BUCKET_HEIGHT)
+#define EDGE_Y_BUCKET_INDEX(y, ymin) (((y) - (ymin))/GRID_Y)
 
 /* A collection of sorted and vertically clipped edges of the polygon.
  * Edges are moved from the polygon to an active list while scan
@@ -707,16 +697,14 @@ cell_list_find (struct cell_list *cells, int x)
 {
     struct cell *tail = cells->cursor;
 
-    assert (x >= tail->x);
-
     if (tail->x == x)
 	return tail;
 
     while (1) {
 	UNROLL3({
-	    if (tail->next->x > x)
-		break;
-	    tail = tail->next;
+		if (tail->next->x > x)
+			break;
+		tail = tail->next;
 	});
     }
 
@@ -738,15 +726,12 @@ cell_list_find_pair(struct cell_list *cells, int x1, int x2)
 {
     struct cell_pair pair;
 
-    assert (x2 > x1);
-    assert (x1 >= cells->cursor->x);
-
     pair.cell1 = cells->cursor;
     while (1) {
 	UNROLL3({
-	    if (pair.cell1->next->x > x1)
-		break;
-	    pair.cell1 = pair.cell1->next;
+		if (pair.cell1->next->x > x1)
+			break;
+		pair.cell1 = pair.cell1->next;
 	});
     }
     if (pair.cell1->x != x1)
@@ -755,9 +740,9 @@ cell_list_find_pair(struct cell_list *cells, int x1, int x2)
     pair.cell2 = pair.cell1;
     while (1) {
 	UNROLL3({
-	    if (pair.cell2->next->x > x2)
-		break;
-	    pair.cell2 = pair.cell2->next;
+		if (pair.cell2->next->x > x2)
+			break;
+		pair.cell2 = pair.cell2->next;
 	});
     }
     if (pair.cell2->x != x2)
@@ -954,12 +939,11 @@ polygon_reset (struct polygon *polygon,
 	       grid_scaled_y_t ymax)
 {
     unsigned h = ymax - ymin;
-    unsigned num_buckets = EDGE_Y_BUCKET_INDEX(ymax + EDGE_Y_BUCKET_HEIGHT-1,
-					       ymin);
+    unsigned num_buckets = EDGE_Y_BUCKET_INDEX(ymax + GRID_Y-1, ymin);
 
     pool_reset(polygon->edge_pool.base);
 
-    if (unlikely (h > 0x7FFFFFFFU - EDGE_Y_BUCKET_HEIGHT))
+    if (unlikely (h > 0x7FFFFFFFU - GRID_Y))
 	goto bail_no_mem; /* even if you could, you wouldn't want to. */
 
     if (polygon->y_buckets != polygon->y_buckets_embedded)
@@ -978,16 +962,15 @@ polygon_reset (struct polygon *polygon,
     polygon->ymax = ymax;
     return GLITTER_STATUS_SUCCESS;
 
- bail_no_mem:
+bail_no_mem:
     polygon->ymin = 0;
     polygon->ymax = 0;
     return GLITTER_STATUS_NO_MEMORY;
 }
 
 static void
-_polygon_insert_edge_into_its_y_bucket(
-    struct polygon *polygon,
-    struct edge *e)
+_polygon_insert_edge_into_its_y_bucket(struct polygon *polygon,
+				       struct edge *e)
 {
     unsigned ix = EDGE_Y_BUCKET_INDEX(e->ytop, polygon->ymin);
     struct edge **ptail = &polygon->y_buckets[ix];
@@ -1191,7 +1174,7 @@ sort_edges (struct edge *list,
     return remaining;
 }
 
-static struct edge *
+ static struct edge *
 merge_unsorted_edges (struct edge *head, struct edge *unsorted)
 {
     sort_edges (unsorted, UINT_MAX, &unsorted);
@@ -1281,47 +1264,6 @@ polygon_fill_buckets (struct active_list *active,
 
     active->is_vertical = is_vertical;
     active->min_height = min_height;
-}
-
-/* Advance the edges on the active list by one subsample row by
- * updating their x positions.  Drop edges from the list that end. */
-inline static void
-active_list_substep_edges(struct active_list *active)
-{
-    grid_scaled_x_t prev_x = INT_MIN;
-    struct edge *edge = active->head.next;
-
-    while (edge != &active->tail) {
-	struct edge *next = edge->next;
-
-	if (--edge->height_left) {
-	    edge->x.quo += edge->dxdy.quo;
-	    edge->x.rem += edge->dxdy.rem;
-	    if (edge->x.rem >= 0) {
-		++edge->x.quo;
-		edge->x.rem -= edge->dy;
-	    }
-
-	    if (edge->x.quo < prev_x) {
-		struct edge *pos = edge->prev;
-		pos->next = next;
-		next->prev = pos;
-		do {
-		    pos = pos->prev;
-		} while (edge->x.quo < pos->x.quo);
-		pos->next->prev = edge;
-		edge->next = pos->next;
-		edge->prev = pos;
-		pos->next = edge;
-	    } else
-		prev_x = edge->x.quo;
-	} else {
-	    edge->prev->next = next;
-	    next->prev = edge->prev;
-	}
-
-	edge = next;
-    }
 }
 
 inline static void
@@ -1481,9 +1423,9 @@ int_to_grid_scaled(int i, int scale)
 
 I glitter_status_t
 glitter_scan_converter_reset(
-    glitter_scan_converter_t *converter,
-    int xmin, int ymin,
-    int xmax, int ymax)
+			     glitter_scan_converter_t *converter,
+			     int xmin, int ymin,
+			     int xmax, int ymax)
 {
     glitter_status_t status;
 
@@ -1536,11 +1478,16 @@ glitter_scan_converter_reset(
 #endif
 
 #define INPUT_TO_GRID_general(in, out, grid_scale) do {		\
-	long long tmp__ = (long long)(grid_scale) * (in);	\
-	tmp__ >>= GLITTER_INPUT_BITS;				\
-	(out) = tmp__;						\
+    long long tmp__ = (long long)(grid_scale) * (in);	\
+    tmp__ >>= GLITTER_INPUT_BITS;				\
+    (out) = tmp__;						\
 } while (0)
 
+/* Add a new polygon edge from pixel (x1,y1) to (x2,y2) to the scan
+ * converter.  The coordinates represent pixel positions scaled by
+ * 2**GLITTER_PIXEL_BITS.  If this function fails then the scan
+ * converter should be reset or destroyed.  Dir must be +1 or -1,
+ * with the latter reversing the orientation of the edge. */
 I void
 glitter_scan_converter_add_edge (glitter_scan_converter_t *converter,
 				 const cairo_edge_t *edge)
@@ -1566,18 +1513,6 @@ glitter_scan_converter_add_edge (glitter_scan_converter_t *converter,
     polygon_add_edge (converter->polygon, &e);
 }
 
-#ifndef GLITTER_BLIT_COVERAGES_BEGIN
-# define GLITTER_BLIT_COVERAGES_BEGIN
-#endif
-
-#ifndef GLITTER_BLIT_COVERAGES_END
-# define GLITTER_BLIT_COVERAGES_END
-#endif
-
-#ifndef GLITTER_BLIT_COVERAGES_EMPTY
-# define GLITTER_BLIT_COVERAGES_EMPTY(y0, y1, xmin, xmax)
-#endif
-
 static void
 step_edges (struct active_list *active, int count)
 {
@@ -1594,11 +1529,11 @@ step_edges (struct active_list *active, int count)
 }
 
 static glitter_status_t
-blit (struct cell_list *cells,
-      cairo_span_renderer_t *renderer,
-      cairo_half_open_span_t *spans,
-      int y, int height,
-      int xmin, int xmax)
+blit_a8 (struct cell_list *cells,
+	 cairo_span_renderer_t *renderer,
+	 cairo_half_open_span_t *spans,
+	 int y, int height,
+	 int xmin, int xmax)
 {
     struct cell *cell = cells->head.next;
     int prev_x = xmin, last_x = -1;
@@ -1661,10 +1596,80 @@ blit (struct cell_list *cells,
     return renderer->render_rows (renderer, y, height, spans, num_spans);
 }
 
+#define GRID_AREA_TO_A1(A)  ((GRID_AREA_TO_ALPHA (A) > 127) ? 255 : 0)
+static glitter_status_t
+blit_a1 (struct cell_list *cells,
+	 cairo_span_renderer_t *renderer,
+	 cairo_half_open_span_t *spans,
+	 int y, int height,
+	 int xmin, int xmax)
+{
+    struct cell *cell = cells->head.next;
+    int prev_x = xmin, last_x = -1;
+    int16_t cover = 0;
+    uint8_t coverage, last_cover = 0;
+    unsigned num_spans;
+
+    if (cell == &cells->tail)
+	return CAIRO_STATUS_SUCCESS;
+
+    /* Skip cells to the left of the clip region. */
+    while (cell->x < xmin) {
+	cover += cell->covered_height;
+	cell = cell->next;
+    }
+    cover *= GRID_X*2;
+
+    /* Form the spans from the coverages and areas. */
+    num_spans = 0;
+    for (; cell->x < xmax; cell = cell->next) {
+	int x = cell->x;
+	int16_t area;
+
+	coverage = GRID_AREA_TO_A1 (cover);
+	if (x > prev_x && coverage != last_cover) {
+	    last_x = spans[num_spans].x = prev_x;
+	    last_cover = spans[num_spans].coverage = coverage;
+	    ++num_spans;
+	}
+
+	cover += cell->covered_height*GRID_X*2;
+	area = cover - cell->uncovered_area;
+
+	coverage = GRID_AREA_TO_A1 (area);
+	if (coverage != last_cover) {
+	    last_x = spans[num_spans].x = x;
+	    last_cover = spans[num_spans].coverage = coverage;
+	    ++num_spans;
+	}
+
+	prev_x = x+1;
+    }
+
+    coverage = GRID_AREA_TO_A1 (cover);
+    if (prev_x <= xmax && coverage != last_cover) {
+	last_x = spans[num_spans].x = prev_x;
+	last_cover = spans[num_spans].coverage = coverage;
+	++num_spans;
+    }
+
+    if (last_x < xmax && last_cover) {
+	spans[num_spans].x = xmax;
+	spans[num_spans].coverage = 0;
+	++num_spans;
+    }
+    if (num_spans == 1)
+	return CAIRO_STATUS_SUCCESS;
+
+    /* Dump them into the renderer. */
+    return renderer->render_rows (renderer, y, height, spans, num_spans);
+}
+
 
 I void
 glitter_scan_converter_render(glitter_scan_converter_t *converter,
 			      unsigned int winding_mask,
+			      int antialias,
 			      cairo_span_renderer_t *renderer)
 {
     int i, j;
@@ -1682,9 +1687,6 @@ glitter_scan_converter_render(glitter_scan_converter_t *converter,
     if (xmin_i >= xmax_i)
 	return;
 
-    /* Let the coverage blitter initialise itself. */
-    GLITTER_BLIT_COVERAGES_BEGIN;
-
     /* Render each pixel row. */
     for (i = 0; i < h; i = j) {
 	int do_full_row = 0;
@@ -1693,13 +1695,12 @@ glitter_scan_converter_render(glitter_scan_converter_t *converter,
 
 	/* Determine if we can ignore this row or use the full pixel
 	 * stepper. */
-	if (GRID_Y == EDGE_Y_BUCKET_HEIGHT && ! polygon->y_buckets[i]) {
+	if (! polygon->y_buckets[i]) {
 	    if (active->head.next == &active->tail) {
 		active->min_height = INT_MAX;
 		active->is_vertical = 1;
 		for (; j < h && ! polygon->y_buckets[j]; j++)
 		    ;
-		GLITTER_BLIT_COVERAGES_EMPTY (i+ymin_i, j-i, xmin_i, xmax_i);
 		continue;
 	    }
 
@@ -1740,15 +1741,16 @@ glitter_scan_converter_render(glitter_scan_converter_t *converter,
 	    }
 	}
 
-	blit (coverages, renderer, converter->spans,
-	      i+ymin_i, j-i, xmin_i, xmax_i);
+	if (antialias)
+	    blit_a8 (coverages, renderer, converter->spans,
+		     i+ymin_i, j-i, xmin_i, xmax_i);
+	else
+	    blit_a1 (coverages, renderer, converter->spans,
+		     i+ymin_i, j-i, xmin_i, xmax_i);
 	cell_list_reset (coverages);
 
 	active->min_height -= GRID_Y;
     }
-
-    /* Clean up the coverage blitter. */
-    GLITTER_BLIT_COVERAGES_END;
 }
 
 struct _cairo_tor_scan_converter {
@@ -1756,6 +1758,7 @@ struct _cairo_tor_scan_converter {
 
     glitter_scan_converter_t converter[1];
     cairo_fill_rule_t fill_rule;
+    cairo_antialias_t antialias;
 
     jmp_buf jmp;
 };
@@ -1773,36 +1776,21 @@ _cairo_tor_scan_converter_destroy (void *converter)
     free(self);
 }
 
-static cairo_status_t
-_cairo_tor_scan_converter_add_edge (void		*converter,
-				    const cairo_point_t *p1,
-				    const cairo_point_t *p2,
-				    int top, int bottom,
-				    int dir)
-{
-    cairo_tor_scan_converter_t *self = converter;
-    cairo_edge_t edge;
-
-    edge.line.p1 = *p1;
-    edge.line.p2 = *p2;
-    edge.top = top;
-    edge.bottom = bottom;
-    edge.dir = dir;
-
-    glitter_scan_converter_add_edge (self->converter, &edge);
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
+cairo_status_t
 _cairo_tor_scan_converter_add_polygon (void		*converter,
 				       const cairo_polygon_t *polygon)
 {
     cairo_tor_scan_converter_t *self = converter;
     int i;
 
+#if 0
+    FILE *file = fopen ("polygon.txt", "w");
+    _cairo_debug_print_polygon (file, polygon);
+    fclose (file);
+#endif
+
     for (i = 0; i < polygon->num_edges; i++)
-	 glitter_scan_converter_add_edge (self->converter,
-						  &polygon->edges[i]);
+	 glitter_scan_converter_add_edge (self->converter, &polygon->edges[i]);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1819,6 +1807,7 @@ _cairo_tor_scan_converter_generate (void			*converter,
 
     glitter_scan_converter_render (self->converter,
 				   self->fill_rule == CAIRO_FILL_RULE_WINDING ? ~0 : 1,
+				   self->antialias != CAIRO_ANTIALIAS_NONE,
 				   renderer);
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1828,20 +1817,19 @@ _cairo_tor_scan_converter_create (int			xmin,
 				  int			ymin,
 				  int			xmax,
 				  int			ymax,
-				  cairo_fill_rule_t	fill_rule)
+				  cairo_fill_rule_t	fill_rule,
+				  cairo_antialias_t	antialias)
 {
     cairo_tor_scan_converter_t *self;
     cairo_status_t status;
 
-    self = calloc (1, sizeof(struct _cairo_tor_scan_converter));
+    self = malloc (sizeof(struct _cairo_tor_scan_converter));
     if (unlikely (self == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto bail_nomem;
     }
 
     self->base.destroy = _cairo_tor_scan_converter_destroy;
-    self->base.add_edge = _cairo_tor_scan_converter_add_edge;
-    self->base.add_polygon = _cairo_tor_scan_converter_add_polygon;
     self->base.generate = _cairo_tor_scan_converter_generate;
 
     _glitter_scan_converter_init (self->converter, &self->jmp);
@@ -1851,6 +1839,7 @@ _cairo_tor_scan_converter_create (int			xmin,
 	goto bail;
 
     self->fill_rule = fill_rule;
+    self->antialias = antialias;
 
     return &self->base;
 

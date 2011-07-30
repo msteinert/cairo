@@ -202,11 +202,11 @@ CAIRO_ENABLE_SURFACE_BACKEND(skia, Skia, no, [
 	      [skia_DIR="`pwd`/../skia"])
   AC_ARG_WITH([skia-bulid],
 	      [AS_HELP_STRING([--with-skia-build=(Release|Debug)]
-			      [build of skia to link with, default is Relese])],
+			      [build of skia to link with, default is Release])],
 	      [skia_BUILD="$withval"],
 	      [skia_BUILD="Release"])
   skia_NONPKGCONFIG_CFLAGS="-I$skia_DIR/include/config -I$skia_DIR/include/core -I$skia_DIR/include/effects"
-  if test "x$(skia_BUILD)" = x"Relese"; then
+  if test "x$skia_BUILD" = x"Release"; then
   	skia_NONPKGCONFIG_CFLAGS="-DSK_RELEASE -DSK_CAN_USE_FLOAT $skia_NONPKGCONFIG_CFLAGS"
   fi
   skia_NONPKGCONFIG_LIBS="--start-group $skia_DIR/out/$skia_BUILD/obj.target/gyp/libeffects.a $skia_DIR/out/$skia_BUILD/obj.target/gyp/libimages.a $skia_DIR/out/$skia_BUILD/obj.target/gyp/libutils.a $skia_DIR/out/$skia_BUILD/obj.target/gyp/libopts.a $skia_DIR/out/$skia_BUILD/obj.target/gyp/libcore.a -end-group"

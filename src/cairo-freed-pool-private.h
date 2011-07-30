@@ -42,7 +42,9 @@
 
 CAIRO_BEGIN_DECLS
 
-#if HAS_ATOMIC_OPS
+#define DISABLE_FREED_POOLS 0
+
+#if HAS_ATOMIC_OPS && ! DISABLE_FREED_POOLS
 /* Keep a stash of recently freed clip_paths, since we need to
  * reallocate them frequently.
  */
@@ -128,7 +130,7 @@ typedef int freed_pool_t;
 
 #define _freed_pool_get(pool) NULL
 #define _freed_pool_put(pool, ptr) free(ptr)
-#define _freed_pool_reset(ptr) assert((ptr) != NULL)
+#define _freed_pool_reset(ptr)
 
 #endif
 

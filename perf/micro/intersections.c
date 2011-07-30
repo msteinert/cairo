@@ -143,12 +143,15 @@ random_curve_nz (cairo_t *cr, int width, int height, int loops)
     return draw_random_curve (cr, CAIRO_FILL_RULE_WINDING, width, height, loops);
 }
 
+cairo_bool_t
+intersections_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "intersections", NULL);
+}
+
 void
 intersections (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "intersections", NULL))
-	return;
-
     cairo_perf_run (perf, "intersections-nz-fill", random_nz, NULL);
     cairo_perf_run (perf, "intersections-eo-fill", random_eo, NULL);
 

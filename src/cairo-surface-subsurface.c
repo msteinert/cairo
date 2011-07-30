@@ -202,8 +202,7 @@ _cairo_surface_subsurface_glyphs (void			*abstract_surface,
 				  cairo_glyph_t		*glyphs,
 				  int			 num_glyphs,
 				  cairo_scaled_font_t	*scaled_font,
-				  const cairo_clip_t		*clip,
-				  int *remaining_glyphs)
+				  const cairo_clip_t	*clip)
 {
     cairo_surface_subsurface_t *surface = abstract_surface;
     cairo_rectangle_int_t rect = { 0, 0, surface->extents.width, surface->extents.height };
@@ -216,7 +215,6 @@ _cairo_surface_subsurface_glyphs (void			*abstract_surface,
 					   op, source,
 					   scaled_font, glyphs, num_glyphs,
 					   target_clip);
-    *remaining_glyphs = 0;
     _cairo_clip_destroy (target_clip);
     return status;
 }
@@ -489,30 +487,23 @@ static const cairo_surface_backend_t _cairo_surface_subsurface_backend = {
 
     _cairo_surface_subsurface_acquire_source_image,
     _cairo_surface_subsurface_release_source_image,
-    NULL, NULL, /* acquire, release dest */
-    NULL, /* clone similar */
-    NULL, /* composite */
-    NULL, /* fill rectangles */
-    NULL, /* composite trapezoids */
-    NULL, /* create span renderer */
-    NULL, /* check span renderer */
+    _cairo_surface_subsurface_snapshot,
+
     NULL, /* copy_page */
     NULL, /* show_page */
+
     _cairo_surface_subsurface_get_extents,
-    NULL, /* old_show_glyphs */
     _cairo_surface_subsurface_get_font_options,
+
     _cairo_surface_subsurface_flush,
     _cairo_surface_subsurface_mark_dirty,
-    NULL, /* font_fini */
-    NULL, /* glyph_fini */
 
     _cairo_surface_subsurface_paint,
     _cairo_surface_subsurface_mask,
     _cairo_surface_subsurface_stroke,
     _cairo_surface_subsurface_fill,
+    NULL, /* fill/stroke */
     _cairo_surface_subsurface_glyphs,
-
-    _cairo_surface_subsurface_snapshot,
 };
 
 /**

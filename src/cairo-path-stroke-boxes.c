@@ -234,29 +234,31 @@ _cairo_rectilinear_stroker_emit_segments (cairo_rectilinear_stroker_t *stroker)
 	}
 
 	/* Perform the adjustments of the endpoints. */
-	if (a->y == b->y) {
-	    if (a->x < b->x) {
-		if (lengthen_initial)
-		    a->x -= half_line_width;
-		if (lengthen_final)
-		    b->x += half_line_width;
+	if (lengthen_initial | lengthen_final) {
+	    if (a->y == b->y) {
+		if (a->x < b->x) {
+		    if (lengthen_initial)
+			a->x -= half_line_width;
+		    if (lengthen_final)
+			b->x += half_line_width;
+		} else {
+		    if (lengthen_initial)
+			a->x += half_line_width;
+		    if (lengthen_final)
+			b->x -= half_line_width;
+		}
 	    } else {
-		if (lengthen_initial)
-		    a->x += half_line_width;
-		if (lengthen_final)
-		    b->x -= half_line_width;
-	    }
-	} else {
-	    if (a->y < b->y) {
-		if (lengthen_initial)
-		    a->y -= half_line_width;
-		if (lengthen_final)
-		    b->y += half_line_width;
-	    } else {
-		if (lengthen_initial)
-		    a->y += half_line_width;
-		if (lengthen_final)
-		    b->y -= half_line_width;
+		if (a->y < b->y) {
+		    if (lengthen_initial)
+			a->y -= half_line_width;
+		    if (lengthen_final)
+			b->y += half_line_width;
+		} else {
+		    if (lengthen_initial)
+			a->y += half_line_width;
+		    if (lengthen_final)
+			b->y -= half_line_width;
+		}
 	    }
 	}
 
@@ -291,7 +293,6 @@ _cairo_rectilinear_stroker_emit_segments (cairo_rectilinear_stroker_t *stroker)
     }
 
     stroker->num_segments = 0;
-
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -606,6 +607,7 @@ _cairo_path_fixed_stroke_rectilinear_to_boxes (const cairo_path_fixed_t	*path,
 {
     cairo_rectilinear_stroker_t rectilinear_stroker;
     cairo_int_status_t status;
+    cairo_box_t box;
 
     assert (_cairo_path_fixed_stroke_is_rectilinear (path));
 
@@ -614,6 +616,46 @@ _cairo_path_fixed_stroke_rectilinear_to_boxes (const cairo_path_fixed_t	*path,
 					   boxes))
     {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    if (! rectilinear_stroker.dash.dashed &&
+	_cairo_path_fixed_is_stroke_box (path, &box))
+    {
+	cairo_box_t b;
+
+	/* top */
+	b.p1.x = box.p1.x - rectilinear_stroker.half_line_width;
+	b.p2.x = box.p2.x + rectilinear_stroker.half_line_width;
+	b.p1.y = box.p1.y - rectilinear_stroker.half_line_width;
+	b.p2.y = box.p1.y + rectilinear_stroker.half_line_width;
+	status = _cairo_boxes_add (boxes, antialias, &b);
+	assert (status == CAIRO_INT_STATUS_SUCCESS);
+
+	/* left  (excluding top/bottom) */
+	b.p1.x = box.p1.x - rectilinear_stroker.half_line_width;
+	b.p2.x = box.p1.x + rectilinear_stroker.half_line_width;
+	b.p1.y = box.p1.y + rectilinear_stroker.half_line_width;
+	b.p2.y = box.p2.y - rectilinear_stroker.half_line_width;
+	status = _cairo_boxes_add (boxes, antialias, &b);
+	assert (status == CAIRO_INT_STATUS_SUCCESS);
+
+	/* right  (excluding top/bottom) */
+	b.p1.x = box.p2.x - rectilinear_stroker.half_line_width;
+	b.p2.x = box.p2.x + rectilinear_stroker.half_line_width;
+	b.p1.y = box.p1.y + rectilinear_stroker.half_line_width;
+	b.p2.y = box.p2.y - rectilinear_stroker.half_line_width;
+	status = _cairo_boxes_add (boxes, antialias, &b);
+	assert (status == CAIRO_INT_STATUS_SUCCESS);
+
+	/* bottom */
+	b.p1.x = box.p1.x - rectilinear_stroker.half_line_width;
+	b.p2.x = box.p2.x + rectilinear_stroker.half_line_width;
+	b.p1.y = box.p2.y - rectilinear_stroker.half_line_width;
+	b.p2.y = box.p2.y + rectilinear_stroker.half_line_width;
+	status = _cairo_boxes_add (boxes, antialias, &b);
+	assert (status == CAIRO_INT_STATUS_SUCCESS);
+
+	goto done;
     }
 
     if (boxes->num_limits) {
@@ -647,8 +689,8 @@ _cairo_path_fixed_stroke_rectilinear_to_boxes (const cairo_path_fixed_t	*path,
     if (unlikely (status))
 	goto BAIL;
 
+done:
     _cairo_rectilinear_stroker_fini (&rectilinear_stroker);
-
     return CAIRO_STATUS_SUCCESS;
 
 BAIL:

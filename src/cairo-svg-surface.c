@@ -41,7 +41,10 @@
 
 #define _BSD_SOURCE /* for snprintf() */
 #include "cairoint.h"
+
 #include "cairo-svg.h"
+
+#include "cairo-array-private.h"
 #include "cairo-analysis-surface-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
@@ -2474,8 +2477,7 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
 				cairo_glyph_t		*glyphs,
 				int			 num_glyphs,
 				cairo_scaled_font_t	*scaled_font,
-				const cairo_clip_t	*clip,
-				int			*remaining_glyphs)
+				const cairo_clip_t	*clip)
 {
     cairo_svg_surface_t *surface = abstract_surface;
     cairo_svg_document_t *document = surface->document;
@@ -2587,31 +2589,23 @@ static const cairo_surface_backend_t cairo_svg_surface_backend = {
 
 	NULL, /* acquire_source_image */
 	NULL, /* release_source_image */
-	NULL, /* acquire_dest_image */
-	NULL, /* release_dest_image */
-	NULL, /* clone_similar */
-	NULL, /* _cairo_svg_surface_composite, */
-	NULL, /* _cairo_svg_surface_fill_rectangles, */
-	NULL, /* _cairo_svg_surface_composite_trapezoids,*/
-	NULL, /* create_span_renderer */
-	NULL, /* check_span_renderer */
+	NULL, /* snapshot */
+
 	_cairo_svg_surface_copy_page,
 	_cairo_svg_surface_show_page,
+
 	_cairo_svg_surface_get_extents,
-	NULL, /* _cairo_svg_surface_old_show_glyphs, */
 	_cairo_svg_surface_get_font_options,
+
 	NULL, /* flush */
 	NULL, /* mark dirty rectangle */
-	NULL, /* scaled font fini */
-	NULL, /* scaled glyph fini */
+
 	_cairo_svg_surface_paint,
 	_cairo_svg_surface_mask,
 	_cairo_svg_surface_stroke,
 	_cairo_svg_surface_fill,
+	_cairo_svg_surface_fill_stroke,
 	_cairo_svg_surface_show_glyphs,
-	NULL, /* snapshot */
-	NULL, /* is_similar */
-	_cairo_svg_surface_fill_stroke
 };
 
 static cairo_status_t

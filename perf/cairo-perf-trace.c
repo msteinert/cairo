@@ -79,7 +79,7 @@ basename_no_ext (char *path)
 
     name = basename (path);
 
-    dot = strchr (name, '.');
+    dot = strrchr (name, '.');
     if (dot)
 	*dot = '\0';
 
@@ -108,6 +108,7 @@ struct trace {
     void            *closure;
     cairo_surface_t *surface;
     cairo_bool_t observe;
+    int tile_size;
 };
 
 cairo_bool_t
@@ -132,7 +133,7 @@ cairo_perf_can_run (cairo_perf_t *perf,
 	return TRUE;
 
     copy = xstrdup (name);
-    dot = strchr (copy, '.');
+    dot = strrchr (copy, '.');
     if (dot != NULL)
 	*dot = '\0';
 
@@ -435,6 +436,7 @@ parse_options (cairo_perf_t *perf,
     perf->raw = FALSE;
     perf->observe = FALSE;
     perf->list_only = FALSE;
+    perf->tile_size = 0;
     perf->names = NULL;
     perf->num_names = 0;
     perf->summary = stdout;
@@ -443,7 +445,7 @@ parse_options (cairo_perf_t *perf,
     perf->num_exclude_names = 0;
 
     while (1) {
-	c = _cairo_getopt (argc, argv, "i:x:lsrvc");
+	c = _cairo_getopt (argc, argv, "t:i:x:lsrvc");
 	if (c == -1)
 	    break;
 
@@ -453,6 +455,14 @@ parse_options (cairo_perf_t *perf,
 	    perf->iterations = strtoul (optarg, &end, 10);
 	    if (*end != '\0') {
 		fprintf (stderr, "Invalid argument for -i (not an integer): %s\n",
+			 optarg);
+		exit (1);
+	    }
+	    break;
+	case 't':
+	    perf->tile_size = strtoul (optarg, &end, 10);
+	    if (*end != '\0') {
+		fprintf (stderr, "Invalid argument for -t (not an integer): %s\n",
 			 optarg);
 		exit (1);
 	    }
@@ -487,6 +497,11 @@ parse_options (cairo_perf_t *perf,
 	    usage (argv[0]);
 	    exit (1);
 	}
+    }
+
+    if (perf->observe && perf->tile_size) {
+	fprintf (stderr, "Can't mix observer and tiling. Sorry.\n");
+	exit (1);
     }
 
     if (verbose && perf->summary == NULL)
@@ -536,6 +551,79 @@ have_trace_filenames (cairo_perf_t *perf)
 }
 
 static void
+_tiling_surface_finish (cairo_surface_t *observer,
+			cairo_surface_t *target,
+			void *closure)
+{
+    struct trace *args = closure;
+    cairo_surface_t *surface;
+    cairo_content_t content;
+    cairo_rectangle_t r;
+    int width, height;
+    int x, y, w, h;
+
+    cairo_recording_surface_get_extents (target, &r);
+    w = r.width;
+    h = r.height;
+
+    content = cairo_surface_get_content (target);
+
+    for (y = 0; y < h; y += args->tile_size) {
+	height = args->tile_size;
+	if (y + height > h)
+	    height = h - y;
+
+	for (x = 0; x < w; x += args->tile_size) {
+	    cairo_t *cr;
+
+	    width = args->tile_size;
+	    if (x + width > w)
+		width = w - x;
+
+	    /* XXX to correctly observe the playback we would need
+	     * to replay the target onto the observer directly.
+	     */
+	    surface = args->target->create_similar (args->surface,
+						    content, width, height);
+
+	    cr = cairo_create (surface);
+	    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	    cairo_set_source_surface (cr, target, -x, -y);
+	    cairo_paint (cr);
+	    cairo_destroy (cr);
+
+	    cairo_surface_destroy (surface);
+	}
+    }
+}
+
+static cairo_surface_t *
+_tiling_surface_create (void		 *closure,
+			cairo_content_t  content,
+			double		  width,
+			double		  height,
+			long		  uid)
+{
+    cairo_rectangle_t r;
+    cairo_surface_t *surface, *observer;
+
+    r.x = r.y = 0;
+    r.width = width;
+    r.height = height;
+
+    surface = cairo_recording_surface_create (content, &r);
+    observer = cairo_surface_create_observer (surface,
+					      CAIRO_SURFACE_OBSERVER_NORMAL);
+    cairo_surface_destroy (surface);
+
+    cairo_surface_observer_add_finish_callback (observer,
+						_tiling_surface_finish,
+						closure);
+
+    return observer;
+}
+
+static void
 cairo_perf_trace (cairo_perf_t			   *perf,
 		  const cairo_boilerplate_target_t *target,
 		  const char			   *trace)
@@ -549,7 +637,7 @@ cairo_perf_trace (cairo_perf_t			   *perf,
     char *trace_cpy, *name;
     const cairo_script_interpreter_hooks_t hooks = {
 	&args,
-	_similar_surface_create,
+	perf->tile_size ? _tiling_surface_create : _similar_surface_create,
 	NULL, /* surface_destroy */
 	_context_create,
 	NULL, /* context_destroy */
@@ -557,6 +645,7 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 	NULL /* copy_page */
     };
 
+    args.tile_size = perf->tile_size;
     args.observe = perf->observe;
 
     trace_cpy = xstrdup (trace);
@@ -648,25 +737,29 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 	}
 
 	cairo_script_interpreter_run (csi, trace);
+	line_no = cairo_script_interpreter_get_line_number (csi);
+
+	/* Finish before querying timings in case we are using an intermediate
+	 * target and so need to destroy all surfaces before rendering
+	 * commences.
+	 */
+	cairo_script_interpreter_finish (csi);
 
 	if (perf->observe) {
 	    cairo_device_t *observer = cairo_surface_get_device (args.surface);
-	    times[i] = _cairo_time_from_s (1.e9 * cairo_device_observer_elapsed (observer));
-	    paint[i] = _cairo_time_from_s (1.e9 * cairo_device_observer_paint_elapsed (observer));
-	    mask[i] = _cairo_time_from_s (1.e9 * cairo_device_observer_mask_elapsed (observer));
-	    stroke[i] = _cairo_time_from_s (1.e9 * cairo_device_observer_stroke_elapsed (observer));
-	    fill[i] = _cairo_time_from_s (1.e9 * cairo_device_observer_fill_elapsed (observer));
-	    glyphs[i] = _cairo_time_from_s (1.e9 * cairo_device_observer_glyphs_elapsed (observer));
+	    times[i] = _cairo_time_from_s (1.e-9 * cairo_device_observer_elapsed (observer));
+	    paint[i] = _cairo_time_from_s (1.e-9 * cairo_device_observer_paint_elapsed (observer));
+	    mask[i] = _cairo_time_from_s (1.e-9 * cairo_device_observer_mask_elapsed (observer));
+	    stroke[i] = _cairo_time_from_s (1.e-9 * cairo_device_observer_stroke_elapsed (observer));
+	    fill[i] = _cairo_time_from_s (1.e-9 * cairo_device_observer_fill_elapsed (observer));
+	    glyphs[i] = _cairo_time_from_s (1.e-9 * cairo_device_observer_glyphs_elapsed (observer));
 	} else {
 	    clear_surface (args.surface); /* queue a write to the sync'ed surface */
 	    cairo_perf_timer_stop ();
 	    times[i] = cairo_perf_timer_elapsed ();
 	}
 
-	cairo_script_interpreter_finish (csi);
 	scache_clear ();
-
-	line_no = cairo_script_interpreter_get_line_number (csi);
 
 	cairo_surface_destroy (args.surface);
 
@@ -766,28 +859,28 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 	    fprintf (perf->summary,
 		     " %#9.3f", _cairo_time_to_s (stats.median_ticks));
 
-	    _cairo_stats_compute (&stats, paint, i+1);
+	    _cairo_stats_compute (&stats, paint, i);
 	    fprintf (perf->summary,
 		     " %#9.3f", _cairo_time_to_s (stats.median_ticks));
 
-	    _cairo_stats_compute (&stats, mask, i+1);
+	    _cairo_stats_compute (&stats, mask, i);
 	    fprintf (perf->summary,
 		     " %#9.3f", _cairo_time_to_s (stats.median_ticks));
 
-	    _cairo_stats_compute (&stats, fill, i+1);
+	    _cairo_stats_compute (&stats, fill, i);
 	    fprintf (perf->summary,
 		     " %#9.3f", _cairo_time_to_s (stats.median_ticks));
 
-	    _cairo_stats_compute (&stats, stroke, i+1);
+	    _cairo_stats_compute (&stats, stroke, i);
 	    fprintf (perf->summary,
 		     " %#9.3f", _cairo_time_to_s (stats.median_ticks));
 
-	    _cairo_stats_compute (&stats, glyphs, i+1);
+	    _cairo_stats_compute (&stats, glyphs, i);
 	    fprintf (perf->summary,
 		     " %#9.3f", _cairo_time_to_s (stats.median_ticks));
 
 	    fprintf (perf->summary,
-		     " %5d\n", i+1);
+		     " %5d\n", i);
 	} else {
 	    fprintf (perf->summary,
 		     "%#8.3f %#8.3f %#6.2f%% %4d/%d\n",
@@ -807,11 +900,6 @@ out:
 
     perf->test_number++;
     free (trace_cpy);
-
-    cairo_debug_reset_static_data ();
-#if HAVE_FCFINI
-    FcFini ();
-#endif
 }
 
 static void

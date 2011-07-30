@@ -105,10 +105,16 @@ _cairo_clip_is_region (const cairo_clip_t *clip)
     if (clip == NULL)
 	return TRUE;
 
+    if (clip->is_region)
+	return TRUE;
+
     /* XXX Geometric reduction? */
 
     if (clip->path)
-	    return FALSE;
+	return FALSE;
+
+    if (clip->num_boxes == 0)
+	return TRUE;
 
     if (clip->region == NULL)
 	_cairo_clip_extract_region ((cairo_clip_t *) clip);

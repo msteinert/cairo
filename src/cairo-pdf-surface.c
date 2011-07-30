@@ -41,10 +41,13 @@
 
 #define _BSD_SOURCE /* for snprintf() */
 #include "cairoint.h"
+
 #include "cairo-pdf.h"
 #include "cairo-pdf-surface-private.h"
 #include "cairo-pdf-operators-private.h"
 #include "cairo-pdf-shading-private.h"
+
+#include "cairo-array-private.h"
 #include "cairo-analysis-surface-private.h"
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-default-context-private.h"
@@ -1122,17 +1125,19 @@ _get_source_surface_size (cairo_surface_t         *source,
 	     *height = extents->height;
 	} else {
 	    cairo_rectangle_int_t surf_extents;
-	    double x, y, w, h;
+	    cairo_box_t box;
 	    cairo_bool_t bounded;
 
 	    if (_cairo_surface_is_snapshot (source))
 		source = _cairo_surface_snapshot_get_target (source);
 
-	    cairo_recording_surface_ink_extents (source, &x, &y,&w, &h);
-	    extents->x = floor (x);
-	    extents->y = floor (y);
-	    extents->width = ceil (x + w) - extents->x;
-	    extents->height = ceil (y + h) - extents->y;
+	    status = _cairo_recording_surface_get_ink_bbox ((cairo_recording_surface_t *)source,
+							    &box, NULL);
+	    if (unlikely (status))
+		return status;
+
+	    _cairo_box_round_to_rectangle (&box, extents);
+
 	    bounded = _cairo_surface_get_extents (source, &surf_extents);
 	    *width = surf_extents.width;
 	    *height = surf_extents.height;
@@ -2358,16 +2363,9 @@ _cairo_pdf_surface_emit_padded_image_surface (cairo_pdf_surface_t     *surface,
         _cairo_pattern_init_for_surface (&pad_pattern, &image->base);
         cairo_matrix_init_translate (&pad_pattern.base.matrix, -x, -y);
         pad_pattern.base.extend = CAIRO_EXTEND_PAD;
-        status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
-                                           &pad_pattern.base,
-                                           NULL,
-                                           pad_image,
-                                           0, 0,
-                                           0, 0,
-                                           0, 0,
-                                           rect.width,
-                                           rect.height,
-					   NULL);
+        status = _cairo_surface_paint (pad_image,
+				       CAIRO_OPERATOR_SOURCE, &pad_pattern.base,
+				       NULL);
         _cairo_pattern_fini (&pad_pattern.base);
         if (unlikely (status))
             goto BAIL;
@@ -5917,11 +5915,10 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
     cairo_pdf_smask_group_t *group;
     cairo_pdf_resource_t pattern_res, gstate_res;
     cairo_composite_rectangles_t extents;
-    cairo_rectangle_int_t unbounded;
     cairo_int_status_t status;
 
-    _cairo_pdf_surface_get_extents (surface, &unbounded);
-    status = _cairo_composite_rectangles_init_for_paint (&extents, &unbounded,
+    status = _cairo_composite_rectangles_init_for_paint (&extents,
+							 &surface->base,
 							 op, source, clip);
     if (unlikely (status))
 	return status;
@@ -6037,11 +6034,10 @@ _cairo_pdf_surface_mask (void			*abstract_surface,
     cairo_pdf_surface_t *surface = abstract_surface;
     cairo_pdf_smask_group_t *group;
     cairo_composite_rectangles_t extents;
-    cairo_rectangle_int_t unbounded;
     cairo_int_status_t status;
 
-    _cairo_pdf_surface_get_extents (surface, &unbounded);
-    status = _cairo_composite_rectangles_init_for_mask (&extents, &unbounded,
+    status = _cairo_composite_rectangles_init_for_mask (&extents,
+							&surface->base,
 							op, source, mask, clip);
     if (unlikely (status))
 	return status;
@@ -6166,11 +6162,10 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
     cairo_pdf_smask_group_t *group;
     cairo_pdf_resource_t pattern_res, gstate_res;
     cairo_composite_rectangles_t extents;
-    cairo_rectangle_int_t unbounded;
     cairo_int_status_t status;
 
-    _cairo_pdf_surface_get_extents (surface, &unbounded);
-    status = _cairo_composite_rectangles_init_for_stroke (&extents, &unbounded,
+    status = _cairo_composite_rectangles_init_for_stroke (&extents,
+							  &surface->base,
 							  op, source,
 							  path, style, ctm,
 							  clip);
@@ -6305,10 +6300,9 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
     cairo_pdf_smask_group_t *group;
     cairo_pdf_resource_t pattern_res, gstate_res;
     cairo_composite_rectangles_t extents;
-    cairo_rectangle_int_t unbounded;
 
-    _cairo_pdf_surface_get_extents (surface, &unbounded);
-    status = _cairo_composite_rectangles_init_for_fill (&extents, &unbounded,
+    status = _cairo_composite_rectangles_init_for_fill (&extents,
+							&surface->base,
 							op, source, path,
 							clip);
     if (unlikely (status))
@@ -6471,7 +6465,6 @@ _cairo_pdf_surface_fill_stroke (void			*abstract_surface,
     cairo_int_status_t status;
     cairo_pdf_resource_t fill_pattern_res, stroke_pattern_res, gstate_res;
     cairo_composite_rectangles_t extents;
-    cairo_rectangle_int_t unbounded;
 
     /* During analysis we return unsupported and let the _fill and
      * _stroke functions that are on the fallback path do the analysis
@@ -6498,8 +6491,8 @@ _cairo_pdf_surface_fill_stroke (void			*abstract_surface,
     /* Compute the operation extents using the stroke which will naturally
      * be larger than the fill extents.
      */
-    _cairo_pdf_surface_get_extents (surface, &unbounded);
-    status = _cairo_composite_rectangles_init_for_stroke (&extents, &unbounded,
+    status = _cairo_composite_rectangles_init_for_stroke (&extents,
+							  &surface->base,
 							  stroke_op, stroke_source,
 							  path, stroke_style, stroke_ctm,
 							  clip);
@@ -6630,12 +6623,11 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
     cairo_pdf_smask_group_t *group;
     cairo_pdf_resource_t pattern_res, gstate_res;
     cairo_composite_rectangles_t extents;
-    cairo_rectangle_int_t unbounded;
     cairo_bool_t overlap;
     cairo_int_status_t status;
 
-    _cairo_pdf_surface_get_extents (surface, &unbounded);
-    status = _cairo_composite_rectangles_init_for_glyphs (&extents, &unbounded,
+    status = _cairo_composite_rectangles_init_for_glyphs (&extents,
+							  &surface->base,
 							  op, source,
 							  scaled_font,
 							  glyphs, num_glyphs,
@@ -6798,37 +6790,24 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
 
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
-    NULL, /* acquire_dest_image */
-    NULL, /* release_dest_image */
-    NULL, /* clone_similar */
-    NULL, /* composite */
-    NULL, /* fill_rectangles */
-    NULL, /* composite_trapezoids */
-    NULL, /* create_span_renderer */
-    NULL, /* check_span_renderer */
+    NULL, /* snapshot */
+
     NULL,  /* _cairo_pdf_surface_copy_page */
     _cairo_pdf_surface_show_page,
+
     _cairo_pdf_surface_get_extents,
-    NULL, /* old_show_glyphs */
     _cairo_pdf_surface_get_font_options,
+
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
-    NULL, /* scaled_font_fini */
-    NULL, /* scaled_glyph_fini */
 
     /* Here are the drawing functions */
-
     _cairo_pdf_surface_paint,
     _cairo_pdf_surface_mask,
     _cairo_pdf_surface_stroke,
     _cairo_pdf_surface_fill,
-    NULL, /* show_glyphs */
-    NULL, /* snapshot */
-
-    NULL, /* is_compatible */
     _cairo_pdf_surface_fill_stroke,
-    NULL, /* create_solid_pattern_surface */
-    NULL, /* can_repaint_solid_pattern_surface */
+    NULL, /* show_glyphs */
     _cairo_pdf_surface_has_show_text_glyphs,
     _cairo_pdf_surface_show_text_glyphs,
 };

@@ -45,6 +45,7 @@
 #include "cairo-path-fixed-private.h"
 #include "cairo-slope-private.h"
 #include "cairo-stroke-dash-private.h"
+#include "cairo-traps-private.h"
 
 typedef struct cairo_stroker {
     cairo_stroke_style_t style;
@@ -125,6 +126,7 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
 
 static void
 _cairo_stroker_limit (cairo_stroker_t *stroker,
+		      const cairo_path_fixed_t *path,
 		      const cairo_box_t *boxes,
 		      int num_boxes)
 {
@@ -139,8 +141,8 @@ _cairo_stroker_limit (cairo_stroker_t *stroker,
      * of the bounds but which might generate rendering that's within bounds.
      */
 
-    _cairo_stroke_style_max_distance_from_path (&stroker->style, stroker->ctm,
-						&dx, &dy);
+    _cairo_stroke_style_max_distance_from_path (&stroker->style, path,
+						stroker->ctm, &dx, &dy);
 
     fdx = _cairo_fixed_from_double (dx);
     fdy = _cairo_fixed_from_double (dy);
@@ -1293,7 +1295,8 @@ _cairo_path_fixed_stroke_dashed_to_polygon (const cairo_path_fixed_t	*path,
     stroker.closure = polygon;
 
     if (polygon->num_limits)
-	_cairo_stroker_limit (&stroker, polygon->limits, polygon->num_limits);
+	_cairo_stroker_limit (&stroker, path,
+			      polygon->limits, polygon->num_limits);
 
     status = _cairo_path_fixed_interpret (path,
 					  _cairo_stroker_move_to,
@@ -1328,7 +1331,6 @@ _cairo_path_fixed_stroke_to_traps (const cairo_path_fixed_t	*path,
     cairo_polygon_t polygon;
 
     _cairo_polygon_init (&polygon, traps->limits, traps->num_limits);
-
     status = _cairo_path_fixed_stroke_to_polygon (path,
 						  stroke_style,
 						  ctm,

@@ -33,6 +33,7 @@
 
 #include "cairoint.h"
 
+#include "cairo-box-private.h"
 #include "cairo-boxes-private.h"
 #include "cairo-error-private.h"
 
@@ -50,6 +51,16 @@ _cairo_boxes_init (cairo_boxes_t *boxes)
     boxes->chunks.count = 0;
 
     boxes->is_pixel_aligned = TRUE;
+}
+
+void
+_cairo_boxes_init_from_rectangle (cairo_boxes_t *boxes,
+				  int x, int y, int w, int h)
+{
+    _cairo_boxes_init (boxes);
+
+    _cairo_box_from_integers (&boxes->chunks.base[0], x, y, w, h);
+    boxes->num_boxes = 1;
 }
 
 void
@@ -154,13 +165,8 @@ _cairo_boxes_add_internal (cairo_boxes_t *boxes,
     chunk->base[chunk->count++] = *box;
     boxes->num_boxes++;
 
-    if (boxes->is_pixel_aligned) {
-	boxes->is_pixel_aligned =
-	    _cairo_fixed_is_integer (box->p1.x) &&
-	    _cairo_fixed_is_integer (box->p1.y) &&
-	    _cairo_fixed_is_integer (box->p2.x) &&
-	    _cairo_fixed_is_integer (box->p2.y);
-    }
+    if (boxes->is_pixel_aligned)
+	boxes->is_pixel_aligned = _cairo_box_is_pixel_aligned (box);
 }
 
 cairo_status_t
@@ -261,38 +267,34 @@ _cairo_boxes_add (cairo_boxes_t *boxes,
 
 void
 _cairo_boxes_extents (const cairo_boxes_t *boxes,
-		      cairo_rectangle_int_t *extents)
+		      cairo_box_t *box)
 {
     const struct _cairo_boxes_chunk *chunk;
-    cairo_box_t box;
+    cairo_box_t b;
     int i;
 
     if (boxes->num_boxes == 0) {
-	extents->x = extents->y = extents->width = extents->height = 0;
+	box->p1.x = box->p1.y = box->p2.x = box->p2.y = 0;
 	return;
     }
 
-    box.p1.y = box.p1.x = INT_MAX;
-    box.p2.y = box.p2.x = INT_MIN;
-
+    b = boxes->chunks.base[0];
     for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
-	const cairo_box_t *b = chunk->base;
 	for (i = 0; i < chunk->count; i++) {
-	    if (b[i].p1.x < box.p1.x)
-		box.p1.x = b[i].p1.x;
+	    if (chunk->base[i].p1.x < b.p1.x)
+		b.p1.x = chunk->base[i].p1.x;
 
-	    if (b[i].p1.y < box.p1.y)
-		box.p1.y = b[i].p1.y;
+	    if (chunk->base[i].p1.y < b.p1.y)
+		b.p1.y = chunk->base[i].p1.y;
 
-	    if (b[i].p2.x > box.p2.x)
-		box.p2.x = b[i].p2.x;
+	    if (chunk->base[i].p2.x > b.p2.x)
+		b.p2.x = chunk->base[i].p2.x;
 
-	    if (b[i].p2.y > box.p2.y)
-		box.p2.y = b[i].p2.y;
+	    if (chunk->base[i].p2.y > b.p2.y)
+		b.p2.y = chunk->base[i].p2.y;
 	}
     }
-
-    _cairo_box_round_to_rectangle (&box, extents);
+    *box = b;
 }
 
 void
@@ -354,17 +356,38 @@ _cairo_boxes_fini (cairo_boxes_t *boxes)
     }
 }
 
+cairo_bool_t
+_cairo_boxes_for_each_box (cairo_boxes_t *boxes,
+			   cairo_bool_t (*func) (cairo_box_t *box, void *data),
+			   void *data)
+{
+    struct _cairo_boxes_chunk *chunk;
+    int i;
+
+    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
+	for (i = 0; i < chunk->count; i++)
+	    if (! func (&chunk->base[i], data))
+		return FALSE;
+    }
+
+    return TRUE;
+}
+
+
 void
 _cairo_debug_print_boxes (FILE *stream, const cairo_boxes_t *boxes)
 {
-    cairo_rectangle_int_t extents;
     const struct _cairo_boxes_chunk *chunk;
+    cairo_box_t extents;
     int i;
 
     _cairo_boxes_extents (boxes, &extents);
-    fprintf (stream, "boxes x %d: (%d, %d) x (%d, %d)\n",
+    fprintf (stream, "boxes x %d: (%f, %f) x (%f, %f)\n",
 	     boxes->num_boxes,
-	     extents.x, extents.y, extents.width, extents.height);
+	     _cairo_fixed_to_double (extents.p1.x),
+	     _cairo_fixed_to_double (extents.p1.y),
+	     _cairo_fixed_to_double (extents.p2.x),
+	     _cairo_fixed_to_double (extents.p2.y));
 
     for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
 	for (i = 0; i < chunk->count; i++) {

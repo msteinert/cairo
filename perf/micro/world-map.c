@@ -134,12 +134,15 @@ do_world_map_both (cairo_t *cr, int width, int height, int loops)
     return do_world_map (cr, width, height, loops, FILL | STROKE);
 }
 
+cairo_bool_t
+world_map_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "world-map", NULL);
+}
+
 void
 world_map (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "world-map", NULL))
-	return;
-
     cairo_perf_run (perf, "world-map-stroke", do_world_map_stroke, NULL);
     cairo_perf_run (perf, "world-map-fill", do_world_map_fill, NULL);
     cairo_perf_run (perf, "world-map", do_world_map_both, NULL);

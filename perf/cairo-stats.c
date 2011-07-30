@@ -25,16 +25,25 @@
 
 #include "cairo-stats.h"
 
+#include <assert.h>
+
 void
 _cairo_stats_compute (cairo_stats_t *stats,
 		      cairo_time_t  *values,
 		      int	     num_values)
 {
-    int i;
-    cairo_time_t sumtime;
-    double sum, mean, delta, q1, q3, iqr;
-    double outlier_min, outlier_max;
-    int min_valid, num_valid;
+    cairo_time_t sum, mean, delta, q1, q3, iqr;
+    cairo_time_t outlier_min, outlier_max;
+    int i, min_valid, num_valid;
+
+    assert (num_values > 0);
+
+    if (num_values == 1) {
+	stats->min_ticks = stats->median_ticks = values[0];
+	stats->std_dev = 0;
+	stats->iterations = 1;
+	return;
+    }
 
     /* First, identify any outliers, using the definition of "mild
      * outliers" from:
@@ -48,44 +57,35 @@ _cairo_stats_compute (cairo_stats_t *stats,
      */
     qsort (values, num_values, sizeof (cairo_time_t), _cairo_time_cmp);
 
-    q1 = _cairo_time_to_s (values[(1*num_values)/4]);
-    q3 = _cairo_time_to_s (values[(3*num_values)/4]);
+    q1 = values[1*num_values/4];
+    q3 = values[3*num_values/4];
 
+    /* XXX assumes we have native uint64_t */
     iqr = q3 - q1;
+    outlier_min = q1 - 3 * iqr / 2;
+    outlier_max = q3 + 3 * iqr / 2;
 
-    outlier_min = _cairo_time_from_s (q1 - 1.5 * iqr);
-    outlier_max = _cairo_time_from_s (q3 + 1.5 * iqr);
+    for (i = 0; i < num_values && values[i] < outlier_min; i++)
+	;
+    min_valid = i;
 
-    min_valid = 0;
-    while (min_valid < num_values &&
-	   _cairo_time_to_s (values[min_valid]) < outlier_min)
-    {
-	min_valid++;
-    }
-
-    i = min_valid;
-    num_valid = 0;
-    while (i + num_valid < num_values &&
-	   _cairo_time_to_s (values[i+num_valid]) <= outlier_max)
-    {
-	num_valid++;
-    }
+    for (i = 0; i < num_values && values[i] <= outlier_max; i++)
+	;
+    num_valid = i - min_valid;
+    assert(num_valid);
 
     stats->iterations = num_valid;
     stats->min_ticks = values[min_valid];
-
-    sumtime = _cairo_time_from_s (0);
-    for (i = min_valid; i < min_valid + num_valid; i++) {
-	sumtime = _cairo_time_add (sumtime, values[i]);
-	stats->min_ticks = _cairo_time_min (stats->min_ticks, values[i]);
-    }
-
-    mean = _cairo_time_to_s (sumtime) / num_valid;
     stats->median_ticks = values[min_valid + num_valid / 2];
 
-    sum = 0.0;
+    sum = 0;
+    for (i = min_valid; i < min_valid + num_valid; i++)
+	sum = _cairo_time_add (sum, values[i]);
+    mean = sum / num_valid;
+
+    sum = 0;
     for (i = min_valid; i < min_valid + num_valid; i++) {
-	delta = _cairo_time_to_s (values[i]) - mean;
+	delta = values[i] - mean;
 	sum += delta * delta;
     }
 

@@ -103,8 +103,7 @@ _cairo_clip_get_surface (const cairo_clip_t *clip,
 						   CAIRO_CONTENT_ALPHA,
 						   clip->extents.width,
 						   clip->extents.height,
-						   CAIRO_COLOR_TRANSPARENT,
-						   TRUE);
+						   CAIRO_COLOR_WHITE);
     if (unlikely (surface->status))
 	return surface;
 
@@ -114,12 +113,7 @@ _cairo_clip_get_surface (const cairo_clip_t *clip,
     copy_path = copy->path;
     copy->path = NULL;
 
-    assert (copy->num_boxes);
-    status = _cairo_surface_paint (surface,
-				   CAIRO_OPERATOR_ADD,
-				   &_cairo_pattern_white.base,
-				   copy);
-
+    status = CAIRO_STATUS_SUCCESS;
     clip_path = copy_path;
     while (status == CAIRO_STATUS_SUCCESS && clip_path) {
 	status = _cairo_surface_fill (surface,
@@ -138,5 +132,34 @@ _cairo_clip_get_surface (const cairo_clip_t *clip,
 
     *tx = clip->extents.x;
     *ty = clip->extents.y;
+    return surface;
+}
+
+cairo_surface_t *
+_cairo_clip_get_image (const cairo_clip_t *clip,
+		       cairo_surface_t *target,
+		       const cairo_rectangle_int_t *extents)
+{
+    cairo_surface_t *surface;
+    cairo_status_t status;
+
+    surface = cairo_surface_create_similar_image (target,
+						  CAIRO_FORMAT_A8,
+						  extents->width,
+						  extents->height);
+    if (unlikely (surface->status))
+	return surface;
+
+    status = _cairo_surface_paint (surface, CAIRO_OPERATOR_SOURCE,
+				   &_cairo_pattern_white.base, NULL);
+    if (likely (status == CAIRO_STATUS_SUCCESS))
+	status = _cairo_clip_combine_with_surface (clip, surface,
+						   extents->x, extents->y);
+
+    if (unlikely (status)) {
+	cairo_surface_destroy (surface);
+	surface = _cairo_surface_create_in_error (status);
+    }
+
     return surface;
 }

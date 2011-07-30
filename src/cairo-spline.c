@@ -36,7 +36,49 @@
 
 #include "cairoint.h"
 
+#include "cairo-box-private.h"
 #include "cairo-slope-private.h"
+
+cairo_bool_t
+_cairo_spline_intersects (const cairo_point_t *a,
+			  const cairo_point_t *b,
+			  const cairo_point_t *c,
+			  const cairo_point_t *d,
+			  const cairo_box_t *box)
+{
+    cairo_box_t bounds;
+
+    if (_cairo_box_contains_point (box, a) ||
+	_cairo_box_contains_point (box, b) ||
+	_cairo_box_contains_point (box, c) ||
+	_cairo_box_contains_point (box, d))
+    {
+	return TRUE;
+    }
+
+    bounds.p2 = bounds.p1 = *a;
+    _cairo_box_add_point (&bounds, b);
+    _cairo_box_add_point (&bounds, c);
+    _cairo_box_add_point (&bounds, d);
+
+    if (bounds.p2.x <= box->p1.x || bounds.p1.x >= box->p2.x ||
+	bounds.p2.y <= box->p1.y || bounds.p1.y >= box->p2.y)
+    {
+	return FALSE;
+    }
+
+#if 0 /* worth refining? */
+    bounds.p2 = bounds.p1 = *a;
+    _cairo_box_add_curve_to (&bounds, b, c, d);
+    if (bounds.p2.x <= box->p1.x || bounds.p1.x >= box->p2.x ||
+	bounds.p2.y <= box->p1.y || bounds.p1.y >= box->p2.y)
+    {
+	return FALSE;
+    }
+#endif
+
+    return TRUE;
+}
 
 cairo_bool_t
 _cairo_spline_init (cairo_spline_t *spline,
@@ -45,6 +87,10 @@ _cairo_spline_init (cairo_spline_t *spline,
 		    const cairo_point_t *a, const cairo_point_t *b,
 		    const cairo_point_t *c, const cairo_point_t *d)
 {
+    /* If both tangents are zero, this is just a straight line */
+    if (a->x == b->x && a->y == b->y && c->x == d->x && c->y == d->y)
+	return FALSE;
+
     spline->add_point_func = add_point_func;
     spline->closure = closure;
 
@@ -68,6 +114,8 @@ _cairo_spline_init (cairo_spline_t *spline,
 	_cairo_slope_init (&spline->final_slope, &spline->knots.b, &spline->knots.d);
     else
 	return FALSE; /* just treat this as a straight-line from a -> d */
+
+    /* XXX if the initial, final and vector are all equal, this is just a line */
 
     return TRUE;
 }
@@ -213,7 +261,6 @@ _cairo_spline_decompose (cairo_spline_t *spline, double tolerance)
 {
     cairo_spline_knots_t s1;
     cairo_status_t status;
-    cairo_slope_t slope;
 
     s1 = spline->knots;
     spline->last_point = s1.a;
@@ -221,8 +268,8 @@ _cairo_spline_decompose (cairo_spline_t *spline, double tolerance)
     if (unlikely (status))
 	return status;
 
-    _cairo_slope_init (&slope, &spline->knots.c, &spline->knots.d);
-    return spline->add_point_func (spline->closure, &spline->knots.d, &slope);
+    return spline->add_point_func (spline->closure,
+				   &spline->knots.d, &spline->final_slope);
 }
 
 /* Note: this function is only good for computing bounds in device space. */

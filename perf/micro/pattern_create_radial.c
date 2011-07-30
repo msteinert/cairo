@@ -79,13 +79,16 @@ do_pattern_create_radial (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
+cairo_bool_t
+pattern_create_radial_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "pattern-create-radial", NULL);
+}
+
 void
 pattern_create_radial (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
     int i;
-
-    if (! cairo_perf_can_run (perf, "pattern-create-radial", NULL))
-	return;
 
     srand (time (0));
     for (i = 0; i < RADIALS_COUNT; i++)

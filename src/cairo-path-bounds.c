@@ -40,7 +40,6 @@
 #include "cairo-error-private.h"
 #include "cairo-path-fixed-private.h"
 
-
 typedef struct _cairo_path_bounder {
     cairo_point_t current_point;
     cairo_bool_t has_extents;
@@ -161,8 +160,9 @@ _cairo_path_fixed_approximate_stroke_extents (const cairo_path_fixed_t *path,
 	cairo_box_t box_extents;
 	double dx, dy;
 
+	_cairo_stroke_style_max_distance_from_path (style, path, ctm, &dx, &dy);
+
 	box_extents = path->extents;
-	_cairo_stroke_style_max_distance_from_path (style, ctm, &dx, &dy);
 	box_extents.p1.x -= _cairo_fixed_from_double (dx);
 	box_extents.p1.y -= _cairo_fixed_from_double (dy);
 	box_extents.p2.x += _cairo_fixed_from_double (dx);
@@ -183,23 +183,17 @@ _cairo_path_fixed_stroke_extents (const cairo_path_fixed_t	*path,
 				  double			 tolerance,
 				  cairo_rectangle_int_t		*extents)
 {
-    cairo_traps_t traps;
-    cairo_box_t bbox;
+    cairo_polygon_t polygon;
     cairo_status_t status;
 
-    _cairo_traps_init (&traps);
-
-    status = _cairo_path_fixed_stroke_to_traps (path,
-						stroke_style,
-						ctm,
-						ctm_inverse,
-						tolerance,
-						&traps);
-
-    _cairo_traps_extents (&traps, &bbox);
-    _cairo_traps_fini (&traps);
-
-    _cairo_box_round_to_rectangle (&bbox, extents);
+    _cairo_polygon_init (&polygon, NULL, 0);
+    status = _cairo_path_fixed_stroke_to_polygon (path,
+						  stroke_style,
+						  ctm, ctm_inverse,
+						  tolerance,
+						  &polygon);
+    _cairo_box_round_to_rectangle (&polygon.extents, extents);
+    _cairo_polygon_fini (&polygon);
 
     return status;
 }

@@ -48,6 +48,7 @@
 #include "cairo-mutex-private.h"
 #include "cairo-pattern-private.h"
 #include "cairo-reference-count-private.h"
+#include "cairo-scaled-font-private.h"
 #include "cairo-spans-private.h"
 #include "cairo-surface-private.h"
 
@@ -167,6 +168,7 @@ typedef struct _cairo_xcb_font_glyphset_info {
 } cairo_xcb_font_glyphset_info_t;
 
 struct _cairo_xcb_font {
+    cairo_scaled_font_private_t      base;
     cairo_scaled_font_t		    *scaled_font;
     cairo_xcb_connection_t	    *connection;
     cairo_xcb_font_glyphset_info_t  glyphset_info[NUM_GLYPHSETS];
@@ -321,7 +323,7 @@ cairo_private void
 _cairo_xcb_connection_shm_mem_pools_fini (cairo_xcb_connection_t *connection);
 
 cairo_private void
-_cairo_xcb_font_finish (cairo_xcb_font_t *font);
+_cairo_xcb_font_close (cairo_xcb_font_t *font);
 
 cairo_private cairo_xcb_screen_t *
 _cairo_xcb_screen_get (xcb_connection_t *connection,

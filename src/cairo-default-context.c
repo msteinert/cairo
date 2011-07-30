@@ -158,8 +158,7 @@ _cairo_default_context_push_group (void *abstract_cr, cairo_content_t content)
 							     content,
 							     extents.width,
 							     extents.height,
-							     CAIRO_COLOR_TRANSPARENT,
-							     TRUE);
+							     CAIRO_COLOR_TRANSPARENT);
 	status = group_surface->status;
 	if (unlikely (status))
 	    goto bail;

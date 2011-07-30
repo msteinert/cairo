@@ -54,6 +54,7 @@ cairo_private = \
 	cairoint.h \
 	cairo-analysis-surface-private.h \
 	cairo-arc-private.h \
+	cairo-array-private.h \
 	cairo-atomic-private.h \
 	cairo-backend-private.h \
 	cairo-box-private.h \
@@ -62,6 +63,7 @@ cairo_private = \
 	cairo-clip-private.h \
 	cairo-combsort-private.h \
 	cairo-compiler-private.h \
+	cairo-compositor-private.h \
 	cairo-contour-private.h \
 	cairo-composite-rectangles-private.h \
 	cairo-default-context-private.h \
@@ -97,10 +99,11 @@ cairo_private = \
 	cairo-scaled-font-private.h \
 	cairo-slope-private.h \
 	cairo-spans-private.h \
+	cairo-spans-compositor-private.h \
 	cairo-stroke-dash-private.h \
-	cairo-surface-fallback-private.h \
 	cairo-surface-private.h \
 	cairo-surface-clipper-private.h \
+	cairo-surface-fallback-private.h \
 	cairo-surface-observer-private.h \
 	cairo-surface-offset-private.h \
 	cairo-surface-subsurface-private.h \
@@ -108,6 +111,8 @@ cairo_private = \
 	cairo-surface-wrapper-private.h \
 	cairo-time-private.h \
 	cairo-types-private.h \
+	cairo-traps-private.h \
+	cairo-tristrip-private.h \
 	cairo-user-font-private.h \
 	cairo-wideint-private.h \
 	cairo-wideint-type-private.h \
@@ -134,11 +139,13 @@ cairo_sources = \
 	cairo-clip-surface.c \
 	cairo-color.c \
 	cairo-composite-rectangles.c \
+	cairo-compositor.c \
 	cairo-contour.c \
 	cairo-debug.c \
 	cairo-default-context.c \
 	cairo-device.c \
 	cairo-error.c \
+	cairo-fallback-compositor.c \
 	cairo-fixed.c \
 	cairo-font-face.c \
 	cairo-font-face-twin.c \
@@ -149,14 +156,19 @@ cairo_sources = \
 	cairo-gstate.c \
 	cairo-hash.c \
 	cairo-hull.c \
+	cairo-image-compositor.c \
 	cairo-image-info.c \
+	cairo-image-source.c \
 	cairo-image-surface.c \
 	cairo-lzw.c \
 	cairo-matrix.c \
+	cairo-mask-compositor.c \
 	cairo-mesh-pattern-rasterizer.c \
 	cairo-mime-surface.c \
 	cairo-misc.c \
+	cairo-mono-scan-converter.c \
 	cairo-mutex.c \
+	cairo-no-compositor.c \
 	cairo-observer.c \
 	cairo-output-stream.c \
 	cairo-paginated-surface.c \
@@ -168,6 +180,7 @@ cairo_sources = \
 	cairo-path-stroke.c \
 	cairo-path-stroke-boxes.c \
 	cairo-path-stroke-polygon.c \
+	cairo-path-stroke-tristrip.c \
 	cairo-pattern.c \
 	cairo-pen.c \
 	cairo-polygon.c \
@@ -181,12 +194,13 @@ cairo_sources = \
 	cairo-scaled-font.c \
 	cairo-slope.c \
 	cairo-spans.c \
+	cairo-spans-compositor.c \
 	cairo-spline.c \
 	cairo-stroke-dash.c \
 	cairo-stroke-style.c \
 	cairo-surface.c \
-	cairo-surface-fallback.c \
 	cairo-surface-clipper.c \
+	cairo-surface-fallback.c \
 	cairo-surface-observer.c \
 	cairo-surface-offset.c \
 	cairo-surface-snapshot.c \
@@ -195,8 +209,12 @@ cairo_sources = \
 	cairo-system.c \
 	cairo-time.c \
 	cairo-tor-scan-converter.c \
+	cairo-tor22-scan-converter.c \
+	cairo-clip-tor-scan-converter.c \
 	cairo-toy-font-face.c \
 	cairo-traps.c \
+	cairo-tristrip.c \
+	cairo-traps-compositor.c \
 	cairo-unicode.c \
 	cairo-user-font.c \
 	cairo-version.c \
@@ -253,18 +271,15 @@ cairo_ft_sources = cairo-ft-font.c
 
 # These are private, even though they look like public headers
 cairo_test_surfaces_private = \
-	test-fallback-surface.h \
-	test-fallback16-surface.h \
-	test-null-surface.h \
+	test-compositor-surface.h \
+	test-null-compositor-surface.h \
 	test-paginated-surface.h \
-	test-wrapping-surface.h \
 	$(NULL)
 cairo_test_surfaces_sources = \
-	test-fallback-surface.c \
-	test-fallback16-surface.c \
-	test-null-surface.c \
+	test-compositor-surface.c \
+	test-null-compositor-surface.c \
+	test-base-compositor-surface.c \
 	test-paginated-surface.c \
-	test-wrapping-surface.c \
 	$(NULL)
 
 cairo_xlib_headers = cairo-xlib.h
@@ -275,7 +290,11 @@ cairo_xlib_private = \
 	$(NULL)
 cairo_xlib_sources = \
 	cairo-xlib-display.c \
+	cairo-xlib-core-compositor.c \
+	cairo-xlib-fallback-compositor.c \
+	cairo-xlib-render-compositor.c \
 	cairo-xlib-screen.c \
+	cairo-xlib-source.c \
 	cairo-xlib-surface.c \
 	cairo-xlib-visual.c \
 	cairo-xlib-xcb-surface.c \
@@ -343,7 +362,10 @@ cairo_gl_sources = cairo-gl-composite.c \
 		   cairo-gl-glyphs.c \
 		   cairo-gl-gradient.c \
 		   cairo-gl-info.c \
+		   cairo-gl-operand.c \
 		   cairo-gl-shaders.c \
+		   cairo-gl-spans-compositor.c \
+		   cairo-gl-traps-compositor.c \
 		   cairo-gl-surface.c
 
 cairo_glesv2_headers = $(cairo_gl_headers)

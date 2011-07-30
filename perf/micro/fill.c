@@ -107,12 +107,15 @@ do_fill_eo_noaa (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
+cairo_bool_t
+fill_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "fill", NULL);
+}
+
 void
 fill (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "fill", NULL))
-	return;
-
     cairo_perf_cover_sources_and_operators (perf, "fill", do_fill, NULL);
     cairo_perf_cover_sources_and_operators (perf, "fill-annuli", do_fill_annuli, NULL);
     cairo_perf_cover_sources_and_operators (perf, "fill-eo-noaa", do_fill_eo_noaa, NULL);

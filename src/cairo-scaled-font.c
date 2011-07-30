@@ -43,6 +43,7 @@
 #include "cairo-image-surface-private.h"
 #include "cairo-pattern-private.h"
 #include "cairo-scaled-font-private.h"
+#include "cairo-surface-backend-private.h"
 
 #if _XOPEN_SOURCE >= 600 || defined (_ISOC99_SOURCE)
 #define ISFINITE(x) isfinite (x)
@@ -199,10 +200,13 @@ static void
 _cairo_scaled_glyph_fini (cairo_scaled_font_t *scaled_font,
 			  cairo_scaled_glyph_t *scaled_glyph)
 {
-    const cairo_surface_backend_t *surface_backend = scaled_font->surface_backend;
-
-    if (surface_backend != NULL && surface_backend->scaled_glyph_fini != NULL)
-	surface_backend->scaled_glyph_fini (scaled_glyph, scaled_font);
+    while (! cairo_list_is_empty (&scaled_glyph->dev_privates)) {
+	cairo_scaled_glyph_private_t *private =
+	    cairo_list_first_entry (&scaled_glyph->dev_privates,
+				    cairo_scaled_glyph_private_t,
+				    link);
+	private->destroy (private, scaled_glyph, scaled_font);
+    }
 
     if (scaled_glyph->surface != NULL)
 	cairo_surface_destroy (&scaled_glyph->surface->base);
@@ -243,8 +247,7 @@ static const cairo_scaled_font_t _cairo_scaled_font_nil = {
     { NULL, NULL },		/* pages */
     FALSE,			/* cache_frozen */
     FALSE,			/* global_cache_frozen */
-    NULL,			/* surface_backend */
-    NULL,			/* surface_private */
+    { NULL, NULL },		/* privates */
     NULL			/* backend */
 };
 
@@ -444,6 +447,8 @@ _cairo_scaled_glyph_page_destroy (void *closure)
     cairo_scaled_glyph_page_t *page = closure;
     cairo_scaled_font_t *scaled_font;
     unsigned int n;
+
+    assert (! cairo_list_is_empty (&page->link));
 
     scaled_font = (cairo_scaled_font_t *) page->cache_entry.hash;
     for (n = 0; n < page->num_glyphs; n++) {
@@ -734,8 +739,7 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 
     CAIRO_MUTEX_INIT (scaled_font->mutex);
 
-    scaled_font->surface_backend = NULL;
-    scaled_font->surface_private = NULL;
+    cairo_list_init (&scaled_font->dev_privates);
 
     scaled_font->backend = backend;
     cairo_list_init (&scaled_font->link);
@@ -826,30 +830,18 @@ _cairo_scaled_font_fini_internal (cairo_scaled_font_t *scaled_font)
 
     CAIRO_MUTEX_FINI (scaled_font->mutex);
 
-    if (scaled_font->surface_backend != NULL &&
-	scaled_font->surface_backend->scaled_font_fini != NULL)
-	scaled_font->surface_backend->scaled_font_fini (scaled_font);
+    while (! cairo_list_is_empty (&scaled_font->dev_privates)) {
+	cairo_scaled_font_private_t *private =
+	    cairo_list_first_entry (&scaled_font->dev_privates,
+				    cairo_scaled_font_private_t,
+				    link);
+	private->destroy (private, scaled_font);
+    }
 
     if (scaled_font->backend != NULL && scaled_font->backend->fini != NULL)
 	scaled_font->backend->fini (scaled_font);
 
     _cairo_user_data_array_fini (&scaled_font->user_data);
-}
-
-/* XXX: allow multiple backends to share the font */
-void
-_cairo_scaled_font_revoke_ownership (cairo_scaled_font_t *scaled_font)
-{
-    if (scaled_font->surface_backend == NULL)
-	return;
-
-    _cairo_scaled_font_reset_cache (scaled_font);
-
-    if (scaled_font->surface_backend->scaled_font_fini != NULL)
-	scaled_font->surface_backend->scaled_font_fini (scaled_font);
-
-    scaled_font->surface_backend = NULL;
-    scaled_font->surface_private = NULL;
 }
 
 void
@@ -860,6 +852,69 @@ _cairo_scaled_font_fini (cairo_scaled_font_t *scaled_font)
     CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
     _cairo_scaled_font_fini_internal (scaled_font);
     CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
+}
+
+void
+_cairo_scaled_font_attach_private (cairo_scaled_font_t *scaled_font,
+				   cairo_scaled_font_private_t *private,
+				   const void *key,
+				   void (*destroy) (cairo_scaled_font_private_t *,
+						    cairo_scaled_font_t *))
+{
+    private->key = key;
+    private->destroy = destroy;
+    cairo_list_add (&private->link, &scaled_font->dev_privates);
+}
+
+cairo_scaled_font_private_t *
+_cairo_scaled_font_find_private (cairo_scaled_font_t *scaled_font,
+				 const void *key)
+{
+    cairo_scaled_font_private_t *priv;
+
+    cairo_list_foreach_entry (priv, cairo_scaled_font_private_t,
+			      &scaled_font->dev_privates, link)
+    {
+	if (priv->key == key) {
+	    if (priv->link.prev != &scaled_font->dev_privates)
+		cairo_list_move (&priv->link, &scaled_font->dev_privates);
+	    return priv;
+	}
+    }
+
+    return NULL;
+}
+
+void
+_cairo_scaled_glyph_attach_private (cairo_scaled_glyph_t *scaled_glyph,
+				   cairo_scaled_glyph_private_t *private,
+				   const void *key,
+				   void (*destroy) (cairo_scaled_glyph_private_t *,
+						    cairo_scaled_glyph_t *,
+						    cairo_scaled_font_t *))
+{
+    private->key = key;
+    private->destroy = destroy;
+    cairo_list_add (&private->link, &scaled_glyph->dev_privates);
+}
+
+cairo_scaled_glyph_private_t *
+_cairo_scaled_glyph_find_private (cairo_scaled_glyph_t *scaled_glyph,
+				 const void *key)
+{
+    cairo_scaled_glyph_private_t *priv;
+
+    cairo_list_foreach_entry (priv, cairo_scaled_glyph_private_t,
+			      &scaled_glyph->dev_privates, link)
+    {
+	if (priv->key == key) {
+	    if (priv->link.prev != &scaled_glyph->dev_privates)
+		cairo_list_move (&priv->link, &scaled_glyph->dev_privates);
+	    return priv;
+	}
+    }
+
+    return NULL;
 }
 
 /**
@@ -2209,6 +2264,8 @@ _cairo_scaled_font_glyph_approximate_extents (cairo_scaled_font_t	 *scaled_font,
     extents->height = ceil (y1 + pad) - extents->y;
 }
 
+#if 0
+/* XXX win32 */
 cairo_status_t
 _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
 				cairo_operator_t	 op,
@@ -2399,6 +2456,7 @@ CLEANUP_MASK:
 	cairo_surface_destroy (mask);
     return _cairo_scaled_font_set_error (scaled_font, status);
 }
+#endif
 
 /* Add a single-device-unit rectangle to a path. */
 static cairo_status_t
@@ -2844,6 +2902,7 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 
 	memset (scaled_glyph, 0, sizeof (cairo_scaled_glyph_t));
 	_cairo_scaled_glyph_set_index (scaled_glyph, index);
+	cairo_list_init (&scaled_glyph->dev_privates);
 
 	/* ask backend to initialize metrics and shape fields */
 	status =

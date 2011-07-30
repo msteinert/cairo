@@ -347,11 +347,10 @@ _paint_page (cairo_paginated_surface_t *surface)
 	                                  CAIRO_PAGINATED_MODE_ANALYZE);
     status = _cairo_recording_surface_replay_and_create_regions (surface->recording_surface,
 								 analysis);
-    if (status || analysis->status) {
-	if (status == CAIRO_INT_STATUS_SUCCESS)
-	    status = analysis->status;
+    if (status)
 	goto FAIL;
-    }
+
+    assert (analysis->status == CAIRO_STATUS_SUCCESS);
 
      if (surface->backend->set_bounding_box) {
 	 cairo_box_t bbox;
@@ -674,33 +673,23 @@ static const cairo_surface_backend_t cairo_paginated_surface_backend = {
 
     _cairo_paginated_surface_acquire_source_image,
     _cairo_paginated_surface_release_source_image,
-    NULL, /* acquire_dest_image */
-    NULL, /* release_dest_image */
-    NULL, /* clone_similar */
-    NULL, /* composite */
-    NULL, /* fill_rectangles */
-    NULL, /* composite_trapezoids */
-    NULL, /* create_span_renderer */
-    NULL, /* check_span_renderer */
+    _cairo_paginated_surface_snapshot,
+
     _cairo_paginated_surface_copy_page,
     _cairo_paginated_surface_show_page,
+
     _cairo_paginated_surface_get_extents,
-    NULL, /* old_show_glyphs */
     _cairo_paginated_surface_get_font_options,
+
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
-    NULL, /* scaled_font_fini */
-    NULL, /* scaled_glyph_fini */
+
     _cairo_paginated_surface_paint,
     _cairo_paginated_surface_mask,
     _cairo_paginated_surface_stroke,
     _cairo_paginated_surface_fill,
-    NULL, /* show_glyphs */
-    _cairo_paginated_surface_snapshot,
-    NULL, /* is_similar */
     NULL, /* fill_stroke */
-    NULL, /* create_solid_pattern_surface */
-    NULL, /* can_repaint_solid_pattern_surface */
+    NULL, /* show_glyphs */
     _cairo_paginated_surface_has_show_text_glyphs,
     _cairo_paginated_surface_show_text_glyphs
 };

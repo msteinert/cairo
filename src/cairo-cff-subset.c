@@ -42,6 +42,8 @@
 
 #define _BSD_SOURCE /* for snprintf(), strdup() */
 #include "cairoint.h"
+
+#include "cairo-array-private.h"
 #include "cairo-error-private.h"
 
 #if CAIRO_HAS_FONT_SUBSET
@@ -2897,7 +2899,7 @@ cairo_bool_t
 _cairo_cff_scaled_font_is_cid_cff (cairo_scaled_font_t *scaled_font)
 {
     const cairo_scaled_font_backend_t *backend;
-    cairo_status_t status;
+    cairo_int_status_t status;
     unsigned char *data;
     unsigned long data_length;
     unsigned char *current_ptr;
@@ -2916,7 +2918,7 @@ _cairo_cff_scaled_font_is_cid_cff (cairo_scaled_font_t *scaled_font)
     /* Try to load an OpenType/CFF font */
     if (backend->load_truetype_table &&
 	(status = backend->load_truetype_table (scaled_font, TT_TAG_CFF,
-						0, NULL, &data_length)) == CAIRO_STATUS_SUCCESS)
+						0, NULL, &data_length)) == CAIRO_INT_STATUS_SUCCESS)
     {
 	data = malloc (data_length);
 	if (unlikely (data == NULL)) {
@@ -2933,7 +2935,7 @@ _cairo_cff_scaled_font_is_cid_cff (cairo_scaled_font_t *scaled_font)
     if (status == CAIRO_INT_STATUS_UNSUPPORTED &&
 	backend->load_type1_data &&
 	(status = backend->load_type1_data (scaled_font,
-					    0, NULL, &data_length)) == CAIRO_STATUS_SUCCESS)
+					    0, NULL, &data_length)) == CAIRO_INT_STATUS_SUCCESS)
     {
 	data = malloc (data_length);
 	if (unlikely (data == NULL)) {

@@ -396,6 +396,7 @@ _csi_init (csi_t *ctx)
 
     ctx->status = CSI_STATUS_SUCCESS;
     ctx->ref_count = 1;
+    ctx->scanner.line_number = -1;
 
     status = _csi_hash_table_init (&ctx->strings, _intern_string_equal);
     if (status)

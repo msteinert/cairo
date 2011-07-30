@@ -109,18 +109,14 @@ static const cairo_surface_backend_t _cairo_surface_snapshot_backend = {
 
     _cairo_surface_snapshot_acquire_source_image,
     _cairo_surface_snapshot_release_source_image,
-    NULL, NULL, /* acquire, release dest */
-    NULL, /* clone similar */
-    NULL, /* composite */
-    NULL, /* fill rectangles */
-    NULL, /* composite trapezoids */
-    NULL, /* create span renderer */
-    NULL, /* check span renderer */
+    NULL, /* snapshot */
+
     NULL, /* copy_page */
     NULL, /* show_page */
+
     _cairo_surface_snapshot_get_extents,
-    NULL, /* old-show-glyphs */
     NULL, /* get-font-options */
+
     _cairo_surface_snapshot_flush,
 };
 
@@ -141,8 +137,10 @@ _cairo_surface_snapshot_copy_on_write (cairo_surface_t *surface)
 
     if (snapshot->target->backend->snapshot != NULL) {
 	clone = snapshot->target->backend->snapshot (snapshot->target);
-	if (clone != NULL)
+	if (clone != NULL) {
+	    assert (clone->status || ! _cairo_surface_is_snapshot (clone));
 	    goto done;
+	}
     }
 
     /* XXX copy to a similar surface, leave acquisition till later?
@@ -160,7 +158,6 @@ _cairo_surface_snapshot_copy_on_write (cairo_surface_t *surface)
 
 done:
     status = _cairo_surface_set_error (surface, clone->status);
-    assert (! _cairo_surface_is_snapshot (clone));
     snapshot->target = snapshot->clone = clone;
     snapshot->base.type = clone->type;
 }
