@@ -1816,7 +1816,7 @@ blit_with_span_renderer (struct cell_list *cells,
 {
     struct cell *cell = cells->head.next;
     int prev_x = xmin, last_x = -1;
-    int cover = 0, last_cover = -1;
+    int cover = 0, last_cover = 0;
     cairo_half_open_span_t *spans;
     unsigned num_spans;
 
@@ -1851,7 +1851,7 @@ blit_with_span_renderer (struct cell_list *cells,
 	int x = cell->x;
 	int area;
 
-	if (x > prev_x) {
+	if (x > prev_x && cover != last_cover) {
 	    spans[num_spans].x = prev_x;
 	    spans[num_spans].coverage = GRID_AREA_TO_ALPHA (cover);
 	    last_cover = cover;
