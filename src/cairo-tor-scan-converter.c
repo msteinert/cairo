@@ -1142,12 +1142,22 @@ static struct edge *
 merge_sorted_edges (struct edge *head_a, struct edge *head_b)
 {
     struct edge *head, **next;
+    int32_t x;
 
-    head = head_a;
+    if (head_a == NULL)
+	return head_b;
+
     next = &head;
+    if (head_a->x.quo <= head_b->x.quo) {
+	head = head_a;
+    } else {
+	head = head_b;
+	goto start_with_b;
+    }
 
-    while (1) {
-	while (head_a != NULL && head_a->x.quo <= head_b->x.quo) {
+    do {
+	x = head_b->x.quo;
+	while (head_a != NULL && head_a->x.quo <= x) {
 	    next = &head_a->next;
 	    head_a = head_a->next;
 	}
@@ -1156,7 +1166,9 @@ merge_sorted_edges (struct edge *head_a, struct edge *head_b)
 	if (head_a == NULL)
 	    return head;
 
-	while (head_b != NULL && head_b->x.quo <= head_a->x.quo) {
+start_with_b:
+	x = head_a->x.quo;
+	while (head_b != NULL && head_b->x.quo <= x) {
 	    next = &head_b->next;
 	    head_b = head_b->next;
 	}
@@ -1164,7 +1176,7 @@ merge_sorted_edges (struct edge *head_a, struct edge *head_b)
 	*next = head_a;
 	if (head_b == NULL)
 	    return head;
-    }
+    } while (1);
 }
 
 /*
@@ -1287,21 +1299,25 @@ active_list_merge_edges_from_polygon(struct active_list *active,
      * the active list. */
     int min_height = active->min_height;
     struct edge *subrow_edges = NULL;
+    struct edge *tail = *ptail;
 
-    while (1) {
-	struct edge *tail = *ptail;
-	if (NULL == tail) break;
+    do {
+	struct edge *next = tail->next;
 
 	if (y == tail->ytop) {
-	    *ptail = tail->next;
 	    tail->next = subrow_edges;
 	    subrow_edges = tail;
+
 	    if (tail->height_left < min_height)
 		min_height = tail->height_left;
-	} else {
+
+	    *ptail = next;
+	} else
 	    ptail = &tail->next;
-	}
-    }
+
+	tail = next;
+    } while (tail);
+
     if (subrow_edges) {
 	sort_edges (subrow_edges, UINT_MAX, &subrow_edges);
 	active->head = merge_sorted_edges (active->head, subrow_edges);
