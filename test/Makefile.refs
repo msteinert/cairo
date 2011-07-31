@@ -394,6 +394,8 @@ REFERENCE_IMAGES = \
 	extend-repeat.ps2.ref.png \
 	extend-repeat.ps3.ref.png \
 	extend-repeat.ref.png \
+	extended-blend-alpha-mask.argb32.ref.png \
+	extended-blend-alpha-mask.rgb24.ref.png \
 	extended-blend-alpha.argb32.ref.png \
 	extended-blend-alpha.image16.ref.png \
 	extended-blend-alpha.quartz.argb32.ref.png \
@@ -401,6 +403,8 @@ REFERENCE_IMAGES = \
 	extended-blend-alpha.rgb24.ref.png \
 	extended-blend-alpha.svg12.argb32.xfail.png \
 	extended-blend-alpha.svg12.rgb24.xfail.png \
+	extended-blend-mask.argb32.ref.png \
+	extended-blend-mask.rgb24.ref.png \
 	extended-blend-solid-alpha.argb32.ref.png \
 	extended-blend-solid-alpha.image16.ref.png \
 	extended-blend-solid-alpha.rgb24.ref.png \

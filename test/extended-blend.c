@@ -139,6 +139,26 @@ do_blend (cairo_t *cr, cairo_operator_t op, cairo_bool_t alpha)
     cairo_surface_destroy (bg);
 }
 
+static void
+do_blend_mask (cairo_t *cr, cairo_operator_t op, cairo_bool_t alpha)
+{
+    cairo_surface_t *bg, *fg;
+
+    create_patterns (cr, &bg, &fg, alpha);
+
+    /* not using CAIRO_OPERATOR_SOURCE here, it triggers a librsvg bug */
+    cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+    cairo_set_source_surface (cr, bg, 0, 0);
+    cairo_paint (cr);
+
+    cairo_set_operator (cr, op);
+    cairo_set_source_surface (cr, fg, 0, 0);
+    cairo_paint_with_alpha (cr, .5);
+
+    cairo_surface_destroy (fg);
+    cairo_surface_destroy (bg);
+}
+
 static cairo_test_status_t
 draw (cairo_t *cr, cairo_bool_t alpha,
       void (*blend)(cairo_t *, cairo_operator_t, cairo_bool_t))
@@ -182,6 +202,17 @@ draw_extended_blend_solid_alpha (cairo_t *cr, int width, int height)
     return draw (cr, TRUE, do_blend_solid);
 }
 
+static cairo_test_status_t
+draw_extended_blend_mask (cairo_t *cr, int width, int height)
+{
+    return draw (cr, FALSE, do_blend_mask);
+}
+static cairo_test_status_t
+draw_extended_blend_alpha_mask (cairo_t *cr, int width, int height)
+{
+    return draw (cr, TRUE, do_blend_mask);
+}
+
 CAIRO_TEST (extended_blend,
 	    "Tests extended blend modes without alpha",
 	    "operator", /* keywords */
@@ -195,6 +226,20 @@ CAIRO_TEST (extended_blend_alpha,
 	    NULL, /* requirements */
 	    FULL_WIDTH * SIZE, FULL_HEIGHT * SIZE,
 	    NULL, draw_extended_blend_alpha)
+
+CAIRO_TEST (extended_blend_mask,
+	    "Tests extended blend modes with an alpha mask",
+	    "operator,mask", /* keywords */
+	    NULL, /* requirements */
+	    FULL_WIDTH * SIZE, FULL_HEIGHT * SIZE,
+	    NULL, draw_extended_blend_mask)
+CAIRO_TEST (extended_blend_alpha_mask,
+	    "Tests extended blend modes with an alpha mask",
+	    "operator,mask", /* keywords */
+	    NULL, /* requirements */
+	    FULL_WIDTH * SIZE, FULL_HEIGHT * SIZE,
+	    NULL, draw_extended_blend_alpha_mask)
+
 
 CAIRO_TEST (extended_blend_solid,
 	    "Tests extended blend modes on solid patterns without alpha",
