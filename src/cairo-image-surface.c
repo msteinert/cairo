@@ -3034,10 +3034,10 @@ _composite_boxes (cairo_image_surface_t *dst,
 		cairo_box_t *box = chunk->base;
 
 		for (i = 0; i < chunk->count; i++) {
-		    int x1 = _cairo_fixed_integer_round_down (box[i].p1.x);
-		    int y1 = _cairo_fixed_integer_round_down (box[i].p1.y);
-		    int x2 = _cairo_fixed_integer_round_down (box[i].p2.x);
-		    int y2 = _cairo_fixed_integer_round_down (box[i].p2.y);
+		    int x1 = _cairo_fixed_integer_part (box[i].p1.x);
+		    int y1 = _cairo_fixed_integer_part (box[i].p1.y);
+		    int x2 = _cairo_fixed_integer_part (box[i].p2.x);
+		    int y2 = _cairo_fixed_integer_part (box[i].p2.y);
 
 		    if (x2 == x1 || y2 == y1)
 			continue;
@@ -3070,10 +3070,10 @@ _composite_boxes (cairo_image_surface_t *dst,
 	    cairo_box_t *box = chunk->base;
 
 	    for (i = 0; i < chunk->count; i++) {
-		int x1 = _cairo_fixed_integer_round_down (box[i].p1.x);
-		int y1 = _cairo_fixed_integer_round_down (box[i].p1.y);
-		int x2 = _cairo_fixed_integer_round_down (box[i].p2.x);
-		int y2 = _cairo_fixed_integer_round_down (box[i].p2.y);
+		int x1 = _cairo_fixed_integer_part (box[i].p1.x);
+		int y1 = _cairo_fixed_integer_part (box[i].p1.y);
+		int x2 = _cairo_fixed_integer_part (box[i].p2.x);
+		int y2 = _cairo_fixed_integer_part (box[i].p2.y);
 
 		if (x2 == x1 || y2 == y1)
 		    continue;
@@ -3131,10 +3131,10 @@ _composite_boxes (cairo_image_surface_t *dst,
 	    const cairo_box_t *box = chunk->base;
 
 	    for (i = 0; i < chunk->count; i++) {
-		int x1 = _cairo_fixed_integer_round_down (box[i].p1.x);
-		int y1 = _cairo_fixed_integer_round_down (box[i].p1.y);
-		int x2 = _cairo_fixed_integer_round_down (box[i].p2.x);
-		int y2 = _cairo_fixed_integer_round_down (box[i].p2.y);
+		int x1 = _cairo_fixed_integer_part (box[i].p1.x);
+		int y1 = _cairo_fixed_integer_part (box[i].p1.y);
+		int x2 = _cairo_fixed_integer_part (box[i].p2.x);
+		int y2 = _cairo_fixed_integer_part (box[i].p2.y);
 
 		if (x2 == x1 || y2 == y1)
 		    continue;
