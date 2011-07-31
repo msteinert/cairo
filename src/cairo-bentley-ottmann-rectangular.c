@@ -261,7 +261,6 @@ sweep_line_init (sweep_line_t	 *sweep_line,
 		 int		  num_rectangles,
 		 cairo_fill_rule_t fill_rule)
 {
-    _rectangle_sort (rectangles, num_rectangles);
     rectangles[num_rectangles] = NULL;
     sweep_line->rectangles = rectangles;
 
@@ -702,6 +701,8 @@ _cairo_bentley_ottmann_tessellate_rectangular_traps (cairo_traps_t *traps,
 
 	rectangles_ptrs[i] = &rectangles[i];
     }
+    /* XXX incremental sort */
+    _rectangle_sort (rectangles_ptrs, i);
 
     _cairo_traps_clear (traps);
     status = _cairo_bentley_ottmann_tessellate_rectangular (rectangles_ptrs, i,
@@ -727,9 +728,11 @@ _cairo_bentley_ottmann_tessellate_boxes (const cairo_boxes_t *in,
     rectangle_t *rectangles;
     rectangle_t *stack_rectangles_ptrs[ARRAY_LENGTH (stack_rectangles) + 1];
     rectangle_t **rectangles_ptrs;
+    rectangle_t *stack_rectangles_chain[CAIRO_STACK_ARRAY_LENGTH (rectangle_t *) ];
+    rectangle_t **rectangles_chain;
     const struct _cairo_boxes_chunk *chunk;
     cairo_status_t status;
-    int i, j;
+    int i, j, y_min, y_max;
 
     if (unlikely (in->num_boxes == 0)) {
 	_cairo_boxes_clear (out);
@@ -751,6 +754,28 @@ _cairo_bentley_ottmann_tessellate_boxes (const cairo_boxes_t *in,
 	return CAIRO_STATUS_SUCCESS;
     }
 
+    y_min = INT_MAX; y_max = INT_MIN;
+    for (chunk = &in->chunks; chunk != NULL; chunk = chunk->next) {
+	const cairo_box_t *box = chunk->base;
+	for (i = 0; i < chunk->count; i++) {
+	    if (box[i].p1.y < y_min)
+		y_min = box[i].p1.y;
+	    if (box[i].p1.y > y_max)
+		y_max = box[i].p1.y;
+	}
+    }
+    y_min = _cairo_fixed_integer_floor (y_min);
+    y_max = _cairo_fixed_integer_floor (y_max) + 1;
+    y_max -= y_min;
+
+    rectangles_chain = stack_rectangles_chain;
+    if (y_max > ARRAY_LENGTH (stack_rectangles_chain)) {
+	rectangles_chain = _cairo_malloc_ab (y_max, sizeof (rectangle_t *));
+	if (unlikely (rectangles_chain == NULL))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+    memset (rectangles_chain, 0, y_max * sizeof (rectangle_t*));
+
     rectangles = stack_rectangles;
     rectangles_ptrs = stack_rectangles_ptrs;
     if (in->num_boxes > ARRAY_LENGTH (stack_rectangles)) {
@@ -758,8 +783,11 @@ _cairo_bentley_ottmann_tessellate_boxes (const cairo_boxes_t *in,
 					  sizeof (rectangle_t) +
 					  sizeof (rectangle_t *),
 					  sizeof (rectangle_t *));
-	if (unlikely (rectangles == NULL))
+	if (unlikely (rectangles == NULL)) {
+	    if (rectangles_chain != stack_rectangles_chain)
+		free (rectangles_chain);
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	}
 
 	rectangles_ptrs = (rectangle_t **) (rectangles + in->num_boxes);
     }
@@ -768,6 +796,8 @@ _cairo_bentley_ottmann_tessellate_boxes (const cairo_boxes_t *in,
     for (chunk = &in->chunks; chunk != NULL; chunk = chunk->next) {
 	const cairo_box_t *box = chunk->base;
 	for (i = 0; i < chunk->count; i++) {
+	    int h;
+
 	    if (box[i].p1.x < box[i].p2.x) {
 		rectangles[j].left.x = box[i].p1.x;
 		rectangles[j].left.dir = 1;
@@ -788,10 +818,26 @@ _cairo_bentley_ottmann_tessellate_boxes (const cairo_boxes_t *in,
 	    rectangles[j].top = box[i].p1.y;
 	    rectangles[j].bottom = box[i].p2.y;
 
-	    rectangles_ptrs[j] = &rectangles[j];
+	    h = _cairo_fixed_integer_floor (box[i].p1.y) - y_min;
+	    rectangles[j].left.next = (edge_t *)rectangles_chain[h];
+	    rectangles_chain[h] = &rectangles[j];
 	    j++;
 	}
     }
+
+    j = 0;
+    for (y_min = 0; y_min < y_max; y_min++) {
+	rectangle_t *r;
+	int start = j;
+	for (r = rectangles_chain[y_min]; r; r = (rectangle_t *)r->left.next)
+	    rectangles_ptrs[j++] = r;
+	if (j > start + 1)
+		_rectangle_sort (rectangles_ptrs + start, j - start);
+    }
+    assert (j == in->num_boxes);
+
+    if (rectangles_chain != stack_rectangles_chain)
+	free (rectangles_chain);
 
     _cairo_boxes_clear (out);
     status = _cairo_bentley_ottmann_tessellate_rectangular (rectangles_ptrs, j,
