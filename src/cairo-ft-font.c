@@ -226,6 +226,16 @@ typedef struct _cairo_ft_unscaled_font_map {
 static cairo_ft_unscaled_font_map_t *cairo_ft_unscaled_font_map = NULL;
 
 
+static FT_Face
+_cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled);
+
+static void
+_cairo_ft_unscaled_font_unlock_face (cairo_ft_unscaled_font_t *unscaled);
+
+static cairo_bool_t
+_cairo_ft_scaled_font_is_vertical (cairo_scaled_font_t *scaled_font);
+
+
 static void
 _font_map_release_face_lock_held (cairo_ft_unscaled_font_map_t *font_map,
 				  cairo_ft_unscaled_font_t *unscaled)
@@ -621,7 +631,7 @@ _has_unlocked_face (const void *entry)
  * This differs from _cairo_ft_scaled_font_lock_face in that it doesn't
  * set the scale on the face, but just returns it at the last scale.
  */
-cairo_warn FT_Face
+static cairo_warn FT_Face
 _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled)
 {
     cairo_ft_unscaled_font_map_t *font_map;
@@ -676,7 +686,7 @@ _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled)
 
 /* Unlock unscaled font locked with _cairo_ft_unscaled_font_lock_face
  */
-void
+static void
 _cairo_ft_unscaled_font_unlock_face (cairo_ft_unscaled_font_t *unscaled)
 {
     assert (unscaled->lock_count > 0);
@@ -3350,7 +3360,7 @@ cairo_ft_scaled_font_unlock_face (cairo_scaled_font_t *abstract_font)
     _cairo_ft_unscaled_font_unlock_face (scaled_font->unscaled);
 }
 
-cairo_bool_t
+static cairo_bool_t
 _cairo_ft_scaled_font_is_vertical (cairo_scaled_font_t *scaled_font)
 {
     cairo_ft_scaled_font_t *ft_scaled_font;
