@@ -3350,18 +3350,6 @@ cairo_ft_scaled_font_unlock_face (cairo_scaled_font_t *abstract_font)
     _cairo_ft_unscaled_font_unlock_face (scaled_font->unscaled);
 }
 
-/* We expose our unscaled font implementation internally for the the
- * PDF backend, which needs to keep track of the the different
- * fonts-on-disk used by a document, so it can embed them.
- */
-cairo_unscaled_font_t *
-_cairo_ft_scaled_font_get_unscaled_font (cairo_scaled_font_t *abstract_font)
-{
-    cairo_ft_scaled_font_t *scaled_font = (cairo_ft_scaled_font_t *) abstract_font;
-
-    return &scaled_font->unscaled->base;
-}
-
 cairo_bool_t
 _cairo_ft_scaled_font_is_vertical (cairo_scaled_font_t *scaled_font)
 {
