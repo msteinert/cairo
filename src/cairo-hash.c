@@ -72,7 +72,7 @@
  * prime chosen to be a little more than double the high water mark for a
  * given arrangement, so the tables should remain < 50% full. The table
  * size makes for the "first" hash modulus; a second prime (2 less than the
- * first prime) serves as the "second" hash modulus, which is co-prime and
+ * first prime) serves as the "second" hash modulus, which is smaller and
  * thus guarantees a complete permutation of table indices.
  *
  * This structure, and accompanying table, is borrowed/modified from the
@@ -218,9 +218,7 @@ _cairo_hash_table_lookup_unique_key (cairo_hash_table_t *hash_table,
 	return entry;
 
     i = 1;
-    step = key->hash % hash_table->arrangement->rehash;
-    if (step == 0)
-	step = 1;
+    step = 1 + key->hash % hash_table->arrangement->rehash;
     do {
 	idx += step;
 	if (idx >= table_size)
@@ -324,9 +322,7 @@ _cairo_hash_table_lookup (cairo_hash_table_t *hash_table,
 	return NULL;
 
     i = 1;
-    step = key->hash % hash_table->arrangement->rehash;
-    if (step == 0)
-	step = 1;
+    step = 1 + key->hash % hash_table->arrangement->rehash;
     do {
 	idx += step;
 	if (idx >= table_size)
@@ -381,9 +377,7 @@ _cairo_hash_table_random_entry (cairo_hash_table_t	   *hash_table,
 	return entry;
 
     i = 1;
-    step = hash % hash_table->arrangement->rehash;
-    if (step == 0)
-	step = 1;
+    step = 1 + hash % hash_table->arrangement->rehash;
     do {
 	idx += step;
 	if (idx >= table_size)
@@ -455,9 +449,7 @@ _cairo_hash_table_lookup_exact_key (cairo_hash_table_t *hash_table,
 	return entry;
 
     i = 1;
-    step = key->hash % hash_table->arrangement->rehash;
-    if (step == 0)
-	step = 1;
+    step = 1 + key->hash % hash_table->arrangement->rehash;
     do {
 	idx += step;
 	if (idx >= table_size)
