@@ -79,7 +79,7 @@ _cairo_clip_path_destroy (cairo_clip_path_t *clip_path);
 cairo_private void
 _cairo_clip_destroy (cairo_clip_t *clip);
 
-extern const cairo_clip_t __cairo_clip_all;
+cairo_private extern const cairo_clip_t __cairo_clip_all;
 
 static inline cairo_bool_t _cairo_clip_is_all_clipped(const cairo_clip_t *clip)
 {
