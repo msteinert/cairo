@@ -203,7 +203,9 @@ cairo_perf_run (cairo_perf_t	   *perf,
 		   name, perf->target->name,
 		   _content_to_string (perf->target->content, 0),
 		   perf->size);
+	cairo_save (perf->cr);
 	perf_func (perf->cr, perf->size, perf->size, 1);
+	cairo_restore (perf->cr);
 	status = cairo_surface_write_to_png (cairo_get_target (perf->cr), filename);
 	if (status) {
 	    fprintf (stderr, "Failed to generate output check '%s': %s\n",
@@ -232,10 +234,14 @@ cairo_perf_run (cairo_perf_t	   *perf,
 	if (similar)
 	    cairo_push_group_with_content (perf->cr,
 					   cairo_boilerplate_content (perf->target->content));
+	else
+	    cairo_save (perf->cr);
 	perf_func (perf->cr, perf->size, perf->size, 1);
 	loops = cairo_perf_calibrate (perf, perf_func);
 	if (similar)
 	    cairo_pattern_destroy (cairo_pop_group (perf->cr));
+	else
+	    cairo_restore (perf->cr);
 
 	low_std_dev_count = 0;
 	for (i =0; i < perf->iterations; i++) {
@@ -243,10 +249,13 @@ cairo_perf_run (cairo_perf_t	   *perf,
 	    if (similar)
 		cairo_push_group_with_content (perf->cr,
 					       cairo_boilerplate_content (perf->target->content));
+	    else
+		cairo_save (perf->cr);
 	    times[i] = perf_func (perf->cr, perf->size, perf->size, loops) / loops;
 	    if (similar)
 		cairo_pattern_destroy (cairo_pop_group (perf->cr));
-
+	    else
+		cairo_restore (perf->cr);
 	    if (perf->raw) {
 		if (i == 0)
 		    printf ("[*] %s.%s %s.%d %g",
