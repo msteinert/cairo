@@ -500,13 +500,6 @@ _device_flush (void *device)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_bool_t
-_xrender_formats_equal (const void *A, const void *B)
-{
-    const cairo_xcb_xrender_format_t *a = A, *b = B;
-    return a->key.hash == b->key.hash;
-}
-
 static void
 _pluck_xrender_format (void *entry,
 		       void *closure)
@@ -633,7 +626,7 @@ _cairo_xcb_connection_get (xcb_connection_t *xcb_connection)
     cairo_list_init (&connection->fonts);
     cairo_list_init (&connection->screens);
     cairo_list_init (&connection->link);
-    connection->xrender_formats = _cairo_hash_table_create (_xrender_formats_equal);
+    connection->xrender_formats = _cairo_hash_table_create (NULL);
     if (connection->xrender_formats == NULL) {
 	CAIRO_MUTEX_FINI (connection->device.mutex);
 	free (connection);
@@ -641,7 +634,7 @@ _cairo_xcb_connection_get (xcb_connection_t *xcb_connection)
 	goto unlock;
     }
 
-    connection->visual_to_xrender_format = _cairo_hash_table_create (_xrender_formats_equal);
+    connection->visual_to_xrender_format = _cairo_hash_table_create (NULL);
     if (connection->visual_to_xrender_format == NULL) {
 	_cairo_hash_table_destroy (connection->xrender_formats);
 	CAIRO_MUTEX_FINI (connection->device.mutex);

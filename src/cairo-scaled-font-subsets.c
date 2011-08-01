@@ -152,15 +152,6 @@ _cairo_sub_font_glyph_init_key (cairo_sub_font_glyph_t  *sub_font_glyph,
     sub_font_glyph->base.hash = scaled_font_glyph_index;
 }
 
-static cairo_bool_t
-_cairo_sub_font_glyphs_equal (const void *key_a, const void *key_b)
-{
-    const cairo_sub_font_glyph_t *sub_font_glyph_a = key_a;
-    const cairo_sub_font_glyph_t *sub_font_glyph_b = key_b;
-
-    return sub_font_glyph_a->base.hash == sub_font_glyph_b->base.hash;
-}
-
 static cairo_sub_font_glyph_t *
 _cairo_sub_font_glyph_create (unsigned long	scaled_font_glyph_index,
 			      unsigned int	subset_id,
@@ -314,7 +305,7 @@ _cairo_sub_font_create (cairo_scaled_font_subsets_t	*parent,
     sub_font->num_glyphs_in_latin_subset = 0;
     sub_font->max_glyphs_per_subset = max_glyphs_per_subset;
 
-    sub_font->sub_font_glyphs = _cairo_hash_table_create (_cairo_sub_font_glyphs_equal);
+    sub_font->sub_font_glyphs = _cairo_hash_table_create (NULL);
     if (unlikely (sub_font->sub_font_glyphs == NULL)) {
 	free (sub_font);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);

@@ -128,6 +128,25 @@ struct _cairo_hash_table {
 };
 
 /**
+ * _cairo_hash_table_uid_keys_equal:
+ * @key_a: the first key to be compared
+ * @key_b: the second key to be compared
+ *
+ * Provides a cairo_hash_keys_equal_func_t which always returns
+ * %TRUE. This is useful to create hash tables using keys whose hash
+ * completely describes the key, because in this special case
+ * comparing the hashes is sufficient to guarantee that the keys are
+ * equal.
+ *
+ * Return value: %TRUE.
+ **/
+static cairo_bool_t
+_cairo_hash_table_uid_keys_equal (const void *key_a, const void *key_b)
+{
+    return TRUE;
+}
+
+/**
  * _cairo_hash_table_create:
  * @keys_equal: a function to return %TRUE if two keys are equal
  *
@@ -138,6 +157,9 @@ struct _cairo_hash_table {
  * value. Sometimes only the key will be necessary, (as in
  * _cairo_hash_table_remove), and other times both a key and a value
  * will be necessary, (as in _cairo_hash_table_insert).
+ *
+ * If @keys_equal is %NULL, two keys will be considered equal if and
+ * only if their hashes are equal.
  *
  * See #cairo_hash_entry_t for more details.
  *
@@ -154,7 +176,10 @@ _cairo_hash_table_create (cairo_hash_keys_equal_func_t keys_equal)
 	return NULL;
     }
 
-    hash_table->keys_equal = keys_equal;
+    if (keys_equal == NULL)
+	hash_table->keys_equal = _cairo_hash_table_uid_keys_equal;
+    else
+	hash_table->keys_equal = keys_equal;
 
     hash_table->arrangement = &hash_table_arrangements[0];
 
@@ -316,7 +341,7 @@ _cairo_hash_table_lookup (cairo_hash_table_t *hash_table,
 
     entry = hash_table->entries[idx];
     if (ENTRY_IS_LIVE (entry)) {
-	if (hash_table->keys_equal (key, entry))
+	if (entry->hash == key->hash && hash_table->keys_equal (key, entry))
 	    return entry;
     } else if (ENTRY_IS_FREE (entry))
 	return NULL;
@@ -330,7 +355,7 @@ _cairo_hash_table_lookup (cairo_hash_table_t *hash_table,
 
 	entry = hash_table->entries[idx];
 	if (ENTRY_IS_LIVE (entry)) {
-	    if (hash_table->keys_equal (key, entry))
+	    if (entry->hash == key->hash && hash_table->keys_equal (key, entry))
 		return entry;
 	} else if (ENTRY_IS_FREE (entry))
 	    return NULL;

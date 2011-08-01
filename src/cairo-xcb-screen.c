@@ -97,9 +97,6 @@ _linear_pattern_cache_entry_equal (const void *A, const void *B)
 {
     const struct pattern_cache_entry *a = A, *b = B;
 
-    if (a->key.hash != b->key.hash)
-	return FALSE;
-
     return _cairo_linear_pattern_equal (&a->pattern.gradient.linear,
 					&b->pattern.gradient.linear);
 }
@@ -108,9 +105,6 @@ static cairo_bool_t
 _radial_pattern_cache_entry_equal (const void *A, const void *B)
 {
     const struct pattern_cache_entry *a = A, *b = B;
-
-    if (a->key.hash != b->key.hash)
-	return FALSE;
 
     return _cairo_radial_pattern_equal (&a->pattern.gradient.radial,
 					&b->pattern.gradient.radial);

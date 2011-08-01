@@ -638,9 +638,6 @@ _cairo_scaled_font_keys_equal (const void *abstract_key_a,
     const cairo_scaled_font_t *key_a = abstract_key_a;
     const cairo_scaled_font_t *key_b = abstract_key_b;
 
-    if (key_a->hash_entry.hash != key_b->hash_entry.hash)
-	return FALSE;
-
     return key_a->original_font_face == key_b->original_font_face &&
 	    memcmp ((unsigned char *)(&key_a->font_matrix.xx),
 		    (unsigned char *)(&key_b->font_matrix.xx),
@@ -666,15 +663,6 @@ _cairo_scaled_font_matches (const cairo_scaled_font_t *scaled_font,
 		    (unsigned char *)(&ctm->xx),
 		    sizeof(cairo_matrix_t)) == 0 &&
 	    cairo_font_options_equal (&scaled_font->options, options);
-}
-
-static cairo_bool_t
-_cairo_scaled_glyphs_equal (const void *abstract_a, const void *abstract_b)
-{
-    const cairo_scaled_glyph_t *a = abstract_a;
-    const cairo_scaled_glyph_t *b = abstract_b;
-
-    return a->hash_entry.hash == b->hash_entry.hash;
 }
 
 /*
@@ -725,7 +713,7 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 	    return status;
     }
 
-    scaled_font->glyphs = _cairo_hash_table_create (_cairo_scaled_glyphs_equal);
+    scaled_font->glyphs = _cairo_hash_table_create (NULL);
     if (unlikely (scaled_font->glyphs == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
