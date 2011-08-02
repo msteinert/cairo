@@ -212,9 +212,11 @@ _cairo_create_in_error (cairo_status_t status)
  *  with cairo_destroy() when you are done using the #cairo_t.
  *  This function never returns %NULL. If memory cannot be
  *  allocated, a special #cairo_t object will be returned on
- *  which cairo_status() returns %CAIRO_STATUS_NO_MEMORY.
- *  You can use this object normally, but no drawing will
- *  be done.
+ *  which cairo_status() returns %CAIRO_STATUS_NO_MEMORY. If
+ *  you attempt to target a surface which does not support
+ *  writing (such as #cairo_mime_surface_t) then a
+ *  %CAIRO_STATUS_WRITE_ERROR will be raised.  You can use this
+ *  object normally, but no drawing will be done.
  **/
 cairo_t *
 cairo_create (cairo_surface_t *target)
@@ -223,6 +225,9 @@ cairo_create (cairo_surface_t *target)
 	return _cairo_create_in_error (_cairo_error (CAIRO_STATUS_NULL_POINTER));
     if (unlikely (target->status))
 	return _cairo_create_in_error (target->status);
+
+    if (target->backend->create_context == NULL)
+	return _cairo_create_in_error (_cairo_error (CAIRO_STATUS_WRITE_ERROR));
 
     return target->backend->create_context (target);
 

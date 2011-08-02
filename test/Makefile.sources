@@ -190,6 +190,7 @@ test_sources = \
 	mesh-pattern-overlap.c		        	\
 	mesh-pattern-transformed.c		        \
 	mime-data.c					\
+	mime-surface.c					\
 	miter-precision.c				\
 	move-to-show-surface.c				\
 	new-sub-path.c					\

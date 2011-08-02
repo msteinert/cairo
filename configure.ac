@@ -620,6 +620,7 @@ CAIRO_ENABLE_SURFACE_BACKEND(image, image, always, [
 
 dnl ===========================================================================
 
+CAIRO_ENABLE_SURFACE_BACKEND(mime, mime, always)
 CAIRO_ENABLE_SURFACE_BACKEND(recording, recording, always)
 CAIRO_ENABLE_SURFACE_BACKEND(observer, observer, always)
 CAIRO_ENABLE_SURFACE_BACKEND(tee, tee, no)

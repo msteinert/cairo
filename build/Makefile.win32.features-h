@@ -99,6 +99,7 @@ ifeq ($(CAIRO_HAS_TEST_SURFACES),1)
 	@echo "#define CAIRO_HAS_TEST_SURFACES 1" >> $(top_srcdir)/src/cairo-features.h
 endif
 	@echo "#define CAIRO_HAS_IMAGE_SURFACE 1" >> $(top_srcdir)/src/cairo-features.h
+	@echo "#define CAIRO_HAS_MIME_SURFACE 1" >> $(top_srcdir)/src/cairo-features.h
 	@echo "#define CAIRO_HAS_RECORDING_SURFACE 1" >> $(top_srcdir)/src/cairo-features.h
 	@echo "#define CAIRO_HAS_OBSERVER_SURFACE 1" >> $(top_srcdir)/src/cairo-features.h
 ifeq ($(CAIRO_HAS_TEE_SURFACE),1)

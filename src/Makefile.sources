@@ -151,6 +151,7 @@ cairo_sources = \
 	cairo-lzw.c \
 	cairo-matrix.c \
 	cairo-mesh-pattern-rasterizer.c \
+	cairo-mime-surface.c \
 	cairo-misc.c \
 	cairo-mutex.c \
 	cairo-observer.c \

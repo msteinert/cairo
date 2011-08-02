@@ -789,6 +789,7 @@ REFERENCE_IMAGES = \
 	mime-data.ref.png \
 	mime-data.script.ref.png \
 	mime-data.svg.ref.png \
+	mime-surface.ref.png \
 	miter-precision.ps2.ref.png \
 	miter-precision.ps3.ref.png \
 	miter-precision.ref.png \

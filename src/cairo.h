@@ -433,6 +433,24 @@ typedef cairo_status_t (*cairo_read_func_t) (void		*closure,
 					     unsigned char	*data,
 					     unsigned int	length);
 
+/**
+ * cairo_rectangle_int_t:
+ * @x: X coordinate of the left side of the rectangle
+ * @y: Y coordinate of the the top side of the rectangle
+ * @width: width of the rectangle
+ * @height: height of the rectangle
+ *
+ * A data structure for holding a rectangle with integer coordinates.
+ *
+ * Since: 1.10
+ **/
+
+typedef struct _cairo_rectangle_int {
+    int x, y;
+    int width, height;
+} cairo_rectangle_int_t;
+
+
 /* Functions for manipulating state objects */
 cairo_public cairo_t *
 cairo_create (cairo_surface_t *target);
@@ -2153,6 +2171,7 @@ cairo_surface_status (cairo_surface_t *surface);
  * @CAIRO_SURFACE_TYPE_SKIA: The surface is of type Skia, since 1.10
  * @CAIRO_SURFACE_TYPE_SUBSURFACE: The surface is a subsurface created with
  *   cairo_surface_create_for_rectangle(), since 1.10
+ * @CAIRO_SURFACE_TYPE_MIME: The surface is a callback (mime) surface, since 1.12
  *
  * #cairo_surface_type_t is used to describe the type of a given
  * surface. The surface types are also known as "backends" or "surface
@@ -2202,7 +2221,8 @@ typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_TEE,
     CAIRO_SURFACE_TYPE_XML,
     CAIRO_SURFACE_TYPE_SKIA,
-    CAIRO_SURFACE_TYPE_SUBSURFACE
+    CAIRO_SURFACE_TYPE_SUBSURFACE,
+    CAIRO_SURFACE_TYPE_MIME
 } cairo_surface_type_t;
 
 cairo_public cairo_surface_type_t
@@ -2356,6 +2376,56 @@ cairo_recording_surface_ink_extents (cairo_surface_t *surface,
                                      double *y0,
                                      double *width,
                                      double *height);
+
+/* Mime-surface (callback) functions */
+
+typedef cairo_surface_t *(*cairo_mime_surface_acquire_t) (cairo_surface_t *mime_surface,
+							  void *callback_data,
+							  cairo_surface_t *target,
+							  const cairo_rectangle_int_t *sample_extents,
+							  cairo_rectangle_int_t *surface_extents);
+
+typedef void (*cairo_mime_surface_release_t) (cairo_surface_t *mime_surface,
+					      void *callback_data,
+					      cairo_surface_t *image_surface);
+
+typedef cairo_surface_t *(*cairo_mime_surface_snapshot_t) (cairo_surface_t *mime_surface,
+							   void *callback_data);
+typedef void (*cairo_mime_surface_destroy_t) (cairo_surface_t *mime_surface,
+					      void *callback_data);
+
+cairo_public cairo_surface_t *
+cairo_mime_surface_create (void *data, cairo_content_t content, int width, int height);
+
+cairo_public void
+cairo_mime_surface_set_callback_data (cairo_surface_t *surface,
+				      void *data);
+
+cairo_public void *
+cairo_mime_surface_get_callback_data (cairo_surface_t *surface);
+
+cairo_public void
+cairo_mime_surface_set_acquire (cairo_surface_t *surface,
+				cairo_mime_surface_acquire_t acquire,
+				cairo_mime_surface_release_t release);
+
+cairo_public void
+cairo_mime_surface_get_acquire (cairo_surface_t *surface,
+				cairo_mime_surface_acquire_t *acquire,
+				cairo_mime_surface_release_t *release);
+cairo_public void
+cairo_mime_surface_set_snapshot (cairo_surface_t *surface,
+				 cairo_mime_surface_snapshot_t snapshot);
+
+cairo_public cairo_mime_surface_snapshot_t
+cairo_mime_surface_get_snapshot (cairo_surface_t *surface);
+
+cairo_public void
+cairo_mime_surface_set_destroy (cairo_surface_t *surface,
+				cairo_mime_surface_destroy_t destroy);
+
+cairo_public cairo_mime_surface_destroy_t
+cairo_mime_surface_get_destroy (cairo_surface_t *surface);
 
 /* Pattern creation functions */
 
@@ -2683,23 +2753,6 @@ cairo_matrix_transform_point (const cairo_matrix_t *matrix,
  * Since: 1.10
  **/
 typedef struct _cairo_region cairo_region_t;
-
-/**
- * cairo_rectangle_int_t:
- * @x: X coordinate of the left side of the rectangle
- * @y: Y coordinate of the the top side of the rectangle
- * @width: width of the rectangle
- * @height: height of the rectangle
- *
- * A data structure for holding a rectangle with integer coordinates.
- *
- * Since: 1.10
- **/
-
-typedef struct _cairo_rectangle_int {
-    int x, y;
-    int width, height;
-} cairo_rectangle_int_t;
 
 typedef enum _cairo_region_overlap {
     CAIRO_REGION_OVERLAP_IN,		/* completely inside region */

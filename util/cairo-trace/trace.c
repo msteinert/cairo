@@ -3496,6 +3496,55 @@ cairo_image_surface_create_for_data (unsigned char *data, cairo_format_t format,
 }
 
 cairo_surface_t *
+cairo_mime_surface_create (void *data, cairo_content_t content, int width, int height)
+{
+    cairo_surface_t *ret;
+
+    _enter_trace ();
+
+    ret = DLCALL (cairo_mime_surface_create, data, content, width, height);
+
+    _emit_line_info ();
+    if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+	cairo_format_t format;
+	cairo_surface_t *image;
+	cairo_t *cr;
+
+	/* Impossible to accurately record the interaction with a mime-surface
+	 * so just suck all the data into an image upfront */
+	switch (content) {
+	case CAIRO_CONTENT_ALPHA: format = CAIRO_FORMAT_A8; break;
+	case CAIRO_CONTENT_COLOR: format = CAIRO_FORMAT_RGB24; break;
+	default:
+	case CAIRO_CONTENT_COLOR_ALPHA: format = CAIRO_FORMAT_ARGB32; break;
+	}
+
+	_trace_printf ("%% mime-surface\n");
+
+	image = DLCALL (cairo_image_surface_create, format, width, height);
+	cr = DLCALL (cairo_create, image);
+	DLCALL (cairo_set_source_surface, cr, ret, 0, 0);
+	DLCALL (cairo_paint, cr);
+	DLCALL (cairo_destroy, cr);
+
+	_emit_image (image, NULL);
+	DLCALL (cairo_surface_destroy, image);
+	_trace_printf (" dup /s%ld exch def\n",
+		       obj->token);
+
+	obj->width = width;
+	obj->height = height;
+	obj->defined = TRUE;
+	_push_object (obj);
+	_write_unlock ();
+    }
+
+    _exit_trace ();
+    return ret;
+}
+
+cairo_surface_t *
 cairo_surface_create_similar (cairo_surface_t *other,
 			      cairo_content_t content,
 			      int width, int height)
