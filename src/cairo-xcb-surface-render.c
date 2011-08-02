@@ -2692,10 +2692,15 @@ _upload_image_inplace (cairo_xcb_surface_t *surface,
     if (! cairo_boxes_for_each_box (boxes, image_contains_box, &icb))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    if (surface->deferred_clear) {
+	status = _cairo_xcb_surface_clear (surface);
+	if (unlikely (status))
+	    return status;
+    }
+
     status = _cairo_xcb_connection_acquire (surface->connection);
     if (unlikely (status))
 	return status;
-
 
     iub.surface = surface;
     iub.image = image;
