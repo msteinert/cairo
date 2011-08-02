@@ -198,6 +198,7 @@ test_sources = \
 	over-below-source.c				\
 	over-between-source.c				\
 	overlapping-glyphs.c				\
+	overlapping-dash-caps.c				\
 	paint.c						\
 	paint-clip-fill.c				\
 	paint-repeat.c					\
