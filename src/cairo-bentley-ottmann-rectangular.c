@@ -739,18 +739,28 @@ _cairo_bentley_ottmann_tessellate_boxes (const cairo_boxes_t *in,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    if (unlikely (in->num_boxes == 1)) {
-	cairo_box_t box = in->chunks.base[0];
-	_cairo_boxes_clear (out);
+    if (in->num_boxes == 1) {
+	if (in == out) {
+	    cairo_box_t *box = &in->chunks.base[0];
 
-	if (box.p1.x > box.p2.x) {
-	    cairo_fixed_t tmp = box.p1.x;
-	    box.p1.x = box.p2.x;
-	    box.p2.x = tmp;
+	    if (box->p1.x > box->p2.x) {
+		cairo_fixed_t tmp = box->p1.x;
+		box->p1.x = box->p2.x;
+		box->p2.x = tmp;
+	    }
+	} else {
+	    cairo_box_t box = in->chunks.base[0];
+
+	    if (box.p1.x > box.p2.x) {
+		cairo_fixed_t tmp = box.p1.x;
+		box.p1.x = box.p2.x;
+		box.p2.x = tmp;
+	    }
+
+	    _cairo_boxes_clear (out);
+	    status = _cairo_boxes_add (out, CAIRO_ANTIALIAS_DEFAULT, &box);
+	    assert (status == CAIRO_STATUS_SUCCESS);
 	}
-
-	status = _cairo_boxes_add (out, CAIRO_ANTIALIAS_DEFAULT, &box);
-	assert (status == CAIRO_STATUS_SUCCESS);
 	return CAIRO_STATUS_SUCCESS;
     }
 
