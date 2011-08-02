@@ -147,6 +147,10 @@ cairo_private cairo_bool_t
 _cairo_composite_rectangles_can_reduce_clip (cairo_composite_rectangles_t *composite,
 					     cairo_clip_t *clip);
 
+cairo_private cairo_int_status_t
+_cairo_composite_rectangles_add_to_damage (cairo_composite_rectangles_t *composite,
+					   cairo_boxes_t *damage);
+
 cairo_private void
 _cairo_composite_rectangles_fini (cairo_composite_rectangles_t *extents);
 

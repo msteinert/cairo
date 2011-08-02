@@ -806,10 +806,9 @@ cairo_xcb_device_debug_cap_xshm_version (cairo_device_t *device,
                                          int minor_version)
 {
     cairo_xcb_connection_t *connection = (cairo_xcb_connection_t *) device;
-    cairo_status_t status;
 
     if (device->backend->type != CAIRO_DEVICE_TYPE_XCB) {
-	status = _cairo_device_set_error (device, CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
+	_cairo_device_set_error (device, CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
 	return;
     }
 
@@ -843,10 +842,9 @@ cairo_xcb_device_debug_cap_xrender_version (cairo_device_t *device,
                                             int minor_version)
 {
     cairo_xcb_connection_t *connection = (cairo_xcb_connection_t *) device;
-    cairo_status_t status;
 
     if (device->backend->type != CAIRO_DEVICE_TYPE_XCB) {
-	status = _cairo_device_set_error (device, CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
+	_cairo_device_set_error (device, CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
 	return;
     }
 

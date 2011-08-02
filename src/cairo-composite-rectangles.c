@@ -436,3 +436,21 @@ _cairo_composite_rectangles_can_reduce_clip (cairo_composite_rectangles_t *compo
     _cairo_box_from_rectangle (&box, &extents);
     return _cairo_clip_contains_box (clip, &box);
 }
+
+cairo_int_status_t
+_cairo_composite_rectangles_add_to_damage (cairo_composite_rectangles_t *composite,
+					   cairo_boxes_t *damage)
+{
+    cairo_int_status_t status;
+    int n;
+
+    for (n = 0; n < composite->clip->num_boxes; n++) {
+	status = _cairo_boxes_add (damage,
+			  CAIRO_ANTIALIAS_NONE,
+			  &composite->clip->boxes[n]);
+	if (unlikely (status))
+	    return status;
+    }
+
+    return CAIRO_INT_STATUS_SUCCESS;
+}

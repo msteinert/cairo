@@ -43,6 +43,7 @@
 #include "cairo-xcb.h"
 #include "cairo-xcb-private.h"
 
+#include "cairo-composite-rectangles-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-image-surface-private.h"
 #include "cairo-surface-backend-private.h"
@@ -188,9 +189,10 @@ _cairo_xcb_surface_finish (void *abstract_surface)
     cairo_status_t status;
 
     if (surface->fallback != NULL) {
-	cairo_surface_finish (surface->fallback);
-	cairo_surface_destroy (surface->fallback);
+	cairo_surface_finish (&surface->fallback->base);
+	cairo_surface_destroy (&surface->fallback->base);
     }
+    _cairo_boxes_fini (&surface->fallback_damage);
 
     cairo_list_del (&surface->link);
 
@@ -455,7 +457,7 @@ _cairo_xcb_surface_acquire_source_image (void *abstract_surface,
     cairo_surface_t *image;
 
     if (surface->fallback != NULL) {
-	image = cairo_surface_reference (surface->fallback);
+	image = cairo_surface_reference (&surface->fallback->base);
 	goto DONE;
     }
 
@@ -582,6 +584,108 @@ _put_image (cairo_xcb_surface_t    *surface,
     return status;
 }
 
+static cairo_int_status_t
+_put_shm_image_boxes (cairo_xcb_surface_t    *surface,
+		      cairo_image_surface_t  *image,
+		      xcb_gcontext_t gc,
+		      cairo_boxes_t *boxes)
+{
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
+    cairo_xcb_shm_info_t *shm_info;
+
+    shm_info = _cairo_user_data_array_get_data (&image->base.user_data,
+						(const cairo_user_data_key_t *) surface->connection);
+    if (shm_info != NULL) {
+	struct _cairo_boxes_chunk *chunk;
+
+	for (chunk = &boxes->chunks; chunk; chunk = chunk->next) {
+	    int i;
+
+	    for (i = 0; i < chunk->count; i++) {
+		cairo_box_t *b = &chunk->base[i];
+		int x = _cairo_fixed_integer_part (b->p1.x);
+		int y = _cairo_fixed_integer_part (b->p1.y);
+		int width = _cairo_fixed_integer_part (b->p2.x - b->p1.x);
+		int height = _cairo_fixed_integer_part (b->p2.y - b->p1.y);
+
+		_cairo_xcb_connection_shm_put_image (surface->connection,
+						     surface->drawable,
+						     gc,
+						     surface->width, surface->height,
+						     x, y,
+						     width, height,
+						     x, y,
+						     image->depth,
+						     shm_info->shm,
+						     shm_info->offset);
+	    }
+	}
+    }
+
+    return CAIRO_INT_STATUS_SUCCESS;
+#endif
+
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+static cairo_status_t
+_put_image_boxes (cairo_xcb_surface_t    *surface,
+		  cairo_image_surface_t  *image,
+		  cairo_boxes_t *boxes)
+{
+    cairo_int_status_t status = CAIRO_INT_STATUS_SUCCESS;
+    xcb_gcontext_t gc;
+
+    if (boxes->num_boxes == 0)
+	    return CAIRO_STATUS_SUCCESS;
+
+    /* XXX track damaged region? */
+
+    status = _cairo_xcb_connection_acquire (surface->connection);
+    if (unlikely (status))
+	return status;
+
+    assert (image->pixman_format == surface->pixman_format);
+    assert (image->depth == surface->depth);
+    assert (image->stride == (int) CAIRO_STRIDE_FOR_WIDTH_BPP (image->width, PIXMAN_FORMAT_BPP (image->pixman_format)));
+
+    gc = _cairo_xcb_screen_get_gc (surface->screen,
+				   surface->drawable,
+				   surface->depth);
+
+    status = _put_shm_image_boxes (surface, image, gc, boxes);
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	    struct _cairo_boxes_chunk *chunk;
+
+	    for (chunk = &boxes->chunks; chunk; chunk = chunk->next) {
+		    int i;
+
+		    for (i = 0; i < chunk->count; i++) {
+			    cairo_box_t *b = &chunk->base[i];
+			    int x = _cairo_fixed_integer_part (b->p1.x);
+			    int y = _cairo_fixed_integer_part (b->p1.y);
+			    int width = _cairo_fixed_integer_part (b->p2.x - b->p1.x);
+			    int height = _cairo_fixed_integer_part (b->p2.y - b->p1.y);
+			    _cairo_xcb_connection_put_image (surface->connection,
+							     surface->drawable, gc,
+							     width, height,
+							     x, y,
+							     image->depth,
+							     image->stride,
+							     image->data +
+							     x * PIXMAN_FORMAT_BPP (image->pixman_format) / 8 +
+							     y * image->stride);
+
+		    }
+	    }
+	    status = CAIRO_STATUS_SUCCESS;
+    }
+
+    _cairo_xcb_screen_put_gc (surface->screen, surface->depth, gc);
+    _cairo_xcb_connection_release (surface->connection);
+    return status;
+}
+
 static cairo_status_t
 _cairo_xcb_surface_flush (void *abstract_surface)
 {
@@ -598,20 +702,27 @@ _cairo_xcb_surface_flush (void *abstract_surface)
 
     status = surface->base.status;
     if (status == CAIRO_STATUS_SUCCESS && ! surface->base.finished) {
-	status = cairo_surface_status (surface->fallback);
+	status = cairo_surface_status (&surface->fallback->base);
 
-	if (status == CAIRO_STATUS_SUCCESS) {
-	    status = _put_image (surface, (cairo_image_surface_t *)surface->fallback);
-	}
+	if (status == CAIRO_STATUS_SUCCESS)
+		status = _cairo_bentley_ottmann_tessellate_boxes (&surface->fallback_damage,
+								  CAIRO_FILL_RULE_WINDING,
+								  &surface->fallback_damage);
+
+	if (status == CAIRO_STATUS_SUCCESS)
+	    status = _put_image_boxes (surface,
+				       surface->fallback,
+				       &surface->fallback_damage);
 
 	if (status == CAIRO_STATUS_SUCCESS) {
 	    _cairo_surface_attach_snapshot (&surface->base,
-					    surface->fallback,
+					    &surface->fallback->base,
 					    cairo_surface_finish);
 	}
     }
 
-    cairo_surface_destroy (surface->fallback);
+    _cairo_boxes_clear (&surface->fallback_damage);
+    cairo_surface_destroy (&surface->fallback->base);
     surface->fallback = NULL;
 
     return status;
@@ -625,7 +736,7 @@ _cairo_xcb_surface_map_to_image (void *abstract_surface,
     cairo_surface_t *image;
 
     if (surface->fallback)
-	return surface->fallback->backend->map_to_image (surface->fallback, extents);
+	return surface->fallback->base.backend->map_to_image (&surface->fallback->base, extents);
 
     image = _get_image (surface, TRUE,
 			extents->x, extents->y,
@@ -638,10 +749,8 @@ _cairo_xcb_surface_map_to_image (void *abstract_surface,
      * uploading the image will handle the problem for us.
      */
     if (surface->deferred_clear &&
-	    ! (extents->x == 0 &&
-	       extents->y == 0 &&
-	       extents->width == surface->width &&
-	       extents->height == surface->height)) {
+	! (extents->width == surface->width &&
+	   extents->height == surface->height)) {
 	cairo_status_t status = _cairo_xcb_surface_clear (surface);
 	if (unlikely (status)) {
 	    cairo_surface_destroy(image);
@@ -661,22 +770,32 @@ _cairo_xcb_surface_unmap (void *abstract_surface,
     cairo_xcb_surface_t *surface = abstract_surface;
 
     if (surface->fallback)
-	return surface->fallback->backend->unmap_image (surface->fallback, image);
+	return surface->fallback->base.backend->unmap_image (&surface->fallback->base, image);
     return _put_image (abstract_surface, image);
 }
 
 static cairo_surface_t *
-_cairo_xcb_surface_fallback (cairo_xcb_surface_t *surface)
+_cairo_xcb_surface_fallback (cairo_xcb_surface_t *surface,
+			     cairo_composite_rectangles_t *composite)
 {
-    cairo_surface_t *image;
+    cairo_image_surface_t *image;
+    cairo_status_t status;
 
-    image = _get_image (surface, TRUE, 0, 0, surface->width, surface->height);
+    image = (cairo_image_surface_t *)
+	    _get_image (surface, TRUE, 0, 0, surface->width, surface->height);
 
     /* If there was a deferred clear, _get_image applied it */
-    if (image->status == CAIRO_STATUS_SUCCESS)
+    if (image->base.status == CAIRO_STATUS_SUCCESS) {
 	surface->deferred_clear = FALSE;
 
-    return image;
+	surface->fallback = image;
+    }
+
+    status = _cairo_composite_rectangles_add_to_damage (composite,
+							&surface->fallback_damage);
+    if (unlikely (status))
+	    return _cairo_surface_create_in_error (status);
+    return &surface->fallback->base;
 }
 
 static cairo_int_status_t
@@ -686,21 +805,34 @@ _cairo_xcb_surface_paint (void			*abstract_surface,
 			  const cairo_clip_t	*clip)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
+    cairo_composite_rectangles_t composite;
     cairo_int_status_t status;
+
+    status = _cairo_composite_rectangles_init_for_paint (&composite,
+							 &surface->base,
+							 op, source,
+							 clip);
+    if (unlikely (status))
+	return status;
 
     if (surface->fallback == NULL) {
 	status = _cairo_xcb_surface_cairo_paint (surface, op, source, clip);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
+	    goto done;
 
-	status = _cairo_xcb_surface_render_paint (surface, op, source, clip);
+	status = _cairo_xcb_surface_render_paint (surface, op, source,
+						  &composite);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
-
-	surface->fallback = _cairo_xcb_surface_fallback (surface);
+	    goto done;
     }
 
-    return _cairo_surface_paint (surface->fallback, op, source, clip);
+    status = _cairo_surface_paint (_cairo_xcb_surface_fallback (surface,
+								&composite),
+				   op, source, clip);
+
+done:
+    _cairo_composite_rectangles_fini (&composite);
+    return status;
 }
 
 static cairo_int_status_t
@@ -711,25 +843,34 @@ _cairo_xcb_surface_mask (void			*abstract_surface,
 			 const cairo_clip_t	*clip)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
+    cairo_composite_rectangles_t composite;
     cairo_int_status_t status;
+
+    status = _cairo_composite_rectangles_init_for_mask (&composite,
+							&surface->base,
+							op, source, mask, clip);
+    if (unlikely (status))
+	return status;
 
     if (surface->fallback == NULL) {
 	status =  _cairo_xcb_surface_cairo_mask (surface,
 						 op, source, mask, clip);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
+	    goto done;
 
 	status =  _cairo_xcb_surface_render_mask (surface,
-						  op, source, mask, clip);
+						  op, source, mask, &composite);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
-
-	surface->fallback = _cairo_xcb_surface_fallback (surface);
+	    goto done;
     }
 
-    return _cairo_surface_mask (surface->fallback,
-				op, source, mask,
-				clip);
+    status = _cairo_surface_mask (_cairo_xcb_surface_fallback (surface,
+							       &composite),
+				  op, source, mask,
+				  clip);
+done:
+    _cairo_composite_rectangles_fini (&composite);
+    return status;
 }
 
 static cairo_int_status_t
@@ -745,7 +886,16 @@ _cairo_xcb_surface_stroke (void				*abstract_surface,
 			   const cairo_clip_t		*clip)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
+    cairo_composite_rectangles_t composite;
     cairo_int_status_t status;
+
+    status = _cairo_composite_rectangles_init_for_stroke (&composite,
+							  &surface->base,
+							  op, source,
+							  path, style, ctm,
+							  clip);
+    if (unlikely (status))
+	return status;
 
     if (surface->fallback == NULL) {
 	status = _cairo_xcb_surface_cairo_stroke (surface, op, source,
@@ -755,26 +905,28 @@ _cairo_xcb_surface_stroke (void				*abstract_surface,
 						  clip);
 
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
+	    goto done;
 
 	status = _cairo_xcb_surface_render_stroke (surface, op, source,
 						   path, style,
 						   ctm, ctm_inverse,
 						   tolerance, antialias,
-						   clip);
+						   &composite);
 
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
-
-	surface->fallback = _cairo_xcb_surface_fallback (surface);
+	    goto done;
     }
 
-    return _cairo_surface_stroke (surface->fallback,
-				  op, source,
-				  path, style,
-				  ctm, ctm_inverse,
-				  tolerance, antialias,
-				  clip);
+    status = _cairo_surface_stroke (_cairo_xcb_surface_fallback (surface,
+								 &composite),
+				    op, source,
+				    path, style,
+				    ctm, ctm_inverse,
+				    tolerance, antialias,
+				    clip);
+done:
+    _cairo_composite_rectangles_fini (&composite);
+    return status;
 }
 
 static cairo_int_status_t
@@ -788,7 +940,15 @@ _cairo_xcb_surface_fill (void			*abstract_surface,
 			 const cairo_clip_t	*clip)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
+    cairo_composite_rectangles_t composite;
     cairo_int_status_t status;
+
+    status = _cairo_composite_rectangles_init_for_fill (&composite,
+							&surface->base,
+							op, source, path,
+							clip);
+    if (unlikely (status))
+	return status;
 
     if (surface->fallback == NULL) {
 	status = _cairo_xcb_surface_cairo_fill (surface, op, source,
@@ -796,23 +956,25 @@ _cairo_xcb_surface_fill (void			*abstract_surface,
 						tolerance, antialias,
 						clip);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
+	    goto done;
 
 	status = _cairo_xcb_surface_render_fill (surface, op, source,
 						 path, fill_rule,
 						 tolerance, antialias,
-						 clip);
+						 &composite);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
-
-	surface->fallback = _cairo_xcb_surface_fallback (surface);
+	    goto done;
     }
 
-    return _cairo_surface_fill (surface->fallback,
-				op, source,
-				path, fill_rule,
-				tolerance, antialias,
-				clip);
+    status = _cairo_surface_fill (_cairo_xcb_surface_fallback (surface,
+							       &composite),
+				  op, source,
+				  path, fill_rule,
+				  tolerance, antialias,
+				  clip);
+done:
+    _cairo_composite_rectangles_fini (&composite);
+    return status;
 }
 
 static cairo_int_status_t
@@ -825,7 +987,18 @@ _cairo_xcb_surface_glyphs (void				*abstract_surface,
 			   const cairo_clip_t		*clip)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
+    cairo_composite_rectangles_t composite;
     cairo_int_status_t status;
+    cairo_bool_t overlap;
+
+    status = _cairo_composite_rectangles_init_for_glyphs (&composite,
+							  &surface->base,
+							  op, source,
+							  scaled_font,
+							  glyphs, num_glyphs,
+							  clip, &overlap);
+    if (unlikely (status))
+	return status;
 
     if (surface->fallback == NULL) {
 	status = _cairo_xcb_surface_cairo_glyphs (surface,
@@ -833,25 +1006,27 @@ _cairo_xcb_surface_glyphs (void				*abstract_surface,
 						  scaled_font, glyphs, num_glyphs,
 						  clip);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
+	    goto done;
 
 	status = _cairo_xcb_surface_render_glyphs (surface,
 						   op, source,
 						   scaled_font, glyphs, num_glyphs,
-						   clip);
+						   &composite, overlap);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
-
-	surface->fallback = _cairo_xcb_surface_fallback (surface);
+	    goto done;
     }
 
-    return _cairo_surface_show_text_glyphs (surface->fallback,
-					    op, source,
-					    NULL, 0,
-					    glyphs, num_glyphs,
-					    NULL, 0, 0,
-					    scaled_font,
-					    clip);
+    status =  _cairo_surface_show_text_glyphs (_cairo_xcb_surface_fallback (surface,
+									    &composite),
+					       op, source,
+					       NULL, 0,
+					       glyphs, num_glyphs,
+					       NULL, 0, 0,
+					       scaled_font,
+					       clip);
+done:
+    _cairo_composite_rectangles_fini (&composite);
+    return status;
 }
 
 const cairo_surface_backend_t _cairo_xcb_surface_backend = {
@@ -910,8 +1085,6 @@ _cairo_xcb_surface_create_internal (cairo_xcb_screen_t		*screen,
     surface->screen = screen;
     cairo_list_add (&surface->link, &screen->surfaces);
 
-    surface->fallback = NULL;
-
     surface->drawable = drawable;
     surface->owns_pixmap = owns_pixmap;
 
@@ -930,6 +1103,9 @@ _cairo_xcb_surface_create_internal (cairo_xcb_screen_t		*screen,
 
     surface->pixman_format = pixman_format;
     surface->xrender_format = xrender_format;
+
+    surface->fallback = NULL;
+    _cairo_boxes_init (&surface->fallback_damage);
 
     return &surface->base;
 }
