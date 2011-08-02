@@ -964,6 +964,7 @@ struct _cairo_image_surface {
 
     unsigned owns_data : 1;
     unsigned transparency : 2;
+    unsigned color : 2;
 };
 
 extern const cairo_private cairo_surface_backend_t _cairo_image_surface_backend;
@@ -2027,6 +2028,9 @@ _cairo_image_surface_span_render_row (int				 y,
 
 cairo_private cairo_image_transparency_t
 _cairo_image_analyze_transparency (cairo_image_surface_t      *image);
+
+cairo_private cairo_image_color_t
+_cairo_image_analyze_color (cairo_image_surface_t      *image);
 
 cairo_private cairo_bool_t
 _cairo_surface_is_image (const cairo_surface_t *surface) cairo_pure;

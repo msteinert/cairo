@@ -168,6 +168,7 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
     surface->data = (uint8_t *) pixman_image_get_data (pixman_image);
     surface->owns_data = FALSE;
     surface->transparency = CAIRO_IMAGE_UNKNOWN;
+    surface->color = CAIRO_IMAGE_UNKNOWN_COLOR;
 
     surface->width = width;
     surface->height = height;
@@ -4907,4 +4908,62 @@ _cairo_image_analyze_transparency (cairo_image_surface_t      *image)
     }
 
     return image->transparency;
+}
+
+cairo_image_color_t
+_cairo_image_analyze_color (cairo_image_surface_t      *image)
+{
+    int x, y;
+
+    if (image->transparency != CAIRO_IMAGE_UNKNOWN_COLOR)
+	return image->color;
+
+    if (image->format == CAIRO_FORMAT_A1 || image->format == CAIRO_FORMAT_A8)
+	return image->color = CAIRO_IMAGE_IS_MONOCHROME;
+
+    if (image->format == CAIRO_FORMAT_ARGB32) {
+	image->color = CAIRO_IMAGE_IS_MONOCHROME;
+	for (y = 0; y < image->height; y++) {
+	    uint32_t *pixel = (uint32_t *) (image->data + y * image->stride);
+
+	    for (x = 0; x < image->width; x++, pixel++) {
+		int a = (*pixel & 0xff000000) >> 24;
+		int r = (*pixel & 0x00ff0000) >> 16;
+		int g = (*pixel & 0x0000ff00) >> 8;
+		int b = (*pixel & 0x000000ff);
+		if (a == 0) {
+		    r = g = b = 0;
+		} else {
+		    r = (r * 255 + a / 2) / a;
+		    g = (g * 255 + a / 2) / a;
+		    b = (b * 255 + a / 2) / a;
+		}
+		if (!(r == g && g == b))
+		    return image->color = CAIRO_IMAGE_IS_COLOR;
+		else if (r > 0 && r < 255)
+		    image->color = CAIRO_IMAGE_IS_GRAYSCALE;
+	    }
+	}
+	return image->color;
+    }
+
+    if (image->format == CAIRO_FORMAT_RGB24) {
+	image->color = CAIRO_IMAGE_IS_MONOCHROME;
+	for (y = 0; y < image->height; y++) {
+	    uint32_t *pixel = (uint32_t *) (image->data + y * image->stride);
+
+	    for (x = 0; x < image->width; x++, pixel++) {
+		int r = (*pixel & 0x00ff0000) >> 16;
+		int g = (*pixel & 0x0000ff00) >>  8;
+		int b = (*pixel & 0x000000ff);
+		if (!(r == g && g == b))
+		    return image->color = CAIRO_IMAGE_IS_COLOR;
+		else if (r > 0 && r < 255)
+		    image->color = CAIRO_IMAGE_IS_GRAYSCALE;
+	    }
+	}
+	return image->color;
+    }
+
+    return image->color = CAIRO_IMAGE_IS_COLOR;
 }

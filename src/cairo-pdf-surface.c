@@ -1967,13 +1967,14 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
 			       cairo_bool_t             mask)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    char *rgb;
-    unsigned long rgb_size;
+    char *data;
+    unsigned long data_size;
     uint32_t *pixel;
-    int i, x, y;
+    int i, x, y, bit;
     cairo_pdf_resource_t smask = {0}; /* squelch bogus compiler warning */
     cairo_bool_t need_smask;
     const char *interpolate = "true";
+    cairo_image_color_t color;
 
     /* These are the only image formats we currently support, (which
      * makes things a lot simpler here). This is enforced through
@@ -1988,18 +1989,36 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
     if (mask)
 	return _cairo_pdf_surface_emit_imagemask (surface, image, image_res);
 
-    rgb_size = image->height * image->width * 3;
-    rgb = _cairo_malloc_abc (image->width, image->height, 3);
-    if (unlikely (rgb == NULL)) {
+    color = _cairo_image_analyze_color (image);
+    switch (color) {
+	case CAIRO_IMAGE_IS_COLOR:
+	case CAIRO_IMAGE_UNKNOWN_COLOR:
+	    data_size = image->height * image->width * 3;
+	    data = _cairo_malloc_abc (image->width, image->height, 3);
+	    break;
+
+	case CAIRO_IMAGE_IS_GRAYSCALE:
+	    data_size = image->height * image->width;
+	    data = _cairo_malloc_ab (image->width, image->height);
+	    break;
+	case CAIRO_IMAGE_IS_MONOCHROME:
+	    data_size = (image->width + 7) / 8 * image->height;
+	    data = _cairo_malloc_ab ((image->width+7) / 8, image->height);
+	    break;
+    }
+    if (unlikely (data == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP;
     }
 
     i = 0;
+    bit = 7;
     for (y = 0; y < image->height; y++) {
 	pixel = (uint32_t *) (image->data + y * image->stride);
 
 	for (x = 0; x < image->width; x++, pixel++) {
+	    int r, g, b;
+
 	    /* XXX: We're un-premultiplying alpha here. My reading of the PDF
 	     * specification suggests that we should be able to avoid having
 	     * to do this by filling in the SMask's Matte dictionary
@@ -2009,22 +2028,43 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
 		uint8_t a;
 		a = (*pixel & 0xff000000) >> 24;
 		if (a == 0) {
-		    rgb[i++] = 0;
-		    rgb[i++] = 0;
-		    rgb[i++] = 0;
+		    r = g = b = 0;
 		} else {
-		    rgb[i++] = (((*pixel & 0xff0000) >> 16) * 255 + a / 2) / a;
-		    rgb[i++] = (((*pixel & 0x00ff00) >>  8) * 255 + a / 2) / a;
-		    rgb[i++] = (((*pixel & 0x0000ff) >>  0) * 255 + a / 2) / a;
+		    r = (((*pixel & 0xff0000) >> 16) * 255 + a / 2) / a;
+		    g = (((*pixel & 0x00ff00) >>  8) * 255 + a / 2) / a;
+		    b = (((*pixel & 0x0000ff) >>  0) * 255 + a / 2) / a;
 		}
 	    } else if (image->format == CAIRO_FORMAT_RGB24) {
-		rgb[i++] = (*pixel & 0x00ff0000) >> 16;
-		rgb[i++] = (*pixel & 0x0000ff00) >>  8;
-		rgb[i++] = (*pixel & 0x000000ff) >>  0;
+		r = (*pixel & 0x00ff0000) >> 16;
+		g = (*pixel & 0x0000ff00) >>  8;
+		b = (*pixel & 0x000000ff) >>  0;
 	    } else {
-		rgb[i++] = 0;
-		rgb[i++] = 0;
-		rgb[i++] = 0;
+		r = g = b = 0;
+	    }
+
+	    switch (color) {
+		case CAIRO_IMAGE_IS_COLOR:
+		case CAIRO_IMAGE_UNKNOWN_COLOR:
+		    data[i++] = r;
+		    data[i++] = g;
+		    data[i++] = b;
+		    break;
+
+		case CAIRO_IMAGE_IS_GRAYSCALE:
+		    data[i++] = r;
+		    break;
+
+		case CAIRO_IMAGE_IS_MONOCHROME:
+		    if (bit == 7)
+			data[i] = 0;
+		    if (r != 0)
+			data[i] |= (1 << bit);
+		    bit--;
+		    if (bit < 0) {
+			bit = 7;
+			i++;
+		    }
+		    break;
 	    }
 	}
     }
@@ -2058,9 +2098,9 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
 				"   /Subtype /Image\n"	\
 				"   /Width %d\n"		\
 				"   /Height %d\n"		\
-				"   /ColorSpace /DeviceRGB\n"	\
+				"   /ColorSpace %s\n"	\
 	                        "   /Interpolate %s\n" \
-				"   /BitsPerComponent 8\n"
+				"   /BitsPerComponent %d\n"
 
     if (need_smask)
 	status = _cairo_pdf_surface_open_stream (surface,
@@ -2069,7 +2109,9 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
 						 IMAGE_DICTIONARY
 						 "   /SMask %d 0 R\n",
 						 image->width, image->height,
+						 color == CAIRO_IMAGE_IS_COLOR ? "/DeviceRGB" : "/DeviceGray",
 						 interpolate,
+						 color == CAIRO_IMAGE_IS_MONOCHROME? 1 : 8,
 						 smask.id);
     else
 	status = _cairo_pdf_surface_open_stream (surface,
@@ -2077,17 +2119,19 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
 						 TRUE,
 						 IMAGE_DICTIONARY,
 						 image->width, image->height,
-						 interpolate);
+						 color == CAIRO_IMAGE_IS_COLOR ? "/DeviceRGB" : "/DeviceGray",
+						 interpolate,
+						 color == CAIRO_IMAGE_IS_MONOCHROME? 1 : 8);
     if (unlikely (status))
 	goto CLEANUP_RGB;
 
 #undef IMAGE_DICTIONARY
 
-    _cairo_output_stream_write (surface->output, rgb, rgb_size);
+    _cairo_output_stream_write (surface->output, data, data_size);
     status = _cairo_pdf_surface_close_stream (surface);
 
 CLEANUP_RGB:
-    free (rgb);
+    free (data);
 CLEANUP:
     return status;
 }

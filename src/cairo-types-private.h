@@ -377,6 +377,14 @@ typedef enum _cairo_image_transparency {
     CAIRO_IMAGE_UNKNOWN
 } cairo_image_transparency_t;
 
+typedef enum _cairo_image_color {
+    CAIRO_IMAGE_IS_COLOR,
+    CAIRO_IMAGE_IS_GRAYSCALE,
+    CAIRO_IMAGE_IS_MONOCHROME,
+    CAIRO_IMAGE_UNKNOWN_COLOR
+} cairo_image_color_t;
+
+
 struct _cairo_mime_data {
     cairo_reference_count_t ref_count;
     unsigned char *data;
