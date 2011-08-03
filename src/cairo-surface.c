@@ -685,17 +685,34 @@ cairo_surface_unmap_image (cairo_surface_t *surface,
     if (surface->backend->unmap_image)
 	status = surface->backend->unmap_image (surface, (cairo_image_surface_t *) image);
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	cairo_image_surface_t *img = (cairo_image_surface_t *) image;
 	cairo_surface_pattern_t pattern;
+	cairo_clip_t *clip;
+	cairo_rectangle_int_t extents;
 
 	_cairo_pattern_init_for_surface (&pattern, image);
 	pattern.base.filter = CAIRO_FILTER_NEAREST;
 
+	/* We have to apply the translate from map_to_image's extents.x and .y */
+	cairo_matrix_init_translate (&pattern.base.matrix,
+				     image->device_transform.x0,
+				     image->device_transform.y0);
+
+	/* And we also have to clip the operation to the image's extents */
+	extents.x = image->device_transform_inverse.x0;
+	extents.y = image->device_transform_inverse.y0;
+	extents.width = img->width;
+	extents.height = img->height;
+
+	clip = _cairo_clip_intersect_rectangle (NULL, &extents);
+
 	status = _cairo_surface_paint (surface,
 				       CAIRO_OPERATOR_SOURCE,
 				       &pattern.base,
-				       NULL);
+				       clip);
 
 	_cairo_pattern_fini (&pattern.base);
+	_cairo_clip_destroy (clip);
     }
 
 error:
