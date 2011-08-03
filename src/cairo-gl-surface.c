@@ -40,10 +40,12 @@
 
 #include "cairoint.h"
 
+#include "cairo-gl-private.h"
+
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
-#include "cairo-gl-private.h"
+#include "cairo-image-surface-private.h"
 
 static cairo_int_status_t
 _cairo_gl_surface_fill_rectangles (void			   *abstract_dst,

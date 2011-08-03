@@ -83,6 +83,7 @@
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
+#include "cairo-image-surface-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-surface-wrapper-private.h"
 

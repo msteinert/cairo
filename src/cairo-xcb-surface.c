@@ -44,6 +44,7 @@
 #include "cairo-xcb-private.h"
 
 #include "cairo-default-context-private.h"
+#include "cairo-image-surface-private.h"
 
 #define XLIB_COORD_MAX 32767
 
@@ -222,8 +223,8 @@ _cairo_xcb_surface_finish (void *abstract_surface)
     cairo_status_t status;
 
     if (surface->fallback != NULL) {
-	cairo_surface_finish (&surface->fallback->base);
-	cairo_surface_destroy (&surface->fallback->base);
+	cairo_surface_finish (surface->fallback);
+	cairo_surface_destroy (surface->fallback);
     }
 
     cairo_list_del (&surface->link);
@@ -297,7 +298,7 @@ _cairo_xcb_surface_create_shm_image (cairo_xcb_connection_t *connection,
 }
 #endif
 
-static cairo_image_surface_t *
+static cairo_surface_t *
 _get_shm_image (cairo_xcb_surface_t *surface,
 		int x, int y,
 		int width, int height)
@@ -329,19 +330,19 @@ _get_shm_image (cairo_xcb_surface_t *surface,
     }
 
 done:
-    return (cairo_image_surface_t *) image;
+    return image;
 #else
-    return NULL;;
+    return NULL;
 #endif
 }
 
-static cairo_image_surface_t *
+static cairo_surface_t *
 _get_image (cairo_xcb_surface_t		 *surface,
 	    cairo_bool_t		  use_shm,
 	    int x, int y,
 	    int width, int height)
 {
-    cairo_image_surface_t *image;
+    cairo_surface_t *image;
     cairo_xcb_connection_t *connection;
     xcb_get_image_reply_t *reply;
     cairo_int_status_t status;
@@ -353,7 +354,7 @@ _get_image (cairo_xcb_surface_t		 *surface,
     assert (y + height <= surface->height);
 
     if (surface->deferred_clear) {
-	image = (cairo_image_surface_t *)
+	image =
 	    _cairo_image_surface_create_with_pixman_format (NULL,
 							    surface->pixman_format,
 							    width, height,
@@ -362,14 +363,13 @@ _get_image (cairo_xcb_surface_t		 *surface,
 	    cairo_solid_pattern_t solid;
 
 	    _cairo_pattern_init_solid (&solid, &surface->deferred_clear_color);
-	    status = _cairo_surface_paint (&image->base,
+	    status = _cairo_surface_paint (image,
 					   CAIRO_OPERATOR_SOURCE,
 					   &solid.base,
 					   NULL);
 	    if (unlikely (status)) {
-		cairo_surface_destroy (&image->base);
-		image = (cairo_image_surface_t *)
-		    _cairo_surface_create_in_error (status);
+		cairo_surface_destroy (image);
+		image = _cairo_surface_create_in_error (status);
 	    }
 	}
 	return image;
@@ -379,7 +379,7 @@ _get_image (cairo_xcb_surface_t		 *surface,
 
     status = _cairo_xcb_connection_acquire (connection);
     if (unlikely (status))
-	return (cairo_image_surface_t *) _cairo_surface_create_in_error (status);
+	return _cairo_surface_create_in_error (status);
 
     if (use_shm) {
 	image = _get_shm_image (surface, x, y, width, height);
@@ -450,22 +450,20 @@ _get_image (cairo_xcb_surface_t		 *surface,
     /* XXX format conversion */
     assert (reply->depth == surface->depth);
 
-    image = (cairo_image_surface_t *)
-	_cairo_image_surface_create_with_pixman_format
+    image = _cairo_image_surface_create_with_pixman_format
 	(xcb_get_image_data (reply),
 	 surface->pixman_format,
 	 width, height,
 	 CAIRO_STRIDE_FOR_WIDTH_BPP (width,
 				     PIXMAN_FORMAT_BPP (surface->pixman_format)));
-    status = image->base.status;
+    status = image->status;
     if (unlikely (status)) {
 	free (reply);
 	goto FAIL;
     }
 
-    assert (xcb_get_image_data_length (reply) == image->height * image->stride);
-
-    pixman_image_set_destroy_function (image->pixman_image, _destroy_image, reply);
+    /* XXX */
+    pixman_image_set_destroy_function (((cairo_image_surface_t *)image)->pixman_image, _destroy_image, reply);
 
     _cairo_xcb_connection_release (connection);
 
@@ -473,7 +471,7 @@ _get_image (cairo_xcb_surface_t		 *surface,
 
 FAIL:
     _cairo_xcb_connection_release (connection);
-    return (cairo_image_surface_t *) _cairo_surface_create_in_error (status);
+    return _cairo_surface_create_in_error (status);
 }
 
 static cairo_status_t
@@ -482,29 +480,28 @@ _cairo_xcb_surface_acquire_source_image (void *abstract_surface,
 					 void **image_extra)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
-    cairo_image_surface_t *image;
+    cairo_surface_t *image;
 
     if (surface->fallback != NULL) {
-	image = (cairo_image_surface_t *) cairo_surface_reference (&surface->fallback->base);
+	image = cairo_surface_reference (surface->fallback);
 	goto DONE;
     }
 
-    image = (cairo_image_surface_t *)
-	_cairo_surface_has_snapshot (&surface->base,
-				     &_cairo_image_surface_backend);
+    image = _cairo_surface_has_snapshot (&surface->base,
+					 &_cairo_image_surface_backend);
     if (image != NULL) {
-	image = (cairo_image_surface_t *) cairo_surface_reference (&image->base);
+	image = cairo_surface_reference (image);
 	goto DONE;
     }
 
     image = _get_image (surface, FALSE, 0, 0, surface->width, surface->height);
-    if (unlikely (image->base.status))
-	return image->base.status;
+    if (unlikely (image->status))
+	return image->status;
 
-    _cairo_surface_attach_snapshot (&surface->base, &image->base, NULL);
+    _cairo_surface_attach_snapshot (&surface->base, image, NULL);
 
 DONE:
-    *image_out = image;
+    *image_out = (cairo_image_surface_t *) image;
     *image_extra = NULL;
     return CAIRO_STATUS_SUCCESS;
 }
@@ -629,20 +626,20 @@ _cairo_xcb_surface_flush (void *abstract_surface)
 
     status = surface->base.status;
     if (status == CAIRO_STATUS_SUCCESS && ! surface->base.finished) {
-	status = cairo_surface_status (&surface->fallback->base);
+	status = cairo_surface_status (surface->fallback);
 
 	if (status == CAIRO_STATUS_SUCCESS) {
-	    status = _put_image (surface, surface->fallback);
+	    status = _put_image (surface, (cairo_image_surface_t *)surface->fallback);
 	}
 
 	if (status == CAIRO_STATUS_SUCCESS) {
 	    _cairo_surface_attach_snapshot (&surface->base,
-					    &surface->fallback->base,
+					    surface->fallback,
 					    cairo_surface_finish);
 	}
     }
 
-    cairo_surface_destroy (&surface->fallback->base);
+    cairo_surface_destroy (surface->fallback);
     surface->fallback = NULL;
 
     return status;
@@ -653,16 +650,16 @@ _cairo_xcb_surface_map_to_image (void *abstract_surface,
 				 const cairo_rectangle_int_t *extents)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
-    cairo_image_surface_t *image;
+    cairo_surface_t *image;
 
     if (surface->fallback)
-	return surface->fallback->base.backend->map_to_image (surface->fallback, extents);
+	return surface->fallback->backend->map_to_image (surface->fallback, extents);
 
     image = _get_image (surface, TRUE,
 			extents->x, extents->y,
 			extents->width, extents->height);
-    if (unlikely (image->base.status))
-	return &image->base;
+    if (unlikely (image->status))
+	return image;
 
     /* Do we have a deferred clear and this image surface does NOT cover the
      * whole xcb surface? Have to apply the clear in that case, else
@@ -675,14 +672,14 @@ _cairo_xcb_surface_map_to_image (void *abstract_surface,
 	       extents->height == surface->height)) {
 	cairo_status_t status = _cairo_xcb_surface_clear (surface);
 	if (unlikely (status)) {
-	    cairo_surface_destroy(&image->base);
+	    cairo_surface_destroy(image);
 	    return _cairo_surface_create_in_error (status);
 	}
     }
     surface->deferred_clear = FALSE;
 
-    cairo_surface_set_device_offset (&image->base, -extents->x, -extents->y);
-    return &image->base;
+    cairo_surface_set_device_offset (image, -extents->x, -extents->y);
+    return image;
 }
 
 static cairo_int_status_t
@@ -692,18 +689,19 @@ _cairo_xcb_surface_unmap (void *abstract_surface,
     cairo_xcb_surface_t *surface = abstract_surface;
 
     if (surface->fallback)
-	return surface->fallback->base.backend->unmap_image (surface->fallback, image);
+	return surface->fallback->backend->unmap_image (surface->fallback, image);
     return _put_image (abstract_surface, image);
 }
 
-static cairo_image_surface_t *
+static cairo_surface_t *
 _cairo_xcb_surface_fallback (cairo_xcb_surface_t *surface)
 {
-    cairo_image_surface_t *image;
+    cairo_surface_t *image;
+
     image = _get_image (surface, TRUE, 0, 0, surface->width, surface->height);
 
     /* If there was a deferred clear, _get_image applied it */
-    if (image->base.status == CAIRO_STATUS_SUCCESS)
+    if (image->status == CAIRO_STATUS_SUCCESS)
 	surface->deferred_clear = FALSE;
 
     return image;
@@ -730,7 +728,7 @@ _cairo_xcb_surface_paint (void			*abstract_surface,
 	surface->fallback = _cairo_xcb_surface_fallback (surface);
     }
 
-    return _cairo_surface_paint (&surface->fallback->base, op, source, clip);
+    return _cairo_surface_paint (surface->fallback, op, source, clip);
 }
 
 static cairo_int_status_t
@@ -757,7 +755,7 @@ _cairo_xcb_surface_mask (void			*abstract_surface,
 	surface->fallback = _cairo_xcb_surface_fallback (surface);
     }
 
-    return _cairo_surface_mask (&surface->fallback->base,
+    return _cairo_surface_mask (surface->fallback,
 				op, source, mask,
 				clip);
 }
@@ -799,7 +797,7 @@ _cairo_xcb_surface_stroke (void				*abstract_surface,
 	surface->fallback = _cairo_xcb_surface_fallback (surface);
     }
 
-    return _cairo_surface_stroke (&surface->fallback->base,
+    return _cairo_surface_stroke (surface->fallback,
 				  op, source,
 				  path, style,
 				  ctm, ctm_inverse,
@@ -838,7 +836,7 @@ _cairo_xcb_surface_fill (void			*abstract_surface,
 	surface->fallback = _cairo_xcb_surface_fallback (surface);
     }
 
-    return _cairo_surface_fill (&surface->fallback->base,
+    return _cairo_surface_fill (surface->fallback,
 				op, source,
 				path, fill_rule,
 				tolerance, antialias,
@@ -878,7 +876,7 @@ _cairo_xcb_surface_glyphs (void				*abstract_surface,
 	surface->fallback = _cairo_xcb_surface_fallback (surface);
     }
 
-    return _cairo_surface_show_text_glyphs (&surface->fallback->base,
+    return _cairo_surface_show_text_glyphs (surface->fallback,
 					    op, source,
 					    NULL, 0,
 					    glyphs, num_glyphs,

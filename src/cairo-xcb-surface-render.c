@@ -34,6 +34,7 @@
 #include "cairo-boxes-private.h"
 #include "cairo-clip-private.h"
 #include "cairo-composite-rectangles-private.h"
+#include "cairo-image-surface-private.h"
 #include "cairo-region-private.h"
 #include "cairo-surface-offset-private.h"
 #include "cairo-surface-snapshot-private.h"

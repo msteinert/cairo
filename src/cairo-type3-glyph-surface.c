@@ -44,6 +44,7 @@
 #include "cairo-analysis-surface-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
+#include "cairo-image-surface-private.h"
 #include "cairo-surface-clipper-private.h"
 
 static const cairo_surface_backend_t cairo_type3_glyph_surface_backend;

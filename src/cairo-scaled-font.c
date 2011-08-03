@@ -40,6 +40,7 @@
 
 #include "cairoint.h"
 #include "cairo-error-private.h"
+#include "cairo-image-surface-private.h"
 #include "cairo-pattern-private.h"
 #include "cairo-scaled-font-private.h"
 

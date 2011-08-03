@@ -42,6 +42,7 @@
 #include "cairo-clip-private.h"
 #include "cairo-device-private.h"
 #include "cairo-error-private.h"
+#include "cairo-image-surface-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-region-private.h"
 #include "cairo-tee-surface-private.h"

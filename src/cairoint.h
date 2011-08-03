@@ -254,6 +254,7 @@ _cairo_isdigit (int c)
 #include "cairo-cache-private.h"
 #include "cairo-reference-count-private.h"
 #include "cairo-spans-private.h"
+#include "cairo-surface-private.h"
 
 cairo_private void
 _cairo_box_from_doubles (cairo_box_t *box,
@@ -795,7 +796,7 @@ struct _cairo_surface_backend {
      * FALSE the surface is considered to be
      * boundless and infinite bounds are used for it.
      */
-    cairo_warn cairo_bool_t
+    cairo_bool_t
     (*get_extents)		(void			 *surface,
 				 cairo_rectangle_int_t   *extents);
 
@@ -945,29 +946,6 @@ struct _cairo_surface_backend {
 					 cairo_image_surface_t  **image_out,
 					 void                   **image_extra);
 };
-
-#include "cairo-surface-private.h"
-
-struct _cairo_image_surface {
-    cairo_surface_t base;
-
-    pixman_format_code_t pixman_format;
-    cairo_format_t format;
-    unsigned char *data;
-
-    int width;
-    int height;
-    int stride;
-    int depth;
-
-    pixman_image_t *pixman_image;
-
-    unsigned owns_data : 1;
-    unsigned transparency : 2;
-    unsigned color : 2;
-};
-
-extern const cairo_private cairo_surface_backend_t _cairo_image_surface_backend;
 
 #define CAIRO_EXTEND_SURFACE_DEFAULT CAIRO_EXTEND_NONE
 #define CAIRO_EXTEND_GRADIENT_DEFAULT CAIRO_EXTEND_PAD
@@ -1850,7 +1828,7 @@ cairo_private cairo_bool_t
 _cairo_surface_is_similar (cairo_surface_t *surface_a,
 	                   cairo_surface_t *surface_b);
 
-cairo_private cairo_bool_t
+cairo_private_no_warn cairo_bool_t
 _cairo_surface_get_extents (cairo_surface_t         *surface,
 			    cairo_rectangle_int_t   *extents);
 

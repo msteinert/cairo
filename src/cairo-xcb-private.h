@@ -83,7 +83,7 @@ struct _cairo_xcb_shm_info {
 
 struct _cairo_xcb_surface {
     cairo_surface_t base;
-    cairo_image_surface_t *fallback;
+    cairo_surface_t *fallback;
 
     cairo_xcb_connection_t *connection;
     cairo_xcb_screen_t *screen;

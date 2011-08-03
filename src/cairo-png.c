@@ -39,6 +39,7 @@
 #include "cairoint.h"
 
 #include "cairo-error-private.h"
+#include "cairo-image-surface-private.h"
 #include "cairo-output-stream-private.h"
 
 #include <stdio.h>

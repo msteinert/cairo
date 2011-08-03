@@ -33,6 +33,7 @@
 #include "cairo-freed-pool-private.h"
 #include "cairo-path-private.h"
 #include "cairo-pattern-private.h"
+#include "cairo-image-surface-private.h"
 
 #include <float.h>
 

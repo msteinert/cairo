@@ -40,6 +40,7 @@
 #include "cairoint.h"
 
 #include "cairo-error-private.h"
+#include "cairo-image-surface-private.h"
 #include "cairo-surface-snapshot-private.h"
 
 static cairo_status_t

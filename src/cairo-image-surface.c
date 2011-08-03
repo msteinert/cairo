@@ -44,6 +44,7 @@
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
+#include "cairo-image-surface-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-pattern-private.h"
 #include "cairo-recording-surface-private.h"
@@ -144,13 +145,33 @@ _cairo_content_from_pixman_format (pixman_format_code_t pixman_format)
     return content;
 }
 
+void
+_cairo_image_surface_init (cairo_image_surface_t *surface,
+			   pixman_image_t	*pixman_image,
+			   pixman_format_code_t	 pixman_format)
+{
+    surface->pixman_image = pixman_image;
+
+    surface->pixman_format = pixman_format;
+    surface->format = _cairo_format_from_pixman_format (pixman_format);
+    surface->data = (uint8_t *) pixman_image_get_data (pixman_image);
+    surface->owns_data = FALSE;
+    surface->transparency = CAIRO_IMAGE_UNKNOWN;
+    surface->color = CAIRO_IMAGE_UNKNOWN_COLOR;
+
+    surface->width = pixman_image_get_width (pixman_image);
+    surface->height = pixman_image_get_height (pixman_image);
+    surface->stride = pixman_image_get_stride (pixman_image);
+    surface->depth = pixman_image_get_depth (pixman_image);
+
+    surface->base.is_clear = surface->width == 0 || surface->height == 0;
+}
+
 cairo_surface_t *
 _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
 					      pixman_format_code_t	 pixman_format)
 {
     cairo_image_surface_t *surface;
-    int width = pixman_image_get_width (pixman_image);
-    int height = pixman_image_get_height (pixman_image);
 
     surface = malloc (sizeof (cairo_image_surface_t));
     if (unlikely (surface == NULL))
@@ -161,21 +182,7 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
 			 NULL, /* device */
 			 _cairo_content_from_pixman_format (pixman_format));
 
-    surface->pixman_image = pixman_image;
-
-    surface->pixman_format = pixman_format;
-    surface->format = _cairo_format_from_pixman_format (pixman_format);
-    surface->data = (uint8_t *) pixman_image_get_data (pixman_image);
-    surface->owns_data = FALSE;
-    surface->transparency = CAIRO_IMAGE_UNKNOWN;
-    surface->color = CAIRO_IMAGE_UNKNOWN_COLOR;
-
-    surface->width = width;
-    surface->height = height;
-    surface->stride = pixman_image_get_stride (pixman_image);
-    surface->depth = pixman_image_get_depth (pixman_image);
-
-    surface->base.is_clear = width == 0 || height == 0;
+    _cairo_image_surface_init (surface, pixman_image, pixman_format);
 
     return &surface->base;
 }
@@ -760,7 +767,7 @@ _cairo_image_surface_unmap_image (void *abstract_surface,
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+cairo_status_t
 _cairo_image_surface_finish (void *abstract_surface)
 {
     cairo_image_surface_t *surface = abstract_surface;
@@ -3387,7 +3394,7 @@ _clip_and_composite_trapezoids (cairo_image_surface_t *dst,
 }
 
 /* high level image interface */
-static cairo_bool_t
+cairo_bool_t
 _cairo_image_surface_get_extents (void			  *abstract_surface,
 				  cairo_rectangle_int_t   *rectangle)
 {
@@ -4281,7 +4288,7 @@ _cairo_image_surface_glyphs (void			*abstract_surface,
     return status;
 }
 
-static void
+void
 _cairo_image_surface_get_font_options (void                  *abstract_surface,
 				       cairo_font_options_t  *options)
 {
