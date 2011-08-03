@@ -193,6 +193,7 @@ CAIRO_PERF_DECL (hatching);
 CAIRO_PERF_DECL (tessellate);
 CAIRO_PERF_DECL (text);
 CAIRO_PERF_DECL (glyphs);
+CAIRO_PERF_DECL (hash_table);
 CAIRO_PERF_DECL (pattern_create_radial);
 CAIRO_PERF_DECL (zrusin);
 CAIRO_PERF_DECL (world_map);

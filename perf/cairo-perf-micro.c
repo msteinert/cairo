@@ -548,6 +548,7 @@ const cairo_perf_case_t perf_cases[] = {
     { hatching,   64, 512},
     { tessellate, 100, 100},
     { subimage_copy, 16, 512},
+    { hash_table, 16, 16},
     { pattern_create_radial, 16, 16},
     { zrusin, 415, 415},
     { world_map, 800, 800},
