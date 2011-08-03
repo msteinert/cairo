@@ -48,8 +48,13 @@ typedef struct _wm_element {
 
 #include "world-map.h"
 
+enum {
+    STROKE = 1,
+    FILL = 2,
+};
+
 static cairo_perf_ticks_t
-do_world_map (cairo_t *cr, int width, int height, int loops)
+do_world_map (cairo_t *cr, int width, int height, int loops, int mode)
 {
     const wm_element_t *e;
     double cx, cy;
@@ -68,10 +73,15 @@ do_world_map (cairo_t *cr, int width, int height, int loops)
 	    switch (e->type) {
 	    case WM_NEW_PATH:
 	    case WM_END:
-		cairo_set_source_rgb (cr, .75, .75, .75); /* silver */
-		cairo_fill_preserve (cr);
-		cairo_set_source_rgb (cr, .50, .50, .50); /* gray */
-		cairo_stroke (cr);
+		if (mode & FILL) {
+		    cairo_set_source_rgb (cr, .75, .75, .75); /* silver */
+		    cairo_fill_preserve (cr);
+		}
+		if (mode & STROKE) {
+		    cairo_set_source_rgb (cr, .50, .50, .50); /* gray */
+		    cairo_stroke (cr);
+		}
+		cairo_new_path (cr);
 		cairo_move_to (cr, e->x, e->y);
 		break;
 	    case WM_MOVE_TO:
@@ -106,11 +116,31 @@ do_world_map (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
+static cairo_perf_ticks_t
+do_world_map_stroke (cairo_t *cr, int width, int height, int loops)
+{
+    return do_world_map (cr, width, height, loops, STROKE);
+}
+
+static cairo_perf_ticks_t
+do_world_map_fill (cairo_t *cr, int width, int height, int loops)
+{
+    return do_world_map (cr, width, height, loops, FILL);
+}
+
+static cairo_perf_ticks_t
+do_world_map_both (cairo_t *cr, int width, int height, int loops)
+{
+    return do_world_map (cr, width, height, loops, FILL | STROKE);
+}
+
 void
 world_map (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
     if (! cairo_perf_can_run (perf, "world-map", NULL))
 	return;
 
-    cairo_perf_run (perf, "world-map", do_world_map, NULL);
+    cairo_perf_run (perf, "world-map-stroke", do_world_map_stroke, NULL);
+    cairo_perf_run (perf, "world-map-fill", do_world_map_fill, NULL);
+    cairo_perf_run (perf, "world-map", do_world_map_both, NULL);
 }
