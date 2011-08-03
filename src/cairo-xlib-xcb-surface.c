@@ -103,6 +103,41 @@ _cairo_xlib_xcb_surface_finish (void *abstract_surface)
     return status;
 }
 
+static cairo_surface_t *
+_cairo_xlib_xcb_surface_create_similar_image (void			*abstract_other,
+					      cairo_format_t		 format,
+					      int			 width,
+					      int			 height)
+{
+    cairo_xlib_xcb_surface_t *surface = abstract_other;
+    return cairo_surface_create_similar_image (&surface->xcb->base, format, width, height);
+}
+
+static cairo_surface_t *
+_cairo_xlib_xcb_surface_map_to_image (void *abstract_surface,
+				      const cairo_rectangle_int_t *extents)
+{
+    cairo_xlib_xcb_surface_t *surface = abstract_surface;
+    cairo_rectangle_t rect;
+
+    rect.x = extents->x;
+    rect.y = extents->y;
+    rect.width = extents->width;
+    rect.height = extents->height;
+
+    return cairo_surface_map_to_image (&surface->xcb->base, &rect);
+}
+
+static cairo_int_status_t
+_cairo_xlib_xcb_surface_unmap (void *abstract_surface,
+			       cairo_image_surface_t *image)
+{
+    cairo_xlib_xcb_surface_t *surface = abstract_surface;
+
+    cairo_surface_unmap_image (&surface->xcb->base, &image->base);
+    return cairo_surface_status (&surface->xcb->base);
+}
+
 static cairo_status_t
 _cairo_xlib_xcb_surface_acquire_source_image (void *abstract_surface,
 					      cairo_image_surface_t **image_out,
@@ -239,9 +274,9 @@ static const cairo_surface_backend_t _cairo_xlib_xcb_surface_backend = {
     _cairo_default_context_create, /* XXX */
 
     _cairo_xlib_xcb_surface_create_similar,
-    NULL, /* similar image */
-    NULL, /* map to image */
-    NULL, /* unmap image */
+    _cairo_xlib_xcb_surface_create_similar_image,
+    _cairo_xlib_xcb_surface_map_to_image,
+    _cairo_xlib_xcb_surface_unmap,
 
     _cairo_xlib_xcb_surface_acquire_source_image,
     _cairo_xlib_xcb_surface_release_source_image,
