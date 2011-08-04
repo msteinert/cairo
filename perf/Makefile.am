@@ -12,6 +12,8 @@ AM_CPPFLAGS =					\
 
 AM_LDFLAGS = $(CAIRO_LDFLAGS)
 
+SUBDIRS = micro
+
 noinst_PROGRAMS = cairo-perf-trace cairo-perf-micro
 
 EXTRA_PROGRAMS += cairo-perf-micro \
