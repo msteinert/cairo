@@ -546,6 +546,8 @@ cairo_surface_create_similar (cairo_surface_t  *other,
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if @other is already in an error state
  * or any other error occurs.
+ *
+ * Since: 1.12
  **/
 cairo_surface_t *
 cairo_surface_create_similar_image (cairo_surface_t  *other,
@@ -590,6 +592,8 @@ cairo_surface_create_similar_image (cairo_surface_t  *other,
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if @other is already in an error state
  * or any other error occurs.
+ *
+ * Since: 1.12
  **/
 cairo_surface_t *
 cairo_surface_map_to_image (cairo_surface_t  *surface,
@@ -653,6 +657,8 @@ cairo_surface_map_to_image (cairo_surface_t  *surface,
  *
  * Using an image surface which wasn't returned by cairo_surface_map_to_image()
  * results in undefined behavior.
+ *
+ * Since: 1.12
  **/
 void
 cairo_surface_unmap_image (cairo_surface_t *surface,
