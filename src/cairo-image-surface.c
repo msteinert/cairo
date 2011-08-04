@@ -4915,7 +4915,7 @@ _cairo_image_analyze_color (cairo_image_surface_t      *image)
 {
     int x, y;
 
-    if (image->transparency != CAIRO_IMAGE_UNKNOWN_COLOR)
+    if (image->color != CAIRO_IMAGE_UNKNOWN_COLOR)
 	return image->color;
 
     if (image->format == CAIRO_FORMAT_A1 || image->format == CAIRO_FORMAT_A8)
