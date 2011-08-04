@@ -484,6 +484,9 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
  * Initially the surface contents are all 0 (transparent if contents
  * have transparency, black otherwise.)
  *
+ * Use cairo_surface_create_similar_image() if you need an image surface
+ * which can be painted quickly to the target surface.
+ *
  * Return value: a pointer to the newly allocated surface. The caller
  * owns the surface and should call cairo_surface_destroy() when done
  * with it.
@@ -528,10 +531,13 @@ cairo_surface_create_similar (cairo_surface_t  *other,
  * @height: height of the new surface (in device-space units)
  *
  * Create a new image surface that is as compatible as possible for uploading
- * to and the use in conjunction with an existing surface.
+ * to and the use in conjunction with an existing surface. However, this surface
+ * can still be used like any normal image surface.
  *
  * Initially the surface contents are all 0 (transparent if contents
  * have transparency, black otherwise.)
+ *
+ * Use cairo_surface_create_similar() if you don't need an image surface.
  *
  * Return value: a pointer to the newly allocated image surface. The caller
  * owns the surface and should call cairo_surface_destroy() when done
@@ -575,11 +581,11 @@ cairo_surface_create_similar_image (cairo_surface_t  *other,
  *
  * Note, the use of the original surface as a target or source whilst it is
  * mapped is undefined. The result of mapping the surface multiple times is
- * undefined.
+ * undefined. Calling cairo_surface_destroy() or cairo_surface_finish() on the
+ * resulting image surface results in undefined behavior.
  *
  * Return value: a pointer to the newly allocated image surface. The caller
- * owns the surface and should call cairo_surface_destroy() when done
- * with it.
+ * must use cairo_surface_unmap_image() to destroy this image surface.
  *
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if @other is already in an error state
@@ -637,21 +643,16 @@ cairo_surface_map_to_image (cairo_surface_t  *surface,
 
 /**
  * cairo_surface_unmap_image:
- * @surface: an existing surface used to extract the image from
+ * @surface: the surface passed to cairo_surface_map_to_image().
  * @image: the currently mapped image
  *
  * Unmaps the image surface as returned from #cairo_surface_map_to_image().
- * Returns an image surface that is the most efficient mechanism for
- * modifying the backing store of the target surface. The region retrieved
- * may be limited to the @extents or %NULL for the whole surface
  *
- * Return value: a pointer to the newly allocated image surface. The caller
- * owns the surface and should call cairo_surface_destroy() when done
- * with it.
+ * The content of the image will be uploaded to the target surface.
+ * Afterwards, the image is destroyed.
  *
- * This function always returns a valid pointer, but it will return a
- * pointer to a "nil" surface if @other is already in an error state
- * or any other error occurs.
+ * Using an image surface which wasn't returned by cairo_surface_map_to_image()
+ * results in undefined behavior.
  **/
 void
 cairo_surface_unmap_image (cairo_surface_t *surface,
