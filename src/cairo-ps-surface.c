@@ -2087,12 +2087,13 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
     cairo_status_t status;
     unsigned char *data, *data_compressed;
     unsigned long data_size, data_compressed_size;
-    cairo_image_surface_t *opaque_image = NULL;
+    cairo_image_surface_t *ps_image = image;
     int x, y, i;
     cairo_image_transparency_t transparency;
     cairo_bool_t use_mask;
     uint32_t *pixel;
     int bit;
+    cairo_image_color_t color;
     const char *interpolate;
 
     if (image->base.status)
@@ -2125,27 +2126,44 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
     {
 	status = _cairo_ps_surface_flatten_image_transparency (surface,
 							       image,
-							       &opaque_image);
+							       &ps_image);
 	if (unlikely (status))
 	    return status;
 
 	use_mask = FALSE;
     } else if (transparency == CAIRO_IMAGE_IS_OPAQUE) {
-	opaque_image = image;
 	use_mask = FALSE;
-    } else {
+    } else { /* transparency == CAIRO_IMAGE_HAS_BILEVEL_ALPHA */
 	use_mask = TRUE;
     }
 
-    if (use_mask) {
-	/* Type 2 (mask and image interleaved) has the mask and image
-	 * samples interleaved by row.  The mask row is first, one bit
-	 * per pixel with (bit 7 first). The row is padded to byte
-	 * boundaries. The image data is 3 bytes per pixel RGB
-	 * format. */
-	data_size = image->height * ((image->width + 7)/8 + 3*image->width);
-    } else {
-	data_size = image->height * image->width * 3;
+    color = _cairo_image_analyze_color (ps_image);
+
+    /* Type 2 (mask and image interleaved) has the mask and image
+     * samples interleaved by row.  The mask row is first, one bit per
+     * pixel with (bit 7 first). The row is padded to byte
+     * boundaries. The image data is 3 bytes per pixel RGB format. */
+    switch (color) {
+	case CAIRO_IMAGE_IS_COLOR:
+	case CAIRO_IMAGE_UNKNOWN_COLOR:
+	    if (use_mask)
+		data_size = ps_image->height * ((ps_image->width + 7)/8 + 3*ps_image->width);
+	    else
+		data_size = ps_image->height * ps_image->width * 3;
+	    break;
+
+	case CAIRO_IMAGE_IS_GRAYSCALE:
+	    if (use_mask)
+		data_size = ps_image->height * ((ps_image->width + 7)/8 + ps_image->width);
+	    else
+		data_size = ps_image->height * ps_image->width;
+	    break;
+	case CAIRO_IMAGE_IS_MONOCHROME:
+	    if (use_mask)
+		data_size = ps_image->height * ((ps_image->width + 7)/8) * 2;
+	    else
+		data_size = ps_image->height * ((ps_image->width + 7)/8);
+	    break;
     }
     data = malloc (data_size);
     if (unlikely (data == NULL)) {
@@ -2153,16 +2171,16 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 	goto bail1;
     }
 
-    if (use_mask) {
-	i = 0;
-	for (y = 0; y < image->height; y++) {
+    i = 0;
+    for (y = 0; y < ps_image->height; y++) {
+	if (use_mask) {
 	    /* mask row */
-	    pixel = (uint32_t *) (image->data + y * image->stride);
+	    pixel = (uint32_t *) (ps_image->data + y * ps_image->stride);
 	    bit = 7;
-	    for (x = 0; x < image->width; x++, pixel++) {
+	    for (x = 0; x < ps_image->width; x++, pixel++) {
 		if (bit == 7)
 		    data[i] = 0;
-		if (((*pixel & 0xff000000) >> 24) > 0x80)
+		if (*pixel & 0xff000000)
 		    data[i] |= (1 << bit);
 		bit--;
 		if (bit < 0) {
@@ -2172,23 +2190,55 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 	    }
 	    if (bit != 7)
 		i++;
-
-	    /* image row*/
-	    pixel = (uint32_t *) (image->data + y * image->stride);
-	    for (x = 0; x < image->width; x++, pixel++) {
-		data[i++] = (*pixel & 0x00ff0000) >> 16;
-		data[i++] = (*pixel & 0x0000ff00) >>  8;
-		data[i++] = (*pixel & 0x000000ff) >>  0;
-	    }
 	}
-    } else {
-	i = 0;
-	for (y = 0; y < opaque_image->height; y++) {
-	    pixel = (uint32_t *) (opaque_image->data + y * opaque_image->stride);
-	    for (x = 0; x < opaque_image->width; x++, pixel++) {
-		data[i++] = (*pixel & 0x00ff0000) >> 16;
-		data[i++] = (*pixel & 0x0000ff00) >>  8;
-		data[i++] = (*pixel & 0x000000ff) >>  0;
+
+	/* image row*/
+	pixel = (uint32_t *) (ps_image->data + y * ps_image->stride);
+	bit = 7;
+	for (x = 0; x < ps_image->width; x++, pixel++) {
+	    int r, g, b;
+
+	    if (ps_image->format == CAIRO_FORMAT_ARGB32) {
+		/* At this point ARGB32 images are either opaque or
+		 * bilevel alpha so we don't need to unpremultiply. */
+		if (((*pixel & 0xff000000) >> 24) == 0) {
+		    r = g = b = 0;
+		} else {
+		    r = (*pixel & 0x00ff0000) >> 16;
+		    g = (*pixel & 0x0000ff00) >>  8;
+		    b = (*pixel & 0x000000ff) >>  0;
+		}
+	    } else if (ps_image->format == CAIRO_FORMAT_RGB24) {
+		r = (*pixel & 0x00ff0000) >> 16;
+		g = (*pixel & 0x0000ff00) >>  8;
+		b = (*pixel & 0x000000ff) >>  0;
+	    } else {
+		r = g = b = 0;
+	    }
+
+	    switch (color) {
+		case CAIRO_IMAGE_IS_COLOR:
+		case CAIRO_IMAGE_UNKNOWN_COLOR:
+		    data[i++] = r;
+		    data[i++] = g;
+		    data[i++] = b;
+		    break;
+
+		case CAIRO_IMAGE_IS_GRAYSCALE:
+		    data[i++] = r;
+		    break;
+
+		case CAIRO_IMAGE_IS_MONOCHROME:
+		    if (bit == 7)
+			data[i] = 0;
+		    if (r != 0)
+			data[i] |= (1 << bit);
+		    bit--;
+		    if (bit < 0) {
+			bit = 7;
+			i++;
+		    }
+		    break;
 	    }
 	}
     }
@@ -2223,7 +2273,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 
     if (use_mask) {
 	_cairo_output_stream_printf (surface->stream,
-				     "/DeviceRGB setcolorspace\n"
+				     "%s setcolorspace\n"
 				     "5 dict dup begin\n"
 				     "  /ImageType 3 def\n"
 				     "  /InterleaveType 2 def\n"
@@ -2233,11 +2283,14 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 				     "    /Width %d def\n"
 				     "    /Height %d def\n"
 				     "    /Interpolate %s def\n"
-				     "    /BitsPerComponent 8 def\n"
-				     "    /Decode [ 0 1 0 1 0 1 ] def\n",
-				     image->width,
-				     image->height,
-				     interpolate);
+				     "    /BitsPerComponent %d def\n"
+				     "    /Decode [ %s ] def\n",
+				     color == CAIRO_IMAGE_IS_COLOR ? "/DeviceRGB" : "/DeviceGray",
+				     ps_image->width,
+				     ps_image->height,
+				     interpolate,
+				     color == CAIRO_IMAGE_IS_MONOCHROME ? 1 : 8,
+				     color == CAIRO_IMAGE_IS_COLOR ? "0 1 0 1 0 1" : "0 1");
 
 	if (surface->use_string_datasource) {
 	    _cairo_output_stream_printf (surface->stream,
@@ -2267,22 +2320,27 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 				     "  end\n"
 				     "end\n"
 				     "image\n",
-				     image->height,
-				     image->width,
-				     image->height,
+				     ps_image->height,
+				     ps_image->width,
+				     ps_image->height,
 				     interpolate,
-				     image->height);
+				     ps_image->height);
     } else {
 	_cairo_output_stream_printf (surface->stream,
-				     "/DeviceRGB setcolorspace\n"
+				     "%s setcolorspace\n"
 				     "8 dict dup begin\n"
 				     "  /ImageType 1 def\n"
 				     "  /Width %d def\n"
 				     "  /Height %d def\n"
-				     "  /BitsPerComponent 8 def\n"
-				     "  /Decode [ 0 1 0 1 0 1 ] def\n",
-				     opaque_image->width,
-				     opaque_image->height);
+				     "  /Interpolate %s def\n"
+				     "  /BitsPerComponent %d def\n"
+				     "  /Decode [ %s ] def\n",
+				     color == CAIRO_IMAGE_IS_COLOR ? "/DeviceRGB" : "/DeviceGray",
+				     ps_image->width,
+				     ps_image->height,
+				     interpolate,
+				     color == CAIRO_IMAGE_IS_MONOCHROME ? 1 : 8,
+				     color == CAIRO_IMAGE_IS_COLOR ? "0 1 0 1 0 1" : "0 1");
 	if (surface->use_string_datasource) {
 	    _cairo_output_stream_printf (surface->stream,
 					 "  /DataSource {\n"
@@ -2302,7 +2360,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 				     "end\n"
 				     "image\n",
 				     interpolate,
-				     opaque_image->height);
+				     ps_image->height);
     }
 
     if (!surface->use_string_datasource) {
@@ -2324,8 +2382,8 @@ bail2:
     free (data);
 
 bail1:
-    if (!use_mask && opaque_image != image)
-	cairo_surface_destroy (&opaque_image->base);
+    if (!use_mask && ps_image != image)
+	cairo_surface_destroy (&ps_image->base);
 
     return status;
 }
