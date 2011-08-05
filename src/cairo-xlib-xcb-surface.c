@@ -134,6 +134,10 @@ _cairo_xlib_xcb_surface_unmap (void *abstract_surface,
 {
     cairo_xlib_xcb_surface_t *surface = abstract_surface;
 
+    /* cairo_surface_unmap_image destroys the surface, so get a new reference
+     * for it to destroy.
+     */
+    cairo_surface_reference (&image->base);
     cairo_surface_unmap_image (&surface->xcb->base, &image->base);
     return cairo_surface_status (&surface->xcb->base);
 }
