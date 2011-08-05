@@ -76,6 +76,7 @@ REFERENCE_IMAGES = \
 	caps-sub-paths.image16.ref.png \
 	caps-sub-paths.ps.ref.png \
 	caps-sub-paths.ref.png \
+	caps-tails-curve.ref.png \
 	caps.image16.ref.png \
 	caps.ps.ref.png \
 	caps.ref.png \
@@ -366,6 +367,7 @@ REFERENCE_IMAGES = \
 	device-offset-scale.svg.xfail.png \
 	device-offset.ref.png \
 	device-offset.rgb24.ref.png \
+	drunkard-tails.ref.png \
 	extend-pad-border.image16.ref.png \
 	extend-pad-border.ps.ref.png \
 	extend-pad-border.quartz.ref.png \

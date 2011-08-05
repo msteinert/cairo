@@ -23,6 +23,7 @@ test_sources = \
 	caps-joins.c					\
 	caps-joins-alpha.c				\
 	caps-joins-curve.c				\
+	caps-tails-curve.c				\
 	caps-sub-paths.c				\
 	clear.c						\
 	clear-source.c					\
@@ -86,6 +87,7 @@ test_sources = \
 	degenerate-pen.c				\
 	degenerate-radial-gradient.c			\
 	degenerate-rel-curve-to.c			\
+	drunkard-tails.c				\
 	device-offset.c					\
 	device-offset-fractional.c			\
 	device-offset-positive.c			\
