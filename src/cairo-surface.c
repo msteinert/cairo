@@ -611,7 +611,18 @@ cairo_surface_map_to_image (cairo_surface_t  *surface,
 	if (unlikely (! surface->backend->get_extents (surface, &rect)))
 	    return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_SIZE);
     } else {
+	cairo_rectangle_int_t surface_extents;
 	_cairo_rectangle_int_from_double (&rect, extents);
+
+	/* If this surface is bounded, we can't map parts
+	 * that are outside of it. */
+	if (likely (surface->backend->get_extents (surface, &surface_extents))) {
+	    if (unlikely (rect.x < surface_extents.x ||
+			  rect.y < surface_extents.y ||
+			  rect.x + rect.width > surface_extents.x + surface_extents.width ||
+			  rect.y + rect.height > surface_extents.y + surface_extents.height))
+		return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_SIZE);
+	}
     }
 
     image = NULL;
