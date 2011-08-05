@@ -142,11 +142,10 @@ _cairo_surface_clipper_set_clip (cairo_surface_clipper_t *clipper,
 		sizeof (cairo_box_t) * clip->num_boxes) == 0)
     {
 	cairo_clip_path_t *clip_path = clip->path;
-	while (clip_path != clipper->clip->path)
+	while (clip_path != NULL && clip_path != clipper->clip->path)
 	    clip_path = clip_path->prev;
 
 	if (clip_path) {
-	    assert (clip_path != clipper->clip->path);
 	    incremental = TRUE;
 	    status = _cairo_surface_clipper_intersect_clip_path_recursive (clipper,
 									   clip->path,
