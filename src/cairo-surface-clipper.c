@@ -74,6 +74,9 @@ _cairo_surface_clipper_intersect_clip_boxes (cairo_surface_clipper_t *clipper,
     cairo_status_t status;
     int i;
 
+    if (clip->num_boxes == 0)
+	return CAIRO_STATUS_SUCCESS;
+
     /* Reconstruct the path for the clip boxes.
      * XXX maybe a new clipper callback?
      */
