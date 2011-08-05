@@ -4879,10 +4879,21 @@ _cairo_image_analyze_transparency (cairo_image_surface_t      *image)
 	return image->transparency = CAIRO_IMAGE_IS_OPAQUE;
 
     if ((image->base.content & CAIRO_CONTENT_COLOR) == 0) {
-	if (image->format == CAIRO_FORMAT_A1)
+	if (image->format == CAIRO_FORMAT_A1) {
 	    return image->transparency = CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
-	else
+	} else if (image->format == CAIRO_FORMAT_A8) {
+	    for (y = 0; y < image->height; y++) {
+		uint8_t *alpha = (uint8_t *) (image->data + y * image->stride);
+
+		for (x = 0; x < image->width; x++, alpha++) {
+		    if (*alpha > 0 && *alpha < 255)
+			return image->transparency = CAIRO_IMAGE_HAS_ALPHA;
+		}
+	    }
+	    return image->transparency = CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
+	} else {
 	    return image->transparency = CAIRO_IMAGE_HAS_ALPHA;
+	}
     }
 
     if (image->format == CAIRO_FORMAT_RGB16_565) {
