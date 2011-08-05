@@ -1871,9 +1871,8 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
     unsigned long alpha_size;
     uint32_t *pixel32;
     uint8_t *pixel8;
-    int i, x, y;
-    cairo_bool_t opaque;
-    uint8_t a;
+    int i, x, y, bit, a;
+    cairo_image_transparency_t transparency;
 
     /* This is the only image format we support, which simplifies things. */
     assert (image->format == CAIRO_FORMAT_ARGB32 ||
@@ -1881,8 +1880,11 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 	    image->format == CAIRO_FORMAT_A1 );
 
     stream_ret->id = 0;
+    transparency = _cairo_image_analyze_transparency (image);
+    if (transparency == CAIRO_IMAGE_IS_OPAQUE)
+	return status;
 
-    if (image->format == CAIRO_FORMAT_A1) {
+    if (transparency == CAIRO_IMAGE_HAS_BILEVEL_ALPHA) {
 	alpha_size = (image->width + 7) / 8 * image->height;
 	alpha = _cairo_malloc_ab ((image->width+7) / 8, image->height);
     } else {
@@ -1895,43 +1897,45 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 	goto CLEANUP;
     }
 
-    opaque = TRUE;
     i = 0;
+    bit = 7;
     for (y = 0; y < image->height; y++) {
-	if (image->format == CAIRO_FORMAT_ARGB32) {
-	    pixel32 = (uint32_t *) (image->data + y * image->stride);
-
-	    for (x = 0; x < image->width; x++, pixel32++) {
-		a = (*pixel32 & 0xff000000) >> 24;
-		alpha[i++] = a;
-		if (a != 0xff)
-		    opaque = FALSE;
-	    }
-	} else if (image->format == CAIRO_FORMAT_A8){
-	    pixel8 = (uint8_t *) (image->data + y * image->stride);
-
-	    for (x = 0; x < image->width; x++, pixel8++) {
-		a = *pixel8;
-		alpha[i++] = a;
-		if (a != 0xff)
-		    opaque = FALSE;
-	    }
-	} else { /* image->format == CAIRO_FORMAT_A1 */
+	if (image->format == CAIRO_FORMAT_A1) {
 	    pixel8 = (uint8_t *) (image->data + y * image->stride);
 
 	    for (x = 0; x < (image->width + 7) / 8; x++, pixel8++) {
 		a = *pixel8;
 		a = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (a);
 		alpha[i++] = a;
-		if (a != 0xff)
-		    opaque = FALSE;
+	    }
+	} else {
+	    pixel8 = (uint8_t *) (image->data + y * image->stride);
+	    pixel32 = (uint32_t *) (image->data + y * image->stride);
+	    for (x = 0; x < image->width; x++) {
+		if (image->format == CAIRO_FORMAT_ARGB32) {
+		    a = (*pixel32 & 0xff000000) >> 24;
+		    pixel32++;
+		} else {
+		    a = *pixel8;
+		    pixel8++;
+		}
+
+		if (transparency == CAIRO_IMAGE_HAS_ALPHA) {
+		    alpha[i++] = a;
+		} else { /* transparency == CAIRO_IMAGE_HAS_BILEVEL_ALPHA */
+		    if (bit == 7)
+			alpha[i] = 0;
+		    if (a != 0)
+			alpha[i] |= (1 << bit);
+		    bit--;
+		    if (bit < 0) {
+			bit = 7;
+			i++;
+		    }
+		}
 	    }
 	}
     }
-
-    /* Bail out without emitting smask if it's all opaque. */
-    if (opaque)
-	goto CLEANUP_ALPHA;
 
     status = _cairo_pdf_surface_open_stream (surface,
 					     NULL,
@@ -1943,7 +1947,7 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 					     "   /ColorSpace /DeviceGray\n"
 					     "   /BitsPerComponent %d\n",
 					     image->width, image->height,
-					     image->format == CAIRO_FORMAT_A1 ? 1 : 8);
+					     transparency == CAIRO_IMAGE_HAS_ALPHA ? 8 : 1);
     if (unlikely (status))
 	goto CLEANUP_ALPHA;
 
