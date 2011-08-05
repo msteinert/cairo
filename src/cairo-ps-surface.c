@@ -3846,15 +3846,25 @@ _cairo_ps_surface_fill (void		*abstract_surface,
     return status;
 }
 
+static cairo_bool_t
+_cairo_ps_surface_has_show_text_glyphs	(void			*abstract_surface)
+{
+    return TRUE;
+}
+
 static cairo_int_status_t
-_cairo_ps_surface_show_glyphs (void		     *abstract_surface,
-			       cairo_operator_t	      op,
-			       const cairo_pattern_t *source,
-			       cairo_glyph_t         *glyphs,
-			       int		      num_glyphs,
-			       cairo_scaled_font_t   *scaled_font,
-			       const cairo_clip_t    *clip,
-			       int		     *remaining_glyphs)
+_cairo_ps_surface_show_text_glyphs (void		       *abstract_surface,
+				    cairo_operator_t	        op,
+				    const cairo_pattern_t      *source,
+				    const char                 *utf8,
+				    int                         utf8_len,
+				    cairo_glyph_t	       *glyphs,
+				    int			        num_glyphs,
+				    const cairo_text_cluster_t *clusters,
+				    int                         num_clusters,
+				    cairo_text_cluster_flags_t  cluster_flags,
+				    cairo_scaled_font_t	       *scaled_font,
+				    const cairo_clip_t	       *clip)
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_composite_rectangles_t extents;
@@ -3895,10 +3905,10 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 	return status;
 
     return _cairo_pdf_operators_show_text_glyphs (&surface->pdf_operators,
-						  NULL, 0,
+						  utf8, utf8_len,
 						  glyphs, num_glyphs,
-						  NULL, 0,
-						  FALSE,
+						  clusters, num_clusters,
+						  cluster_flags,
 						  scaled_font);
 }
 
@@ -4054,8 +4064,15 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     NULL, /* mask */
     _cairo_ps_surface_stroke,
     _cairo_ps_surface_fill,
-    _cairo_ps_surface_show_glyphs,
+    NULL, /* show_glyphs */
     NULL, /* snapshot */
+
+    NULL, /* is_compatible */
+    NULL, /* fill_stroke */
+    NULL, /* create_solid_pattern_surface */
+    NULL, /* can_repaint_solid_pattern_surface */
+    _cairo_ps_surface_has_show_text_glyphs,
+    _cairo_ps_surface_show_text_glyphs,
 };
 
 static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backend = {
