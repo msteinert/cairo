@@ -309,6 +309,7 @@ test_sources = \
 	user-font-mask.c				\
 	user-font-proxy.c				\
 	user-font-rescale.c				\
+	world-map.c					\
 	white-in-noop.c					\
 	xcb-stress-cache.c				\
 	xcb-snapshot-assert.c				\
@@ -371,7 +372,9 @@ fallback_resolution_test_sources = fallback-resolution.c
 cairo_test_suite_headers = \
 	buffer-diff.h \
 	cairo-test.h \
-	cairo-test-private.h
+	cairo-test-private.h \
+	world-map.h \
+	$(NULL)
 
 cairo_test_suite_sources = \
 	buffer-diff.c \

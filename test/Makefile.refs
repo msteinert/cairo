@@ -1379,6 +1379,12 @@ REFERENCE_IMAGES = \
 	user-font.svg.ref.png \
 	user-font.xlib.ref.png \
 	white-in-noop.ref.png \
+	world-map-fill.image16.ref.png \
+	world-map-fill.ref.png \
+	world-map-stroke.image16.ref.png \
+	world-map-stroke.ref.png \
+	world-map.image16.ref.png \
+	world-map.ref.png \
 	xcb-snapshot-assert.ref.png \
 	xcb-stress-cache.ref.png \
 	xcb-surface-source.argb32.ref.png \
