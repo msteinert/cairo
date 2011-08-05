@@ -30,7 +30,30 @@
 #define HEIGHT	3
 
 /* A single, black pixel */
-static const uint32_t black_pixel = 0xff000000;
+static const uint32_t black_pixel_argb = 0xff000000;
+static const uint32_t black_pixel      = 0x00000000;
+
+static cairo_bool_t
+set_pixel_black(uint8_t *data, int stride,
+	  cairo_format_t format, int x, int y)
+{
+    switch (format) {
+    case CAIRO_FORMAT_ARGB32:
+    case CAIRO_FORMAT_RGB24:
+	*(uint32_t *)(data + y * stride + 4*x) = black_pixel_argb;
+	break;
+    case CAIRO_FORMAT_RGB16_565:
+	*(uint16_t *)(data + y * stride + 2*x) = black_pixel;
+	break;
+    case CAIRO_FORMAT_RGB30:
+    case CAIRO_FORMAT_A8:
+    case CAIRO_FORMAT_A1:
+    case CAIRO_FORMAT_INVALID:
+    default:
+	return FALSE;
+    }
+    return TRUE;
+}
 
 static cairo_test_status_t
 all (cairo_t *cr, int width, int height)
@@ -38,6 +61,7 @@ all (cairo_t *cr, int width, int height)
     cairo_surface_t *surface;
     uint8_t *data;
     int stride;
+    cairo_format_t format;
     int i, j;
 
     /* Fill background white */
@@ -46,12 +70,14 @@ all (cairo_t *cr, int width, int height)
 
     surface = cairo_surface_map_to_image (cairo_get_target (cr), NULL);
     cairo_surface_flush (surface);
+    format = cairo_image_surface_get_format (surface);
     stride = cairo_image_surface_get_stride (surface);
     data = cairo_image_surface_get_data (surface);
     if (data) {
-	    for (j = 0; j < HEIGHT; j++)
-		    for (i = 0; i < WIDTH; i++)
-			    *(uint32_t *)(data + j * stride + 4*i) = black_pixel;
+	for (j = 0; j < HEIGHT; j++)
+	    for (i = 0; i < WIDTH; i++)
+		if (! set_pixel_black (data, stride, format, i, j))
+		    return CAIRO_TEST_FAILURE;
     }
     cairo_surface_mark_dirty (surface);
     cairo_surface_unmap_image (cairo_get_target (cr), surface);
@@ -64,6 +90,7 @@ bit (cairo_t *cr, int width, int height)
 {
     cairo_surface_t *surface;
     cairo_rectangle_t extents;
+    cairo_format_t format;
     uint8_t *data;
 
     extents.x = extents.y = extents.width = extents.height = 1;
@@ -75,8 +102,11 @@ bit (cairo_t *cr, int width, int height)
     surface = cairo_surface_map_to_image (cairo_get_target (cr), &extents);
     cairo_surface_flush (surface);
     data = cairo_image_surface_get_data (surface);
-    if (data)
-	    *(uint32_t *)data = black_pixel;
+    format = cairo_image_surface_get_format (surface);
+    if (data) {
+	if (! set_pixel_black (data, 0, format, 0, 0))
+	    return CAIRO_TEST_FAILURE;
+    }
     cairo_surface_mark_dirty (surface);
     cairo_surface_unmap_image (cairo_get_target (cr), surface);
 
