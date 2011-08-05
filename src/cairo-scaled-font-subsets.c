@@ -606,12 +606,37 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 	int latin_character;
 
 	status = _cairo_sub_font_glyph_lookup_unicode (sub_font->scaled_font,
-						       scaled_font_glyph_index,
-						       &font_unicode,
-						       &font_utf8,
-						       &font_utf8_len);
+							   scaled_font_glyph_index,
+							   &font_unicode,
+							   &font_utf8,
+							   &font_utf8_len);
 	if (unlikely(status))
 	    return status;
+
+	/* If the supplied utf8 is a valid single character, use it
+	 * instead of the font lookup */
+	if (text_utf8 != NULL && text_utf8_len > 0) {
+	    uint32_t  *ucs4;
+	    int	ucs4_len;
+
+	    status = _cairo_utf8_to_ucs4 (text_utf8, text_utf8_len,
+					  &ucs4, &ucs4_len);
+	    if (status == CAIRO_STATUS_SUCCESS) {
+		if (ucs4_len == 1) {
+		    font_unicode = ucs4[0];
+		    free (font_utf8);
+		    font_utf8 = malloc (text_utf8_len + 1);
+		    if (font_utf8 == NULL) {
+			free (ucs4);
+			return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+		    }
+		    memcpy (font_utf8, text_utf8, text_utf8_len);
+		    font_utf8[font_utf8_len] = 0;
+		    font_utf8_len = text_utf8_len;
+		}
+		free (ucs4);
+	    }
+	}
 
 	/* If glyph is in the winansi encoding and font is not a user
 	 * font, put glyph in the latin subset. If glyph is .notdef
