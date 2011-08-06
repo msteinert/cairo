@@ -1357,6 +1357,7 @@ REFERENCE_IMAGES = \
 	unbounded-operator.svg12.argb32.ref.png \
 	unbounded-operator.svg12.rgb24.xfail.png \
 	unbounded-operator.xlib.rgb24.ref.png \
+	unclosed-strokes.ref.png \
 	user-font-mask.image16.ref.png \
 	user-font-mask.pdf.ref.png \
 	user-font-mask.ps2.ref.png \

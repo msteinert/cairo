@@ -307,9 +307,10 @@ test_sources = \
 	twin-antialias-mixed.c				\
 	twin-antialias-none.c				\
 	twin-antialias-subpixel.c			\
-	unaligned-box.c				\
+	unaligned-box.c					\
 	unantialiased-shapes.c				\
 	unbounded-operator.c				\
+	unclosed-strokes.c				\
 	user-data.c					\
 	user-font.c					\
 	user-font-mask.c				\
