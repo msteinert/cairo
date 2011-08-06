@@ -654,6 +654,7 @@ REFERENCE_IMAGES = \
 	inverse-text.quartz.ref.png \
 	inverse-text.ref.png \
 	joins-loop.ref.png \
+	joins-retrace.ref.png \
 	joins-star.ref.png \
 	joins.image16.ref.png \
 	joins.ps.ref.png \

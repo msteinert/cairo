@@ -148,6 +148,7 @@ test_sources = \
 	joins.c						\
 	joins-loop.c					\
 	joins-star.c					\
+	joins-retrace.c					\
 	large-clip.c					\
 	large-font.c					\
 	large-source.c					\
