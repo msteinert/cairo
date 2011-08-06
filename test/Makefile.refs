@@ -653,6 +653,7 @@ REFERENCE_IMAGES = \
 	inverse-text.ps.ref.png \
 	inverse-text.quartz.ref.png \
 	inverse-text.ref.png \
+	joins-star.ref.png \
 	joins.image16.ref.png \
 	joins.ps.ref.png \
 	joins.quartz.ref.png \

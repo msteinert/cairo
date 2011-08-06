@@ -146,6 +146,7 @@ test_sources = \
 	invalid-matrix.c				\
 	inverse-text.c					\
 	joins.c						\
+	joins-star.c					\
 	large-clip.c					\
 	large-font.c					\
 	large-source.c					\
