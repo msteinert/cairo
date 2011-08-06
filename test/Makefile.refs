@@ -17,6 +17,7 @@ REFERENCE_IMAGES = \
 	a1-rasterisation-rectangles.ref.png \
 	a1-rasterisation-triangles.quartz.xfail.png \
 	a1-rasterisation-triangles.ref.png \
+	a1-sample.ref.png \
 	a1-traps-sample.quartz.xfail.png \
 	a1-traps-sample.ref.png \
 	a8-clear.quartz.ref.png \

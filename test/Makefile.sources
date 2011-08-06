@@ -4,6 +4,7 @@ test_sources = \
 	a1-image-sample.c 				\
 	a1-mask.c					\
 	a1-mask-sample.c 				\
+	a1-sample.c	 				\
 	a1-traps-sample.c				\
 	a1-rasterisation.c				\
 	a8-clear.c					\
