@@ -1290,38 +1290,30 @@ active_list_can_step_full_row (struct active_list *active)
 /* Merges edges on the given subpixel row from the polygon to the
  * active_list. */
 inline static void
-active_list_merge_edges_from_polygon(struct active_list *active,
-				     struct edge **ptail,
-				     grid_scaled_y_t y,
-				     struct polygon *polygon)
+active_list_merge_edges_from_bucket(struct active_list *active,
+				     struct edge *edges)
 {
-    /* Split off the edges on the current subrow and merge them into
-     * the active list. */
-    int min_height = active->min_height;
-    struct edge *subrow_edges = NULL;
-    struct edge *tail = *ptail;
+    struct edge *tail;
+    grid_scaled_y_t min_height = active->min_height;
+    for (tail = edges; tail; tail = tail->next) {
+	if (tail->height_left < min_height)
+	    min_height = tail->height_left;
+    }
+    active->min_height = min_height;
 
-    do {
-	struct edge *next = tail->next;
+    sort_edges (edges, UINT_MAX, &edges);
+    active->head = merge_sorted_edges (active->head, edges);
+}
 
-	if (y == tail->ytop) {
-	    tail->next = subrow_edges;
-	    subrow_edges = tail;
-
-	    if (tail->height_left < min_height)
-		min_height = tail->height_left;
-
-	    *ptail = next;
-	} else
-	    ptail = &tail->next;
-
-	tail = next;
-    } while (tail);
-
-    if (subrow_edges) {
-	sort_edges (subrow_edges, UINT_MAX, &subrow_edges);
-	active->head = merge_sorted_edges (active->head, subrow_edges);
-	active->min_height = min_height;
+inline static void
+polygon_fill_buckets (struct edge *edge, int y, struct edge **buckets)
+{
+    while (edge) {
+	struct edge *next = edge->next;
+	int suby = edge->ytop - y;
+	edge->next = buckets[suby];
+	buckets[suby] = edge;
+	edge = next;
     }
 }
 
@@ -1722,6 +1714,7 @@ glitter_scan_converter_render(
     struct polygon *polygon = converter->polygon;
     struct cell_list *coverages = converter->coverages;
     struct active_list *active = converter->active;
+    struct edge *buckets[GRID_Y] = { 0 };
 
     xmin_i = converter->xmin / GRID_X;
     xmax_i = converter->xmax / GRID_X;
@@ -1769,16 +1762,15 @@ glitter_scan_converter_render(
 		    step_edges (active, j - (i + 1));
 	    }
 	} else {
-	    grid_scaled_y_t suby;
+	    int sub;
+
+	    polygon_fill_buckets (polygon->y_buckets[i], (i+ymin_i)*GRID_Y, buckets);
 
 	    /* Subsample this row. */
-	    for (suby = 0; suby < GRID_Y; suby++) {
-		grid_scaled_y_t y = (i+ymin_i)*GRID_Y + suby;
-
-		if (polygon->y_buckets[i]) {
-		    active_list_merge_edges_from_polygon (active,
-							  &polygon->y_buckets[i], y,
-							  polygon);
+	    for (sub = 0; sub < GRID_Y; sub++) {
+		if (buckets[sub]) {
+		    active_list_merge_edges_from_bucket (active, buckets[sub]);
+		    buckets[sub] = NULL;
 		}
 
 		if (nonzero_fill)
