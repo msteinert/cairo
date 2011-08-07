@@ -354,7 +354,16 @@ struct pool {
 /* A polygon edge. */
 struct edge {
     /* Next in y-bucket or active list. */
-    struct edge *next;
+    struct edge *next, *prev;
+
+    /* Number of subsample rows remaining to scan convert of this
+     * edge. */
+    grid_scaled_y_t height_left;
+
+    /* Original sign of the edge: +1 for downwards, -1 for upwards
+     * edges.  */
+    int dir;
+    int vertical;
 
     /* Current x coordinate while the edge is on the active
      * list. Initialised to the x coordinate of the top of the
@@ -376,15 +385,6 @@ struct edge {
 
     /* y2-y1 after orienting the edge downwards.  */
     grid_scaled_y_t dy;
-
-    /* Number of subsample rows remaining to scan convert of this
-     * edge. */
-    grid_scaled_y_t height_left;
-
-    /* Original sign of the edge: +1 for downwards, -1 for upwards
-     * edges.  */
-    int dir;
-    int vertical;
 };
 
 /* Number of subsample rows per y-bucket. Must be GRID_Y. */
@@ -486,7 +486,7 @@ struct cell_pair {
  * the x-coordinate of the intercept of the edge and the scan line. */
 struct active_list {
     /* Leftmost edge on the current scan line. */
-    struct edge *head;
+    struct edge head, tail;
 
     /* A lower bound on the height of the active edges is used to
      * estimate how soon some active edge ends.	 We can't advance the
@@ -1110,7 +1110,16 @@ polygon_add_edge (struct polygon *polygon,
 static void
 active_list_reset (struct active_list *active)
 {
-    active->head = NULL;
+    active->head.vertical = 1;
+    active->head.height_left = INT_MAX;
+    active->head.x.quo = INT_MIN;
+    active->head.prev = NULL;
+    active->head.next = &active->tail;
+    active->tail.prev = &active->head;
+    active->tail.next = NULL;
+    active->tail.x.quo = INT_MAX;
+    active->tail.height_left = INT_MAX;
+    active->tail.vertical = 1;
     active->min_height = 0;
 }
 
@@ -1239,6 +1248,13 @@ sort_edges (struct edge  *list,
     return remaining;
 }
 
+static struct edge *
+merge_unsorted_edges (struct edge *head, struct edge *unsorted)
+{
+    sort_edges (unsorted, UINT_MAX, &unsorted);
+    return merge_sorted_edges (head, unsorted);
+}
+
 /* Test if the edges on the active list can be safely advanced by a
  * full row without intersections or any edges ending. */
 inline static int
@@ -1252,7 +1268,7 @@ active_list_can_step_full_row (struct active_list *active)
     if (active->min_height <= 0) {
 	int min_height = INT_MAX;
 
-	e = active->head;
+	e = active->head.next;
 	while (NULL != e) {
 	    if (e->height_left < min_height)
 		min_height = e->height_left;
@@ -1266,8 +1282,7 @@ active_list_can_step_full_row (struct active_list *active)
 	return 0;
 
     /* Check for intersections as no edges end during the next row. */
-    e = active->head;
-    while (NULL != e) {
+    for (e = active->head.next; e != &active->tail; e = e->next) {
 	struct quorem x = e->x;
 
 	if (! e->vertical) {
@@ -1281,7 +1296,6 @@ active_list_can_step_full_row (struct active_list *active)
 	    return 0;
 
 	prev_x = x.quo;
-	e = e->next;
     }
 
     return 1;
@@ -1291,30 +1305,36 @@ active_list_can_step_full_row (struct active_list *active)
  * active_list. */
 inline static void
 active_list_merge_edges_from_bucket(struct active_list *active,
-				     struct edge *edges)
+				    struct edge *edges)
 {
-    struct edge *tail;
-    grid_scaled_y_t min_height = active->min_height;
-    for (tail = edges; tail; tail = tail->next) {
-	if (tail->height_left < min_height)
-	    min_height = tail->height_left;
-    }
-    active->min_height = min_height;
+    struct edge *edge, *prev;
 
-    sort_edges (edges, UINT_MAX, &edges);
-    active->head = merge_sorted_edges (active->head, edges);
+    active->head.next = merge_unsorted_edges (active->head.next, edges);
+
+    /* update links within sort? */
+    for (edge = &active->head, prev = NULL; edge; prev = edge, edge = edge->next)
+	edge->prev = prev;
 }
 
 inline static void
-polygon_fill_buckets (struct edge *edge, int y, struct edge **buckets)
+polygon_fill_buckets (struct active_list *active,
+		      struct edge *edge,
+		      int y,
+		      struct edge **buckets)
 {
+    grid_scaled_y_t min_height = active->min_height;
+
     while (edge) {
 	struct edge *next = edge->next;
 	int suby = edge->ytop - y;
 	edge->next = buckets[suby];
 	buckets[suby] = edge;
+	if (edge->height_left < min_height)
+	    min_height = edge->height_left;
 	edge = next;
     }
+
+    active->min_height = min_height;
 }
 
 /* Advance the edges on the active list by one subsample row by
@@ -1322,77 +1342,69 @@ polygon_fill_buckets (struct edge *edge, int y, struct edge **buckets)
 inline static void
 active_list_substep_edges(struct active_list *active)
 {
-    struct edge **cursor = &active->head;
     grid_scaled_x_t prev_x = INT_MIN;
-    struct edge *unsorted = NULL;
-    struct edge *edge = *cursor;
+    struct edge *edge = active->head.next;
 
     do {
-       	UNROLL3({
-	    struct edge *next;
+	struct edge *next;
 
-	    if (NULL == edge)
-		break;
+	if (&active->tail == edge)
+	    break;
 
-	    next = edge->next;
-	    if (--edge->height_left) {
-		edge->x.quo += edge->dxdy.quo;
-		edge->x.rem += edge->dxdy.rem;
-		if (edge->x.rem >= 0) {
-		    ++edge->x.quo;
-		    edge->x.rem -= edge->dy;
-		}
-
-		if (edge->x.quo < prev_x) {
-		    *cursor = next;
-		    edge->next = unsorted;
-		    unsorted = edge;
-		} else {
-		    prev_x = edge->x.quo;
-		    cursor = &edge->next;
-		}
-	    } else {
-		 *cursor = next;
+	next = edge->next;
+	if (--edge->height_left) {
+	    edge->x.quo += edge->dxdy.quo;
+	    edge->x.rem += edge->dxdy.rem;
+	    if (edge->x.rem >= 0) {
+		++edge->x.quo;
+		edge->x.rem -= edge->dy;
 	    }
-	    edge = next;
-	})
-    } while (1);
 
-    if (unsorted) {
-	sort_edges (unsorted, UINT_MAX, &unsorted);
-	active->head = merge_sorted_edges (active->head, unsorted);
-    }
+	    if (edge->x.quo < prev_x) {
+		struct edge *pos = edge->prev;
+		pos->next = next;
+		next->prev = pos;
+		do {
+		    pos = pos->prev;
+		} while (edge->x.quo < pos->x.quo);
+		pos->next->prev = edge;
+		edge->next = pos->next;
+		edge->prev = pos;
+		pos->next = edge;
+	    } else
+		prev_x = edge->x.quo;
+	} else {
+	    edge->prev->next = next;
+	    next->prev = edge->prev;
+	}
+	edge = next;
+    } while (1);
 }
 
 inline static void
 apply_nonzero_fill_rule_for_subrow (struct active_list *active,
 				    struct cell_list *coverages)
 {
-    struct edge *edge = active->head;
-    int winding = 0;
-    int xstart;
-    int xend;
+    struct edge *edge = active->head.next;
 
     cell_list_rewind (coverages);
 
-    while (NULL != edge) {
-	xstart = edge->x.quo;
-	winding = edge->dir;
+    while (&active->tail != edge) {
+	int xstart = edge->x.quo;
+	int winding = edge->dir;
 	while (1) {
 	    edge = edge->next;
-	    if (NULL == edge)
+	    if (&active->tail == edge)
 		return cell_list_add_unbounded_subspan (coverages, xstart);
 
 	    winding += edge->dir;
 	    if (0 == winding) {
-		if (edge->next == NULL || edge->next->x.quo != edge->x.quo)
+		if (edge->next->x.quo != edge->x.quo)
 		    break;
 	    }
 	}
 
-	xend = edge->x.quo;
-	cell_list_add_subspan (coverages, xstart, xend);
-
+	cell_list_add_subspan (coverages, xstart,  edge->x.quo);
 	edge = edge->next;
     }
 }
@@ -1401,31 +1413,27 @@ static void
 apply_evenodd_fill_rule_for_subrow (struct active_list *active,
 				    struct cell_list *coverages)
 {
-    struct edge *edge = active->head;
-    int xstart;
-    int xend;
+    struct edge *edge = active->head.next;
 
     cell_list_rewind (coverages);
 
-    while (NULL != edge) {
-	xstart = edge->x.quo;
+    while (&active->tail != edge) {
+	int xstart = edge->x.quo;
 
 	while (1) {
 	    edge = edge->next;
-	    if (NULL == edge) {
+	    if (&active->tail == edge) {
 		cell_list_add_unbounded_subspan (coverages, xstart);
 		return;
 	    }
 
-	    if (edge->next == NULL || edge->next->x.quo != edge->x.quo)
+	    if (edge->next->x.quo != edge->x.quo)
 		break;
 
 	    edge = edge->next;
 	}
 
-	xend = edge->x.quo;
-	cell_list_add_subspan (coverages, xstart, xend);
-
+	cell_list_add_subspan (coverages, xstart,  edge->x.quo);
 	edge = edge->next;
     }
 }
@@ -1434,41 +1442,36 @@ static void
 apply_nonzero_fill_rule_and_step_edges (struct active_list *active,
 					struct cell_list *coverages)
 {
-    struct edge **cursor = &active->head;
-    struct edge *left_edge;
+    struct edge *pos = active->head.next;
 
-    left_edge = *cursor;
-    while (NULL != left_edge) {
+    while (&active->tail != pos) {
+	struct edge *left_edge = pos;
 	struct edge *right_edge;
-	int winding = left_edge->dir;
+	int winding;
 
 	left_edge->height_left -= GRID_Y;
-	if (left_edge->height_left)
-	    cursor = &left_edge->next;
-	else
-	    *cursor = left_edge->next;
+	if (! left_edge->height_left) {
+	    left_edge->prev->next = left_edge->next;
+	    left_edge->next->prev = left_edge->prev;
+	}
 
+	winding = left_edge->dir;
+	right_edge = left_edge->next;
 	while (1) {
-	    right_edge = *cursor;
-	    if (NULL == right_edge) {
+	    if (&active->tail == right_edge) {
 		cell_list_render_edge (coverages, left_edge, +1);
 		return;
 	    }
 
 	    right_edge->height_left -= GRID_Y;
-	    if (right_edge->height_left)
-		cursor = &right_edge->next;
-	    else
-		*cursor = right_edge->next;
+	    if (! right_edge->height_left) {
+		right_edge->prev->next = right_edge->next;
+		right_edge->next->prev = right_edge->prev;
+	    }
 
 	    winding += right_edge->dir;
-	    if (0 == winding) {
-		if (right_edge->next == NULL ||
-		    right_edge->next->x.quo != right_edge->x.quo)
-		{
-		    break;
-		}
-	    }
+	    if (0 == winding && right_edge->next->x.quo != right_edge->x.quo)
+		break;
 
 	    if (! right_edge->vertical) {
 		right_edge->x.quo += right_edge->dxdy_full.quo;
@@ -1478,12 +1481,14 @@ apply_nonzero_fill_rule_and_step_edges (struct active_list *active,
 		    right_edge->x.rem -= right_edge->dy;
 		}
 	    }
+
+	    right_edge = right_edge->next;
 	}
 
 	cell_list_render_edge (coverages, left_edge, +1);
 	cell_list_render_edge (coverages, right_edge, -1);
 
-	left_edge = *cursor;
+	pos = right_edge->next;
     }
 }
 
@@ -1491,37 +1496,33 @@ static void
 apply_evenodd_fill_rule_and_step_edges (struct active_list *active,
 					struct cell_list *coverages)
 {
-    struct edge **cursor = &active->head;
-    struct edge *left_edge;
+    struct edge *pos = active->head.next;
 
-    left_edge = *cursor;
-    while (NULL != left_edge) {
+    while (&active->tail != pos) {
+	struct edge *left_edge = pos;
 	struct edge *right_edge;
 
 	left_edge->height_left -= GRID_Y;
-	if (left_edge->height_left)
-	    cursor = &left_edge->next;
-	else
-	    *cursor = left_edge->next;
+	if (! left_edge->height_left) {
+	    left_edge->prev->next = left_edge->next;
+	    left_edge->next->prev = left_edge->prev;
+	}
 
+	right_edge = left_edge->next;
 	while (1) {
-	    right_edge = *cursor;
-	    if (NULL == right_edge) {
+	    if (&active->tail == right_edge) {
 		cell_list_render_edge (coverages, left_edge, +1);
 		return;
 	    }
 
 	    right_edge->height_left -= GRID_Y;
-	    if (right_edge->height_left)
-		cursor = &right_edge->next;
-	    else
-		*cursor = right_edge->next;
-
-	    if (right_edge->next == NULL ||
-		right_edge->next->x.quo != right_edge->x.quo)
-	    {
-		break;
+	    if (! right_edge->height_left) {
+		right_edge->prev->next = right_edge->next;
+		right_edge->next->prev = right_edge->prev;
 	    }
+
+	    if (right_edge->next->x.quo != right_edge->x.quo)
+		break;
 
 	    if (! right_edge->vertical) {
 		right_edge->x.quo += right_edge->dxdy_full.quo;
@@ -1531,12 +1532,14 @@ apply_evenodd_fill_rule_and_step_edges (struct active_list *active,
 		    right_edge->x.rem -= right_edge->dy;
 		}
 	    }
+
+	    right_edge = right_edge->next;
 	}
 
 	cell_list_render_edge (coverages, left_edge, +1);
 	cell_list_render_edge (coverages, right_edge, -1);
 
-	left_edge = *cursor;
+	pos = right_edge->next;
     }
 }
 
@@ -1677,7 +1680,7 @@ active_list_is_vertical (struct active_list *active)
 {
     struct edge *e;
 
-    for (e = active->head; e != NULL; e = e->next) {
+    for (e = active->head.next; e != &active->tail; e = e->next) {
 	if (! e->vertical)
 	    return FALSE;
     }
@@ -1688,15 +1691,17 @@ active_list_is_vertical (struct active_list *active)
 static void
 step_edges (struct active_list *active, int count)
 {
-    struct edge **cursor = &active->head;
     struct edge *edge;
 
-    for (edge = *cursor; edge != NULL; edge = *cursor) {
-	edge->height_left -= GRID_Y * count;
-	if (edge->height_left)
-	    cursor = &edge->next;
-	else
-	    *cursor = edge->next;
+    count *= GRID_Y;
+    for (edge = active->head.next; edge != &active->tail; edge = edge->next) {
+	edge->height_left -= count;
+	if (! edge->height_left) {
+	    if (edge->prev)
+		edge->prev->next = edge->next;
+	    if (edge->next)
+		edge->next->prev = edge->prev;
+	}
     }
 }
 
@@ -1733,7 +1738,8 @@ glitter_scan_converter_render(
 	/* Determine if we can ignore this row or use the full pixel
 	 * stepper. */
 	if (GRID_Y == EDGE_Y_BUCKET_HEIGHT && ! polygon->y_buckets[i]) {
-	    if (! active->head) {
+	    if (active->head.next == &active->tail) {
+		active->min_height = INT_MAX;
 		for (; j < h && ! polygon->y_buckets[j]; j++)
 		    ;
 		GLITTER_BLIT_COVERAGES_EMPTY (i+ymin_i, j-i, xmin_i, xmax_i);
@@ -1764,7 +1770,10 @@ glitter_scan_converter_render(
 	} else {
 	    int sub;
 
-	    polygon_fill_buckets (polygon->y_buckets[i], (i+ymin_i)*GRID_Y, buckets);
+	    polygon_fill_buckets (active,
+				  polygon->y_buckets[i],
+				  (i+ymin_i)*GRID_Y,
+				  buckets);
 
 	    /* Subsample this row. */
 	    for (sub = 0; sub < GRID_Y; sub++) {
@@ -1785,10 +1794,7 @@ glitter_scan_converter_render(
 	GLITTER_BLIT_COVERAGES(coverages, i+ymin_i, j-i, xmin_i, xmax_i);
 	cell_list_reset (coverages);
 
-	if (! active->head)
-	    active->min_height = INT_MAX;
-	else
-	    active->min_height -= GRID_Y;
+	active->min_height -= GRID_Y;
     }
 
     /* Clean up the coverage blitter. */
