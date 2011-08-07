@@ -211,5 +211,6 @@ CAIRO_PERF_DECL (pythagoras_tree);
 CAIRO_PERF_DECL (intersections);
 CAIRO_PERF_DECL (spiral);
 CAIRO_PERF_DECL (wave);
+CAIRO_PERF_DECL (many_strokes);
 
 #endif

@@ -28,6 +28,7 @@ libcairo_perf_micro_sources = \
 	dragon.c		\
 	pythagoras-tree.c	\
 	intersections.c		\
+	many-strokes.c		\
 	spiral.c		\
 	$(NULL)
 
