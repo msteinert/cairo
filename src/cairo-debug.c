@@ -283,7 +283,8 @@ _cairo_debug_print_polygon (FILE *stream, cairo_polygon_t *polygon)
 	cairo_edge_t *edge = &polygon->edges[n];
 
 	fprintf (stream,
-		 "  (%f, %f) -> (%f, %f), top=%f, bottom=%f, dir=%d\n",
+		 "  [%d] = [(%f, %f), (%f, %f)], top=%f, bottom=%f, dir=%d\n",
+		 n,
 		 _cairo_fixed_to_double (edge->line.p1.x),
 		 _cairo_fixed_to_double (edge->line.p1.y),
 		 _cairo_fixed_to_double (edge->line.p2.x),
