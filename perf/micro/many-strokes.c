@@ -39,6 +39,110 @@ uniform_random (double minval, double maxval)
 }
 
 static cairo_perf_ticks_t
+do_many_strokes_ha (cairo_t *cr, int width, int height, int loops)
+{
+    int count;
+
+    state = 0xc0ffee;
+    for (count = 0; count < 1000; count++) {
+	double h = floor (uniform_random (0, height));
+	cairo_move_to (cr, floor (uniform_random (0, width)), h);
+	cairo_line_to (cr, ceil (uniform_random (0, width)), h);
+    }
+
+    cairo_set_line_width (cr, 2.);
+
+    cairo_perf_timer_start ();
+
+    while (loops--)
+	cairo_stroke_preserve (cr);
+
+    cairo_perf_timer_stop ();
+
+    cairo_new_path (cr);
+
+    return cairo_perf_timer_elapsed ();
+}
+
+static cairo_perf_ticks_t
+do_many_strokes_h (cairo_t *cr, int width, int height, int loops)
+{
+    int count;
+
+    state = 0xc0ffee;
+    for (count = 0; count < 1000; count++) {
+	double h = uniform_random (0, height);
+	cairo_move_to (cr, uniform_random (0, width), h);
+	cairo_line_to (cr, uniform_random (0, width), h);
+    }
+
+    cairo_set_line_width (cr, 2.);
+
+    cairo_perf_timer_start ();
+
+    while (loops--)
+	cairo_stroke_preserve (cr);
+
+    cairo_perf_timer_stop ();
+
+    cairo_new_path (cr);
+
+    return cairo_perf_timer_elapsed ();
+}
+
+static cairo_perf_ticks_t
+do_many_strokes_va (cairo_t *cr, int width, int height, int loops)
+{
+    int count;
+
+    state = 0xc0ffee;
+    for (count = 0; count < 1000; count++) {
+	double v = floor (uniform_random (0, width));
+	cairo_move_to (cr, v, floor (uniform_random (0, height)));
+	cairo_line_to (cr, v, ceil (uniform_random (0, height)));
+    }
+
+    cairo_set_line_width (cr, 2.);
+
+    cairo_perf_timer_start ();
+
+    while (loops--)
+	cairo_stroke_preserve (cr);
+
+    cairo_perf_timer_stop ();
+
+    cairo_new_path (cr);
+
+    return cairo_perf_timer_elapsed ();
+}
+
+static cairo_perf_ticks_t
+do_many_strokes_v (cairo_t *cr, int width, int height, int loops)
+{
+    int count;
+
+    state = 0xc0ffee;
+    for (count = 0; count < 1000; count++) {
+	double v = uniform_random (0, width);
+	cairo_move_to (cr, v, uniform_random (0, height));
+	cairo_line_to (cr, v, uniform_random (0, height));
+    }
+
+    cairo_set_line_width (cr, 2.);
+
+    cairo_perf_timer_start ();
+
+    while (loops--)
+	cairo_stroke_preserve (cr);
+
+    cairo_perf_timer_stop ();
+
+    cairo_new_path (cr);
+
+    return cairo_perf_timer_elapsed ();
+}
+
+static cairo_perf_ticks_t
 do_many_strokes (cairo_t *cr, int width, int height, int loops)
 {
     int count;
@@ -71,5 +175,9 @@ many_strokes (cairo_perf_t *perf, cairo_t *cr, int width, int height)
     if (! cairo_perf_can_run (perf, "many-strokes", NULL))
 	return;
 
-    cairo_perf_run (perf, "many-strokes", do_many_strokes, NULL);
+    cairo_perf_run (perf, "many-strokes-halign", do_many_strokes_ha, NULL);
+    cairo_perf_run (perf, "many-strokes-valign", do_many_strokes_va, NULL);
+    cairo_perf_run (perf, "many-strokes-horizontal", do_many_strokes_h, NULL);
+    cairo_perf_run (perf, "many-strokes-vertical", do_many_strokes_v, NULL);
+    cairo_perf_run (perf, "many-strokes-random", do_many_strokes, NULL);
 }
