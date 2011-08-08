@@ -1398,13 +1398,11 @@ apply_nonzero_fill_rule_for_subrow (struct active_list *active,
 		return cell_list_add_unbounded_subspan (coverages, xstart);
 
 	    winding += edge->dir;
-	    if (0 == winding) {
-		if (edge->next->x.quo != edge->x.quo)
-		    break;
-	    }
+	    if (0 == winding && edge->next->x.quo != edge->x.quo)
+		break;
 	}
 
-	cell_list_add_subspan (coverages, xstart,  edge->x.quo);
+	cell_list_add_subspan (coverages, xstart, edge->x.quo);
 	edge = edge->next;
     }
 }
@@ -1697,10 +1695,8 @@ step_edges (struct active_list *active, int count)
     for (edge = active->head.next; edge != &active->tail; edge = edge->next) {
 	edge->height_left -= count;
 	if (! edge->height_left) {
-	    if (edge->prev)
-		edge->prev->next = edge->next;
-	    if (edge->next)
-		edge->next->prev = edge->prev;
+	    edge->prev->next = edge->next;
+	    edge->next->prev = edge->prev;
 	}
     }
 }
