@@ -188,7 +188,7 @@ _cairo_xcb_surface_create_similar_image (void			*abstract_other,
 						      stride * height,
 						      &shm_info);
     if (unlikely (status))
-	return _cairo_surface_create_in_error (status);
+	return cairo_image_surface_create (format, width, height);
 
     image = _cairo_image_surface_create_with_pixman_format (shm_info->mem,
 							    pixman_format,
