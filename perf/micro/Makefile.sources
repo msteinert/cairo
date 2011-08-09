@@ -31,6 +31,7 @@ libcairo_perf_micro_sources = \
 	many-strokes.c		\
 	many-fills.c		\
 	many-curves.c		\
+	curve.c			\
 	spiral.c		\
 	$(NULL)
 

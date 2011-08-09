@@ -214,5 +214,6 @@ CAIRO_PERF_DECL (wave);
 CAIRO_PERF_DECL (many_strokes);
 CAIRO_PERF_DECL (many_fills);
 CAIRO_PERF_DECL (many_curves);
+CAIRO_PERF_DECL (curve);
 
 #endif
