@@ -566,6 +566,7 @@ const cairo_perf_case_t perf_cases[] = {
     { intersections, 512, 512 },
     { many_strokes, 64, 512 },
     { many_fills, 64, 512 },
+    { many_curves, 64, 512 },
     { spiral, 512, 512 },
     { wave, 500, 500 },
     { NULL }
