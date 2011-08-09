@@ -326,16 +326,15 @@ edge_start_or_continue_box (sweep_line_t *sweep_line,
 static edge_t *
 merge_sorted_edges (edge_t *head_a, edge_t *head_b)
 {
-    edge_t *head, **next;
+    edge_t *head, **next, *prev;
     int32_t x;
 
-    if (head_a == NULL)
-	return head_b;
-
+    prev = head_a->prev;
     next = &head;
     if (head_a->x <= head_b->x) {
 	head = head_a;
     } else {
+	head_b->prev = prev;
 	head = head_b;
 	goto start_with_b;
     }
@@ -343,10 +342,12 @@ merge_sorted_edges (edge_t *head_a, edge_t *head_b)
     do {
 	x = head_b->x;
 	while (head_a != NULL && head_a->x <= x) {
+	    prev = head_a;
 	    next = &head_a->next;
 	    head_a = head_a->next;
 	}
 
+	head_b->prev = prev;
 	*next = head_b;
 	if (head_a == NULL)
 	    return head;
@@ -354,10 +355,12 @@ merge_sorted_edges (edge_t *head_a, edge_t *head_b)
 start_with_b:
 	x = head_a->x;
 	while (head_b != NULL && head_b->x <= x) {
+	    prev = head_b;
 	    next = &head_b->next;
 	    head_b = head_b->next;
 	}
 
+	head_a->prev = prev;
 	*next = head_a;
 	if (head_b == NULL)
 	    return head;
@@ -402,18 +405,16 @@ sort_edges (edge_t  *list,
 	head_other->next = NULL;
     } else {
 	*head_out = head_other;
+	head_other->prev = list->prev;
 	head_other->next = list;
+	list->prev = head_other;
 	list->next = NULL;
     }
 
     for (i = 0; i < level && remaining; i++) {
-	/* Extract a sorted list of the same size as *head_out
-	 * (2^(i+1) elements) from the list of remaining elements. */
 	remaining = sort_edges (remaining, i, &head_other);
 	*head_out = merge_sorted_edges (*head_out, head_other);
     }
-
-    /* *head_out now contains (at most) 2^(level+1) elements. */
 
     return remaining;
 }
@@ -446,10 +447,6 @@ active_edges_insert (sweep_line_t *sweep)
     sweep->cursor = sweep->insert;
     sweep->insert = NULL;
     sweep->insert_x = INT_MAX;
-
-    /* update links within sort? */
-    for (edge = prev->next; edge; prev = edge, edge = edge->next)
-	edge->prev = prev;
 }
 
 static inline void
@@ -587,8 +584,12 @@ sweep_line_delete (sweep_line_t	*sweep, rectangle_t	*rectangle)
 static inline void
 sweep_line_insert (sweep_line_t	*sweep, rectangle_t *rectangle)
 {
+    if (sweep->insert)
+	sweep->insert->prev = &rectangle->right;
     rectangle->right.next = sweep->insert;
+    rectangle->right.prev = &rectangle->left;
     rectangle->left.next = &rectangle->right;
+    rectangle->left.prev = NULL;
     sweep->insert = &rectangle->left;
     if (rectangle->left.x < sweep->insert_x)
 	sweep->insert_x = rectangle->left.x;
