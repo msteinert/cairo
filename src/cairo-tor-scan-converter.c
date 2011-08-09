@@ -493,6 +493,7 @@ struct active_list {
      * scan conversion by a full pixel row if an edge ends somewhere
      * within it. */
     grid_scaled_y_t min_height;
+    int is_vertical;
 };
 
 struct glitter_scan_converter {
@@ -1121,6 +1122,7 @@ active_list_reset (struct active_list *active)
     active->tail.height_left = INT_MAX;
     active->tail.vertical = 1;
     active->min_height = 0;
+    active->is_vertical = 1;
 }
 
 static void
@@ -1262,14 +1264,17 @@ active_list_can_step_full_row (struct active_list *active)
      * list if we have been dropping edges. */
     if (active->min_height <= 0) {
 	int min_height = INT_MAX;
+	int is_vertical = 1;
 
 	e = active->head.next;
 	while (NULL != e) {
 	    if (e->height_left < min_height)
 		min_height = e->height_left;
+	    is_vertical &= e->vertical;
 	    e = e->next;
 	}
 
+	active->is_vertical = is_vertical;
 	active->min_height = min_height;
     }
 
@@ -1312,6 +1317,7 @@ polygon_fill_buckets (struct active_list *active,
 		      struct edge **buckets)
 {
     grid_scaled_y_t min_height = active->min_height;
+    int is_vertical = active->is_vertical;
 
     while (edge) {
 	struct edge *next = edge->next;
@@ -1323,9 +1329,11 @@ polygon_fill_buckets (struct active_list *active,
 	buckets[suby] = edge;
 	if (edge->height_left < min_height)
 	    min_height = edge->height_left;
+	is_vertical &= edge->vertical;
 	edge = next;
     }
 
+    active->is_vertical = is_vertical;
     active->min_height = min_height;
 }
 
@@ -1665,19 +1673,6 @@ glitter_scan_converter_add_edge (glitter_scan_converter_t *converter,
 # define GLITTER_BLIT_COVERAGES_EMPTY(y0, y1, xmin, xmax)
 #endif
 
-static cairo_bool_t
-active_list_is_vertical (struct active_list *active)
-{
-    struct edge *e;
-
-    for (e = active->head.next; e != &active->tail; e = e->next) {
-	if (! e->vertical)
-	    return FALSE;
-    }
-
-    return TRUE;
-}
-
 static void
 step_edges (struct active_list *active, int count)
 {
@@ -1728,6 +1723,7 @@ glitter_scan_converter_render(
 	if (GRID_Y == EDGE_Y_BUCKET_HEIGHT && ! polygon->y_buckets[i]) {
 	    if (active->head.next == &active->tail) {
 		active->min_height = INT_MAX;
+		active->is_vertical = 1;
 		for (; j < h && ! polygon->y_buckets[j]; j++)
 		    ;
 		GLITTER_BLIT_COVERAGES_EMPTY (i+ymin_i, j-i, xmin_i, xmax_i);
@@ -1744,7 +1740,7 @@ glitter_scan_converter_render(
 	    else
 		apply_evenodd_fill_rule_and_step_edges (active, coverages);
 
-	    if (active_list_is_vertical (active)) {
+	    if (active->is_vertical) {
 		while (j < h &&
 		       polygon->y_buckets[j] == NULL &&
 		       active->min_height >= 2*GRID_Y)
