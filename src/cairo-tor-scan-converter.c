@@ -1150,27 +1150,28 @@ active_list_init(struct active_list *active)
 static struct edge *
 merge_sorted_edges (struct edge *head_a, struct edge *head_b)
 {
-    struct edge *head, **next;
+    struct edge *head, **next, *prev;
     int32_t x;
 
-    if (head_a == NULL)
-	return head_b;
-
+    prev = head_a->prev;
     next = &head;
     if (head_a->x.quo <= head_b->x.quo) {
 	head = head_a;
     } else {
 	head = head_b;
+	head_b->prev = prev;
 	goto start_with_b;
     }
 
     do {
 	x = head_b->x.quo;
 	while (head_a != NULL && head_a->x.quo <= x) {
+	    prev = head_a;
 	    next = &head_a->next;
 	    head_a = head_a->next;
 	}
 
+	head_b->prev = prev;
 	*next = head_b;
 	if (head_a == NULL)
 	    return head;
@@ -1178,10 +1179,12 @@ merge_sorted_edges (struct edge *head_a, struct edge *head_b)
 start_with_b:
 	x = head_a->x.quo;
 	while (head_b != NULL && head_b->x.quo <= x) {
+	    prev = head_b;
 	    next = &head_b->next;
 	    head_b = head_b->next;
 	}
 
+	head_a->prev = prev;
 	*next = head_a;
 	if (head_b == NULL)
 	    return head;
@@ -1206,8 +1209,8 @@ start_with_b:
  * (we start with a small sorted list and keep merging other lists of the same size to it).
  */
 static struct edge *
-sort_edges (struct edge  *list,
-	    unsigned int  level,
+sort_edges (struct edge *list,
+	    unsigned int level,
 	    struct edge **head_out)
 {
     struct edge *head_other, *remaining;
@@ -1215,35 +1218,27 @@ sort_edges (struct edge  *list,
 
     head_other = list->next;
 
-    /* Single element list -> return */
     if (head_other == NULL) {
 	*head_out = list;
 	return NULL;
     }
 
-    /* Unroll the first iteration of the following loop (halves the number of calls to merge_sorted_edges):
-     *  - Initialize remaining to be the list containing the elements after the second in the input list.
-     *  - Initialize *head_out to be the sorted list containing the first two element.
-     */
     remaining = head_other->next;
     if (list->x.quo <= head_other->x.quo) {
 	*head_out = list;
-	/* list->next = head_other; */ /* The input list is already like this. */
 	head_other->next = NULL;
     } else {
 	*head_out = head_other;
+	head_other->prev = list->prev;
 	head_other->next = list;
+	list->prev = head_other;
 	list->next = NULL;
     }
 
     for (i = 0; i < level && remaining; i++) {
-	/* Extract a sorted list of the same size as *head_out
-	 * (2^(i+1) elements) from the list of remaining elements. */
 	remaining = sort_edges (remaining, i, &head_other);
 	*head_out = merge_sorted_edges (*head_out, head_other);
     }
-
-    /* *head_out now contains (at most) 2^(level+1) elements. */
 
     return remaining;
 }
@@ -1307,13 +1302,7 @@ inline static void
 active_list_merge_edges_from_bucket(struct active_list *active,
 				    struct edge *edges)
 {
-    struct edge *edge, *prev;
-
     active->head.next = merge_unsorted_edges (active->head.next, edges);
-
-    /* update links within sort? */
-    for (edge = &active->head, prev = NULL; edge; prev = edge, edge = edge->next)
-	edge->prev = prev;
 }
 
 inline static void
@@ -1327,7 +1316,10 @@ polygon_fill_buckets (struct active_list *active,
     while (edge) {
 	struct edge *next = edge->next;
 	int suby = edge->ytop - y;
+	if (buckets[suby])
+	    buckets[suby]->prev = edge;
 	edge->next = buckets[suby];
+	edge->prev = NULL;
 	buckets[suby] = edge;
 	if (edge->height_left < min_height)
 	    min_height = edge->height_left;
