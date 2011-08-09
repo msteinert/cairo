@@ -1338,11 +1338,8 @@ _cairo_path_fixed_iter_is_fill_box (cairo_path_fixed_iter_t *_iter,
 
     iter = *_iter;
 
-    if (iter.n_op == iter.buf->num_ops &&
-	! _cairo_path_fixed_iter_next_op (&iter))
-    {
+    if (iter.n_op == iter.buf->num_ops && ! _cairo_path_fixed_iter_next_op (&iter))
 	return FALSE;
-    }
 
     /* Check whether the ops are those that would be used for a rectangle */
     if (iter.buf->op[iter.n_op] != CAIRO_PATH_OP_MOVE_TO)
@@ -1357,8 +1354,20 @@ _cairo_path_fixed_iter_is_fill_box (cairo_path_fixed_iter_t *_iter,
     if (! _cairo_path_fixed_iter_next_op (&iter))
 	return FALSE;
 
-    if (iter.buf->op[iter.n_op] != CAIRO_PATH_OP_LINE_TO)
+    /* a horizontal/vertical closed line is also a degenerate rectangle */
+    switch (iter.buf->op[iter.n_op]) {
+    case CAIRO_PATH_OP_CLOSE_PATH:
+	_cairo_path_fixed_iter_next_op (&iter);
+    case CAIRO_PATH_OP_MOVE_TO: /* implicit close */
+	box->p1 = box->p2 = points[0];
+	*_iter = iter;
+	return TRUE;
+    default:
 	return FALSE;
+    case CAIRO_PATH_OP_LINE_TO:
+	break;
+    }
+
     points[2] = iter.buf->points[iter.n_point++];
     if (! _cairo_path_fixed_iter_next_op (&iter))
 	return FALSE;
@@ -1372,19 +1381,18 @@ _cairo_path_fixed_iter_is_fill_box (cairo_path_fixed_iter_t *_iter,
     /* Now, there are choices. The rectangle might end with a LINE_TO
      * (to the original point), but this isn't required. If it
      * doesn't, then it must end with a CLOSE_PATH (which may be implicit). */
-    if (iter.buf->op[iter.n_op] == CAIRO_PATH_OP_LINE_TO)
-    {
+    if (iter.buf->op[iter.n_op] == CAIRO_PATH_OP_LINE_TO) {
 	points[4] = iter.buf->points[iter.n_point++];
 	if (points[4].x != points[0].x || points[4].y != points[0].y)
 	    return FALSE;
-    }
-    else if (! (iter.buf->op[iter.n_op] == CAIRO_PATH_OP_CLOSE_PATH ||
-		iter.buf->op[iter.n_op] == CAIRO_PATH_OP_MOVE_TO))
-    {
+	_cairo_path_fixed_iter_next_op (&iter);
+    } else if (iter.buf->op[iter.n_op] == CAIRO_PATH_OP_CLOSE_PATH) {
+	_cairo_path_fixed_iter_next_op (&iter);
+    } else if (iter.buf->op[iter.n_op] == CAIRO_PATH_OP_MOVE_TO) {
+	/* implicit close-path */
+    } else {
 	return FALSE;
     }
-    if (! _cairo_path_fixed_iter_next_op (&iter))
-	return FALSE;
 
     /* Ok, we may have a box, if the points line up */
     if (points[0].y == points[1].y &&
