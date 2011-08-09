@@ -72,12 +72,12 @@ struct _rectangle {
 typedef struct _sweep_line {
     rectangle_t **rectangles;
     rectangle_t **stop;
-    edge_t head, tail;
-    edge_t *insert_left, *insert_right;
+    edge_t head, tail, *insert, *cursor;
     int32_t current_y;
     int32_t last_y;
     int stop_size;
 
+    int32_t insert_x;
     cairo_fill_rule_t fill_rule;
 
     cairo_bool_t do_traps;
@@ -217,17 +217,20 @@ sweep_line_init (sweep_line_t	 *sweep_line,
     sweep_line->stop = rectangles - 2;
     sweep_line->stop_size = 0;
 
+    sweep_line->insert = NULL;
+    sweep_line->insert_x = INT_MAX;
+    sweep_line->cursor = &sweep_line->tail;
+
+    sweep_line->head.dir = 0;
     sweep_line->head.x = INT32_MIN;
     sweep_line->head.right = NULL;
-    sweep_line->head.dir = 0;
+    sweep_line->head.prev = NULL;
     sweep_line->head.next = &sweep_line->tail;
-    sweep_line->tail.x = INT32_MAX;
-    sweep_line->tail.right = NULL;
-    sweep_line->tail.dir = 0;
     sweep_line->tail.prev = &sweep_line->head;
-
-    sweep_line->insert_left = &sweep_line->tail;
-    sweep_line->insert_right = &sweep_line->tail;
+    sweep_line->tail.next = NULL;
+    sweep_line->tail.right = NULL;
+    sweep_line->tail.x = INT32_MAX;
+    sweep_line->tail.dir = 0;
 
     sweep_line->current_y = INT32_MIN;
     sweep_line->last_y = INT32_MIN;
@@ -288,7 +291,7 @@ edge_start_or_continue_box (sweep_line_t *sweep_line,
 	return;
 
     if (left->right != NULL) {
-	if (right != NULL && left->right->x == right->x) {
+	if (left->right->x == right->x) {
 	    /* continuation on right, so just swap edges */
 	    left->right = right;
 	    return;
@@ -297,10 +300,156 @@ edge_start_or_continue_box (sweep_line_t *sweep_line,
 	edge_end_box (sweep_line, left, top);
     }
 
-    if (right != NULL && left->x != right->x) {
+    if (left->x != right->x) {
 	left->top = top;
 	left->right = right;
     }
+}
+/*
+ * Merge two sorted edge lists.
+ * Input:
+ *  - head_a: The head of the first list.
+ *  - head_b: The head of the second list; head_b cannot be NULL.
+ * Output:
+ * Returns the head of the merged list.
+ *
+ * Implementation notes:
+ * To make it fast (in particular, to reduce to an insertion sort whenever
+ * one of the two input lists only has a single element) we iterate through
+ * a list until its head becomes greater than the head of the other list,
+ * then we switch their roles. As soon as one of the two lists is empty, we
+ * just attach the other one to the current list and exit.
+ * Writes to memory are only needed to "switch" lists (as it also requires
+ * attaching to the output list the list which we will be iterating next) and
+ * to attach the last non-empty list.
+ */
+static edge_t *
+merge_sorted_edges (edge_t *head_a, edge_t *head_b)
+{
+    edge_t *head, **next;
+    int32_t x;
+
+    if (head_a == NULL)
+	return head_b;
+
+    next = &head;
+    if (head_a->x <= head_b->x) {
+	head = head_a;
+    } else {
+	head = head_b;
+	goto start_with_b;
+    }
+
+    do {
+	x = head_b->x;
+	while (head_a != NULL && head_a->x <= x) {
+	    next = &head_a->next;
+	    head_a = head_a->next;
+	}
+
+	*next = head_b;
+	if (head_a == NULL)
+	    return head;
+
+start_with_b:
+	x = head_a->x;
+	while (head_b != NULL && head_b->x <= x) {
+	    next = &head_b->next;
+	    head_b = head_b->next;
+	}
+
+	*next = head_a;
+	if (head_b == NULL)
+	    return head;
+    } while (1);
+}
+
+/*
+ * Sort (part of) a list.
+ * Input:
+ *  - list: The list to be sorted; list cannot be NULL.
+ *  - limit: Recursion limit.
+ * Output:
+ *  - head_out: The head of the sorted list containing the first 2^(level+1) elements of the
+ *              input list; if the input list has fewer elements, head_out be a sorted list
+ *              containing all the elements of the input list.
+ * Returns the head of the list of unprocessed elements (NULL if the sorted list contains
+ * all the elements of the input list).
+ *
+ * Implementation notes:
+ * Special case single element list, unroll/inline the sorting of the first two elements.
+ * Some tail recursion is used since we iterate on the bottom-up solution of the problem
+ * (we start with a small sorted list and keep merging other lists of the same size to it).
+ */
+static edge_t *
+sort_edges (edge_t  *list,
+	    unsigned int  level,
+	    edge_t **head_out)
+{
+    edge_t *head_other, *remaining;
+    unsigned int i;
+
+    head_other = list->next;
+
+    if (head_other == NULL) {
+	*head_out = list;
+	return NULL;
+    }
+
+    remaining = head_other->next;
+    if (list->x <= head_other->x) {
+	*head_out = list;
+	head_other->next = NULL;
+    } else {
+	*head_out = head_other;
+	head_other->next = list;
+	list->next = NULL;
+    }
+
+    for (i = 0; i < level && remaining; i++) {
+	/* Extract a sorted list of the same size as *head_out
+	 * (2^(i+1) elements) from the list of remaining elements. */
+	remaining = sort_edges (remaining, i, &head_other);
+	*head_out = merge_sorted_edges (*head_out, head_other);
+    }
+
+    /* *head_out now contains (at most) 2^(level+1) elements. */
+
+    return remaining;
+}
+
+static edge_t *
+merge_unsorted_edges (edge_t *head, edge_t *unsorted)
+{
+    sort_edges (unsorted, UINT_MAX, &unsorted);
+    return merge_sorted_edges (head, unsorted);
+}
+
+static void
+active_edges_insert (sweep_line_t *sweep)
+{
+    edge_t *edge, *prev;
+    int x;
+
+    x = sweep->insert_x;
+    prev = sweep->cursor;
+    if (prev->x > x) {
+	do {
+	    prev = prev->prev;
+	} while (prev->x > x);
+    } else {
+	while (prev->next->x < x)
+	    prev = prev->next;
+    }
+
+    prev->next = merge_unsorted_edges (prev->next, sweep->insert);
+    sweep->cursor = sweep->insert;
+    sweep->insert = NULL;
+    sweep->insert_x = INT_MAX;
+
+    /* update links within sort? */
+    for (edge = prev->next; edge; prev = edge, edge = edge->next)
+	edge->prev = prev;
 }
 
 static inline void
@@ -311,6 +460,9 @@ active_edges_to_traps (sweep_line_t *sweep)
 
     if (sweep->last_y == sweep->current_y)
 	return;
+
+    if (sweep->insert)
+	active_edges_insert (sweep);
 
     pos = sweep->head.next;
     if (pos == &sweep->tail)
@@ -395,7 +547,7 @@ active_edges_to_traps (sweep_line_t *sweep)
 }
 
 static inline void
-sweep_line_delete_edge (sweep_line_t *sweep_line, edge_t *edge)
+sweep_line_delete_edge (sweep_line_t *sweep, edge_t *edge)
 {
     if (edge->right != NULL) {
 	edge_t *next = edge->next;
@@ -403,13 +555,11 @@ sweep_line_delete_edge (sweep_line_t *sweep_line, edge_t *edge)
 	    next->top = edge->top;
 	    next->right = edge->right;
 	} else
-	    edge_end_box (sweep_line, edge, sweep_line->current_y);
+	    edge_end_box (sweep, edge, sweep->current_y);
     }
 
-    if (sweep_line->insert_left == edge)
-	sweep_line->insert_left = edge->next;
-    if (sweep_line->insert_right == edge)
-	sweep_line->insert_right = edge->next;
+    if (sweep->cursor == edge)
+	sweep->cursor = edge->prev;
 
     edge->prev->next = edge->next;
     edge->next->prev = edge->prev;
@@ -435,57 +585,15 @@ sweep_line_delete (sweep_line_t	*sweep, rectangle_t	*rectangle)
 }
 
 static inline void
-insert_edge (edge_t *edge, edge_t *pos)
+sweep_line_insert (sweep_line_t	*sweep, rectangle_t *rectangle)
 {
-    if (pos->x != edge->x) {
-	if (pos->x > edge->x) {
-	    do {
-		if (pos->prev->x <= edge->x)
-		    break;
-		pos = pos->prev;
-	    } while (TRUE);
-	} else {
-	    do {
-		pos = pos->next;
-		if (pos->x >= edge->x)
-		    break;
-	    } while (TRUE);
-	}
-    }
-
-    pos->prev->next = edge;
-    edge->prev = pos->prev;
-    edge->next = pos;
-    pos->prev = edge;
-}
-
-static inline cairo_bool_t
-sweep_line_insert (sweep_line_t	*sweep,
-		   rectangle_t	*rectangle)
-{
-    edge_t *pos;
-
-    /* right edge */
-    pos = sweep->insert_right;
-    insert_edge (&rectangle->right, pos);
-    sweep->insert_right = &rectangle->right;
-
-    /* left edge */
-    pos = sweep->insert_left;
-    if (pos->x > sweep->insert_right->x)
-	pos = sweep->insert_right->prev;
-    insert_edge (&rectangle->left, pos);
-    sweep->insert_left = &rectangle->left;
+    rectangle->right.next = sweep->insert;
+    rectangle->left.next = &rectangle->right;
+    sweep->insert = &rectangle->left;
+    if (rectangle->left.x < sweep->insert_x)
+	sweep->insert_x = rectangle->left.x;
 
     pqueue_push (sweep, rectangle);
-
-    if (sweep->fill_rule == CAIRO_FILL_RULE_WINDING &&
-	rectangle->left.prev->dir == rectangle->left.dir)
-    {
-	return rectangle->left.next != &rectangle->right;
-    }
-
-    return TRUE;
 }
 
 static cairo_status_t
@@ -535,8 +643,12 @@ _cairo_bentley_ottmann_tessellate_rectangular (rectangle_t	**rectangles,
 	    sweep_line.current_y = rectangle->top;
 	}
 
-	update |= sweep_line_insert (&sweep_line, rectangle);
-    } while ((rectangle = rectangle_pop_start (&sweep_line)) != NULL);
+	do {
+	    sweep_line_insert (&sweep_line, rectangle);
+	} while ((rectangle = rectangle_pop_start (&sweep_line)) != NULL &&
+		 sweep_line.current_y == rectangle->top);
+	update = TRUE;
+    } while (rectangle);
 
     while ((rectangle = rectangle_peek_stop (&sweep_line)) != NULL) {
 	if (rectangle->bottom != sweep_line.current_y) {
