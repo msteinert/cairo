@@ -50,6 +50,7 @@
 #include "cairo-default-context-private.h"
 #include "cairo-device-private.h"
 #include "cairo-error-private.h"
+#include "cairo-image-surface-private.h"
 #include "cairo-list-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-output-stream-private.h"
@@ -2119,7 +2120,7 @@ _cairo_script_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clip
     }
 
     /* skip the trivial clip covering the surface extents */
-    if (surface->width >=0 && surface->height >= 0 &&
+    if (surface->width >= 0 && surface->height >= 0 &&
 	_cairo_path_fixed_is_box (path, &box))
     {
 	if (box.p1.x <= 0 && box.p1.y <= 0 &&

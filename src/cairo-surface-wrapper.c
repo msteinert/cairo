@@ -591,8 +591,11 @@ _cairo_surface_wrapper_init (cairo_surface_wrapper_t *wrapper,
     wrapper->has_extents = FALSE;
     wrapper->extents.x = wrapper->extents.y = 0;
 
-    wrapper->needs_transform =
-	! _cairo_matrix_is_identity (&wrapper->target->device_transform);
+    wrapper->needs_transform = FALSE;
+    if (target) {
+	wrapper->needs_transform =
+	    ! _cairo_matrix_is_identity (&target->device_transform);
+    }
 }
 
 void
