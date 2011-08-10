@@ -90,7 +90,7 @@ _cairo_composite_rectangles_init_for_paint (cairo_composite_rectangles_t *extent
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
     }
 
-    extents->mask = extents->bounded;
+    extents->mask = *unbounded;
 
     extents->clip = _cairo_clip_reduce_for_composite (clip, extents);
     if (_cairo_clip_is_all_clipped (extents->clip))
