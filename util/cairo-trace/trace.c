@@ -3824,7 +3824,7 @@ cairo_surface_write_to_png (cairo_surface_t *surface, const char *filename)
     if (surface != NULL && _write_lock ()) {
 	_trace_printf ("%% s%ld ", _get_surface_id (surface));
 	_emit_string_literal (filename, -1);
-	_trace_printf (" write-to-png\n");
+	_trace_printf (" write-to-png pop\n");
 	_write_unlock ();
     }
     ret = DLCALL (cairo_surface_write_to_png, surface, filename);
@@ -3850,7 +3850,7 @@ cairo_surface_write_to_png_stream (cairo_surface_t *surface,
 	symbol[0] = '\0';
 #endif
 	_emit_string_literal (symbol, -1);
-	_trace_printf (" write-to-png-stream\n");
+	_trace_printf (" write-to-png-stream pop\n");
 	_write_unlock ();
     }
     ret = DLCALL (cairo_surface_write_to_png_stream,
