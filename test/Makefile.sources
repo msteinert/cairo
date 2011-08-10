@@ -230,6 +230,7 @@ test_sources = \
 	random-intersections-curves-eo.c		\
 	random-intersections-curves-nz.c		\
 	record.c					\
+	record-extend.c					\
 	recording-surface-pattern.c			\
 	recording-surface-extend.c			\
 	rectangle-rounding-error.c			\

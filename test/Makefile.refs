@@ -1010,6 +1010,10 @@ REFERENCE_IMAGES = \
 	random-intersections-nonzero.quartz.ref.png \
 	random-intersections-nonzero.ref.png \
 	random-intersections-nonzero.xlib.ref.png \
+	record-extend-none.ref.png \
+	record-extend-pad.ref.png \
+	record-extend-reflect.ref.png \
+	record-extend-repeat.ref.png \
 	record-fill-alpha.ref.png \
 	record-paint-alpha-clip-mask.ref.png \
 	record-paint-alpha-clip.ref.png \
