@@ -36,6 +36,10 @@
 
 #include "cairo-script-private.h"
 
+#if CAIRO_HAS_SCRIPT_SURFACE
+#include "cairo-script.h"
+#endif
+
 #include <stdio.h> /* snprintf */
 #include <stdlib.h> /* mkstemp */
 #include <string.h>
@@ -6203,6 +6207,43 @@ _write_to_png (csi_t *ctx)
 }
 
 static csi_status_t
+_write_to_script (csi_t *ctx)
+{
+    csi_status_t status;
+    csi_string_t *filename;
+    cairo_surface_t *record;
+
+    check (2);
+
+    status = _csi_ostack_get_string (ctx, 0, &filename);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_surface (ctx, 1, &record);
+    if (_csi_unlikely (status))
+	return status;
+
+    if (cairo_surface_get_type (record) != CAIRO_SURFACE_TYPE_RECORDING)
+	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+
+#if CAIRO_HAS_SCRIPT_SURFACE
+    {
+	cairo_device_t *script;
+
+	script = cairo_script_create (filename->string);
+	status = cairo_script_from_recording_surface (script, record);
+	cairo_device_destroy (script);
+	if (_csi_unlikely (status))
+	    return status;
+    }
+#else
+    return CAIRO_STATUS_WRITE_ERROR;
+#endif
+
+    pop (1);
+    return CSI_STATUS_SUCCESS;
+}
+
+static csi_status_t
 _xor (csi_t *ctx)
 {
     csi_object_t *a, *b;
@@ -6501,6 +6542,7 @@ _defs[] = {
     { "user-to-device-distance", NULL },
     { "where", NULL },
     { "write-to-png", _write_to_png },
+    { "write-to-script", _write_to_script },
     { "xor", _xor },
 
     { "=", _debug_print },
