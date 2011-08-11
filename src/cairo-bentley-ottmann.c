@@ -1040,9 +1040,6 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	 *event_queue,
 			    cairo_bo_event_t		**start_events,
 			    int				  num_events)
 {
-    _cairo_bo_event_queue_sort (start_events, num_events);
-    start_events[num_events] = NULL;
-
     event_queue->start_events = start_events;
 
     _cairo_freepool_init (&event_queue->pool,
@@ -1162,6 +1159,7 @@ _cairo_bo_sweep_line_insert (cairo_bo_sweep_line_t	*sweep_line,
 	}
     } else {
 	sweep_line->head = edge;
+	edge->next = NULL;
     }
 
     sweep_line->current_edge = edge;
@@ -1727,12 +1725,24 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	 *traps,
     cairo_bo_start_event_t *events;
     cairo_bo_event_t *stack_event_ptrs[ARRAY_LENGTH (stack_events) + 1];
     cairo_bo_event_t **event_ptrs;
-    int num_events;
-    int i;
+    cairo_bo_start_event_t *stack_event_y[64];
+    cairo_bo_start_event_t **event_y = NULL;
+    int i, num_events, y, ymin, ymax;
 
     num_events = polygon->num_edges;
     if (unlikely (0 == num_events))
 	return CAIRO_STATUS_SUCCESS;
+
+    if (polygon->num_limits) {
+	ymin = _cairo_fixed_integer_floor (polygon->limit.p1.y);
+	ymax = _cairo_fixed_integer_ceil (polygon->limit.p2.y) - ymin;
+
+	if (ymax > 64)
+	    event_y = _cairo_malloc_ab(sizeof (cairo_bo_event_t*), ymax);
+	else
+	    event_y = stack_event_y;
+	memset (event_y, 0, ymax * sizeof(cairo_bo_event_t *));
+    }
 
     events = stack_events;
     event_ptrs = stack_event_ptrs;
@@ -1748,8 +1758,6 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	 *traps,
     }
 
     for (i = 0; i < num_events; i++) {
-	event_ptrs[i] = (cairo_bo_event_t *) &events[i];
-
 	events[i].type = CAIRO_BO_EVENT_TYPE_START;
 	events[i].point.y = polygon->edges[i].top;
 	events[i].point.x =
@@ -1760,7 +1768,29 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	 *traps,
 	events[i].edge.deferred_trap.right = NULL;
 	events[i].edge.prev = NULL;
 	events[i].edge.next = NULL;
+
+	if (event_y) {
+	    y = _cairo_fixed_integer_floor (events[i].point.y) - ymin;
+	    events[i].edge.next = (cairo_bo_edge_t *) event_y[y];
+	    event_y[y] = (cairo_bo_start_event_t *) &events[i];
+	} else
+	    event_ptrs[i] = (cairo_bo_event_t *) &events[i];
     }
+
+    if (event_y) {
+	for (y = i = 0; y < ymax && i < num_events; y++) {
+	    cairo_bo_start_event_t *e;
+	    int j = i;
+	    for (e = event_y[y]; e; e = (cairo_bo_start_event_t *)e->edge.next) 
+		event_ptrs[i++] = (cairo_bo_event_t *) e;
+	    if (i > j + 1)
+		_cairo_bo_event_queue_sort (event_ptrs+j, i-j);
+	}
+	if (event_y != stack_event_y)
+	    free (event_y);
+    } else
+	_cairo_bo_event_queue_sort (event_ptrs, i);
+    event_ptrs[i] = NULL;
 
 #if DEBUG_TRAPS
     dump_edges (events, num_events, "bo-polygon-edges.txt");
@@ -1770,8 +1800,7 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	 *traps,
      * passes of the Bentley-Ottmann algorithm. It would merely
      * require storing the results of each pass into a temporary
      * cairo_traps_t. */
-    status = _cairo_bentley_ottmann_tessellate_bo_edges (event_ptrs,
-							 num_events,
+    status = _cairo_bentley_ottmann_tessellate_bo_edges (event_ptrs, num_events,
 							 fill_rule, traps,
 							 &intersections);
 #if DEBUG_TRAPS
