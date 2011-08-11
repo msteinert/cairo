@@ -141,18 +141,18 @@ _cairo_default_context_push_group (void *abstract_cr, cairo_content_t content)
 	    goto bail;
     } else {
 	cairo_surface_t *parent_surface;
-	const cairo_rectangle_int_t *clip_extents;
 	cairo_rectangle_int_t extents;
-        cairo_matrix_t matrix;
 	cairo_bool_t is_empty;
 
 	parent_surface = _cairo_gstate_get_target (cr->gstate);
 
 	/* Get the extents that we'll use in creating our new group surface */
 	is_empty = _cairo_surface_get_extents (parent_surface, &extents);
-	clip_extents = _cairo_clip_get_extents (_cairo_gstate_get_clip (cr->gstate));
-	if (clip_extents != NULL)
-	    is_empty = _cairo_rectangle_intersect (&extents, clip_extents);
+	if (clip)
+	    is_empty = _cairo_rectangle_intersect (&extents,
+						   _cairo_clip_get_extents (clip));
+
+	/* XXX unbounded surface creation */
 
 	group_surface = _cairo_surface_create_similar_solid (parent_surface,
 							     content,
@@ -175,8 +175,9 @@ _cairo_default_context_push_group (void *abstract_cr, cairo_content_t content)
 
 	/* If we have a current path, we need to adjust it to compensate for
 	 * the device offset just applied. */
-        cairo_matrix_init_translate (&matrix, -extents.x, -extents.y);
-	_cairo_path_fixed_transform (cr->path, &matrix);
+	_cairo_path_fixed_translate (cr->path,
+				     _cairo_fixed_from_int (-extents.x),
+				     _cairo_fixed_from_int (-extents.y));
     }
 
     /* create a new gstate for the redirect */
