@@ -49,9 +49,20 @@ typedef struct _PolygonViewClass {
 
 G_DEFINE_TYPE (PolygonView, polygon_view, GTK_TYPE_WIDGET)
 
-static void draw_edges (cairo_t *cr, polygon_t *p, int dir)
+static void draw_edges (cairo_t *cr, polygon_t *p, gdouble sf, int dir)
 {
     int n;
+
+    for (n = 0; n < p->num_edges; n++) {
+	const edge_t *e = &p->edges[n];
+
+	if (e->dir != dir)
+	    continue;
+
+	cairo_arc (cr, e->p1.x, e->p1.y, 3/sf, 0, 2*M_PI);
+	cairo_arc (cr, e->p2.x, e->p2.y, 3/sf, 0, 2*M_PI);
+	cairo_fill (cr);
+    }
 
     for (n = 0; n < p->num_edges; n++) {
 	const edge_t *e = &p->edges[n];
@@ -69,13 +80,13 @@ static void draw_edges (cairo_t *cr, polygon_t *p, int dir)
     } cairo_restore (cr);
 }
 
-static void draw_polygon (cairo_t *cr, polygon_t *p)
+static void draw_polygon (cairo_t *cr, polygon_t *p, gdouble sf)
 {
     cairo_set_source_rgb (cr, 0.0, 0.0, 1.0);
-    draw_edges (cr, p, -1);
+    draw_edges (cr, p, sf, -1);
 
     cairo_set_source_rgb (cr, 1.0, 0.0, 0.0);
-    draw_edges (cr, p, +1);
+    draw_edges (cr, p, sf, +1);
 }
 
 static cairo_surface_t *
@@ -127,7 +138,7 @@ pixmap_create (PolygonView *self, cairo_surface_t *target)
 	    if (polygon->num_edges == 0)
 		continue;
 
-	    draw_polygon (cr, polygon);
+	    draw_polygon (cr, polygon, sf);
 	}
     } cairo_restore (cr);
 
@@ -211,7 +222,7 @@ polygon_view_draw (PolygonView *self, cairo_t *cr)
 		    if (polygon->num_edges == 0)
 			continue;
 
-		    draw_polygon (cr, polygon);
+		    draw_polygon (cr, polygon, zoom);
 		}
 	    } cairo_restore (cr);
 
