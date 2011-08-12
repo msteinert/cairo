@@ -55,8 +55,6 @@ do_many_curves_stroked (cairo_t *cr, int width, int height, int loops)
 	cairo_curve_to (cr, x1, y1, x2, y2, x3, y3);
     }
 
-    cairo_set_line_width (cr, 2.);
-
     cairo_perf_timer_start ();
 
     while (loops--)
@@ -67,6 +65,20 @@ do_many_curves_stroked (cairo_t *cr, int width, int height, int loops)
     cairo_new_path (cr);
 
     return cairo_perf_timer_elapsed ();
+}
+
+static cairo_perf_ticks_t
+do_many_curves_hair_stroked (cairo_t *cr, int width, int height, int loops)
+{
+    cairo_set_line_width (cr, 1.);
+    return do_many_curves_stroked (cr, width, height, loops);
+}
+
+static cairo_perf_ticks_t
+do_many_curves_wide_stroked (cairo_t *cr, int width, int height, int loops)
+{
+    cairo_set_line_width (cr, 5.);
+    return do_many_curves_stroked (cr, width, height, loops);
 }
 
 static cairo_perf_ticks_t
@@ -114,6 +126,7 @@ many_curves (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 
     cairo_set_source_rgb (cr, 1., 1., 1.);
 
-    cairo_perf_run (perf, "many-curves-stroked", do_many_curves_stroked, NULL);
+    cairo_perf_run (perf, "many-curves-hair-stroked", do_many_curves_hair_stroked, NULL);
+    cairo_perf_run (perf, "many-curves-wide-stroked", do_many_curves_wide_stroked, NULL);
     cairo_perf_run (perf, "many-curves-filled", do_many_curves_filled, NULL);
 }

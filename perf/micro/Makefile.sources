@@ -29,7 +29,9 @@ libcairo_perf_micro_sources = \
 	pythagoras-tree.c	\
 	intersections.c		\
 	many-strokes.c		\
+	wide-strokes.c		\
 	many-fills.c		\
+	wide-fills.c		\
 	many-curves.c		\
 	curve.c			\
 	spiral.c		\

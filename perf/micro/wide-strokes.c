@@ -39,7 +39,7 @@ uniform_random (double minval, double maxval)
 }
 
 static cairo_perf_ticks_t
-do_many_strokes_ha (cairo_t *cr, int width, int height, int loops)
+do_wide_strokes_ha (cairo_t *cr, int width, int height, int loops)
 {
     int count;
 
@@ -50,7 +50,7 @@ do_many_strokes_ha (cairo_t *cr, int width, int height, int loops)
 	cairo_line_to (cr, ceil (uniform_random (0, width)), h);
     }
 
-    cairo_set_line_width (cr, 1.);
+    cairo_set_line_width (cr, 5.);
 
     cairo_perf_timer_start ();
 
@@ -65,7 +65,7 @@ do_many_strokes_ha (cairo_t *cr, int width, int height, int loops)
 }
 
 static cairo_perf_ticks_t
-do_many_strokes_h (cairo_t *cr, int width, int height, int loops)
+do_wide_strokes_h (cairo_t *cr, int width, int height, int loops)
 {
     int count;
 
@@ -76,7 +76,7 @@ do_many_strokes_h (cairo_t *cr, int width, int height, int loops)
 	cairo_line_to (cr, uniform_random (0, width), h);
     }
 
-    cairo_set_line_width (cr, 1.);
+    cairo_set_line_width (cr, 5.);
 
     cairo_perf_timer_start ();
 
@@ -91,7 +91,7 @@ do_many_strokes_h (cairo_t *cr, int width, int height, int loops)
 }
 
 static cairo_perf_ticks_t
-do_many_strokes_va (cairo_t *cr, int width, int height, int loops)
+do_wide_strokes_va (cairo_t *cr, int width, int height, int loops)
 {
     int count;
 
@@ -102,7 +102,7 @@ do_many_strokes_va (cairo_t *cr, int width, int height, int loops)
 	cairo_line_to (cr, v, ceil (uniform_random (0, height)));
     }
 
-    cairo_set_line_width (cr, 1.);
+    cairo_set_line_width (cr, 5.);
 
     cairo_perf_timer_start ();
 
@@ -117,7 +117,7 @@ do_many_strokes_va (cairo_t *cr, int width, int height, int loops)
 }
 
 static cairo_perf_ticks_t
-do_many_strokes_v (cairo_t *cr, int width, int height, int loops)
+do_wide_strokes_v (cairo_t *cr, int width, int height, int loops)
 {
     int count;
 
@@ -128,7 +128,7 @@ do_many_strokes_v (cairo_t *cr, int width, int height, int loops)
 	cairo_line_to (cr, v, uniform_random (0, height));
     }
 
-    cairo_set_line_width (cr, 1.);
+    cairo_set_line_width (cr, 5.);
 
     cairo_perf_timer_start ();
 
@@ -143,7 +143,7 @@ do_many_strokes_v (cairo_t *cr, int width, int height, int loops)
 }
 
 static cairo_perf_ticks_t
-do_many_strokes (cairo_t *cr, int width, int height, int loops)
+do_wide_strokes (cairo_t *cr, int width, int height, int loops)
 {
     int count;
 
@@ -155,7 +155,7 @@ do_many_strokes (cairo_t *cr, int width, int height, int loops)
 		       uniform_random (0, height));
     }
 
-    cairo_set_line_width (cr, 1.);
+    cairo_set_line_width (cr, 5.);
 
     cairo_perf_timer_start ();
 
@@ -170,14 +170,16 @@ do_many_strokes (cairo_t *cr, int width, int height, int loops)
 }
 
 void
-many_strokes (cairo_perf_t *perf, cairo_t *cr, int width, int height)
+wide_strokes (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "many-strokes", NULL))
+    if (! cairo_perf_can_run (perf, "wide-strokes", NULL))
 	return;
 
-    cairo_perf_run (perf, "many-strokes-halign", do_many_strokes_ha, NULL);
-    cairo_perf_run (perf, "many-strokes-valign", do_many_strokes_va, NULL);
-    cairo_perf_run (perf, "many-strokes-horizontal", do_many_strokes_h, NULL);
-    cairo_perf_run (perf, "many-strokes-vertical", do_many_strokes_v, NULL);
-    cairo_perf_run (perf, "many-strokes-random", do_many_strokes, NULL);
+    cairo_set_source_rgb (cr, 1., 1., 1.);
+
+    cairo_perf_run (perf, "wide-strokes-halign", do_wide_strokes_ha, NULL);
+    cairo_perf_run (perf, "wide-strokes-valign", do_wide_strokes_va, NULL);
+    cairo_perf_run (perf, "wide-strokes-horizontal", do_wide_strokes_h, NULL);
+    cairo_perf_run (perf, "wide-strokes-vertical", do_wide_strokes_v, NULL);
+    cairo_perf_run (perf, "wide-strokes-random", do_wide_strokes, NULL);
 }

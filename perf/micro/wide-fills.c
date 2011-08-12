@@ -24,6 +24,13 @@
  * Author: Chris Wilson <chris@chris-wilson.co.uk>
  */
 
+
+/* This is a variant on wide strokes where we precompute
+ * a simplified stroke-to-path.
+ * When we have a real stroke-to-path, it would useful to compare the cost
+ * of stroking vs filling the "identical" paths.
+ */
+
 #include "cairo-perf.h"
 
 static uint32_t state;
@@ -39,23 +46,21 @@ uniform_random (double minval, double maxval)
 }
 
 static cairo_perf_ticks_t
-do_many_strokes_ha (cairo_t *cr, int width, int height, int loops)
+do_wide_fills_ha (cairo_t *cr, int width, int height, int loops)
 {
     int count;
 
     state = 0xc0ffee;
     for (count = 0; count < 1000; count++) {
-	double h = floor (uniform_random (0, height));
-	cairo_move_to (cr, floor (uniform_random (0, width)), h);
-	cairo_line_to (cr, ceil (uniform_random (0, width)), h);
+	double y = floor (uniform_random (0, height));
+	double x = floor (uniform_random (0, width));
+	cairo_rectangle (cr, x, y, ceil (uniform_random (0, width)) - x, 5);
     }
-
-    cairo_set_line_width (cr, 1.);
 
     cairo_perf_timer_start ();
 
     while (loops--)
-	cairo_stroke_preserve (cr);
+	cairo_fill_preserve (cr);
 
     cairo_perf_timer_stop ();
 
@@ -65,23 +70,21 @@ do_many_strokes_ha (cairo_t *cr, int width, int height, int loops)
 }
 
 static cairo_perf_ticks_t
-do_many_strokes_h (cairo_t *cr, int width, int height, int loops)
+do_wide_fills_h (cairo_t *cr, int width, int height, int loops)
 {
     int count;
 
     state = 0xc0ffee;
     for (count = 0; count < 1000; count++) {
-	double h = uniform_random (0, height);
-	cairo_move_to (cr, uniform_random (0, width), h);
-	cairo_line_to (cr, uniform_random (0, width), h);
+	double y = uniform_random (0, height);
+	double x = uniform_random (0, width);
+	cairo_rectangle (cr, x, y, uniform_random (0, width) - x, 5);
     }
-
-    cairo_set_line_width (cr, 1.);
 
     cairo_perf_timer_start ();
 
     while (loops--)
-	cairo_stroke_preserve (cr);
+	cairo_fill_preserve (cr);
 
     cairo_perf_timer_stop ();
 
@@ -91,23 +94,21 @@ do_many_strokes_h (cairo_t *cr, int width, int height, int loops)
 }
 
 static cairo_perf_ticks_t
-do_many_strokes_va (cairo_t *cr, int width, int height, int loops)
+do_wide_fills_va (cairo_t *cr, int width, int height, int loops)
 {
     int count;
 
     state = 0xc0ffee;
     for (count = 0; count < 1000; count++) {
-	double v = floor (uniform_random (0, width));
-	cairo_move_to (cr, v, floor (uniform_random (0, height)));
-	cairo_line_to (cr, v, ceil (uniform_random (0, height)));
+	double x = floor (uniform_random (0, width));
+	double y = floor (uniform_random (0, height));
+	cairo_rectangle (cr, x, y, 5, ceil (uniform_random (0, height) - y));
     }
-
-    cairo_set_line_width (cr, 1.);
 
     cairo_perf_timer_start ();
 
     while (loops--)
-	cairo_stroke_preserve (cr);
+	cairo_fill_preserve (cr);
 
     cairo_perf_timer_stop ();
 
@@ -117,23 +118,21 @@ do_many_strokes_va (cairo_t *cr, int width, int height, int loops)
 }
 
 static cairo_perf_ticks_t
-do_many_strokes_v (cairo_t *cr, int width, int height, int loops)
+do_wide_fills_v (cairo_t *cr, int width, int height, int loops)
 {
     int count;
 
     state = 0xc0ffee;
     for (count = 0; count < 1000; count++) {
-	double v = uniform_random (0, width);
-	cairo_move_to (cr, v, uniform_random (0, height));
-	cairo_line_to (cr, v, uniform_random (0, height));
+	double x = uniform_random (0, width);
+	double y = uniform_random (0, height);
+	cairo_rectangle (cr, x, y, 5, uniform_random (0, height) - y);
     }
-
-    cairo_set_line_width (cr, 1.);
 
     cairo_perf_timer_start ();
 
     while (loops--)
-	cairo_stroke_preserve (cr);
+	cairo_fill_preserve (cr);
 
     cairo_perf_timer_stop ();
 
@@ -143,24 +142,26 @@ do_many_strokes_v (cairo_t *cr, int width, int height, int loops)
 }
 
 static cairo_perf_ticks_t
-do_many_strokes (cairo_t *cr, int width, int height, int loops)
+do_wide_fills (cairo_t *cr, int width, int height, int loops)
 {
     int count;
 
-    /* lots and lots of overlapping strokes */
+    /* lots and lots of overlapping stroke-like fills */
     state = 0xc0ffee;
     for (count = 0; count < 1000; count++) {
-	cairo_line_to (cr,
-		       uniform_random (0, width),
-		       uniform_random (0, height));
+	cairo_save (cr);
+	cairo_translate (cr,
+			 uniform_random (0, width),
+			 uniform_random (0, height));
+	cairo_rotate (cr, uniform_random (-M_PI,M_PI));
+	cairo_rectangle (cr, 0, 0, uniform_random (0, width), 5);
+	cairo_restore (cr);
     }
-
-    cairo_set_line_width (cr, 1.);
 
     cairo_perf_timer_start ();
 
     while (loops--)
-	cairo_stroke_preserve (cr);
+	cairo_fill_preserve (cr);
 
     cairo_perf_timer_stop ();
 
@@ -170,14 +171,14 @@ do_many_strokes (cairo_t *cr, int width, int height, int loops)
 }
 
 void
-many_strokes (cairo_perf_t *perf, cairo_t *cr, int width, int height)
+wide_fills (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "many-strokes", NULL))
+    if (! cairo_perf_can_run (perf, "wide-fills", NULL))
 	return;
 
-    cairo_perf_run (perf, "many-strokes-halign", do_many_strokes_ha, NULL);
-    cairo_perf_run (perf, "many-strokes-valign", do_many_strokes_va, NULL);
-    cairo_perf_run (perf, "many-strokes-horizontal", do_many_strokes_h, NULL);
-    cairo_perf_run (perf, "many-strokes-vertical", do_many_strokes_v, NULL);
-    cairo_perf_run (perf, "many-strokes-random", do_many_strokes, NULL);
+    cairo_perf_run (perf, "wide-fills-halign", do_wide_fills_ha, NULL);
+    cairo_perf_run (perf, "wide-fills-valign", do_wide_fills_va, NULL);
+    cairo_perf_run (perf, "wide-fills-horizontal", do_wide_fills_h, NULL);
+    cairo_perf_run (perf, "wide-fills-vertical", do_wide_fills_v, NULL);
+    cairo_perf_run (perf, "wide-fills-random", do_wide_fills, NULL);
 }

@@ -212,7 +212,9 @@ CAIRO_PERF_DECL (intersections);
 CAIRO_PERF_DECL (spiral);
 CAIRO_PERF_DECL (wave);
 CAIRO_PERF_DECL (many_strokes);
+CAIRO_PERF_DECL (wide_strokes);
 CAIRO_PERF_DECL (many_fills);
+CAIRO_PERF_DECL (wide_fills);
 CAIRO_PERF_DECL (many_curves);
 CAIRO_PERF_DECL (curve);
 

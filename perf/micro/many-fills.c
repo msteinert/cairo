@@ -54,7 +54,7 @@ do_many_fills_ha (cairo_t *cr, int width, int height, int loops)
     for (count = 0; count < 1000; count++) {
 	double y = floor (uniform_random (0, height));
 	double x = floor (uniform_random (0, width));
-	cairo_rectangle (cr, x, y, ceil (uniform_random (0, width)) - x, 2);
+	cairo_rectangle (cr, x, y, ceil (uniform_random (0, width)) - x, 1);
     }
 
     cairo_perf_timer_start ();
@@ -78,7 +78,7 @@ do_many_fills_h (cairo_t *cr, int width, int height, int loops)
     for (count = 0; count < 1000; count++) {
 	double y = uniform_random (0, height);
 	double x = uniform_random (0, width);
-	cairo_rectangle (cr, x, y, uniform_random (0, width) - x, 2);
+	cairo_rectangle (cr, x, y, uniform_random (0, width) - x, 1);
     }
 
     cairo_perf_timer_start ();
@@ -102,7 +102,7 @@ do_many_fills_va (cairo_t *cr, int width, int height, int loops)
     for (count = 0; count < 1000; count++) {
 	double x = floor (uniform_random (0, width));
 	double y = floor (uniform_random (0, height));
-	cairo_rectangle (cr, x, y, 2, ceil (uniform_random (0, height) - y));
+	cairo_rectangle (cr, x, y, 1, ceil (uniform_random (0, height) - y));
     }
 
     cairo_perf_timer_start ();
@@ -126,7 +126,7 @@ do_many_fills_v (cairo_t *cr, int width, int height, int loops)
     for (count = 0; count < 1000; count++) {
 	double x = uniform_random (0, width);
 	double y = uniform_random (0, height);
-	cairo_rectangle (cr, x, y, 2, uniform_random (0, height) - y);
+	cairo_rectangle (cr, x, y, 1, uniform_random (0, height) - y);
     }
 
     cairo_perf_timer_start ();
@@ -154,7 +154,7 @@ do_many_fills (cairo_t *cr, int width, int height, int loops)
 			 uniform_random (0, width),
 			 uniform_random (0, height));
 	cairo_rotate (cr, uniform_random (-M_PI,M_PI));
-	cairo_rectangle (cr, 0, 0, uniform_random (0, width), 2);
+	cairo_rectangle (cr, 0, 0, uniform_random (0, width), 1);
 	cairo_restore (cr);
     }
 
