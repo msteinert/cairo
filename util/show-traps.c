@@ -47,6 +47,9 @@ typedef struct _TrapView {
     struct _TrapView *group_next;
     struct _TrapView *group_prev;
 
+    cairo_surface_t *pixmap;
+    int pixmap_width, pixmap_height;
+
     traps_t *traps_list;
     traps_t *current_traps;
 
@@ -95,30 +98,27 @@ _compute_intersection_point (const line_t *line,
     p->x = _compute_intersection_x_for_y (line, p->y = y);
 }
 
-static void
-trap_view_draw (TrapView *self, cairo_t *cr)
+static cairo_surface_t *
+pixmap_create (TrapView *self, cairo_surface_t *target)
 {
+    cairo_surface_t *surface = cairo_surface_create_similar (target, CAIRO_CONTENT_COLOR,
+							     self->widget.allocation.width,
+							     self->widget.allocation.height);
+    cairo_t *cr;
     traps_t *traps;
     edges_t *edges;
     gdouble sf_x, sf_y, sf;
     gdouble mid, dim;
-    gdouble x0, x1,  y0, y1;
+    gdouble x0,  y0;
     double dash[2] = {8, 8};
     double dots[2] = {0., 1.};
     int n;
     box_t extents;
     point_t p;
 
-    cairo_save (cr);
-    cairo_save (cr);
-    cairo_set_source_rgb (cr, 1, 1, 1);
-    cairo_paint (cr);
-    cairo_restore (cr);
-
     traps = self->current_traps;
     if (traps == NULL)
-	return;
-
+	return surface;
     edges = self->current_edges;
 
     extents = traps->extents;
@@ -146,11 +146,13 @@ trap_view_draw (TrapView *self, cairo_t *cr)
     mid = (extents.p2.x + extents.p1.x) / 2.;
     dim = sf_x / sf * (extents.p2.x - extents.p1.x) / 2. * 1.25;
     x0 = mid - dim;
-    x1 = mid + dim;
     mid = (extents.p2.y + extents.p1.y) / 2.;
     dim = sf_y / sf * (extents.p2.y - extents.p1.y) / 2. * 1.25;
     y0 = mid - dim;
-    y1 = mid + dim;
+
+    cr = cairo_create (surface);
+    cairo_set_source_rgb (cr, 1, 1, 1);
+    cairo_paint (cr);
 
     cairo_save (cr);
     cairo_scale (cr, sf, sf);
@@ -353,11 +355,79 @@ trap_view_draw (TrapView *self, cairo_t *cr)
 	cairo_restore (cr);
     }
 
+    cairo_destroy (cr);
+    return surface;
+}
+
+static void
+trap_view_draw (TrapView *self, cairo_t *cr)
+{
+    traps_t *traps;
+    edges_t *edges;
+    gdouble sf_x, sf_y, sf;
+    gdouble mid, dim;
+    gdouble x0, y0;
+    double dash[2] = {8, 8};
+    int n;
+    box_t extents;
+    point_t p;
+
+    if (self->pixmap_width != self->widget.allocation.width ||
+	self->pixmap_height != self->widget.allocation.height)
+    {
+	cairo_surface_destroy (self->pixmap);
+	self->pixmap = pixmap_create (self, cairo_get_target (cr));
+	self->pixmap_width = self->widget.allocation.width;
+	self->pixmap_height = self->widget.allocation.height;
+    }
+
+    cairo_save (cr);
+    cairo_set_source_surface (cr, self->pixmap, 0, 0);
+    cairo_paint (cr);
+    cairo_restore (cr);
+
+    traps = self->current_traps;
+    if (traps == NULL)
+	return;
+
+    extents = traps->extents;
+    edges = self->current_edges;
+    if (edges != NULL) {
+	if (edges->extents.p1.x < extents.p1.x)
+	    extents.p1.x = edges->extents.p1.x;
+	if (edges->extents.p1.y < extents.p1.y)
+	    extents.p1.y = edges->extents.p1.y;
+	if (edges->extents.p2.x > extents.p2.x)
+	    extents.p2.x = edges->extents.p2.x;
+	if (edges->extents.p2.y > extents.p2.y)
+	    extents.p2.y = edges->extents.p2.y;
+    }
+
+    mid = (extents.p2.x + extents.p1.x) / 2.;
+    dim = (extents.p2.x - extents.p1.x) / 2. * 1.25;
+    sf_x = self->widget.allocation.width / dim / 2;
+
+    mid = (extents.p2.y + extents.p1.y) / 2.;
+    dim = (extents.p2.y - extents.p1.y) / 2. * 1.25;
+    sf_y = self->widget.allocation.height / dim / 2;
+
+    sf = MIN (sf_x, sf_y);
+
+    mid = (extents.p2.x + extents.p1.x) / 2.;
+    dim = sf_x / sf * (extents.p2.x - extents.p1.x) / 2. * 1.25;
+    x0 = mid - dim;
+    mid = (extents.p2.y + extents.p1.y) / 2.;
+    dim = sf_y / sf * (extents.p2.y - extents.p1.y) / 2. * 1.25;
+    y0 = mid - dim;
+
+    cairo_save (cr);
+
     /* draw a zoom view of the area around the mouse */
     {
-	cairo_save (cr);
 	double zoom = self->mag_zoom;
 	int size = self->mag_size;
+
+	cairo_save (cr);
 
 	/* bottom right */
 	cairo_rectangle (cr, self->mag_x, self->mag_y, size, size);
@@ -645,6 +715,7 @@ trap_view_advance (TrapView *self)
 	self->current_traps = self->current_traps->prev;
     if (self->current_edges && self->current_edges->prev)
 	self->current_edges = self->current_edges->prev;
+    self->pixmap_width = self->pixmap_height = 0;
     gtk_widget_queue_draw (&self->widget);
 }
 
@@ -655,6 +726,7 @@ trap_view_back (TrapView *self)
 	self->current_traps = self->current_traps->next;
     if (self->current_edges && self->current_edges->next)
 	self->current_edges = self->current_edges->next;
+    self->pixmap_width = self->pixmap_height = 0;
     gtk_widget_queue_draw (&self->widget);
 }
 
