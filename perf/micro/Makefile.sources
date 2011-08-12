@@ -6,6 +6,7 @@ libcairo_perf_micro_sources = \
 	fill.c			\
 	hatching.c		\
 	hash-table.c		\
+	line.c			\
 	long-lines.c		\
 	mosaic.c		\
 	paint.c			\
