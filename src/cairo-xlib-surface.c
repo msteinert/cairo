@@ -4767,7 +4767,6 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
     composite_operation_t operation;
     cairo_surface_attributes_t attributes;
     cairo_xlib_surface_t *src = NULL;
-    cairo_region_t *clip_region = NULL;
     cairo_xlib_display_t *display;
 
     if (! CAIRO_SURFACE_RENDER_HAS_COMPOSITE_TEXT (dst))
@@ -4807,30 +4806,8 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 
     X_DEBUG ((display->display, "show_glyphs (dst=%x)", (unsigned int) dst->drawable));
 
-    if (clip_region != NULL &&
-	cairo_region_num_rectangles (clip_region) == 1)
-    {
-	cairo_rectangle_int_t glyph_extents;
-	const cairo_rectangle_int_t *clip_extents;
-
-	/* Can we do without the clip?
-	 * Around 50% of the time the clip is redundant (firefox).
-	 */
-	_cairo_scaled_font_glyph_approximate_extents (scaled_font,
-						      glyphs, num_glyphs,
-						      &glyph_extents);
-
-	clip_extents = &clip->path->extents;
-	if (clip_extents->x <= glyph_extents.x &&
-	    clip_extents->y <= glyph_extents.y &&
-	    clip_extents->x + clip_extents->width  >= glyph_extents.x + glyph_extents.width &&
-	    clip_extents->y + clip_extents->height >= glyph_extents.y + glyph_extents.height)
-	{
-	    clip_region = NULL;
-	}
-    }
-
-    status = _cairo_xlib_surface_set_clip_region (dst, clip_region);
+    status = _cairo_xlib_surface_set_clip_region (dst,
+						  _cairo_clip_get_region (clip));
     if (unlikely (status))
         goto BAIL0;
 
@@ -4868,14 +4845,6 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 							  NULL);
         if (unlikely (status))
 	    goto BAIL0;
-
-	if (clip != NULL) {
-	    if (! _cairo_rectangle_intersect (&glyph_extents,
-					      _cairo_clip_get_extents (clip)))
-	    {
-		goto BAIL0;
-	    }
-	}
 
         status = _cairo_xlib_surface_acquire_pattern_surface (display,
                                                               dst, src_pattern,
