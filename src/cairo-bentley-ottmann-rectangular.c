@@ -163,7 +163,7 @@ rectangle_pop_stop (sweep_line_t *sweep)
 
     tail = elements[sweep->stop_size--];
     if (sweep->stop_size == 0) {
-	elements[PQ_FIRST_ENTRY] = NULL;
+	tail = NULL;
 	return;
     }
 
@@ -326,11 +326,10 @@ edge_start_or_continue_box (sweep_line_t *sweep_line,
 static edge_t *
 merge_sorted_edges (edge_t *head_a, edge_t *head_b)
 {
-    edge_t *head, **next, *prev;
+    edge_t *head, *prev;
     int32_t x;
 
     prev = head_a->prev;
-    next = &head;
     if (head_a->x <= head_b->x) {
 	head = head_a;
     } else {
@@ -343,12 +342,11 @@ merge_sorted_edges (edge_t *head_a, edge_t *head_b)
 	x = head_b->x;
 	while (head_a != NULL && head_a->x <= x) {
 	    prev = head_a;
-	    next = &head_a->next;
 	    head_a = head_a->next;
 	}
 
 	head_b->prev = prev;
-	*next = head_b;
+	prev->next = head_b;
 	if (head_a == NULL)
 	    return head;
 
@@ -356,12 +354,11 @@ start_with_b:
 	x = head_a->x;
 	while (head_b != NULL && head_b->x <= x) {
 	    prev = head_b;
-	    next = &head_b->next;
 	    head_b = head_b->next;
 	}
 
 	head_a->prev = prev;
-	*next = head_a;
+	prev->next = head_a;
 	if (head_b == NULL)
 	    return head;
     } while (1);
@@ -429,7 +426,7 @@ merge_unsorted_edges (edge_t *head, edge_t *unsorted)
 static void
 active_edges_insert (sweep_line_t *sweep)
 {
-    edge_t *edge, *prev;
+    edge_t *prev;
     int x;
 
     x = sweep->insert_x;
@@ -476,36 +473,32 @@ active_edges_to_traps (sweep_line_t *sweep)
 	    right = left->next;
 
 	    /* Check if there is a co-linear edge with an existing trap */
-	    if (left->right == NULL) {
-		while (unlikely (right->x == left->x)) {
-		    winding += right->dir;
-		    if (right->right != NULL) {
-			/* continuation on left */
-			left->top = right->top;
-			left->right = right->right;
-			right->right = NULL;
-			winding -= right->dir;
-			break;
-		    }
-
-		    right = right->next;
+	    while (right->x == left->x) {
+		if (right->right != NULL) {
+		    assert (left->right == NULL);
+		    /* continuation on left */
+		    left->top = right->top;
+		    left->right = right->right;
+		    right->right = NULL;
 		}
-
-		if (winding == 0) {
-		    pos = right;
-		    continue;
-		}
+		winding += right->dir;
+		right = right->next;
 	    }
 
-	    /* Greedily search for the closing edge, so that we generate the
-	     * maximal span width with the minimal number of trapezoids.
-	     */
+	    if (winding == 0) {
+		pos = right;
+		continue;
+	    }
 
 	    do {
 		/* End all subsumed traps */
 		if (unlikely (right->right != NULL))
 		    edge_end_box (sweep, right, top);
 
+		/* Greedily search for the closing edge, so that we generate
+		 * the * maximal span width with the minimal number of
+		 * boxes.
+		 */
 		winding += right->dir;
 		if (winding == 0 && right->x != right->next->x)
 		    break;
