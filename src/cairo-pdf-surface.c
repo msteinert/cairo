@@ -6345,18 +6345,34 @@ _cairo_pdf_surface_fill_stroke (void			*abstract_surface,
     if (fill_op != stroke_op)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    /* Compute the operation extents using the stroke which will naturally
+     * be larger than the fill extents.
+     */
+    _cairo_pdf_surface_get_extents (surface, &unbounded);
+    status = _cairo_composite_rectangles_init_for_stroke (&extents, &unbounded,
+							  stroke_op, stroke_source,
+							  path, stroke_style, stroke_ctm,
+							  clip);
+    if (unlikely (status))
+	return status;
+
+    /* use the more accurate extents */
+    if (extents.is_bounded) {
+	status = _cairo_path_fixed_stroke_extents (path, stroke_style,
+						   stroke_ctm, stroke_ctm_inverse,
+						   stroke_tolerance,
+						   &extents.mask);
+	if (unlikely (status))
+	    return status;
+
+	_cairo_rectangle_intersect (&extents.bounded, &extents.mask);
+    }
+
     status = _cairo_pdf_surface_set_clip (surface, &extents);
     if (unlikely (status))
 	return status;
 
     status = _cairo_pdf_surface_select_operator (surface, fill_op);
-    if (unlikely (status))
-	return status;
-
-    _cairo_pdf_surface_get_extents (surface, &unbounded);
-    status = _cairo_composite_rectangles_init_for_fill (&extents, &unbounded,
-							fill_op, fill_source, path,
-							clip);
     if (unlikely (status))
 	return status;
 
@@ -6380,25 +6396,6 @@ _cairo_pdf_surface_fill_stroke (void			*abstract_surface,
 	return status;
 
     assert (gstate_res.id == 0);
-
-    status = _cairo_composite_rectangles_init_for_stroke (&extents, &unbounded,
-							  stroke_op, stroke_source,
-							  path, stroke_style, stroke_ctm,
-							  clip);
-    if (unlikely (status))
-	return status;
-
-    /* use the more accurate extents */
-    if (extents.is_bounded) {
-	status = _cairo_path_fixed_stroke_extents (path, stroke_style,
-						   stroke_ctm, stroke_ctm_inverse,
-						   stroke_tolerance,
-						   &extents.mask);
-	if (unlikely (status))
-	    return status;
-
-	_cairo_rectangle_intersect (&extents.bounded, &extents.mask);
-    }
 
     stroke_pattern_res.id = 0;
     gstate_res.id = 0;
