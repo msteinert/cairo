@@ -1406,8 +1406,8 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 	cairo_image_surface_t *source = (cairo_image_surface_t *) pattern->surface;
 	cairo_surface_type_t type;
 
-	if (source->base.backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT)
-	    source = (cairo_image_surface_t *) ((cairo_surface_snapshot_t *) pattern->surface)->target;
+	if (_cairo_surface_is_snapshot (&source->base))
+	    source = (cairo_image_surface_t *) _cairo_surface_snapshot_get_target (&source->base);
 
 	type = source->base.backend->type;
 	if (type == CAIRO_SURFACE_TYPE_IMAGE) {
@@ -2963,6 +2963,8 @@ is_recording_pattern (const cairo_pattern_t *pattern)
     surface = ((const cairo_surface_pattern_t *) pattern)->surface;
     if (_cairo_surface_is_paginated (surface))
 	surface = _cairo_paginated_surface_get_recording (surface);
+    if (_cairo_surface_is_snapshot (surface))
+	surface = _cairo_surface_snapshot_get_target (surface);
     return _cairo_surface_is_recording (surface);
 }
 
@@ -2974,6 +2976,8 @@ recording_pattern_get_surface (const cairo_pattern_t *pattern)
     surface = ((const cairo_surface_pattern_t *) pattern)->surface;
     if (_cairo_surface_is_paginated (surface))
 	surface = _cairo_paginated_surface_get_recording (surface);
+    if (_cairo_surface_is_snapshot (surface))
+	surface = _cairo_surface_snapshot_get_target (surface);
     return surface;
 }
 

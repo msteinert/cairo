@@ -1084,7 +1084,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 		picture->width  = rect.width;
 		picture->height = rect.height;
 	    }
-	} else if (source->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT) {
+	} else if (_cairo_surface_is_snapshot (source)) {
 	    cairo_surface_snapshot_t *snap = (cairo_surface_snapshot_t *) source;
 	    cairo_xcb_surface_t *xcb = (cairo_xcb_surface_t *) snap->target;
 

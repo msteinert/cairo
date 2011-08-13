@@ -120,7 +120,7 @@ _analyze_recording_surface_pattern (cairo_analysis_surface_t *surface,
     surface->has_ctm = ! _cairo_matrix_is_identity (&surface->ctm);
 
     source = surface_pattern->surface;
-    if (source->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT)
+    if (_cairo_surface_is_snapshot (source))
 	source = _cairo_surface_snapshot_get_target (source);
     if (source->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) source;

@@ -2412,7 +2412,7 @@ _cairo_xlib_surface_upload(cairo_xlib_surface_t *surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (image->base.backend->type != CAIRO_SURFACE_TYPE_IMAGE) {
-	if (image->base.backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT) {
+	if (_cairo_surface_is_snapshot (&image->base)) {
 	    image = (cairo_image_surface_t *) ((cairo_surface_snapshot_t *) image)->target;
 	    extents.x = extents.y = 0;
 	    extents.width = image->width;

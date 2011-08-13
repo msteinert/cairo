@@ -1570,7 +1570,7 @@ _emit_surface_pattern (cairo_script_surface_t *surface,
     surface_pattern = (cairo_surface_pattern_t *) pattern;
     source = surface_pattern->surface;
 
-    if (source->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT) {
+    if (_cairo_surface_is_snapshot (source)) {
 	snapshot = _cairo_surface_has_snapshot (source, &script_snapshot_backend);
 	if (snapshot) {
 	    _cairo_output_stream_printf (ctx->stream,

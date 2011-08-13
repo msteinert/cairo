@@ -1114,7 +1114,7 @@ _get_source_surface_size (cairo_surface_t         *source,
 	    cairo_recording_surface_t *recording_surface;
 	    cairo_box_t bbox;
 
-	    if (source->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT)
+	    if (_cairo_surface_is_snapshot (source))
 		source = _cairo_surface_snapshot_get_target (source);
 
 	    recording_surface = (cairo_recording_surface_t *) source;
@@ -2381,7 +2381,7 @@ _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t  *surface,
     cairo_int_status_t status;
     int alpha = 0;
 
-    if (source->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT)
+    if (_cairo_surface_is_snapshot (source))
 	source = _cairo_surface_snapshot_get_target (source);
 
     is_bounded = _cairo_surface_get_extents (source,
@@ -5957,7 +5957,7 @@ _cairo_pdf_surface_mask (void			*abstract_surface,
 	cairo_status_t source_status, mask_status;
 
 	status = _cairo_pdf_surface_analyze_operation (surface, op, source, &extents.bounded);
-	if (_cairo_status_is_error (status))
+	if (_cairo_int_status_is_error (status))
 	    goto cleanup;
 	source_status = status;
 
@@ -5965,7 +5965,7 @@ _cairo_pdf_surface_mask (void			*abstract_surface,
 	    status = CAIRO_INT_STATUS_UNSUPPORTED;
 	} else {
 	    status = _cairo_pdf_surface_analyze_operation (surface, op, mask, &extents.bounded);
-	    if (_cairo_status_is_error (status))
+	    if (_cairo_int_status_is_error (status))
 		goto cleanup;
 	}
 	mask_status = status;

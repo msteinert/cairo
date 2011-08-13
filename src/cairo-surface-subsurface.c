@@ -316,7 +316,7 @@ _cairo_surface_subsurface_acquire_source_image (void                    *abstrac
 	}
 
 	meta = surface->target;
-	if (surface->target->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT)
+	if (_cairo_surface_is_snapshot (meta))
 	    meta = _cairo_surface_snapshot_get_target (meta);
 
 	if (! _cairo_surface_has_snapshot (meta, &_cairo_image_surface_backend)) {
