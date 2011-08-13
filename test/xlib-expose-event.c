@@ -102,23 +102,19 @@ clone_similar_surface (cairo_surface_t * target, cairo_surface_t *surface)
 }
 
 static void
-draw_image (const cairo_test_context_t *ctx, cairo_t *cr)
+draw_image (const cairo_test_context_t *ctx,
+	    cairo_t *cr,
+	    cairo_surface_t *image)
 {
-    cairo_surface_t *surface, *similar;
-
-    surface = cairo_test_create_surface_from_png (ctx, png_filename);
-    similar = clone_similar_surface (cairo_get_group_target (cr), surface);
-    cairo_surface_destroy (surface);
-
-    cairo_set_source_surface (cr, similar, 0, 0);
+    cairo_set_source_surface (cr, image, 0, 0);
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
     cairo_paint (cr);
-    cairo_surface_destroy (similar);
 }
 
 static void
 draw (const cairo_test_context_t *ctx,
       cairo_t *cr,
+      cairo_surface_t *image,
       cairo_rectangle_t *region,
       int n_regions)
 {
@@ -133,7 +129,7 @@ draw (const cairo_test_context_t *ctx,
 	cairo_clip (cr);
     }
     cairo_push_group (cr);
-    draw_image (ctx, cr);
+    draw_image (ctx, cr, image);
     draw_mask (cr);
     cairo_pop_group_to_source (cr);
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
@@ -146,12 +142,17 @@ draw_func (cairo_t *cr, int width, int height)
 {
     cairo_rectangle_t region[4];
     const cairo_test_context_t *ctx;
+    cairo_surface_t *source, *image;
     int i, j;
 
     ctx = cairo_test_get_context (cr);
 
+    source = cairo_test_create_surface_from_png (ctx, png_filename);
+    image = clone_similar_surface (cairo_get_group_target (cr), source);
+    cairo_surface_destroy (source);
+
     cairo_push_group_with_content (cr, CAIRO_CONTENT_COLOR);
-    draw (ctx, cr, NULL, 0);
+    draw (ctx, cr, image, NULL, 0);
     for (i = 0; i < NLOOPS; i++) {
 	for (j = 0; j < NLOOPS; j++) {
 	    region[0].x = i * SIZE / NLOOPS;
@@ -174,13 +175,15 @@ draw_func (cairo_t *cr, int width, int height)
 	    region[3].width = SIZE / 4;
 	    region[3].height = SIZE / 4;
 
-	    draw (ctx, cr, region, 4);
+	    draw (ctx, cr, image, region, 4);
 	}
     }
 
     cairo_pop_group_to_source (cr);
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
     cairo_paint (cr);
+
+    cairo_surface_destroy (image);
 
     return CAIRO_TEST_SUCCESS;
 }
