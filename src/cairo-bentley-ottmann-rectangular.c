@@ -163,7 +163,7 @@ rectangle_pop_stop (sweep_line_t *sweep)
 
     tail = elements[sweep->stop_size--];
     if (sweep->stop_size == 0) {
-	tail = NULL;
+	elements[PQ_FIRST_ENTRY] = NULL;
 	return;
     }
 
