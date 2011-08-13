@@ -142,7 +142,7 @@ cairo_status_t
 _cairo_surface_wrapper_paint (cairo_surface_wrapper_t *wrapper,
 			      cairo_operator_t	 op,
 			      const cairo_pattern_t *source,
-			      const cairo_clip_t	    *clip)
+			      const cairo_clip_t    *clip)
 {
     cairo_status_t status;
     cairo_clip_t *dev_clip;
@@ -590,6 +590,7 @@ _cairo_surface_wrapper_init (cairo_surface_wrapper_t *wrapper,
     cairo_matrix_init_identity (&wrapper->transform);
     wrapper->has_extents = FALSE;
     wrapper->extents.x = wrapper->extents.y = 0;
+    wrapper->clip = NULL;
 
     wrapper->needs_transform = FALSE;
     if (target) {
