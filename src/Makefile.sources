@@ -96,6 +96,7 @@ cairo_private = \
 	cairo-scaled-font-private.h \
 	cairo-slope-private.h \
 	cairo-spans-private.h \
+	cairo-stroke-dash-private.h \
 	cairo-surface-fallback-private.h \
 	cairo-surface-private.h \
 	cairo-surface-clipper-private.h \
@@ -160,6 +161,7 @@ cairo_sources = \
 	cairo-path-fixed.c \
 	cairo-path-in-fill.c \
 	cairo-path-stroke.c \
+	cairo-path-stroke-boxes.c \
 	cairo-pattern.c \
 	cairo-pen.c \
 	cairo-polygon.c \
@@ -174,6 +176,7 @@ cairo_sources = \
 	cairo-slope.c \
 	cairo-spans.c \
 	cairo-spline.c \
+	cairo-stroke-dash.c \
 	cairo-stroke-style.c \
 	cairo-surface.c \
 	cairo-surface-fallback.c \

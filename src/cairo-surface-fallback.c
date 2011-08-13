@@ -1038,7 +1038,7 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
     cairo_traps_t traps;
     cairo_composite_rectangles_t extents;
     cairo_rectangle_int_t rect;
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     if (!_cairo_surface_get_extents (surface, &rect))
         ASSERT_NOT_REACHED;
@@ -1053,44 +1053,47 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
     _cairo_polygon_init_with_clip (&polygon, extents.clip);
     _cairo_traps_init_with_clip (&traps, extents.clip);
 
+    status = CAIRO_INT_STATUS_UNSUPPORTED;
     if (_cairo_path_fixed_stroke_is_rectilinear (path)) {
-	status = _cairo_path_fixed_stroke_rectilinear_to_traps (path,
+	cairo_boxes_t boxes;
+
+	/* Did I mention, that I need to rewrite surface-fallback? */
+	_cairo_boxes_init_with_clip (&boxes, extents.clip);
+	status = _cairo_path_fixed_stroke_rectilinear_to_boxes (path,
 								stroke_style,
 								ctm,
 								antialias,
-								&traps);
-	if (likely (status == CAIRO_STATUS_SUCCESS))
-	    goto DO_TRAPS;
+								&boxes);
+	if (status == CAIRO_INT_STATUS_SUCCESS)
+	    status = _cairo_traps_init_boxes (&traps, &boxes);
+	_cairo_boxes_fini (&boxes);
 
-	if (_cairo_status_is_error (status))
-	    goto CLEANUP;
-    }
-
-    status = _cairo_path_fixed_stroke_to_polygon (path,
-						  stroke_style,
-						  ctm, ctm_inverse,
-						  tolerance,
-						  &polygon);
-    if (unlikely (status))
-	goto CLEANUP;
-
-    if (polygon.num_edges == 0)
-	goto DO_TRAPS;
-
-    if (_cairo_operator_bounded_by_mask (op)) {
-	_cairo_box_round_to_rectangle (&polygon.extents, &extents.mask);
-	if (! _cairo_rectangle_intersect (&extents.bounded, &extents.mask))
+	if (unlikely (_cairo_int_status_is_error (status)))
 	    goto CLEANUP;
     }
 
     /* Fall back to trapezoid fills. */
-    status = _cairo_bentley_ottmann_tessellate_polygon (&traps,
-							&polygon,
-							CAIRO_FILL_RULE_WINDING);
-    if (unlikely (status))
-	goto CLEANUP;
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	status = _cairo_path_fixed_stroke_to_polygon (path,
+						      stroke_style,
+						      ctm, ctm_inverse,
+						      tolerance,
+						      &polygon);
+	if (unlikely (status))
+	    goto CLEANUP;
 
-  DO_TRAPS:
+	status = _cairo_composite_rectangles_intersect_mask_extents (&extents,
+								     &polygon.extents);
+	if (unlikely (status))
+	    goto CLEANUP;
+
+	status = _cairo_bentley_ottmann_tessellate_polygon (&traps,
+							    &polygon,
+							    CAIRO_FILL_RULE_WINDING);
+	if (unlikely (status))
+	    goto CLEANUP;
+    }
+
     status = _clip_and_composite_trapezoids (source, op, surface,
 					     &traps, antialias,
 					     extents.clip,
@@ -1116,10 +1119,9 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 {
     cairo_polygon_t polygon;
     cairo_traps_t traps;
-    cairo_bool_t is_rectilinear;
     cairo_composite_rectangles_t extents;
     cairo_rectangle_int_t rect;
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     if (!_cairo_surface_get_extents (surface, &rect))
         ASSERT_NOT_REACHED;
@@ -1136,49 +1138,43 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
     if (_cairo_path_fixed_fill_is_empty (path))
 	goto DO_TRAPS;
 
-    is_rectilinear = _cairo_path_fixed_fill_is_rectilinear (path);
-    if (is_rectilinear) {
-	status = _cairo_path_fixed_fill_rectilinear_to_traps (path,
+    status = CAIRO_INT_STATUS_UNSUPPORTED;
+    if (_cairo_path_fixed_fill_is_rectilinear (path)) {
+	cairo_boxes_t boxes;
+
+	/* meh, surface-fallback is dying anyway... */
+	_cairo_boxes_init_with_clip (&boxes, extents.clip);
+	status = _cairo_path_fixed_fill_rectilinear_to_boxes (path,
 							      fill_rule,
 							      antialias,
-							      &traps);
-	if (likely (status == CAIRO_STATUS_SUCCESS))
-	    goto DO_TRAPS;
-
-	if (_cairo_status_is_error (status))
+							      &boxes);
+	if (unlikely (status))
 	    goto CLEANUP;
-    }
 
-    status = _cairo_path_fixed_fill_to_polygon (path, tolerance, &polygon);
-    if (unlikely (status))
-	goto CLEANUP;
-
-    if (polygon.num_edges == 0)
-	goto DO_TRAPS;
-
-    if (_cairo_operator_bounded_by_mask (op)) {
-	_cairo_box_round_to_rectangle (&polygon.extents, &extents.mask);
-	if (! _cairo_rectangle_intersect (&extents.bounded, &extents.mask))
-	    goto CLEANUP;
-    }
-
-    if (is_rectilinear) {
-	status = _cairo_bentley_ottmann_tessellate_rectilinear_polygon (&traps,
-									&polygon,
-									fill_rule);
-	if (likely (status == CAIRO_STATUS_SUCCESS))
-	    goto DO_TRAPS;
-
-	if (unlikely (_cairo_status_is_error (status)))
+	if (status == CAIRO_INT_STATUS_SUCCESS)
+	    status = _cairo_traps_init_boxes (&traps, &boxes);
+	_cairo_boxes_fini (&boxes);
+	if (unlikely (_cairo_int_status_is_error (status)))
 	    goto CLEANUP;
     }
 
     /* Fall back to trapezoid fills. */
-    status = _cairo_bentley_ottmann_tessellate_polygon (&traps,
-							&polygon,
-							fill_rule);
-    if (unlikely (status))
-	goto CLEANUP;
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	status = _cairo_path_fixed_fill_to_polygon (path, tolerance, &polygon);
+	if (unlikely (status))
+	    goto CLEANUP;
+
+	status = _cairo_composite_rectangles_intersect_mask_extents (&extents,
+								     &polygon.extents);
+	if (unlikely (status))
+	    goto CLEANUP;
+
+	status = _cairo_bentley_ottmann_tessellate_polygon (&traps,
+							    &polygon,
+							    fill_rule);
+	if (unlikely (status))
+	    goto CLEANUP;
+    }
 
   DO_TRAPS:
     status = _clip_and_composite_trapezoids (source, op, surface,
