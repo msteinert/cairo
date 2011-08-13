@@ -528,35 +528,118 @@ _cairo_recording_surface_acquire_source_image_transformed (void			   *abstract_s
     return CAIRO_STATUS_SUCCESS;
 }
 
+struct proxy {
+    cairo_surface_t base;
+    cairo_surface_t *image;
+};
+
+static cairo_status_t
+proxy_acquire_source_image (void			 *abstract_surface,
+			    cairo_image_surface_t	**image_out,
+			    void			**image_extra)
+{
+    struct proxy *proxy = abstract_surface;
+    return _cairo_surface_acquire_source_image (proxy->image, image_out, image_extra);
+}
+
+static void
+proxy_release_source_image (void			*abstract_surface,
+			    cairo_image_surface_t	*image,
+			    void			*image_extra)
+{
+    struct proxy *proxy = abstract_surface;
+    _cairo_surface_release_source_image (proxy->image, image, image_extra);
+}
+
+static cairo_status_t
+proxy_finish (void *abstract_surface)
+{
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static const cairo_surface_backend_t proxy_backend  = {
+    CAIRO_INTERNAL_SURFACE_TYPE_NULL,
+    proxy_finish,
+    NULL,
+
+    NULL, /* create similar */
+    NULL, /* create similar image */
+    NULL, /* map to image */
+    NULL, /* unmap image */
+
+    proxy_acquire_source_image,
+    proxy_release_source_image,
+};
+
+static cairo_surface_t *
+attach_proxy (cairo_surface_t *source,
+	      cairo_surface_t *image)
+{
+    struct proxy *proxy;
+
+    proxy = malloc (sizeof (*proxy));
+    if (unlikely (proxy == NULL))
+	return _cairo_surface_create_in_error (CAIRO_STATUS_NO_MEMORY);
+
+    _cairo_surface_init (&proxy->base, &proxy_backend, NULL, image->content);
+
+    proxy->image = image;
+    _cairo_surface_attach_snapshot (source, &proxy->base, NULL);
+
+    return &proxy->base;
+}
+
+static void
+detach_proxy (cairo_surface_t *source,
+	      cairo_surface_t *proxy)
+{
+    cairo_surface_finish (proxy);
+    cairo_surface_destroy (proxy);
+}
+
+static cairo_surface_t *
+get_proxy (cairo_surface_t *proxy)
+{
+    return ((struct proxy *)proxy)->image;
+}
+
 static cairo_status_t
 _cairo_recording_surface_acquire_source_image (void			 *abstract_surface,
 					       cairo_image_surface_t	**image_out,
 					       void			**image_extra)
 {
-    cairo_matrix_t identity;
-    cairo_surface_t *image;
+    cairo_recording_surface_t *surface = abstract_surface;
+    cairo_surface_t *image, *proxy;
     cairo_status_t status;
 
-    image = _cairo_surface_has_snapshot (abstract_surface,
-					 &_cairo_image_surface_backend);
-    if (image != NULL) {
-	*image_out = (cairo_image_surface_t *) cairo_surface_reference (image);
+    proxy = _cairo_surface_has_snapshot (abstract_surface, &proxy_backend);
+    if (proxy != NULL) {
+	*image_out = (cairo_image_surface_t *)
+	    cairo_surface_reference (get_proxy (proxy));
 	*image_extra = NULL;
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    cairo_matrix_init_identity (&identity);
+    assert (! surface->unbounded);
+    image = _cairo_image_surface_create_with_content (surface->base.content,
+						      surface->extents.width,
+						      surface->extents.height);
+    if (unlikely (image->status))
+	return image->status;
 
-    status =
-	_cairo_recording_surface_acquire_source_image_transformed (abstract_surface, &identity, image_out, image_extra);
-    if (unlikely (status))
+    /* Handle recursion by returning future reads from the current image */
+    proxy = attach_proxy (abstract_surface, image);
+    status = _cairo_recording_surface_replay (&surface->base, image);
+    detach_proxy (abstract_surface, proxy);
+
+    if (unlikely (status)) {
+	cairo_surface_destroy (image);
 	return status;
+    }
 
-    _cairo_surface_attach_snapshot (abstract_surface,
-				    &(*image_out)->base,
-				    NULL);
+    *image_out = (cairo_image_surface_t *) image;
+    *image_extra = NULL;
     return CAIRO_STATUS_SUCCESS;
-
 }
 
 static void

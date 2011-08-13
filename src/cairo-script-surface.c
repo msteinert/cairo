@@ -1035,20 +1035,77 @@ _emit_mesh_pattern (cairo_script_surface_t *surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+struct script_snapshot {
+    cairo_surface_t base;
+};
+
+static cairo_status_t
+script_snapshot_finish (void *abstract_surface)
+{
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static const cairo_surface_backend_t script_snapshot_backend = {
+    CAIRO_SURFACE_TYPE_SCRIPT,
+    script_snapshot_finish,
+};
+
+static void
+detach_snapshot (cairo_surface_t *abstract_surface)
+{
+    cairo_script_surface_t *surface = (cairo_script_surface_t *)abstract_surface;
+    cairo_script_context_t *ctx = to_context (surface);
+
+    _cairo_output_stream_printf (ctx->stream,
+				 "/s%d undef\n  ",
+				 surface->base.unique_id);
+}
+
+static void
+attach_snapshot (cairo_script_context_t *ctx,
+		 cairo_surface_t *source)
+{
+    struct script_snapshot *surface;
+
+    surface = malloc (sizeof (*surface));
+    if (unlikely (surface == NULL))
+	return;
+
+    _cairo_surface_init (&surface->base,
+			 &script_snapshot_backend,
+			 &ctx->base,
+			 source->content);
+
+    _cairo_output_stream_printf (ctx->stream,
+				 "dup /s%d exch def ",
+				 surface->base.unique_id);
+
+    _cairo_surface_attach_snapshot (source, &surface->base, detach_snapshot);
+    cairo_surface_destroy (&surface->base);
+}
+
 static cairo_status_t
 _emit_recording_surface_pattern (cairo_script_surface_t *surface,
 				 cairo_recording_surface_t *source)
 {
     cairo_script_implicit_context_t old_cr;
+    cairo_script_context_t *ctx = to_context (surface);
     cairo_script_surface_t *similar;
+    cairo_surface_t *snapshot;
     cairo_rectangle_t r, *extents;
     cairo_status_t status;
+
+    snapshot = _cairo_surface_has_snapshot (&source->base, &script_snapshot_backend);
+    if (snapshot) {
+	_cairo_output_stream_printf (ctx->stream, "s%d", snapshot->unique_id);
+	return CAIRO_INT_STATUS_SUCCESS;
+    }
 
     extents = NULL;
     if (_cairo_recording_surface_get_bounds (&source->base, &r))
 	extents = &r;
 
-    similar = _cairo_script_surface_create_internal (to_context (surface),
+    similar = _cairo_script_surface_create_internal (ctx,
 						     source->base.content,
 						     extents,
 						     NULL);
@@ -1057,20 +1114,23 @@ _emit_recording_surface_pattern (cairo_script_surface_t *surface,
 
     similar->base.is_clear = TRUE;
 
-    _cairo_output_stream_printf (to_context (surface)->stream,
-				 "//%s ",
+    _cairo_output_stream_printf (ctx->stream, "//%s ",
 				 _content_to_string (source->base.content));
     if (extents) {
-	_cairo_output_stream_printf (to_context (surface)->stream,
-				     "[%f %f %f %f]",
+	_cairo_output_stream_printf (ctx->stream, "[%f %f %f %f]",
 				     extents->x, extents->y,
 				     extents->width, extents->height);
     } else
-	_cairo_output_stream_puts (to_context (surface)->stream, "[]");
-    _cairo_output_stream_puts (to_context (surface)->stream,
-				 " record dup context\n");
+	_cairo_output_stream_puts (ctx->stream, "[]");
+    _cairo_output_stream_puts (ctx->stream, " record\n");
+
+    attach_snapshot (ctx, &source->base);
+
+    _cairo_output_stream_puts (ctx->stream, "dup context\n");
+
     target_push (similar);
     similar->emitted = TRUE;
+
 
     old_cr = surface->cr;
     _cairo_script_implicit_context_init (&surface->cr);
@@ -1085,7 +1145,7 @@ _emit_recording_surface_pattern (cairo_script_surface_t *surface,
     cairo_list_del (&similar->operand.link);
     assert (target_is_active (surface));
 
-    _cairo_output_stream_puts (to_context (surface)->stream, "pop ");
+    _cairo_output_stream_puts (ctx->stream, "pop ");
     cairo_surface_destroy (&similar->base);
 
     return CAIRO_STATUS_SUCCESS;
@@ -1497,55 +1557,6 @@ _emit_subsurface_pattern (cairo_script_surface_t *surface,
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
-struct script_snapshot {
-    cairo_surface_t base;
-};
-
-static cairo_status_t
-script_snapshot_finish (void *abstract_surface)
-{
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static const cairo_surface_backend_t script_snapshot_backend = {
-    CAIRO_SURFACE_TYPE_SCRIPT,
-    script_snapshot_finish,
-};
-
-static void
-detach_snapshot (cairo_surface_t *abstract_surface)
-{
-    cairo_script_surface_t *surface = (cairo_script_surface_t *)abstract_surface;
-    cairo_script_context_t *ctx = to_context (surface);
-
-    _cairo_output_stream_printf (ctx->stream,
-				 "/s%d undef\n  ",
-				 surface->base.unique_id);
-}
-
-static void
-attach_snapshot (cairo_script_context_t *ctx,
-		 cairo_surface_t *source)
-{
-    struct script_snapshot *surface;
-
-    surface = malloc (sizeof (*surface));
-    if (unlikely (surface == NULL))
-	return;
-
-    _cairo_surface_init (&surface->base,
-			 &script_snapshot_backend,
-			 &ctx->base,
-			 source->content);
-
-    _cairo_output_stream_printf (ctx->stream,
-				 "dup /s%d exch def\n  ",
-				 surface->base.unique_id);
-
-    _cairo_surface_attach_snapshot (source, &surface->base, detach_snapshot);
-    cairo_surface_destroy (&surface->base);
-}
-
 static cairo_int_status_t
 _emit_surface_pattern (cairo_script_surface_t *surface,
 		       const cairo_pattern_t *pattern)
@@ -1563,7 +1574,7 @@ _emit_surface_pattern (cairo_script_surface_t *surface,
 	snapshot = _cairo_surface_has_snapshot (source, &script_snapshot_backend);
 	if (snapshot) {
 	    _cairo_output_stream_printf (ctx->stream,
-					 "s%d pattern",
+					 "s%d pattern ",
 					 snapshot->unique_id);
 	    return CAIRO_INT_STATUS_SUCCESS;
 	}

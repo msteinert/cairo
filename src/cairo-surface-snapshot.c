@@ -60,6 +60,15 @@ _cairo_surface_snapshot_finish (void *abstract_surface)
 }
 
 static cairo_status_t
+_cairo_surface_snapshot_flush (void *abstract_surface)
+{
+    cairo_surface_snapshot_t *surface = abstract_surface;
+
+    cairo_surface_flush (surface->target);
+    return surface->target->status;
+}
+
+static cairo_status_t
 _cairo_surface_snapshot_acquire_source_image (void                    *abstract_surface,
 					      cairo_image_surface_t  **image_out,
 					      void                   **extra_out)
@@ -110,6 +119,9 @@ static const cairo_surface_backend_t _cairo_surface_snapshot_backend = {
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_surface_snapshot_get_extents,
+    NULL, /* old-show-glyphs */
+    NULL, /* get-font-options */
+    _cairo_surface_snapshot_flush,
 };
 
 static void
