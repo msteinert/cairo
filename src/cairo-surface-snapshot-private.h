@@ -45,4 +45,16 @@ struct _cairo_surface_snapshot {
     cairo_surface_t *clone;
 };
 
+static inline cairo_bool_t
+_cairo_surface_snapshot_is_reused (cairo_surface_t *surface)
+{
+    return CAIRO_REFERENCE_COUNT_GET_VALUE (&surface->ref_count) > 2;
+}
+
+static inline cairo_surface_t *
+_cairo_surface_snapshot_get_target (cairo_surface_t *surface)
+{
+    return ((cairo_surface_snapshot_t *) surface)->target;
+}
+
 #endif /* CAIRO_SURFACE_SNAPSHOT_PRIVATE_H */

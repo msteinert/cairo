@@ -117,7 +117,7 @@ _cairo_surface_snapshot_copy_on_write (cairo_surface_t *surface)
 {
     cairo_surface_snapshot_t *snapshot = (cairo_surface_snapshot_t *) surface;
     cairo_image_surface_t *image;
-    cairo_image_surface_t *clone;
+    cairo_surface_t *clone;
     void *extra;
     cairo_status_t status;
 
@@ -127,41 +127,26 @@ _cairo_surface_snapshot_copy_on_write (cairo_surface_t *surface)
      * been lost.
      */
 
+    if (snapshot->target->backend->snapshot != NULL) {
+	clone = snapshot->target->backend->snapshot (snapshot->target);
+	if (clone != NULL)
+	    goto done;
+    }
+
+    /* XXX copy to a similar surface, leave acquisition till later? */
     status = _cairo_surface_acquire_source_image (snapshot->target, &image, &extra);
     if (unlikely (status)) {
 	snapshot->target = _cairo_surface_create_in_error (status);
 	status = _cairo_surface_set_error (surface, status);
 	return;
     }
-
-    clone = (cairo_image_surface_t *)
-	_cairo_image_surface_create_with_pixman_format (NULL,
-							image->pixman_format,
-							image->width,
-							image->height,
-							0);
-    if (likely (clone->base.status == CAIRO_STATUS_SUCCESS)) {
-	if (clone->stride == image->stride) {
-	    memcpy (clone->data, image->data, image->stride * image->height);
-	} else {
-	    pixman_image_composite32 (PIXMAN_OP_SRC,
-				      image->pixman_image, NULL, clone->pixman_image,
-				      0, 0,
-				      0, 0,
-				      0, 0,
-				      image->width, image->height);
-	}
-	clone->base.is_clear = FALSE;
-
-	snapshot->clone = &clone->base;
-    } else {
-	snapshot->clone = &clone->base;
-	status = _cairo_surface_set_error (surface, clone->base.status);
-    }
-
+    clone = image->base.backend->snapshot (&image->base);
     _cairo_surface_release_source_image (snapshot->target, image, extra);
-    snapshot->target = snapshot->clone;
-    snapshot->base.type = snapshot->target->type;
+
+done:
+    status = _cairo_surface_set_error (surface, clone->status);
+    snapshot->target = snapshot->clone = clone;
+    snapshot->base.type = clone->type;
 }
 
 /**
@@ -192,38 +177,14 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
     if (unlikely (surface->status))
 	return _cairo_surface_create_in_error (surface->status);
 
-    if (surface->finished)
+    if (unlikely (surface->finished))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 
     if (surface->snapshot_of != NULL)
 	return cairo_surface_reference (surface);
 
-    if (surface->backend->snapshot != NULL) {
-	cairo_surface_t *snap;
-
-	snap = _cairo_surface_has_snapshot (surface, surface->backend);
-	if (snap != NULL)
-	    return cairo_surface_reference (snap);
-
-	snap = surface->backend->snapshot (surface);
-	if (snap != NULL) {
-	    if (unlikely (snap->status))
-		return snap;
-
-	    status = _cairo_surface_copy_mime_data (snap, surface);
-	    if (unlikely (status)) {
-		cairo_surface_destroy (snap);
-		return _cairo_surface_create_in_error (status);
-	    }
-
-	    snap->device_transform = surface->device_transform;
-	    snap->device_transform_inverse = surface->device_transform_inverse;
-
-	    _cairo_surface_attach_snapshot (surface, snap, NULL);
-
-	    return snap;
-	}
-    }
+    if (surface->backend == &_cairo_surface_snapshot_backend)
+	return cairo_surface_reference (surface);
 
     snapshot = (cairo_surface_snapshot_t *)
 	_cairo_surface_has_snapshot (surface, &_cairo_surface_snapshot_backend);

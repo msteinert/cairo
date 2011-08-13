@@ -328,11 +328,11 @@ _cairo_surface_detach_snapshot (cairo_surface_t *snapshot)
 {
     assert (snapshot->snapshot_of != NULL);
 
-    snapshot->snapshot_of = NULL;
-    cairo_list_del (&snapshot->snapshot);
-
     if (snapshot->snapshot_detach != NULL)
 	snapshot->snapshot_detach (snapshot);
+
+    snapshot->snapshot_of = NULL;
+    cairo_list_del (&snapshot->snapshot);
 
     cairo_surface_destroy (snapshot);
 }

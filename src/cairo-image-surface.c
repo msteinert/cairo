@@ -738,6 +738,36 @@ _cairo_image_surface_create_similar (void	       *abstract_other,
 }
 
 static cairo_surface_t *
+_cairo_image_surface_snapshot (void *abstract_surface)
+{
+    cairo_image_surface_t *image = abstract_surface;
+    cairo_image_surface_t *clone;
+
+    clone = (cairo_image_surface_t *)
+	_cairo_image_surface_create_with_pixman_format (NULL,
+							image->pixman_format,
+							image->width,
+							image->height,
+							0);
+    if (unlikely (clone->base.status))
+	return &clone->base;
+
+    if (clone->stride == image->stride) {
+	memcpy (clone->data, image->data, clone->stride * clone->height);
+    } else {
+	pixman_image_composite32 (PIXMAN_OP_SRC,
+				  image->pixman_image, NULL, clone->pixman_image,
+				  0, 0,
+				  0, 0,
+				  0, 0,
+				  image->width, image->height);
+    }
+    clone->base.is_clear = FALSE;
+    return &clone->base;
+}
+
+
+static cairo_surface_t *
 _cairo_image_surface_map_to_image (void *abstract_other,
 				   const cairo_rectangle_int_t *extents)
 {
@@ -4823,8 +4853,7 @@ const cairo_surface_backend_t _cairo_image_surface_backend = {
     _cairo_image_surface_stroke,
     _cairo_image_surface_fill,
     _cairo_image_surface_glyphs,
-    NULL, /* show_text_glyphs */
-    NULL, /* snapshot */
+    _cairo_image_surface_snapshot,
     NULL, /* is_similar */
 };
 

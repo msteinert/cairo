@@ -1280,6 +1280,31 @@ _undef (void *data)
     free (def);
 }
 
+static cairo_status_t
+attach_undef_tag (cairo_script_context_t *ctx, cairo_surface_t *surface)
+{
+    struct def *tag;
+    cairo_status_t status;
+
+    tag = malloc (sizeof (*tag));
+    if (unlikely (tag == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    tag->ctx = ctx;
+    tag->tag = surface->unique_id;
+    tag->user_data = &surface->user_data;
+    cairo_list_add (&tag->link, &ctx->defines);
+    status = _cairo_user_data_array_set_data (&surface->user_data,
+					      (cairo_user_data_key_t *) ctx,
+					      tag, _undef);
+    if (unlikely (status)) {
+	free (tag);
+	return status;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_int_status_t
 _emit_image_surface (cairo_script_surface_t *surface,
 		     cairo_image_surface_t *image)
@@ -1290,7 +1315,6 @@ _emit_image_surface (cairo_script_surface_t *surface,
     cairo_int_status_t status, status2;
     const uint8_t *mime_data;
     unsigned long mime_data_length;
-    struct def *tag;
 
     if (_cairo_user_data_array_get_data (&image->base.user_data,
 					 (cairo_user_data_key_t *) ctx))
@@ -1384,21 +1408,9 @@ _emit_image_surface (cairo_script_surface_t *surface,
 	cairo_surface_destroy (&clone->base);
     }
 
-    tag = malloc (sizeof (*tag));
-    if (unlikely (tag == NULL))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    tag->ctx = ctx;
-    tag->tag = image->base.unique_id;
-    tag->user_data = &image->base.user_data;
-    cairo_list_add (&tag->link, &ctx->defines);
-    status = _cairo_user_data_array_set_data (&image->base.user_data,
-					      (cairo_user_data_key_t *) ctx,
-					      tag, _undef);
-    if (unlikely (status)) {
-	free (tag);
+    status = attach_undef_tag (ctx, &image->base);
+    if (unlikely (status))
 	return status;
-    }
 
     _cairo_output_stream_printf (ctx->stream,
 				 "dup /s%u exch def ",
@@ -1443,21 +1455,15 @@ static cairo_int_status_t
 _emit_image_surface_pattern (cairo_script_surface_t *surface,
 			     cairo_surface_t *source)
 {
-    cairo_surface_t *snapshot;
     cairo_image_surface_t *image;
     cairo_status_t status;
     void *extra;
 
-    /* XXX keeping a copy is nasty, but we want to hook into the surface's
-     * lifetime. Using a snapshot is a convenient method.
-     */
-    snapshot = _cairo_surface_snapshot (source);
-    status = _cairo_surface_acquire_source_image (snapshot, &image, &extra);
+    status = _cairo_surface_acquire_source_image (source, &image, &extra);
     if (likely (status == CAIRO_STATUS_SUCCESS)) {
 	status = _emit_image_surface (surface, image);
-	_cairo_surface_release_source_image (snapshot, image, extra);
+	_cairo_surface_release_source_image (source, image, extra);
     }
-    cairo_surface_destroy (snapshot);
 
     return status;
 }
@@ -1492,19 +1498,82 @@ _emit_subsurface_pattern (cairo_script_surface_t *surface,
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
+struct script_snapshot {
+    cairo_surface_t base;
+};
+
+static cairo_status_t
+script_snapshot_finish (void *abstract_surface)
+{
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static const cairo_surface_backend_t script_snapshot_backend = {
+    CAIRO_SURFACE_TYPE_SCRIPT,
+    script_snapshot_finish,
+};
+
+static void
+detach_snapshot (cairo_surface_t *abstract_surface)
+{
+    cairo_script_surface_t *surface = (cairo_script_surface_t *)abstract_surface;
+    cairo_script_context_t *ctx = to_context (surface);
+
+    _cairo_output_stream_printf (ctx->stream,
+				 "/s%d undef\n  ",
+				 surface->base.unique_id);
+}
+
+static void
+attach_snapshot (cairo_script_context_t *ctx,
+		 cairo_surface_t *source)
+{
+    struct script_snapshot *surface;
+
+    surface = malloc (sizeof (*surface));
+    if (unlikely (surface == NULL))
+	return;
+
+    _cairo_surface_init (&surface->base,
+			 &script_snapshot_backend,
+			 &ctx->base,
+			 source->content);
+
+    _cairo_output_stream_printf (ctx->stream,
+				 "dup /s%d exch def\n  ",
+				 surface->base.unique_id);
+
+    _cairo_surface_attach_snapshot (source, &surface->base, detach_snapshot);
+    cairo_surface_destroy (&surface->base);
+}
+
 static cairo_int_status_t
 _emit_surface_pattern (cairo_script_surface_t *surface,
 		       const cairo_pattern_t *pattern)
 {
+    cairo_script_context_t *ctx = to_context (surface);
     cairo_surface_pattern_t *surface_pattern;
-    cairo_surface_t *source;
+    cairo_surface_t *source, *snapshot;
+    cairo_surface_t *take_snapshot = NULL;
     cairo_int_status_t status;
 
     surface_pattern = (cairo_surface_pattern_t *) pattern;
     source = surface_pattern->surface;
 
-    if (source->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT)
-	source = ((cairo_surface_snapshot_t *) source)->target;
+    if (source->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT) {
+	snapshot = _cairo_surface_has_snapshot (source, &script_snapshot_backend);
+	if (snapshot) {
+	    _cairo_output_stream_printf (ctx->stream,
+					 "s%d pattern",
+					 snapshot->unique_id);
+	    return CAIRO_INT_STATUS_SUCCESS;
+	}
+
+	if (_cairo_surface_snapshot_is_reused (source))
+	    take_snapshot = source;
+
+	source = _cairo_surface_snapshot_get_target (source);
+    }
 
     switch ((int) source->backend->type) {
     case CAIRO_SURFACE_TYPE_RECORDING:
@@ -1523,7 +1592,10 @@ _emit_surface_pattern (cairo_script_surface_t *surface,
     if (unlikely (status))
 	return status;
 
-    _cairo_output_stream_puts (to_context (surface)->stream, "pattern");
+    if (take_snapshot)
+	attach_snapshot (ctx, take_snapshot);
+
+    _cairo_output_stream_puts (ctx->stream, "pattern");
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
@@ -1796,6 +1868,8 @@ _emit_path (cairo_script_surface_t *surface,
 	double y1 = _cairo_fixed_to_double (box.p1.y);
 	double x2 = _cairo_fixed_to_double (box.p2.x);
 	double y2 = _cairo_fixed_to_double (box.p2.y);
+
+	assert (x1 > -9999);
 
 	_cairo_output_stream_printf (ctx->stream,
 				     " %f %f %f %f rectangle",

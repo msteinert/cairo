@@ -56,6 +56,7 @@
 #include "cairo-paginated-private.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-surface-clipper-private.h"
+#include "cairo-surface-snapshot-private.h"
 #include "cairo-surface-subsurface-private.h"
 #include "cairo-type3-glyph-surface-private.h"
 
@@ -1110,9 +1111,13 @@ _get_source_surface_size (cairo_surface_t         *source,
 	    *height = sub->extents.height;
 
 	} else {
-	    cairo_recording_surface_t *recording_surface = (cairo_recording_surface_t *) source;
+	    cairo_recording_surface_t *recording_surface;
 	    cairo_box_t bbox;
 
+	    if (source->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT)
+		source = _cairo_surface_snapshot_get_target (source);
+
+	    recording_surface = (cairo_recording_surface_t *) source;
 	    status = _cairo_recording_surface_get_bbox (recording_surface, &bbox, NULL);
 	    if (unlikely (status))
 		return status;
@@ -2366,7 +2371,7 @@ BAIL:
 
 static cairo_status_t
 _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t  *surface,
-					   cairo_surface_t      *recording_surface,
+					   cairo_surface_t      *source,
 					   cairo_pdf_resource_t  resource)
 {
     double old_width, old_height;
@@ -2376,7 +2381,11 @@ _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t  *surface,
     cairo_int_status_t status;
     int alpha = 0;
 
-    is_bounded = _cairo_surface_get_extents (recording_surface, &recording_extents);
+    if (source->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT)
+	source = _cairo_surface_snapshot_get_target (source);
+
+    is_bounded = _cairo_surface_get_extents (source,
+					     &recording_extents);
     assert (is_bounded);
 
     old_width = surface->width;
@@ -2396,7 +2405,7 @@ _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t  *surface,
     if (unlikely (status))
 	return status;
 
-    if (cairo_surface_get_content (recording_surface) == CAIRO_CONTENT_COLOR) {
+    if (cairo_surface_get_content (source) == CAIRO_CONTENT_COLOR) {
 	status = _cairo_pdf_surface_add_alpha (surface, 1.0, &alpha);
 	if (unlikely (status))
 	    return status;
@@ -2408,7 +2417,7 @@ _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t  *surface,
 				     surface->height);
     }
 
-    status = _cairo_recording_surface_replay_region (recording_surface,
+    status = _cairo_recording_surface_replay_region (source,
 						     NULL,
 						     &surface->base,
 						     CAIRO_RECORDING_REGION_NATIVE);

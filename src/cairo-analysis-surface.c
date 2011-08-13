@@ -41,6 +41,7 @@
 #include "cairo-error-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-recording-surface-private.h"
+#include "cairo-surface-snapshot-private.h"
 #include "cairo-surface-subsurface-private.h"
 #include "cairo-region-private.h"
 
@@ -119,6 +120,8 @@ _analyze_recording_surface_pattern (cairo_analysis_surface_t *surface,
     surface->has_ctm = ! _cairo_matrix_is_identity (&surface->ctm);
 
     source = surface_pattern->surface;
+    if (source->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT)
+	source = _cairo_surface_snapshot_get_target (source);
     if (source->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) source;
 	source = sub->target;
