@@ -3617,27 +3617,17 @@ _cairo_ps_surface_set_clip (cairo_ps_surface_t *surface,
 {
     cairo_clip_t *clip = composite->clip;
 
-    if (_cairo_clip_is_region (clip) &&
-	cairo_region_contains_rectangle (_cairo_clip_get_region (clip),
-					 &composite->unbounded) == CAIRO_REGION_OVERLAP_IN)
-    {
-	    clip = NULL;
-    }
+    if (_cairo_composite_rectangles_can_reduce_clip (composite, clip))
+	clip = NULL;
 
     if (clip == NULL) {
-	cairo_clip_t *current = surface->clipper.clip;
-
-	if (current && _cairo_clip_is_region (current) &&
-	    cairo_region_contains_rectangle (_cairo_clip_get_region (current),
-					     &composite->unbounded) == CAIRO_REGION_OVERLAP_IN)
-	{
+	if (_cairo_composite_rectangles_can_reduce_clip (composite,
+							 surface->clipper.clip))
 	    return CAIRO_STATUS_SUCCESS;
-	}
     }
 
     return _cairo_surface_clipper_set_clip (&surface->clipper, clip);
 }
-
 
 static cairo_int_status_t
 _cairo_ps_surface_paint (void			*abstract_surface,

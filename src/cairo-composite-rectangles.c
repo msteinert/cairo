@@ -54,11 +54,12 @@ _cairo_composite_rectangles_init (cairo_composite_rectangles_t *extents,
 				  const cairo_clip_t *clip)
 {
     extents->clip = NULL;
+    extents->destination = *unbounded;
 
     if (_cairo_clip_is_all_clipped (clip))
 	return FALSE;
 
-    extents->unbounded = *unbounded;
+    extents->unbounded = extents->destination;
     if (clip != NULL) {
 	if (! _cairo_rectangle_intersect (&extents->unbounded,
 					  _cairo_clip_get_extents (clip)))
@@ -246,4 +247,27 @@ _cairo_composite_rectangles_init_for_glyphs (cairo_composite_rectangles_t *exten
 	return status;
 
     return _cairo_composite_rectangles_intersect (extents, clip);
+}
+
+cairo_bool_t
+_cairo_composite_rectangles_can_reduce_clip (cairo_composite_rectangles_t *composite,
+					     cairo_clip_t *clip)
+{
+    cairo_rectangle_int_t extents;
+
+    if (clip == NULL)
+	return TRUE;
+
+    /* XXX In the not a region case, we could still search through the boxes */
+    if (! _cairo_clip_is_region (clip))
+	return FALSE;
+
+    extents = composite->destination;
+    if (composite->is_bounded & CAIRO_OPERATOR_BOUND_BY_SOURCE)
+	_cairo_rectangle_intersect (&extents, &composite->source);
+    if (composite->is_bounded & CAIRO_OPERATOR_BOUND_BY_MASK)
+	_cairo_rectangle_intersect (&extents, &composite->mask);
+
+    return cairo_region_contains_rectangle (_cairo_clip_get_region (clip),
+					    &extents) == CAIRO_REGION_OVERLAP_IN;
 }

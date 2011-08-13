@@ -587,11 +587,8 @@ _command_init (cairo_recording_surface_t *surface,
 
     /* steal the clip */
     command->clip = NULL;
-    if (! _cairo_clip_is_region (composite->clip) ||
-	composite->mask.width > composite->unbounded.width ||
-	composite->mask.height > composite->unbounded.height ||
-	cairo_region_contains_rectangle (_cairo_clip_get_region (composite->clip),
-					 &composite->unbounded) != CAIRO_REGION_OVERLAP_IN)
+    if (! _cairo_composite_rectangles_can_reduce_clip (composite,
+						       composite->clip))
     {
 	command->clip = composite->clip;
 	composite->clip = NULL;

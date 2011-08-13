@@ -53,11 +53,13 @@ CAIRO_BEGIN_DECLS
 struct _cairo_composite_rectangles {
     cairo_rectangle_int_t source;
     cairo_rectangle_int_t mask;
-    cairo_rectangle_int_t bounded; /* dst */
-    cairo_rectangle_int_t unbounded; /* clip */
+    cairo_rectangle_int_t destination;
+
+    cairo_rectangle_int_t bounded; /* source? IN mask? IN unbounded */
+    cairo_rectangle_int_t unbounded; /* destination IN clip */
     uint32_t is_bounded;
 
-    cairo_clip_t *clip;
+    cairo_clip_t *clip; /* clip will be reduced to the minimal container */
 };
 
 cairo_private cairo_int_status_t
@@ -107,6 +109,10 @@ _cairo_composite_rectangles_init_for_glyphs (cairo_composite_rectangles_t *exten
 cairo_private cairo_int_status_t
 _cairo_composite_rectangles_intersect_mask_extents (cairo_composite_rectangles_t *extents,
 						    const cairo_box_t *box);
+
+cairo_private cairo_bool_t
+_cairo_composite_rectangles_can_reduce_clip (cairo_composite_rectangles_t *composite,
+					     cairo_clip_t *clip);
 
 cairo_private void
 _cairo_composite_rectangles_fini (cairo_composite_rectangles_t *extents);
