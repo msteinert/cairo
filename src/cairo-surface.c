@@ -2226,6 +2226,23 @@ _pattern_has_error (const cairo_pattern_t *pattern)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_bool_t
+nothing_to_do (cairo_surface_t *surface,
+	       cairo_operator_t op,
+	       const cairo_pattern_t *source)
+{
+    if (op == CAIRO_OPERATOR_SOURCE && _cairo_pattern_is_clear (source))
+	op = CAIRO_OPERATOR_CLEAR;
+
+    if (op == CAIRO_OPERATOR_CLEAR && surface->is_clear)
+	return TRUE;
+
+    if (op == CAIRO_OPERATOR_OVER && _cairo_pattern_is_clear (source))
+	return TRUE;
+
+    return FALSE;
+}
+
 cairo_status_t
 _cairo_surface_paint (cairo_surface_t		*surface,
 		      cairo_operator_t		 op,
@@ -2240,13 +2257,7 @@ _cairo_surface_paint (cairo_surface_t		*surface,
     if (_cairo_clip_is_all_clipped (clip))
 	return CAIRO_STATUS_SUCCESS;
 
-    if (op == CAIRO_OPERATOR_SOURCE && _cairo_pattern_is_clear (source))
-	op = CAIRO_OPERATOR_CLEAR;
-
-    if (op == CAIRO_OPERATOR_CLEAR && surface->is_clear)
-	return CAIRO_STATUS_SUCCESS;
-
-    if (op == CAIRO_OPERATOR_OVER && _cairo_pattern_is_clear (source))
+    if (nothing_to_do (surface, op, source))
 	return CAIRO_STATUS_SUCCESS;
 
     status = _pattern_has_error (source);
@@ -2285,18 +2296,12 @@ _cairo_surface_mask (cairo_surface_t		*surface,
     if (_cairo_clip_is_all_clipped (clip))
 	return CAIRO_STATUS_SUCCESS;
 
-    if (op == CAIRO_OPERATOR_CLEAR && surface->is_clear)
+    if (nothing_to_do (surface, op, source))
 	return CAIRO_STATUS_SUCCESS;
 
     /* If the mask is blank, this is just an expensive no-op */
     if (_cairo_pattern_is_clear (mask) &&
 	_cairo_operator_bounded_by_mask (op))
-    {
-	return CAIRO_STATUS_SUCCESS;
-    }
-
-    if (op == CAIRO_OPERATOR_OVER &&
-	_cairo_pattern_is_clear (source))
     {
 	return CAIRO_STATUS_SUCCESS;
     }
@@ -2426,14 +2431,8 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
     if (_cairo_clip_is_all_clipped (clip))
 	return CAIRO_STATUS_SUCCESS;
 
-    if (op == CAIRO_OPERATOR_CLEAR && surface->is_clear)
+    if (nothing_to_do (surface, op, source))
 	return CAIRO_STATUS_SUCCESS;
-
-    if (op == CAIRO_OPERATOR_OVER &&
-	_cairo_pattern_is_clear (source))
-    {
-	return CAIRO_STATUS_SUCCESS;
-    }
 
     status = _pattern_has_error (source);
     if (unlikely (status))
@@ -2483,14 +2482,8 @@ _cairo_surface_fill (cairo_surface_t	*surface,
     if (_cairo_clip_is_all_clipped (clip))
 	return CAIRO_STATUS_SUCCESS;
 
-    if (op == CAIRO_OPERATOR_CLEAR && surface->is_clear)
+    if (nothing_to_do (surface, op, source))
 	return CAIRO_STATUS_SUCCESS;
-
-    if (op == CAIRO_OPERATOR_OVER &&
-	_cairo_pattern_is_clear (source))
-    {
-	return CAIRO_STATUS_SUCCESS;
-    }
 
     status = _pattern_has_error (source);
     if (unlikely (status))
