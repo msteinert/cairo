@@ -690,6 +690,10 @@ REFERENCE_IMAGES = \
 	leaky-polygon.image16.ref.png \
 	leaky-polygon.ps.ref.png \
 	leaky-polygon.ref.png \
+	line-width-overlap-flipped.ref.png \
+	line-width-overlap-flopped.ref.png \
+	line-width-overlap-offset.ref.png \
+	line-width-overlap-rotated.ref.png \
 	line-width-overlap.ref.png \
 	line-width-scale.image16.ref.png \
 	line-width-scale.ps2.ref.png \
