@@ -1049,7 +1049,7 @@ _emit_recording_surface_pattern (cairo_script_surface_t *surface,
 	extents = &r;
 
     similar = _cairo_script_surface_create_internal (to_context (surface),
-						     source->content,
+						     source->base.content,
 						     extents,
 						     NULL);
     if (unlikely (similar->base.status))
@@ -1059,7 +1059,7 @@ _emit_recording_surface_pattern (cairo_script_surface_t *surface,
 
     _cairo_output_stream_printf (to_context (surface)->stream,
 				 "//%s ",
-				 _content_to_string (source->content));
+				 _content_to_string (source->base.content));
     if (extents) {
 	_cairo_output_stream_printf (to_context (surface)->stream,
 				     "[%f %f %f %f]",

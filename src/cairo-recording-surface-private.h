@@ -124,8 +124,6 @@ typedef union _cairo_command {
 typedef struct _cairo_recording_surface {
     cairo_surface_t base;
 
-    cairo_content_t content;
-
     /* A recording-surface is logically unbounded, but when used as a
      * source we need to render it to an image, so we need a size at
      * which to create that image. */

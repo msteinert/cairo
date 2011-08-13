@@ -388,7 +388,6 @@ cairo_recording_surface_create (cairo_content_t		 content,
 			 NULL, /* device */
 			 content);
 
-    surface->content = content;
 
     surface->unbounded = TRUE;
 
@@ -507,7 +506,7 @@ _cairo_recording_surface_acquire_source_image_transformed (void			   *abstract_s
 
     width = surface->extents.width * device_transform->xx;
     height = surface->extents.height * device_transform->yy;
-    image = _cairo_image_surface_create_with_content (surface->content,
+    image = _cairo_image_surface_create_with_content (surface->base.content,
 						      width, height);
     if (unlikely (image->status))
 	return image->status;
@@ -1019,7 +1018,6 @@ _cairo_recording_surface_snapshot (void *abstract_other)
     surface->extents_pixels = other->extents_pixels;
     surface->extents = other->extents;
     surface->unbounded = other->unbounded;
-    surface->content = other->content;
 
     surface->base.is_clear = TRUE;
 
@@ -1471,7 +1469,7 @@ _recording_surface_get_ink_bbox (cairo_recording_surface_t *surface,
     cairo_surface_t *analysis_surface;
     cairo_status_t status;
 
-    null_surface = _cairo_null_surface_create (surface->content);
+    null_surface = _cairo_null_surface_create (surface->base.content);
     analysis_surface = _cairo_analysis_surface_create (null_surface);
     cairo_surface_destroy (null_surface);
 

@@ -1388,7 +1388,7 @@ _cairo_svg_surface_emit_recording_surface (cairo_svg_document_t      *document,
     }
 
     paginated_surface = _cairo_svg_surface_create_for_document (document,
-								source->content,
+								source->base.content,
 								source->extents_pixels.width,
 								source->extents_pixels.height);
     if (unlikely (paginated_surface->status))
@@ -1427,7 +1427,7 @@ _cairo_svg_surface_emit_recording_surface (cairo_svg_document_t      *document,
 				     svg_surface->height);
     }
 
-    if (source->content == CAIRO_CONTENT_ALPHA) {
+    if (source->base.content == CAIRO_CONTENT_ALPHA) {
 	_cairo_svg_surface_emit_alpha_filter (document);
 	_cairo_output_stream_printf (document->xml_node_defs,
 				     "<g id=\"surface%d\" "

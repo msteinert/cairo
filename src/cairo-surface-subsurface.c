@@ -341,7 +341,7 @@ _cairo_surface_subsurface_acquire_source_image (void                    *abstrac
 					   &_cairo_image_surface_backend))
 	{
 	    image = (cairo_image_surface_t *)
-		_cairo_image_surface_create_with_content (meta->content,
+		_cairo_image_surface_create_with_content (meta->base.content,
 							  surface->extents.width,
 							  surface->extents.height);
 	    if (unlikely (image->base.status))
