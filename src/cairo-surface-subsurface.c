@@ -224,13 +224,9 @@ static cairo_status_t
 _cairo_surface_subsurface_flush (void *abstract_surface)
 {
     cairo_surface_subsurface_t *surface = abstract_surface;
-    cairo_status_t status;
 
-    status = CAIRO_STATUS_SUCCESS;
-    if (surface->target->backend->flush != NULL)
-	status = surface->target->backend->flush (surface->target);
-
-    return status;
+    cairo_surface_flush (surface->target);
+    return surface->target->status;
 }
 
 static cairo_status_t
