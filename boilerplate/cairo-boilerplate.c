@@ -274,6 +274,7 @@ _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
     cairo_surface_t *surface, *image;
     cairo_t *cr;
     cairo_status_t status;
+    cairo_format_t format;
 
     if (cairo_surface_status (src))
 	return cairo_surface_reference (src);
@@ -282,7 +283,20 @@ _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
 	return cairo_boilerplate_surface_create_in_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 
     /* extract sub-surface */
-    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+    switch (cairo_surface_get_content (src)) {
+    case CAIRO_CONTENT_ALPHA:
+	format = CAIRO_FORMAT_A8;
+	break;
+    case CAIRO_CONTENT_COLOR:
+	format = CAIRO_FORMAT_RGB24;
+	break;
+    default:
+    case CAIRO_CONTENT_COLOR_ALPHA:
+	format = CAIRO_FORMAT_ARGB32;
+	break;
+    }
+    surface = cairo_image_surface_create (format, width, height);
+    assert (cairo_surface_get_content (surface) == cairo_surface_get_content (src));
     image = cairo_surface_reference (surface);
 
     /* open a logging channel (only interesting for recording surfaces) */
@@ -309,9 +323,7 @@ _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
 
     cr = cairo_create (surface);
     cairo_surface_destroy (surface);
-
     cairo_set_source_surface (cr, src, 0, 0);
-    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
     cairo_paint (cr);
 
     status = cairo_status (cr);
