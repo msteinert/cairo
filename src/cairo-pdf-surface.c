@@ -5830,12 +5830,8 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
     _cairo_pdf_surface_get_extents (surface, &unbounded);
     status = _cairo_composite_rectangles_init_for_paint (&extents, &unbounded,
 							 op, source, clip);
-    if (unlikely (status)) {
-	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
-	    return CAIRO_INT_STATUS_SUCCESS;
-
+    if (unlikely (status))
 	return status;
-    }
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
 	return _cairo_pdf_surface_analyze_operation (surface, op, source, &extents.bounded);
@@ -5878,8 +5874,6 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
     status = _cairo_pdf_surface_add_pdf_pattern (surface, source,
 						 &extents.bounded,
 						 &pattern_res, &gstate_res);
-    if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
-	return CAIRO_STATUS_SUCCESS;
     if (unlikely (status))
 	return status;
 
@@ -5947,12 +5941,8 @@ _cairo_pdf_surface_mask (void			*abstract_surface,
     _cairo_pdf_surface_get_extents (surface, &unbounded);
     status = _cairo_composite_rectangles_init_for_mask (&extents, &unbounded,
 							op, source, mask, clip);
-    if (unlikely (status)) {
-	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
-	    return CAIRO_STATUS_SUCCESS;
-
+    if (unlikely (status))
 	return status;
-    }
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
 	cairo_status_t source_status, mask_status;
@@ -6064,12 +6054,8 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 							  op, source,
 							  path, style, ctm,
 							  clip);
-    if (unlikely (status)) {
-	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
-	    return CAIRO_INT_STATUS_SUCCESS;
-
+    if (unlikely (status))
 	return status;
-    }
 
     /* use the more accurate extents */
     if (extents.is_bounded) {
@@ -6098,8 +6084,6 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
     status = _cairo_pdf_surface_add_pdf_pattern (surface, source,
 						 &extents.bounded,
 						 &pattern_res, &gstate_res);
-    if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
-	return CAIRO_INT_STATUS_SUCCESS;
     if (unlikely (status))
 	return status;
 
@@ -6192,12 +6176,8 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
     status = _cairo_composite_rectangles_init_for_fill (&extents, &unbounded,
 							op, source, path,
 							clip);
-    if (unlikely (status)) {
-	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
-	    return CAIRO_INT_STATUS_SUCCESS;
-
+    if (unlikely (status))
 	return status;
-    }
 
     /* use the more accurate extents */
     if (extents.is_bounded) {
@@ -6257,8 +6237,6 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
     status = _cairo_pdf_surface_add_pdf_pattern (surface, source,
 						 &extents.bounded,
 						 &pattern_res, &gstate_res);
-    if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
-	return CAIRO_INT_STATUS_SUCCESS;
     if (unlikely (status))
 	return status;
 
@@ -6379,10 +6357,8 @@ _cairo_pdf_surface_fill_stroke (void			*abstract_surface,
     status = _cairo_composite_rectangles_init_for_fill (&extents, &unbounded,
 							fill_op, fill_source, path,
 							clip);
-    if (unlikely (status)) {
-	if (status != CAIRO_INT_STATUS_NOTHING_TO_DO)
-	    return status;
-    }
+    if (unlikely (status))
+	return status;
 
     /* use the more accurate extents */
     if (extents.is_bounded) {
@@ -6409,10 +6385,8 @@ _cairo_pdf_surface_fill_stroke (void			*abstract_surface,
 							  stroke_op, stroke_source,
 							  path, stroke_style, stroke_ctm,
 							  clip);
-    if (unlikely (status)) {
-	if (status != CAIRO_INT_STATUS_NOTHING_TO_DO)
-	    return status;
-    }
+    if (unlikely (status))
+	return status;
 
     /* use the more accurate extents */
     if (extents.is_bounded) {
@@ -6501,12 +6475,8 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 							  glyphs, num_glyphs,
 							  clip,
 							  &overlap);
-    if (unlikely (status)) {
-	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
-	    return CAIRO_INT_STATUS_SUCCESS;
-
+    if (unlikely (status))
 	return status;
-    }
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_pdf_surface_analyze_operation (surface, op, source, &extents.bounded);
@@ -6522,8 +6492,6 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
     status = _cairo_pdf_surface_add_pdf_pattern (surface, source,
 						 &extents.bounded,
 						 &pattern_res, &gstate_res);
-    if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
-	return CAIRO_INT_STATUS_SUCCESS;
     if (unlikely (status))
 	return status;
 
