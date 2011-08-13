@@ -1193,7 +1193,7 @@ _cairo_recording_surface_get_path (cairo_surface_t    *abstract_surface,
 	    break;
     }
 
-    return _cairo_surface_set_error (&surface->base, status);
+    return status;
 }
 
 static int
