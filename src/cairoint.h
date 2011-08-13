@@ -1600,9 +1600,9 @@ cairo_private cairo_status_t
 _cairo_surface_copy_mime_data (cairo_surface_t *dst,
 			       cairo_surface_t *src);
 
-cairo_private cairo_status_t
+cairo_private cairo_int_status_t
 _cairo_surface_set_error (cairo_surface_t	*surface,
-			  cairo_status_t	 status);
+			  cairo_int_status_t	 status);
 
 cairo_private void
 _cairo_surface_set_resolution (cairo_surface_t *surface,

@@ -166,13 +166,19 @@ static DEFINE_NIL_SURFACE(CAIRO_STATUS_DEVICE_ERROR, _cairo_surface_nil_device_e
  *
  * Return value: the error status.
  **/
-cairo_status_t
+cairo_int_status_t
 _cairo_surface_set_error (cairo_surface_t *surface,
-			  cairo_status_t status)
+			  cairo_int_status_t status)
 {
-    if (status == CAIRO_STATUS_SUCCESS ||
-        status == (int)CAIRO_INT_STATUS_NOTHING_TO_DO)
-        return CAIRO_STATUS_SUCCESS;
+    /* NOTHING_TO_DO is magic. We use it to break out of the inner-most
+     * surface function, but anything higher just sees "success".
+     */
+    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	status = CAIRO_INT_STATUS_SUCCESS;
+
+    if (status == CAIRO_INT_STATUS_SUCCESS ||
+        status >= (int)CAIRO_INT_STATUS_LAST_STATUS)
+        return status;
 
     /* Don't overwrite an existing error. This preserves the first
      * error, which is the most significant. */
