@@ -1714,12 +1714,61 @@ _path_close (void *closure)
 }
 
 static cairo_status_t
+_emit_path_boxes (cairo_script_surface_t *surface,
+		  const cairo_path_fixed_t *path)
+{
+    cairo_script_context_t *ctx = to_context (surface);
+    cairo_path_fixed_iter_t iter;
+    cairo_status_t status;
+    struct _cairo_boxes_chunk *chunk;
+    cairo_boxes_t boxes;
+    cairo_box_t box;
+    int i;
+
+    _cairo_boxes_init (&boxes);
+    _cairo_path_fixed_iter_init (&iter, path);
+    while (_cairo_path_fixed_iter_is_fill_box (&iter, &box)) {
+	if (box.p1.y == box.p2.y || box.p1.x == box.p2.x)
+	    continue;
+
+	status = _cairo_boxes_add (&boxes, CAIRO_ANTIALIAS_DEFAULT, &box);
+	if (unlikely (status)) {
+	    _cairo_boxes_fini (&boxes);
+	    return status;
+	}
+    }
+
+    if (! _cairo_path_fixed_iter_at_end (&iter)) {
+	_cairo_boxes_fini (&boxes);
+	return FALSE;
+    }
+
+    for (chunk = &boxes.chunks; chunk; chunk = chunk->next) {
+	for (i = 0; i < chunk->count; i++) {
+	    const cairo_box_t *b = &chunk->base[i];
+	    double x1 = _cairo_fixed_to_double (b->p1.x);
+	    double y1 = _cairo_fixed_to_double (b->p1.y);
+	    double x2 = _cairo_fixed_to_double (b->p2.x);
+	    double y2 = _cairo_fixed_to_double (b->p2.y);
+
+	    _cairo_output_stream_printf (ctx->stream,
+					 "\n  %f %f %f %f rectangle",
+					 x1, y1, x2 - x1, y2 - y1);
+	}
+    }
+
+    _cairo_boxes_fini (&boxes);
+    return status;
+}
+
+static cairo_status_t
 _emit_path (cairo_script_surface_t *surface,
-	    const cairo_path_fixed_t *path)
+	    const cairo_path_fixed_t *path,
+	    cairo_bool_t is_fill)
 {
     cairo_script_context_t *ctx = to_context (surface);
     cairo_box_t box;
-    cairo_status_t status;
+    cairo_int_status_t status;
 
     assert (target_is_active (surface));
     assert (_cairo_matrix_is_identity (&surface->cr.current_ctm));
@@ -1733,39 +1782,41 @@ _emit_path (cairo_script_surface_t *surface,
 
     if (path == NULL) {
 	_cairo_path_fixed_init (&surface->cr.current_path);
-    } else if (_cairo_path_fixed_is_rectangle (path, &box)) {
+	_cairo_output_stream_puts (ctx->stream, "\n");
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    status = _cairo_path_fixed_init_copy (&surface->cr.current_path, path);
+    if (unlikely (status))
+	return status;
+
+    status = CAIRO_INT_STATUS_UNSUPPORTED;
+    if (_cairo_path_fixed_is_rectangle (path, &box)) {
 	double x1 = _cairo_fixed_to_double (box.p1.x);
 	double y1 = _cairo_fixed_to_double (box.p1.y);
 	double x2 = _cairo_fixed_to_double (box.p2.x);
 	double y2 = _cairo_fixed_to_double (box.p2.y);
 
-	status = _cairo_path_fixed_init_copy (&surface->cr.current_path, path);
-	if (unlikely (status))
-	    return status;
-
 	_cairo_output_stream_printf (ctx->stream,
 				     " %f %f %f %f rectangle",
 				     x1, y1, x2 - x1, y2 - y1);
-    } else {
-	cairo_status_t status;
+	status = CAIRO_INT_STATUS_SUCCESS;
+    } else if (is_fill && _cairo_path_fixed_fill_is_rectilinear (path)) {
+	status = _emit_path_boxes (surface, path);
+    }
 
-	status = _cairo_path_fixed_init_copy (&surface->cr.current_path, path);
-	if (unlikely (status))
-	    return status;
-
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	status = _cairo_path_fixed_interpret (path,
 					      _path_move_to,
 					      _path_line_to,
 					      _path_curve_to,
 					      _path_close,
 					      ctx->stream);
-	if (unlikely (status))
-	    return status;
     }
 
     _cairo_output_stream_puts (ctx->stream, "\n");
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 static cairo_bool_t
 _scaling_matrix_equal (const cairo_matrix_t *a,
@@ -2124,8 +2175,8 @@ _cairo_script_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clip
 	_cairo_path_fixed_is_box (path, &box))
     {
 	if (box.p1.x <= 0 && box.p1.y <= 0 &&
-	    box.p2.x - box.p1.x >= _cairo_fixed_from_double (surface->width) &&
-	    box.p2.y - box.p1.y >= _cairo_fixed_from_double (surface->height))
+	    box.p2.x >= _cairo_fixed_from_double (surface->width) &&
+	    box.p2.y >= _cairo_fixed_from_double (surface->height))
 	{
 	    return CAIRO_STATUS_SUCCESS;
 	}
@@ -2151,7 +2202,7 @@ _cairo_script_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clip
 	    return status;
     }
 
-    status = _emit_path (surface, path);
+    status = _emit_path (surface, path, TRUE);
     if (unlikely (status))
 	return status;
 
@@ -2397,7 +2448,7 @@ _cairo_script_surface_stroke (void				*abstract_surface,
     if (unlikely (status))
 	goto BAIL;
 
-    status = _emit_path (surface, path);
+    status = _emit_path (surface, path, FALSE);
     if (unlikely (status))
 	goto BAIL;
 
@@ -2509,7 +2560,7 @@ _cairo_script_surface_fill (void			*abstract_surface,
 	    goto BAIL;
     }
 
-    status = _emit_path (surface, path);
+    status = _emit_path (surface, path, TRUE);
     if (unlikely (status))
 	goto BAIL;
 
