@@ -31,7 +31,7 @@
 #define IMAGE_HEIGHT ((LINES+4)*LINES)/2 + 2
 
 static cairo_test_status_t
-draw_a8 (cairo_t *cr, int width, int height)
+draw (cairo_t *cr, int width, int height)
 {
     int i;
 
@@ -59,29 +59,8 @@ draw_a8 (cairo_t *cr, int width, int height)
 static cairo_test_status_t
 draw_a1 (cairo_t *cr, int width, int height)
 {
-    int i;
-
-    /* We draw in black, so paint white first. */
-    cairo_set_source_rgb (cr, 1.0, 1.0, 1.0); /* white */
-    cairo_paint (cr);
-
-    cairo_set_source_rgb (cr, 0, 0, 0);
-    cairo_translate (cr, 2, 2);
-
     cairo_set_antialias (cr, CAIRO_ANTIALIAS_NONE);
-
-    for (i=0; i < LINES; i++) {
-	cairo_set_line_width (cr, i+1);
-	cairo_move_to (cr, 0, 0);
-	cairo_rel_line_to (cr, LINE_LENGTH, 0);
-	cairo_stroke (cr);
-	cairo_move_to (cr, LINE_LENGTH + 2, 0.5);
-	cairo_rel_line_to (cr, LINE_LENGTH, 0);
-	cairo_stroke (cr);
-	cairo_translate (cr, 0, i+3);
-    }
-
-    return CAIRO_TEST_SUCCESS;
+    return draw (cr, width, height);
 }
 
 CAIRO_TEST (line_width,
@@ -89,7 +68,7 @@ CAIRO_TEST (line_width,
 	    "stroke", /* keywords */
 	    NULL, /* requirements */
 	    IMAGE_WIDTH, IMAGE_HEIGHT,
-	    NULL, draw_a8)
+	    NULL, draw)
 CAIRO_TEST (a1_line_width,
 	    "Tests cairo_set_line_width",
 	    "stroke", /* keywords */
