@@ -174,6 +174,18 @@ _cairo_recording_surface_get_bbox (cairo_recording_surface_t *recording,
 				   cairo_box_t *bbox,
 				   const cairo_matrix_t *transform);
 
+static inline cairo_bool_t
+_cairo_recording_surface_get_bounds (cairo_surface_t *surface,
+				     cairo_rectangle_t *extents)
+{
+    cairo_recording_surface_t *recording = (cairo_recording_surface_t *)surface;
+    if (recording->unbounded)
+	return FALSE;
+
+    *extents = recording->extents_pixels;
+    return TRUE;
+}
+
 cairo_private cairo_bool_t
 _cairo_surface_is_recording (const cairo_surface_t *surface);
 

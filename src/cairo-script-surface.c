@@ -166,8 +166,7 @@ static const cairo_surface_backend_t _cairo_script_surface_backend;
 static cairo_script_surface_t *
 _cairo_script_surface_create_internal (cairo_script_context_t *ctx,
 				       cairo_content_t content,
-				       double width,
-				       double height,
+				       cairo_rectangle_t *extents,
 				       cairo_surface_t *passthrough);
 
 static void
@@ -1042,34 +1041,34 @@ _emit_recording_surface_pattern (cairo_script_surface_t *surface,
 {
     cairo_script_implicit_context_t old_cr;
     cairo_script_surface_t *similar;
+    cairo_rectangle_t r, *extents;
     cairo_status_t status;
-    cairo_box_t bbox;
-    cairo_rectangle_int_t rect;
 
-    /* first measure the extents */
-    status = _cairo_recording_surface_get_bbox (source, &bbox, NULL);
-    if (unlikely (status))
-	return status;
-
-    /* convert to extents so that it matches the public api */
-    _cairo_box_round_to_rectangle (&bbox, &rect);
+    extents = NULL;
+    if (_cairo_recording_surface_get_bounds (&source->base, &r))
+	extents = &r;
 
     similar = _cairo_script_surface_create_internal (to_context (surface),
 						     source->content,
-						     rect.width,
-						     rect.height,
+						     extents,
 						     NULL);
     if (unlikely (similar->base.status))
 	return similar->base.status;
 
-    cairo_surface_set_device_offset (&similar->base, -rect.x, -rect.y);
     similar->base.is_clear = TRUE;
 
-    _get_target (surface);
     _cairo_output_stream_printf (to_context (surface)->stream,
-				 "%d %d //%s similar dup context\n",
-				 rect.width, rect.height,
+				 "//%s ",
 				 _content_to_string (source->content));
+    if (extents) {
+	_cairo_output_stream_printf (to_context (surface)->stream,
+				     "[%f %f %f %f]",
+				     extents->x, extents->y,
+				     extents->width, extents->height);
+    } else
+	_cairo_output_stream_puts (to_context (surface)->stream, "[]");
+    _cairo_output_stream_puts (to_context (surface)->stream,
+				 " record dup context\n");
     target_push (similar);
     similar->emitted = TRUE;
 
@@ -1977,6 +1976,7 @@ _cairo_script_surface_create_similar (void	       *abstract_surface,
     cairo_script_surface_t *surface, *other = abstract_surface;
     cairo_surface_t *passthrough = NULL;
     cairo_script_context_t *ctx;
+    cairo_rectangle_t extents;
     cairo_status_t status;
 
     ctx = to_context (other);
@@ -2005,10 +2005,11 @@ _cairo_script_surface_create_similar (void	       *abstract_surface,
 	}
     }
 
-    surface = _cairo_script_surface_create_internal (ctx,
-						     content,
-						     width, height,
-						     passthrough);
+    extents.x = extents.y = 0;
+    extents.width = width;
+    extents.height = height;
+    surface = _cairo_script_surface_create_internal (ctx, content,
+						     &extents, passthrough);
     cairo_surface_destroy (passthrough);
 
     if (unlikely (surface->base.status)) {
@@ -3617,8 +3618,7 @@ _cairo_script_implicit_context_reset (cairo_script_implicit_context_t *cr)
 static cairo_script_surface_t *
 _cairo_script_surface_create_internal (cairo_script_context_t *ctx,
 				       cairo_content_t content,
-				       double width,
-				       double height,
+				       cairo_rectangle_t *extents,
 				       cairo_surface_t *passthrough)
 {
     cairo_script_surface_t *surface;
@@ -3640,8 +3640,13 @@ _cairo_script_surface_create_internal (cairo_script_context_t *ctx,
     _cairo_surface_clipper_init (&surface->clipper,
 				 _cairo_script_surface_clipper_intersect_clip_path);
 
-    surface->width = width;
-    surface->height = height;
+    surface->width = surface->height = -1;
+    if (extents) {
+	surface->width = extents->width;
+	surface->height = extents->height;
+	cairo_surface_set_device_offset (&surface->base,
+					 -extents->x, -extents->y);
+    }
 
     surface->emitted = FALSE;
     surface->defined = FALSE;
@@ -3755,15 +3760,23 @@ cairo_script_surface_create (cairo_device_t *device,
 			     double width,
 			     double height)
 {
+    cairo_rectangle_t *extents, r;
+
     if (unlikely (device->backend->type != CAIRO_DEVICE_TYPE_SCRIPT))
 	return _cairo_surface_create_in_error (CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
 
     if (unlikely (device->status))
 	return _cairo_surface_create_in_error (device->status);
 
+    extents = NULL;
+    if (width > 0 && height > 0) {
+	r.x = r.y = 0;
+	r.width  = width;
+	r.height = height;
+	extents = &r;
+    }
     return &_cairo_script_surface_create_internal ((cairo_script_context_t *) device,
-						   content,
-						   width, height,
+						   content, extents,
 						   NULL)->base;
 }
 
@@ -3772,6 +3785,7 @@ cairo_script_surface_create_for_target (cairo_device_t *device,
 					cairo_surface_t *target)
 {
     cairo_rectangle_int_t extents;
+    cairo_rectangle_t rect, *r;
 
     if (unlikely (device->backend->type != CAIRO_DEVICE_TYPE_SCRIPT))
 	return _cairo_surface_create_in_error (CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
@@ -3782,13 +3796,15 @@ cairo_script_surface_create_for_target (cairo_device_t *device,
     if (unlikely (target->status))
 	return _cairo_surface_create_in_error (target->status);
 
-    if (! _cairo_surface_get_extents (target, &extents))
-	extents.width = extents.height = -1;
-
+    r = NULL;
+    if (_cairo_surface_get_extents (target, &extents)) {
+	rect.x = rect.y = 0;
+	rect.width = extents.width;
+	rect.height = extents.height;
+	r= &rect;
+    }
     return &_cairo_script_surface_create_internal ((cairo_script_context_t *) device,
-						   target->content,
-						   extents.width,
-						   extents.height,
+						   target->content, r,
 						   target)->base;
 }
 
@@ -3796,8 +3812,7 @@ cairo_status_t
 cairo_script_from_recording_surface (cairo_device_t *device,
 				     cairo_surface_t *recording_surface)
 {
-    cairo_box_t bbox;
-    cairo_rectangle_int_t extents;
+    cairo_rectangle_t r, *extents;
     cairo_surface_t *surface;
     cairo_status_t status;
 
@@ -3813,22 +3828,17 @@ cairo_script_from_recording_surface (cairo_device_t *device,
     if (unlikely (! _cairo_surface_is_recording (recording_surface)))
 	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 
-    status = _cairo_recording_surface_get_bbox ((cairo_recording_surface_t *) recording_surface,
-					   &bbox, NULL);
-    if (unlikely (status))
-	return status;
-
-    _cairo_box_round_to_rectangle (&bbox, &extents);
+    extents = NULL;
+    if (_cairo_recording_surface_get_bounds (recording_surface, &r))
+	extents = &r;
 
     surface = &_cairo_script_surface_create_internal ((cairo_script_context_t *) device,
 						      recording_surface->content,
-						      extents.width,
-						      extents.height,
+						      extents,
 						      NULL)->base;
     if (unlikely (surface->status))
 	return surface->status;
 
-    cairo_surface_set_device_offset (surface, -extents.x, -extents.y);
     status = _cairo_recording_surface_replay (recording_surface, surface);
     cairo_surface_destroy (surface);
 
