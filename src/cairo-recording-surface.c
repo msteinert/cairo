@@ -605,6 +605,20 @@ _cairo_recording_surface_extents (cairo_recording_surface_t *surface)
     return &surface->extents;
 }
 
+static void
+_cairo_recording_surface_break_self_copy_loop (cairo_recording_surface_t *surface)
+{
+    cairo_surface_flush (&surface->base);
+}
+
+static cairo_status_t
+_cairo_recording_surface_commit (cairo_recording_surface_t *surface,
+				 cairo_command_header_t *command)
+{
+    _cairo_recording_surface_break_self_copy_loop (surface);
+    return _cairo_array_append (&surface->commands, &command);
+}
+
 static cairo_int_status_t
 _cairo_recording_surface_paint (void			  *abstract_surface,
 				cairo_operator_t	   op,
@@ -649,7 +663,7 @@ _cairo_recording_surface_paint (void			  *abstract_surface,
     if (unlikely (status))
 	goto CLEANUP_COMMAND;
 
-    status = _cairo_array_append (&surface->commands, &command);
+    status = _cairo_recording_surface_commit (surface, &command->header);
     if (unlikely (status))
 	goto CLEANUP_SOURCE;
 
@@ -708,7 +722,7 @@ _cairo_recording_surface_mask (void			*abstract_surface,
     if (unlikely (status))
 	goto CLEANUP_SOURCE;
 
-    status = _cairo_array_append (&surface->commands, &command);
+    status = _cairo_recording_surface_commit (surface, &command->header);
     if (unlikely (status))
 	goto CLEANUP_MASK;
 
@@ -784,7 +798,7 @@ _cairo_recording_surface_stroke (void			*abstract_surface,
     command->tolerance = tolerance;
     command->antialias = antialias;
 
-    status = _cairo_array_append (&surface->commands, &command);
+    status = _cairo_recording_surface_commit (surface, &command->header);
     if (unlikely (status))
 	goto CLEANUP_STYLE;
 
@@ -854,7 +868,7 @@ _cairo_recording_surface_fill (void			*abstract_surface,
     command->tolerance = tolerance;
     command->antialias = antialias;
 
-    status = _cairo_array_append (&surface->commands, &command);
+    status = _cairo_recording_surface_commit (surface, &command->header);
     if (unlikely (status))
 	goto CLEANUP_PATH;
 
@@ -963,7 +977,7 @@ _cairo_recording_surface_show_text_glyphs (void				*abstract_surface,
 
     command->scaled_font = cairo_scaled_font_reference (scaled_font);
 
-    status = _cairo_array_append (&surface->commands, &command);
+    status = _cairo_recording_surface_commit (surface, &command->header);
     if (unlikely (status))
 	goto CLEANUP_SCALED_FONT;
 
