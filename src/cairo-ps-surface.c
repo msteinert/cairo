@@ -67,6 +67,7 @@
 #include "cairo-paginated-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-surface-clipper-private.h"
+#include "cairo-surface-snapshot-private.h"
 #include "cairo-surface-subsurface-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-type3-glyph-surface-private.h"
@@ -2541,6 +2542,9 @@ _cairo_ps_surface_emit_recording_surface (cairo_ps_surface_t *surface,
     old_page_bbox = surface->page_bbox;
     old_cairo_to_ps = surface->cairo_to_ps;
 
+    if (_cairo_surface_is_snapshot (recording_surface))
+	recording_surface = _cairo_surface_snapshot_get_target (recording_surface);
+
     status =
 	_cairo_recording_surface_get_bbox ((cairo_recording_surface_t *) recording_surface,
 					   &bbox,
@@ -2639,6 +2643,9 @@ _cairo_ps_surface_emit_recording_subsurface (cairo_ps_surface_t *surface,
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
 						  &surface->cairo_to_ps);
     _cairo_output_stream_printf (surface->stream, "  q\n");
+
+    if (_cairo_surface_is_snapshot (recording_surface))
+	recording_surface = _cairo_surface_snapshot_get_target (recording_surface);
 
     if (recording_surface->content == CAIRO_CONTENT_COLOR) {
 	surface->content = CAIRO_CONTENT_COLOR;
@@ -2743,9 +2750,14 @@ _cairo_ps_surface_acquire_surface (cairo_ps_surface_t      *surface,
 	    *width  = sub->extents.width;
 	    *height = sub->extents.height;
 	} else {
-	    cairo_recording_surface_t *recording_surface = (cairo_recording_surface_t *) pattern->surface;
+	    cairo_recording_surface_t *recording_surface;
 	    cairo_box_t bbox;
 	    cairo_rectangle_int_t extents;
+
+	    recording_surface = (cairo_recording_surface_t *) pattern->surface;
+	    if (_cairo_surface_is_snapshot (&recording_surface->base))
+		recording_surface = (cairo_recording_surface_t *)
+		    _cairo_surface_snapshot_get_target (&recording_surface->base);
 
 	    status = _cairo_recording_surface_get_bbox (recording_surface, &bbox, NULL);
 	    if (unlikely (status))
