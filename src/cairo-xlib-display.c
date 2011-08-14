@@ -177,8 +177,6 @@ _cairo_xlib_display_finish (void *abstract_display)
 
 	cairo_device_release (&display->base);
     }
-
-    display->display = NULL;
 }
 
 static void
@@ -237,8 +235,7 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
     }
     CAIRO_MUTEX_UNLOCK (_cairo_xlib_display_mutex);
 
-    assert (display != NULL);
-
+    display->display = NULL; /* catch any later invalid access */
     cairo_device_destroy (&display->base);
 
     /* Return value in accordance with requirements of
