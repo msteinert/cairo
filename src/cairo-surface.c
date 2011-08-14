@@ -2231,13 +2231,15 @@ nothing_to_do (cairo_surface_t *surface,
 	       cairo_operator_t op,
 	       const cairo_pattern_t *source)
 {
-    if (op == CAIRO_OPERATOR_SOURCE && _cairo_pattern_is_clear (source))
-	op = CAIRO_OPERATOR_CLEAR;
+    if (_cairo_pattern_is_clear (source)) {
+	if (op == CAIRO_OPERATOR_OVER || op == CAIRO_OPERATOR_ADD)
+	    return TRUE;
+
+	if (op == CAIRO_OPERATOR_SOURCE)
+	    op = CAIRO_OPERATOR_CLEAR;
+    }
 
     if (op == CAIRO_OPERATOR_CLEAR && surface->is_clear)
-	return TRUE;
-
-    if (op == CAIRO_OPERATOR_OVER && _cairo_pattern_is_clear (source))
 	return TRUE;
 
     return FALSE;
