@@ -50,6 +50,7 @@
 #include "cairo-analysis-surface-private.h"
 #include "cairo-error-private.h"
 #include "cairo-image-surface-private.h"
+#include "cairo-surface-subsurface-private.h"
 
 static const cairo_surface_backend_t cairo_paginated_surface_backend;
 
@@ -652,7 +653,12 @@ static cairo_t *
 _cairo_paginated_context_create (void *target)
 {
     cairo_paginated_surface_t *surface = target;
-    return surface->recording_surface->backend->create_context (surface);
+
+    if (_cairo_surface_is_subsurface (&surface->base))
+	surface = (cairo_paginated_surface_t *)
+	    _cairo_surface_subsurface_get_target (&surface->base);
+
+    return surface->recording_surface->backend->create_context (target);
 }
 
 static const cairo_surface_backend_t cairo_paginated_surface_backend = {
