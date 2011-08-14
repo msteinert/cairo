@@ -428,29 +428,32 @@ _get_target (cairo_script_surface_t *surface)
 {
     cairo_script_context_t *ctx = to_context (surface);
 
+    if (target_is_active (surface)) {
+	_cairo_output_stream_puts (ctx->stream, "dup ");
+	return;
+    }
+
     if (surface->defined) {
 	_cairo_output_stream_printf (ctx->stream, "s%u ",
 				     surface->base.unique_id);
     } else {
+	int depth = target_depth (surface);
+
 	assert (! cairo_list_is_empty (&surface->operand.link));
-	if (! target_is_active (surface)) {
-	    int depth = target_depth (surface);
-	    if (ctx->active) {
-		_cairo_output_stream_printf (ctx->stream, "%d index ", depth);
-		_cairo_output_stream_puts (ctx->stream, "/target get exch pop ");
-	    } else {
-		if (depth == 1) {
-		    _cairo_output_stream_puts (ctx->stream,
-					       "exch\n");
-		} else {
-		    _cairo_output_stream_printf (ctx->stream,
-						 "%d -1 roll\n",
-						 depth);
-		}
-		_cairo_output_stream_puts (ctx->stream, "/target get ");
-	    }
+	assert (! target_is_active (surface));
+
+	if (ctx->active) {
+	    _cairo_output_stream_printf (ctx->stream, "%d index ", depth);
+	    _cairo_output_stream_puts (ctx->stream, "/target get exch pop ");
 	} else {
-	    _cairo_output_stream_puts (ctx->stream, "/target get ");
+	    if (depth == 1) {
+		_cairo_output_stream_puts (ctx->stream, "exch ");
+	    } else {
+		_cairo_output_stream_printf (ctx->stream,
+					     "%d -1 roll ", depth);
+	    }
+	    target_push (surface);
+	    _cairo_output_stream_puts (ctx->stream, "dup ");
 	}
     }
 }
