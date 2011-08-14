@@ -405,7 +405,7 @@ ifeq ($(CAIRO_HAS_WGL_FUNCTIONS),1)
 enabled_cairo_pkgconf += cairo-wgl.pc
 endif
 
-unsupported_cairo_headers += $(cairo_script_headers)
+supported_cairo_headers += $(cairo_script_headers)
 all_cairo_headers += $(cairo_script_headers)
 all_cairo_private += $(cairo_script_private)
 all_cairo_cxx_sources += $(cairo_script_cxx_sources)

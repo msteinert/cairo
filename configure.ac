@@ -407,7 +407,7 @@ CAIRO_ENABLE_FUNCTIONS(wgl, WGL, auto, [
 dnl ===========================================================================
 
 any2ppm_cs=no
-CAIRO_ENABLE_SURFACE_BACKEND(script, script, no, [
+CAIRO_ENABLE_SURFACE_BACKEND(script, script, yes, [
   any2ppm_cs=yes
 ])
 
