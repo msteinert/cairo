@@ -1060,7 +1060,7 @@ detach_snapshot (cairo_surface_t *abstract_surface)
     cairo_script_context_t *ctx = to_context (surface);
 
     _cairo_output_stream_printf (ctx->stream,
-				 "/s%d undef\n  ",
+				 "/s%d undef\n",
 				 surface->base.unique_id);
 }
 
@@ -1325,48 +1325,6 @@ _emit_png_surface (cairo_script_surface_t *surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-struct def {
-    cairo_script_context_t *ctx;
-    cairo_user_data_array_t *user_data;
-    unsigned int tag;
-    cairo_list_t link;
-};
-
-static void
-_undef (void *data)
-{
-    struct def *def = data;
-
-    cairo_list_del (&def->link);
-    _cairo_output_stream_printf (def->ctx->stream, "/s%u undef\n", def->tag);
-    free (def);
-}
-
-static cairo_status_t
-attach_undef_tag (cairo_script_context_t *ctx, cairo_surface_t *surface)
-{
-    struct def *tag;
-    cairo_status_t status;
-
-    tag = malloc (sizeof (*tag));
-    if (unlikely (tag == NULL))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    tag->ctx = ctx;
-    tag->tag = surface->unique_id;
-    tag->user_data = &surface->user_data;
-    cairo_list_add (&tag->link, &ctx->defines);
-    status = _cairo_user_data_array_set_data (&surface->user_data,
-					      (cairo_user_data_key_t *) ctx,
-					      tag, _undef);
-    if (unlikely (status)) {
-	free (tag);
-	return status;
-    }
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static cairo_int_status_t
 _emit_image_surface (cairo_script_surface_t *surface,
 		     cairo_image_surface_t *image)
@@ -1375,15 +1333,14 @@ _emit_image_surface (cairo_script_surface_t *surface,
     cairo_output_stream_t *base85_stream;
     cairo_output_stream_t *zlib_stream;
     cairo_int_status_t status, status2;
+    cairo_surface_t *snapshot;
     const uint8_t *mime_data;
     unsigned long mime_data_length;
 
-    if (_cairo_user_data_array_get_data (&image->base.user_data,
-					 (cairo_user_data_key_t *) ctx))
-    {
-	_cairo_output_stream_printf (ctx->stream,
-				     "s%u ",
-				     image->base.unique_id);
+    snapshot = _cairo_surface_has_snapshot (&image->base,
+					    &script_snapshot_backend);
+    if (snapshot) {
+	_cairo_output_stream_printf (ctx->stream, "s%u ", snapshot->unique_id);
 	return CAIRO_INT_STATUS_SUCCESS;
     }
 
@@ -1470,14 +1427,6 @@ _emit_image_surface (cairo_script_surface_t *surface,
 	cairo_surface_destroy (&clone->base);
     }
 
-    status = attach_undef_tag (ctx, &image->base);
-    if (unlikely (status))
-	return status;
-
-    _cairo_output_stream_printf (ctx->stream,
-				 "dup /s%u exch def ",
-				 image->base.unique_id);
-
     cairo_surface_get_mime_data (&image->base, CAIRO_MIME_TYPE_JPEG,
 				 &mime_data, &mime_data_length);
     if (mime_data != NULL) {
@@ -1509,6 +1458,7 @@ _emit_image_surface (cairo_script_surface_t *surface,
 
 	_cairo_output_stream_puts (ctx->stream, "~> set-mime-data\n");
     }
+    attach_snapshot (ctx, &image->base);
 
     return CAIRO_INT_STATUS_SUCCESS;
 }
@@ -2070,16 +2020,6 @@ _device_destroy (void *abstract_device)
 	if (font->parent->surface_private == font)
 	    font->parent->surface_private = NULL;
 	free (font);
-    }
-
-    while (! cairo_list_is_empty (&ctx->defines)) {
-	struct def *def = cairo_list_first_entry (&ctx->defines,
-						  struct def, link);
-
-	status = _cairo_user_data_array_set_data (def->user_data,
-						  (cairo_user_data_key_t *) ctx,
-						  NULL, NULL);
-	assert (status == CAIRO_STATUS_SUCCESS);
     }
 
     _bitmap_fini (ctx->surface_id.next);
