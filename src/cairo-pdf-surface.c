@@ -2377,16 +2377,23 @@ _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t  *surface,
     double old_width, old_height;
     cairo_paginated_mode_t old_paginated_mode;
     cairo_rectangle_int_t recording_extents;
-    cairo_bool_t is_bounded;
     cairo_int_status_t status;
     int alpha = 0;
 
     if (_cairo_surface_is_snapshot (source))
 	source = _cairo_surface_snapshot_get_target (source);
 
-    is_bounded = _cairo_surface_get_extents (source,
-					     &recording_extents);
-    assert (is_bounded);
+    if (! _cairo_surface_get_extents (source, &recording_extents)) {
+	cairo_box_t bbox;
+
+	status =
+	    _cairo_recording_surface_get_bbox ((cairo_recording_surface_t *) source,
+					       &bbox, NULL);
+	if (unlikely (status))
+	    return status;
+
+	_cairo_box_round_to_rectangle (&bbox, &recording_extents);
+    }
 
     old_width = surface->width;
     old_height = surface->height;
