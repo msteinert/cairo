@@ -573,7 +573,10 @@ _cairo_surface_wrapper_get_font_options (cairo_surface_wrapper_t    *wrapper,
 cairo_surface_t *
 _cairo_surface_wrapper_snapshot (cairo_surface_wrapper_t *wrapper)
 {
-    return _cairo_surface_snapshot (wrapper->target);
+    if (wrapper->target->backend->snapshot)
+	return wrapper->target->backend->snapshot (wrapper->target);
+
+    return NULL;
 }
 
 cairo_bool_t
