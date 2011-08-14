@@ -84,7 +84,7 @@ cairo_bool_t
 _cairo_quartz_verify_surface_size(int width, int height);
 
 CGImageRef
-_cairo_quartz_create_cgimage (cairo_format_t format,
+CairoQuartzCreateCGImage (cairo_format_t format,
 			      unsigned int width,
 			      unsigned int height,
 			      unsigned int stride,
