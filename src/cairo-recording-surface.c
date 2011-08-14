@@ -1596,7 +1596,7 @@ cairo_recording_surface_ink_extents (cairo_surface_t *surface,
 
     memset (&bbox, 0, sizeof (bbox));
 
-    if (! _cairo_surface_is_recording (surface)) {
+    if (surface->status || ! _cairo_surface_is_recording (surface)) {
 	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	goto DONE;
     }
