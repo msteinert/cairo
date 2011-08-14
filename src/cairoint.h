@@ -2001,9 +2001,6 @@ _cairo_image_analyze_color (cairo_image_surface_t      *image);
 cairo_private cairo_bool_t
 _cairo_surface_is_image (const cairo_surface_t *surface) cairo_pure;
 
-cairo_private cairo_bool_t
-_cairo_surface_is_recording (const cairo_surface_t *surface) cairo_pure;
-
 /* cairo-pen.c */
 cairo_private cairo_status_t
 _cairo_pen_init (cairo_pen_t	*pen,

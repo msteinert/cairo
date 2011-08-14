@@ -184,7 +184,18 @@ _cairo_recording_surface_get_bounds (cairo_surface_t *surface,
     return TRUE;
 }
 
-cairo_private cairo_bool_t
-_cairo_surface_is_recording (const cairo_surface_t *surface);
+/**
+ * _cairo_surface_is_recording:
+ * @surface: a #cairo_surface_t
+ *
+ * Checks if a surface is a #cairo_recording_surface_t
+ *
+ * Return value: %TRUE if the surface is a recording surface
+ **/
+static inline cairo_bool_t
+_cairo_surface_is_recording (const cairo_surface_t *surface)
+{
+    return surface->backend->type == CAIRO_SURFACE_TYPE_RECORDING;
+}
 
 #endif /* CAIRO_RECORDING_SURFACE_H */

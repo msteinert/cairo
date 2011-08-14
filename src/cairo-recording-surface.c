@@ -1147,20 +1147,6 @@ _cairo_recording_surface_get_extents (void		    *abstract_surface,
     return TRUE;
 }
 
-/**
- * _cairo_surface_is_recording:
- * @surface: a #cairo_surface_t
- *
- * Checks if a surface is a #cairo_recording_surface_t
- *
- * Return value: %TRUE if the surface is a recording surface
- **/
-cairo_bool_t
-_cairo_surface_is_recording (const cairo_surface_t *surface)
-{
-    return surface->backend == &cairo_recording_surface_backend;
-}
-
 static const cairo_surface_backend_t cairo_recording_surface_backend = {
     CAIRO_SURFACE_TYPE_RECORDING,
     _cairo_recording_surface_finish,
