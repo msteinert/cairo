@@ -2096,6 +2096,19 @@ cairo_surface_create_for_rectangle (cairo_surface_t	*target,
                                     double		 height);
 
 cairo_public cairo_surface_t *
+cairo_surface_create_observer (cairo_surface_t *target);
+
+cairo_public void
+cairo_surface_observer_print (cairo_surface_t *surface,
+			      cairo_write_func_t write_func,
+			      void *closure);
+
+cairo_public void
+cairo_device_observer_print (cairo_device_t *device,
+			     cairo_write_func_t write_func,
+			     void *closure);
+
+cairo_public cairo_surface_t *
 cairo_surface_reference (cairo_surface_t *surface);
 
 cairo_public void

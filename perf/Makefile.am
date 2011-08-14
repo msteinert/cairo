@@ -14,15 +14,22 @@ AM_LDFLAGS = $(CAIRO_LDFLAGS)
 
 SUBDIRS = micro
 
-noinst_PROGRAMS = cairo-perf-trace cairo-perf-micro
+noinst_PROGRAMS = \
+	cairo-analyse-trace \
+	cairo-perf-trace \
+	cairo-perf-micro \
+	$(NULL)
 
-EXTRA_PROGRAMS += cairo-perf-micro \
-		  cairo-perf-trace \
-		  cairo-perf-diff-files \
-		  cairo-perf-print \
-		  cairo-perf-chart \
-		  cairo-perf-compare-backends \
-		  cairo-perf-graph-files
+EXTRA_PROGRAMS += \
+	cairo-analyse-trace \
+	cairo-perf-micro \
+	cairo-perf-trace \
+	cairo-perf-diff-files \
+	cairo-perf-print \
+	cairo-perf-chart \
+	cairo-perf-compare-backends \
+	cairo-perf-graph-files \
+	$(NULL)
 EXTRA_DIST += cairo-perf-diff COPYING
 EXTRA_LTLIBRARIES += libcairoperf.la
 
@@ -42,6 +49,16 @@ libcairoperf_la_SOURCES = \
 	$(libcairoperf_sources)	\
 	$(libcairoperf_headers)
 libcairoperf_la_LIBADD = $(CAIROPERF_LIBS)
+
+cairo_analyse_trace_SOURCES = \
+	$(cairo_analyse_trace_sources)	\
+	$(cairo_analyse_trace_external_sources)
+cairo_analyse_trace_LDADD =		\
+	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
+	$(LDADD)
+cairo_analyse_trace_DEPENDENCIES = \
+	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
+	$(LDADD)
 
 cairo_perf_trace_SOURCES = \
 	$(cairo_perf_trace_sources)	\

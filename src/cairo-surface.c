@@ -562,6 +562,8 @@ cairo_surface_create_similar_image (cairo_surface_t  *other,
 				    int		width,
 				    int		height)
 {
+    cairo_surface_t *image;
+
     if (other->status)
 	return _cairo_surface_create_in_error (other->status);
     if (unlikely (other->finished))
@@ -572,11 +574,13 @@ cairo_surface_create_similar_image (cairo_surface_t  *other,
     if (unlikely (! CAIRO_FORMAT_VALID (format)))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
 
+    image = NULL;
     if (other->backend->create_similar_image)
-	return other->backend->create_similar_image (other,
-						    format, width, height);
-
-    return cairo_image_surface_create (format, width, height);
+	image = other->backend->create_similar_image (other,
+						      format, width, height);
+    if (image == NULL)
+	image = cairo_image_surface_create (format, width, height);
+    return image;
 }
 
 /**

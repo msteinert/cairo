@@ -11,6 +11,9 @@ libcairoperf_headers = \
 	cairo-stats.h  \
 	$(NULL)
 
+cairo_analyse_trace_sources = cairo-analyse-trace.c
+cairo_analyse_trace_external_sources = ../src/cairo-error.c
+
 cairo_perf_trace_sources = cairo-perf-trace.c
 cairo_perf_trace_external_sources = \
 	../src/cairo-error.c \

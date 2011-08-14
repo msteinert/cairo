@@ -100,6 +100,7 @@ cairo_private = \
 	cairo-surface-fallback-private.h \
 	cairo-surface-private.h \
 	cairo-surface-clipper-private.h \
+	cairo-surface-observer-private.h \
 	cairo-surface-offset-private.h \
 	cairo-surface-subsurface-private.h \
 	cairo-surface-snapshot-private.h \
@@ -181,6 +182,7 @@ cairo_sources = \
 	cairo-surface.c \
 	cairo-surface-fallback.c \
 	cairo-surface-clipper.c \
+	cairo-surface-observer.c \
 	cairo-surface-offset.c \
 	cairo-surface-snapshot.c \
 	cairo-surface-subsurface.c \

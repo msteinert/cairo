@@ -82,6 +82,7 @@ typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
 typedef struct _cairo_solid_pattern cairo_solid_pattern_t;
 typedef struct _cairo_surface_attributes cairo_surface_attributes_t;
 typedef struct _cairo_surface_backend cairo_surface_backend_t;
+typedef struct _cairo_surface_observer cairo_surface_observer_t;
 typedef struct _cairo_surface_snapshot cairo_surface_snapshot_t;
 typedef struct _cairo_surface_subsurface cairo_surface_subsurface_t;
 typedef struct _cairo_surface_wrapper cairo_surface_wrapper_t;
@@ -231,12 +232,17 @@ typedef enum _cairo_internal_surface_type {
     CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT = 0x1000,
     CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED,
     CAIRO_INTERNAL_SURFACE_TYPE_ANALYSIS,
+    CAIRO_INTERNAL_SURFACE_TYPE_OBSERVER,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_WRAPPING,
     CAIRO_INTERNAL_SURFACE_TYPE_NULL,
     CAIRO_INTERNAL_SURFACE_TYPE_TYPE3_GLYPH
 } cairo_internal_surface_type_t;
+
+typedef enum _cairo_internal_device_type {
+    CAIRO_INTERNAL_DEVICE_TYPE_OBSERVER = 0x1000,
+} cairo_device_surface_type_t;
 
 #define CAIRO_HAS_TEST_PAGINATED_SURFACE 1
 #define CAIRO_HAS_TEST_NULL_SURFACE 1
