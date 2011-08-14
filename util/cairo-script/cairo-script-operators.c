@@ -2849,7 +2849,7 @@ _image_read_raw (csi_file_t *src,
 {
     cairo_surface_t *image;
     uint8_t *bp, *data;
-    int rem, len, ret, x, rowlen, stride;
+    int rem, len, ret, x, rowlen, instride, stride;
     cairo_status_t status;
 
     stride = cairo_format_stride_for_width (format, width);
@@ -2870,22 +2870,23 @@ _image_read_raw (csi_file_t *src,
 
     switch (format) {
     case CAIRO_FORMAT_A1:
-	rowlen = (width+7)/8;
+	instride = rowlen = (width+7)/8;
 	break;
     case CAIRO_FORMAT_A8:
-	rowlen = width;
+	instride = rowlen = width;
 	break;
     case CAIRO_FORMAT_RGB16_565:
-	rowlen = 2 * width;
+	instride = rowlen = 2 * width;
 	break;
     case CAIRO_FORMAT_RGB24:
 	rowlen = 3 * width;
+	instride = 4 *width;
 	break;
     default:
     case CAIRO_FORMAT_RGB30:
     case CAIRO_FORMAT_INVALID:
     case CAIRO_FORMAT_ARGB32:
-	rowlen = 4 * width;
+	instride = rowlen = 4 * width;
 	break;
     }
     len = rowlen * height;
@@ -2951,7 +2952,7 @@ _image_read_raw (csi_file_t *src,
 		break;
 	    }
 
-	    memset (row + rowlen, 0, stride - rowlen);
+	    memset (row + instride, 0, stride - instride);
 	}
 
 	/* need to treat last row carefully */
@@ -3039,7 +3040,7 @@ _image_read_raw (csi_file_t *src,
 	    /* stride == width */
 	    break;
 	}
-	memset (data + rowlen, 0, stride - rowlen);
+	memset (data + instride, 0, stride - instride);
     } else {
 #ifndef WORDS_BIGENDIAN
 	switch (format) {
