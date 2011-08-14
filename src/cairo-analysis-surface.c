@@ -95,31 +95,81 @@ _cairo_analysis_surface_merge_status (cairo_int_status_t status_a,
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
+struct proxy {
+    cairo_surface_t base;
+    cairo_surface_t *target;
+};
+
+static cairo_status_t
+proxy_finish (void *abstract_surface)
+{
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static const cairo_surface_backend_t proxy_backend  = {
+    CAIRO_INTERNAL_SURFACE_TYPE_NULL,
+    proxy_finish,
+};
+
+static cairo_surface_t *
+attach_proxy (cairo_surface_t *source,
+	      cairo_surface_t *target)
+{
+    struct proxy *proxy;
+
+    proxy = malloc (sizeof (*proxy));
+    if (unlikely (proxy == NULL))
+	return _cairo_surface_create_in_error (CAIRO_STATUS_NO_MEMORY);
+
+    _cairo_surface_init (&proxy->base, &proxy_backend, NULL, target->content);
+
+    proxy->target = target;
+    _cairo_surface_attach_snapshot (source, &proxy->base, NULL);
+
+    return &proxy->base;
+}
+
+static void
+detach_proxy (cairo_surface_t *proxy)
+{
+    cairo_surface_finish (proxy);
+    cairo_surface_destroy (proxy);
+}
+
 static cairo_int_status_t
 _analyze_recording_surface_pattern (cairo_analysis_surface_t *surface,
 				    const cairo_pattern_t    *pattern)
 {
     const cairo_surface_pattern_t *surface_pattern;
-    cairo_bool_t old_has_ctm;
-    cairo_matrix_t old_ctm, p2d;
+    cairo_analysis_surface_t *tmp;
+    cairo_surface_t *source, *proxy;
+    cairo_matrix_t p2d;
     cairo_status_t status;
-    cairo_surface_t *source;
 
     assert (pattern->type == CAIRO_PATTERN_TYPE_SURFACE);
     surface_pattern = (const cairo_surface_pattern_t *) pattern;
     assert (surface_pattern->surface->type == CAIRO_SURFACE_TYPE_RECORDING);
+    source = surface_pattern->surface;
 
-    old_ctm = surface->ctm;
-    old_has_ctm = surface->has_ctm;
+    proxy = _cairo_surface_has_snapshot (source, &proxy_backend);
+    if (proxy != NULL) {
+	/* nothing untoward found so far */
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    tmp = (cairo_analysis_surface_t *)
+	_cairo_analysis_surface_create (surface->target);
+    if (unlikely (tmp->base.status))
+	return tmp->base.status;
+    proxy = attach_proxy (source, &tmp->base);
 
     p2d = pattern->matrix;
     status = cairo_matrix_invert (&p2d);
     assert (status == CAIRO_STATUS_SUCCESS);
 
-    cairo_matrix_multiply (&surface->ctm, &p2d, &surface->ctm);
-    surface->has_ctm = ! _cairo_matrix_is_identity (&surface->ctm);
+    cairo_matrix_multiply (&tmp->ctm, &p2d, &surface->ctm);
+    tmp->has_ctm = ! _cairo_matrix_is_identity (&tmp->ctm);
 
-    source = surface_pattern->surface;
     if (_cairo_surface_is_snapshot (source))
 	source = _cairo_surface_snapshot_get_target (source);
     if (source->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
@@ -127,10 +177,9 @@ _analyze_recording_surface_pattern (cairo_analysis_surface_t *surface,
 	source = sub->target;
     }
 
-    status = _cairo_recording_surface_replay_and_create_regions (source, &surface->base);
-
-    surface->ctm = old_ctm;
-    surface->has_ctm = old_has_ctm;
+    status = _cairo_recording_surface_replay_and_create_regions (source, &tmp->base);
+    detach_proxy (proxy);
+    cairo_surface_destroy (&tmp->base);
 
     return status;
 }
