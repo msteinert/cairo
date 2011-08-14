@@ -3057,7 +3057,7 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     cairo_glyph_t stack_glyphs[CAIRO_STACK_ARRAY_LENGTH (cairo_glyph_t)];
     cairo_text_cluster_t stack_clusters[CAIRO_STACK_ARRAY_LENGTH (cairo_text_cluster_t)];
     cairo_scaled_font_t *scaled_font;
-    cairo_glyph_text_info_t info;
+    cairo_glyph_text_info_t info, *i;
 
     if (unlikely (cr->status))
 	return;
@@ -3100,13 +3100,17 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     if (num_glyphs == 0)
 	return;
 
-    info.utf8 = utf8;
-    info.utf8_len = utf8_len;
-    info.clusters = clusters;
-    info.num_clusters = num_clusters;
-    info.cluster_flags = cluster_flags;
+    i = NULL;
+    if (has_show_text_glyphs) {
+	info.utf8 = utf8;
+	info.utf8_len = utf8_len;
+	info.clusters = clusters;
+	info.num_clusters = num_clusters;
+	info.cluster_flags = cluster_flags;
+	i = &info;
+    }
 
-    status = cr->backend->glyphs (cr, glyphs, num_glyphs, &info);
+    status = cr->backend->glyphs (cr, glyphs, num_glyphs, i);
     if (unlikely (status))
 	goto BAIL;
 
