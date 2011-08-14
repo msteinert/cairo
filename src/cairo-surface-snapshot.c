@@ -157,6 +157,7 @@ _cairo_surface_snapshot_copy_on_write (cairo_surface_t *surface)
 
 done:
     status = _cairo_surface_set_error (surface, clone->status);
+    assert (! _cairo_surface_is_snapshot (clone));
     snapshot->target = snapshot->clone = clone;
     snapshot->base.type = clone->type;
 }
@@ -195,7 +196,7 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
     if (surface->snapshot_of != NULL)
 	return cairo_surface_reference (surface);
 
-    if (surface->backend == &_cairo_surface_snapshot_backend)
+    if (_cairo_surface_is_snapshot (surface))
 	return cairo_surface_reference (surface);
 
     snapshot = (cairo_surface_snapshot_t *)

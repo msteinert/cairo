@@ -172,10 +172,8 @@ _analyze_recording_surface_pattern (cairo_analysis_surface_t *surface,
 
     if (_cairo_surface_is_snapshot (source))
 	source = _cairo_surface_snapshot_get_target (source);
-    if (source->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
-	cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) source;
-	source = sub->target;
-    }
+    if (_cairo_surface_is_subsurface (source))
+	source = _cairo_surface_subsurface_get_target (source);
 
     status = _cairo_recording_surface_replay_and_create_regions (source, &tmp->base);
     detach_proxy (proxy);
