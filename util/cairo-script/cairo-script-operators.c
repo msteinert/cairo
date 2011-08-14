@@ -6085,6 +6085,7 @@ _record (csi_t *ctx)
     switch (array->stack.len) {
     case 0:
 	r = NULL;
+	break;
     case 2:
 	extents.x = extents.y = 0;
 	extents.width = _csi_object_as_real (&array->stack.objects[0]);
