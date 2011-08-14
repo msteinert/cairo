@@ -108,6 +108,12 @@
  * This macro can be used to conditionally compile backend-specific code.
  */
 
+typedef enum {
+    CAIRO_PS_COMPRESS_NONE,
+    CAIRO_PS_COMPRESS_LZW,
+    CAIRO_PS_COMPRESS_DEFLATE
+ } cairo_ps_compress_t;
+
 static const cairo_surface_backend_t cairo_ps_surface_backend;
 static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backend;
 
@@ -2044,9 +2050,12 @@ static cairo_status_t
 _cairo_ps_surface_emit_base85_string (cairo_ps_surface_t    *surface,
 				      const unsigned char   *data,
 				      unsigned long	     length,
+				      cairo_ps_compress_t    compress,
 				      cairo_bool_t           use_strings)
 {
-    cairo_output_stream_t *base85_stream, *string_array_stream;
+    cairo_output_stream_t *base85_stream, *string_array_stream, *deflate_stream;
+    unsigned char *data_compressed;
+    unsigned long data_compressed_size;
     cairo_status_t status, status2;
 
     if (use_strings)
@@ -2065,8 +2074,39 @@ _cairo_ps_surface_emit_base85_string (cairo_ps_surface_t    *surface,
 	return _cairo_output_stream_destroy (base85_stream);
     }
 
-    _cairo_output_stream_write (base85_stream, data, length);
+    switch (compress) {
+	case CAIRO_PS_COMPRESS_NONE:
+	    _cairo_output_stream_write (base85_stream, data, length);
+	    break;
 
+	case CAIRO_PS_COMPRESS_LZW:
+	    /* XXX: Should fix cairo-lzw to provide a stream-based interface
+	     * instead. */
+	    data_compressed_size = length;
+	    data_compressed = _cairo_lzw_compress ((unsigned char*)data, &data_compressed_size);
+	    if (unlikely (data_compressed == NULL)) {
+		status = _cairo_output_stream_destroy (string_array_stream);
+		status = _cairo_output_stream_destroy (base85_stream);
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    }
+	    _cairo_output_stream_write (base85_stream, data_compressed, data_compressed_size);
+	    free (data_compressed);
+	    break;
+
+	case CAIRO_PS_COMPRESS_DEFLATE:
+	    deflate_stream = _cairo_deflate_stream_create (base85_stream);
+	    if (_cairo_output_stream_get_status (deflate_stream)) {
+		return _cairo_output_stream_destroy (deflate_stream);
+	    }
+	    _cairo_output_stream_write (deflate_stream, data, length);
+	    status = _cairo_output_stream_destroy (deflate_stream);
+	    if (unlikely (status)) {
+		status2 = _cairo_output_stream_destroy (string_array_stream);
+		status2 = _cairo_output_stream_destroy (base85_stream);
+		return _cairo_output_stream_destroy (deflate_stream);
+	    }
+	    break;
+    }
     status = _cairo_output_stream_destroy (base85_stream);
 
     /* Mark end of base85 data */
@@ -2074,7 +2114,6 @@ _cairo_ps_surface_emit_base85_string (cairo_ps_surface_t    *surface,
     status2 = _cairo_output_stream_destroy (string_array_stream);
     if (status == CAIRO_STATUS_SUCCESS)
 	status = status2;
-
 
     return status;
 }
@@ -2086,8 +2125,8 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 			      cairo_filter_t         filter)
 {
     cairo_status_t status;
-    unsigned char *data, *data_compressed;
-    unsigned long data_size, data_compressed_size;
+    unsigned char *data;
+    unsigned long data_size;
     cairo_image_surface_t *ps_image = image;
     int x, y, i;
     cairo_image_transparency_t transparency;
@@ -2096,6 +2135,8 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
     int bit;
     cairo_image_color_t color;
     const char *interpolate;
+    cairo_ps_compress_t compress;
+    const char *compress_filter;
 
     if (image->base.status)
 	return image->base.status;
@@ -2244,13 +2285,13 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 	}
     }
 
-    /* XXX: Should fix cairo-lzw to provide a stream-based interface
-     * instead. */
-    data_compressed_size = data_size;
-    data_compressed = _cairo_lzw_compress (data, &data_compressed_size);
-    if (unlikely (data_compressed == NULL)) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto bail2;
+    if (surface->ps_level == CAIRO_PS_LEVEL_2) {
+	compress = CAIRO_PS_COMPRESS_LZW;
+	compress_filter = "LZWDecode";
+    } else {
+	compress = CAIRO_PS_COMPRESS_DEFLATE;
+	compress_filter = "FlateDecode";
+	surface->ps_level_used = CAIRO_PS_LEVEL_3;
     }
 
     if (surface->use_string_datasource) {
@@ -2260,11 +2301,12 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 				     "/CairoImageData [\n");
 
 	status = _cairo_ps_surface_emit_base85_string (surface,
-						       data_compressed,
-						       data_compressed_size,
+						       data,
+						       data_size,
+						       compress,
 						       TRUE);
 	if (unlikely (status))
-	    goto bail3;
+	    goto bail2;
 
 	_cairo_output_stream_printf (surface->stream,
 				     "] def\n");
@@ -2300,10 +2342,12 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 					 "	/CairoImageDataIndex CairoImageDataIndex 1 add def\n"
 					 "	CairoImageDataIndex CairoImageData length 1 sub gt\n"
 					 "       { /CairoImageDataIndex 0 def } if\n"
-					 "    } /ASCII85Decode filter /LZWDecode filter def\n");
+					 "    } /ASCII85Decode filter /%s filter def\n",
+					 compress_filter);
 	} else {
 	    _cairo_output_stream_printf (surface->stream,
-					 "    /DataSource currentfile /ASCII85Decode filter /LZWDecode filter def\n");
+					 "    /DataSource currentfile /ASCII85Decode filter /%s filter def\n",
+					 compress_filter);
 	}
 
 	_cairo_output_stream_printf (surface->stream,
@@ -2349,10 +2393,12 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 					 "    /CairoImageDataIndex CairoImageDataIndex 1 add def\n"
 					 "    CairoImageDataIndex CairoImageData length 1 sub gt\n"
 					 "     { /CairoImageDataIndex 0 def } if\n"
-					 "  } /ASCII85Decode filter /LZWDecode filter def\n");
+					 "  } /ASCII85Decode filter /%s filter def\n",
+					 compress_filter);
 	} else {
 	    _cairo_output_stream_printf (surface->stream,
-					 "  /DataSource currentfile /ASCII85Decode filter /LZWDecode filter def\n");
+					 "  /DataSource currentfile /ASCII85Decode filter /%s filter def\n",
+					 compress_filter);
 	}
 
 	_cairo_output_stream_printf (surface->stream,
@@ -2368,16 +2414,14 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 	/* Emit the image data as a base85-encoded string which will
 	 * be used as the data source for the image operator. */
 	status = _cairo_ps_surface_emit_base85_string (surface,
-						       data_compressed,
-						       data_compressed_size,
+						       data,
+						       data_size,
+						       compress,
 						       FALSE);
 	_cairo_output_stream_printf (surface->stream, "\n");
     } else {
 	status = CAIRO_STATUS_SUCCESS;
     }
-
-bail3:
-    free (data_compressed);
 
 bail2:
     free (data);
@@ -2423,6 +2467,7 @@ _cairo_ps_surface_emit_jpeg_image (cairo_ps_surface_t    *surface,
 	status = _cairo_ps_surface_emit_base85_string (surface,
 						       mime_data,
 						       mime_data_length,
+						       CAIRO_PS_COMPRESS_NONE,
 						       TRUE);
 	if (unlikely (status))
 	    return status;
@@ -2472,6 +2517,7 @@ _cairo_ps_surface_emit_jpeg_image (cairo_ps_surface_t    *surface,
 	status = _cairo_ps_surface_emit_base85_string (surface,
 						       mime_data,
 						       mime_data_length,
+						       CAIRO_PS_COMPRESS_NONE,
 						       FALSE);
     }
 
@@ -3446,8 +3492,6 @@ _cairo_ps_surface_emit_mesh_pattern (cairo_ps_surface_t     *surface,
     cairo_matrix_t pat_to_ps;
     cairo_status_t status;
     cairo_pdf_shading_t shading;
-    unsigned char *data_compressed;
-    unsigned long data_compressed_size;
     int i;
 
     if (_cairo_array_num_elements (&pattern->patches) == 0)
@@ -3469,7 +3513,7 @@ _cairo_ps_surface_emit_mesh_pattern (cairo_ps_surface_t     *surface,
 				 "   /Shading\n"
 				 "   << /ShadingType %d\n"
 				 "      /ColorSpace /DeviceRGB\n"
-				 "      /DataSource currentfile /ASCII85Decode filter /LZWDecode filter\n"
+				 "      /DataSource currentfile /ASCII85Decode filter /FlateDecode filter\n"
 				 "      /BitsPerCoordinate %d\n"
 				 "      /BitsPerComponent %d\n"
 				 "      /BitsPerFlag %d\n"
@@ -3495,20 +3539,15 @@ _cairo_ps_surface_emit_mesh_pattern (cairo_ps_surface_t     *surface,
     _cairo_output_stream_printf (surface->stream,
 				 "makepattern\n");
 
-    data_compressed_size = shading.data_length;
-    data_compressed = _cairo_lzw_compress (shading.data, &data_compressed_size);
-    if (unlikely (data_compressed == NULL))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
     status = _cairo_ps_surface_emit_base85_string (surface,
-						   data_compressed,
-						   data_compressed_size,
+						   shading.data,
+						   shading.data_length,
+						   CAIRO_PS_COMPRESS_DEFLATE,
 						   FALSE);
     _cairo_output_stream_printf (surface->stream,
 				 "\n"
 				 "setpattern\n");
 
-    free (data_compressed);
     _cairo_pdf_shading_fini (&shading);
 
     return status;
