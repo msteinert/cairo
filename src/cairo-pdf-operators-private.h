@@ -43,6 +43,7 @@
 #define CAIRO_PDF_OPERATORS_H
 
 #include "cairo-compiler-private.h"
+#include "cairo-error-private.h"
 #include "cairo-types-private.h"
 
 /* The glyph buffer size is based on the expected maximum glyphs in a

@@ -36,6 +36,8 @@
 #ifndef CAIRO_SURFACE_SNAPSHOT_PRIVATE_H
 #define CAIRO_SURFACE_SNAPSHOT_PRIVATE_H
 
+#include "cairoint.h" /* cairo_surface_backend_t */
+
 #include "cairo-device-private.h"
 #include "cairo-surface-private.h"
 

@@ -38,6 +38,7 @@
 #define CAIRO_COMPOSITE_RECTANGLES_PRIVATE_H
 
 #include "cairo-types-private.h"
+#include "cairo-error-private.h"
 
 CAIRO_BEGIN_DECLS
 
