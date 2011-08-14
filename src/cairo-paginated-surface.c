@@ -646,7 +646,7 @@ _cairo_paginated_surface_snapshot (void *abstract_other)
 {
     cairo_paginated_surface_t *other = abstract_other;
 
-    return _cairo_surface_snapshot (other->recording_surface);
+    return other->recording_surface->backend->snapshot (other->recording_surface);
 }
 
 static cairo_t *
