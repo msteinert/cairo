@@ -93,40 +93,6 @@ _cairo_xlib_call_close_display_hooks (cairo_xlib_display_t *display)
     display->closed = TRUE;
 }
 
-static void
-_cairo_xlib_display_finish (void *abstract_display)
-{
-    cairo_xlib_display_t *display = abstract_display;
-
-    display->display = NULL;
-}
-
-static void
-_cairo_xlib_display_destroy (void *abstract_display)
-{
-    cairo_xlib_display_t *display = abstract_display;
-
-    /* destroy all outstanding notifies */
-    while (display->workqueue != NULL) {
-	cairo_xlib_job_t *job = display->workqueue;
-	display->workqueue = job->next;
-
-	if (job->type == WORK && job->func.work.destroy != NULL)
-	    job->func.work.destroy (job->func.work.data);
-
-	_cairo_freelist_free (&display->wq_freelist, job);
-    }
-    _cairo_freelist_fini (&display->wq_freelist);
-
-    while (! cairo_list_is_empty (&display->screens)) {
-	_cairo_xlib_screen_destroy (cairo_list_first_entry (&display->screens,
-                                                            cairo_xlib_screen_t,
-                                                            link));
-    }
-
-    free (display);
-}
-
 static int
 _noop_error_handler (Display     *display,
 		     XErrorEvent *event)
@@ -187,11 +153,64 @@ _cairo_xlib_display_notify (cairo_xlib_display_t *display)
     }
 }
 
+static void
+_cairo_xlib_display_finish (void *abstract_display)
+{
+    cairo_xlib_display_t *display = abstract_display;
+    Display *dpy = display->display;
+
+    if (! cairo_device_acquire (&display->base)) {
+	cairo_xlib_error_func_t old_handler;
+
+	/* protect the notifies from triggering XErrors */
+	XSync (dpy, False);
+	old_handler = XSetErrorHandler (_noop_error_handler);
+
+	_cairo_xlib_display_notify (display);
+	_cairo_xlib_call_close_display_hooks (display);
+
+	/* catch any that arrived before marking the display as closed */
+	_cairo_xlib_display_notify (display);
+
+	XSync (dpy, False);
+	XSetErrorHandler (old_handler);
+
+	cairo_device_release (&display->base);
+    }
+
+    display->display = NULL;
+}
+
+static void
+_cairo_xlib_display_destroy (void *abstract_display)
+{
+    cairo_xlib_display_t *display = abstract_display;
+
+    /* destroy all outstanding notifies */
+    while (display->workqueue != NULL) {
+	cairo_xlib_job_t *job = display->workqueue;
+	display->workqueue = job->next;
+
+	if (job->type == WORK && job->func.work.destroy != NULL)
+	    job->func.work.destroy (job->func.work.data);
+
+	_cairo_freelist_free (&display->wq_freelist, job);
+    }
+    _cairo_freelist_fini (&display->wq_freelist);
+
+    while (! cairo_list_is_empty (&display->screens)) {
+	_cairo_xlib_screen_destroy (cairo_list_first_entry (&display->screens,
+                                                            cairo_xlib_screen_t,
+                                                            link));
+    }
+
+    free (display);
+}
+
 static int
 _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
 {
     cairo_xlib_display_t *display, **prev, *next;
-    cairo_xlib_error_func_t old_handler;
 
     CAIRO_MUTEX_LOCK (_cairo_xlib_display_mutex);
     for (display = _cairo_xlib_display_list; display; display = display->next)
@@ -201,22 +220,7 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
     if (display == NULL)
 	return 0;
 
-    if (! cairo_device_acquire (&display->base)) {
-      /* protect the notifies from triggering XErrors */
-      XSync (dpy, False);
-      old_handler = XSetErrorHandler (_noop_error_handler);
-
-      _cairo_xlib_display_notify (display);
-      _cairo_xlib_call_close_display_hooks (display);
-
-      /* catch any that arrived before marking the display as closed */
-      _cairo_xlib_display_notify (display);
-
-      XSync (dpy, False);
-      XSetErrorHandler (old_handler);
-
-      cairo_device_release (&display->base);
-    }
+    cairo_device_finish (&display->base);
 
     /*
      * Unhook from the global list
@@ -235,7 +239,6 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
 
     assert (display != NULL);
 
-    cairo_device_finish (&display->base);
     cairo_device_destroy (&display->base);
 
     /* Return value in accordance with requirements of

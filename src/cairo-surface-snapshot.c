@@ -145,7 +145,10 @@ _cairo_surface_snapshot_copy_on_write (cairo_surface_t *surface)
 	    goto done;
     }
 
-    /* XXX copy to a similar surface, leave acquisition till later? */
+    /* XXX copy to a similar surface, leave acquisition till later?
+     * We should probably leave such decisions to the backend in case we
+     * rely upon devices/connections like Xlib.
+    */
     status = _cairo_surface_acquire_source_image (snapshot->target, &image, &extra);
     if (unlikely (status)) {
 	snapshot->target = _cairo_surface_create_in_error (status);

@@ -277,6 +277,15 @@ _cairo_xlib_screen_close_display (cairo_xlib_display_t *display,
 
     dpy = display->display;
 
+    while (! cairo_list_is_empty (&info->surfaces)) {
+	cairo_xlib_surface_t *surface;
+
+	surface = cairo_list_first_entry (&info->surfaces,
+					  cairo_xlib_surface_t,
+					  link);
+	cairo_surface_finish (&surface->base);
+    }
+
     for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
 	if (info->gc_depths[i] != 0) {
 	    XFreeGC (dpy, info->gc[i]);
@@ -336,6 +345,7 @@ _cairo_xlib_screen_get (Display *dpy,
     memset (info->gc_depths, 0, sizeof (info->gc_depths));
     memset (info->gc, 0, sizeof (info->gc));
 
+    cairo_list_init (&info->surfaces);
     cairo_list_init (&info->visuals);
     cairo_list_add (&info->link, &display->screens);
 

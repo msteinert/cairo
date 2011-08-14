@@ -46,6 +46,7 @@ struct _cairo_xlib_surface {
 
     cairo_xlib_screen_t *screen;
     cairo_xlib_hook_t close_display_hook;
+    cairo_list_t link;
 
     Drawable drawable;
     cairo_bool_t owns_pixmap;

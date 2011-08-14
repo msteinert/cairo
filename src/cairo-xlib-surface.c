@@ -466,6 +466,8 @@ _cairo_xlib_surface_finish (void *abstract_surface)
 
     X_DEBUG ((display->display, "finish (drawable=%x)", (unsigned int) surface->drawable));
 
+    cairo_list_del (&surface->link);
+
     status = _cairo_xlib_display_acquire (surface->base.device, &display);
     if (unlikely (status))
         return status;
@@ -3387,6 +3389,8 @@ found:
 	surface->g_mask = 0;
 	surface->b_mask = 0;
     }
+
+    cairo_list_add (&surface->link, &screen->surfaces);
 
     return &surface->base;
 }
