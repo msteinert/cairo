@@ -876,12 +876,12 @@ print_pattern (cairo_output_stream_t *stream,
 	       const struct pattern *p)
 {
     _cairo_output_stream_printf (stream,
-				 "  %s: %d native, %d record, %d other surface, %d solid, %d linear, %d radial, %d mesh\n",
+				 "  %s: %d solid, %d native, %d record, %d other surface, %d linear, %d radial, %d mesh\n",
 				 name,
+				 p->type[3], /* solid first */
 				 p->type[0],
 				 p->type[1],
 				 p->type[2],
-				 p->type[3],
 				 p->type[4],
 				 p->type[5],
 				 p->type[6]);
