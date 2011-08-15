@@ -568,6 +568,8 @@ _cairo_surface_observer_stroke (void				*abstract_surface,
     surface->log.stroke.count++;
     surface->log.stroke.operators[op]++;
     surface->log.stroke.antialias[antialias]++;
+    surface->log.stroke.caps[style->line_cap]++;
+    surface->log.stroke.joins[style->line_join]++;
     add_pattern (&surface->log.stroke.source, source, surface->target);
     add_path (&surface->log.stroke.path, path, FALSE);
     add_clip (&surface->log.stroke.clip, clip);
@@ -575,6 +577,8 @@ _cairo_surface_observer_stroke (void				*abstract_surface,
     device->log.stroke.count++;
     device->log.stroke.operators[op]++;
     device->log.stroke.antialias[antialias]++;
+    device->log.stroke.caps[style->line_cap]++;
+    device->log.stroke.joins[style->line_join]++;
     add_pattern (&device->log.stroke.source, source, surface->target);
     add_path (&device->log.stroke.path, path, FALSE);
     add_clip (&device->log.stroke.clip, clip);
@@ -879,6 +883,27 @@ static inline int ordercmp (int a, int b, unsigned int *array)
 CAIRO_COMBSORT_DECLARE_WITH_DATA (sort_order, int, ordercmp)
 
 static void
+print_array (cairo_output_stream_t *stream,
+	     unsigned int *array,
+	     const char **names,
+	     int count)
+{
+    int order[64];
+    int i, j;
+
+    assert (count < ARRAY_LENGTH (order));
+    for (i = j = 0; i < count; i++) {
+	if (array[i] != 0)
+	    order[j++] = i;
+    }
+
+    sort_order (order, j, array);
+    for (i = 0; i < j; i++)
+	_cairo_output_stream_printf (stream, " %d %s",
+				     array[order[i]], names[order[i]]);
+}
+
+static void
 print_operators (cairo_output_stream_t *stream, unsigned int *array)
 {
     static const char *names[] = {
@@ -916,19 +941,35 @@ print_operators (cairo_output_stream_t *stream, unsigned int *array)
 	"HSL_COLOR",	/* CAIRO_OPERATOR_HSL_COLOR */
 	"HSL_LUMINOSITY" /* CAIRO_OPERATOR_HSL_LUMINOSITY */
     };
-    int order[NUM_OPERATORS];
-    int i, j;
-
-    for (i = j = 0; i < NUM_OPERATORS; i++) {
-	if (array[i] != 0)
-	    order[j++] = i;
-    }
 
     _cairo_output_stream_printf (stream, "  op:");
-    sort_order (order, j, array);
-    for (i = 0; i < j; i++)
-	_cairo_output_stream_printf (stream, " %d %s",
-				     array[order[i]], names[order[i]]);
+    print_array (stream, array, names, NUM_OPERATORS);
+    _cairo_output_stream_printf (stream, "\n");
+}
+
+static void
+print_line_caps (cairo_output_stream_t *stream, unsigned int *array)
+{
+    static const char *names[] = {
+	"butt",		/* CAIRO_LINE_CAP_BUTT */
+	"round",	/* CAIRO_LINE_CAP_ROUND */
+	"square"	/* CAIRO_LINE_CAP_SQUARE */
+    };
+    _cairo_output_stream_printf (stream, "  caps:");
+    print_array (stream, array, names, NUM_CAPS);
+    _cairo_output_stream_printf (stream, "\n");
+}
+
+static void
+print_line_joins (cairo_output_stream_t *stream, unsigned int *array)
+{
+    static const char *names[] = {
+	"miter",	/* CAIRO_LINE_JOIN_MITER */
+	"round",	/* CAIRO_LINE_JOIN_ROUND */
+	"bevel",	/* CAIRO_LINE_JOIN_BEVEL */
+    };
+    _cairo_output_stream_printf (stream, "  joins:");
+    print_array (stream, array, names, NUM_JOINS);
     _cairo_output_stream_printf (stream, "\n");
 }
 
@@ -1020,6 +1061,8 @@ _cairo_observation_print (cairo_output_stream_t *stream,
 	print_operators (stream, log->stroke.operators);
 	print_pattern (stream, "source", &log->stroke.source);
 	print_path (stream, &log->stroke.path);
+	print_line_caps (stream, log->stroke.caps);
+	print_line_joins (stream, log->stroke.joins);
 	print_clip (stream, &log->stroke.clip);
     }
 
