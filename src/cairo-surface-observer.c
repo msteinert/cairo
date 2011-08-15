@@ -35,6 +35,7 @@
 
 #include "cairoint.h"
 
+#include "cairo-combsort-private.h"
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-error-private.h"
 #include "cairo-image-surface-private.h"
@@ -870,6 +871,67 @@ print_extents (cairo_output_stream_t *stream, const struct extents *e)
 				 e->unbounded);
 }
 
+static inline int ordercmp (int a, int b, unsigned int *array)
+{
+    /* high to low */
+    return array[b] - array[a];
+}
+CAIRO_COMBSORT_DECLARE_WITH_DATA (sort_order, int, ordercmp)
+
+static void
+print_operators (cairo_output_stream_t *stream, unsigned int *array)
+{
+    static const char *names[] = {
+	"CLEAR",	/* CAIRO_OPERATOR_CLEAR */
+
+	"SOURCE",	/* CAIRO_OPERATOR_SOURCE */
+	"OVER",		/* CAIRO_OPERATOR_OVER */
+	"IN",		/* CAIRO_OPERATOR_IN */
+	"OUT",		/* CAIRO_OPERATOR_OUT */
+	"ATOP",		/* CAIRO_OPERATOR_ATOP */
+
+	"DEST",		/* CAIRO_OPERATOR_DEST */
+	"DEST_OVER",	/* CAIRO_OPERATOR_DEST_OVER */
+	"DEST_IN",	/* CAIRO_OPERATOR_DEST_IN */
+	"DEST_OUT",	/* CAIRO_OPERATOR_DEST_OUT */
+	"DEST_ATOP",	/* CAIRO_OPERATOR_DEST_ATOP */
+
+	"XOR",		/* CAIRO_OPERATOR_XOR */
+	"ADD",		/* CAIRO_OPERATOR_ADD */
+	"SATURATE",	/* CAIRO_OPERATOR_SATURATE */
+
+	"MULTIPLY",	/* CAIRO_OPERATOR_MULTIPLY */
+	"SCREEN",	/* CAIRO_OPERATOR_SCREEN */
+	"OVERLAY",	/* CAIRO_OPERATOR_OVERLAY */
+	"DARKEN",	/* CAIRO_OPERATOR_DARKEN */
+	"LIGHTEN",	/* CAIRO_OPERATOR_LIGHTEN */
+	"DODGE",	/* CAIRO_OPERATOR_COLOR_DODGE */
+	"BURN",		/* CAIRO_OPERATOR_COLOR_BURN */
+	"HARD_LIGHT",	/* CAIRO_OPERATOR_HARD_LIGHT */
+	"SOFT_LIGHT",	/* CAIRO_OPERATOR_SOFT_LIGHT */
+	"DIFFERENCE",	/* CAIRO_OPERATOR_DIFFERENCE */
+	"EXCLUSION",	/* CAIRO_OPERATOR_EXCLUSION */
+	"HSL_HUE",	/* CAIRO_OPERATOR_HSL_HUE */
+	"HSL_SATURATION", /* CAIRO_OPERATOR_HSL_SATURATION */
+	"HSL_COLOR",	/* CAIRO_OPERATOR_HSL_COLOR */
+	"HSL_LUMINOSITY" /* CAIRO_OPERATOR_HSL_LUMINOSITY */
+    };
+    int order[NUM_OPERATORS];
+    int i, j;
+
+    for (i = j = 0; i < NUM_OPERATORS; i++) {
+	if (array[i] != 0)
+	    order[j++] = i;
+    }
+
+    _cairo_output_stream_printf (stream, "  op:");
+    sort_order (order, j, array);
+    for (i = 0; i < j; i++)
+	_cairo_output_stream_printf (stream, " %d %s",
+				     array[order[i]], names[order[i]]);
+    _cairo_output_stream_printf (stream, "\n");
+}
+
 static void
 print_pattern (cairo_output_stream_t *stream,
 	       const char *name,
@@ -926,6 +988,7 @@ _cairo_observation_print (cairo_output_stream_t *stream,
 				 log->paint.count, log->paint.noop);
     if (log->paint.count) {
 	print_extents (stream, &log->paint.extents);
+	print_operators (stream, log->paint.operators);
 	print_pattern (stream, "source", &log->paint.source);
 	print_clip (stream, &log->paint.clip);
     }
@@ -934,6 +997,7 @@ _cairo_observation_print (cairo_output_stream_t *stream,
 				 log->mask.count, log->mask.noop);
     if (log->mask.count) {
 	print_extents (stream, &log->mask.extents);
+	print_operators (stream, log->mask.operators);
 	print_pattern (stream, "source", &log->mask.source);
 	print_pattern (stream, "mask", &log->mask.mask);
 	print_clip (stream, &log->mask.clip);
@@ -943,6 +1007,7 @@ _cairo_observation_print (cairo_output_stream_t *stream,
 				 log->fill.count, log->fill.noop);
     if (log->fill.count) {
 	print_extents (stream, &log->fill.extents);
+	print_operators (stream, log->fill.operators);
 	print_pattern (stream, "source", &log->fill.source);
 	print_path (stream, &log->fill.path);
 	print_clip (stream, &log->fill.clip);
@@ -952,6 +1017,7 @@ _cairo_observation_print (cairo_output_stream_t *stream,
 				 log->stroke.count, log->stroke.noop);
     if (log->stroke.count) {
 	print_extents (stream, &log->stroke.extents);
+	print_operators (stream, log->stroke.operators);
 	print_pattern (stream, "source", &log->stroke.source);
 	print_path (stream, &log->stroke.path);
 	print_clip (stream, &log->stroke.clip);
@@ -961,6 +1027,7 @@ _cairo_observation_print (cairo_output_stream_t *stream,
 				 log->glyphs.count, log->glyphs.noop);
     if (log->glyphs.count) {
 	print_extents (stream, &log->glyphs.extents);
+	print_operators (stream, log->glyphs.operators);
 	print_pattern (stream, "source", &log->glyphs.source);
 	print_clip (stream, &log->glyphs.clip);
     }
