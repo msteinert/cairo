@@ -164,6 +164,7 @@ cairo_sources = \
 	cairo-path-in-fill.c \
 	cairo-path-stroke.c \
 	cairo-path-stroke-boxes.c \
+	cairo-path-stroke-polygon.c \
 	cairo-pattern.c \
 	cairo-pen.c \
 	cairo-polygon.c \
