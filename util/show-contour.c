@@ -2,37 +2,32 @@
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <gdk/gdkkeysyms.h>
 #include <math.h>
 
 typedef struct _point {
     gdouble x, y;
 } point_t;
-typedef struct _edge {
-    point_t p1, p2;
-    gdouble top, bot;
-    int dir;
-} edge_t;
 typedef struct _box {
     point_t p1, p2;
 } box_t;
 
-typedef struct _polygon {
-    struct _polygon *next, *prev;
-    int num_edges;
+typedef struct _contour {
+    struct _contour *next, *prev;
+    int direction;
+    int num_points;
     int size;
-    edge_t edges[0];
-} polygon_t;
+    point_t points[0];
+} contour_t;
 
-typedef struct _PolygonView {
+typedef struct _TrapView {
     GtkWidget widget;
 
     cairo_surface_t *pixmap;
     int pixmap_width, pixmap_height;
 
     box_t extents;
-    polygon_t *polygons;
+    contour_t *contours;
 
     double px, py;
 
@@ -41,72 +36,33 @@ typedef struct _PolygonView {
     gdouble mag_zoom;
     gboolean in_mag_drag;
     gint mag_drag_x, mag_drag_y;
-} PolygonView;
+} TrapView;
 
-typedef struct _PolygonViewClass {
+typedef struct _TrapViewClass {
     GtkWidgetClass parent_class;
-} PolygonViewClass;
+} TrapViewClass;
 
-G_DEFINE_TYPE (PolygonView, polygon_view, GTK_TYPE_WIDGET)
-
-static void draw_edges (cairo_t *cr, polygon_t *p, gdouble sf, int dir)
-{
-    int n;
-
-    for (n = 0; n < p->num_edges; n++) {
-	const edge_t *e = &p->edges[n];
-
-	if (e->dir != dir)
-	    continue;
-
-	cairo_arc (cr, e->p1.x, e->p1.y, 3/sf, 0, 2*M_PI);
-	cairo_arc (cr, e->p2.x, e->p2.y, 3/sf, 0, 2*M_PI);
-	cairo_fill (cr);
-    }
-
-    for (n = 0; n < p->num_edges; n++) {
-	const edge_t *e = &p->edges[n];
-
-	if (e->dir != dir)
-	    continue;
-
-	cairo_move_to (cr, e->p1.x, e->p1.y);
-	cairo_line_to (cr, e->p2.x, e->p2.y);
-    }
-    cairo_save (cr); {
-	cairo_identity_matrix (cr);
-	cairo_set_line_width (cr, 1.);
-	cairo_stroke (cr);
-    } cairo_restore (cr);
-}
-
-static void draw_polygon (cairo_t *cr, polygon_t *p, gdouble sf)
-{
-    cairo_set_source_rgb (cr, 0.0, 0.0, 1.0);
-    draw_edges (cr, p, sf, -1);
-
-    cairo_set_source_rgb (cr, 1.0, 0.0, 0.0);
-    draw_edges (cr, p, sf, +1);
-}
+G_DEFINE_TYPE (TrapView, trap_view, GTK_TYPE_WIDGET)
 
 static cairo_surface_t *
-pixmap_create (PolygonView *self, cairo_surface_t *target)
+pixmap_create (TrapView *self, cairo_surface_t *target)
 {
     cairo_surface_t *surface =
 	cairo_surface_create_similar (target, CAIRO_CONTENT_COLOR,
 				      self->widget.allocation.width,
 				      self->widget.allocation.height);
     cairo_t *cr = cairo_create (surface);
-    polygon_t *polygon;
+    contour_t *contour;
     gdouble sf_x, sf_y, sf;
     gdouble mid, dim;
     gdouble x0,  y0;
+    int n;
     box_t extents;
 
     cairo_set_source_rgb (cr, 1, 1, 1);
     cairo_paint (cr);
 
-    if (self->polygons == NULL) {
+    if (self->contours == NULL) {
 	cairo_destroy(cr);
 	return surface;
     }
@@ -130,29 +86,70 @@ pixmap_create (PolygonView *self, cairo_surface_t *target)
     dim = sf_y / sf * (extents.p2.y - extents.p1.y) / 2. * 1.25;
     y0 = mid - dim;
 
-    cairo_save (cr); {
-	cairo_scale (cr, sf, sf);
-	cairo_translate (cr, -x0, -y0);
+    for (contour = self->contours; contour; contour = contour->next) {
+	if (contour->num_points == 0)
+	    continue;
 
-	for (polygon = self->polygons; polygon; polygon = polygon->next) {
-	    if (polygon->num_edges == 0)
-		continue;
+	cairo_save (cr); {
+	    cairo_scale (cr, sf, sf);
+	    cairo_translate (cr, -x0, -y0);
+	    switch (contour->direction) {
+	    case -1:
+		cairo_set_source_rgb (cr, 0.0, 0.0, 1.0);
+		break;
+	    case 0:
+		cairo_set_source_rgb (cr, 0.0, 1.0, 0.0);
+		break;
+	    case 1:
+		cairo_set_source_rgb (cr, 1.0, 0.0, 0.0);
+		break;
+	    }
+	    {
+		const point_t *p = &contour->points[0];
+		cairo_arc (cr, p->x, p->y, 4/sf, 0, 2 * M_PI);
+		cairo_save (cr);
+		cairo_identity_matrix (cr);
+		cairo_stroke (cr);
+		cairo_restore (cr);
+	    }
+	    for (n = 0; n < contour->num_points; n++) {
+		const point_t *p = &contour->points[n];
+		cairo_arc (cr, p->x, p->y, 2/sf, 0, 2 * M_PI);
+		cairo_fill (cr);
+	    }
+	    for (n = 0; n < contour->num_points; n++) {
+		const point_t *p = &contour->points[n];
+		cairo_line_to (cr, p->x, p->y);
+	    }
+	} cairo_restore (cr);
 
-	    draw_polygon (cr, polygon, sf);
+	switch (contour->direction) {
+	case -1:
+	    cairo_set_source_rgb (cr, 0.3, 0.3, 0.9);
+	    break;
+	case 0:
+	    cairo_set_source_rgb (cr, 0.3, 0.9, 0.3);
+	    break;
+	case 1:
+	    cairo_set_source_rgb (cr, 0.9, 0.3, 0.3);
+	    break;
 	}
-    } cairo_restore (cr);
+	cairo_set_line_width (cr, 1.);
+	cairo_stroke (cr);
+    }
 
     cairo_destroy (cr);
     return surface;
 }
 
 static void
-polygon_view_draw (PolygonView *self, cairo_t *cr)
+trap_view_draw (TrapView *self, cairo_t *cr)
 {
-    polygon_t *polygon;
+    contour_t *contour;
     gdouble sf_x, sf_y, sf;
     gdouble mid, dim;
     gdouble x0,  y0;
+    int n;
     box_t extents;
 
     extents = self->extents;
@@ -186,7 +183,7 @@ polygon_view_draw (PolygonView *self, cairo_t *cr)
     cairo_set_source_surface (cr, self->pixmap, 0, 0);
     cairo_paint (cr);
 
-    if (self->polygons == NULL)
+    if (self->contours == NULL)
 	return;
 
     /* draw a zoom view of the area around the mouse */
@@ -220,13 +217,55 @@ polygon_view_draw (PolygonView *self, cairo_t *cr)
 	    cairo_translate (cr, mag_x + size/2, mag_y + size/2);
 
 	    cairo_save (cr); {
-		cairo_scale (cr, zoom, zoom);
-		cairo_translate (cr, -(self->px / sf + x0), -(self->py /sf + y0));
-		for (polygon = self->polygons; polygon; polygon = polygon->next) {
-		    if (polygon->num_edges == 0)
+		for (contour = self->contours; contour; contour = contour->next) {
+		    if (contour->num_points == 0)
 			continue;
 
-		    draw_polygon (cr, polygon, zoom);
+		    cairo_save (cr); {
+			cairo_scale (cr, zoom, zoom);
+			cairo_translate (cr, -(self->px / sf + x0), -(self->py /sf + y0));
+			switch (contour->direction) {
+			case -1:
+			    cairo_set_source_rgb (cr, 0.0, 0.0, 1.0);
+			    break;
+			case 0:
+			    cairo_set_source_rgb (cr, 0.0, 1.0, 0.0);
+			    break;
+			case 1:
+			    cairo_set_source_rgb (cr, 1.0, 0.0, 0.0);
+			    break;
+			}
+			{
+			    const point_t *p = &contour->points[0];
+			    cairo_arc (cr, p->x, p->y, 4/zoom, 0, 2 * M_PI);
+			    cairo_save (cr);
+			    cairo_identity_matrix (cr);
+			    cairo_stroke (cr);
+			    cairo_restore (cr);
+			}
+			for (n = 0; n < contour->num_points; n++) {
+			    const point_t *p = &contour->points[n];
+			    cairo_arc (cr, p->x, p->y, 2/zoom, 0, 2 * M_PI);
+			    cairo_fill (cr);
+			}
+			for (n = 0; n < contour->num_points; n++) {
+			    const point_t *p = &contour->points[n];
+			    cairo_line_to (cr, p->x, p->y);
+			}
+		    } cairo_restore (cr);
+
+		    switch (contour->direction) {
+		    case -1:
+			cairo_set_source_rgb (cr, 0.3, 0.3, 0.9);
+			break;
+		    case 0:
+			cairo_set_source_rgb (cr, 0.3, 0.9, 0.3);
+			break;
+		    case 1:
+			cairo_set_source_rgb (cr, 0.9, 0.3, 0.3);
+			break;
+		    }
+		    cairo_stroke (cr);
 		}
 	    } cairo_restore (cr);
 
@@ -264,24 +303,91 @@ polygon_view_draw (PolygonView *self, cairo_t *cr)
     }
 }
 
-static gboolean
-polygon_view_expose (GtkWidget *w, GdkEventExpose *ev)
+
+static gdouble
+edge_length (const point_t *p1, const point_t *p2)
 {
-    PolygonView *self = (PolygonView *) w;
+    return hypot (p2->x - p1->x, p2->y - p1->y);
+}
+
+static gdouble
+contour_compute_total_length (const contour_t *contour)
+{
+    int n;
+    gdouble len = 0.;
+    for (n = 1; n < contour->num_points; n++)
+	len += edge_length (&contour->points[n-1], &contour->points[n]);
+    return len;
+}
+
+static void
+trap_view_draw_labels (TrapView *self, cairo_t *cr)
+{
+    contour_t *contour;
+    int y = 12;
+
+    for (contour = self->contours; contour; contour = contour->next) {
+	double total_length = contour_compute_total_length (contour) / 256.;
+	PangoLayout *layout;
+	gint width, height;
+	GString *string;
+	gchar *str;
+
+	if (contour->num_points == 0)
+	    continue;
+
+	string = g_string_new (NULL);
+	g_string_append_printf (string,
+				"Number of points:\t%d\n"
+				"Total length of contour: \t%.2f",
+				contour->num_points,
+				total_length);
+
+	str = g_string_free (string, FALSE);
+	layout = gtk_widget_create_pango_layout (&self->widget, str);
+	g_free (str);
+
+	pango_layout_get_pixel_size (layout, &width, &height);
+
+	switch (contour->direction) {
+	case -1:
+	    cairo_set_source_rgb (cr, 0.9, 0.3, 0.3);
+	    break;
+	case 0:
+	    cairo_set_source_rgb (cr, 0.3, 0.9, 0.3);
+	    break;
+	case 1:
+	    cairo_set_source_rgb (cr, 0.3, 0.3, 0.9);
+	    break;
+	}
+
+	cairo_move_to (cr, 10, y);
+	pango_cairo_show_layout (cr, layout);
+	g_object_unref (layout);
+
+	y += height + 4;
+    }
+}
+
+static gboolean
+trap_view_expose (GtkWidget *w, GdkEventExpose *ev)
+{
+    TrapView *self = (TrapView *) w;
     cairo_t *cr;
 
     cr = gdk_cairo_create (w->window);
     gdk_cairo_region (cr, ev->region);
     cairo_clip (cr);
 
-    polygon_view_draw (self, cr);
+    trap_view_draw (self, cr);
+    trap_view_draw_labels (self, cr);
 
     cairo_destroy (cr);
     return FALSE;
 }
 
 static gboolean
-polygon_view_key_press (GtkWidget *w, GdkEventKey *ev)
+trap_view_key_press (GtkWidget *w, GdkEventKey *ev)
 {
     switch (ev->keyval) {
     case GDK_Escape:
@@ -294,9 +400,9 @@ polygon_view_key_press (GtkWidget *w, GdkEventKey *ev)
 }
 
 static gboolean
-polygon_view_button_press (GtkWidget *w, GdkEventButton *ev)
+trap_view_button_press (GtkWidget *w, GdkEventButton *ev)
 {
-    PolygonView *self = (PolygonView *) w;
+    TrapView *self = (TrapView *) w;
 
     if (ev->x < self->mag_x ||
 	ev->y < self->mag_y ||
@@ -315,9 +421,9 @@ polygon_view_button_press (GtkWidget *w, GdkEventButton *ev)
 }
 
 static gboolean
-polygon_view_button_release (GtkWidget *w, GdkEventButton *ev)
+trap_view_button_release (GtkWidget *w, GdkEventButton *ev)
 {
-    PolygonView *self = (PolygonView *) w;
+    TrapView *self = (TrapView *) w;
 
     self->in_mag_drag = FALSE;
 
@@ -325,7 +431,7 @@ polygon_view_button_release (GtkWidget *w, GdkEventButton *ev)
 }
 
 static void
-polygon_view_update_mouse (PolygonView *self, GdkEventMotion *ev)
+trap_view_update_mouse (TrapView *self, GdkEventMotion *ev)
 {
     self->px = ev->x;
     self->py = ev->y;
@@ -334,7 +440,7 @@ polygon_view_update_mouse (PolygonView *self, GdkEventMotion *ev)
 }
 
 static void
-polygon_view_update_magnifier (PolygonView *self, gint *xy)
+trap_view_update_magnifier (TrapView *self, gint *xy)
 {
     self->mag_x = xy[0];
     self->mag_y = xy[1];
@@ -343,9 +449,9 @@ polygon_view_update_magnifier (PolygonView *self, gint *xy)
 }
 
 static gboolean
-polygon_view_motion (GtkWidget *w, GdkEventMotion *ev)
+trap_view_motion (GtkWidget *w, GdkEventMotion *ev)
 {
-    PolygonView *self = (PolygonView *) w;
+    TrapView *self = (TrapView *) w;
 
     if (self->in_mag_drag) {
 	int xy[2];
@@ -353,7 +459,7 @@ polygon_view_motion (GtkWidget *w, GdkEventMotion *ev)
 	xy[0] = self->mag_x + ev->x - self->mag_drag_x;
 	xy[1] = self->mag_y + ev->y - self->mag_drag_y;
 
-	polygon_view_update_magnifier (self, xy);
+	trap_view_update_magnifier (self, xy);
 
 	self->mag_drag_x = ev->x;
 	self->mag_drag_y = ev->y;
@@ -362,14 +468,14 @@ polygon_view_motion (GtkWidget *w, GdkEventMotion *ev)
 	       ev->x > self->mag_x + self->mag_size ||
 	       ev->y > self->mag_y + self->mag_size)
     {
-	polygon_view_update_mouse (self, ev);
+	trap_view_update_mouse (self, ev);
     }
 
     return FALSE;
 }
 
 static void
-polygon_view_realize (GtkWidget *widget)
+trap_view_realize (GtkWidget *widget)
 {
     GdkWindowAttr attributes;
 
@@ -403,41 +509,41 @@ polygon_view_realize (GtkWidget *widget)
 }
 
 static void
-polygon_view_size_allocate (GtkWidget *w, GdkRectangle *r)
+trap_view_size_allocate (GtkWidget *w, GdkRectangle *r)
 {
-    PolygonView *self = (PolygonView *) w;
+    TrapView *self = (TrapView *) w;
 
-    GTK_WIDGET_CLASS (polygon_view_parent_class)->size_allocate (w, r);
+    GTK_WIDGET_CLASS (trap_view_parent_class)->size_allocate (w, r);
 
     self->mag_x = w->allocation.width - self->mag_size - 10;
     self->mag_y = w->allocation.height - self->mag_size - 10;
 }
 
 static void
-polygon_view_finalize (GObject *obj)
+trap_view_finalize (GObject *obj)
 {
-    G_OBJECT_CLASS (polygon_view_parent_class)->finalize (obj);
+    G_OBJECT_CLASS (trap_view_parent_class)->finalize (obj);
 }
 
 static void
-polygon_view_class_init (PolygonViewClass *klass)
+trap_view_class_init (TrapViewClass *klass)
 {
     GObjectClass *object_class = (GObjectClass *) klass;
     GtkWidgetClass *widget_class = (GtkWidgetClass *) klass;
 
-    object_class->finalize = polygon_view_finalize;
+    object_class->finalize = trap_view_finalize;
 
-    widget_class->realize = polygon_view_realize;
-    widget_class->size_allocate = polygon_view_size_allocate;
-    widget_class->expose_event = polygon_view_expose;
-    widget_class->key_press_event = polygon_view_key_press;
-    widget_class->button_press_event = polygon_view_button_press;
-    widget_class->button_release_event = polygon_view_button_release;
-    widget_class->motion_notify_event = polygon_view_motion;
+    widget_class->realize = trap_view_realize;
+    widget_class->size_allocate = trap_view_size_allocate;
+    widget_class->expose_event = trap_view_expose;
+    widget_class->key_press_event = trap_view_key_press;
+    widget_class->button_press_event = trap_view_button_press;
+    widget_class->button_release_event = trap_view_button_release;
+    widget_class->motion_notify_event = trap_view_motion;
 }
 
 static void
-polygon_view_init (PolygonView *self)
+trap_view_init (TrapView *self)
 {
     self->mag_zoom = 64;
     self->mag_size = 200;
@@ -450,72 +556,62 @@ polygon_view_init (PolygonView *self)
     GTK_WIDGET_SET_FLAGS (self, GTK_CAN_FOCUS);
 }
 
-static polygon_t *
-_polygon_add_edge (PolygonView *view, polygon_t *polygon,
-		   point_t *p1, point_t *p2,
-		   gdouble top, gdouble bot, int dir)
+static contour_t *
+_contour_add_point (TrapView *tv, contour_t *contour, point_t *p)
 {
-    if (polygon == NULL)
+    if (contour == NULL)
 	return NULL;
 
-    if (top < view->extents.p1.y)
-	view->extents.p1.y = top;
-    if (bot > view->extents.p2.y)
-	view->extents.p2.y = bot;
+    if (p->y < tv->extents.p1.y)
+	tv->extents.p1.y = p->y;
+    if (p->y > tv->extents.p2.y)
+	tv->extents.p2.y = p->y;
 
-    if (p1->x < view->extents.p1.x)
-	view->extents.p1.x = p1->x;
-    if (p1->x > view->extents.p2.x)
-	view->extents.p2.x = p1->x;
-    if (p2->x < view->extents.p1.x)
-	view->extents.p1.x = p2->x;
-    if (p2->x > view->extents.p2.x)
-	view->extents.p2.x = p2->x;
+    if (p->x < tv->extents.p1.x)
+	tv->extents.p1.x = p->x;
+    if (p->x > tv->extents.p2.x)
+	tv->extents.p2.x = p->x;
 
-    if (polygon->num_edges == polygon->size) {
-	int newsize = 2 * polygon->size;
-	void *newpolygon;
+    if (contour->num_points == contour->size) {
+	int newsize = 2 * contour->size;
+	void *newcontour;
 
-	newpolygon = g_realloc (polygon,
-			      sizeof (polygon_t) + newsize * sizeof (edge_t));
-	if (newpolygon == NULL)
-	    return polygon;
+	newcontour = g_realloc (contour,
+			      sizeof (contour_t) + newsize * sizeof (point_t));
+	if (newcontour == NULL)
+	    return contour;
 
-	polygon = newpolygon;
-	polygon->size = newsize;
+	contour = newcontour;
+	contour->size = newsize;
 
-	if (polygon->next != NULL)
-	    polygon->next->prev = newpolygon;
-	if (polygon->prev != NULL)
-	    polygon->prev->next = newpolygon;
+	if (contour->next != NULL)
+	    contour->next->prev = newcontour;
+	if (contour->prev != NULL)
+	    contour->prev->next = newcontour;
 	else
-	    view->polygons = newpolygon;
+	    tv->contours = newcontour;
     }
 
-    polygon->edges[polygon->num_edges].p1 = *p1;
-    polygon->edges[polygon->num_edges].p2 = *p2;
-    polygon->edges[polygon->num_edges].top = top;
-    polygon->edges[polygon->num_edges].bot = bot;
-    polygon->edges[polygon->num_edges].dir = dir;
-    polygon->num_edges++;
+    contour->points[contour->num_points++] = *p;
 
-    return polygon;
+    return contour;
 }
 
-static polygon_t *
-polygon_new (PolygonView *view)
+static contour_t *
+contour_new (TrapView *tv, int direction)
 {
-    polygon_t *t;
+    contour_t *t;
 
-    t = g_malloc (sizeof (polygon_t) + 128 * sizeof (edge_t));
+    t = g_malloc (sizeof (contour_t) + 128 * sizeof (point_t));
+    t->direction = direction;
     t->prev = NULL;
-    t->next = view->polygons;
-    if (view->polygons)
-	view->polygons->prev = t;
-    view->polygons = t;
+    t->next = tv->contours;
+    if (tv->contours)
+	tv->contours->prev = t;
+    tv->contours = t;
 
     t->size = 128;
-    t->num_edges = 0;
+    t->num_points = 0;
 
     return t;
 }
@@ -523,8 +619,8 @@ polygon_new (PolygonView *view)
 int
 main (int argc, char **argv)
 {
-    PolygonView *view;
-    polygon_t *polygon = NULL;
+    TrapView *tv;
+    contour_t *contour = NULL;
     GtkWidget *window;
     FILE *file;
     char *line = NULL;
@@ -532,34 +628,30 @@ main (int argc, char **argv)
 
     gtk_init (&argc, &argv);
 
-    view = g_object_new (polygon_view_get_type (), NULL);
+    tv = g_object_new (trap_view_get_type (), NULL);
 
     file = fopen (argv[1], "r");
     if (file != NULL) {
 	while (getline (&line, &len, file) != -1) {
-	    point_t p1, p2;
-	    double top, bottom;
-	    int dir;
+	    point_t p;
+	    int direction;
 
-	    if (strncmp (line, "polygon: ", sizeof("polygon: ")-1) == 0) {
-		if (polygon && polygon->num_edges) {
-		    g_print ("read polygon with %d edges\n", polygon->num_edges);
+	    if (sscanf (line, "contour: direction=%d", &direction)) {
+		if (contour)
+		    g_print ("read %d contour\n", contour->num_points);
 
-		    polygon = polygon_new (view);
-		} else if (polygon == NULL)
-		    polygon = polygon_new (view);
-	    } else if (sscanf (line, "  [%*d] = [(%lf, %lf), (%lf, %lf)], top=%lf, bottom=%lf, dir=%d", &p1.x, &p1.y, &p2.x, &p2.y, &top, &bottom, &dir) == 7) {
-		polygon = _polygon_add_edge (view, polygon, &p1, &p2,
-					     top, bottom, dir);
+		contour = contour_new (tv, direction);
+	    } else if (sscanf (line, "  [%*d] = (%lf, %lf)", &p.x, &p.y) == 2) {
+		contour = _contour_add_point (tv, contour, &p);
 	    }
 	}
 
-	if (polygon && polygon->num_edges)
-	    g_print ("read polygon with %d edges\n", polygon->num_edges);
+	if (contour)
+	    g_print ("read %d contour\n", contour->num_points);
 
 	g_print ("extents=(%lg, %lg), (%lg, %lg)\n",
-		 view->extents.p1.x, view->extents.p1.y,
-		 view->extents.p2.x, view->extents.p2.y);
+		 tv->extents.p1.x, tv->extents.p1.y,
+		 tv->extents.p2.x, tv->extents.p2.y);
 	fclose (file);
     }
 
@@ -567,7 +659,7 @@ main (int argc, char **argv)
     g_signal_connect (window, "delete-event",
 		      G_CALLBACK (gtk_main_quit), NULL);
     gtk_widget_set_size_request (window, 800, 800);
-    gtk_container_add (GTK_CONTAINER (window), &view->widget);
+    gtk_container_add (GTK_CONTAINER (window), &tv->widget);
     gtk_widget_show_all (window);
 
     gtk_main ();

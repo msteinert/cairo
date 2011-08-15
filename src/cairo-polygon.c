@@ -38,12 +38,14 @@
 #include "cairoint.h"
 
 #include "cairo-boxes-private.h"
+#include "cairo-contour-private.h"
 #include "cairo-error-private.h"
 
 static void
 _cairo_polygon_add_edge (cairo_polygon_t *polygon,
 			 const cairo_point_t *p1,
-			 const cairo_point_t *p2);
+			 const cairo_point_t *p2,
+			 int dir);
 
 void
 _cairo_polygon_init (cairo_polygon_t *polygon,
@@ -131,12 +133,12 @@ _cairo_polygon_init_boxes (cairo_polygon_t *polygon,
 		    p1 = chunk->base[i].p1;
 		    p2.x = p1.x;
 		    p2.y = chunk->base[i].p2.y;
-		    _cairo_polygon_add_edge (polygon, &p1, &p2);
+		    _cairo_polygon_add_edge (polygon, &p1, &p2, 1);
 
 		    p1 = chunk->base[i].p2;
 		    p2.x = p1.x;
 		    p2.y = chunk->base[i].p1.y;
-		    _cairo_polygon_add_edge (polygon, &p1, &p2);
+		    _cairo_polygon_add_edge (polygon, &p1, &p2, 1);
 	    }
     }
 
@@ -178,12 +180,12 @@ _cairo_polygon_init_box_array (cairo_polygon_t *polygon,
 	p1 = boxes[i].p1;
 	p2.x = p1.x;
 	p2.y = boxes[i].p2.y;
-	_cairo_polygon_add_edge (polygon, &p1, &p2);
+	_cairo_polygon_add_edge (polygon, &p1, &p2, 1);
 
 	p1 = boxes[i].p2;
 	p2.x = p1.x;
 	p2.y = boxes[i].p1.y;
-	_cairo_polygon_add_edge (polygon, &p1, &p2);
+	_cairo_polygon_add_edge (polygon, &p1, &p2, 1);
     }
 
     return polygon->status;
@@ -406,20 +408,17 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 static void
 _cairo_polygon_add_edge (cairo_polygon_t *polygon,
 			 const cairo_point_t *p1,
-			 const cairo_point_t *p2)
+			 const cairo_point_t *p2,
+			 int dir)
 {
-    int dir;
-
     /* drop horizontal edges */
     if (p1->y == p2->y)
 	return;
 
-    if (p1->y < p2->y) {
-	dir = 1;
-    } else {
+    if (p1->y > p2->y) {
 	const cairo_point_t *t;
 	t = p1, p1 = p2, p2 = t;
-	dir = -1;
+	dir = -dir;
     }
 
     if (polygon->num_limits) {
@@ -439,7 +438,7 @@ _cairo_polygon_add_external_edge (void *polygon,
 				  const cairo_point_t *p1,
 				  const cairo_point_t *p2)
 {
-    _cairo_polygon_add_edge (polygon, p1, p2);
+    _cairo_polygon_add_edge (polygon, p1, p2, 1);
     return _cairo_polygon_status (polygon);
 }
 
@@ -466,6 +465,29 @@ _cairo_polygon_add_line (cairo_polygon_t *polygon,
 	_add_clipped_edge (polygon, &line->p1, &line->p2, top, bottom, dir);
     } else
 	_add_edge (polygon, &line->p1, &line->p2, top, bottom, dir);
+
+    return polygon->status;
+}
+
+cairo_status_t
+_cairo_polygon_add_contour (cairo_polygon_t *polygon,
+			    const cairo_contour_t *contour)
+{
+    const struct _cairo_contour_chain *chain;
+    const cairo_point_t *prev = NULL;
+    int i;
+
+    if (contour->chain.num_points <= 1)
+	return CAIRO_INT_STATUS_SUCCESS;
+
+    prev = &contour->chain.points[0];
+    for (chain = &contour->chain; chain; chain = chain->next) {
+	for (i = 0; i < chain->num_points; i++) {
+	    _cairo_polygon_add_edge (polygon, prev, &chain->points[i],
+				     contour->direction);
+	    prev = &chain->points[i];
+	}
+    }
 
     return polygon->status;
 }

@@ -32,7 +32,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/src \
 	      -I$(top_srcdir)/util/cairo-script	\
 	      $(CAIRO_CFLAGS)
 
-EXTRA_PROGRAMS += show-traps show-edges show-polygon show-events
+EXTRA_PROGRAMS += show-contour show-traps show-edges show-polygon show-events
 if CAIRO_HAS_INTERPRETER
 EXTRA_PROGRAMS += trace-to-xml xml-to-trace
 endif
@@ -55,6 +55,11 @@ show_edges_SOURCES = show-edges.c
 show_edges_CFLAGS = $(gtk_CFLAGS)
 #show_edges_LDADD = $(top_builddir)/src/libcairo.la $(gtk_LIBS)
 show_edges_LDADD = $(gtk_LIBS)
+
+show_contour_SOURCES = show-contour.c
+show_contour_CFLAGS = $(gtk_CFLAGS)
+#show_contour_LDADD = $(top_builddir)/src/libcairo.la $(gtk_LIBS)
+show_contour_LDADD = $(gtk_LIBS)
 
 show_events_SOURCES = show-events.c
 show_events_CFLAGS = $(gtk_CFLAGS)

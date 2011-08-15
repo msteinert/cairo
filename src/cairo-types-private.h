@@ -63,6 +63,9 @@ typedef struct _cairo_clip cairo_clip_t;
 typedef struct _cairo_clip_path cairo_clip_path_t;
 typedef struct _cairo_color cairo_color_t;
 typedef struct _cairo_color_stop cairo_color_stop_t;
+typedef struct _cairo_contour cairo_contour_t;
+typedef struct _cairo_contour_chain cairo_contour_chain_t;
+typedef struct _cairo_contour_iter cairo_contour_iter_t;
 typedef struct _cairo_device_backend cairo_device_backend_t;
 typedef struct _cairo_font_face_backend     cairo_font_face_backend_t;
 typedef struct _cairo_gstate cairo_gstate_t;
@@ -312,7 +315,8 @@ typedef struct _cairo_polygon {
 
 typedef cairo_warn cairo_status_t
 (*cairo_spline_add_point_func_t) (void *closure,
-				  const cairo_point_t *point);
+				  const cairo_point_t *point,
+				  const cairo_slope_t *tangent);
 
 typedef struct _cairo_spline_knots {
     cairo_point_t a, b, c, d;

@@ -62,6 +62,7 @@ cairo_private = \
 	cairo-clip-private.h \
 	cairo-combsort-private.h \
 	cairo-compiler-private.h \
+	cairo-contour-private.h \
 	cairo-composite-rectangles-private.h \
 	cairo-default-context-private.h \
 	cairo-device-private.h \
@@ -132,6 +133,7 @@ cairo_sources = \
 	cairo-clip-surface.c \
 	cairo-color.c \
 	cairo-composite-rectangles.c \
+	cairo-contour.c \
 	cairo-debug.c \
 	cairo-default-context.c \
 	cairo-device.c \

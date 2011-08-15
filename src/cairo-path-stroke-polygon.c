@@ -2,6 +2,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
+ * Copyright © 2011 Intel Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -41,23 +42,34 @@
 
 #include "cairo-box-private.h"
 #include "cairo-boxes-private.h"
+#include "cairo-contour-private.h"
 #include "cairo-error-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-slope-private.h"
 
-typedef struct cairo_stroker {
+#define DEBUG 0
+
+struct stroker {
     cairo_stroke_style_t style;
+
+#if DEBUG
+    cairo_contour_t path;
+#endif
+
+    struct stroke_contour {
+	/* Note that these are not strictly contours as they may intersect */
+	cairo_contour_t contour;
+    } cw, ccw;
+    cairo_uint64_t contour_tolerance;
+    cairo_polygon_t *polygon;
 
     const cairo_matrix_t *ctm;
     const cairo_matrix_t *ctm_inverse;
     double tolerance;
-    double ctm_determinant;
     cairo_bool_t ctm_det_positive;
 
-    cairo_polygon_t *polygon;
-    cairo_pen_t	  pen;
+    cairo_pen_t pen;
 
-    cairo_point_t current_point;
     cairo_point_t first_point;
 
     cairo_bool_t has_initial_sub_path;
@@ -67,38 +79,42 @@ typedef struct cairo_stroker {
 
     cairo_bool_t has_first_face;
     cairo_stroke_face_t first_face;
+};
 
-    cairo_bool_t has_bounds;
-    cairo_box_t bounds;
-} cairo_stroker_t;
+static inline double
+normalize_slope (double *dx, double *dy);
 
 static void
-stroker_limit (cairo_stroker_t *stroker,
-	       const cairo_box_t *boxes,
-	       int num_boxes)
+compute_face (const cairo_point_t *point,
+	      const cairo_slope_t *dev_slope,
+	      struct stroker *stroker,
+	      cairo_stroke_face_t *face);
+
+static cairo_uint64_t
+point_distance_sq (const cairo_point_t *p1,
+			const cairo_point_t *p2)
 {
-    double dx, dy;
-    cairo_fixed_t fdx, fdy;
+    int32_t dx = p1->x - p2->x;
+    int32_t dy = p1->y - p2->y;
+    return _cairo_int32x32_64_mul (dx, dx) + _cairo_int32x32_64_mul (dy, dy);
+}
 
-    stroker->has_bounds = TRUE;
-    _cairo_boxes_get_extents (boxes, num_boxes, &stroker->bounds);
+static cairo_bool_t
+within_tolerance (const cairo_point_t *p1,
+	      const cairo_point_t *p2,
+	      cairo_uint64_t tolerance)
+{
+    return _cairo_int64_lt (point_distance_sq (p1, p2), tolerance);
+}
 
-    /* Extend the bounds in each direction to account for the maximum area
-     * we might generate trapezoids, to capture line segments that are outside
-     * of the bounds but which might generate rendering that's within bounds.
-     */
-
-    _cairo_stroke_style_max_distance_from_path (&stroker->style, stroker->ctm,
-						&dx, &dy);
-
-    fdx = _cairo_fixed_from_double (dx);
-    fdy = _cairo_fixed_from_double (dy);
-
-    stroker->bounds.p1.x -= fdx;
-    stroker->bounds.p2.x += fdx;
-
-    stroker->bounds.p1.y -= fdy;
-    stroker->bounds.p2.y += fdy;
+static void
+contour_add_point (struct stroker *stroker,
+		   struct stroke_contour *c,
+		   const cairo_point_t *point)
+{
+    if (! within_tolerance (point, _cairo_contour_last_point (&c->contour),
+			stroker->contour_tolerance))
+	_cairo_contour_add_point (&c->contour, point);
 }
 
 static void
@@ -108,19 +124,6 @@ translate_point (cairo_point_t *point, const cairo_point_t *offset)
     point->y += offset->y;
 }
 
-static int
-join_is_clockwise (const cairo_stroke_face_t *in,
-		   const cairo_stroke_face_t *out)
-{
-    return _cairo_slope_compare (&in->dev_vector, &out->dev_vector) < 0;
-}
-
-/**
- * slope_compare_sgn
- *
- * Return -1, 0 or 1 depending on the relative slopes of
- * two lines.
- */
 static int
 slope_compare_sgn (double dx1, double dy1, double dx2, double dy2)
 {
@@ -146,43 +149,19 @@ range_step (int i, int step, int max)
  * Construct a fan around the midpoint using the vertices from pen between
  * inpt and outpt.
  */
-static cairo_status_t
-tessellate_fan (cairo_stroker_t *stroker,
-		const cairo_slope_t *in_vector,
-		const cairo_slope_t *out_vector,
-		const cairo_point_t *midpt,
-		const cairo_point_t *inpt,
-		const cairo_point_t *outpt,
-		cairo_bool_t clockwise)
+static void
+add_fan (struct stroker *stroker,
+	 const cairo_slope_t *in_vector,
+	 const cairo_slope_t *out_vector,
+	 const cairo_point_t *midpt,
+	 const cairo_point_t *inpt,
+	 const cairo_point_t *outpt,
+	 cairo_bool_t clockwise,
+	 struct stroke_contour *c)
 {
-    cairo_point_t stack_points[64], *points = stack_points;
     int start, stop, step, i, npoints;
-    cairo_status_t status;
 
     if (clockwise) {
-	step  = -1;
-
-	start = _cairo_pen_find_active_ccw_vertex_index (&stroker->pen,
-							 in_vector);
-	if (_cairo_slope_compare (&stroker->pen.vertices[start].slope_ccw,
-				  in_vector) < 0)
-	    start = range_step (start, -1, stroker->pen.num_vertices);
-
-	stop  = _cairo_pen_find_active_ccw_vertex_index (&stroker->pen,
-							 out_vector);
-	if (_cairo_slope_compare (&stroker->pen.vertices[stop].slope_cw,
-				  out_vector) > 0)
-	{
-	    stop = range_step (stop, 1, stroker->pen.num_vertices);
-	    if (_cairo_slope_compare (&stroker->pen.vertices[stop].slope_ccw,
-				      in_vector) < 0)
-	    {
-		goto BEVEL;
-	    }
-	}
-
-	npoints = start - stop;
-    } else {
 	step  = 1;
 
 	start = _cairo_pen_find_active_cw_vertex_index (&stroker->pen,
@@ -199,119 +178,296 @@ tessellate_fan (cairo_stroker_t *stroker,
 	    stop = range_step (stop, -1, stroker->pen.num_vertices);
 	    if (_cairo_slope_compare (&stroker->pen.vertices[stop].slope_cw,
 				      in_vector) < 0)
-	    {
-		goto BEVEL;
-	    }
+		return;
 	}
 
 	npoints = stop - start;
+    } else {
+	step  = -1;
+
+	start = _cairo_pen_find_active_ccw_vertex_index (&stroker->pen,
+							 in_vector);
+	if (_cairo_slope_compare (&stroker->pen.vertices[start].slope_ccw,
+				  in_vector) < 0)
+	    start = range_step (start, -1, stroker->pen.num_vertices);
+
+	stop  = _cairo_pen_find_active_ccw_vertex_index (&stroker->pen,
+							 out_vector);
+	if (_cairo_slope_compare (&stroker->pen.vertices[stop].slope_cw,
+				  out_vector) > 0)
+	{
+	    stop = range_step (stop, 1, stroker->pen.num_vertices);
+	    if (_cairo_slope_compare (&stroker->pen.vertices[stop].slope_ccw,
+				      in_vector) < 0)
+		return;
+	}
+
+	npoints = start - stop;
     }
     stop = range_step (stop, step, stroker->pen.num_vertices);
-
     if (npoints < 0)
 	npoints += stroker->pen.num_vertices;
-    npoints += 3;
-
     if (npoints <= 1)
-	goto BEVEL;
+	return;
 
-    if (npoints > ARRAY_LENGTH (stack_points)) {
-	points = _cairo_malloc_ab (npoints, sizeof (cairo_point_t));
-	if (unlikely (points == NULL))
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    }
-
-
-    /* Construct the fan. */
-    npoints = 0;
-    points[npoints++] = *inpt;
     for (i = start;
 	 i != stop;
 	i = range_step (i, step, stroker->pen.num_vertices))
     {
-	points[npoints] = *midpt;
-	translate_point (&points[npoints], &stroker->pen.vertices[i].point);
-	npoints++;
+	cairo_point_t p = *midpt;
+	translate_point (&p, &stroker->pen.vertices[i].point);
+	contour_add_point (stroker, c, &p);
     }
-    points[npoints++] = *outpt;
-
-    for (i = 0; i < npoints - 1; i++) {
-	if (clockwise) {
-	    status = _cairo_polygon_add_external_edge (stroker->polygon,
-						       &points[i], &points[i+1]);
-	} else {
-	    status = _cairo_polygon_add_external_edge (stroker->polygon,
-						       &points[i+1], &points[i]);
-	}
-	if (unlikely (status))
-	    break;
-    }
-
-    if (points != stack_points)
-	free (points);
-
-    return status;
-
-BEVEL:
-    /* Ensure a leak free connection... */
-    if (clockwise)
-	return _cairo_polygon_add_external_edge (stroker->polygon, inpt, outpt);
-    else
-	return _cairo_polygon_add_external_edge (stroker->polygon, outpt, inpt);
 }
 
-static cairo_status_t
-join (cairo_stroker_t *stroker,
-      const cairo_stroke_face_t *in,
-      const cairo_stroke_face_t *out)
+static int
+join_is_clockwise (const cairo_stroke_face_t *in,
+		   const cairo_stroke_face_t *out)
 {
-    int	 clockwise = join_is_clockwise (out, in);
-    const cairo_point_t	*inpt, *outpt;
-    cairo_point_t points[4];
-    cairo_status_t status;
+    return _cairo_slope_compare (&in->dev_vector, &out->dev_vector) < 0;
+}
 
-    if (in->cw.x  == out->cw.x  && in->cw.y  == out->cw.y &&
-	in->ccw.x == out->ccw.x && in->ccw.y == out->ccw.y)
-    {
-	return CAIRO_STATUS_SUCCESS;
-    }
+static cairo_int64_t
+distance_from_face (const cairo_stroke_face_t *face,
+		    const cairo_point_t *p,
+		    cairo_bool_t negate)
+{
+    int32_t dx = (p->x - face->point.x);
+    int32_t dy = (p->y - face->point.y);
+    cairo_int64_t d;
+
+    d = _cairo_int64_sub (_cairo_int32x32_64_mul (dx, face->dev_vector.dy),
+			  _cairo_int32x32_64_mul (dy, face->dev_vector.dx));
+    if (negate)
+	d = _cairo_int64_negate (d);
+    return d;
+}
+
+static cairo_int64_t
+distance_along_face (const cairo_stroke_face_t *face,
+		    const cairo_point_t *p)
+{
+    int32_t dx = (p->x - face->point.x);
+    int32_t dy = (p->y - face->point.y);
+    return _cairo_int64_add (_cairo_int32x32_64_mul (dx, face->dev_vector.dx),
+			     _cairo_int32x32_64_mul (dy, face->dev_vector.dy));
+}
+
+static void
+compute_inner_joint (cairo_point_t *p1, cairo_int64_t d_p1,
+		     const cairo_point_t *p2, cairo_int64_t d_p2,
+		     cairo_int64_t half_line_width)
+{
+    int32_t dx = p2->x - p1->x;
+    int32_t dy = p2->y - p1->y;
+
+    half_line_width = _cairo_int64_sub (half_line_width, d_p1);
+    d_p2 = _cairo_int64_sub (d_p2, d_p1);
+
+    p1->x += _cairo_int_96by64_32x64_divrem (_cairo_int64x32_128_mul (half_line_width, dx),
+					      d_p2).quo;
+
+    p1->y += _cairo_int_96by64_32x64_divrem (_cairo_int64x32_128_mul (half_line_width, dy),
+					      d_p2).quo;
+}
+
+static void
+inner_join (struct stroker *stroker,
+	    const cairo_stroke_face_t *in,
+	    const cairo_stroke_face_t *out,
+	    int clockwise)
+{
+#if 0
+    cairo_point_t last;
+    const cairo_point_t *p, *outpt;
+    struct stroke_contour *inner;
+    cairo_int64_t d_p, d_last;
+    cairo_int64_t half_line_width;
+    cairo_bool_t negate;
+
+    /* XXX line segments shorter than line-width */
 
     if (clockwise) {
-	status = _cairo_polygon_add_external_edge (stroker->polygon,
-						   &out->cw, &in->point);
-	if (unlikely (status))
-	    return status;
+	inner = &stroker->ccw;
+	outpt = &out->ccw;
+	negate = 1;
+    } else {
+	inner = &stroker->cw;
+	outpt = &out->cw;
+	negate = 0;
+    }
 
-	status = _cairo_polygon_add_external_edge (stroker->polygon,
-						   &in->point, &in->cw);
-	if (unlikely (status))
-	    return status;
+    half_line_width = CAIRO_FIXED_ONE*CAIRO_FIXED_ONE/2 * stroker->style.line_width * out->length + .5;
 
-	inpt = &in->ccw;
+    /* On the inside, the previous end-point is always
+     * closer to the new face by definition.
+     */
+    last = *_cairo_contour_last_point (&inner->contour);
+    d_last = distance_from_face (out, &last, negate);
+    _cairo_contour_remove_last_point (&inner->contour);
+
+prev:
+    if (inner->contour.chain.num_points == 0) {
+	contour_add_point (stroker, inner, outpt);
+	return;
+    }
+    p = _cairo_contour_last_point (&inner->contour);
+    d_p = distance_from_face (out, p, negate);
+    if (_cairo_int64_lt (d_p, half_line_width) &&
+	!_cairo_int64_negative (distance_along_face (out, p)))
+    {
+	last = *p;
+	d_last = d_p;
+	_cairo_contour_remove_last_point (&inner->contour);
+	goto prev;
+    }
+
+    compute_inner_joint (&last, d_last, p, d_p, half_line_width);
+    contour_add_point (stroker, inner, &last);
+#else
+    const cairo_point_t *outpt;
+    struct stroke_contour *inner;
+
+    if (clockwise) {
+	inner = &stroker->ccw;
 	outpt = &out->ccw;
     } else {
-	status = _cairo_polygon_add_external_edge (stroker->polygon,
-						   &in->ccw, &in->point);
-	if (unlikely (status))
-	    return status;
+	inner = &stroker->cw;
+	outpt = &out->cw;
+    }
+    contour_add_point (stroker, inner, &in->point);
+    contour_add_point (stroker, inner, outpt);
+#endif
+}
 
-	status = _cairo_polygon_add_external_edge (stroker->polygon,
-						   &in->point, &out->ccw);
-	if (unlikely (status))
-	    return status;
+static void
+inner_close (struct stroker *stroker,
+	     const cairo_stroke_face_t *in,
+	     cairo_stroke_face_t *out)
+{
+#if 0
+    cairo_point_t last;
+    const cairo_point_t *p, *outpt, *inpt;
+    struct stroke_contour *inner;
+    struct _cairo_contour_chain *chain;
 
+    /* XXX line segments shorter than line-width */
+
+    if (join_is_clockwise (in, out)) {
+	inner = &stroker->ccw;
+	outpt = &in->ccw;
+	inpt = &out->ccw;
+    } else {
+	inner = &stroker->cw;
+	outpt = &in->cw;
+	inpt = &out->cw;
+    }
+
+    if (inner->contour.chain.num_points == 0) {
+	contour_add_point (stroker, inner, &in->point);
+	contour_add_point (stroker, inner, inpt);
+	*_cairo_contour_first_point (&inner->contour) =
+	    *_cairo_contour_last_point (&inner->contour);
+	return;
+    }
+
+    line_width = stroker->style.line_width/2;
+    line_width *= CAIRO_FIXED_ONE;
+
+    d_last = sign * distance_from_face (out, outpt);
+    last = *outpt;
+
+    for (chain = &inner->contour.chain; chain; chain = chain->next) {
+	for (i = 0; i < chain->num_points; i++) {
+	    p = &chain->points[i];
+	    if ((d_p = sign * distance_from_face (in, p)) >= line_width &&
+		distance_from_edge (stroker, inpt, &last, p) < line_width)
+	    {
+		goto out;
+	    }
+
+	    if (p->x != last.x || p->y != last.y) {
+		last = *p;
+		d_last = d_p;
+	    }
+	}
+    }
+out:
+
+    if (d_p != d_last) {
+	double dot = (line_width - d_last) / (d_p - d_last);
+	last.x += dot * (p->x - last.x);
+	last.y += dot * (p->y - last.y);
+    }
+    *_cairo_contour_last_point (&inner->contour) = last;
+
+    for (chain = &inner->contour.chain; chain; chain = chain->next) {
+	for (i = 0; i < chain->num_points; i++) {
+	    cairo_point_t *pp = &chain->points[i];
+	    if (pp == p)
+		return;
+	    *pp = last;
+	}
+    }
+#else
+    const cairo_point_t *inpt;
+    struct stroke_contour *inner;
+
+    if (join_is_clockwise (in, out)) {
+	inner = &stroker->ccw;
+	inpt = &out->ccw;
+    } else {
+	inner = &stroker->cw;
+	inpt = &out->cw;
+    }
+
+    contour_add_point (stroker, inner, &in->point);
+    contour_add_point (stroker, inner, inpt);
+    *_cairo_contour_first_point (&inner->contour) =
+	*_cairo_contour_last_point (&inner->contour);
+#endif
+}
+
+static void
+outer_close (struct stroker *stroker,
+	     const cairo_stroke_face_t *in,
+	     const cairo_stroke_face_t *out)
+{
+    const cairo_point_t	*inpt, *outpt;
+    struct stroke_contour *outer;
+    int	clockwise;
+
+    if (in->cw.x == out->cw.x && in->cw.y == out->cw.y &&
+	in->ccw.x == out->ccw.x && out->ccw.y == out->ccw.y)
+    {
+	return;
+    }
+    clockwise = join_is_clockwise (in, out);
+    if (clockwise) {
 	inpt = &in->cw;
 	outpt = &out->cw;
+	outer = &stroker->cw;
+    } else {
+	inpt = &in->ccw;
+	outpt = &out->ccw;
+	outer = &stroker->ccw;
+    }
+
+    if (within_tolerance (inpt, outpt, stroker->contour_tolerance)) {
+	*_cairo_contour_first_point (&outer->contour) =
+	    *_cairo_contour_last_point (&outer->contour);
+	return;
     }
 
     switch (stroker->style.line_join) {
     case CAIRO_LINE_JOIN_ROUND:
 	/* construct a fan around the common midpoint */
-	return tessellate_fan (stroker,
-			       &in->dev_vector,
-			       &out->dev_vector,
-			       &in->point, inpt, outpt,
-			       clockwise);
+	add_fan (stroker,
+		 &in->dev_vector,
+		 &out->dev_vector,
+		 &in->point, inpt, outpt,
+		 clockwise, outer);
+	break;
 
     case CAIRO_LINE_JOIN_MITER:
     default: {
@@ -448,52 +604,216 @@ join (cairo_stroker_t *stroker,
 	    if (slope_compare_sgn (fdx1, fdy1, mdx, mdy) !=
 		slope_compare_sgn (fdx2, fdy2, mdx, mdy))
 	    {
-		points[0].x = _cairo_fixed_from_double (mx);
-		points[0].y = _cairo_fixed_from_double (my);
+		cairo_point_t p;
 
-		if (clockwise) {
-		    status = _cairo_polygon_add_external_edge (stroker->polygon,
-							 inpt, &points[0]);
-		    if (unlikely (status))
-			return status;
+		p.x = _cairo_fixed_from_double (mx);
+		p.y = _cairo_fixed_from_double (my);
 
-		    status = _cairo_polygon_add_external_edge (stroker->polygon,
-							 &points[0], outpt);
-		    if (unlikely (status))
-			return status;
-		} else {
-		    status = _cairo_polygon_add_external_edge (stroker->polygon,
-							 outpt, &points[0]);
-		    if (unlikely (status))
-			return status;
-
-		    status = _cairo_polygon_add_external_edge (stroker->polygon,
-							 &points[0], inpt);
-		    if (unlikely (status))
-			return status;
-		}
-
-		return CAIRO_STATUS_SUCCESS;
+		*_cairo_contour_last_point (&outer->contour) = p;
+		*_cairo_contour_first_point (&outer->contour) = p;
+		return;
 	    }
 	}
+	break;
     }
-
-    /* fall through ... */
 
     case CAIRO_LINE_JOIN_BEVEL:
-	if (clockwise) {
-	    return _cairo_polygon_add_external_edge (stroker->polygon,
-					       inpt, outpt);
-	} else {
-	    return _cairo_polygon_add_external_edge (stroker->polygon,
-					       outpt, inpt);
-	}
+	break;
     }
+    contour_add_point (stroker, outer, outpt);
 }
 
-static cairo_status_t
-add_cap (cairo_stroker_t *stroker,
-	 const cairo_stroke_face_t *f)
+static void
+outer_join (struct stroker *stroker,
+	    const cairo_stroke_face_t *in,
+	    const cairo_stroke_face_t *out,
+	    int clockwise)
+{
+    const cairo_point_t	*inpt, *outpt;
+    struct stroke_contour *outer;
+
+    if (in->cw.x == out->cw.x && in->cw.y == out->cw.y &&
+	in->ccw.x == out->ccw.x && out->ccw.y == out->ccw.y)
+    {
+	return;
+    }
+    if (clockwise) {
+	inpt = &in->cw;
+	outpt = &out->cw;
+	outer = &stroker->cw;
+    } else {
+	inpt = &in->ccw;
+	outpt = &out->ccw;
+	outer = &stroker->ccw;
+    }
+
+    switch (stroker->style.line_join) {
+    case CAIRO_LINE_JOIN_ROUND:
+	/* construct a fan around the common midpoint */
+	add_fan (stroker,
+		 &in->dev_vector,
+		 &out->dev_vector,
+		 &in->point, inpt, outpt,
+		 clockwise, outer);
+	break;
+
+    case CAIRO_LINE_JOIN_MITER:
+    default: {
+	/* dot product of incoming slope vector with outgoing slope vector */
+	double	in_dot_out = -in->usr_vector.x * out->usr_vector.x +
+			     -in->usr_vector.y * out->usr_vector.y;
+	double	ml = stroker->style.miter_limit;
+
+	/* Check the miter limit -- lines meeting at an acute angle
+	 * can generate long miters, the limit converts them to bevel
+	 *
+	 * Consider the miter join formed when two line segments
+	 * meet at an angle psi:
+	 *
+	 *	   /.\
+	 *	  /. .\
+	 *	 /./ \.\
+	 *	/./psi\.\
+	 *
+	 * We can zoom in on the right half of that to see:
+	 *
+	 *	    |\
+	 *	    | \ psi/2
+	 *	    |  \
+	 *	    |   \
+	 *	    |    \
+	 *	    |     \
+	 *	  miter    \
+	 *	 length     \
+	 *	    |        \
+	 *	    |        .\
+	 *	    |    .     \
+	 *	    |.   line   \
+	 *	     \    width  \
+	 *	      \           \
+	 *
+	 *
+	 * The right triangle in that figure, (the line-width side is
+	 * shown faintly with three '.' characters), gives us the
+	 * following expression relating miter length, angle and line
+	 * width:
+	 *
+	 *	1 /sin (psi/2) = miter_length / line_width
+	 *
+	 * The right-hand side of this relationship is the same ratio
+	 * in which the miter limit (ml) is expressed. We want to know
+	 * when the miter length is within the miter limit. That is
+	 * when the following condition holds:
+	 *
+	 *	1/sin(psi/2) <= ml
+	 *	1 <= ml sin(psi/2)
+	 *	1 <= ml² sin²(psi/2)
+	 *	2 <= ml² 2 sin²(psi/2)
+	 *				2·sin²(psi/2) = 1-cos(psi)
+	 *	2 <= ml² (1-cos(psi))
+	 *
+	 *				in · out = |in| |out| cos (psi)
+	 *
+	 * in and out are both unit vectors, so:
+	 *
+	 *				in · out = cos (psi)
+	 *
+	 *	2 <= ml² (1 - in · out)
+	 *
+	 */
+	if (2 <= ml * ml * (1 - in_dot_out)) {
+	    double		x1, y1, x2, y2;
+	    double		mx, my;
+	    double		dx1, dx2, dy1, dy2;
+	    double		ix, iy;
+	    double		fdx1, fdy1, fdx2, fdy2;
+	    double		mdx, mdy;
+
+	    /*
+	     * we've got the points already transformed to device
+	     * space, but need to do some computation with them and
+	     * also need to transform the slope from user space to
+	     * device space
+	     */
+	    /* outer point of incoming line face */
+	    x1 = _cairo_fixed_to_double (inpt->x);
+	    y1 = _cairo_fixed_to_double (inpt->y);
+	    dx1 = in->usr_vector.x;
+	    dy1 = in->usr_vector.y;
+	    cairo_matrix_transform_distance (stroker->ctm, &dx1, &dy1);
+
+	    /* outer point of outgoing line face */
+	    x2 = _cairo_fixed_to_double (outpt->x);
+	    y2 = _cairo_fixed_to_double (outpt->y);
+	    dx2 = out->usr_vector.x;
+	    dy2 = out->usr_vector.y;
+	    cairo_matrix_transform_distance (stroker->ctm, &dx2, &dy2);
+
+	    /*
+	     * Compute the location of the outer corner of the miter.
+	     * That's pretty easy -- just the intersection of the two
+	     * outer edges.  We've got slopes and points on each
+	     * of those edges.  Compute my directly, then compute
+	     * mx by using the edge with the larger dy; that avoids
+	     * dividing by values close to zero.
+	     */
+	    my = (((x2 - x1) * dy1 * dy2 - y2 * dx2 * dy1 + y1 * dx1 * dy2) /
+		  (dx1 * dy2 - dx2 * dy1));
+	    if (fabs (dy1) >= fabs (dy2))
+		mx = (my - y1) * dx1 / dy1 + x1;
+	    else
+		mx = (my - y2) * dx2 / dy2 + x2;
+
+	    /*
+	     * When the two outer edges are nearly parallel, slight
+	     * perturbations in the position of the outer points of the lines
+	     * caused by representing them in fixed point form can cause the
+	     * intersection point of the miter to move a large amount. If
+	     * that moves the miter intersection from between the two faces,
+	     * then draw a bevel instead.
+	     */
+
+	    ix = _cairo_fixed_to_double (in->point.x);
+	    iy = _cairo_fixed_to_double (in->point.y);
+
+	    /* slope of one face */
+	    fdx1 = x1 - ix; fdy1 = y1 - iy;
+
+	    /* slope of the other face */
+	    fdx2 = x2 - ix; fdy2 = y2 - iy;
+
+	    /* slope from the intersection to the miter point */
+	    mdx = mx - ix; mdy = my - iy;
+
+	    /*
+	     * Make sure the miter point line lies between the two
+	     * faces by comparing the slopes
+	     */
+	    if (1 || slope_compare_sgn (fdx1, fdy1, mdx, mdy) !=
+		slope_compare_sgn (fdx2, fdy2, mdx, mdy))
+	    {
+		cairo_point_t p;
+
+		p.x = _cairo_fixed_from_double (mx);
+		p.y = _cairo_fixed_from_double (my);
+
+		*_cairo_contour_last_point (&outer->contour) = p;
+		return;
+	    }
+	}
+	break;
+    }
+
+    case CAIRO_LINE_JOIN_BEVEL:
+	break;
+    }
+    contour_add_point (stroker,outer, outpt);
+}
+
+static void
+add_cap (struct stroker *stroker,
+	 const cairo_stroke_face_t *f,
+	 struct stroke_contour *c)
 {
     switch (stroker->style.line_cap) {
     case CAIRO_LINE_CAP_ROUND: {
@@ -502,19 +822,16 @@ add_cap (cairo_stroker_t *stroker,
 	slope.dx = -f->dev_vector.dx;
 	slope.dy = -f->dev_vector.dy;
 
-	return tessellate_fan (stroker,
-			       &f->dev_vector,
-			       &slope,
-			       &f->point, &f->cw, &f->ccw,
-			       FALSE);
-
+	add_fan (stroker, &f->dev_vector, &slope,
+		 &f->point, &f->ccw, &f->cw,
+		 FALSE, c);
+	break;
     }
 
     case CAIRO_LINE_CAP_SQUARE: {
 	double dx, dy;
 	cairo_slope_t	fvector;
 	cairo_point_t	quad[4];
-	cairo_status_t status;
 
 	dx = f->usr_vector.x;
 	dy = f->usr_vector.y;
@@ -531,34 +848,21 @@ add_cap (cairo_stroker_t *stroker,
 	quad[2].y = f->cw.y + fvector.dy;
 	quad[3] = f->cw;
 
-	status = _cairo_polygon_add_external_edge (stroker->polygon,
-					     &quad[0], &quad[1]);
-	if (unlikely (status))
-	    return status;
-
-	status = _cairo_polygon_add_external_edge (stroker->polygon,
-					     &quad[1], &quad[2]);
-	if (unlikely (status))
-	    return status;
-
-	status = _cairo_polygon_add_external_edge (stroker->polygon,
-					     &quad[2], &quad[3]);
-	if (unlikely (status))
-	    return status;
-
-	return CAIRO_STATUS_SUCCESS;
+	contour_add_point (stroker, c, &quad[1]);
+	contour_add_point (stroker, c, &quad[2]);
     }
 
     case CAIRO_LINE_CAP_BUTT:
     default:
-	return _cairo_polygon_add_external_edge (stroker->polygon,
-					   &f->ccw, &f->cw);
+	break;
     }
+    contour_add_point (stroker, c, &f->cw);
 }
 
-static cairo_status_t
-add_leading_cap (cairo_stroker_t     *stroker,
-		 const cairo_stroke_face_t *face)
+static void
+add_leading_cap (struct stroker *stroker,
+		 const cairo_stroke_face_t *face,
+		 struct stroke_contour *c)
 {
     cairo_stroke_face_t reversed;
     cairo_point_t t;
@@ -570,35 +874,29 @@ add_leading_cap (cairo_stroker_t     *stroker,
     reversed.usr_vector.y = -reversed.usr_vector.y;
     reversed.dev_vector.dx = -reversed.dev_vector.dx;
     reversed.dev_vector.dy = -reversed.dev_vector.dy;
+
     t = reversed.cw;
     reversed.cw = reversed.ccw;
     reversed.ccw = t;
 
-    return add_cap (stroker, &reversed);
+    add_cap (stroker, &reversed, c);
 }
 
-static cairo_status_t
-add_trailing_cap (cairo_stroker_t     *stroker,
-		  const cairo_stroke_face_t *face)
+static void
+add_trailing_cap (struct stroker *stroker,
+		  const cairo_stroke_face_t *face,
+		  struct stroke_contour *c)
 {
-    return add_cap (stroker, face);
+    add_cap (stroker, face, c);
 }
 
-static inline cairo_bool_t
-compute_normalized_device_slope (double *dx, double *dy,
-				 const cairo_matrix_t *ctm_inverse,
-				 double *mag_out)
+static inline double
+normalize_slope (double *dx, double *dy)
 {
     double dx0 = *dx, dy0 = *dy;
     double mag;
 
-    cairo_matrix_transform_distance (ctm_inverse, &dx0, &dy0);
-
-    if (dx0 == 0.0 && dy0 == 0.0) {
-	if (mag_out)
-	    *mag_out = 0.0;
-	return FALSE;
-    }
+    assert (dx0 != 0.0 || dy0 != 0.0);
 
     if (dx0 == 0.0) {
 	*dx = 0.0;
@@ -624,19 +922,24 @@ compute_normalized_device_slope (double *dx, double *dy,
 	*dy = dy0 / mag;
     }
 
-    if (mag_out)
-	*mag_out = mag;
-
-    return TRUE;
+    return mag;
 }
 
 static void
-compute_face (const cairo_point_t *point, cairo_slope_t *dev_slope,
-	      double slope_dx, double slope_dy,
-	      cairo_stroker_t *stroker, cairo_stroke_face_t *face)
+compute_face (const cairo_point_t *point,
+	      const cairo_slope_t *dev_slope,
+	      struct stroker *stroker,
+	      cairo_stroke_face_t *face)
 {
     double face_dx, face_dy;
     cairo_point_t offset_ccw, offset_cw;
+    double slope_dx, slope_dy;
+
+    slope_dx = _cairo_fixed_to_double (dev_slope->dx);
+    slope_dy = _cairo_fixed_to_double (dev_slope->dy);
+    face->length = normalize_slope (&slope_dx, &slope_dy);
+    face->dev_slope.x = slope_dx;
+    face->dev_slope.y = slope_dy;
 
     /*
      * rotate to get a line_width/2 vector along the face, note that
@@ -645,19 +948,29 @@ compute_face (const cairo_point_t *point, cairo_slope_t *dev_slope,
      * whether the ctm reflects or not, and that can be determined
      * by looking at the determinant of the matrix.
      */
-    if (stroker->ctm_det_positive)
-    {
+    if (! _cairo_matrix_is_identity (stroker->ctm_inverse)) {
+	/* Normalize the matrix! */
+	cairo_matrix_transform_distance (stroker->ctm_inverse,
+					 &slope_dx, &slope_dy);
+	normalize_slope (&slope_dx, &slope_dy);
+
+	if (stroker->ctm_det_positive)
+	{
+	    face_dx = - slope_dy * (stroker->style.line_width / 2.0);
+	    face_dy = slope_dx * (stroker->style.line_width / 2.0);
+	}
+	else
+	{
+	    face_dx = slope_dy * (stroker->style.line_width / 2.0);
+	    face_dy = - slope_dx * (stroker->style.line_width / 2.0);
+	}
+
+	/* back to device space */
+	cairo_matrix_transform_distance (stroker->ctm, &face_dx, &face_dy);
+    } else {
 	face_dx = - slope_dy * (stroker->style.line_width / 2.0);
 	face_dy = slope_dx * (stroker->style.line_width / 2.0);
     }
-    else
-    {
-	face_dx = slope_dy * (stroker->style.line_width / 2.0);
-	face_dy = - slope_dx * (stroker->style.line_width / 2.0);
-    }
-
-    /* back to device space */
-    cairo_matrix_transform_distance (stroker->ctm, &face_dx, &face_dy);
 
     offset_ccw.x = _cairo_fixed_from_double (face_dx);
     offset_ccw.y = _cairo_fixed_from_double (face_dy);
@@ -678,11 +991,9 @@ compute_face (const cairo_point_t *point, cairo_slope_t *dev_slope,
     face->dev_vector = *dev_slope;
 }
 
-static cairo_status_t
-add_caps (cairo_stroker_t *stroker)
+static void
+add_caps (struct stroker *stroker)
 {
-    cairo_status_t status;
-
     /* check for a degenerative sub_path */
     if (stroker->has_initial_sub_path &&
 	! stroker->has_first_face &&
@@ -690,95 +1001,84 @@ add_caps (cairo_stroker_t *stroker)
 	stroker->style.line_cap == CAIRO_LINE_CAP_ROUND)
     {
 	/* pick an arbitrary slope to use */
-	double dx = 1.0, dy = 0.0;
 	cairo_slope_t slope = { CAIRO_FIXED_ONE, 0 };
 	cairo_stroke_face_t face;
 
-	compute_normalized_device_slope (&dx, &dy,
-					 stroker->ctm_inverse, NULL);
+	/* arbitrarily choose first_point */
+	compute_face (&stroker->first_point, &slope, stroker, &face);
 
-	/* arbitrarily choose first_point
-	 * first_point and current_point should be the same */
-	compute_face (&stroker->first_point, &slope, dx, dy, stroker, &face);
+	add_leading_cap (stroker, &face, &stroker->ccw);
+	add_trailing_cap (stroker, &face, &stroker->ccw);
 
-	status = add_leading_cap (stroker, &face);
-	if (unlikely (status))
-	    return status;
+	/* ensure the circle is complete */
+	_cairo_contour_add_point (&stroker->ccw.contour,
+				  _cairo_contour_first_point (&stroker->ccw.contour));
 
-	status = add_trailing_cap (stroker, &face);
-	if (unlikely (status))
-	    return status;
+	_cairo_polygon_add_contour (stroker->polygon, &stroker->ccw.contour);
+	_cairo_contour_reset (&stroker->ccw.contour);
+    } else {
+	if (stroker->has_current_face)
+	    add_trailing_cap (stroker, &stroker->current_face, &stroker->ccw);
+
+#if DEBUG
+	{
+	    FILE *file = fopen ("contours.txt", "a");
+	    _cairo_debug_print_contour (file, &stroker->path);
+	    _cairo_debug_print_contour (file, &stroker->cw.contour);
+	    _cairo_debug_print_contour (file, &stroker->ccw.contour);
+	    fclose (file);
+	    _cairo_contour_reset (&stroker->path);
+	}
+#endif
+
+	_cairo_polygon_add_contour (stroker->polygon, &stroker->ccw.contour);
+	_cairo_contour_reset (&stroker->ccw.contour);
+
+	if (stroker->has_first_face) {
+	    _cairo_contour_add_point (&stroker->ccw.contour,
+				      &stroker->first_face.cw);
+	    add_leading_cap (stroker, &stroker->first_face, &stroker->ccw);
+#if DEBUG
+	    {
+		FILE *file = fopen ("contours.txt", "a");
+		_cairo_debug_print_contour (file, &stroker->ccw.contour);
+		fclose (file);
+	    }
+#endif
+
+	    _cairo_polygon_add_contour (stroker->polygon,
+					&stroker->ccw.contour);
+	    _cairo_contour_reset (&stroker->ccw.contour);
+	}
+
+	_cairo_polygon_add_contour (stroker->polygon, &stroker->cw.contour);
+	_cairo_contour_reset (&stroker->cw.contour);
     }
-
-    if (stroker->has_first_face) {
-	status = add_leading_cap (stroker, &stroker->first_face);
-	if (unlikely (status))
-	    return status;
-    }
-
-    if (stroker->has_current_face) {
-	status = add_trailing_cap (stroker, &stroker->current_face);
-	if (unlikely (status))
-	    return status;
-    }
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
-add_sub_edge (cairo_stroker_t *stroker,
-	      const cairo_point_t *p1,
-	      const cairo_point_t *p2,
-	      cairo_slope_t *dev_slope,
-	      double slope_dx, double slope_dy,
-	      cairo_stroke_face_t *start,
-	      cairo_stroke_face_t *end)
-{
-    cairo_status_t status;
-
-    compute_face (p1, dev_slope, slope_dx, slope_dy, stroker, start);
-    *end = *start;
-
-    if (p1->x == p2->x && p1->y == p2->y)
-	return CAIRO_STATUS_SUCCESS;
-
-    end->point = *p2;
-    end->ccw.x += p2->x - p1->x;
-    end->ccw.y += p2->y - p1->y;
-    end->cw.x += p2->x - p1->x;
-    end->cw.y += p2->y - p1->y;
-
-    status = _cairo_polygon_add_external_edge (stroker->polygon,
-					 &end->cw, &start->cw);
-    if (unlikely (status))
-	return status;
-
-    status = _cairo_polygon_add_external_edge (stroker->polygon,
-					 &start->ccw, &end->ccw);
-    if (unlikely (status))
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
-}
+close_path (void *closure);
 
 static cairo_status_t
 move_to (void *closure,
 	 const cairo_point_t *point)
 {
-    cairo_stroker_t *stroker = closure;
-    cairo_status_t status;
+    struct stroker *stroker = closure;
 
     /* Cap the start and end of the previous sub path as needed */
-    status = add_caps (stroker);
-    if (unlikely (status))
-	return status;
-
-    stroker->first_point = *point;
-    stroker->current_point = *point;
+    add_caps (stroker);
 
     stroker->has_first_face = FALSE;
     stroker->has_current_face = FALSE;
     stroker->has_initial_sub_path = FALSE;
+
+    stroker->first_point = *point;
+
+#if DEBUG
+    _cairo_contour_add_point (&stroker->path, point);
+#endif
+
+    stroker->current_face.point = *point;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -787,46 +1087,111 @@ static cairo_status_t
 line_to (void *closure,
 	 const cairo_point_t *point)
 {
-    cairo_stroker_t *stroker = closure;
-    cairo_stroke_face_t start, end;
-    cairo_point_t *p1 = &stroker->current_point;
+    struct stroker *stroker = closure;
+    cairo_stroke_face_t start;
+    cairo_point_t *p1 = &stroker->current_face.point;
     cairo_slope_t dev_slope;
-    double slope_dx, slope_dy;
-    cairo_status_t status;
 
     stroker->has_initial_sub_path = TRUE;
 
     if (p1->x == point->x && p1->y == point->y)
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_slope_init (&dev_slope, p1, point);
-    slope_dx = _cairo_fixed_to_double (point->x - p1->x);
-    slope_dy = _cairo_fixed_to_double (point->y - p1->y);
-    compute_normalized_device_slope (&slope_dx, &slope_dy,
-				     stroker->ctm_inverse, NULL);
+#if DEBUG
+    _cairo_contour_add_point (&stroker->path, point);
+#endif
 
-    status = add_sub_edge (stroker,
-			   p1, point,
-			   &dev_slope,
-			   slope_dx, slope_dy,
-			   &start, &end);
-    if (unlikely (status))
-	return status;
+    _cairo_slope_init (&dev_slope, p1, point);
+    compute_face (p1, &dev_slope, stroker, &start);
 
     if (stroker->has_current_face) {
+	int clockwise = join_is_clockwise (&stroker->current_face, &start);
 	/* Join with final face from previous segment */
-	status = join (stroker, &stroker->current_face, &start);
-	if (unlikely (status))
-	    return status;
-    } else if (! stroker->has_first_face) {
-	/* Save sub path's first face in case needed for closing join */
-	stroker->first_face = start;
-	stroker->has_first_face = TRUE;
-    }
-    stroker->current_face = end;
-    stroker->has_current_face = TRUE;
+	if (! within_tolerance (&stroker->current_face.ccw, &start.ccw,
+				stroker->contour_tolerance) ||
+	    ! within_tolerance (&stroker->current_face.cw, &start.cw,
+				stroker->contour_tolerance))
+	{
+	    outer_join (stroker, &stroker->current_face, &start, clockwise);
+	    inner_join (stroker, &stroker->current_face, &start, clockwise);
+	}
+    } else {
+	if (! stroker->has_first_face) {
+	    /* Save sub path's first face in case needed for closing join */
+	    stroker->first_face = start;
+	    stroker->has_first_face = TRUE;
+	}
+	stroker->has_current_face = TRUE;
 
-    stroker->current_point = *point;
+	contour_add_point (stroker, &stroker->cw, &start.cw);
+	contour_add_point (stroker, &stroker->ccw, &start.ccw);
+    }
+
+    stroker->current_face = start;
+    stroker->current_face.point = *point;
+    stroker->current_face.ccw.x += dev_slope.dx;
+    stroker->current_face.ccw.y += dev_slope.dy;
+    stroker->current_face.cw.x += dev_slope.dx;
+    stroker->current_face.cw.y += dev_slope.dy;
+
+    contour_add_point (stroker, &stroker->cw, &stroker->current_face.cw);
+    contour_add_point (stroker, &stroker->ccw, &stroker->current_face.ccw);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+spline_to (void *closure,
+	   const cairo_point_t *point,
+	   const cairo_slope_t *tangent)
+{
+    struct stroker *stroker = closure;
+    cairo_stroke_face_t face;
+
+#if DEBUG
+    _cairo_contour_add_point (&stroker->path, point);
+#endif
+    if (tangent->dx == 0 && tangent->dy == 0) {
+	const cairo_point_t *inpt, *outpt;
+	struct stroke_contour *outer;
+	cairo_point_t t;
+	int clockwise;
+
+	face = stroker->current_face;
+
+	face.usr_vector.x = -face.usr_vector.x;
+	face.usr_vector.y = -face.usr_vector.y;
+	face.dev_vector.dx = -face.dev_vector.dx;
+	face.dev_vector.dy = -face.dev_vector.dy;
+
+	t = face.cw;
+	face.cw = face.ccw;
+	face.ccw = t;
+
+	clockwise = join_is_clockwise (&stroker->current_face, &face);
+	if (clockwise) {
+	    inpt = &stroker->current_face.cw;
+	    outpt = &face.cw;
+	    outer = &stroker->cw;
+	} else {
+	    inpt = &stroker->current_face.ccw;
+	    outpt = &face.ccw;
+	    outer = &stroker->ccw;
+	}
+
+	add_fan (stroker,
+		 &stroker->current_face.dev_vector,
+		 &face.dev_vector,
+		 &stroker->current_face.point, inpt, outpt,
+		 clockwise, outer);
+    } else {
+	compute_face (point, tangent, stroker, &face);
+
+	contour_add_point (stroker, &stroker->cw, &face.cw);
+	contour_add_point (stroker, &stroker->ccw, &face.ccw);
+    }
+
+    stroker->current_face = face;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -837,82 +1202,42 @@ curve_to (void *closure,
 	  const cairo_point_t *c,
 	  const cairo_point_t *d)
 {
-    cairo_stroker_t *stroker = closure;
+    struct stroker *stroker = closure;
     cairo_spline_t spline;
-    cairo_line_join_t line_join_save;
     cairo_stroke_face_t face;
-    double slope_dx, slope_dy;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
-    if (! _cairo_spline_init (&spline, line_to, stroker,
-			      &stroker->current_point, b, c, d))
-    {
+    if (! _cairo_spline_init (&spline, spline_to, stroker,
+			      &stroker->current_face.point, b, c, d))
 	return line_to (closure, d);
-    }
 
-    /* Compute the initial face */
-    if (1) {
-	slope_dx = _cairo_fixed_to_double (spline.initial_slope.dx);
-	slope_dy = _cairo_fixed_to_double (spline.initial_slope.dy);
-	if (compute_normalized_device_slope (&slope_dx, &slope_dy,
-					     stroker->ctm_inverse, NULL))
-	{
-	    compute_face (&stroker->current_point,
-			  &spline.initial_slope,
-			  slope_dx, slope_dy,
-			  stroker, &face);
-	}
-	if (stroker->has_current_face) {
-	    status = join (stroker, &stroker->current_face, &face);
-	    if (unlikely (status))
-		return status;
-	} else if (! stroker->has_first_face) {
+    compute_face (&stroker->current_face.point, &spline.initial_slope,
+		  stroker, &face);
+
+    if (stroker->has_current_face) {
+	int clockwise = join_is_clockwise (&stroker->current_face, &face);
+	/* Join with final face from previous segment */
+	outer_join (stroker, &stroker->current_face, &face, clockwise);
+	inner_join (stroker, &stroker->current_face, &face, clockwise);
+    } else {
+	if (! stroker->has_first_face) {
+	    /* Save sub path's first face in case needed for closing join */
 	    stroker->first_face = face;
 	    stroker->has_first_face = TRUE;
 	}
-
-	stroker->current_face = face;
 	stroker->has_current_face = TRUE;
+
+	contour_add_point (stroker, &stroker->cw, &face.cw);
+	contour_add_point (stroker, &stroker->ccw, &face.ccw);
     }
+    stroker->current_face = face;
 
-    /* Temporarily modify the stroker to use round joins to guarantee
-     * smooth stroked curves. */
-    line_join_save = stroker->style.line_join;
-    stroker->style.line_join = CAIRO_LINE_JOIN_ROUND;
-
-    status = _cairo_spline_decompose (&spline, stroker->tolerance);
-    if (unlikely (status))
-	return status;
-
-    /* And join the final face */
-    if (1) {
-	slope_dx = _cairo_fixed_to_double (spline.final_slope.dx);
-	slope_dy = _cairo_fixed_to_double (spline.final_slope.dy);
-	if (compute_normalized_device_slope (&slope_dx, &slope_dy,
-					     stroker->ctm_inverse, NULL))
-	{
-	    compute_face (&stroker->current_point,
-			  &spline.final_slope,
-			  slope_dx, slope_dy,
-			  stroker, &face);
-	}
-
-	status = join (stroker, &stroker->current_face, &face);
-	if (unlikely (status))
-	    return status;
-
-	stroker->current_face = face;
-    }
-
-    stroker->style.line_join = line_join_save;
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_spline_decompose (&spline, stroker->tolerance);
 }
 
 static cairo_status_t
 close_path (void *closure)
 {
-    cairo_stroker_t *stroker = closure;
+    struct stroker *stroker = closure;
     cairo_status_t status;
 
     status = line_to (stroker, &stroker->first_point);
@@ -921,14 +1246,35 @@ close_path (void *closure)
 
     if (stroker->has_first_face && stroker->has_current_face) {
 	/* Join first and final faces of sub path */
-	status = join (stroker, &stroker->current_face, &stroker->first_face);
-	if (unlikely (status))
-	    return status;
+	outer_close (stroker, &stroker->current_face, &stroker->first_face);
+	inner_close (stroker, &stroker->current_face, &stroker->first_face);
+#if 0
+	*_cairo_contour_first_point (&stroker->ccw.contour) =
+	    *_cairo_contour_last_point (&stroker->ccw.contour);
+
+	*_cairo_contour_first_point (&stroker->cw.contour) =
+	    *_cairo_contour_last_point (&stroker->cw.contour);
+#endif
+
+	_cairo_polygon_add_contour (stroker->polygon, &stroker->cw.contour);
+	_cairo_polygon_add_contour (stroker->polygon, &stroker->ccw.contour);
+
+#if DEBUG
+	{
+	    FILE *file = fopen ("contours.txt", "a");
+	    _cairo_debug_print_contour (file, &stroker->path);
+	    _cairo_debug_print_contour (file, &stroker->cw.contour);
+	    _cairo_debug_print_contour (file, &stroker->ccw.contour);
+	    fclose (file);
+
+	    _cairo_contour_reset (&stroker->path);
+	}
+#endif
+	_cairo_contour_reset (&stroker->cw.contour);
+	_cairo_contour_reset (&stroker->ccw.contour);
     } else {
 	/* Cap the start and end of the sub path as needed */
-	status = add_caps (stroker);
-	if (unlikely (status))
-	    return status;
+	add_caps (stroker);
     }
 
     stroker->has_initial_sub_path = FALSE;
@@ -946,23 +1292,25 @@ _cairo_path_fixed_stroke_to_polygon (const cairo_path_fixed_t	*path,
 				     double		 tolerance,
 				     cairo_polygon_t *polygon)
 {
-    cairo_stroker_t stroker;
+    struct stroker stroker;
     cairo_status_t status;
 
-    if (style->dash)
+    if (style->num_dashes) {
 	return _cairo_path_fixed_stroke_dashed_to_polygon (path,
 							   style,
 							   ctm,
 							   ctm_inverse,
 							   tolerance,
 							   polygon);
+    }
 
     stroker.style = *style;
     stroker.ctm = ctm;
     stroker.ctm_inverse = ctm_inverse;
     stroker.tolerance = tolerance;
 
-    stroker.ctm_det_positive = _cairo_matrix_compute_determinant (ctm) >= 0.;
+    stroker.ctm_det_positive =
+	_cairo_matrix_compute_determinant (ctm) >= 0.0;
 
     status = _cairo_pen_init (&stroker.pen,
 		              style->line_width / 2.0,
@@ -975,15 +1323,19 @@ _cairo_path_fixed_stroke_to_polygon (const cairo_path_fixed_t	*path,
     if (stroker.pen.num_vertices <= 1)
 	return CAIRO_STATUS_SUCCESS;
 
-    stroker.polygon = polygon;
-
     stroker.has_current_face = FALSE;
     stroker.has_first_face = FALSE;
     stroker.has_initial_sub_path = FALSE;
 
-    stroker.has_bounds = FALSE;
-    if (polygon->num_limits)
-	stroker_limit (&stroker, polygon->limits, polygon->num_limits);
+#if DEBUG
+    _cairo_contour_init (&stroker.path, 0);
+#endif
+    _cairo_contour_init (&stroker.cw.contour, 1);
+    _cairo_contour_init (&stroker.ccw.contour, -1);
+    tolerance *= CAIRO_FIXED_ONE;
+    tolerance *= tolerance;
+    stroker.contour_tolerance = tolerance;
+    stroker.polygon = polygon;
 
     status = _cairo_path_fixed_interpret (path,
 					  move_to,
@@ -991,12 +1343,21 @@ _cairo_path_fixed_stroke_to_polygon (const cairo_path_fixed_t	*path,
 					  curve_to,
 					  close_path,
 					  &stroker);
-
     /* Cap the start and end of the final sub path as needed */
     if (likely (status == CAIRO_STATUS_SUCCESS))
-	status = add_caps (&stroker);
+	add_caps (&stroker);
 
+    _cairo_contour_fini (&stroker.cw.contour);
+    _cairo_contour_fini (&stroker.ccw.contour);
     _cairo_pen_fini (&stroker.pen);
+
+#if DEBUG
+    {
+	FILE *file = fopen ("polygons.txt", "a");
+	_cairo_debug_print_polygon (file, polygon);
+	fclose (file);
+    }
+#endif
 
     return status;
 }

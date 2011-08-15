@@ -1118,7 +1118,7 @@ _cairo_stroker_curve_to (void *closure,
 	_cairo_stroker_line_to;
 
     if (! _cairo_spline_init (&spline,
-			      line_to, stroker,
+			      (cairo_spline_add_point_func_t)line_to, stroker,
 			      &stroker->current_point, b, c, d))
     {
 	return line_to (closure, d);

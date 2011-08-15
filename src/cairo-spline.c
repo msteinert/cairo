@@ -67,22 +67,27 @@ _cairo_spline_init (cairo_spline_t *spline,
     else if (b->x != d->x || b->y != d->y)
 	_cairo_slope_init (&spline->final_slope, &spline->knots.b, &spline->knots.d);
     else
-	_cairo_slope_init (&spline->final_slope, &spline->knots.a, &spline->knots.d);
+	return FALSE; /* just treat this as a straight-line from a -> d */
 
     return TRUE;
 }
 
 static cairo_status_t
-_cairo_spline_add_point (cairo_spline_t *spline, cairo_point_t *point)
+_cairo_spline_add_point (cairo_spline_t *spline,
+			 const cairo_point_t *point,
+			 const cairo_point_t *knot)
 {
     cairo_point_t *prev;
+    cairo_slope_t slope;
 
     prev = &spline->last_point;
     if (prev->x == point->x && prev->y == point->y)
 	return CAIRO_STATUS_SUCCESS;
 
+    _cairo_slope_init (&slope, point, knot);
+
     spline->last_point = *point;
-    return spline->add_point_func (spline->closure, point);
+    return spline->add_point_func (spline->closure, point, &slope);
 }
 
 static void
@@ -184,13 +189,15 @@ _cairo_spline_error_squared (const cairo_spline_knots_t *knots)
 }
 
 static cairo_status_t
-_cairo_spline_decompose_into (cairo_spline_knots_t *s1, double tolerance_squared, cairo_spline_t *result)
+_cairo_spline_decompose_into (cairo_spline_knots_t *s1,
+			      double tolerance_squared,
+			      cairo_spline_t *result)
 {
     cairo_spline_knots_t s2;
     cairo_status_t status;
 
     if (_cairo_spline_error_squared (s1) < tolerance_squared)
-	return _cairo_spline_add_point (result, &s1->a);
+	return _cairo_spline_add_point (result, &s1->a, &s1->b);
 
     _de_casteljau (s1, &s2);
 
@@ -206,6 +213,7 @@ _cairo_spline_decompose (cairo_spline_t *spline, double tolerance)
 {
     cairo_spline_knots_t s1;
     cairo_status_t status;
+    cairo_slope_t slope;
 
     s1 = spline->knots;
     spline->last_point = s1.a;
@@ -213,7 +221,8 @@ _cairo_spline_decompose (cairo_spline_t *spline, double tolerance)
     if (unlikely (status))
 	return status;
 
-    return _cairo_spline_add_point (spline, &spline->knots.d);
+    _cairo_slope_init (&slope, &spline->knots.c, &spline->knots.d);
+    return spline->add_point_func (spline->closure, &spline->knots.d, &slope);
 }
 
 /* Note: this function is only good for computing bounds in device space. */
@@ -325,7 +334,7 @@ _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
     c = -y0 + y1;
     FIND_EXTREMES (a, b, c);
 
-    status = add_point_func (closure, p0);
+    status = add_point_func (closure, p0, NULL);
     if (unlikely (status))
 	return status;
 
@@ -359,10 +368,10 @@ _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
 
 	p.x = _cairo_fixed_from_double (x);
 	p.y = _cairo_fixed_from_double (y);
-	status = add_point_func (closure, &p);
+	status = add_point_func (closure, &p, NULL);
 	if (unlikely (status))
 	    return status;
     }
 
-    return add_point_func (closure, p3);
+    return add_point_func (closure, p3, NULL);
 }

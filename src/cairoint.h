@@ -1030,7 +1030,9 @@ typedef struct _cairo_stroke_face {
     cairo_point_t point;
     cairo_point_t cw;
     cairo_slope_t dev_vector;
+    cairo_point_double_t dev_slope;
     cairo_point_double_t usr_vector;
+    double length;
 } cairo_stroke_face_t;
 
 /* cairo.c */
@@ -2068,6 +2070,10 @@ cairo_private cairo_status_t
 _cairo_polygon_add_external_edge (void *polygon,
 				  const cairo_point_t *p1,
 				  const cairo_point_t *p2);
+
+cairo_private cairo_status_t
+_cairo_polygon_add_contour (cairo_polygon_t *polygon,
+			    const cairo_contour_t *contour);
 
 cairo_private cairo_status_t
 _cairo_polygon_reduce (cairo_polygon_t *polygon,
