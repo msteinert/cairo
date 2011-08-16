@@ -4224,7 +4224,7 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
 	last_glyph = i;
 	_cairo_pdf_surface_update_object (surface, subset_resource);
 	_cairo_output_stream_printf (surface->output,
-				     "%d 0 obj\r\n"
+				     "%d 0 obj\n"
 				     "<< /Type /Font\n"
 				     "   /Subtype /Type1\n"
 				     "   /BaseFont /%s+%s\n"
@@ -4663,7 +4663,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 	last_glyph = i;
 	_cairo_pdf_surface_update_object (surface, subset_resource);
 	_cairo_output_stream_printf (surface->output,
-				     "%d 0 obj\r\n"
+				     "%d 0 obj\n"
 				     "<< /Type /Font\n"
 				     "   /Subtype /TrueType\n"
 				     "   /BaseFont /%s+%s\n"
