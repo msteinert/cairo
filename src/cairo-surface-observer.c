@@ -1025,12 +1025,15 @@ print_path (cairo_output_stream_t *stream,
 static void
 print_clip (cairo_output_stream_t *stream, const struct clip *c)
 {
-    _cairo_output_stream_printf (stream,
-				 "  clip: %d none, %d region, %d boxes, %d general path\n",
-				 c->type[0],
-				 c->type[1],
-				 c->type[2],
-				 c->type[3]);
+    static const char *names[] = {
+	"none",
+	"region",
+	"boxes",
+	"general path",
+    };
+    _cairo_output_stream_printf (stream, "  clip:");
+    print_array (stream, c->type, names, ARRAY_LENGTH (names));
+    _cairo_output_stream_printf (stream, "\n");
 }
 
 static void
