@@ -875,7 +875,7 @@ print_extents (cairo_output_stream_t *stream, const struct extents *e)
 				 e->unbounded);
 }
 
-static inline int ordercmp (int a, int b, unsigned int *array)
+static inline int ordercmp (int a, int b, const unsigned int *array)
 {
     /* high to low */
     return array[b] - array[a];
@@ -884,7 +884,7 @@ CAIRO_COMBSORT_DECLARE_WITH_DATA (sort_order, int, ordercmp)
 
 static void
 print_array (cairo_output_stream_t *stream,
-	     unsigned int *array,
+	     const unsigned int *array,
 	     const char **names,
 	     int count)
 {
@@ -897,7 +897,7 @@ print_array (cairo_output_stream_t *stream,
 	    order[j++] = i;
     }
 
-    sort_order (order, j, array);
+    sort_order (order, j, (void *)array);
     for (i = 0; i < j; i++)
 	_cairo_output_stream_printf (stream, " %d %s",
 				     array[order[i]], names[order[i]]);
@@ -992,16 +992,18 @@ print_pattern (cairo_output_stream_t *stream,
 	       const char *name,
 	       const struct pattern *p)
 {
-    _cairo_output_stream_printf (stream,
-				 "  %s: %d solid, %d native, %d record, %d other surface, %d linear, %d radial, %d mesh\n",
-				 name,
-				 p->type[3], /* solid first */
-				 p->type[0],
-				 p->type[1],
-				 p->type[2],
-				 p->type[4],
-				 p->type[5],
-				 p->type[6]);
+    static const char *names[] = {
+	"native",
+	"record",
+	"other surface",
+	"solid",
+	"linear",
+	"radial",
+	"mesh"
+    };
+    _cairo_output_stream_printf (stream, "  %s:", name);
+    print_array (stream, p->type, names, ARRAY_LENGTH (names));
+    _cairo_output_stream_printf (stream, "\n");
 }
 
 static void
