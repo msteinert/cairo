@@ -1010,13 +1010,16 @@ static void
 print_path (cairo_output_stream_t *stream,
 	    const struct path *p)
 {
-    _cairo_output_stream_printf (stream,
-				 "  path: %d empty, %d pixel-aligned, %d rectilinear, %d straight, %d curved\n",
-				 p->type[0],
-				 p->type[1],
-				 p->type[2],
-				 p->type[3],
-				 p->type[4]);
+    static const char *names[] = {
+	"empty",
+	"pixel-aligned",
+	"rectliinear",
+	"straight",
+	"curved",
+    };
+    _cairo_output_stream_printf (stream, "  path:");
+    print_array (stream, p->type, names, ARRAY_LENGTH (names));
+    _cairo_output_stream_printf (stream, "\n");
 }
 
 static void
