@@ -974,6 +974,20 @@ print_line_joins (cairo_output_stream_t *stream, unsigned int *array)
 }
 
 static void
+print_antialias (cairo_output_stream_t *stream, unsigned int *array)
+{
+    static const char *names[] = {
+	"default",
+	"none",
+	"gray",
+	"subpixel"
+    };
+    _cairo_output_stream_printf (stream, "  antialias:");
+    print_array (stream, array, names, NUM_ANTIALIAS);
+    _cairo_output_stream_printf (stream, "\n");
+}
+
+static void
 print_pattern (cairo_output_stream_t *stream,
 	       const char *name,
 	       const struct pattern *p)
@@ -1051,6 +1065,7 @@ _cairo_observation_print (cairo_output_stream_t *stream,
 	print_operators (stream, log->fill.operators);
 	print_pattern (stream, "source", &log->fill.source);
 	print_path (stream, &log->fill.path);
+	print_antialias (stream, log->fill.antialias);
 	print_clip (stream, &log->fill.clip);
     }
 
@@ -1061,6 +1076,7 @@ _cairo_observation_print (cairo_output_stream_t *stream,
 	print_operators (stream, log->stroke.operators);
 	print_pattern (stream, "source", &log->stroke.source);
 	print_path (stream, &log->stroke.path);
+	print_antialias (stream, log->stroke.antialias);
 	print_line_caps (stream, log->stroke.caps);
 	print_line_joins (stream, log->stroke.joins);
 	print_clip (stream, &log->stroke.clip);
