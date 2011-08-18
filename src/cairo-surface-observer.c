@@ -902,8 +902,9 @@ print_array (cairo_output_stream_t *stream,
 
     sort_order (order, j, (void *)array);
     for (i = 0; i < j; i++)
-	_cairo_output_stream_printf (stream, " %d %s",
-				     array[order[i]], names[order[i]]);
+	_cairo_output_stream_printf (stream, " %d %s%s",
+				     array[order[i]], names[order[i]],
+				     i < j -1 ? "," : "");
 }
 
 static void
