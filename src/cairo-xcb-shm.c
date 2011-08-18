@@ -548,11 +548,12 @@ _cairo_xcb_connection_allocate_shm_info (cairo_xcb_connection_t *connection,
 	if (pool->shmid != -1)
 	    break;
 
-	if (errno == EINVAL && bytes > size) {
-	    bytes >>= 1;
-	    continue;
-	}
-    } while (FALSE);
+	/* If the allocation failed because we asked for too much memory, we try
+	 * again with a smaller request, as long as our allocation still fits. */
+	bytes >>= 1;
+	if (errno != EINVAL || bytes < size)
+	    break;
+    } while (TRUE);
     if (pool->shmid == -1) {
 	int err = errno;
 	if (! (err == EINVAL || err == ENOMEM))
