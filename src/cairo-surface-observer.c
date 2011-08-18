@@ -128,18 +128,17 @@ get_pattern_surface (const cairo_pattern_t *pattern)
     return ((cairo_surface_pattern_t *)pattern)->surface;
 }
 
-static void
-add_pattern (struct pattern *stats,
-	     const cairo_pattern_t *source,
-	     const cairo_surface_t *target)
+static int
+classify_pattern (const cairo_pattern_t *pattern,
+		  const cairo_surface_t *target)
 {
     int classify;
 
-    switch (source->type) {
+    switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SURFACE:
-	if (get_pattern_surface (source)->type == target->type)
+	if (get_pattern_surface (pattern)->type == target->type)
 	    classify = 0;
-	else if (get_pattern_surface (source)->type == CAIRO_SURFACE_TYPE_RECORDING)
+	else if (get_pattern_surface (pattern)->type == CAIRO_SURFACE_TYPE_RECORDING)
 	    classify = 1;
 	else
 	    classify = 2;
@@ -158,13 +157,20 @@ add_pattern (struct pattern *stats,
 	classify = 6;
 	break;
     }
-    stats->type[classify]++;
+    return classify;
 }
 
 static void
-add_path (struct path *stats,
-	  const cairo_path_fixed_t *path,
-	  cairo_bool_t is_fill)
+add_pattern (struct pattern *stats,
+	     const cairo_pattern_t *pattern,
+	     const cairo_surface_t *target)
+{
+    stats->type[classify_pattern(pattern, target)]++;
+}
+
+static int
+classify_path (const cairo_path_fixed_t *path,
+	       cairo_bool_t is_fill)
 {
     int classify;
 
@@ -182,12 +188,20 @@ add_path (struct path *stats,
     if (classify == 1 && ! path->fill_maybe_region)
 	classify = 2;
     classify = 3 + path->has_curve_to != 0;
-    stats->type[classify]++;
+
+    return classify;
 }
 
 static void
-add_clip (struct clip *stats,
-	  const cairo_clip_t *clip)
+add_path (struct path *stats,
+	  const cairo_path_fixed_t *path,
+	  cairo_bool_t is_fill)
+{
+    stats->type[classify_path(path, is_fill)]++;
+}
+
+static int
+classify_clip (const cairo_clip_t *clip)
 {
     int classify;
 
@@ -204,7 +218,14 @@ add_clip (struct clip *stats,
     else
 	classify = 5;
 
-    stats->type[classify]++;
+    return classify;
+}
+
+static void
+add_clip (struct clip *stats,
+	  const cairo_clip_t *clip)
+{
+    stats->type[classify_clip (clip)]++;
 }
 
 static void
@@ -407,6 +428,161 @@ _cairo_surface_observer_unmap_image (void *abstract_surface,
     return surface->target->backend->unmap_image (surface->target, image);
 }
 
+static void
+record_paint (cairo_observation_record_t *r,
+	      cairo_surface_t *target,
+	      cairo_operator_t op,
+	      const cairo_pattern_t *source,
+	      const cairo_clip_t *clip,
+	      double elapsed)
+{
+    r->op = op;
+    r->source = classify_pattern (source, target);
+    r->mask = -1;
+    r->num_glyphs = -1;
+    r->path = -1;
+    r->fill_rule = -1;
+    r->tolerance = -1;
+    r->antialias = -1;
+    r->clip = classify_clip (clip);
+    r->elapsed = elapsed;
+}
+
+static void
+record_mask (cairo_observation_record_t *r,
+	     cairo_surface_t *target,
+	     cairo_operator_t op,
+	     const cairo_pattern_t *source,
+	     const cairo_pattern_t *mask,
+	     const cairo_clip_t *clip,
+	     double elapsed)
+{
+    r->op = op;
+    r->source = classify_pattern (source, target);
+    r->mask = classify_pattern (mask, target);
+    r->num_glyphs = -1;
+    r->path = -1;
+    r->fill_rule = -1;
+    r->tolerance = -1;
+    r->antialias = -1;
+    r->clip = classify_clip (clip);
+    r->elapsed = elapsed;
+}
+
+static void
+record_fill (cairo_observation_record_t *r,
+	     cairo_surface_t		*target,
+	     cairo_operator_t		op,
+	     const cairo_pattern_t	*source,
+	     const cairo_path_fixed_t	*path,
+	     cairo_fill_rule_t		 fill_rule,
+	     double			 tolerance,
+	     cairo_antialias_t		 antialias,
+	     const cairo_clip_t		*clip,
+	     double elapsed)
+{
+    r->op = op;
+    r->source = classify_pattern (source, target);
+    r->mask = -1;
+    r->num_glyphs = -1;
+    r->path = classify_path (path, TRUE);
+    r->fill_rule = fill_rule;
+    r->tolerance = tolerance;
+    r->antialias = antialias;
+    r->clip = classify_clip (clip);
+    r->elapsed = elapsed;
+}
+
+static void
+record_stroke (cairo_observation_record_t *r,
+	       cairo_surface_t		*target,
+	       cairo_operator_t		op,
+	       const cairo_pattern_t	*source,
+	       const cairo_path_fixed_t	*path,
+	       const cairo_stroke_style_t	*style,
+	       const cairo_matrix_t	*ctm,
+	       const cairo_matrix_t	*ctm_inverse,
+	       double			 tolerance,
+	       cairo_antialias_t	 antialias,
+	       const cairo_clip_t	*clip,
+	       double			 elapsed)
+{
+    r->op = op;
+    r->source = classify_pattern (source, target);
+    r->mask = -1;
+    r->num_glyphs = -1;
+    r->path = classify_path (path, FALSE);
+    r->fill_rule = -1;
+    r->tolerance = tolerance;
+    r->antialias = antialias;
+    r->clip = classify_clip (clip);
+    r->elapsed = elapsed;
+}
+
+static void
+record_glyphs (cairo_observation_record_t *r,
+	       cairo_surface_t		*target,
+	       cairo_operator_t		op,
+	       const cairo_pattern_t	*source,
+	       cairo_glyph_t		*glyphs,
+	       int			 num_glyphs,
+	       cairo_scaled_font_t	*scaled_font,
+	       const cairo_clip_t	*clip,
+	       double			 elapsed)
+{
+    r->op = op;
+    r->source = classify_pattern (source, target);
+    r->mask = -1;
+    r->path = -1;
+    r->num_glyphs = num_glyphs;
+    r->fill_rule = -1;
+    r->tolerance = -1;
+    r->antialias = -1;
+    r->clip = classify_clip (clip);
+    r->elapsed = elapsed;
+}
+
+static void
+start_timer (struct timespec *ts)
+{
+    clock_gettime (CLOCK_MONOTONIC, ts);
+}
+
+static double
+stop_timer (const struct timespec *then)
+{
+    struct timespec now;
+    double elapsed;
+
+    clock_gettime (CLOCK_MONOTONIC, &now);
+
+    elapsed = now.tv_nsec - then->tv_nsec;
+    elapsed += 1e9 * (now.tv_sec - then->tv_sec);
+    return elapsed;
+}
+
+static void
+sync (cairo_surface_t *target, int x, int y)
+{
+    cairo_rectangle_t extents;
+
+    extents.x = x;
+    extents.y = y;
+    extents.width = 1;
+    extents.height = 1;
+
+    cairo_surface_unmap_image (target,
+			       cairo_surface_map_to_image (target,
+							   &extents));
+}
+
+static void
+midpt (const cairo_composite_rectangles_t *extents, int *x, int *y)
+{
+    *x = extents->bounded.x + extents->bounded.width / 2;
+    *y = extents->bounded.y + extents->bounded.height / 2;
+}
+
 static cairo_int_status_t
 _cairo_surface_observer_paint (void *abstract_surface,
 			       cairo_operator_t op,
@@ -418,6 +594,9 @@ _cairo_surface_observer_paint (void *abstract_surface,
     cairo_composite_rectangles_t composite;
     cairo_rectangle_int_t extents;
     cairo_int_status_t status;
+    struct timespec ts;
+    double elapsed;
+    int x, y;
 
     /* XXX device locking */
 
@@ -442,14 +621,33 @@ _cairo_surface_observer_paint (void *abstract_surface,
 	return status;
     }
 
+    midpt (&composite, &x, &y);
+
     add_extents (&surface->log.paint.extents, &composite);
     add_extents (&device->log.paint.extents, &composite);
     _cairo_composite_rectangles_fini (&composite);
 
-    /* XXX time? */
-    return _cairo_surface_paint (surface->target,
-				 op, source,
-				 clip);
+    start_timer (&ts);
+    status =  _cairo_surface_paint (surface->target,
+				    op, source,
+				    clip);
+    if (unlikely (status))
+	return status;
+
+    sync (surface->target, x, y);
+    elapsed = stop_timer (&ts);
+
+    if (elapsed > surface->log.paint.slowest.elapsed)
+	record_paint (&surface->log.paint.slowest,
+		      surface->target, op, source, clip, elapsed);
+    surface->log.paint.elapsed += elapsed;
+
+    if (elapsed > device->log.paint.slowest.elapsed)
+	record_paint (&device->log.paint.slowest,
+		      surface->target, op, source, clip, elapsed);
+    device->log.paint.elapsed += elapsed;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
@@ -464,6 +662,9 @@ _cairo_surface_observer_mask (void *abstract_surface,
     cairo_composite_rectangles_t composite;
     cairo_rectangle_int_t extents;
     cairo_int_status_t status;
+    struct timespec ts;
+    double elapsed;
+    int x, y;
 
     surface->log.mask.count++;
     surface->log.mask.operators[op]++;
@@ -488,13 +689,33 @@ _cairo_surface_observer_mask (void *abstract_surface,
 	return status;
     }
 
+    midpt (&composite, &x, &y);
+
     add_extents (&surface->log.mask.extents, &composite);
     add_extents (&device->log.mask.extents, &composite);
     _cairo_composite_rectangles_fini (&composite);
 
-    return _cairo_surface_mask (surface->target,
-				op, source, mask,
-				clip);
+    start_timer (&ts);
+    status =  _cairo_surface_mask (surface->target,
+				   op, source, mask,
+				   clip);
+    if (unlikely (status))
+	return status;
+
+    sync (surface->target, x, y);
+    elapsed = stop_timer (&ts);
+
+    if (elapsed > surface->log.mask.slowest.elapsed)
+	record_mask (&surface->log.mask.slowest,
+		     surface->target, op, source, mask, clip, elapsed);
+    surface->log.mask.elapsed += elapsed;
+
+    if (elapsed > device->log.mask.slowest.elapsed)
+	record_mask (&device->log.mask.slowest,
+		      surface->target, op, source, mask, clip, elapsed);
+    device->log.mask.elapsed += elapsed;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
@@ -512,6 +733,9 @@ _cairo_surface_observer_fill (void			*abstract_surface,
     cairo_composite_rectangles_t composite;
     cairo_rectangle_int_t extents;
     cairo_int_status_t status;
+    struct timespec ts;
+    double elapsed;
+    int x, y;
 
     surface->log.fill.count++;
     surface->log.fill.operators[op]++;
@@ -540,14 +764,38 @@ _cairo_surface_observer_fill (void			*abstract_surface,
 	return status;
     }
 
+    midpt (&composite, &x, &y);
+
     add_extents (&surface->log.fill.extents, &composite);
     add_extents (&device->log.fill.extents, &composite);
     _cairo_composite_rectangles_fini (&composite);
 
-    return _cairo_surface_fill (surface->target,
-				op, source, path,
-				fill_rule, tolerance, antialias,
-				clip);
+    start_timer (&ts);
+    status = _cairo_surface_fill (surface->target,
+				  op, source, path,
+				  fill_rule, tolerance, antialias,
+				  clip);
+    if (unlikely (status))
+	return status;
+
+    sync (surface->target, x, y);
+    elapsed = stop_timer (&ts);
+
+    if (elapsed > surface->log.fill.slowest.elapsed)
+	record_fill (&surface->log.fill.slowest,
+		     surface->target, op, source, path,
+		     fill_rule, tolerance, antialias,
+		     clip, elapsed);
+    surface->log.fill.elapsed += elapsed;
+
+    if (elapsed > device->log.fill.slowest.elapsed)
+	record_fill (&device->log.fill.slowest,
+		     surface->target, op, source, path,
+		     fill_rule, tolerance, antialias,
+		     clip, elapsed);
+    device->log.fill.elapsed += elapsed;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
@@ -567,6 +815,9 @@ _cairo_surface_observer_stroke (void				*abstract_surface,
     cairo_composite_rectangles_t composite;
     cairo_rectangle_int_t extents;
     cairo_int_status_t status;
+    struct timespec ts;
+    double elapsed;
+    int x, y;
 
     surface->log.stroke.count++;
     surface->log.stroke.operators[op]++;
@@ -598,15 +849,41 @@ _cairo_surface_observer_stroke (void				*abstract_surface,
 	return status;
     }
 
+    midpt (&composite, &x, &y);
+
     add_extents (&surface->log.stroke.extents, &composite);
     add_extents (&device->log.stroke.extents, &composite);
     _cairo_composite_rectangles_fini (&composite);
 
-    return _cairo_surface_stroke (surface->target,
+    start_timer (&ts);
+    status = _cairo_surface_stroke (surface->target,
 				  op, source, path,
 				  style, ctm, ctm_inverse,
 				  tolerance, antialias,
 				  clip);
+    if (unlikely (status))
+	return status;
+
+    sync (surface->target, x, y);
+    elapsed = stop_timer (&ts);
+
+    if (elapsed > surface->log.stroke.slowest.elapsed)
+	    record_stroke (&surface->log.stroke.slowest,
+			   surface->target, op, source, path,
+			   style, ctm,ctm_inverse,
+			   tolerance, antialias,
+			   clip, elapsed);
+    surface->log.stroke.elapsed += elapsed;
+
+    if (elapsed > device->log.stroke.slowest.elapsed)
+	record_stroke (&device->log.stroke.slowest,
+		       surface->target, op, source, path,
+		       style, ctm, ctm_inverse,
+		       tolerance, antialias,
+		       clip, elapsed);
+    device->log.stroke.elapsed += elapsed;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
@@ -624,6 +901,9 @@ _cairo_surface_observer_glyphs (void			*abstract_surface,
     cairo_composite_rectangles_t composite;
     cairo_rectangle_int_t extents;
     cairo_int_status_t status;
+    struct timespec ts;
+    double elapsed;
+    int x, y;
 
     surface->log.glyphs.count++;
     surface->log.glyphs.operators[op]++;
@@ -649,17 +929,41 @@ _cairo_surface_observer_glyphs (void			*abstract_surface,
 	return status;
     }
 
+    midpt (&composite, &x, &y);
+
     add_extents (&surface->log.glyphs.extents, &composite);
     add_extents (&device->log.glyphs.extents, &composite);
     _cairo_composite_rectangles_fini (&composite);
 
     *remaining_glyphs = 0;
-    return _cairo_surface_show_text_glyphs (surface->target, op, source,
+    start_timer (&ts);
+    status = _cairo_surface_show_text_glyphs (surface->target, op, source,
 					    NULL, 0,
 					    glyphs, num_glyphs,
 					    NULL, 0, 0,
 					    scaled_font,
 					    clip);
+    if (unlikely (status))
+	return status;
+
+    sync (surface->target, x, y);
+    elapsed = stop_timer (&ts);
+
+    if (elapsed > surface->log.glyphs.slowest.elapsed)
+	    record_glyphs (&surface->log.glyphs.slowest,
+			   surface->target, op, source,
+			   glyphs, num_glyphs, scaled_font,
+			   clip, elapsed);
+    surface->log.glyphs.elapsed += elapsed;
+
+    if (elapsed > device->log.glyphs.slowest.elapsed)
+	record_glyphs (&device->log.glyphs.slowest,
+		       surface->target, op, source,
+		       glyphs, num_glyphs, scaled_font,
+		       clip, elapsed);
+    device->log.glyphs.elapsed += elapsed;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -907,145 +1211,190 @@ print_array (cairo_output_stream_t *stream,
 				     i < j -1 ? "," : "");
 }
 
+static const char *operator_names[] = {
+    "CLEAR",	/* CAIRO_OPERATOR_CLEAR */
+
+    "SOURCE",	/* CAIRO_OPERATOR_SOURCE */
+    "OVER",		/* CAIRO_OPERATOR_OVER */
+    "IN",		/* CAIRO_OPERATOR_IN */
+    "OUT",		/* CAIRO_OPERATOR_OUT */
+    "ATOP",		/* CAIRO_OPERATOR_ATOP */
+
+    "DEST",		/* CAIRO_OPERATOR_DEST */
+    "DEST_OVER",	/* CAIRO_OPERATOR_DEST_OVER */
+    "DEST_IN",	/* CAIRO_OPERATOR_DEST_IN */
+    "DEST_OUT",	/* CAIRO_OPERATOR_DEST_OUT */
+    "DEST_ATOP",	/* CAIRO_OPERATOR_DEST_ATOP */
+
+    "XOR",		/* CAIRO_OPERATOR_XOR */
+    "ADD",		/* CAIRO_OPERATOR_ADD */
+    "SATURATE",	/* CAIRO_OPERATOR_SATURATE */
+
+    "MULTIPLY",	/* CAIRO_OPERATOR_MULTIPLY */
+    "SCREEN",	/* CAIRO_OPERATOR_SCREEN */
+    "OVERLAY",	/* CAIRO_OPERATOR_OVERLAY */
+    "DARKEN",	/* CAIRO_OPERATOR_DARKEN */
+    "LIGHTEN",	/* CAIRO_OPERATOR_LIGHTEN */
+    "DODGE",	/* CAIRO_OPERATOR_COLOR_DODGE */
+    "BURN",		/* CAIRO_OPERATOR_COLOR_BURN */
+    "HARD_LIGHT",	/* CAIRO_OPERATOR_HARD_LIGHT */
+    "SOFT_LIGHT",	/* CAIRO_OPERATOR_SOFT_LIGHT */
+    "DIFFERENCE",	/* CAIRO_OPERATOR_DIFFERENCE */
+    "EXCLUSION",	/* CAIRO_OPERATOR_EXCLUSION */
+    "HSL_HUE",	/* CAIRO_OPERATOR_HSL_HUE */
+    "HSL_SATURATION", /* CAIRO_OPERATOR_HSL_SATURATION */
+    "HSL_COLOR",	/* CAIRO_OPERATOR_HSL_COLOR */
+    "HSL_LUMINOSITY" /* CAIRO_OPERATOR_HSL_LUMINOSITY */
+};
 static void
 print_operators (cairo_output_stream_t *stream, unsigned int *array)
 {
-    static const char *names[] = {
-	"CLEAR",	/* CAIRO_OPERATOR_CLEAR */
-
-	"SOURCE",	/* CAIRO_OPERATOR_SOURCE */
-	"OVER",		/* CAIRO_OPERATOR_OVER */
-	"IN",		/* CAIRO_OPERATOR_IN */
-	"OUT",		/* CAIRO_OPERATOR_OUT */
-	"ATOP",		/* CAIRO_OPERATOR_ATOP */
-
-	"DEST",		/* CAIRO_OPERATOR_DEST */
-	"DEST_OVER",	/* CAIRO_OPERATOR_DEST_OVER */
-	"DEST_IN",	/* CAIRO_OPERATOR_DEST_IN */
-	"DEST_OUT",	/* CAIRO_OPERATOR_DEST_OUT */
-	"DEST_ATOP",	/* CAIRO_OPERATOR_DEST_ATOP */
-
-	"XOR",		/* CAIRO_OPERATOR_XOR */
-	"ADD",		/* CAIRO_OPERATOR_ADD */
-	"SATURATE",	/* CAIRO_OPERATOR_SATURATE */
-
-	"MULTIPLY",	/* CAIRO_OPERATOR_MULTIPLY */
-	"SCREEN",	/* CAIRO_OPERATOR_SCREEN */
-	"OVERLAY",	/* CAIRO_OPERATOR_OVERLAY */
-	"DARKEN",	/* CAIRO_OPERATOR_DARKEN */
-	"LIGHTEN",	/* CAIRO_OPERATOR_LIGHTEN */
-	"DODGE",	/* CAIRO_OPERATOR_COLOR_DODGE */
-	"BURN",		/* CAIRO_OPERATOR_COLOR_BURN */
-	"HARD_LIGHT",	/* CAIRO_OPERATOR_HARD_LIGHT */
-	"SOFT_LIGHT",	/* CAIRO_OPERATOR_SOFT_LIGHT */
-	"DIFFERENCE",	/* CAIRO_OPERATOR_DIFFERENCE */
-	"EXCLUSION",	/* CAIRO_OPERATOR_EXCLUSION */
-	"HSL_HUE",	/* CAIRO_OPERATOR_HSL_HUE */
-	"HSL_SATURATION", /* CAIRO_OPERATOR_HSL_SATURATION */
-	"HSL_COLOR",	/* CAIRO_OPERATOR_HSL_COLOR */
-	"HSL_LUMINOSITY" /* CAIRO_OPERATOR_HSL_LUMINOSITY */
-    };
-
     _cairo_output_stream_printf (stream, "  op:");
-    print_array (stream, array, names, NUM_OPERATORS);
+    print_array (stream, array, operator_names, NUM_OPERATORS);
     _cairo_output_stream_printf (stream, "\n");
 }
 
+static const char *fill_rule_names[] = {
+    "non-zero",
+    "even-odd",
+};
+static void
+print_fill_rule (cairo_output_stream_t *stream, unsigned int *array)
+{
+    _cairo_output_stream_printf (stream, "  fill rule:");
+    print_array (stream, array, fill_rule_names, ARRAY_LENGTH(fill_rule_names));
+    _cairo_output_stream_printf (stream, "\n");
+}
+
+static const char *cap_names[] = {
+    "butt",		/* CAIRO_LINE_CAP_BUTT */
+    "round",	/* CAIRO_LINE_CAP_ROUND */
+    "square"	/* CAIRO_LINE_CAP_SQUARE */
+};
 static void
 print_line_caps (cairo_output_stream_t *stream, unsigned int *array)
 {
-    static const char *names[] = {
-	"butt",		/* CAIRO_LINE_CAP_BUTT */
-	"round",	/* CAIRO_LINE_CAP_ROUND */
-	"square"	/* CAIRO_LINE_CAP_SQUARE */
-    };
     _cairo_output_stream_printf (stream, "  caps:");
-    print_array (stream, array, names, NUM_CAPS);
+    print_array (stream, array, cap_names, NUM_CAPS);
     _cairo_output_stream_printf (stream, "\n");
 }
 
+static const char *join_names[] = {
+    "miter",	/* CAIRO_LINE_JOIN_MITER */
+    "round",	/* CAIRO_LINE_JOIN_ROUND */
+    "bevel",	/* CAIRO_LINE_JOIN_BEVEL */
+};
 static void
 print_line_joins (cairo_output_stream_t *stream, unsigned int *array)
 {
-    static const char *names[] = {
-	"miter",	/* CAIRO_LINE_JOIN_MITER */
-	"round",	/* CAIRO_LINE_JOIN_ROUND */
-	"bevel",	/* CAIRO_LINE_JOIN_BEVEL */
-    };
     _cairo_output_stream_printf (stream, "  joins:");
-    print_array (stream, array, names, NUM_JOINS);
+    print_array (stream, array, join_names, NUM_JOINS);
     _cairo_output_stream_printf (stream, "\n");
 }
 
+static const char *antialias_names[] = {
+    "default",
+    "none",
+    "gray",
+    "subpixel"
+};
 static void
 print_antialias (cairo_output_stream_t *stream, unsigned int *array)
 {
-    static const char *names[] = {
-	"default",
-	"none",
-	"gray",
-	"subpixel"
-    };
     _cairo_output_stream_printf (stream, "  antialias:");
-    print_array (stream, array, names, NUM_ANTIALIAS);
+    print_array (stream, array, antialias_names, NUM_ANTIALIAS);
     _cairo_output_stream_printf (stream, "\n");
 }
 
+static const char *pattern_names[] = {
+    "native",
+    "record",
+    "other surface",
+    "solid",
+    "linear",
+    "radial",
+    "mesh"
+};
 static void
 print_pattern (cairo_output_stream_t *stream,
 	       const char *name,
 	       const struct pattern *p)
 {
-    static const char *names[] = {
-	"native",
-	"record",
-	"other surface",
-	"solid",
-	"linear",
-	"radial",
-	"mesh"
-    };
     _cairo_output_stream_printf (stream, "  %s:", name);
-    print_array (stream, p->type, names, ARRAY_LENGTH (names));
+    print_array (stream, p->type, pattern_names, ARRAY_LENGTH (pattern_names));
     _cairo_output_stream_printf (stream, "\n");
 }
 
+static const char *path_names[] = {
+    "empty",
+    "pixel-aligned",
+    "rectliinear",
+    "straight",
+    "curved",
+};
 static void
 print_path (cairo_output_stream_t *stream,
 	    const struct path *p)
 {
-    static const char *names[] = {
-	"empty",
-	"pixel-aligned",
-	"rectliinear",
-	"straight",
-	"curved",
-    };
     _cairo_output_stream_printf (stream, "  path:");
-    print_array (stream, p->type, names, ARRAY_LENGTH (names));
+    print_array (stream, p->type, path_names, ARRAY_LENGTH (path_names));
+    _cairo_output_stream_printf (stream, "\n");
+}
+
+static const char *clip_names[] = {
+    "none",
+    "region",
+    "boxes",
+    "single path",
+    "polygon",
+    "general",
+};
+static void
+print_clip (cairo_output_stream_t *stream, const struct clip *c)
+{
+    _cairo_output_stream_printf (stream, "  clip:");
+    print_array (stream, c->type, clip_names, ARRAY_LENGTH (clip_names));
     _cairo_output_stream_printf (stream, "\n");
 }
 
 static void
-print_clip (cairo_output_stream_t *stream, const struct clip *c)
+print_record (cairo_output_stream_t *stream,
+	      cairo_observation_record_t *r)
 {
-    static const char *names[] = {
-	"none",
-	"region",
-	"boxes",
-	"single path",
-	"polygon",
-	"general",
-    };
-    _cairo_output_stream_printf (stream, "  clip:");
-    print_array (stream, c->type, names, ARRAY_LENGTH (names));
-    _cairo_output_stream_printf (stream, "\n");
+    _cairo_output_stream_printf (stream, "  op: %s\n", operator_names[r->op]);
+    _cairo_output_stream_printf (stream, "  source: %s\n",
+				 pattern_names[r->source]);
+    if (r->mask != -1)
+	_cairo_output_stream_printf (stream, "  mask: %s\n",
+				     pattern_names[r->mask]);
+    if (r->num_glyphs != -1)
+	_cairo_output_stream_printf (stream, "  num_glyphs: %d\n",
+				     r->num_glyphs);
+    if (r->path != -1)
+	_cairo_output_stream_printf (stream, "  path: %s\n",
+				    path_names[r->path]);
+    if (r->fill_rule != -1)
+	_cairo_output_stream_printf (stream, "  fill rule: %s\n",
+				     fill_rule_names[r->fill_rule]);
+    if (r->antialias != -1)
+	_cairo_output_stream_printf (stream, "  antialias: %s\n",
+				     antialias_names[r->antialias]);
+    _cairo_output_stream_printf (stream, "  clip: %s\n", clip_names[r->clip]);
+    _cairo_output_stream_printf (stream, "  elapsed: %f ns\n", r->elapsed);
+}
+
+static double percent (double a, double b)
+{
+    /* Fake %.1f */
+    return round (a*1000 / b) / 10;
 }
 
 static void
 _cairo_observation_print (cairo_output_stream_t *stream,
-				  cairo_observation_t *log)
+			  cairo_observation_t *log)
 {
+    double total;
+
     _cairo_output_stream_printf (stream, "surfaces: %d\n",
 				 log->num_surfaces);
     _cairo_output_stream_printf (stream, "contexts: %d\n",
@@ -1053,38 +1402,75 @@ _cairo_observation_print (cairo_output_stream_t *stream,
     _cairo_output_stream_printf (stream, "sources acquired: %d\n",
 				 log->num_sources_acquired);
 
-    _cairo_output_stream_printf (stream, "paint: count %d [no-op %d]\n",
-				 log->paint.count, log->paint.noop);
+    total = 0;
+    total += log->paint.elapsed;
+    total += log->mask.elapsed;
+    total += log->fill.elapsed;
+    total += log->stroke.elapsed;
+    total += log->glyphs.elapsed;
+
+    _cairo_output_stream_printf (stream, "paint: count %d [no-op %d], elapsed %f [%f%%]\n",
+				 log->paint.count, log->paint.noop,
+				 log->paint.elapsed,
+				 percent (log->paint.elapsed, total));
     if (log->paint.count) {
 	print_extents (stream, &log->paint.extents);
 	print_operators (stream, log->paint.operators);
 	print_pattern (stream, "source", &log->paint.source);
 	print_clip (stream, &log->paint.clip);
+
+	_cairo_output_stream_printf (stream, "slowest paint: %f%%\n",
+				     percent (log->paint.slowest.elapsed,
+					      log->paint.elapsed));
+	print_record (stream, &log->paint.slowest);
+
+	_cairo_output_stream_printf (stream, "\n");
     }
 
-    _cairo_output_stream_printf (stream, "mask: count %d [no-op %d]\n",
-				 log->mask.count, log->mask.noop);
+    _cairo_output_stream_printf (stream, "mask: count %d [no-op %d], elapsed %f [%f%%]\n",
+				 log->mask.count, log->mask.noop,
+				 log->mask.elapsed,
+				 percent (log->mask.elapsed, total));
     if (log->mask.count) {
 	print_extents (stream, &log->mask.extents);
 	print_operators (stream, log->mask.operators);
 	print_pattern (stream, "source", &log->mask.source);
 	print_pattern (stream, "mask", &log->mask.mask);
 	print_clip (stream, &log->mask.clip);
+
+	_cairo_output_stream_printf (stream, "slowest mask: %f%%\n",
+				     percent (log->mask.slowest.elapsed,
+					      log->mask.elapsed));
+	print_record (stream, &log->mask.slowest);
+
+	_cairo_output_stream_printf (stream, "\n");
     }
 
-    _cairo_output_stream_printf (stream, "fill: count %d [no-op %d]\n",
-				 log->fill.count, log->fill.noop);
+    _cairo_output_stream_printf (stream, "fill: count %d [no-op %d], elaspsed %f [%f%%]\n",
+				 log->fill.count, log->fill.noop,
+				 log->fill.elapsed,
+				 percent (log->fill.elapsed, total));
     if (log->fill.count) {
 	print_extents (stream, &log->fill.extents);
 	print_operators (stream, log->fill.operators);
 	print_pattern (stream, "source", &log->fill.source);
 	print_path (stream, &log->fill.path);
+	print_fill_rule (stream, log->fill.fill_rule);
 	print_antialias (stream, log->fill.antialias);
 	print_clip (stream, &log->fill.clip);
+
+	_cairo_output_stream_printf (stream, "slowest fill: %f%%\n",
+				     percent (log->fill.slowest.elapsed,
+					      log->fill.elapsed));
+	print_record (stream, &log->fill.slowest);
+
+	_cairo_output_stream_printf (stream, "\n");
     }
 
-    _cairo_output_stream_printf (stream, "stroke: count %d [no-op %d]\n",
-				 log->stroke.count, log->stroke.noop);
+    _cairo_output_stream_printf (stream, "stroke: count %d [no-op %d], elapsed %f [%f%%]\n",
+				 log->stroke.count, log->stroke.noop,
+				 log->stroke.elapsed,
+				 percent (log->stroke.elapsed, total));
     if (log->stroke.count) {
 	print_extents (stream, &log->stroke.extents);
 	print_operators (stream, log->stroke.operators);
@@ -1094,15 +1480,31 @@ _cairo_observation_print (cairo_output_stream_t *stream,
 	print_line_caps (stream, log->stroke.caps);
 	print_line_joins (stream, log->stroke.joins);
 	print_clip (stream, &log->stroke.clip);
+
+	_cairo_output_stream_printf (stream, "slowest stroke: %f%%\n",
+				     percent (log->stroke.slowest.elapsed,
+					      log->stroke.elapsed));
+	print_record (stream, &log->stroke.slowest);
+
+	_cairo_output_stream_printf (stream, "\n");
     }
 
-    _cairo_output_stream_printf (stream, "glyphs: count %d [no-op %d]\n",
-				 log->glyphs.count, log->glyphs.noop);
+    _cairo_output_stream_printf (stream, "glyphs: count %d [no-op %d], elasped %f [%f%%]\n",
+				 log->glyphs.count, log->glyphs.noop,
+				 log->glyphs.elapsed,
+				 percent (log->glyphs.elapsed, total));
     if (log->glyphs.count) {
 	print_extents (stream, &log->glyphs.extents);
 	print_operators (stream, log->glyphs.operators);
 	print_pattern (stream, "source", &log->glyphs.source);
 	print_clip (stream, &log->glyphs.clip);
+
+	_cairo_output_stream_printf (stream, "slowest glyphs: %f%%\n",
+				     percent (log->glyphs.slowest.elapsed,
+					      log->glyphs.elapsed));
+	print_record (stream, &log->glyphs.slowest);
+
+	_cairo_output_stream_printf (stream, "\n");
     }
 }
 

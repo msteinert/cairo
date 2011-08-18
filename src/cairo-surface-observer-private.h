@@ -70,7 +70,21 @@ struct clip {
 };
 
 typedef struct _cairo_observation cairo_observation_t;
+typedef struct _cairo_observation_record cairo_observation_record_t;
 typedef struct _cairo_device_observer cairo_device_observer_t;
+
+struct _cairo_observation_record {
+    cairo_operator_t op;
+    int source;
+    int mask;
+    int num_glyphs;
+    int path;
+    int fill_rule;
+    double tolerance;
+    int antialias;
+    int clip;
+    double elapsed;
+};
 
 struct _cairo_observation {
     int num_surfaces;
@@ -80,15 +94,19 @@ struct _cairo_observation {
     /* XXX put interesting stats here! */
 
     struct paint {
+	double elapsed;
 	unsigned int count;
 	struct extents extents;
 	unsigned int operators[NUM_OPERATORS];
 	struct pattern source;
 	struct clip clip;
 	unsigned int noop;
+
+	cairo_observation_record_t slowest;
     } paint;
 
     struct mask {
+	double elapsed;
 	unsigned int count;
 	struct extents extents;
 	unsigned int operators[NUM_OPERATORS];
@@ -96,9 +114,12 @@ struct _cairo_observation {
 	struct pattern mask;
 	struct clip clip;
 	unsigned int noop;
+
+	cairo_observation_record_t slowest;
     } mask;
 
     struct fill {
+	double elapsed;
 	unsigned int count;
 	struct extents extents;
 	unsigned int operators[NUM_OPERATORS];
@@ -108,9 +129,12 @@ struct _cairo_observation {
 	unsigned int fill_rule[NUM_FILL_RULE];
 	struct clip clip;
 	unsigned int noop;
+
+	cairo_observation_record_t slowest;
     } fill;
 
     struct stroke {
+	double elapsed;
 	unsigned int count;
 	struct extents extents;
 	unsigned int operators[NUM_OPERATORS];
@@ -122,15 +146,20 @@ struct _cairo_observation {
 	struct stat line_width;
 	struct clip clip;
 	unsigned int noop;
+
+	cairo_observation_record_t slowest;
     } stroke;
 
     struct glyphs {
+	double elapsed;
 	unsigned int count;
 	struct extents extents;
 	unsigned int operators[NUM_OPERATORS];
 	struct pattern source;
 	struct clip clip;
 	unsigned int noop;
+
+	cairo_observation_record_t slowest;
     } glyphs;
 };
 
