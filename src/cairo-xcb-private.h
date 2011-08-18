@@ -56,6 +56,8 @@
 #include <xcb/xcbext.h>
 #include <pixman.h>
 
+#define XLIB_COORD_MAX 32767
+
 /* maximum number of cached GC's */
 #define GC_CACHE_SIZE 4
 

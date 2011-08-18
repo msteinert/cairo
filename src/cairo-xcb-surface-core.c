@@ -156,6 +156,9 @@ _cairo_xcb_shm_image_create_shm (cairo_xcb_connection_t *connection,
     if (! (connection->flags & CAIRO_XCB_HAS_SHM))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    if (unlikely (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     stride = CAIRO_STRIDE_FOR_WIDTH_BPP (width, PIXMAN_FORMAT_BPP (pixman_format));
     size = stride * height;
     if (size <= CAIRO_XCB_SHM_SMALL_IMAGE)

@@ -46,8 +46,6 @@
 #include "cairo-default-context-private.h"
 #include "cairo-image-surface-private.h"
 
-#define XLIB_COORD_MAX 32767
-
 #if CAIRO_HAS_XLIB_XCB_FUNCTIONS
 slim_hidden_proto (cairo_xcb_surface_create);
 slim_hidden_proto (cairo_xcb_surface_create_for_bitmap);
@@ -164,56 +162,22 @@ _cairo_xcb_surface_create_similar_image (void			*abstract_other,
 					 int			 width,
 					 int			 height)
 {
-#if CAIRO_HAS_XCB_SHM_FUNCTIONS
     cairo_xcb_surface_t *other = abstract_other;
     cairo_xcb_connection_t *connection = other->connection;
 
-    cairo_surface_t *image;
     cairo_xcb_shm_info_t *shm_info;
+    cairo_image_surface_t *image;
     cairo_status_t status;
-    size_t stride;
     pixman_format_code_t pixman_format;
-
-    if (unlikely(width > XLIB_COORD_MAX || height > XLIB_COORD_MAX))
-	return cairo_image_surface_create (format, width, height);
-
-    if ((connection->flags & CAIRO_XCB_HAS_SHM) == 0)
-	return cairo_image_surface_create (format, width, height);
 
     pixman_format = _cairo_format_to_pixman_format_code (format);
 
-    stride = CAIRO_STRIDE_FOR_WIDTH_BPP (width,
-					 PIXMAN_FORMAT_BPP (pixman_format));
-    status = _cairo_xcb_connection_allocate_shm_info (connection,
-						      stride * height,
-						      &shm_info);
+    status = _cairo_xcb_shm_image_create (connection, pixman_format,
+					  width, height, &image,
+					  &shm_info);
     if (unlikely (status))
-	return cairo_image_surface_create (format, width, height);
-
-    image = _cairo_image_surface_create_with_pixman_format (shm_info->mem,
-							    pixman_format,
-							    width,
-							    height,
-							    stride);
-    if (unlikely (image->status)) {
-	_cairo_xcb_shm_info_destroy (shm_info);
-	return image;
-    }
-
-    status = _cairo_user_data_array_set_data (&image->user_data,
-					      (const cairo_user_data_key_t *) connection,
-					      shm_info,
-					      (cairo_destroy_func_t) _cairo_xcb_shm_info_destroy);
-    if (unlikely (status)) {
-	cairo_surface_destroy (image);
-	_cairo_xcb_shm_info_destroy (shm_info);
 	return _cairo_surface_create_in_error (status);
-    }
-
-    return image;
-#else
-    return cairo_image_surface_create (format, width, height);
-#endif
+    return &image->base;
 }
 
 static cairo_status_t
