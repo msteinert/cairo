@@ -197,11 +197,14 @@ add_clip (struct clip *stats,
 	classify = 1;
     else if (clip->path == NULL)
 	classify = 2;
-    else
+    else if (clip->path->prev == NULL)
 	classify = 3;
+    else if (_cairo_clip_is_polygon (clip))
+	classify = 4;
+    else
+	classify = 5;
 
     stats->type[classify]++;
-
 }
 
 static void
@@ -1029,7 +1032,9 @@ print_clip (cairo_output_stream_t *stream, const struct clip *c)
 	"none",
 	"region",
 	"boxes",
-	"general path",
+	"single path",
+	"polygon",
+	"general",
     };
     _cairo_output_stream_printf (stream, "  clip:");
     print_array (stream, c->type, names, ARRAY_LENGTH (names));

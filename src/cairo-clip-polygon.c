@@ -125,3 +125,20 @@ _cairo_clip_get_polygon (const cairo_clip_t *clip,
 
     return CAIRO_STATUS_SUCCESS;
 }
+
+cairo_bool_t
+_cairo_clip_is_polygon (const cairo_clip_t *clip)
+{
+    if (_cairo_clip_is_all_clipped (clip))
+	return TRUE;
+
+    /* If there is no clip, we need an infinite polygon */
+    if (clip == NULL)
+	return FALSE;
+
+    if (clip->path == NULL)
+	return TRUE;
+
+    /* check that residual is all of the same type/tolerance */
+    return can_convert_to_polygon (clip);
+}
