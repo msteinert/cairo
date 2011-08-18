@@ -348,8 +348,13 @@ _get_image (cairo_xcb_surface_t		 *surface,
     if (use_shm) {
 	image = _get_shm_image (surface, x, y, width, height);
 	if (image) {
-	    _cairo_xcb_connection_release (connection);
-	    return image;
+	    /* XXX This only wants to catch SHM exhaustion,
+	     * not other allocation failures. */
+	    if (image->status != CAIRO_STATUS_NO_MEMORY) {
+		_cairo_xcb_connection_release (connection);
+		return image;
+	    }
+	    cairo_surface_destroy (image);
 	}
     }
 
