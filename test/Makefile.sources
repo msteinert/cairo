@@ -320,6 +320,7 @@ test_sources = \
 	user-font-rescale.c				\
 	world-map.c					\
 	white-in-noop.c					\
+	xcb-huge-image-shm.c				\
 	xcb-stress-cache.c				\
 	xcb-snapshot-assert.c				\
 	xcomposite-projection.c				\

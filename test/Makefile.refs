@@ -1402,6 +1402,7 @@ REFERENCE_IMAGES = \
 	world-map-stroke.ref.png \
 	world-map.image16.ref.png \
 	world-map.ref.png \
+	xcb-huge-image-shm.ref.png \
 	xcb-snapshot-assert.ref.png \
 	xcb-stress-cache.ref.png \
 	xcb-surface-source.argb32.ref.png \
