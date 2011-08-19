@@ -193,6 +193,7 @@ REFERENCE_IMAGES = \
 	clip-push-group.ref.png \
 	clip-push-group.svg.ref.png \
 	clip-push-group.xlib.ref.png \
+	clip-rotate-image-surface-paint.ref.png \
 	clip-shape.image16.ref.png \
 	clip-shape.ps.ref.png \
 	clip-shape.quartz.ref.png \
@@ -1080,6 +1081,7 @@ REFERENCE_IMAGES = \
 	rel-path.ref.png \
 	rel-path.rgb24.ref.png \
 	rgb24-ignore-alpha.ref.png \
+	rotate-clip-image-surface-paint.ref.png \
 	rotate-image-surface-paint.pdf.xfail.png \
 	rotate-image-surface-paint.ps.ref.png \
 	rotate-image-surface-paint.quartz.ref.png \
@@ -1288,6 +1290,9 @@ REFERENCE_IMAGES = \
 	svg-surface-source.rgb24.ref.png \
 	svg-surface-source.svg12.argb32.xfail.png \
 	svg-surface-source.svg12.rgb24.xfail.png \
+	test-fallback16-surface-source.ps.ref.png \
+	test-fallback16-surface-source.svg12.argb32.xfail.png \
+	test-fallback16-surface-source.svg12.rgb24.xfail.png \
 	text-antialias-gray.image16.ref.png \
 	text-antialias-gray.quartz.ref.png \
 	text-antialias-gray.ref.png \
