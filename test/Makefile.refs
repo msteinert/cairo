@@ -1024,6 +1024,7 @@ REFERENCE_IMAGES = \
 	record-extend-reflect.ref.png \
 	record-extend-repeat.ref.png \
 	record-fill-alpha.ref.png \
+	record-mesh.ref.png \
 	record-paint-alpha-clip-mask.ref.png \
 	record-paint-alpha-clip.ref.png \
 	record-paint-alpha-solid-clip.ref.png \
