@@ -346,166 +346,6 @@ describe (cairo_perf_t *perf,
 }
 
 static void
-execute (cairo_perf_t	 *perf,
-	 struct trace	 *args,
-	 const char	 *trace)
-{
-    static cairo_bool_t first_run = TRUE;
-    unsigned int i;
-    cairo_perf_ticks_t *times;
-    cairo_stats_t stats = {0.0, 0.0};
-    int low_std_dev_count;
-    char *trace_cpy, *name;
-    const cairo_script_interpreter_hooks_t hooks = {
-	args,
-	_similar_surface_create,
-	NULL, /* surface_destroy */
-	_context_create,
-	NULL, /* context_destroy */
-	NULL, /* show_page */
-	NULL /* copy_page */
-    };
-
-    trace_cpy = xstrdup (trace);
-    name = basename_no_ext (trace_cpy);
-
-    if (perf->list_only) {
-	printf ("%s\n", name);
-	free (trace_cpy);
-	return;
-    }
-
-    if (first_run) {
-	if (perf->raw) {
-	    printf ("[ # ] %s.%-s %s %s %s ...\n",
-		    "backend", "content", "test-size", "ticks-per-ms", "time(ticks)");
-	}
-
-	if (perf->summary) {
-	    fprintf (perf->summary,
-		     "[ # ] %8s %28s %8s %5s %5s %s\n",
-		     "backend", "test", "min(s)", "median(s)",
-		     "stddev.", "count");
-	}
-	first_run = FALSE;
-    }
-
-    describe (perf, args->closure);
-
-    times = perf->times;
-
-    if (perf->summary) {
-	fprintf (perf->summary,
-		 "[%3d] %8s %28s ",
-		 perf->test_number,
-		 perf->target->name,
-		 name);
-	fflush (perf->summary);
-    }
-
-    low_std_dev_count = 0;
-    for (i = 0; i < perf->iterations && ! user_interrupt; i++) {
-	cairo_script_interpreter_t *csi;
-	cairo_status_t status;
-	unsigned int line_no;
-
-	csi = cairo_script_interpreter_create ();
-	cairo_script_interpreter_install_hooks (csi, &hooks);
-
-	cairo_perf_yield ();
-	cairo_perf_timer_start ();
-
-	cairo_script_interpreter_run (csi, trace);
-	clear_surface (args->surface); /* queue a write to the sync'ed surface */
-
-	cairo_perf_timer_stop ();
-	times[i] = cairo_perf_timer_elapsed ();
-
-	cairo_script_interpreter_finish (csi);
-	scache_clear ();
-
-	line_no = cairo_script_interpreter_get_line_number (csi);
-	status = cairo_script_interpreter_destroy (csi);
-	if (status) {
-	    if (perf->summary) {
-		fprintf (perf->summary, "Error during replay, line %d: %s\n",
-			 line_no,
-			 cairo_status_to_string (status));
-	    }
-	    goto out;
-	}
-
-	if (perf->raw) {
-	    if (i == 0)
-		printf ("[*] %s.%s %s.%d %g",
-			perf->target->name,
-			"rgba",
-			name,
-			0,
-			cairo_perf_ticks_per_second () / 1000.0);
-	    printf (" %lld", (long long) times[i]);
-	    fflush (stdout);
-	} else if (! perf->exact_iterations) {
-	    if (i > CAIRO_PERF_MIN_STD_DEV_COUNT) {
-		_cairo_stats_compute (&stats, times, i+1);
-
-		if (stats.std_dev <= CAIRO_PERF_LOW_STD_DEV) {
-		    if (++low_std_dev_count >= CAIRO_PERF_STABLE_STD_DEV_COUNT)
-			break;
-		} else {
-		    low_std_dev_count = 0;
-		}
-	    }
-	}
-
-	if (perf->summary && perf->summary_continuous) {
-	    _cairo_stats_compute (&stats, times, i+1);
-
-	    fprintf (perf->summary,
-		     "\r[%3d] %8s %28s ",
-		     perf->test_number,
-		     perf->target->name,
-		     name);
-	    fprintf (perf->summary,
-		     "%#8.3f %#8.3f %#6.2f%% %4d/%d",
-		     (double) stats.min_ticks / cairo_perf_ticks_per_second (),
-		     (double) stats.median_ticks / cairo_perf_ticks_per_second (),
-		     stats.std_dev * 100.0,
-		     stats.iterations, i+1);
-	    fflush (perf->summary);
-	}
-    }
-    user_interrupt = 0;
-
-    if (perf->summary) {
-	_cairo_stats_compute (&stats, times, i);
-	if (perf->summary_continuous) {
-	    fprintf (perf->summary,
-		     "\r[%3d] %8s %28s ",
-		     perf->test_number,
-		     perf->target->name,
-		     name);
-	}
-	fprintf (perf->summary,
-		 "%#8.3f %#8.3f %#6.2f%% %4d/%d\n",
-		 (double) stats.min_ticks / cairo_perf_ticks_per_second (),
-		 (double) stats.median_ticks / cairo_perf_ticks_per_second (),
-		 stats.std_dev * 100.0,
-		 stats.iterations, i);
-	fflush (perf->summary);
-    }
-
-out:
-    if (perf->raw) {
-	printf ("\n");
-	fflush (stdout);
-    }
-
-    perf->test_number++;
-    free (trace_cpy);
-}
-
-static void
 usage (const char *argv0)
 {
     fprintf (stderr,
@@ -742,31 +582,184 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 		  const cairo_boilerplate_target_t *target,
 		  const char			   *trace)
 {
-    struct trace args;
+    static cairo_bool_t first_run = TRUE;
+    unsigned int i;
+    cairo_perf_ticks_t *times;
+    cairo_stats_t stats = {0.0, 0.0};
+    struct trace args = { target };
+    int low_std_dev_count;
+    char *trace_cpy, *name;
+    const cairo_script_interpreter_hooks_t hooks = {
+	&args,
+	_similar_surface_create,
+	NULL, /* surface_destroy */
+	_context_create,
+	NULL, /* context_destroy */
+	NULL, /* show_page */
+	NULL /* copy_page */
+    };
 
-    args.target = target;
-    args.surface = target->create_surface (NULL,
-					   CAIRO_CONTENT_COLOR_ALPHA,
-					   1, 1,
-					   1, 1,
-					   CAIRO_BOILERPLATE_MODE_PERF,
-					   0,
-					   &args.closure);
-    if (cairo_surface_status (args.surface)) {
-	fprintf (stderr,
-		 "Error: Failed to create target surface: %s\n",
-		 target->name);
+    trace_cpy = xstrdup (trace);
+    name = basename_no_ext (trace_cpy);
+
+    if (perf->list_only) {
+	printf ("%s\n", name);
+	free (trace_cpy);
 	return;
     }
 
-    cairo_perf_timer_set_synchronize (target->synchronize, args.closure);
+    if (first_run) {
+	if (perf->raw) {
+	    printf ("[ # ] %s.%-s %s %s %s ...\n",
+		    "backend", "content", "test-size", "ticks-per-ms", "time(ticks)");
+	}
 
-    execute (perf, &args, trace);
+	if (perf->summary) {
+	    fprintf (perf->summary,
+		     "[ # ] %8s %28s %8s %5s %5s %s\n",
+		     "backend", "test", "min(s)", "median(s)",
+		     "stddev.", "count");
+	}
+	first_run = FALSE;
+    }
 
-    cairo_surface_destroy (args.surface);
+    times = perf->times;
 
-    if (target->cleanup)
-	target->cleanup (args.closure);
+    low_std_dev_count = 0;
+    for (i = 0; i < perf->iterations && ! user_interrupt; i++) {
+	cairo_script_interpreter_t *csi;
+	cairo_status_t status;
+	unsigned int line_no;
+
+	args.surface = target->create_surface (NULL,
+					       CAIRO_CONTENT_COLOR_ALPHA,
+					       1, 1,
+					       1, 1,
+					       CAIRO_BOILERPLATE_MODE_PERF,
+					       0,
+					       &args.closure);
+	if (cairo_surface_status (args.surface)) {
+	    fprintf (stderr,
+		     "Error: Failed to create target surface: %s\n",
+		     target->name);
+	    return;
+	}
+
+	cairo_perf_timer_set_synchronize (target->synchronize, args.closure);
+
+	if (i == 0) {
+	    describe (perf, args.closure);
+	    if (perf->summary) {
+		fprintf (perf->summary,
+			 "[%3d] %8s %28s ",
+			 perf->test_number,
+			 perf->target->name,
+			 name);
+		fflush (perf->summary);
+	    }
+	}
+
+
+	csi = cairo_script_interpreter_create ();
+	cairo_script_interpreter_install_hooks (csi, &hooks);
+
+	cairo_perf_yield ();
+	cairo_perf_timer_start ();
+
+	cairo_script_interpreter_run (csi, trace);
+	clear_surface (args.surface); /* queue a write to the sync'ed surface */
+
+	cairo_perf_timer_stop ();
+	times[i] = cairo_perf_timer_elapsed ();
+
+	cairo_script_interpreter_finish (csi);
+	scache_clear ();
+
+	line_no = cairo_script_interpreter_get_line_number (csi);
+
+	cairo_surface_destroy (args.surface);
+
+	if (target->cleanup)
+	    target->cleanup (args.closure);
+
+	status = cairo_script_interpreter_destroy (csi);
+	if (status) {
+	    if (perf->summary) {
+		fprintf (perf->summary, "Error during replay, line %d: %s\n",
+			 line_no,
+			 cairo_status_to_string (status));
+	    }
+	    goto out;
+	}
+
+	if (perf->raw) {
+	    if (i == 0)
+		printf ("[*] %s.%s %s.%d %g",
+			perf->target->name,
+			"rgba",
+			name,
+			0,
+			cairo_perf_ticks_per_second () / 1000.0);
+	    printf (" %lld", (long long) times[i]);
+	    fflush (stdout);
+	} else if (! perf->exact_iterations) {
+	    if (i > CAIRO_PERF_MIN_STD_DEV_COUNT) {
+		_cairo_stats_compute (&stats, times, i+1);
+
+		if (stats.std_dev <= CAIRO_PERF_LOW_STD_DEV) {
+		    if (++low_std_dev_count >= CAIRO_PERF_STABLE_STD_DEV_COUNT)
+			break;
+		} else {
+		    low_std_dev_count = 0;
+		}
+	    }
+	}
+
+	if (perf->summary && perf->summary_continuous) {
+	    _cairo_stats_compute (&stats, times, i+1);
+
+	    fprintf (perf->summary,
+		     "\r[%3d] %8s %28s ",
+		     perf->test_number,
+		     perf->target->name,
+		     name);
+	    fprintf (perf->summary,
+		     "%#8.3f %#8.3f %#6.2f%% %4d/%d",
+		     (double) stats.min_ticks / cairo_perf_ticks_per_second (),
+		     (double) stats.median_ticks / cairo_perf_ticks_per_second (),
+		     stats.std_dev * 100.0,
+		     stats.iterations, i+1);
+	    fflush (perf->summary);
+	}
+    }
+    user_interrupt = 0;
+
+    if (perf->summary) {
+	_cairo_stats_compute (&stats, times, i);
+	if (perf->summary_continuous) {
+	    fprintf (perf->summary,
+		     "\r[%3d] %8s %28s ",
+		     perf->test_number,
+		     perf->target->name,
+		     name);
+	}
+	fprintf (perf->summary,
+		 "%#8.3f %#8.3f %#6.2f%% %4d/%d\n",
+		 (double) stats.min_ticks / cairo_perf_ticks_per_second (),
+		 (double) stats.median_ticks / cairo_perf_ticks_per_second (),
+		 stats.std_dev * 100.0,
+		 stats.iterations, i);
+	fflush (perf->summary);
+    }
+
+out:
+    if (perf->raw) {
+	printf ("\n");
+	fflush (stdout);
+    }
+
+    perf->test_number++;
+    free (trace_cpy);
 
     cairo_debug_reset_static_data ();
 #if HAVE_FCFINI
