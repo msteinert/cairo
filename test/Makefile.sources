@@ -15,6 +15,7 @@ test_sources = \
 	arc-looping-dash.c				\
 	api-special-cases.c				\
 	big-line.c					\
+	big-little-box.c				\
 	big-trap.c					\
 	bilevel-image.c					\
 	bug-bo-rectangular.c				\
