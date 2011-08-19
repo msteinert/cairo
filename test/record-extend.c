@@ -38,14 +38,12 @@
  */
 
 static cairo_surface_t *
-source (void)
+source (cairo_surface_t *surface)
 {
-    cairo_surface_t *surface;
     cairo_t *cr;
 
     /* Create a 4-pixel image surface with my favorite four colors in each
      * quadrant. */
-    surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24, 2, 2);
     cr = cairo_create (surface);
     cairo_surface_destroy (surface);
 
@@ -75,18 +73,31 @@ source (void)
     return surface;
 }
 
-static cairo_t *
-extend (cairo_t *cr, cairo_extend_t mode)
+static cairo_surface_t *
+image (cairo_t *cr)
 {
-    cairo_surface_t *surface;
+    return source (cairo_image_surface_create (CAIRO_FORMAT_RGB24, 2, 2));
+}
+
+static cairo_surface_t *
+similar (cairo_t *cr)
+{
+    return source (cairo_surface_create_similar (cairo_get_target (cr),
+						 CAIRO_CONTENT_COLOR, 2, 2));
+}
+
+static cairo_t *
+extend (cairo_t *cr, cairo_surface_t *(*surface)(cairo_t *), cairo_extend_t mode)
+{
+    cairo_surface_t *s;
 
     cairo_set_source_rgb (cr, 0, 1, 1);
     cairo_paint (cr);
 
     /* Now use extend modes to cover most of the surface with those 4 colors */
-    surface = source ();
-    cairo_set_source_surface (cr, surface, SIZE/2 - 1, SIZE/2 - 1);
-    cairo_surface_destroy (surface);
+    s = surface (cr);
+    cairo_set_source_surface (cr, s, SIZE/2 - 1, SIZE/2 - 1);
+    cairo_surface_destroy (s);
 
     cairo_pattern_set_extend (cairo_get_source (cr), mode);
 
@@ -98,27 +109,31 @@ extend (cairo_t *cr, cairo_extend_t mode)
 }
 
 static cairo_t *
-extend_none (cairo_t *cr)
+extend_none (cairo_t *cr,
+	     cairo_surface_t *(*pattern)(cairo_t *))
 {
-    return extend (cr, CAIRO_EXTEND_NONE);
+    return extend (cr, pattern, CAIRO_EXTEND_NONE);
 }
 
 static cairo_t *
-extend_pad (cairo_t *cr)
+extend_pad (cairo_t *cr,
+	    cairo_surface_t *(*pattern)(cairo_t *))
 {
-    return extend (cr, CAIRO_EXTEND_PAD);
+    return extend (cr, pattern, CAIRO_EXTEND_PAD);
 }
 
 static cairo_t *
-extend_repeat (cairo_t *cr)
+extend_repeat (cairo_t *cr,
+	       cairo_surface_t *(*pattern)(cairo_t *))
 {
-    return extend (cr, CAIRO_EXTEND_REPEAT);
+    return extend (cr, pattern, CAIRO_EXTEND_REPEAT);
 }
 
 static cairo_t *
-extend_reflect (cairo_t *cr)
+extend_reflect (cairo_t *cr,
+	       cairo_surface_t *(*pattern)(cairo_t *))
 {
-    return extend (cr, CAIRO_EXTEND_REFLECT);
+    return extend (cr, pattern, CAIRO_EXTEND_REFLECT);
 }
 
 static cairo_t *
@@ -146,12 +161,16 @@ record_get (cairo_t *target)
 }
 
 static cairo_test_status_t
-record_replay (cairo_t *cr, cairo_t *(*func)(cairo_t *), int width, int height)
+record_replay (cairo_t *cr,
+	       cairo_t *(*func)(cairo_t *,
+				cairo_surface_t *(*pattern)(cairo_t *)),
+	       cairo_surface_t *(*pattern)(cairo_t *),
+	       int width, int height)
 {
     cairo_surface_t *surface;
     int x, y;
 
-    surface = record_get (func (record_create (cr)));
+    surface = record_get (func (record_create (cr), pattern));
 
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
     cairo_set_source_surface (cr, surface, 0, 0);
@@ -173,25 +192,49 @@ record_replay (cairo_t *cr, cairo_t *(*func)(cairo_t *), int width, int height)
 static cairo_test_status_t
 record_extend_none (cairo_t *cr, int width, int height)
 {
-    return record_replay (cr, extend_none, width, height);
+    return record_replay (cr, extend_none, image, width, height);
 }
 
 static cairo_test_status_t
 record_extend_pad (cairo_t *cr, int width, int height)
 {
-    return record_replay (cr, extend_pad, width, height);
+    return record_replay (cr, extend_pad, image, width, height);
 }
 
 static cairo_test_status_t
 record_extend_repeat (cairo_t *cr, int width, int height)
 {
-    return record_replay (cr, extend_repeat, width, height);
+    return record_replay (cr, extend_repeat, image, width, height);
 }
 
 static cairo_test_status_t
 record_extend_reflect (cairo_t *cr, int width, int height)
 {
-    return record_replay (cr, extend_reflect, width, height);
+    return record_replay (cr, extend_reflect, image, width, height);
+}
+
+static cairo_test_status_t
+record_extend_none_similar (cairo_t *cr, int width, int height)
+{
+    return record_replay (cr, extend_none, similar, width, height);
+}
+
+static cairo_test_status_t
+record_extend_pad_similar (cairo_t *cr, int width, int height)
+{
+    return record_replay (cr, extend_pad, similar, width, height);
+}
+
+static cairo_test_status_t
+record_extend_repeat_similar (cairo_t *cr, int width, int height)
+{
+    return record_replay (cr, extend_repeat, similar, width, height);
+}
+
+static cairo_test_status_t
+record_extend_reflect_similar (cairo_t *cr, int width, int height)
+{
+    return record_replay (cr, extend_reflect, similar, width, height);
 }
 
 CAIRO_TEST (record_extend_none,
@@ -218,3 +261,28 @@ CAIRO_TEST (record_extend_reflect,
 	    NULL, /* requirements */
 	    SIZE, SIZE,
 	    NULL, record_extend_reflect)
+
+CAIRO_TEST (record_extend_none_similar,
+	    "Test CAIRO_EXTEND_NONE for recorded surface patterns",
+	    "record, extend", /* keywords */
+	    NULL, /* requirements */
+	    SIZE, SIZE,
+	    NULL, record_extend_none_similar)
+CAIRO_TEST (record_extend_pad_similar,
+	    "Test CAIRO_EXTEND_PAD for recorded surface patterns",
+	    "record, extend", /* keywords */
+	    NULL, /* requirements */
+	    SIZE, SIZE,
+	    NULL, record_extend_pad_similar)
+CAIRO_TEST (record_extend_repeat_similar,
+	    "Test CAIRO_EXTEND_REPEAT for recorded surface patterns",
+	    "record, extend", /* keywords */
+	    NULL, /* requirements */
+	    SIZE, SIZE,
+	    NULL, record_extend_repeat_similar)
+CAIRO_TEST (record_extend_reflect_similar,
+	    "Test CAIRO_EXTEND_REFLECT for recorded surface patterns",
+	    "record, extend", /* keywords */
+	    NULL, /* requirements */
+	    SIZE, SIZE,
+	    NULL, record_extend_reflect_similar)
