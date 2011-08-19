@@ -82,6 +82,7 @@ REFERENCE_IMAGES = \
 	caps.image16.ref.png \
 	caps.ps.ref.png \
 	caps.ref.png \
+	checkerboard.ref.png \
 	clear-source.image16.ref.png \
 	clear-source.pdf.xfail.png \
 	clear-source.ps.xfail.png \
@@ -1280,9 +1281,6 @@ REFERENCE_IMAGES = \
 	svg-surface-source.rgb24.ref.png \
 	svg-surface-source.svg12.argb32.xfail.png \
 	svg-surface-source.svg12.rgb24.xfail.png \
-	test-fallback16-surface-source.ps.ref.png \
-	test-fallback16-surface-source.svg12.argb32.xfail.png \
-	test-fallback16-surface-source.svg12.rgb24.xfail.png \
 	text-antialias-gray.image16.ref.png \
 	text-antialias-gray.quartz.ref.png \
 	text-antialias-gray.ref.png \

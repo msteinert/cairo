@@ -21,6 +21,7 @@ test_sources = \
 	bug-extents.c					\
 	bug-seams.c					\
 	caps.c						\
+	checkerboard.c					\
 	caps-joins.c					\
 	caps-joins-alpha.c				\
 	caps-joins-curve.c				\
