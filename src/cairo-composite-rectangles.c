@@ -224,9 +224,7 @@ _cairo_composite_rectangles_init_for_glyphs (cairo_composite_rectangles_t *exten
 
     if (! _cairo_composite_rectangles_init (extents, unbounded,
 					    op, source, clip))
-    {
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
-    }
 
     /* Computing the exact bbox and the overlap is expensive.
      * First perform a cheap test to see if the glyphs are all clipped out.

@@ -113,7 +113,7 @@ static void init_glyphs (struct glyphs *g)
     init_clip (&g->clip);
 }
 
-static void
+static cairo_status_t
 log_init (cairo_observation_t *log)
 {
     memset (log, 0, sizeof(*log));
@@ -125,8 +125,15 @@ log_init (cairo_observation_t *log)
     init_glyphs (&log->glyphs);
 
     _cairo_array_init (&log->timings, sizeof (cairo_observation_record_t));
+
     log->record = (cairo_recording_surface_t *)
 	    cairo_recording_surface_create (CAIRO_CONTENT_COLOR_ALPHA, NULL);
+    if (unlikely (log->record->base.status))
+	return log->record->base.status;
+
+    log->record->optimize_clears = FALSE;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -323,15 +330,20 @@ static cairo_device_t *
 _cairo_device_create_observer_internal (cairo_device_t *target)
 {
     cairo_device_observer_t *device;
+    cairo_status_t status;
 
     device = malloc (sizeof (cairo_device_observer_t));
     if (unlikely (device == NULL))
 	return _cairo_device_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_device_init (&device->base, &_cairo_device_observer_backend);
-    device->target = cairo_device_reference (target);
+    status = log_init (&device->log);
+    if (unlikely (status)) {
+	free (device);
+	return _cairo_device_create_in_error (status);
+    }
 
-    log_init (&device->log);
+    device->target = cairo_device_reference (target);
 
     return &device->base;
 }
@@ -349,6 +361,7 @@ _cairo_surface_create_observer_internal (cairo_device_t *device,
 					 cairo_surface_t *target)
 {
     cairo_surface_observer_t *surface;
+    cairo_status_t status;
 
     surface = malloc (sizeof (cairo_surface_observer_t));
     if (unlikely (surface == NULL))
@@ -358,7 +371,11 @@ _cairo_surface_create_observer_internal (cairo_device_t *device,
 			 &_cairo_surface_observer_backend, device,
 			 target->content);
 
-    log_init (&surface->log);
+    status = log_init (&surface->log);
+    if (unlikely (status)) {
+	free (surface);
+	return _cairo_surface_create_in_error (status);
+    }
 
     surface->target = cairo_surface_reference (target);
     surface->base.type = surface->target->type;

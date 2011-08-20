@@ -134,6 +134,7 @@ typedef struct _cairo_recording_surface {
     cairo_array_t commands;
     int *indices;
     int num_indices;
+    cairo_bool_t optimize_clears;
 
     struct bbtree {
 	cairo_box_t extents;

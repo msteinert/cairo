@@ -413,6 +413,7 @@ cairo_recording_surface_create (cairo_content_t		 content,
 
     surface->indices = NULL;
     surface->num_indices = 0;
+    surface->optimize_clears = TRUE;
 
     return &surface->base;
 }
@@ -714,13 +715,12 @@ _cairo_recording_surface_paint (void			  *abstract_surface,
     cairo_composite_rectangles_t composite;
     const cairo_rectangle_int_t *extents;
 
-    /* An optimisation that takes care to not replay what was done
-     * before surface is cleared. We don't erase recorded commands
-     * since we may have earlier snapshots of this surface. */
     if (op == CAIRO_OPERATOR_CLEAR && clip == NULL) {
-	_cairo_recording_surface_destroy_bbtree (surface);
-	surface->commands.num_elements = 0;
-	return CAIRO_STATUS_SUCCESS;
+	if (surface->optimize_clears) {
+	    _cairo_recording_surface_destroy_bbtree (surface);
+	    surface->commands.num_elements = 0;
+	    return CAIRO_STATUS_SUCCESS;
+	}
     }
 
     extents = _cairo_recording_surface_extents (surface);
