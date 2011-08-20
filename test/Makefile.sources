@@ -267,6 +267,7 @@ test_sources = \
 	show-glyphs-advance.c				\
 	show-glyphs-many.c				\
 	show-text-current-point.c			\
+	shape-general-convex.c				\
 	skew-extreme.c					\
 	smask.c						\
 	smask-fill.c					\
