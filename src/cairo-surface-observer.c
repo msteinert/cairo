@@ -477,7 +477,7 @@ record_target (cairo_observation_record_t *r,
     }
 }
 
-static void
+static cairo_observation_record_t *
 record_paint (cairo_observation_record_t *r,
 	      cairo_surface_t *target,
 	      cairo_operator_t op,
@@ -497,9 +497,11 @@ record_paint (cairo_observation_record_t *r,
     r->antialias = -1;
     r->clip = classify_clip (clip);
     r->elapsed = elapsed;
+
+    return r;
 }
 
-static void
+static cairo_observation_record_t *
 record_mask (cairo_observation_record_t *r,
 	     cairo_surface_t *target,
 	     cairo_operator_t op,
@@ -520,9 +522,11 @@ record_mask (cairo_observation_record_t *r,
     r->antialias = -1;
     r->clip = classify_clip (clip);
     r->elapsed = elapsed;
+
+    return r;
 }
 
-static void
+static cairo_observation_record_t *
 record_fill (cairo_observation_record_t *r,
 	     cairo_surface_t		*target,
 	     cairo_operator_t		op,
@@ -546,9 +550,11 @@ record_fill (cairo_observation_record_t *r,
     r->antialias = antialias;
     r->clip = classify_clip (clip);
     r->elapsed = elapsed;
+
+    return r;
 }
 
-static void
+static cairo_observation_record_t *
 record_stroke (cairo_observation_record_t *r,
 	       cairo_surface_t		*target,
 	       cairo_operator_t		op,
@@ -574,9 +580,11 @@ record_stroke (cairo_observation_record_t *r,
     r->antialias = antialias;
     r->clip = classify_clip (clip);
     r->elapsed = elapsed;
+
+    return r;
 }
 
-static void
+static cairo_observation_record_t *
 record_glyphs (cairo_observation_record_t *r,
 	       cairo_surface_t		*target,
 	       cairo_operator_t		op,
@@ -599,6 +607,8 @@ record_glyphs (cairo_observation_record_t *r,
     r->antialias = -1;
     r->clip = classify_clip (clip);
     r->elapsed = elapsed;
+
+    return r;
 }
 
 static void
@@ -608,7 +618,7 @@ add_record (cairo_observation_t *log,
 {
     cairo_int_status_t status;
 
-    r->index = index - 1;
+    r->index = index;
 
     status = _cairo_array_append (&log->timings, r);
     assert (status == CAIRO_INT_STATUS_SUCCESS);
@@ -666,11 +676,18 @@ add_record_paint (cairo_observation_t *log,
     cairo_observation_record_t record;
     cairo_int_status_t status;
 
-    record_paint (&record, target, op, source, clip, elapsed);
+    add_record (log,
+		record_paint (&record, target, op, source, clip, elapsed),
+		log->record->commands.num_elements);
 
-    status = _cairo_surface_paint (&log->record->base, op, source, clip);
+    /* We have to bypass the high-level surface layer in case it tries to be
+     * too smart and discard operations; we need to record exactly what just
+     * happened on the target.
+     */
+    status = log->record->base.backend->paint (&log->record->base,
+					       op, source, clip);
     assert (status == CAIRO_INT_STATUS_SUCCESS);
-    add_record (log, &record, log->record->commands.num_elements);
+    assert (log->record->commands.num_elements == record.index + 1);
 
     if (elapsed > log->paint.slowest.elapsed)
 	log->paint.slowest = record;
@@ -749,12 +766,13 @@ add_record_mask (cairo_observation_t *log,
     cairo_observation_record_t record;
     cairo_int_status_t status;
 
-    record_mask (&record, target, op, source, mask, clip, elapsed);
+    add_record (log,
+		record_mask (&record, target, op, source, mask, clip, elapsed),
+		log->record->commands.num_elements);
 
-    status = _cairo_surface_mask (&log->record->base,
-				  op, source, mask, clip);
+    status = log->record->base.backend->mask (&log->record->base,
+					      op, source, mask, clip);
     assert (status == CAIRO_INT_STATUS_SUCCESS);
-    add_record (log, &record, log->record->commands.num_elements);
 
     if (elapsed > log->mask.slowest.elapsed)
 	log->mask.slowest = record;
@@ -841,17 +859,19 @@ add_record_fill (cairo_observation_t *log,
     cairo_observation_record_t record;
     cairo_int_status_t status;
 
-    record_fill (&record,
-		 target, op, source,
-		 path, fill_rule, tolerance, antialias,
-		 clip, elapsed);
+    add_record (log,
+		record_fill (&record,
+			     target, op, source,
+			     path, fill_rule, tolerance, antialias,
+			     clip, elapsed),
+		log->record->commands.num_elements);
 
-    status = _cairo_surface_fill (&log->record->base,
-				  op, source,
-				  path, fill_rule, tolerance, antialias,
-				  clip);
+    status = log->record->base.backend->fill (&log->record->base,
+					      op, source,
+					      path, fill_rule,
+					      tolerance, antialias,
+					      clip);
     assert (status == CAIRO_INT_STATUS_SUCCESS);
-    add_record (log, &record, log->record->commands.num_elements);
 
     if (elapsed > log->fill.slowest.elapsed)
 	log->fill.slowest = record;
@@ -951,19 +971,20 @@ add_record_stroke (cairo_observation_t *log,
     cairo_observation_record_t record;
     cairo_int_status_t status;
 
-    record_stroke (&record,
-		   target, op, source,
-		   path, style, ctm,ctm_inverse,
-		   tolerance, antialias,
-		   clip, elapsed);
+    add_record (log,
+		record_stroke (&record,
+			       target, op, source,
+			       path, style, ctm,ctm_inverse,
+			       tolerance, antialias,
+			       clip, elapsed),
+		log->record->commands.num_elements);
 
-    status = _cairo_surface_stroke (&log->record->base,
-				    op, source,
-				    path, style, ctm,ctm_inverse,
-				    tolerance, antialias,
-				    clip);
+    status = log->record->base.backend->stroke (&log->record->base,
+						op, source,
+						path, style, ctm,ctm_inverse,
+						tolerance, antialias,
+						clip);
     assert (status == CAIRO_INT_STATUS_SUCCESS);
-    add_record (log, &record, log->record->commands.num_elements);
 
     if (elapsed > log->stroke.slowest.elapsed)
 	log->stroke.slowest = record;
@@ -1068,19 +1089,21 @@ add_record_glyphs (cairo_observation_t	*log,
     cairo_observation_record_t record;
     cairo_int_status_t status;
 
-    record_glyphs (&record,
-		   target, op, source,
-		   glyphs, num_glyphs, scaled_font,
-		   clip, elapsed);
+    add_record (log,
+		record_glyphs (&record,
+			       target, op, source,
+			       glyphs, num_glyphs, scaled_font,
+			       clip, elapsed),
+		log->record->commands.num_elements);
 
-    status = _cairo_surface_show_text_glyphs (&log->record->base, op, source,
-					      NULL, 0,
-					      glyphs, num_glyphs,
-					      NULL, 0, 0,
-					      scaled_font,
-					      clip);
+    status = log->record->base.backend->show_text_glyphs (&log->record->base,
+							  op, source,
+							  NULL, 0,
+							  glyphs, num_glyphs,
+							  NULL, 0, 0,
+							  scaled_font,
+							  clip);
     assert (status == CAIRO_INT_STATUS_SUCCESS);
-    add_record (log, &record, log->record->commands.num_elements);
 
     if (elapsed > log->glyphs.slowest.elapsed)
 	log->glyphs.slowest = record;
