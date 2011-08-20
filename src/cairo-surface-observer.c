@@ -1102,6 +1102,7 @@ _cairo_surface_observer_glyphs (void			*abstract_surface,
     cairo_composite_rectangles_t composite;
     cairo_rectangle_int_t extents;
     cairo_int_status_t status;
+    cairo_glyph_t *dev_glyphs;
     struct timespec ts;
     double elapsed;
     int x, y;
@@ -1136,14 +1137,22 @@ _cairo_surface_observer_glyphs (void			*abstract_surface,
     add_extents (&device->log.glyphs.extents, &composite);
     _cairo_composite_rectangles_fini (&composite);
 
+    /* XXX We have to copy the glyphs, because the backend is allowed to
+     * modify! */
+    dev_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
+    if (unlikely (dev_glyphs == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    memcpy (dev_glyphs, glyphs, num_glyphs * sizeof (cairo_glyph_t));
+
     *remaining_glyphs = 0;
     start_timer (&ts);
     status = _cairo_surface_show_text_glyphs (surface->target, op, source,
-					    NULL, 0,
-					    glyphs, num_glyphs,
-					    NULL, 0, 0,
-					    scaled_font,
-					    clip);
+					      NULL, 0,
+					      dev_glyphs, num_glyphs,
+					      NULL, 0, 0,
+					      scaled_font,
+					      clip);
+    free (dev_glyphs);
     if (unlikely (status))
 	return status;
 
