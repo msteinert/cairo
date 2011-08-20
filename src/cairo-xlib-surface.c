@@ -1395,7 +1395,7 @@ _cairo_xlib_surface_snapshot (void *abstract_surface)
 
     extents.x = extents.y = 0;
     extents.width = surface->width;
-    extents.height = surface->width;
+    extents.height = surface->height;
 
     /* XXX notice the duplication */
     return _get_image_surface (surface, &extents);
