@@ -201,14 +201,13 @@ classify_path (const cairo_path_fixed_t *path,
 	if (path->fill_is_empty)
 	    classify = 0;
 	else if (_cairo_path_fixed_fill_is_rectilinear (path))
-	    classify = 1;
+	    classify = path->fill_maybe_region ? 1 : 2;
     } else {
 	if (_cairo_path_fixed_stroke_is_rectilinear (path))
-	    classify = 1;
+	    classify = 2;
     }
-    if (classify == 1 && ! path->fill_maybe_region)
-	classify = 2;
-    classify = 3 + path->has_curve_to != 0;
+    if (classify == -1)
+	classify = 3 + (path->has_curve_to != 0);
 
     return classify;
 }
