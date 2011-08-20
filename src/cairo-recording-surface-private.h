@@ -149,6 +149,11 @@ _cairo_recording_surface_get_path (cairo_surface_t	 *surface,
 				   cairo_path_fixed_t *path);
 
 cairo_private cairo_status_t
+_cairo_recording_surface_replay_one (cairo_recording_surface_t	*surface,
+				     long unsigned index,
+				     cairo_surface_t *target);
+
+cairo_private cairo_status_t
 _cairo_recording_surface_replay (cairo_surface_t *surface,
 				 cairo_surface_t *target);
 

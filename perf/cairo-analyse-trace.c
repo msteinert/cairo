@@ -427,7 +427,6 @@ cairo_perf_fini (cairo_perf_t *perf)
     cairo_boilerplate_free_targets (perf->targets);
     cairo_boilerplate_fini ();
 
-    free (perf->times);
     cairo_debug_reset_static_data ();
 #if HAVE_FCFINI
     FcFini ();
@@ -585,7 +584,6 @@ main (int   argc,
 	trace_dir = getenv ("CAIRO_TRACE_DIR");
 
     perf.targets = cairo_boilerplate_get_targets (&perf.num_targets, NULL);
-    perf.times = xmalloc (perf.iterations * sizeof (cairo_perf_ticks_t));
 
     /* do we have a list of filenames? */
     perf.exact_names = have_trace_filenames (&perf);

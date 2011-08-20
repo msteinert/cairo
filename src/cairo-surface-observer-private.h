@@ -39,6 +39,7 @@
 #include "cairoint.h" /* cairo_surface_backend_t */
 
 #include "cairo-device-private.h"
+#include "cairo-recording-surface-private.h"
 #include "cairo-surface-private.h"
 
 struct stat {
@@ -74,6 +75,11 @@ typedef struct _cairo_observation_record cairo_observation_record_t;
 typedef struct _cairo_device_observer cairo_device_observer_t;
 
 struct _cairo_observation_record {
+    cairo_content_t target_content;
+    int target_width;
+    int target_height;
+
+    int index;
     cairo_operator_t op;
     int source;
     int mask;
@@ -161,6 +167,9 @@ struct _cairo_observation {
 
 	cairo_observation_record_t slowest;
     } glyphs;
+
+    cairo_array_t timings;
+    cairo_recording_surface_t *record;
 };
 
 struct _cairo_device_observer {

@@ -45,6 +45,7 @@
 #include "cairoint.h"
 
 #include "cairo-script.h"
+#include "cairo-script-private.h"
 
 #include "cairo-analysis-surface-private.h"
 #include "cairo-default-context-private.h"
@@ -100,7 +101,9 @@ struct _cairo_script_context {
     cairo_device_t base;
 
     int active;
+    int attach_snapshots;
 
+    cairo_bool_t owns_stream;
     cairo_output_stream_t *stream;
     cairo_script_mode_t mode;
 
@@ -1070,6 +1073,9 @@ attach_snapshot (cairo_script_context_t *ctx,
 {
     struct script_snapshot *surface;
 
+    if (! ctx->attach_snapshots)
+	return;
+
     surface = malloc (sizeof (*surface));
     if (unlikely (surface == NULL))
 	return;
@@ -1983,10 +1989,12 @@ _cairo_script_surface_create_similar (void	       *abstract_surface,
 
     _get_target (other);
     _cairo_output_stream_printf (ctx->stream,
-				 "%u %u //%s similar dup /s%u exch def context\n",
+				 "%u %u //%s similar",
 				 width, height,
-				 _content_to_string (content),
-				 surface->base.unique_id);
+				 _content_to_string (content));
+    attach_snapshot (ctx, &surface->base);
+    _cairo_output_stream_printf (ctx->stream, " context\n");
+
     surface->emitted = TRUE;
     surface->defined = TRUE;
     surface->base.is_clear = TRUE;
@@ -2025,7 +2033,8 @@ _device_destroy (void *abstract_device)
     _bitmap_fini (ctx->surface_id.next);
     _bitmap_fini (ctx->font_id.next);
 
-    status = _cairo_output_stream_destroy (ctx->stream);
+    if (ctx->owns_stream)
+	status = _cairo_output_stream_destroy (ctx->stream);
 
     free (ctx);
 }
@@ -3623,7 +3632,7 @@ static const cairo_device_backend_t _cairo_script_device_backend = {
     _device_destroy
 };
 
-static cairo_device_t *
+cairo_device_t *
 _cairo_script_context_create_internal (cairo_output_stream_t *stream)
 {
     cairo_script_context_t *ctx;
@@ -3644,8 +3653,33 @@ _cairo_script_context_create_internal (cairo_output_stream_t *stream)
     cairo_list_init (&ctx->fonts);
     cairo_list_init (&ctx->defines);
 
-    _cairo_output_stream_puts (ctx->stream, "%!CairoScript\n");
+    ctx->attach_snapshots = TRUE;
 
+    return &ctx->base;
+}
+
+void
+_cairo_script_context_attach_snapshots (cairo_device_t *device,
+					cairo_bool_t enable)
+{
+    cairo_script_context_t *ctx;
+
+    ctx = (cairo_script_context_t *) device;
+    ctx->attach_snapshots = enable;
+}
+
+static cairo_device_t *
+_cairo_script_context_create (cairo_output_stream_t *stream)
+{
+    cairo_script_context_t *ctx;
+
+    ctx = (cairo_script_context_t *)
+	_cairo_script_context_create_internal (stream);
+    if (unlikely (ctx->base.status))
+	return &ctx->base;
+
+    ctx->owns_stream = TRUE;
+    _cairo_output_stream_puts (ctx->stream, "%!CairoScript\n");
     return &ctx->base;
 }
 
@@ -3659,7 +3693,7 @@ cairo_script_create (const char *filename)
     if ((status = _cairo_output_stream_get_status (stream)))
 	return _cairo_device_create_in_error (status);
 
-    return _cairo_script_context_create_internal (stream);
+    return _cairo_script_context_create (stream);
 }
 
 cairo_device_t *
@@ -3673,7 +3707,7 @@ cairo_script_create_for_stream (cairo_write_func_t	 write_func,
     if ((status = _cairo_output_stream_get_status (stream)))
 	return _cairo_device_create_in_error (status);
 
-    return _cairo_script_context_create_internal (stream);
+    return _cairo_script_context_create (stream);
 }
 
 void
@@ -3733,6 +3767,7 @@ cairo_script_surface_create (cairo_device_t *device,
 						   content, extents,
 						   NULL)->base;
 }
+slim_hidden_def (cairo_script_surface_create);
 
 cairo_surface_t *
 cairo_script_surface_create_for_target (cairo_device_t *device,

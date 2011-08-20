@@ -1480,6 +1480,96 @@ done:
     return _cairo_surface_set_error (&surface->base, status);
 }
 
+cairo_status_t
+_cairo_recording_surface_replay_one (cairo_recording_surface_t	*surface,
+				     long unsigned index,
+				     cairo_surface_t	     *target)
+{
+    cairo_surface_wrapper_t wrapper;
+    cairo_command_t **elements, *command;
+    cairo_int_status_t status;
+
+    if (unlikely (surface->base.status))
+	return surface->base.status;
+
+    if (unlikely (target->status))
+	return target->status;
+
+    if (unlikely (surface->base.finished))
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
+
+    assert (_cairo_surface_is_recording (&surface->base));
+
+    /* XXX
+     * Use a surface wrapper because we may want to do transformed
+     * replay in the future.
+     */
+    _cairo_surface_wrapper_init (&wrapper, target);
+
+    if (index > surface->commands.num_elements)
+	return _cairo_error (CAIRO_STATUS_READ_ERROR);
+
+    elements = _cairo_array_index (&surface->commands, 0);
+    command = elements[index];
+    switch (command->header.type) {
+    case CAIRO_COMMAND_PAINT:
+	status = _cairo_surface_wrapper_paint (&wrapper,
+					       command->header.op,
+					       &command->paint.source.base,
+					       command->header.clip);
+	break;
+
+    case CAIRO_COMMAND_MASK:
+	status = _cairo_surface_wrapper_mask (&wrapper,
+					      command->header.op,
+					      &command->mask.source.base,
+					      &command->mask.mask.base,
+					      command->header.clip);
+	break;
+
+    case CAIRO_COMMAND_STROKE:
+	status = _cairo_surface_wrapper_stroke (&wrapper,
+						command->header.op,
+						&command->stroke.source.base,
+						&command->stroke.path,
+						&command->stroke.style,
+						&command->stroke.ctm,
+						&command->stroke.ctm_inverse,
+						command->stroke.tolerance,
+						command->stroke.antialias,
+						command->header.clip);
+	break;
+
+    case CAIRO_COMMAND_FILL:
+	status = _cairo_surface_wrapper_fill (&wrapper,
+					      command->header.op,
+					      &command->fill.source.base,
+					      &command->fill.path,
+					      command->fill.fill_rule,
+					      command->fill.tolerance,
+					      command->fill.antialias,
+					      command->header.clip);
+	break;
+
+    case CAIRO_COMMAND_SHOW_TEXT_GLYPHS:
+	status = _cairo_surface_wrapper_show_text_glyphs (&wrapper,
+							  command->header.op,
+							  &command->show_text_glyphs.source.base,
+							  command->show_text_glyphs.utf8, command->show_text_glyphs.utf8_len,
+							  command->show_text_glyphs.glyphs, command->show_text_glyphs.num_glyphs,
+							  command->show_text_glyphs.clusters, command->show_text_glyphs.num_clusters,
+							  command->show_text_glyphs.cluster_flags,
+							  command->show_text_glyphs.scaled_font,
+							  command->header.clip);
+	break;
+
+    default:
+	ASSERT_NOT_REACHED;
+    }
+
+    _cairo_surface_wrapper_fini (&wrapper);
+    return _cairo_surface_set_error (&surface->base, status);
+}
 /**
  * _cairo_recording_surface_replay:
  * @surface: the #cairo_recording_surface_t

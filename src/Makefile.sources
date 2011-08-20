@@ -389,6 +389,7 @@ cairo_drm_sources = drm/cairo-drm.c \
 cairo_gallium_sources = drm/cairo-drm-gallium-surface.c
 
 cairo_script_headers = cairo-script.h
+cairo_script_private = cairo-script-private.h
 cairo_script_sources = cairo-script-surface.c
 
 cairo_tee_headers = cairo-tee.h
