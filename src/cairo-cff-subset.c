@@ -1592,9 +1592,9 @@ cairo_cff_parse_charstring (cairo_cff_font_t *font,
 }
 
 static cairo_status_t
-cairo_cff_find_subroutines_used (cairo_cff_font_t  *font,
-                                 unsigned char *charstring, int length,
-                                 int glyph_id, int subset_id)
+cairo_cff_find_width_and_subroutines_used (cairo_cff_font_t  *font,
+					   unsigned char *charstring, int length,
+					   int glyph_id, int subset_id)
 {
     cairo_status_t status;
     int width;
@@ -1612,6 +1612,8 @@ cairo_cff_find_subroutines_used (cairo_cff_font_t  *font,
     font->type2_width = 0;
 
     status = cairo_cff_parse_charstring (font, charstring, length, glyph_id, TRUE);
+    if (status)
+	return status;
 
     if (!font->is_opentype) {
         if (font->is_cid) {
@@ -1629,7 +1631,7 @@ cairo_cff_find_subroutines_used (cairo_cff_font_t  *font,
         font->widths[subset_id] = width;
     }
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
@@ -1651,11 +1653,20 @@ cairo_cff_font_subset_charstrings_and_subroutines (cairo_cff_font_t  *font)
             return status;
 
 	if (font->subset_subroutines) {
-	    status = cairo_cff_find_subroutines_used (font, element->data, element->length, glyph, i);
+	    status = cairo_cff_find_width_and_subroutines_used (font,
+								element->data, element->length,
+								glyph, i);
 	    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+		/* If parsing the charstrings fails we embed all the
+		 * subroutines. But if the font is not opentype we
+		 * need to successfully parse all charstrings to get
+		 * the widths. */
 		font->subset_subroutines = FALSE;
-	    } else if (unlikely (status))
+		if (!font->is_opentype)
+		    return status;
+	    } else if (unlikely (status)) {
                 return status;
+	    }
         }
     }
 
