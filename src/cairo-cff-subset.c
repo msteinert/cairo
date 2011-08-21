@@ -1436,9 +1436,13 @@ type2_decode_integer (unsigned char *p, int *integer)
  * used.
  *
  * The width, if present, is the first integer in the charstring. The
- * only way to confirm if an integer at the start of the charstring is
+ * only way to confirm if the integer at the start of the charstring is
  * the width is when the first stack clearing operator is parsed,
  * check if there is an extra integer left over on the stack.
+ *
+ * When the first stack clearing operator is encountered
+ * type2_find_width is set to FALSE and type2_found_width is set to
+ * TRUE if an extra argument is found, otherwise FALSE.
  */
 static cairo_status_t
 cairo_cff_parse_charstring (cairo_cff_font_t *font,
@@ -1575,13 +1579,15 @@ cairo_cff_parse_charstring (cairo_cff_font_t *font,
         } else if (*p == 12) {
             /* 2 byte instruction */
 
-	    /* Most of the 2 byte operators */
-	    if (need_width && (p[1] < 0x22 || p[1] > 0x25))
+	    /* All the 2 byte operators are either not valid before a
+	     * stack clearing operator or they are one of the
+	     * arithmetic, storage, or conditional operators. */
+	    if (need_width && font->type2_find_width)
 		return CAIRO_INT_STATUS_UNSUPPORTED;
 
             p += 2;
 	    font->type2_stack_top_is_int = FALSE;
-        } else {
+	} else {
             /* 1 byte instruction */
             p++;
 	    font->type2_stack_top_is_int = FALSE;
