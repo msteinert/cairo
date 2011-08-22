@@ -300,8 +300,10 @@ decode_real (unsigned char *p, double *real)
 	buf = decode_nibble (n, buf);
 	n = *p & 0x0f;
 	buf = decode_nibble (n, buf);
-        if ((*p & 0x0f) == 0x0f)
+        if ((*p & 0x0f) == 0x0f) {
+	    p++;
             break;
+	}
 	p++;
     };
     *buf = 0;
