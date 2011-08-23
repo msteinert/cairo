@@ -2120,11 +2120,16 @@ cairo_public void
 cairo_surface_observer_print (cairo_surface_t *surface,
 			      cairo_write_func_t write_func,
 			      void *closure);
+cairo_public double
+cairo_surface_observer_elapsed (cairo_surface_t *surface);
 
 cairo_public void
 cairo_device_observer_print (cairo_device_t *device,
 			     cairo_write_func_t write_func,
 			     void *closure);
+
+cairo_public double
+cairo_device_observer_elapsed (cairo_device_t *device);
 
 cairo_public cairo_surface_t *
 cairo_surface_reference (cairo_surface_t *surface);

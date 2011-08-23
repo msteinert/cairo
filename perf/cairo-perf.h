@@ -77,6 +77,7 @@ typedef struct _cairo_perf {
     cairo_bool_t exact_iterations;
     cairo_bool_t raw;
     cairo_bool_t list_only;
+    cairo_bool_t observe;
     char **names;
     unsigned int num_names;
     char **exclude_names;

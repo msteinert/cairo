@@ -111,8 +111,6 @@ print_change_bar (double change,
 	printf ("%s", boxes[6]);
     else if (change > 0.5/8.0)
 	printf ("%s", boxes[7]);
-
-    printf ("\n");
 }
 
 static void
@@ -145,6 +143,7 @@ test_diff_print (test_diff_t		     *diff,
 
 	if (options->print_change_bars)
 	    print_change_bar (change, max_change, options->use_utf);
+	printf ("\n");
     }
 
     printf("\n");

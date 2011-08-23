@@ -108,6 +108,7 @@ struct trace {
     const cairo_boilerplate_target_t *target;
     void            *closure;
     cairo_surface_t *surface;
+    cairo_bool_t observe;
 };
 
 cairo_bool_t
@@ -253,6 +254,10 @@ _similar_surface_create (void		 *closure,
     cairo_surface_t *surface;
     struct scache skey, *s;
 
+    if (args->observe)
+	    return cairo_surface_create_similar (args->surface,
+						 content, width, height);
+
     if (uid == 0 || surface_cache == NULL)
 	return args->target->create_similar (args->surface, content, width, height);
 
@@ -356,6 +361,7 @@ usage (const char *argv0)
 "The command-line arguments are interpreted as follows:\n"
 "\n"
 "  -r	raw; display each time measurement instead of summary statistics\n"
+"  -s	sync; only sum the elapsed time of the indiviual operations\n"
 "  -v	verbose; in raw mode also show the summaries\n"
 "  -i	iterations; specify the number of iterations per test case\n"
 "  -x   exclude; specify a file to read a list of traces to exclude\n"
@@ -479,6 +485,7 @@ parse_options (cairo_perf_t *perf,
     perf->exact_iterations = 0;
 
     perf->raw = FALSE;
+    perf->observe = FALSE;
     perf->list_only = FALSE;
     perf->names = NULL;
     perf->num_names = 0;
@@ -488,7 +495,7 @@ parse_options (cairo_perf_t *perf,
     perf->num_exclude_names = 0;
 
     while (1) {
-	c = _cairo_getopt (argc, argv, "i:x:lrvc");
+	c = _cairo_getopt (argc, argv, "i:x:lsrvc");
 	if (c == -1)
 	    break;
 
@@ -508,6 +515,9 @@ parse_options (cairo_perf_t *perf,
 	case 'r':
 	    perf->raw = TRUE;
 	    perf->summary = NULL;
+	    break;
+	case 's':
+	    perf->observe = TRUE;
 	    break;
 	case 'v':
 	    verbose = 1;
@@ -599,6 +609,8 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 	NULL /* copy_page */
     };
 
+    args.observe = perf->observe;
+
     trace_cpy = xstrdup (trace);
     name = basename_no_ext (trace_cpy);
 
@@ -638,6 +650,12 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 					       CAIRO_BOILERPLATE_MODE_PERF,
 					       0,
 					       &args.closure);
+	if (perf->observe) {
+	    cairo_surface_t *obs;
+	    obs = cairo_surface_create_observer (args.surface);
+	    cairo_surface_destroy (args.surface);
+	    args.surface = obs;
+	}
 	if (cairo_surface_status (args.surface)) {
 	    fprintf (stderr,
 		     "Error: Failed to create target surface: %s\n",
@@ -663,14 +681,20 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 	csi = cairo_script_interpreter_create ();
 	cairo_script_interpreter_install_hooks (csi, &hooks);
 
-	cairo_perf_yield ();
-	cairo_perf_timer_start ();
+	if (! perf->observe) {
+	    cairo_perf_yield ();
+	    cairo_perf_timer_start ();
+	}
 
 	cairo_script_interpreter_run (csi, trace);
-	clear_surface (args.surface); /* queue a write to the sync'ed surface */
 
-	cairo_perf_timer_stop ();
-	times[i] = cairo_perf_timer_elapsed ();
+	if (perf->observe) {
+	    times[i] = cairo_device_observer_elapsed (cairo_surface_get_device (args.surface)) * (1e-9 * cairo_perf_ticks_per_second ());
+	} else {
+	    clear_surface (args.surface); /* queue a write to the sync'ed surface */
+	    cairo_perf_timer_stop ();
+	    times[i] = cairo_perf_timer_elapsed ();
+	}
 
 	cairo_script_interpreter_finish (csi);
 	scache_clear ();

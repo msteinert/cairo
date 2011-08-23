@@ -1634,6 +1634,18 @@ replay_record (cairo_observation_t *log,
     assert (status == CAIRO_INT_STATUS_SUCCESS);
 }
 
+static double
+_cairo_observation_total_elapsed_ns (cairo_observation_t *log)
+{
+    double total = 0;
+    total += log->paint.elapsed;
+    total += log->mask.elapsed;
+    total += log->fill.elapsed;
+    total += log->stroke.elapsed;
+    total += log->glyphs.elapsed;
+    return total;
+}
+
 static void
 _cairo_observation_print (cairo_output_stream_t *stream,
 			  cairo_observation_t *log)
@@ -1644,6 +1656,10 @@ _cairo_observation_print (cairo_output_stream_t *stream,
     script = _cairo_script_context_create_internal (stream);
     _cairo_script_context_attach_snapshots (script, FALSE);
 
+    total = _cairo_observation_total_elapsed_ns (log);
+
+    _cairo_output_stream_printf (stream, "elapsed: %f\n",
+				 total);
     _cairo_output_stream_printf (stream, "surfaces: %d\n",
 				 log->num_surfaces);
     _cairo_output_stream_printf (stream, "contexts: %d\n",
@@ -1651,12 +1667,6 @@ _cairo_observation_print (cairo_output_stream_t *stream,
     _cairo_output_stream_printf (stream, "sources acquired: %d\n",
 				 log->num_sources_acquired);
 
-    total = 0;
-    total += log->paint.elapsed;
-    total += log->mask.elapsed;
-    total += log->fill.elapsed;
-    total += log->stroke.elapsed;
-    total += log->glyphs.elapsed;
 
     _cairo_output_stream_printf (stream, "paint: count %d [no-op %d], elapsed %f [%f%%]\n",
 				 log->paint.count, log->paint.noop,
@@ -1790,6 +1800,21 @@ cairo_surface_observer_print (cairo_surface_t *abstract_surface,
     _cairo_output_stream_destroy (stream);
 }
 
+double
+cairo_surface_observer_elapsed (cairo_surface_t *abstract_surface)
+{
+    cairo_surface_observer_t *surface;
+
+    if (unlikely (CAIRO_REFERENCE_COUNT_IS_INVALID (&abstract_surface->ref_count)))
+	return;
+
+    if (! _cairo_surface_is_observer (abstract_surface))
+	return;
+
+    surface = (cairo_surface_observer_t *) abstract_surface;
+    return _cairo_observation_total_elapsed_ns (&surface->log);
+}
+
 void
 cairo_device_observer_print (cairo_device_t *abstract_device,
 			     cairo_write_func_t write_func,
@@ -1809,4 +1834,19 @@ cairo_device_observer_print (cairo_device_t *abstract_device,
     stream = _cairo_output_stream_create (write_func, NULL, closure);
     _cairo_observation_print (stream, &device->log);
     _cairo_output_stream_destroy (stream);
+}
+
+double
+cairo_device_observer_elapsed (cairo_device_t *abstract_device)
+{
+    cairo_device_observer_t *device;
+
+    if (unlikely (CAIRO_REFERENCE_COUNT_IS_INVALID (&abstract_device->ref_count)))
+	return;
+
+    if (! _cairo_device_is_observer (abstract_device))
+	return;
+
+    device = (cairo_device_observer_t *) abstract_device;
+    return _cairo_observation_total_elapsed_ns (&device->log);
 }
