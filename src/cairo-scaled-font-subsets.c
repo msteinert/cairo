@@ -631,7 +631,7 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 			return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 		    }
 		    memcpy (font_utf8, text_utf8, text_utf8_len);
-		    font_utf8[font_utf8_len] = 0;
+		    font_utf8[text_utf8_len] = 0;
 		    font_utf8_len = text_utf8_len;
 		}
 		free (ucs4);
