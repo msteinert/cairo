@@ -594,7 +594,7 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 {
     static cairo_bool_t first_run = TRUE;
     unsigned int i;
-    cairo_perf_ticks_t *times;
+    cairo_perf_ticks_t *times, *paint, *mask, *fill, *stroke, *glyphs;
     cairo_stats_t stats = {0.0, 0.0};
     struct trace args = { target };
     int low_std_dev_count;
@@ -627,15 +627,28 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 	}
 
 	if (perf->summary) {
-	    fprintf (perf->summary,
-		     "[ # ] %8s %28s %8s %5s %5s %s\n",
-		     "backend", "test", "min(s)", "median(s)",
-		     "stddev.", "count");
+	    if (perf->observe) {
+		fprintf (perf->summary,
+			 "[ # ] %8s %28s  %9s %9s %9s %9s %9s %9s %5s\n",
+			 "backend", "test",
+			 "total(s)", "paint(s)", "mask(s)", "fill(s)", "stroke(s)", "glyphs(s)",
+			 "count");
+	    } else {
+		fprintf (perf->summary,
+			 "[ # ] %8s %28s %8s %5s %5s %s\n",
+			 "backend", "test", "min(s)", "median(s)",
+			 "stddev.", "count");
+	    }
 	}
 	first_run = FALSE;
     }
 
     times = perf->times;
+    paint = times + perf->iterations;
+    mask = paint + perf->iterations;
+    stroke = mask + perf->iterations;
+    fill = stroke + perf->iterations;
+    glyphs = fill + perf->iterations;
 
     low_std_dev_count = 0;
     for (i = 0; i < perf->iterations && ! user_interrupt; i++) {
@@ -652,7 +665,8 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 					       &args.closure);
 	if (perf->observe) {
 	    cairo_surface_t *obs;
-	    obs = cairo_surface_create_observer (args.surface);
+	    obs = cairo_surface_create_observer (args.surface,
+						 CAIRO_SURFACE_OBSERVER_NORMAL);
 	    cairo_surface_destroy (args.surface);
 	    args.surface = obs;
 	}
@@ -677,7 +691,6 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 	    }
 	}
 
-
 	csi = cairo_script_interpreter_create ();
 	cairo_script_interpreter_install_hooks (csi, &hooks);
 
@@ -689,7 +702,13 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 	cairo_script_interpreter_run (csi, trace);
 
 	if (perf->observe) {
-	    times[i] = cairo_device_observer_elapsed (cairo_surface_get_device (args.surface)) * (1e-9 * cairo_perf_ticks_per_second ());
+	    cairo_device_t *observer = cairo_surface_get_device (args.surface);
+	    times[i] = cairo_device_observer_elapsed (observer) * (1e-9 * cairo_perf_ticks_per_second ());
+	    paint[i] = cairo_device_observer_paint_elapsed (observer) * (1e-9 * cairo_perf_ticks_per_second ());
+	    mask[i] = cairo_device_observer_mask_elapsed (observer) * (1e-9 * cairo_perf_ticks_per_second ());
+	    stroke[i] = cairo_device_observer_stroke_elapsed (observer) * (1e-9 * cairo_perf_ticks_per_second ());
+	    fill[i] = cairo_device_observer_fill_elapsed (observer) * (1e-9 * cairo_perf_ticks_per_second ());
+	    glyphs[i] = cairo_device_observer_glyphs_elapsed (observer) * (1e-9 * cairo_perf_ticks_per_second ());
 	} else {
 	    clear_surface (args.surface); /* queue a write to the sync'ed surface */
 	    cairo_perf_timer_stop ();
@@ -747,12 +766,40 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 		     perf->test_number,
 		     perf->target->name,
 		     name);
-	    fprintf (perf->summary,
-		     "%#8.3f %#8.3f %#6.2f%% %4d/%d",
-		     (double) stats.min_ticks / cairo_perf_ticks_per_second (),
-		     (double) stats.median_ticks / cairo_perf_ticks_per_second (),
-		     stats.std_dev * 100.0,
-		     stats.iterations, i+1);
+	    if (perf->observe) {
+		fprintf (perf->summary,
+			 " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+
+		_cairo_stats_compute (&stats, paint, i+1);
+		fprintf (perf->summary,
+			 " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+
+		_cairo_stats_compute (&stats, mask, i+1);
+		fprintf (perf->summary,
+			 " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+
+		_cairo_stats_compute (&stats, fill, i+1);
+		fprintf (perf->summary,
+			 " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+
+		_cairo_stats_compute (&stats, stroke, i+1);
+		fprintf (perf->summary,
+			 " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+
+		_cairo_stats_compute (&stats, glyphs, i+1);
+		fprintf (perf->summary,
+			 " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+
+		fprintf (perf->summary,
+			 " %5d", i+1);
+	    } else {
+		fprintf (perf->summary,
+			 "%#8.3f %#8.3f %#6.2f%% %4d/%d",
+			 (double) stats.min_ticks / cairo_perf_ticks_per_second (),
+			 (double) stats.median_ticks / cairo_perf_ticks_per_second (),
+			 stats.std_dev * 100.0,
+			 stats.iterations, i+1);
+	    }
 	    fflush (perf->summary);
 	}
     }
@@ -767,12 +814,40 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 		     perf->target->name,
 		     name);
 	}
-	fprintf (perf->summary,
-		 "%#8.3f %#8.3f %#6.2f%% %4d/%d\n",
-		 (double) stats.min_ticks / cairo_perf_ticks_per_second (),
-		 (double) stats.median_ticks / cairo_perf_ticks_per_second (),
-		 stats.std_dev * 100.0,
-		 stats.iterations, i);
+	if (perf->observe) {
+	    fprintf (perf->summary,
+		     " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+
+	    _cairo_stats_compute (&stats, paint, i+1);
+	    fprintf (perf->summary,
+		     " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+
+	    _cairo_stats_compute (&stats, mask, i+1);
+	    fprintf (perf->summary,
+		     " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+
+	    _cairo_stats_compute (&stats, fill, i+1);
+	    fprintf (perf->summary,
+		     " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+
+	    _cairo_stats_compute (&stats, stroke, i+1);
+	    fprintf (perf->summary,
+		     " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+
+	    _cairo_stats_compute (&stats, glyphs, i+1);
+	    fprintf (perf->summary,
+		     " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+
+	    fprintf (perf->summary,
+		     " %5d\n", i+1);
+	} else {
+	    fprintf (perf->summary,
+		     "%#8.3f %#8.3f %#6.2f%% %4d/%d\n",
+		     (double) stats.min_ticks / cairo_perf_ticks_per_second (),
+		     (double) stats.median_ticks / cairo_perf_ticks_per_second (),
+		     stats.std_dev * 100.0,
+		     stats.iterations, i);
+	}
 	fflush (perf->summary);
     }
 
@@ -877,7 +952,7 @@ main (int   argc,
 	trace_dir = getenv ("CAIRO_TRACE_DIR");
 
     perf.targets = cairo_boilerplate_get_targets (&perf.num_targets, NULL);
-    perf.times = xmalloc (perf.iterations * sizeof (cairo_perf_ticks_t));
+    perf.times = xmalloc (6 * perf.iterations * sizeof (cairo_perf_ticks_t));
 
     /* do we have a list of filenames? */
     perf.exact_names = have_trace_filenames (&perf);

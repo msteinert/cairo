@@ -2113,8 +2113,14 @@ cairo_surface_create_for_rectangle (cairo_surface_t	*target,
                                     double		 width,
                                     double		 height);
 
+typedef enum {
+	CAIRO_SURFACE_OBSERVER_NORMAL = 0,
+	CAIRO_SURFACE_OBSERVER_RECORD_OPERATIONS = 0x1,
+} cairo_surface_observer_mode_t;
+
 cairo_public cairo_surface_t *
-cairo_surface_create_observer (cairo_surface_t *target);
+cairo_surface_create_observer (cairo_surface_t *target,
+			       cairo_surface_observer_mode_t mode);
 
 cairo_public void
 cairo_surface_observer_print (cairo_surface_t *surface,
@@ -2130,6 +2136,21 @@ cairo_device_observer_print (cairo_device_t *device,
 
 cairo_public double
 cairo_device_observer_elapsed (cairo_device_t *device);
+
+cairo_public double
+cairo_device_observer_paint_elapsed (cairo_device_t *device);
+
+cairo_public double
+cairo_device_observer_mask_elapsed (cairo_device_t *device);
+
+cairo_public double
+cairo_device_observer_fill_elapsed (cairo_device_t *device);
+
+cairo_public double
+cairo_device_observer_stroke_elapsed (cairo_device_t *device);
+
+cairo_public double
+cairo_device_observer_glyphs_elapsed (cairo_device_t *device);
 
 cairo_public cairo_surface_t *
 cairo_surface_reference (cairo_surface_t *surface);

@@ -114,7 +114,8 @@ static void init_glyphs (struct glyphs *g)
 }
 
 static cairo_status_t
-log_init (cairo_observation_t *log)
+log_init (cairo_observation_t *log,
+	  cairo_bool_t record)
 {
     memset (log, 0, sizeof(*log));
 
@@ -126,12 +127,14 @@ log_init (cairo_observation_t *log)
 
     _cairo_array_init (&log->timings, sizeof (cairo_observation_record_t));
 
-    log->record = (cairo_recording_surface_t *)
+    if (record) {
+	log->record = (cairo_recording_surface_t *)
 	    cairo_recording_surface_create (CAIRO_CONTENT_COLOR_ALPHA, NULL);
-    if (unlikely (log->record->base.status))
-	return log->record->base.status;
+	if (unlikely (log->record->base.status))
+	    return log->record->base.status;
 
-    log->record->optimize_clears = FALSE;
+	log->record->optimize_clears = FALSE;
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -326,7 +329,8 @@ static const cairo_device_backend_t _cairo_device_observer_backend = {
 };
 
 static cairo_device_t *
-_cairo_device_create_observer_internal (cairo_device_t *target)
+_cairo_device_create_observer_internal (cairo_device_t *target,
+					cairo_bool_t record)
 {
     cairo_device_observer_t *device;
     cairo_status_t status;
@@ -336,7 +340,7 @@ _cairo_device_create_observer_internal (cairo_device_t *target)
 	return _cairo_device_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_device_init (&device->base, &_cairo_device_observer_backend);
-    status = log_init (&device->log);
+    status = log_init (&device->log, record);
     if (unlikely (status)) {
 	free (device);
 	return _cairo_device_create_in_error (status);
@@ -370,7 +374,8 @@ _cairo_surface_create_observer_internal (cairo_device_t *device,
 			 &_cairo_surface_observer_backend, device,
 			 target->content);
 
-    status = log_init (&surface->log);
+    status = log_init (&surface->log,
+		       ((cairo_device_observer_t *)device)->log.record != NULL);
     if (unlikely (status)) {
 	free (surface);
 	return _cairo_surface_create_in_error (status);
@@ -612,12 +617,11 @@ record_glyphs (cairo_observation_record_t *r,
 
 static void
 add_record (cairo_observation_t *log,
-	    cairo_observation_record_t *r,
-	    unsigned long index)
+	    cairo_observation_record_t *r)
 {
     cairo_int_status_t status;
 
-    r->index = index;
+    r->index = log->record ? log->record->commands.num_elements : 0;
 
     status = _cairo_array_append (&log->timings, r);
     assert (status == CAIRO_INT_STATUS_SUCCESS);
@@ -676,17 +680,17 @@ add_record_paint (cairo_observation_t *log,
     cairo_int_status_t status;
 
     add_record (log,
-		record_paint (&record, target, op, source, clip, elapsed),
-		log->record->commands.num_elements);
+		record_paint (&record, target, op, source, clip, elapsed));
 
     /* We have to bypass the high-level surface layer in case it tries to be
      * too smart and discard operations; we need to record exactly what just
      * happened on the target.
      */
-    status = log->record->base.backend->paint (&log->record->base,
-					       op, source, clip);
-    assert (status == CAIRO_INT_STATUS_SUCCESS);
-    assert (log->record->commands.num_elements == record.index + 1);
+    if (log->record) {
+	status = log->record->base.backend->paint (&log->record->base,
+						   op, source, clip);
+	assert (status == CAIRO_INT_STATUS_SUCCESS);
+    }
 
     if (elapsed > log->paint.slowest.elapsed)
 	log->paint.slowest = record;
@@ -766,12 +770,13 @@ add_record_mask (cairo_observation_t *log,
     cairo_int_status_t status;
 
     add_record (log,
-		record_mask (&record, target, op, source, mask, clip, elapsed),
-		log->record->commands.num_elements);
+		record_mask (&record, target, op, source, mask, clip, elapsed));
 
-    status = log->record->base.backend->mask (&log->record->base,
-					      op, source, mask, clip);
-    assert (status == CAIRO_INT_STATUS_SUCCESS);
+    if (log->record) {
+	status = log->record->base.backend->mask (&log->record->base,
+						  op, source, mask, clip);
+	assert (status == CAIRO_INT_STATUS_SUCCESS);
+    }
 
     if (elapsed > log->mask.slowest.elapsed)
 	log->mask.slowest = record;
@@ -862,15 +867,16 @@ add_record_fill (cairo_observation_t *log,
 		record_fill (&record,
 			     target, op, source,
 			     path, fill_rule, tolerance, antialias,
-			     clip, elapsed),
-		log->record->commands.num_elements);
+			     clip, elapsed));
 
-    status = log->record->base.backend->fill (&log->record->base,
-					      op, source,
-					      path, fill_rule,
-					      tolerance, antialias,
-					      clip);
-    assert (status == CAIRO_INT_STATUS_SUCCESS);
+    if (log->record) {
+	status = log->record->base.backend->fill (&log->record->base,
+						  op, source,
+						  path, fill_rule,
+						  tolerance, antialias,
+						  clip);
+	assert (status == CAIRO_INT_STATUS_SUCCESS);
+    }
 
     if (elapsed > log->fill.slowest.elapsed)
 	log->fill.slowest = record;
@@ -975,15 +981,16 @@ add_record_stroke (cairo_observation_t *log,
 			       target, op, source,
 			       path, style, ctm,ctm_inverse,
 			       tolerance, antialias,
-			       clip, elapsed),
-		log->record->commands.num_elements);
+			       clip, elapsed));
 
-    status = log->record->base.backend->stroke (&log->record->base,
-						op, source,
-						path, style, ctm,ctm_inverse,
-						tolerance, antialias,
-						clip);
-    assert (status == CAIRO_INT_STATUS_SUCCESS);
+    if (log->record) {
+	status = log->record->base.backend->stroke (&log->record->base,
+						    op, source,
+						    path, style, ctm,ctm_inverse,
+						    tolerance, antialias,
+						    clip);
+	assert (status == CAIRO_INT_STATUS_SUCCESS);
+    }
 
     if (elapsed > log->stroke.slowest.elapsed)
 	log->stroke.slowest = record;
@@ -1092,17 +1099,18 @@ add_record_glyphs (cairo_observation_t	*log,
 		record_glyphs (&record,
 			       target, op, source,
 			       glyphs, num_glyphs, scaled_font,
-			       clip, elapsed),
-		log->record->commands.num_elements);
+			       clip, elapsed));
 
-    status = log->record->base.backend->show_text_glyphs (&log->record->base,
-							  op, source,
-							  NULL, 0,
-							  glyphs, num_glyphs,
-							  NULL, 0, 0,
-							  scaled_font,
-							  clip);
-    assert (status == CAIRO_INT_STATUS_SUCCESS);
+    if (log->record) {
+	status = log->record->base.backend->show_text_glyphs (&log->record->base,
+							      op, source,
+							      NULL, 0,
+							      glyphs, num_glyphs,
+							      NULL, 0, 0,
+							      scaled_font,
+							      clip);
+	assert (status == CAIRO_INT_STATUS_SUCCESS);
+    }
 
     if (elapsed > log->glyphs.slowest.elapsed)
 	log->glyphs.slowest = record;
@@ -1378,17 +1386,20 @@ static const cairo_surface_backend_t _cairo_surface_observer_backend = {
  * Since: 1.12
  **/
 cairo_surface_t *
-cairo_surface_create_observer (cairo_surface_t *target)
+cairo_surface_create_observer (cairo_surface_t *target,
+			       cairo_surface_observer_mode_t mode)
 {
     cairo_device_t *device;
     cairo_surface_t *surface;
+    cairo_bool_t record;
 
     if (unlikely (target->status))
 	return _cairo_surface_create_in_error (target->status);
     if (unlikely (target->finished))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 
-    device = _cairo_device_create_observer_internal (target->device);
+    record = mode & CAIRO_SURFACE_OBSERVER_RECORD_OPERATIONS;
+    device = _cairo_device_create_observer_internal (target->device, record);
     if (unlikely (device->status))
 	return _cairo_surface_create_in_error (device->status);
 
@@ -1615,13 +1626,16 @@ static double percent (double a, double b)
     return round (a*1000 / b) / 10;
 }
 
-static void
+static cairo_bool_t
 replay_record (cairo_observation_t *log,
 	       cairo_observation_record_t *r,
 	       cairo_device_t *script)
 {
     cairo_surface_t *surface;
     cairo_int_status_t status;
+
+    if (log->record == NULL)
+	return FALSE;
 
     surface = cairo_script_surface_create (script,
 					   r->target_content,
@@ -1632,6 +1646,8 @@ replay_record (cairo_observation_t *log,
     cairo_surface_destroy (surface);
 
     assert (status == CAIRO_INT_STATUS_SUCCESS);
+
+    return TRUE;
 }
 
 static double
@@ -1684,8 +1700,8 @@ _cairo_observation_print (cairo_output_stream_t *stream,
 	print_record (stream, &log->paint.slowest);
 
 	_cairo_output_stream_printf (stream, "\n");
-	replay_record (log, &log->paint.slowest, script);
-	_cairo_output_stream_printf (stream, "\n\n");
+	if (replay_record (log, &log->paint.slowest, script))
+	    _cairo_output_stream_printf (stream, "\n\n");
     }
 
     _cairo_output_stream_printf (stream, "mask: count %d [no-op %d], elapsed %f [%f%%]\n",
@@ -1705,8 +1721,8 @@ _cairo_observation_print (cairo_output_stream_t *stream,
 	print_record (stream, &log->mask.slowest);
 
 	_cairo_output_stream_printf (stream, "\n");
-	replay_record (log, &log->mask.slowest, script);
-	_cairo_output_stream_printf (stream, "\n\n");
+	if (replay_record (log, &log->mask.slowest, script))
+	    _cairo_output_stream_printf (stream, "\n\n");
     }
 
     _cairo_output_stream_printf (stream, "fill: count %d [no-op %d], elaspsed %f [%f%%]\n",
@@ -1728,8 +1744,8 @@ _cairo_observation_print (cairo_output_stream_t *stream,
 	print_record (stream, &log->fill.slowest);
 
 	_cairo_output_stream_printf (stream, "\n");
-	replay_record (log, &log->fill.slowest, script);
-	_cairo_output_stream_printf (stream, "\n\n");
+	if (replay_record (log, &log->fill.slowest, script))
+	    _cairo_output_stream_printf (stream, "\n\n");
     }
 
     _cairo_output_stream_printf (stream, "stroke: count %d [no-op %d], elapsed %f [%f%%]\n",
@@ -1752,8 +1768,8 @@ _cairo_observation_print (cairo_output_stream_t *stream,
 	print_record (stream, &log->stroke.slowest);
 
 	_cairo_output_stream_printf (stream, "\n");
-	replay_record (log, &log->stroke.slowest, script);
-	_cairo_output_stream_printf (stream, "\n\n");
+	if (replay_record (log, &log->stroke.slowest, script))
+	    _cairo_output_stream_printf (stream, "\n\n");
     }
 
     _cairo_output_stream_printf (stream, "glyphs: count %d [no-op %d], elasped %f [%f%%]\n",
@@ -1772,8 +1788,8 @@ _cairo_observation_print (cairo_output_stream_t *stream,
 	print_record (stream, &log->glyphs.slowest);
 
 	_cairo_output_stream_printf (stream, "\n");
-	replay_record (log, &log->glyphs.slowest, script);
-	_cairo_output_stream_printf (stream, "\n\n");
+	if (replay_record (log, &log->glyphs.slowest, script))
+	    _cairo_output_stream_printf (stream, "\n\n");
     }
 
     cairo_device_destroy (script);
@@ -1849,4 +1865,79 @@ cairo_device_observer_elapsed (cairo_device_t *abstract_device)
 
     device = (cairo_device_observer_t *) abstract_device;
     return _cairo_observation_total_elapsed_ns (&device->log);
+}
+
+double
+cairo_device_observer_paint_elapsed (cairo_device_t *abstract_device)
+{
+    cairo_device_observer_t *device;
+
+    if (unlikely (CAIRO_REFERENCE_COUNT_IS_INVALID (&abstract_device->ref_count)))
+	return -1;
+
+    if (! _cairo_device_is_observer (abstract_device))
+	return -1;
+
+    device = (cairo_device_observer_t *) abstract_device;
+    return device->log.paint.elapsed;
+}
+
+double
+cairo_device_observer_mask_elapsed (cairo_device_t *abstract_device)
+{
+    cairo_device_observer_t *device;
+
+    if (unlikely (CAIRO_REFERENCE_COUNT_IS_INVALID (&abstract_device->ref_count)))
+	return -1;
+
+    if (! _cairo_device_is_observer (abstract_device))
+	return -1;
+
+    device = (cairo_device_observer_t *) abstract_device;
+    return device->log.mask.elapsed;
+}
+
+double
+cairo_device_observer_fill_elapsed (cairo_device_t *abstract_device)
+{
+    cairo_device_observer_t *device;
+
+    if (unlikely (CAIRO_REFERENCE_COUNT_IS_INVALID (&abstract_device->ref_count)))
+	return -1;
+
+    if (! _cairo_device_is_observer (abstract_device))
+	return -1;
+
+    device = (cairo_device_observer_t *) abstract_device;
+    return device->log.fill.elapsed;
+}
+
+double
+cairo_device_observer_stroke_elapsed (cairo_device_t *abstract_device)
+{
+    cairo_device_observer_t *device;
+
+    if (unlikely (CAIRO_REFERENCE_COUNT_IS_INVALID (&abstract_device->ref_count)))
+	return -1;
+
+    if (! _cairo_device_is_observer (abstract_device))
+	return -1;
+
+    device = (cairo_device_observer_t *) abstract_device;
+    return device->log.stroke.elapsed;
+}
+
+double
+cairo_device_observer_glyphs_elapsed (cairo_device_t *abstract_device)
+{
+    cairo_device_observer_t *device;
+
+    if (unlikely (CAIRO_REFERENCE_COUNT_IS_INVALID (&abstract_device->ref_count)))
+	return -1;
+
+    if (! _cairo_device_is_observer (abstract_device))
+	return -1;
+
+    device = (cairo_device_observer_t *) abstract_device;
+    return device->log.glyphs.elapsed;
 }
