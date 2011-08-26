@@ -18,6 +18,7 @@ test_sources = \
 	big-little-box.c				\
 	big-trap.c					\
 	bilevel-image.c					\
+	bug-40410.c					\
 	bug-bo-rectangular.c				\
 	bug-extents.c					\
 	bug-seams.c					\

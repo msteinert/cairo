@@ -54,6 +54,7 @@ REFERENCE_IMAGES = \
 	bilevel-image.ref.png \
 	bitmap-font.ref.png \
 	bitmap-font.rgb24.ref.png \
+	bug-40410.ref.png \
 	bug-bo-rectangular.image16.ref.png \
 	bug-bo-rectangular.ps.xfail.png \
 	bug-bo-rectangular.ref.png \
