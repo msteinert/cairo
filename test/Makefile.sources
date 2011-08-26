@@ -47,6 +47,7 @@ test_sources = \
 	clip-group-shapes.c				\
 	clip-image.c					\
 	clip-intersect.c				\
+	clip-mixed-antialias.c				\
 	clip-nesting.c					\
 	clip-operator.c					\
 	clip-push-group.c				\

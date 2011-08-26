@@ -159,6 +159,7 @@ REFERENCE_IMAGES = \
 	clip-image.ps.ref.png \
 	clip-image.ref.png \
 	clip-intersect.ref.png \
+	clip-mixed-antialias.ref.png \
 	clip-nesting.pdf.argb32.ref.png \
 	clip-nesting.ps.argb32.ref.png \
 	clip-nesting.ps.rgb24.ref.png \
@@ -1146,7 +1147,7 @@ REFERENCE_IMAGES = \
 	self-intersecting.xlib.ref.png \
 	set-source.ref.png \
 	set-source.rgb24.ref.png \
-	shape-general-concave.ref.png \
+	shape-general-convex.ref.png \
 	show-glyphs-advance.image16.ref.png \
 	show-glyphs-advance.ps.ref.png \
 	show-glyphs-advance.quartz.ref.png \
@@ -1291,6 +1292,9 @@ REFERENCE_IMAGES = \
 	svg-surface-source.rgb24.ref.png \
 	svg-surface-source.svg12.argb32.xfail.png \
 	svg-surface-source.svg12.rgb24.xfail.png \
+	test-fallback16-surface-source.ps.ref.png \
+	test-fallback16-surface-source.svg12.argb32.xfail.png \
+	test-fallback16-surface-source.svg12.rgb24.xfail.png \
 	text-antialias-gray.image16.ref.png \
 	text-antialias-gray.quartz.ref.png \
 	text-antialias-gray.ref.png \
