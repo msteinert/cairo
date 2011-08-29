@@ -2376,6 +2376,7 @@ _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t  *surface,
 {
     double old_width, old_height;
     cairo_paginated_mode_t old_paginated_mode;
+    cairo_surface_clipper_t old_clipper;
     cairo_rectangle_int_t recording_extents;
     cairo_int_status_t status;
     int alpha = 0;
@@ -2398,6 +2399,9 @@ _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t  *surface,
     old_width = surface->width;
     old_height = surface->height;
     old_paginated_mode = surface->paginated_mode;
+    old_clipper = surface->clipper;
+    _cairo_surface_clipper_init (&surface->clipper,
+				 _cairo_pdf_surface_clipper_intersect_clip_path);
 
     _cairo_pdf_surface_set_size_internal (surface,
 					  recording_extents.width,
@@ -2434,6 +2438,8 @@ _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t  *surface,
 
     status = _cairo_pdf_surface_close_content_stream (surface);
 
+    _cairo_surface_clipper_reset (&surface->clipper);
+    surface->clipper = old_clipper;
     _cairo_pdf_surface_set_size_internal (surface,
 					  old_width,
 					  old_height);

@@ -2533,6 +2533,7 @@ _cairo_ps_surface_emit_recording_surface (cairo_ps_surface_t *surface,
     cairo_matrix_t old_cairo_to_ps;
     cairo_content_t old_content;
     cairo_rectangle_int_t old_page_bbox;
+    cairo_surface_clipper_t old_clipper;
     cairo_box_t bbox;
     cairo_int_status_t status;
 
@@ -2541,6 +2542,9 @@ _cairo_ps_surface_emit_recording_surface (cairo_ps_surface_t *surface,
     old_height = surface->height;
     old_page_bbox = surface->page_bbox;
     old_cairo_to_ps = surface->cairo_to_ps;
+    old_clipper = surface->clipper;
+    _cairo_surface_clipper_init (&surface->clipper,
+				 _cairo_ps_surface_clipper_intersect_clip_path);
 
     if (_cairo_surface_is_snapshot (recording_surface))
 	recording_surface = _cairo_surface_snapshot_get_target (recording_surface);
@@ -2595,6 +2599,9 @@ _cairo_ps_surface_emit_recording_surface (cairo_ps_surface_t *surface,
 	return status;
 
     _cairo_output_stream_printf (surface->stream, "  Q\n");
+
+    _cairo_surface_clipper_reset (&surface->clipper);
+    surface->clipper = old_clipper;
     surface->content = old_content;
     surface->width = old_width;
     surface->height = old_height;
@@ -2618,6 +2625,7 @@ _cairo_ps_surface_emit_recording_subsurface (cairo_ps_surface_t *surface,
     cairo_matrix_t old_cairo_to_ps;
     cairo_content_t old_content;
     cairo_rectangle_int_t old_page_bbox;
+    cairo_surface_clipper_t old_clipper;
     cairo_int_status_t status;
 
     old_content = surface->content;
@@ -2625,6 +2633,9 @@ _cairo_ps_surface_emit_recording_subsurface (cairo_ps_surface_t *surface,
     old_height = surface->height;
     old_page_bbox = surface->page_bbox;
     old_cairo_to_ps = surface->cairo_to_ps;
+    old_clipper = surface->clipper;
+    _cairo_surface_clipper_init (&surface->clipper,
+				 _cairo_ps_surface_clipper_intersect_clip_path);
 
 #if DEBUG_PS
     _cairo_output_stream_printf (surface->stream,
@@ -2670,6 +2681,9 @@ _cairo_ps_surface_emit_recording_subsurface (cairo_ps_surface_t *surface,
 	return status;
 
     _cairo_output_stream_printf (surface->stream, "  Q\n");
+
+    _cairo_surface_clipper_reset (&surface->clipper);
+    surface->clipper = old_clipper;
     surface->content = old_content;
     surface->width = old_width;
     surface->height = old_height;
