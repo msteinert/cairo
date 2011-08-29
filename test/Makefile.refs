@@ -46,6 +46,8 @@ REFERENCE_IMAGES = \
 	arc-looping-dash.ref.png \
 	big-empty-box.argb32.ref.png \
 	big-empty-box.rgb24.ref.png \
+	big-empty-triangle.argb32.ref.png \
+	big-empty-triangle.rgb24.ref.png \
 	big-line.image16.ref.png \
 	big-line.ps.ref.png \
 	big-line.quartz.ref.png \

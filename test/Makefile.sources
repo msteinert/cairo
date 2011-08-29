@@ -16,6 +16,7 @@ test_sources = \
 	api-special-cases.c				\
 	big-line.c					\
 	big-empty-box.c					\
+	big-empty-triangle.c				\
 	big-little-box.c				\
 	big-little-triangle.c				\
 	big-trap.c					\
