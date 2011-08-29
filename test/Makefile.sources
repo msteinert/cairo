@@ -16,6 +16,7 @@ test_sources = \
 	api-special-cases.c				\
 	big-line.c					\
 	big-little-box.c				\
+	big-little-triangle.c				\
 	big-trap.c					\
 	bilevel-image.c					\
 	bug-40410.c					\

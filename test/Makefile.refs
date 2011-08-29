@@ -51,6 +51,8 @@ REFERENCE_IMAGES = \
 	big-line.xlib.ref.png \
 	big-little-box.argb32.ref.png \
 	big-little-box.rgb24.ref.png \
+	big-little-triangle.argb32.ref.png \
+	big-little-triangle.rgb24.ref.png \
 	bilevel-image.ref.png \
 	bitmap-font.ref.png \
 	bitmap-font.rgb24.ref.png \
