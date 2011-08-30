@@ -1825,10 +1825,10 @@ cairo_surface_observer_elapsed (cairo_surface_t *abstract_surface)
     cairo_surface_observer_t *surface;
 
     if (unlikely (CAIRO_REFERENCE_COUNT_IS_INVALID (&abstract_surface->ref_count)))
-	return;
+	return -1;
 
     if (! _cairo_surface_is_observer (abstract_surface))
-	return;
+	return -1;
 
     surface = (cairo_surface_observer_t *) abstract_surface;
     return _cairo_observation_total_elapsed_ns (&surface->log);
@@ -1861,10 +1861,10 @@ cairo_device_observer_elapsed (cairo_device_t *abstract_device)
     cairo_device_observer_t *device;
 
     if (unlikely (CAIRO_REFERENCE_COUNT_IS_INVALID (&abstract_device->ref_count)))
-	return;
+	return -1;
 
     if (! _cairo_device_is_observer (abstract_device))
-	return;
+	return -1;
 
     device = (cairo_device_observer_t *) abstract_device;
     return _cairo_observation_total_elapsed_ns (&device->log);
