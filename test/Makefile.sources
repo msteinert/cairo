@@ -309,6 +309,7 @@ test_sources = \
 	text-rotate.c					\
 	text-transform.c				\
 	text-zero-len.c					\
+	tighten-bounds.c				\
 	toy-font-face.c					\
 	transforms.c					\
 	translate-show-surface.c			\

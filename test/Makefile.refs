@@ -1337,6 +1337,7 @@ REFERENCE_IMAGES = \
 	text-transform.ps.ref.png \
 	text-transform.ref.png \
 	text-transform.svg.ref.png \
+	tighten-bounds.ref.png \
 	transforms.image16.ref.png \
 	transforms.ps2.ref.png \
 	transforms.ps3.ref.png \
