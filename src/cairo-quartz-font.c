@@ -38,6 +38,7 @@
 
 #include <dlfcn.h>
 
+#include "cairo-image-surface-private.h"
 #include "cairo-quartz.h"
 #include "cairo-quartz-private.h"
 
