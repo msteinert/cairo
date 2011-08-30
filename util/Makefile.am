@@ -1,6 +1,6 @@
 include $(top_srcdir)/build/Makefile.am.common
 
-SUBDIRS = .
+SUBDIRS = . cairo-missing
 
 if CAIRO_HAS_GOBJECT_FUNCTIONS
 SUBDIRS += cairo-gobject

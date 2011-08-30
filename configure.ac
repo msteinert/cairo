@@ -805,6 +805,7 @@ perf/micro/Makefile
 util/Makefile
 util/cairo-fdr/Makefile
 util/cairo-gobject/Makefile
+util/cairo-missing/Makefile
 util/cairo-script/Makefile
 util/cairo-script/examples/Makefile
 util/cairo-sphinx/Makefile

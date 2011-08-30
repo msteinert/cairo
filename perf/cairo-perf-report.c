@@ -25,6 +25,7 @@
  * Authors: Carl Worth <cworth@cworth.org>
  */
 
+#include "cairo-missing.h"
 #include "cairo-perf.h"
 #include "cairo-stats.h"
 
@@ -47,17 +48,6 @@
  * We use 'ptrdiff_t', which is nearly equivalent. */
 #ifdef _MSC_VER
 typedef ptrdiff_t ssize_t;
-#endif
-
-#if !defined (__USE_GNU) && !defined(__USE_XOPEN2K8)
-static ssize_t
-getline (char	**lineptr,
-	 size_t  *n,
-	 FILE	 *stream);
-
-static char *
-strndup (const char *s,
-	 size_t      n);
 #endif
 
 #ifdef _MSC_VER
@@ -229,61 +219,6 @@ test_report_parse (test_report_t *report,
 
     return TEST_REPORT_STATUS_SUCCESS;
 }
-
-/* We conditionally provide a custom implementation of getline and strndup
- * as needed. These aren't necessary full-fledged general purpose
- * implementations. They just get the job done for our purposes.
- */
-#if !defined (__USE_GNU) && !defined(__USE_XOPEN2K8)
-#define POORMANS_GETLINE_BUFFER_SIZE (65536)
-static ssize_t
-getline (char	**lineptr,
-	 size_t  *n,
-	 FILE	 *stream)
-{
-    if (!*lineptr)
-    {
-	*n = POORMANS_GETLINE_BUFFER_SIZE;
-	*lineptr = (char *) malloc (*n);
-    }
-
-    if (!fgets (*lineptr, *n, stream))
-	return -1;
-
-    if (!feof (stream) && !strchr (*lineptr, '\n'))
-    {
-	fprintf (stderr, "The poor man's implementation of getline in "
-			  __FILE__ " needs a bigger buffer. Perhaps it's "
-			 "time for a complete implementation of getline.\n");
-	exit (0);
-    }
-
-    return strlen (*lineptr);
-}
-#undef POORMANS_GETLINE_BUFFER_SIZE
-
-static char *
-strndup (const char *s,
-	 size_t      n)
-{
-    size_t len;
-    char *sdup;
-
-    if (!s)
-	return NULL;
-
-    len = strlen (s);
-    len = (n < len ? n : len);
-    sdup = (char *) malloc (len + 1);
-    if (sdup)
-    {
-	memcpy (sdup, s, len);
-	sdup[len] = '\0';
-    }
-
-    return sdup;
-}
-#endif /* ifndef __USE_GNU */
 
 /* We provide hereafter a win32 implementation of the basename
  * and strtoll functions which are not available otherwise.

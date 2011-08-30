@@ -6,6 +6,7 @@ AM_CPPFLAGS =					\
 	-I$(srcdir)				\
 	-I$(top_srcdir)/boilerplate		\
 	-I$(top_srcdir)/src			\
+	-I$(top_srcdir)/util/cairo-missing	\
 	-I$(top_srcdir)/util/cairo-script	\
 	-I$(top_builddir)/src			\
 	$(CAIRO_CFLAGS)
@@ -54,9 +55,11 @@ cairo_analyse_trace_SOURCES = \
 	$(cairo_analyse_trace_external_sources)
 cairo_analyse_trace_LDADD =		\
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
+	$(top_builddir)/util/cairo-missing/libcairo-missing.la \
 	$(LDADD)
 cairo_analyse_trace_DEPENDENCIES = \
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
+	$(top_builddir)/util/cairo-missing/libcairo-missing.la \
 	$(LDADD)
 
 cairo_perf_trace_SOURCES = \
@@ -64,9 +67,11 @@ cairo_perf_trace_SOURCES = \
 	$(cairo_perf_trace_external_sources)
 cairo_perf_trace_LDADD =		\
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
+	$(top_builddir)/util/cairo-missing/libcairo-missing.la \
 	$(LDADD)
 cairo_perf_trace_DEPENDENCIES = \
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
+	$(top_builddir)/util/cairo-missing/libcairo-missing.la \
 	$(LDADD)
 
 cairo_perf_diff_files_SOURCES =	$(cairo_perf_diff_files_sources)

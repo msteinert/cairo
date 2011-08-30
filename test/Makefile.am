@@ -114,13 +114,16 @@ cairo_test_trace_LDADD =		\
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
         $(top_builddir)/boilerplate/libcairoboilerplate.la	\
 	$(top_builddir)/src/libcairo.la 			\
+	$(top_builddir)/util/cairo-missing/libcairo-missing.la  \
 	$(CAIRO_LDADD) \
 	$(SHM_LIBS)
 cairo_test_trace_DEPENDENCIES = \
 	$(top_builddir)/test/pdiff/libpdiff.la 			\
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
         $(top_builddir)/boilerplate/libcairoboilerplate.la	\
-	$(top_builddir)/src/libcairo.la
+	$(top_builddir)/src/libcairo.la                         \
+	$(top_builddir)/util/cairo-missing/libcairo-missing.la  \
+	$(NULL)
 endif
 
 BUILT_SOURCES += cairo-test-constructors.c
@@ -271,6 +274,7 @@ AM_CPPFLAGS =					\
 	-I$(srcdir)				\
 	-I$(srcdir)/pdiff			\
 	-I$(top_srcdir)/boilerplate		\
+	-I$(top_srcdir)/util/cairo-missing	\
 	-I$(top_srcdir)/util/cairo-script	\
 	-I$(top_srcdir)/src			\
 	-I$(top_builddir)/src			\

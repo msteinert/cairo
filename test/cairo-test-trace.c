@@ -59,6 +59,7 @@
 
 #include "cairo-boilerplate-getopt.h"
 #include <cairo-script-interpreter.h>
+#include "cairo-missing.h"
 
 #if CAIRO_HAS_SCRIPT_SURFACE
 #include <cairo-script.h>
@@ -1414,52 +1415,6 @@ test_trace (test_trace_t *test, const char *trace)
 
     free (trace_cpy);
 }
-
-#ifndef __USE_GNU
-#define POORMANS_GETLINE_BUFFER_SIZE (65536)
-static ssize_t
-getline (char **lineptr, size_t *n, FILE *stream)
-{
-    if (*lineptr == NULL) {
-        *n = POORMANS_GETLINE_BUFFER_SIZE;
-        *lineptr = (char *) malloc (*n);
-    }
-
-    if (! fgets (*lineptr, *n, stream))
-        return -1;
-
-    if (! feof (stream) && !strchr (*lineptr, '\n')) {
-        fprintf (stderr, "The poor man's implementation of getline in "
-                          __FILE__ " needs a bigger buffer. Perhaps it's "
-                         "time for a complete implementation of getline.\n");
-        exit (0);
-    }
-
-    return strlen (*lineptr);
-}
-#undef POORMANS_GETLINE_BUFFER_SIZE
-
-static char *
-strndup (const char *s, size_t n)
-{
-    size_t len;
-    char *sdup;
-
-    if (!s)
-        return NULL;
-
-    len = strlen (s);
-    len = (n < len ? n : len);
-    sdup = (char *) malloc (len + 1);
-    if (sdup)
-    {
-        memcpy (sdup, s, len);
-        sdup[len] = '\0';
-    }
-
-    return sdup;
-}
-#endif /* ifndef __USE_GNU */
 
 static cairo_bool_t
 read_excludes (test_trace_t *test, const char *filename)
