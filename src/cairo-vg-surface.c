@@ -658,9 +658,12 @@ _vg_rendering_quality_from_cairo (cairo_antialias_t aa)
     switch (aa) {
     case CAIRO_ANTIALIAS_DEFAULT:
     case CAIRO_ANTIALIAS_SUBPIXEL:
+    case CAIRO_ANTIALIAS_GOOD:
+    case CAIRO_ANTIALIAS_BEST:
 	return VG_RENDERING_QUALITY_BETTER;
 
     case CAIRO_ANTIALIAS_GRAY:
+    case CAIRO_ANTIALIAS_FAST:
 	return VG_RENDERING_QUALITY_FASTER;
 
     case CAIRO_ANTIALIAS_NONE:
@@ -1334,7 +1337,7 @@ _vg_surface_show_glyphs (void			*abstract_surface,
 			       op, source, &path,
 			       CAIRO_FILL_RULE_WINDING,
 			       CAIRO_GSTATE_TOLERANCE_DEFAULT,
-			       CAIRO_ANTIALIAS_SUBPIXEL,
+			       CAIRO_ANTIALIAS_DEFAULT,
 			       clip);
 BAIL:
     _cairo_path_fixed_fini (&path);

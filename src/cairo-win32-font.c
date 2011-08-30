@@ -342,9 +342,12 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
 	    f->quality = NONANTIALIASED_QUALITY;
 	    break;
 	case CAIRO_ANTIALIAS_GRAY:
+	case CAIRO_ANTIALIAS_FAST:
+	case CAIRO_ANTIALIAS_GOOD:
 	    f->quality = ANTIALIASED_QUALITY;
 	    break;
 	case CAIRO_ANTIALIAS_SUBPIXEL:
+	case CAIRO_ANTIALIAS_BEST:
 	    if (_have_cleartype_quality ())
 		f->quality = CLEARTYPE_QUALITY;
 	    else

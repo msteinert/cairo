@@ -129,9 +129,15 @@ cairo_gobject_antialias_get_type (void)
    if (g_once_init_enter (&type_volatile)) {
       static const GEnumValue values[] = {
           { CAIRO_ANTIALIAS_DEFAULT, "CAIRO_ANTIALIAS_DEFAULT", "default" },
+
           { CAIRO_ANTIALIAS_NONE, "CAIRO_ANTIALIAS_NONE", "none" },
           { CAIRO_ANTIALIAS_GRAY, "CAIRO_ANTIALIAS_GRAY", "gray" },
           { CAIRO_ANTIALIAS_SUBPIXEL, "CAIRO_ANTIALIAS_SUBPIXEL", "subpixel" },
+
+          { CAIRO_ANTIALIAS_FAST, "CAIRO_ANTIALIAS_FAST", "fast" },
+          { CAIRO_ANTIALIAS_GOOD, "CAIRO_ANTIALIAS_GOOD", "good" },
+          { CAIRO_ANTIALIAS_BEST, "CAIRO_ANTIALIAS_BEST", "best" },
+
           { 0, NULL, NULL }
       };
       GType type = g_enum_register_static (g_intern_static_string ("cairo_antialias_t"), values);

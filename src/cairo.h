@@ -644,12 +644,35 @@ cairo_set_tolerance (cairo_t *cr, double tolerance);
  *  such as LCD panels
  *
  * Specifies the type of antialiasing to do when rendering text or shapes.
+ *
+ * As it is not necessarily clear from the above what advantages a particular
+ * antialias method provides, since 1.12, there is also a set of hints:
+ * @CAIRO_ANTIALIAS_FAST: Allow the backend to degrade raster quality for speed
+ * @CAIRO_ANTIALIAS_GOOD: A balance between speed and quality
+ * @CAIRO_ANTIALIAS_BEST: A high-fidelity, but potentially slow, raster mode
+ *
+ * These make no guarantee on how the backend will perform its rasterisation
+ * (if it even rasterises!), nor that they have any differing effect other
+ * than to enable some form of antialiasing. In the case of glyph rendering,
+ * @CAIRO_ANTIALIAS_FAST and @CAIRO_ANTIALIAS_GOOD will be mapped to
+ * @CAIRO_ANTIALIAS_GRAY, with @CAIRO_ANTALIAS_BEST being equivalent to
+ * @CAIRO_ANTIALIAS_SUBPIXEL.
+ *
+ * The interpretation of @CAIRO_ANTIALIAS_DEFAULT is left entirely up to
+ * the backend, typically this will be similar to @CAIRO_ANTIALIAS_GOOD.
  **/
 typedef enum _cairo_antialias {
     CAIRO_ANTIALIAS_DEFAULT,
+
+    /* method */
     CAIRO_ANTIALIAS_NONE,
     CAIRO_ANTIALIAS_GRAY,
-    CAIRO_ANTIALIAS_SUBPIXEL
+    CAIRO_ANTIALIAS_SUBPIXEL,
+
+    /* hints */
+    CAIRO_ANTIALIAS_FAST,
+    CAIRO_ANTIALIAS_GOOD,
+    CAIRO_ANTIALIAS_BEST
 } cairo_antialias_t;
 
 cairo_public void

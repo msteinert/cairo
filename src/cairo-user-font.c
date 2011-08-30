@@ -229,8 +229,11 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	switch (scaled_font->base.options.antialias) {
 	default:
 	case CAIRO_ANTIALIAS_DEFAULT:
+	case CAIRO_ANTIALIAS_FAST:
+	case CAIRO_ANTIALIAS_GOOD:
 	case CAIRO_ANTIALIAS_GRAY:	format = CAIRO_FORMAT_A8;	break;
 	case CAIRO_ANTIALIAS_NONE:	format = CAIRO_FORMAT_A1;	break;
+	case CAIRO_ANTIALIAS_BEST:
 	case CAIRO_ANTIALIAS_SUBPIXEL:	format = CAIRO_FORMAT_ARGB32;	break;
 	}
 	surface = cairo_image_surface_create (format, width, height);

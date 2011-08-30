@@ -158,10 +158,13 @@ static const char *
 _antialias_to_string (cairo_antialias_t antialias)
 {
     static const char *names[] = {
-	"ANTIALIAS_DEFAULT",	/* CAIRO_ANTIALIAS_DEFAULT */
-	"ANTIALIAS_NONE",	/* CAIRO_ANTIALIAS_NONE */
-	"ANTIALIAS_GRAY",	/* CAIRO_ANTIALIAS_GRAY */
-	"ANTIALIAS_SUBPIXEL"	/* CAIRO_ANTIALIAS_SUBPIXEL */
+	"DEFAULT",	/* CAIRO_ANTIALIAS_DEFAULT */
+	"NONE",         /* CAIRO_ANTIALIAS_NONE */
+	"GRAY",         /* CAIRO_ANTIALIAS_GRAY */
+	"SUBPIXEL",	/* CAIRO_ANTIALIAS_SUBPIXEL */
+	"FAST",         /* CAIRO_ANTIALIAS_FAST */
+	"GOOD",         /* CAIRO_ANTIALIAS_GOOD */
+	"BEST",         /* CAIRO_ANTIALIAS_BEST */
     };
     assert (antialias < ARRAY_LENGTH (names));
     return names[antialias];

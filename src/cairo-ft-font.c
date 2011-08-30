@@ -1266,6 +1266,7 @@ _render_glyph_outline (FT_Face                    face,
 	break;
 
     case CAIRO_ANTIALIAS_SUBPIXEL:
+    case CAIRO_ANTIALIAS_BEST:
 	switch (font_options->subpixel_order) {
 	    case CAIRO_SUBPIXEL_ORDER_DEFAULT:
 	    case CAIRO_SUBPIXEL_ORDER_RGB:
@@ -1299,6 +1300,8 @@ _render_glyph_outline (FT_Face                    face,
 
     case CAIRO_ANTIALIAS_DEFAULT:
     case CAIRO_ANTIALIAS_GRAY:
+    case CAIRO_ANTIALIAS_GOOD:
+    case CAIRO_ANTIALIAS_FAST:
 	render_mode = FT_RENDER_MODE_NORMAL;
     }
 

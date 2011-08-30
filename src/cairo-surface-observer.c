@@ -1533,7 +1533,10 @@ static const char *antialias_names[] = {
     "default",
     "none",
     "gray",
-    "subpixel"
+    "subpixel",
+    "fast",
+    "good",
+    "best"
 };
 static void
 print_antialias (cairo_output_stream_t *stream, unsigned int *array)

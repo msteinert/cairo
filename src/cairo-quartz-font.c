@@ -678,6 +678,7 @@ _cairo_quartz_init_glyph_surface (cairo_quartz_scaled_font_t *font,
 
 	switch (font->base.options.antialias) {
 	case CAIRO_ANTIALIAS_SUBPIXEL:
+	case CAIRO_ANTIALIAS_BEST:
 	    CGContextSetShouldAntialias (cgContext, TRUE);
 	    CGContextSetShouldSmoothFonts (cgContext, TRUE);
 	    if (CGContextSetAllowsFontSmoothingPtr &&
@@ -688,6 +689,8 @@ _cairo_quartz_init_glyph_surface (cairo_quartz_scaled_font_t *font,
 	    CGContextSetShouldAntialias (cgContext, FALSE);
 	    break;
 	case CAIRO_ANTIALIAS_GRAY:
+	case CAIRO_ANTIALIAS_GOOD:
+	case CAIRO_ANTIALIAS_FAST:
 	    CGContextSetShouldAntialias (cgContext, TRUE);
 	    CGContextSetShouldSmoothFonts (cgContext, FALSE);
 	    break;

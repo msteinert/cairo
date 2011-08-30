@@ -2271,9 +2271,14 @@ _antialias_to_string (cairo_antialias_t antialias)
 #define f(name) case CAIRO_ANTIALIAS_ ## name: return "ANTIALIAS_" #name
     switch (antialias) {
 	f(DEFAULT);
+
 	f(NONE);
 	f(GRAY);
 	f(SUBPIXEL);
+
+	f(FAST);
+	f(GOOD);
+	f(BEST);
     };
 #undef f
     return "UNKNOWN_ANTIALIAS";

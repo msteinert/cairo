@@ -1097,8 +1097,11 @@ _cairo_xlib_surface_set_precision (cairo_xlib_display_t	*display,
     case CAIRO_ANTIALIAS_DEFAULT:
     case CAIRO_ANTIALIAS_GRAY:
     case CAIRO_ANTIALIAS_NONE:
+    case CAIRO_ANTIALIAS_FAST:
+    case CAIRO_ANTIALIAS_GOOD:
 	precision = PolyModeImprecise;
 	break;
+    case CAIRO_ANTIALIAS_BEST:
     case CAIRO_ANTIALIAS_SUBPIXEL:
 	precision = PolyModePrecise;
 	break;
@@ -2966,21 +2969,9 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 	goto BAIL;
     }
 
-    switch (antialias) {
-    case CAIRO_ANTIALIAS_NONE:
-	pict_format =
-	    _cairo_xlib_display_get_xrender_format (display,
-						    CAIRO_FORMAT_A1);
-	break;
-    case CAIRO_ANTIALIAS_GRAY:
-    case CAIRO_ANTIALIAS_SUBPIXEL:
-    case CAIRO_ANTIALIAS_DEFAULT:
-    default:
-	pict_format =
-	    _cairo_xlib_display_get_xrender_format (display,
-						    CAIRO_FORMAT_A8);
-	break;
-    }
+    pict_format =
+	_cairo_xlib_display_get_xrender_format (display,
+						antialias == CAIRO_ANTIALIAS_NONE ?  CAIRO_FORMAT_A1 : CAIRO_FORMAT_A8);
 
     status = _cairo_xlib_surface_set_clip_region (dst, clip_region);
     if (unlikely (status))
