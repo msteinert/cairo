@@ -53,9 +53,7 @@ dnl ====================================================================
 AC_CHECK_LIBM
 LIBS="$LIBS $LIBM"
 
-AC_CHECK_LIB(rt, sched_yield, [RT_LIBS=-lrt], [RT_LIBS=])
-CAIROPERF_LIBS=$RT_LIBS
-AC_SUBST(CAIROPERF_LIBS)
+AC_CHECK_LIB(rt, sched_yield)
 
 has_shm_open=
 AC_CHECK_LIB(rt, shm_open, [
@@ -102,10 +100,7 @@ dnl check for mmap support
 AC_CHECK_HEADERS([sys/mman.h], [AC_CHECK_FUNCS([mmap])])
 
 dnl check for clock_gettime() support
-save_LIBS="$LIBS"
-LIBS="$LIBS $RT_LIBS"
 AC_CHECK_HEADERS([time.h], [AC_CHECK_FUNCS([clock_gettime])])
-LIBS="$save_LIBS"
 
 dnl check for GNU-extensions to fenv
 AC_CHECK_HEADER(fenv.h,

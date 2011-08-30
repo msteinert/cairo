@@ -622,7 +622,7 @@ dnl ===========================================================================
 
 CAIRO_ENABLE_SURFACE_BACKEND(mime, mime, always)
 CAIRO_ENABLE_SURFACE_BACKEND(recording, recording, always)
-CAIRO_ENABLE_SURFACE_BACKEND(observer, observer, always, observer_LIBS=-lrt)
+CAIRO_ENABLE_SURFACE_BACKEND(observer, observer, always)
 CAIRO_ENABLE_SURFACE_BACKEND(tee, tee, no)
 CAIRO_ENABLE_SURFACE_BACKEND(xml, xml, no, [
     use_xml=$have_libz

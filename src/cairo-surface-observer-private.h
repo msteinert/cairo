@@ -41,6 +41,7 @@
 #include "cairo-device-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-surface-private.h"
+#include "cairo-time-private.h"
 
 struct stat {
     double min, max, sum, sum_sq;
@@ -89,7 +90,7 @@ struct _cairo_observation_record {
     double tolerance;
     int antialias;
     int clip;
-    double elapsed;
+    cairo_time_t elapsed;
 };
 
 struct _cairo_observation {
@@ -100,7 +101,7 @@ struct _cairo_observation {
     /* XXX put interesting stats here! */
 
     struct paint {
-	double elapsed;
+	cairo_time_t elapsed;
 	unsigned int count;
 	struct extents extents;
 	unsigned int operators[NUM_OPERATORS];
@@ -112,7 +113,7 @@ struct _cairo_observation {
     } paint;
 
     struct mask {
-	double elapsed;
+	cairo_time_t elapsed;
 	unsigned int count;
 	struct extents extents;
 	unsigned int operators[NUM_OPERATORS];
@@ -125,7 +126,7 @@ struct _cairo_observation {
     } mask;
 
     struct fill {
-	double elapsed;
+	cairo_time_t elapsed;
 	unsigned int count;
 	struct extents extents;
 	unsigned int operators[NUM_OPERATORS];
@@ -140,7 +141,7 @@ struct _cairo_observation {
     } fill;
 
     struct stroke {
-	double elapsed;
+	cairo_time_t elapsed;
 	unsigned int count;
 	struct extents extents;
 	unsigned int operators[NUM_OPERATORS];
@@ -157,7 +158,7 @@ struct _cairo_observation {
     } stroke;
 
     struct glyphs {
-	double elapsed;
+	cairo_time_t elapsed;
 	unsigned int count;
 	struct extents extents;
 	unsigned int operators[NUM_OPERATORS];

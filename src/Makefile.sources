@@ -106,6 +106,7 @@ cairo_private = \
 	cairo-surface-subsurface-private.h \
 	cairo-surface-snapshot-private.h \
 	cairo-surface-wrapper-private.h \
+	cairo-time-private.h \
 	cairo-types-private.h \
 	cairo-user-font-private.h \
 	cairo-wideint-private.h \
@@ -192,6 +193,7 @@ cairo_sources = \
 	cairo-surface-subsurface.c \
 	cairo-surface-wrapper.c \
 	cairo-system.c \
+	cairo-time.c \
 	cairo-tor-scan-converter.c \
 	cairo-toy-font-face.c \
 	cairo-traps.c \

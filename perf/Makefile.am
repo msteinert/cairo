@@ -48,7 +48,6 @@ cairo_perf_micro_DEPENDENCIES = \
 libcairoperf_la_SOURCES = \
 	$(libcairoperf_sources)	\
 	$(libcairoperf_headers)
-libcairoperf_la_LIBADD = $(CAIROPERF_LIBS)
 
 cairo_analyse_trace_SOURCES = \
 	$(cairo_analyse_trace_sources)	\

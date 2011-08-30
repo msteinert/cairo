@@ -54,6 +54,8 @@
 cairo_uquorem64_t I
 _cairo_uint64_divrem (cairo_uint64_t num, cairo_uint64_t den);
 
+cairo_uint64_t I	_cairo_double_to_uint64 (double i);
+double	       I	_cairo_uint64_to_double (uint64_t i);
 cairo_uint64_t I	_cairo_uint32_to_uint64 (uint32_t i);
 #define			_cairo_uint64_to_uint32(a)  ((a).lo)
 cairo_uint64_t I	_cairo_uint64_add (cairo_uint64_t a, cairo_uint64_t b);
@@ -102,6 +104,16 @@ _cairo_uint64_divrem (cairo_uint64_t num, cairo_uint64_t den)
     qr.rem = num % den;
     return qr;
 }
+
+/*
+ * These need to be functions or gcc will complain when used on the
+ * result of a function:
+ *
+ * warning: cast from function call of type ‘#cairo_uint64_t’ to
+ * non-matching type ‘double’
+ */
+static cairo_always_inline cairo_uint64_t I _cairo_double_to_uint64 (double i) { return i; }
+static cairo_always_inline double I _cairo_uint64_to_double (cairo_uint64_t i) { return i; }
 
 #define			_cairo_uint32_to_uint64(i)  ((uint64_t) (i))
 #define			_cairo_uint64_to_uint32(i)  ((uint32_t) (i))
