@@ -612,7 +612,7 @@ cairo_private void
 _cairo_xcb_connection_shm_detach (cairo_xcb_connection_t *connection,
 				  uint32_t segment);
 #else
-static inline uint64_t
+static inline void
 _cairo_xcb_connection_shm_put_image (cairo_xcb_connection_t *connection,
 				     xcb_drawable_t dst,
 				     xcb_gcontext_t gc,
@@ -628,7 +628,7 @@ _cairo_xcb_connection_shm_put_image (cairo_xcb_connection_t *connection,
 				     uint32_t shm,
 				     uint32_t offset)
 {
-    return 0;
+    ASSERT_NOT_REACHED;
 }
 #endif
 
