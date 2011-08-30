@@ -1841,6 +1841,9 @@ _clip_and_composite_combine (cairo_clip_t		*clip,
     if (unlikely (tmp->base.status))
 	return tmp->base.status;
 
+    /* create_similar() could have done a fallback to an image surface */
+    assert (tmp->base.backend == &_cairo_xcb_surface_backend);
+
     _cairo_xcb_surface_ensure_picture (tmp);
 
     if (pattern == NULL) {
