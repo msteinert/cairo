@@ -214,8 +214,8 @@ added:
  2. cairo-perf.h: Add a new CAIRO_PERF_DECL line with the name of your
     function, (my_new_test in the example above)
 
- 3. cairo-perf.c: Add a new row to the list at the end of the file. A
-    typical entry would look like:
+ 3. cairo-perf-micro.c: Add a new row to the list at the end of the
+    file. A typical entry would look like:
 
 	{ my_new_test, 16, 64 }
 
