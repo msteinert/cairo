@@ -2203,7 +2203,7 @@ _cairo_xcb_surface_fixup_unbounded_with_mask (cairo_xcb_surface_t *dst,
 static cairo_status_t
 _cairo_xcb_surface_fixup_unbounded_boxes (cairo_xcb_surface_t *dst,
 					  const cairo_composite_rectangles_t *extents,
-					  cairo_region_t *clip_region,
+					  cairo_clip_t *clip,
 					  cairo_boxes_t *boxes)
 {
     cairo_boxes_t clear;
@@ -2212,7 +2212,7 @@ _cairo_xcb_surface_fixup_unbounded_boxes (cairo_xcb_surface_t *dst,
     struct _cairo_boxes_chunk *chunk;
     int i;
 
-    if (boxes->num_boxes <= 1 && clip_region == NULL)
+    if (boxes->num_boxes <= 1 && clip == NULL)
 	return _cairo_xcb_surface_fixup_unbounded (dst, extents);
 
     _cairo_boxes_init (&clear);
@@ -2222,7 +2222,7 @@ _cairo_xcb_surface_fixup_unbounded_boxes (cairo_xcb_surface_t *dst,
     box.p2.x = _cairo_fixed_from_int (extents->unbounded.x);
     box.p2.y = _cairo_fixed_from_int (extents->unbounded.y + extents->unbounded.height);
 
-    if (clip_region == NULL) {
+    if (clip == NULL) {
 	cairo_boxes_t tmp;
 
 	_cairo_boxes_init (&tmp);
@@ -2239,10 +2239,7 @@ _cairo_xcb_surface_fixup_unbounded_boxes (cairo_xcb_surface_t *dst,
 
 	tmp.chunks.next = NULL;
     } else {
-	pixman_box32_t *pbox;
-
-	pbox = pixman_region32_rectangles (&clip_region->rgn, &i);
-	_cairo_boxes_limit (&clear, (cairo_box_t *) pbox, i);
+	_cairo_boxes_init_with_clip (&clear, clip);
 
 	status = _cairo_boxes_add (&clear, CAIRO_ANTIALIAS_DEFAULT, &box);
 	assert (status == CAIRO_STATUS_SUCCESS);
@@ -2490,7 +2487,8 @@ _composite_boxes (cairo_xcb_surface_t *dst,
 		  const cairo_composite_rectangles_t *extents)
 {
     cairo_bool_t need_clip_mask = extents->clip->path != NULL;
-    cairo_region_t *clip_region = _cairo_clip_get_region (extents->clip);
+    cairo_clip_t *clip = extents->clip;
+    cairo_region_t *clip_region = _cairo_clip_get_region (clip);
     cairo_status_t status;
 
     /* If the boxes are not pixel-aligned, we will need to compute a real mask */
@@ -2503,8 +2501,10 @@ _composite_boxes (cairo_xcb_surface_t *dst,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    if (cairo_region_contains_rectangle (clip_region, &extents->bounded) == CAIRO_REGION_OVERLAP_IN)
+    if (cairo_region_contains_rectangle (clip_region, &extents->bounded) == CAIRO_REGION_OVERLAP_IN) {
+	clip = NULL;
 	clip_region = NULL;
+    }
 
     status = _cairo_xcb_connection_acquire (dst->connection);
     if (unlikely (status))
@@ -2561,7 +2561,7 @@ _composite_boxes (cairo_xcb_surface_t *dst,
     if (status == CAIRO_STATUS_SUCCESS && ! extents->is_bounded) {
 	status =
 	    _cairo_xcb_surface_fixup_unbounded_boxes (dst, extents,
-						      clip_region, boxes);
+						      clip, boxes);
     }
 
     _cairo_xcb_connection_release (dst->connection);
