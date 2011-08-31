@@ -78,12 +78,6 @@ cairo_perf_timer_elapsed (void)
     return timer;
 }
 
-cairo_time_t
-cairo_perf_ticks_per_second (void)
-{
-    return _cairo_time_from_s (1.);
-}
-
 void
 cairo_perf_yield (void)
 {

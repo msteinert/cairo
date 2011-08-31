@@ -653,12 +653,12 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 
 	if (perf->observe) {
 	    cairo_device_t *observer = cairo_surface_get_device (args.surface);
-	    times[i] = cairo_device_observer_elapsed (observer) * (1e-9 * cairo_perf_ticks_per_second ());
-	    paint[i] = cairo_device_observer_paint_elapsed (observer) * (1e-9 * cairo_perf_ticks_per_second ());
-	    mask[i] = cairo_device_observer_mask_elapsed (observer) * (1e-9 * cairo_perf_ticks_per_second ());
-	    stroke[i] = cairo_device_observer_stroke_elapsed (observer) * (1e-9 * cairo_perf_ticks_per_second ());
-	    fill[i] = cairo_device_observer_fill_elapsed (observer) * (1e-9 * cairo_perf_ticks_per_second ());
-	    glyphs[i] = cairo_device_observer_glyphs_elapsed (observer) * (1e-9 * cairo_perf_ticks_per_second ());
+	    times[i] = _cairo_time_from_s (1.e9 * cairo_device_observer_elapsed (observer));
+	    paint[i] = _cairo_time_from_s (1.e9 * cairo_device_observer_paint_elapsed (observer));
+	    mask[i] = _cairo_time_from_s (1.e9 * cairo_device_observer_mask_elapsed (observer));
+	    stroke[i] = _cairo_time_from_s (1.e9 * cairo_device_observer_stroke_elapsed (observer));
+	    fill[i] = _cairo_time_from_s (1.e9 * cairo_device_observer_fill_elapsed (observer));
+	    glyphs[i] = _cairo_time_from_s (1.e9 * cairo_device_observer_glyphs_elapsed (observer));
 	} else {
 	    clear_surface (args.surface); /* queue a write to the sync'ed surface */
 	    cairo_perf_timer_stop ();
@@ -692,7 +692,7 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 			"rgba",
 			name,
 			0,
-			cairo_perf_ticks_per_second () / 1000.0);
+			_cairo_time_to_double (_cairo_time_from_s (1)) / 1000.);
 	    printf (" %lld", (long long) times[i]);
 	    fflush (stdout);
 	} else if (! perf->exact_iterations) {
@@ -718,35 +718,35 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 		     name);
 	    if (perf->observe) {
 		fprintf (perf->summary,
-			 " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+			 " %#9.3f", _cairo_time_to_s (stats.median_ticks));
 
 		_cairo_stats_compute (&stats, paint, i+1);
 		fprintf (perf->summary,
-			 " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+			 " %#9.3f", _cairo_time_to_s (stats.median_ticks));
 
 		_cairo_stats_compute (&stats, mask, i+1);
 		fprintf (perf->summary,
-			 " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+			 " %#9.3f", _cairo_time_to_s (stats.median_ticks));
 
 		_cairo_stats_compute (&stats, fill, i+1);
 		fprintf (perf->summary,
-			 " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+			 " %#9.3f", _cairo_time_to_s (stats.median_ticks));
 
 		_cairo_stats_compute (&stats, stroke, i+1);
 		fprintf (perf->summary,
-			 " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+			 " %#9.3f", _cairo_time_to_s (stats.median_ticks));
 
 		_cairo_stats_compute (&stats, glyphs, i+1);
 		fprintf (perf->summary,
-			 " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+			 " %#9.3f", _cairo_time_to_s (stats.median_ticks));
 
 		fprintf (perf->summary,
 			 " %5d", i+1);
 	    } else {
 		fprintf (perf->summary,
 			 "%#8.3f %#8.3f %#6.2f%% %4d/%d",
-			 (double) stats.min_ticks / cairo_perf_ticks_per_second (),
-			 (double) stats.median_ticks / cairo_perf_ticks_per_second (),
+			 _cairo_time_to_s (stats.min_ticks),
+			 _cairo_time_to_s (stats.median_ticks),
 			 stats.std_dev * 100.0,
 			 stats.iterations, i+1);
 	    }
@@ -766,35 +766,35 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 	}
 	if (perf->observe) {
 	    fprintf (perf->summary,
-		     " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+		     " %#9.3f", _cairo_time_to_s (stats.median_ticks));
 
 	    _cairo_stats_compute (&stats, paint, i+1);
 	    fprintf (perf->summary,
-		     " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+		     " %#9.3f", _cairo_time_to_s (stats.median_ticks));
 
 	    _cairo_stats_compute (&stats, mask, i+1);
 	    fprintf (perf->summary,
-		     " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+		     " %#9.3f", _cairo_time_to_s (stats.median_ticks));
 
 	    _cairo_stats_compute (&stats, fill, i+1);
 	    fprintf (perf->summary,
-		     " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+		     " %#9.3f", _cairo_time_to_s (stats.median_ticks));
 
 	    _cairo_stats_compute (&stats, stroke, i+1);
 	    fprintf (perf->summary,
-		     " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+		     " %#9.3f", _cairo_time_to_s (stats.median_ticks));
 
 	    _cairo_stats_compute (&stats, glyphs, i+1);
 	    fprintf (perf->summary,
-		     " %#9.3f", (double) stats.median_ticks / cairo_perf_ticks_per_second ());
+		     " %#9.3f", _cairo_time_to_s (stats.median_ticks));
 
 	    fprintf (perf->summary,
 		     " %5d\n", i+1);
 	} else {
 	    fprintf (perf->summary,
 		     "%#8.3f %#8.3f %#6.2f%% %4d/%d\n",
-		     (double) stats.min_ticks / cairo_perf_ticks_per_second (),
-		     (double) stats.median_ticks / cairo_perf_ticks_per_second (),
+		     _cairo_time_to_s (stats.min_ticks),
+		     _cairo_time_to_s (stats.median_ticks),
 		     stats.std_dev * 100.0,
 		     stats.iterations, i);
 	}

@@ -135,7 +135,7 @@ cairo_perf_calibrate (cairo_perf_t	*perf,
     calibration = perf_func (perf->cr, perf->size, perf->size, min_loops);
 
     if (!perf->fast_and_sloppy) {
-	calibration_max = perf->ms_per_iteration * 0.0001 / 4 * cairo_perf_ticks_per_second ();
+	calibration_max = _cairo_time_from_s (perf->ms_per_iteration * 0.0001 / 4);
 	while (calibration < calibration_max) {
 	    min_loops *= 2;
 	    calibration = perf_func (perf->cr, perf->size, perf->size, min_loops);
@@ -153,7 +153,7 @@ cairo_perf_calibrate (cairo_perf_t	*perf,
      * a more rigorous analysis of the synchronisation overhead,
      * that is to estimate the time for loop=0.
      */
-    loops = perf->ms_per_iteration * 0.001 * cairo_perf_ticks_per_second () * min_loops / calibration;
+    loops = _cairo_time_from_s (perf->ms_per_iteration * 0.001 * min_loops / calibration);
     min_loops = perf->fast_and_sloppy ? 1 : 10;
     if (loops < min_loops)
 	loops = min_loops;
@@ -262,7 +262,7 @@ cairo_perf_run (cairo_perf_t	   *perf,
 			    perf->target->name,
 			    _content_to_string (perf->target->content, similar),
 			    name, perf->size,
-			    cairo_perf_ticks_per_second () / 1000.0);
+			    _cairo_time_to_double (_cairo_time_from_s (1.)) / 1000.);
 		printf (" %lld", (long long) times[i]);
 	    } else if (! perf->exact_iterations) {
 		if (i > 0) {
@@ -289,16 +289,16 @@ cairo_perf_run (cairo_perf_t	   *perf,
 		fprintf (perf->summary,
 			 "%10lld %#8.3f %#8.3f %#5.2f%% %3d: %.2f\n",
 			 (long long) stats.min_ticks,
-			 (stats.min_ticks * 1000.0) / cairo_perf_ticks_per_second (),
-			 (stats.median_ticks * 1000.0) / cairo_perf_ticks_per_second (),
+			 _cairo_time_to_s (stats.min_ticks) * 1000.0,
+			 _cairo_time_to_s (stats.median_ticks) * 1000.0,
 			 stats.std_dev * 100.0, stats.iterations,
-			 count * cairo_perf_ticks_per_second () / stats.min_ticks);
+			 count / _cairo_time_to_s (stats.min_ticks));
 	    } else {
 		fprintf (perf->summary,
 			 "%10lld %#8.3f %#8.3f %#5.2f%% %3d\n",
 			 (long long) stats.min_ticks,
-			 (stats.min_ticks * 1000.0) / cairo_perf_ticks_per_second (),
-			 (stats.median_ticks * 1000.0) / cairo_perf_ticks_per_second (),
+			 _cairo_time_to_s (stats.min_ticks) * 1000.0,
+			 _cairo_time_to_s (stats.median_ticks) * 1000.0,
 			 stats.std_dev * 100.0, stats.iterations);
 	    }
 	    fflush (perf->summary);

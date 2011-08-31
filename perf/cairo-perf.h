@@ -58,9 +58,6 @@ cairo_perf_timer_set_synchronize (cairo_perf_timer_synchronize_t  synchronize,
 cairo_time_t
 cairo_perf_timer_elapsed (void);
 
-cairo_time_t
-cairo_perf_ticks_per_second (void);
-
 /* yield */
 
 void
