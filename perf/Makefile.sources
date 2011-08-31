@@ -1,10 +1,9 @@
 libcairoperf_sources = \
-	cairo-perf-os2.c	\
-	cairo-perf-posix.c	\
-	cairo-perf-report.c	\
-	cairo-perf-win32.c	\
+	cairo-perf.c	\
 	cairo-stats.c		\
 	$(NULL)
+
+libcairoperf_external_sources = ../src/cairo-time.c
 
 libcairoperf_headers = \
 	cairo-perf.h   \

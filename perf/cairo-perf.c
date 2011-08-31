@@ -2,6 +2,7 @@
  * Copyright (c) 2007 Netlabs
  * Copyright (c) 2006 Mozilla Corporation
  * Copyright (c) 2006 Red Hat, Inc.
+ * Copyright (c) 2011 Andrea Canciani
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -25,27 +26,32 @@
  * Authors: Peter Weilbacher <mozilla@weilbacher.org>
  *	    Vladimir Vukicevic <vladimir@pobox.com> (win32/linux code)
  *	    Carl Worth <cworth@cworth.org> (win32/linux code)
+ *          Andrea Canciani <ranma42@gmail.com>
  */
 
 #include "cairo-perf.h"
+#include "../src/cairo-time-private.h"
 
-#if CAIRO_HAS_OS2_SURFACE
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
+#if defined(__OS2__)
 #define INCL_BASE
 #include <os2.h>
+#elif defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#elif defined(_POSIX_PRIORITY_SCHEDULING)
+#include <sched.h>
+#endif
+
 
 /* timers */
-typedef struct _cairo_perf_timer
-{
-    /* make them double so that they can store the full QWORD precision */
-    double start;
-    double stop;
-} cairo_perf_timer_t;
-
-static cairo_perf_timer_t timer;
-
+static cairo_time_t timer;
 static cairo_perf_timer_synchronize_t cairo_perf_timer_synchronize = NULL;
 static void *cairo_perf_timer_synchronize_closure = NULL;
+
 void
 cairo_perf_timer_set_synchronize (cairo_perf_timer_synchronize_t  synchronize,
 				  void				 *closure)
@@ -55,45 +61,41 @@ cairo_perf_timer_set_synchronize (cairo_perf_timer_synchronize_t  synchronize,
 }
 
 void
-cairo_perf_timer_start (void) {
-    QWORD time;
-
-    if (cairo_perf_timer_synchronize)
-	cairo_perf_timer_synchronize (cairo_perf_timer_synchronize_closure);
-    DosTmrQueryTime(&time);
-    timer.start = (time.ulHi*4294967296.0 + time.ulLo);
+cairo_perf_timer_start (void)
+{
+    timer = _cairo_time_get ();
 }
 
 void
-cairo_perf_timer_stop (void) {
-    QWORD time;
-
-    if (cairo_perf_timer_synchronize)
-	cairo_perf_timer_synchronize (cairo_perf_timer_synchronize_closure);
-    DosTmrQueryTime(&time);
-    timer.stop = (time.ulHi*4294967296.0 + time.ulLo);
+cairo_perf_timer_stop (void)
+{
+    timer = _cairo_time_get_delta (timer);
 }
 
-cairo_perf_ticks_t
-cairo_perf_timer_elapsed (void) {
-    ULONG freq;
-
-    DosTmrQueryFreq(&freq);
-    /* return time difference in milliseconds */
-    return (timer.stop - timer.start) / freq * 1000;
+cairo_time_t
+cairo_perf_timer_elapsed (void)
+{
+    return timer;
 }
 
-cairo_perf_ticks_t
-cairo_perf_ticks_per_second (void) {
-    return 1000; /* in ms */
+cairo_time_t
+cairo_perf_ticks_per_second (void)
+{
+    return _cairo_time_from_s (1.);
 }
 
-
-/* yield */
 void
-cairo_perf_yield (void) {
+cairo_perf_yield (void)
+{
     /* try to deactivate this thread until the scheduler calls it again */
-    DosSleep (0);
-}
 
-#endif /* CAIRO_HAS_OS2_SURFACE */
+#if defined(__OS2__)
+    DosSleep (0);
+#elif defined(_WIN32)
+    SleepEx(0, TRUE);
+#elif defined(_POSIX_PRIORITY_SCHEDULING)
+    sched_yield ();
+#else
+    sleep (0);
+#endif
+}

@@ -29,9 +29,10 @@
 #define _CAIRO_PERF_H_
 
 #include "cairo-boilerplate.h"
+#include "../src/cairo-time-private.h"
 #include <stdio.h>
 
-typedef uint64_t cairo_perf_ticks_t;
+typedef cairo_time_t cairo_perf_ticks_t;
 
 typedef struct _cairo_stats {
     cairo_perf_ticks_t min_ticks;
