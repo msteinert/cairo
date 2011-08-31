@@ -164,7 +164,7 @@ do_dragon (cairo_t *cr, int width, int height, int loops)
 static cairo_perf_ticks_t
 do_dragon_solid (cairo_t *cr, int width, int height, int loops)
 {
-    double cx, cy, r;
+    double cx, cy;
 
     cx = cy = .5 * MAX (width, height);
 
