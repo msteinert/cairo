@@ -57,7 +57,7 @@ generate_random_waveform(cairo_t *target, int width, int height)
     return surface;
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_wave (cairo_t *cr, int width, int height, int loops)
 {
     cairo_surface_t *wave;

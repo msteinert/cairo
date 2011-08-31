@@ -544,7 +544,7 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 {
     static cairo_bool_t first_run = TRUE;
     unsigned int i;
-    cairo_perf_ticks_t *times, *paint, *mask, *fill, *stroke, *glyphs;
+    cairo_time_t *times, *paint, *mask, *fill, *stroke, *glyphs;
     cairo_stats_t stats = {0.0, 0.0};
     struct trace args = { target };
     int low_std_dev_count;
@@ -902,7 +902,7 @@ main (int   argc,
 	trace_dir = getenv ("CAIRO_TRACE_DIR");
 
     perf.targets = cairo_boilerplate_get_targets (&perf.num_targets, NULL);
-    perf.times = xmalloc (6 * perf.iterations * sizeof (cairo_perf_ticks_t));
+    perf.times = xmalloc (6 * perf.iterations * sizeof (cairo_time_t));
 
     /* do we have a list of filenames? */
     perf.exact_names = have_trace_filenames (&perf);

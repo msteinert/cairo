@@ -26,9 +26,9 @@
 #include "cairo-stats.h"
 
 void
-_cairo_stats_compute (cairo_stats_t	 *stats,
-		      cairo_perf_ticks_t *values,
-		      int		  num_values)
+_cairo_stats_compute (cairo_stats_t *stats,
+		      cairo_time_t  *values,
+		      int	     num_values)
 {
     int i;
     cairo_time_t sumtime;
@@ -46,8 +46,7 @@ _cairo_stats_compute (cairo_stats_t	 *stats,
      * and third quartiles and IQR is the inter-quartile range (Q3 -
      * Q1).
      */
-    qsort (values, num_values,
-	   sizeof (cairo_perf_ticks_t), _cairo_time_cmp);
+    qsort (values, num_values, sizeof (cairo_time_t), _cairo_time_cmp);
 
     q1 = _cairo_time_to_s (values[(1*num_values)/4]);
     q3 = _cairo_time_to_s (values[(3*num_values)/4]);

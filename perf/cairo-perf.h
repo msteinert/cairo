@@ -32,11 +32,9 @@
 #include "../src/cairo-time-private.h"
 #include <stdio.h>
 
-typedef cairo_time_t cairo_perf_ticks_t;
-
 typedef struct _cairo_stats {
-    cairo_perf_ticks_t min_ticks;
-    cairo_perf_ticks_t median_ticks;
+    cairo_time_t min_ticks;
+    cairo_time_t median_ticks;
     double ticks_per_ms;
     double std_dev;
     int iterations;
@@ -57,10 +55,10 @@ void
 cairo_perf_timer_set_synchronize (cairo_perf_timer_synchronize_t  synchronize,
 				  void				 *closure);
 
-cairo_perf_ticks_t
+cairo_time_t
 cairo_perf_timer_elapsed (void);
 
-cairo_perf_ticks_t
+cairo_time_t
 cairo_perf_ticks_per_second (void);
 
 /* yield */
@@ -89,7 +87,7 @@ typedef struct _cairo_perf {
     cairo_bool_t fast_and_sloppy;
 
     /* Stuff used internally */
-    cairo_perf_ticks_t *times;
+    cairo_time_t *times;
     const cairo_boilerplate_target_t **targets;
     int num_targets;
     const cairo_boilerplate_target_t *target;
@@ -99,7 +97,7 @@ typedef struct _cairo_perf {
     cairo_t *cr;
 } cairo_perf_t;
 
-typedef cairo_perf_ticks_t
+typedef cairo_time_t
 (*cairo_perf_func_t) (cairo_t *cr, int width, int height, int loops);
 
 typedef double
@@ -133,7 +131,7 @@ typedef struct _test_report {
     int size;
 
     /* The samples only exists for "raw" reports */
-    cairo_perf_ticks_t *samples;
+    cairo_time_t *samples;
     unsigned int samples_size;
     unsigned int samples_count;
 

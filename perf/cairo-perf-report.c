@@ -169,13 +169,13 @@ test_report_parse (test_report_t *report,
 	skip_space ();
 
 	report->samples_size = 5;
-	report->samples = xmalloc (report->samples_size * sizeof (cairo_perf_ticks_t));
+	report->samples = xmalloc (report->samples_size * sizeof (cairo_time_t));
 	report->stats.min_ticks = 0;
 	do {
 	    if (report->samples_count == report->samples_size) {
 		report->samples_size *= 2;
 		report->samples = xrealloc (report->samples,
-					    report->samples_size * sizeof (cairo_perf_ticks_t));
+					    report->samples_size * sizeof (cairo_time_t));
 	    }
 	    parse_long_long (report->samples[report->samples_count]);
 	    if (report->samples_count == 0) {
@@ -358,11 +358,11 @@ cairo_perf_report_sort_and_compute_stats (cairo_perf_report_t *report,
 		if (new_samples_count > base->samples_size) {
 		    base->samples_size = new_samples_count;
 		    base->samples = xrealloc (base->samples,
-					      base->samples_size * sizeof (cairo_perf_ticks_t));
+					      base->samples_size * sizeof (cairo_time_t));
 		}
 		for (t = base + 1; t < next; t++) {
 		    memcpy (&base->samples[base->samples_count], t->samples,
-			    t->samples_count * sizeof (cairo_perf_ticks_t));
+			    t->samples_count * sizeof (cairo_time_t));
 		    base->samples_count += t->samples_count;
 		}
 	    }

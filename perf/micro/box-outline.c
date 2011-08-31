@@ -40,7 +40,7 @@
  * for the xlib backend and 16x slower for the image backend.
  */
 
-static cairo_perf_ticks_t
+static cairo_time_t
 box_outline_stroke (cairo_t *cr, int width, int height, int loops)
 {
     cairo_set_source_rgb (cr, 0, 0, 1); /* blue */
@@ -64,7 +64,7 @@ box_outline_stroke (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 box_outline_fill (cairo_t *cr, int width, int height, int loops)
 {
     cairo_set_source_rgb (cr, 0, 0, 1); /* blue */

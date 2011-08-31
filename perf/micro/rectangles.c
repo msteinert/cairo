@@ -39,7 +39,7 @@ static struct {
     double height;
 } rects[RECTANGLE_COUNT];
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_rectangles (cairo_t *cr, int width, int height, int loops)
 {
     int i;
@@ -59,7 +59,7 @@ do_rectangles (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_rectangles_once (cairo_t *cr, int width, int height, int loops)
 {
     int i;
@@ -80,7 +80,7 @@ do_rectangles_once (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_rectangle (cairo_t *cr, int width, int height, int loops)
 {
     cairo_perf_timer_start ();

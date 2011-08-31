@@ -42,7 +42,7 @@ typedef enum {
 #define NUM_LINES    20
 #define LONG_FACTOR  50.0
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_long_lines (cairo_t *cr, int width, int height, int loops, long_lines_crop_t crop)
 {
     int i;
@@ -108,25 +108,25 @@ do_long_lines (cairo_t *cr, int width, int height, int loops, long_lines_crop_t 
     return cairo_perf_timer_elapsed ();
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 long_lines_uncropped (cairo_t *cr, int width, int height, int loops)
 {
     return do_long_lines (cr, width, height, loops, 0);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 long_lines_uncropped_once (cairo_t *cr, int width, int height, int loops)
 {
     return do_long_lines (cr, width, height, loops, LONG_LINES_ONCE);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 long_lines_cropped (cairo_t *cr, int width, int height, int loops)
 {
     return do_long_lines (cr, width, height, loops, LONG_LINES_CROPPED);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 long_lines_cropped_once (cairo_t *cr, int width, int height, int loops)
 {
     return do_long_lines (cr, width, height, loops, LONG_LINES_CROPPED | LONG_LINES_ONCE);

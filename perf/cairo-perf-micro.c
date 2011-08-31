@@ -128,7 +128,7 @@ static unsigned
 cairo_perf_calibrate (cairo_perf_t	*perf,
 		      cairo_perf_func_t  perf_func)
 {
-    cairo_perf_ticks_t calibration, calibration_max;
+    cairo_time_t calibration, calibration_max;
     unsigned loops, min_loops;
 
     min_loops = 1;
@@ -169,7 +169,7 @@ cairo_perf_run (cairo_perf_t	   *perf,
 {
     static cairo_bool_t first_run = TRUE;
     unsigned int i, similar, has_similar;
-    cairo_perf_ticks_t *times;
+    cairo_time_t *times;
     cairo_stats_t stats = {0.0, 0.0};
     int low_std_dev_count;
 
@@ -477,7 +477,7 @@ main (int   argc,
     }
 
     perf.targets = cairo_boilerplate_get_targets (&perf.num_targets, NULL);
-    perf.times = xmalloc (perf.iterations * sizeof (cairo_perf_ticks_t));
+    perf.times = xmalloc (perf.iterations * sizeof (cairo_time_t));
 
     for (i = 0; i < perf.num_targets; i++) {
 	const cairo_boilerplate_target_t *target = perf.targets[i];

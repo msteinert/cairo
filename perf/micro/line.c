@@ -26,7 +26,7 @@
 
 #include "cairo-perf.h"
 
-static cairo_perf_ticks_t
+static cairo_time_t
 horizontal (cairo_t *cr, int width, int height, int loops)
 {
     double h = height/2 + .5;
@@ -46,21 +46,21 @@ horizontal (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 horizontal_hair (cairo_t *cr, int width, int height, int loops)
 {
     cairo_set_line_width (cr, 1.);
     return horizontal (cr, width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 horizontal_wide (cairo_t *cr, int width, int height, int loops)
 {
     cairo_set_line_width (cr, 5.);
     return horizontal (cr, width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 nearly_horizontal (cairo_t *cr, int width, int height, int loops)
 {
     double h = height/2;
@@ -80,14 +80,14 @@ nearly_horizontal (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 nearly_horizontal_hair (cairo_t *cr, int width, int height, int loops)
 {
     cairo_set_line_width (cr, 1.);
     return nearly_horizontal (cr, width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 nearly_horizontal_wide (cairo_t *cr, int width, int height, int loops)
 {
     cairo_set_line_width (cr, 5.);
@@ -95,7 +95,7 @@ nearly_horizontal_wide (cairo_t *cr, int width, int height, int loops)
 }
 
 
-static cairo_perf_ticks_t
+static cairo_time_t
 vertical (cairo_t *cr, int width, int height, int loops)
 {
     double w = width/2 + .5;
@@ -115,21 +115,21 @@ vertical (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 vertical_hair (cairo_t *cr, int width, int height, int loops)
 {
     cairo_set_line_width (cr, 1.);
     return vertical (cr, width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 vertical_wide (cairo_t *cr, int width, int height, int loops)
 {
     cairo_set_line_width (cr, 5.);
     return vertical (cr, width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 nearly_vertical (cairo_t *cr, int width, int height, int loops)
 {
     double w = width/2;
@@ -149,14 +149,14 @@ nearly_vertical (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 nearly_vertical_hair (cairo_t *cr, int width, int height, int loops)
 {
     cairo_set_line_width (cr, 1.);
     return nearly_vertical (cr, width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 nearly_vertical_wide (cairo_t *cr, int width, int height, int loops)
 {
     cairo_set_line_width (cr, 5.);
@@ -164,7 +164,7 @@ nearly_vertical_wide (cairo_t *cr, int width, int height, int loops)
 }
 
 
-static cairo_perf_ticks_t
+static cairo_time_t
 diagonal (cairo_t *cr, int width, int height, int loops)
 {
     cairo_move_to (cr, 0, 0);
@@ -182,14 +182,14 @@ diagonal (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 diagonal_hair (cairo_t *cr, int width, int height, int loops)
 {
     cairo_set_line_width (cr, 1.);
     return diagonal (cr, width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 diagonal_wide (cairo_t *cr, int width, int height, int loops)
 {
     cairo_set_line_width (cr, 5.);

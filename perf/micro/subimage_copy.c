@@ -34,7 +34,7 @@
  * should be independent of the source and destination surface sizes.
  */
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_subimage_copy (cairo_t *cr, int width, int height, int loops)
 {
     cairo_rectangle (cr, 2, 2, 4, 4);

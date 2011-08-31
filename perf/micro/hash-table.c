@@ -38,7 +38,7 @@
  * show the O(n) behavior.
  */
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_hash_table (cairo_t *cr, int width, int height, int loops)
 {
     cairo_scaled_font_t *active_fonts[ACTIVE_FONTS];

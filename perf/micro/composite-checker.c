@@ -47,7 +47,7 @@
 static cairo_pattern_t *checkerboard = NULL;
 static cairo_pattern_t *src_pattern = NULL;
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_composite_checker (cairo_t *cr,
                       int      width,
                       int      height,

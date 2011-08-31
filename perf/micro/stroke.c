@@ -25,7 +25,7 @@
 
 #include "cairo-perf.h"
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_stroke (cairo_t *cr, int width, int height, int loops)
 {
     cairo_arc (cr,
@@ -60,7 +60,7 @@ rounded_rectangle (cairo_t *cr,
     cairo_arc (cr, x+radius,   y+radius,   radius, M_PI,            270 * M_PI / 180);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_strokes (cairo_t *cr, int width, int height, int loops)
 {
     /* a pair of overlapping rectangles */

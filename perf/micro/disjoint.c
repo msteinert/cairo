@@ -62,7 +62,7 @@ static void clip (cairo_t *cr, int width, int height)
     cairo_clip (cr);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 draw (cairo_t *cr, int width, int height, int loops)
 {
     cairo_save (cr);

@@ -44,7 +44,7 @@ zrusin_another_path (cairo_t *cr)
 	cairo_line_to (cr, zrusin_another[i].x, zrusin_another[i].y);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 zrusin_another_tessellate (cairo_t *cr, int width, int height, int loops)
 {
     zrusin_another_path (cr);
@@ -66,7 +66,7 @@ zrusin_another_tessellate (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 zrusin_another_fill (cairo_t *cr, int width, int height, int loops)
 {
     zrusin_another_path (cr);

@@ -80,7 +80,7 @@ static void clip_alpha (cairo_t *cr)
     cairo_paint_with_alpha (cr, .5);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 draw (cairo_t *cr,
       void (*prepare) (cairo_t *cr),
       void (*transform) (cairo_t *cr, int width, int height),
@@ -109,42 +109,42 @@ draw (cairo_t *cr,
     return cairo_perf_timer_elapsed ();
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 draw_aligned_aa (cairo_t *cr, int width, int height, int loops)
 {
     return draw(cr, aa, aligned, cairo_fill,
 		width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 draw_misaligned_aa (cairo_t *cr, int width, int height, int loops)
 {
     return draw(cr, aa, misaligned, cairo_fill,
 		width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 draw_rotated_aa (cairo_t *cr, int width, int height, int loops)
 {
     return draw(cr, aa, rotated, cairo_fill,
 		width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 draw_aligned_mono (cairo_t *cr, int width, int height, int loops)
 {
     return draw(cr, mono, aligned, cairo_fill,
 		width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 draw_misaligned_mono (cairo_t *cr, int width, int height, int loops)
 {
     return draw(cr, mono, misaligned, cairo_fill,
 		width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 draw_rotated_mono (cairo_t *cr, int width, int height, int loops)
 {
     return draw(cr, mono, rotated, cairo_fill,
@@ -152,7 +152,7 @@ draw_rotated_mono (cairo_t *cr, int width, int height, int loops)
 }
 
 #define F(name, op,transform,aa) \
-static cairo_perf_ticks_t \
+static cairo_time_t \
 draw_##name (cairo_t *cr, int width, int height, int loops) \
 { return draw(cr, (aa), (transform), (op), width, height, loops); }
 

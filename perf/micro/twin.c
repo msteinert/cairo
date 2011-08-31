@@ -3,7 +3,7 @@
 
 #include "cairo-perf.h"
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_twin (cairo_t *cr,
 	 int width,
 	 int height,

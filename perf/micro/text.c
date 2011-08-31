@@ -25,7 +25,7 @@
 
 #include "cairo-perf.h"
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_text (cairo_t *cr, int width, int height, int loops)
 {
     const char text[] = "the jay, pig, fox, zebra and my wolves quack";

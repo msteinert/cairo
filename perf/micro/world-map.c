@@ -53,7 +53,7 @@ enum {
     FILL = 2,
 };
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_world_map (cairo_t *cr, int width, int height, int loops, int mode)
 {
     const wm_element_t *e;
@@ -116,19 +116,19 @@ do_world_map (cairo_t *cr, int width, int height, int loops, int mode)
     return cairo_perf_timer_elapsed ();
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_world_map_stroke (cairo_t *cr, int width, int height, int loops)
 {
     return do_world_map (cr, width, height, loops, STROKE);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_world_map_fill (cairo_t *cr, int width, int height, int loops)
 {
     return do_world_map (cr, width, height, loops, FILL);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_world_map_both (cairo_t *cr, int width, int height, int loops)
 {
     return do_world_map (cr, width, height, loops, FILL | STROKE);

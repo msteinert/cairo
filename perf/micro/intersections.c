@@ -39,7 +39,7 @@ uniform_random (double minval, double maxval)
     return minval + state * (maxval - minval) / 4294967296.0;
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 draw_random (cairo_t *cr, cairo_fill_rule_t fill_rule,
 	     int width, int height, int loops)
 {
@@ -77,7 +77,7 @@ draw_random (cairo_t *cr, cairo_fill_rule_t fill_rule,
     return cairo_perf_timer_elapsed ();
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 draw_random_curve (cairo_t *cr, cairo_fill_rule_t fill_rule,
 		   int width, int height, int loops)
 {
@@ -119,25 +119,25 @@ draw_random_curve (cairo_t *cr, cairo_fill_rule_t fill_rule,
     return cairo_perf_timer_elapsed ();
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 random_eo (cairo_t *cr, int width, int height, int loops)
 {
     return draw_random (cr, CAIRO_FILL_RULE_EVEN_ODD, width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 random_nz (cairo_t *cr, int width, int height, int loops)
 {
     return draw_random (cr, CAIRO_FILL_RULE_WINDING, width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 random_curve_eo (cairo_t *cr, int width, int height, int loops)
 {
     return draw_random_curve (cr, CAIRO_FILL_RULE_EVEN_ODD, width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 random_curve_nz (cairo_t *cr, int width, int height, int loops)
 {
     return draw_random_curve (cr, CAIRO_FILL_RULE_WINDING, width, height, loops);

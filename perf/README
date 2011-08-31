@@ -166,7 +166,7 @@ Here is the basic structure of a performance test file:
 
     #include "cairo-perf.h"
 
-    static cairo_perf_ticks_t
+    static cairo_time_t
     do_my_new_test (cairo_t *cr, int width, int height)
     {
 	cairo_perf_timer_start ();

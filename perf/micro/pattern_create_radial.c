@@ -55,7 +55,7 @@ generate_double_in_range (double min, double max)
     return d;
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_pattern_create_radial (cairo_t *cr, int width, int height, int loops)
 {
     cairo_perf_timer_start ();

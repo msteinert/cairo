@@ -94,7 +94,7 @@ path (cairo_t *cr, int step, int dir, int iterations)
     }
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_dragon (cairo_t *cr, int width, int height, int loops)
 {
     cairo_pattern_t *pattern;
@@ -161,7 +161,7 @@ do_dragon (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_dragon_solid (cairo_t *cr, int width, int height, int loops)
 {
     double cx, cy;
@@ -202,14 +202,14 @@ do_dragon_solid (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_dragon_solid_unaligned (cairo_t *cr, int width, int height, int loops)
 {
     cairo_translate (cr, 0.01, 0.01);
     return do_dragon_solid (cr, width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_dragon_solid_aligned_clip (cairo_t *cr, int width, int height, int loops)
 {
     cairo_reset_clip (cr);
@@ -220,7 +220,7 @@ do_dragon_solid_aligned_clip (cairo_t *cr, int width, int height, int loops)
     return do_dragon_solid (cr, width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_dragon_unaligned_solid_aligned_clip (cairo_t *cr, int width, int height, int loops)
 {
     cairo_translate (cr, 0.01, 0.01);
@@ -232,7 +232,7 @@ do_dragon_unaligned_solid_aligned_clip (cairo_t *cr, int width, int height, int 
     return do_dragon_solid (cr, width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_dragon_solid_unaligned_clip (cairo_t *cr, int width, int height, int loops)
 {
     cairo_reset_clip (cr);
@@ -243,7 +243,7 @@ do_dragon_solid_unaligned_clip (cairo_t *cr, int width, int height, int loops)
     return do_dragon_solid (cr, width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_dragon_unaligned_solid_unaligned_clip (cairo_t *cr, int width, int height, int loops)
 {
     cairo_translate (cr, 0.01, 0.01);
@@ -255,7 +255,7 @@ do_dragon_unaligned_solid_unaligned_clip (cairo_t *cr, int width, int height, in
     return do_dragon_solid (cr, width, height, loops);
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_dragon_solid_circle_clip (cairo_t *cr, int width, int height, int loops)
 {
     cairo_reset_clip (cr);

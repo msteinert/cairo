@@ -27,7 +27,7 @@
 
 #include "cairo-perf.h"
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_glyphs (double font_size,
 	   cairo_antialias_t antialias,
 	   cairo_t *cr, int width, int height, int loops)
@@ -142,7 +142,7 @@ count_glyphs (double font_size,
 }
 
 #define DECL(name,size, aa) \
-static cairo_perf_ticks_t \
+static cairo_time_t \
 do_glyphs##name (cairo_t *cr, int width, int height, int loops) \
 { \
     return do_glyphs (size, aa, cr, width, height, loops); \

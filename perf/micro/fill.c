@@ -25,7 +25,7 @@
 
 #include "cairo-perf.h"
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_fill (cairo_t *cr, int width, int height, int loops)
 {
     cairo_arc (cr,
@@ -45,7 +45,7 @@ do_fill (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_fill_annuli (cairo_t *cr, int width, int height, int loops)
 {
     cairo_new_sub_path (cr);
@@ -84,7 +84,7 @@ do_fill_annuli (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_fill_eo_noaa (cairo_t *cr, int width, int height, int loops)
 {
     cairo_set_antialias (cr, CAIRO_ANTIALIAS_NONE);

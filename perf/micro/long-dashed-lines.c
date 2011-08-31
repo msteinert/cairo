@@ -27,7 +27,7 @@
 
 #include "cairo-perf.h"
 
-static cairo_perf_ticks_t
+static cairo_time_t
 do_long_dashed_lines (cairo_t *cr, int width, int height, int loops)
 {
     double dash[2] = { 2.0, 2.0 };
