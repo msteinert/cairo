@@ -2402,34 +2402,36 @@ _clip_and_composite (cairo_xcb_surface_t	*dst,
 	src = NULL;
     }
 
-    if (op == CAIRO_OPERATOR_SOURCE) {
-	status = _clip_and_composite_source (extents->clip, src,
-					     draw_func, mask_func, draw_closure,
-					     dst, &extents->bounded);
-    } else {
-	if (op == CAIRO_OPERATOR_CLEAR) {
-	    op = CAIRO_OPERATOR_DEST_OUT;
-	    src = NULL;
-	}
-
-	if (need_clip & NEED_CLIP_SURFACE) {
-	    if (extents->is_bounded) {
-		status = _clip_and_composite_with_mask (extents->clip, op, src,
-							draw_func,
-							mask_func,
-							draw_closure,
-							dst, &extents->bounded);
-	    } else {
-		status = _clip_and_composite_combine (extents->clip, op, src,
-						      draw_func, draw_closure,
-						      dst, &extents->bounded);
-	    }
+    if (extents->bounded.width != 0 && extents->bounded.height != 0) {
+	if (op == CAIRO_OPERATOR_SOURCE) {
+	    status = _clip_and_composite_source (extents->clip, src,
+						 draw_func, mask_func, draw_closure,
+						 dst, &extents->bounded);
 	} else {
-	    status = draw_func (draw_closure,
-				dst, op, src,
-				0, 0,
-				&extents->bounded,
-				extents->clip);
+	    if (op == CAIRO_OPERATOR_CLEAR) {
+		op = CAIRO_OPERATOR_DEST_OUT;
+		src = NULL;
+	    }
+
+	    if (need_clip & NEED_CLIP_SURFACE) {
+		if (extents->is_bounded) {
+		    status = _clip_and_composite_with_mask (extents->clip, op, src,
+							    draw_func,
+							    mask_func,
+							    draw_closure,
+							    dst, &extents->bounded);
+		} else {
+		    status = _clip_and_composite_combine (extents->clip, op, src,
+							  draw_func, draw_closure,
+							  dst, &extents->bounded);
+		}
+	    } else {
+		status = draw_func (draw_closure,
+				    dst, op, src,
+				    0, 0,
+				    &extents->bounded,
+				    extents->clip);
+	    }
 	}
     }
 
