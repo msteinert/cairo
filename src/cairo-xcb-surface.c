@@ -221,6 +221,7 @@ static cairo_surface_t *
 _cairo_xcb_surface_create_shm_image (cairo_xcb_connection_t *connection,
 				     pixman_format_code_t pixman_format,
 				     int width, int height,
+				     cairo_bool_t might_reuse,
 				     cairo_xcb_shm_info_t **shm_info_out)
 {
     cairo_surface_t *image;
@@ -234,6 +235,7 @@ _cairo_xcb_surface_create_shm_image (cairo_xcb_connection_t *connection,
 					 PIXMAN_FORMAT_BPP (pixman_format));
     status = _cairo_xcb_connection_allocate_shm_info (connection,
 						      stride * height,
+						      might_reuse,
 						      &shm_info);
     if (unlikely (status))
 	return _cairo_surface_create_in_error (status);
@@ -278,6 +280,7 @@ _get_shm_image (cairo_xcb_surface_t *surface,
     image = _cairo_xcb_surface_create_shm_image (surface->connection,
 						 surface->pixman_format,
 						 width, height,
+						 TRUE,
 						 &shm_info);
     if (unlikely (image == NULL || image->status))
 	goto done;

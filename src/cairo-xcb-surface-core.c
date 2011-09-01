@@ -164,8 +164,8 @@ _cairo_xcb_shm_image_create_shm (cairo_xcb_connection_t *connection,
     if (size <= CAIRO_XCB_SHM_SMALL_IMAGE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = _cairo_xcb_connection_allocate_shm_info (connection,
-						      size, &shm_info);
+    status = _cairo_xcb_connection_allocate_shm_info (connection, size,
+						      FALSE, &shm_info);
     if (unlikely (status))
 	return status;
 

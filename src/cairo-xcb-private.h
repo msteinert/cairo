@@ -77,6 +77,7 @@ struct _cairo_xcb_shm_info {
     cairo_xcb_connection_t *connection;
     uint32_t shm;
     uint32_t offset;
+    size_t size;
     void *mem;
     cairo_xcb_shm_mem_pool_t *pool;
     xcb_get_input_focus_cookie_t sync;
@@ -307,6 +308,7 @@ _cairo_xcb_connection_destroy (cairo_xcb_connection_t *connection)
 cairo_private cairo_int_status_t
 _cairo_xcb_connection_allocate_shm_info (cairo_xcb_connection_t *display,
 					 size_t size,
+					 cairo_bool_t might_reuse,
 					 cairo_xcb_shm_info_t **shm_info_out);
 
 cairo_private void

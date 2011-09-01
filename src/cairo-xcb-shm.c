@@ -492,6 +492,7 @@ _cairo_xcb_shm_process_pending (cairo_xcb_connection_t *connection, shm_wait_typ
 cairo_int_status_t
 _cairo_xcb_connection_allocate_shm_info (cairo_xcb_connection_t *connection,
 					 size_t size,
+					 cairo_bool_t might_reuse,
 					 cairo_xcb_shm_info_t **shm_info_out)
 {
     cairo_xcb_shm_info_t *shm_info;
@@ -505,6 +506,22 @@ _cairo_xcb_connection_allocate_shm_info (cairo_xcb_connection_t *connection,
 
     CAIRO_MUTEX_LOCK (connection->shm_mutex);
     _cairo_xcb_shm_process_pending (connection, PENDING_POLL);
+
+    if (might_reuse) {
+	cairo_list_foreach_entry (shm_info, cairo_xcb_shm_info_t,
+		&connection->shm_pending, pending) {
+	    if (shm_info->size >= size) {
+		cairo_list_del (&shm_info->pending);
+		CAIRO_MUTEX_UNLOCK (connection->shm_mutex);
+
+		xcb_discard_reply (connection->xcb_connection, shm_info->sync.sequence);
+		shm_info->sync.sequence = XCB_NONE;
+
+		*shm_info_out = shm_info;
+		return CAIRO_STATUS_SUCCESS;
+	    }
+	}
+    }
 
     cairo_list_foreach_entry_safe (pool, next, cairo_xcb_shm_mem_pool_t,
 				   &connection->shm_pools, link)
@@ -599,6 +616,7 @@ _cairo_xcb_connection_allocate_shm_info (cairo_xcb_connection_t *connection,
     shm_info->connection = connection;
     shm_info->pool = pool;
     shm_info->shm = pool->shmseg;
+    shm_info->size = size;
     shm_info->offset = (char *) mem - (char *) pool->base;
     shm_info->mem = mem;
     shm_info->sync.sequence = XCB_NONE;
