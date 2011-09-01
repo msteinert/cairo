@@ -51,6 +51,7 @@
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
+#include "cairo-image-surface-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-pattern-private.h"
 #include "cairo-win32-private.h"
