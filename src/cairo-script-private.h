@@ -38,6 +38,8 @@
 
 #include "cairo.h"
 
+#include "cairo-compiler-private.h"
+#include "cairo-output-stream-private.h"
 #include "cairo-script.h"
 
 CAIRO_BEGIN_DECLS
