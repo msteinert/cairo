@@ -41,7 +41,12 @@
 static cairo_time_t
 do_hash_table (cairo_t *cr, int width, int height, int loops)
 {
-    cairo_scaled_font_t *active_fonts[ACTIVE_FONTS];
+    /*
+     * Microsoft C Compiler complains that:
+     * error C2466: cannot allocate an array of constant size 0
+     * so we add an unused element to make it happy
+     */
+    cairo_scaled_font_t *active_fonts[ACTIVE_FONTS + 1];
     cairo_matrix_t m;
     int i;
 
