@@ -1603,7 +1603,8 @@ print_record (cairo_output_stream_t *stream,
 static double percent (cairo_time_t a, cairo_time_t b)
 {
     /* Fake %.1f */
-    return round (_cairo_time_to_s (a) * 1000 / _cairo_time_to_s (b)) / 10;
+    return _cairo_round (_cairo_time_to_s (a) * 1000 /
+			 _cairo_time_to_s (b)) / 10;
 }
 
 static cairo_bool_t
