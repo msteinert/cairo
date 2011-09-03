@@ -362,18 +362,13 @@ _get_image (cairo_xcb_surface_t		 *surface,
 	}
     }
 
-    if (surface->use_pixmap == 0) {
-	status = _cairo_xcb_connection_get_image (connection,
-						  surface->drawable,
-						  x, y,
-						  width, height,
-						  &reply);
-	if (unlikely (status))
-	    goto FAIL;
-    } else {
-	surface->use_pixmap--;
-	reply = NULL;
-    }
+    status = _cairo_xcb_connection_get_image (connection,
+					      surface->drawable,
+					      x, y,
+					      width, height,
+					      &reply);
+    if (unlikely (status))
+	goto FAIL;
 
     if (reply == NULL && ! surface->owns_pixmap) {
 	/* xcb_get_image_t from a window is dangerous because it can
@@ -381,6 +376,10 @@ _get_image (cairo_xcb_surface_t		 *surface,
 	 * outside the screen. We could check for errors and
 	 * retry, but to keep things simple, we just create a
 	 * temporary pixmap
+	 *
+	 * If we hit this fallback too often, we should remember so and
+	 * skip the round-trip from the above GetImage request,
+	 * similar to what cairo-xlib does.
 	 */
 	xcb_pixmap_t pixmap;
 	xcb_gcontext_t gc;
@@ -915,7 +914,6 @@ _cairo_xcb_surface_create_internal (cairo_xcb_screen_t		*screen,
 
     surface->drawable = drawable;
     surface->owns_pixmap = owns_pixmap;
-    surface->use_pixmap = 0;
 
     surface->deferred_clear = FALSE;
     surface->deferred_clear_color = *CAIRO_COLOR_TRANSPARENT;

@@ -94,7 +94,6 @@ struct _cairo_xcb_surface {
 
     xcb_drawable_t drawable;
     cairo_bool_t owns_pixmap;
-    int use_pixmap;
 
     cairo_bool_t deferred_clear;
     cairo_color_t deferred_clear_color;
