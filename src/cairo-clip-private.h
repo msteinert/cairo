@@ -55,8 +55,6 @@ struct _cairo_clip_path {
     double			 tolerance;
     cairo_antialias_t		 antialias;
     cairo_clip_path_t		*prev;
-
-    cairo_rectangle_int_t extents;
 };
 
 struct _cairo_clip {
