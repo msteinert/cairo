@@ -992,7 +992,8 @@ _cairo_pdf_surface_emit_group_resources (cairo_pdf_surface_t         *surface,
 }
 
 static cairo_pdf_smask_group_t *
-_cairo_pdf_surface_create_smask_group (cairo_pdf_surface_t	*surface)
+_cairo_pdf_surface_create_smask_group (cairo_pdf_surface_t	    *surface,
+				       const cairo_rectangle_int_t  *extents)
 {
     cairo_pdf_smask_group_t	*group;
 
@@ -1010,6 +1011,15 @@ _cairo_pdf_surface_create_smask_group (cairo_pdf_surface_t	*surface)
     }
     group->width = surface->width;
     group->height = surface->height;
+    if (extents != NULL) {
+	group->extents = *extents;
+    } else {
+	group->extents.x = 0;
+	group->extents.y = 0;
+	group->extents.width = surface->width;
+	group->extents.height = surface->height;
+    }
+    group->extents = *extents;
 
     return group;
 }
@@ -1322,6 +1332,18 @@ _cairo_pdf_surface_add_pdf_pattern (cairo_pdf_surface_t		*surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+/* Get BBox in PDF coordinates from extents in cairo coordinates */
+static void
+_get_bbox_from_extents (double                       surface_height,
+		       const cairo_rectangle_int_t *extents,
+		       cairo_box_double_t          *bbox)
+{
+    bbox->p1.x = extents->x;
+    bbox->p1.y = surface_height - (extents->y + extents->height);
+    bbox->p2.x = extents->x + extents->width;
+    bbox->p2.y = surface_height - extents->y;
+}
+
 static cairo_status_t
 _cairo_pdf_surface_open_stream (cairo_pdf_surface_t	*surface,
 				cairo_pdf_resource_t    *resource,
@@ -1443,7 +1465,8 @@ _cairo_pdf_surface_write_memory_stream (cairo_pdf_surface_t         *surface,
 					cairo_output_stream_t       *mem_stream,
 					cairo_pdf_resource_t         resource,
 					cairo_pdf_group_resources_t *resources,
-					cairo_bool_t                 is_knockout_group)
+					cairo_bool_t                 is_knockout_group,
+					const cairo_box_double_t    *bbox)
 {
     _cairo_pdf_surface_update_object (surface, resource);
 
@@ -1461,13 +1484,12 @@ _cairo_pdf_surface_write_memory_stream (cairo_pdf_surface_t         *surface,
 
     _cairo_output_stream_printf (surface->output,
 				 "   /Subtype /Form\n"
-				 "   /BBox [ 0 0 %f %f ]\n"
+				 "   /BBox [ %f %f %f %f ]\n"
 				 "   /Group <<\n"
 				 "      /Type /Group\n"
 				 "      /S /Transparency\n"
 				 "      /CS /DeviceRGB\n",
-				 surface->width,
-				 surface->height);
+				 bbox->p1.x, bbox->p1.y, bbox->p2.x, bbox->p2.y);
 
     if (is_knockout_group)
         _cairo_output_stream_printf (surface->output,
@@ -1487,8 +1509,9 @@ _cairo_pdf_surface_write_memory_stream (cairo_pdf_surface_t         *surface,
 }
 
 static cairo_status_t
-_cairo_pdf_surface_open_group (cairo_pdf_surface_t  *surface,
-			       cairo_pdf_resource_t *resource)
+_cairo_pdf_surface_open_group (cairo_pdf_surface_t         *surface,
+			       const cairo_box_double_t    *bbox,
+			       cairo_pdf_resource_t        *resource)
 {
     cairo_status_t status;
 
@@ -1523,16 +1546,18 @@ _cairo_pdf_surface_open_group (cairo_pdf_surface_t  *surface,
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
     surface->group_stream.is_knockout = FALSE;
+    surface->group_stream.bbox = *bbox;
 
     return status;
 }
 
 static cairo_status_t
-_cairo_pdf_surface_open_knockout_group (cairo_pdf_surface_t  *surface)
+_cairo_pdf_surface_open_knockout_group (cairo_pdf_surface_t         *surface,
+					const cairo_box_double_t    *bbox)
 {
     cairo_status_t status;
 
-    status = _cairo_pdf_surface_open_group (surface, NULL);
+    status = _cairo_pdf_surface_open_group (surface, bbox, NULL);
     if (unlikely (status))
 	return status;
 
@@ -1568,7 +1593,8 @@ _cairo_pdf_surface_close_group (cairo_pdf_surface_t *surface,
 					    surface->group_stream.mem_stream,
 					    surface->group_stream.resource,
 					    &surface->resources,
-					    surface->group_stream.is_knockout);
+					    surface->group_stream.is_knockout,
+					    &surface->group_stream.bbox);
     if (group)
 	*group = surface->group_stream.resource;
 
@@ -5182,9 +5208,11 @@ _cairo_pdf_surface_write_mask_group (cairo_pdf_surface_t	*surface,
     cairo_pdf_smask_group_t *smask_group;
     cairo_pdf_resource_t pattern_res, gstate_res;
     cairo_status_t status;
+    cairo_box_double_t bbox;
 
     /* Create mask group */
-    status = _cairo_pdf_surface_open_group (surface, NULL);
+    _get_bbox_from_extents (group->height, &group->extents, &bbox);
+    status = _cairo_pdf_surface_open_group (surface, &bbox, NULL);
     if (unlikely (status))
 	return status;
 
@@ -5196,10 +5224,12 @@ _cairo_pdf_surface_write_mask_group (cairo_pdf_surface_t	*surface,
 	return status;
 
     if (gstate_res.id != 0) {
-	smask_group = _cairo_pdf_surface_create_smask_group (surface);
+	smask_group = _cairo_pdf_surface_create_smask_group (surface, &group->extents);
 	if (unlikely (smask_group == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
+	smask_group->width = group->width;
+	smask_group->height = group->height;
 	smask_group->operation = PDF_PAINT;
 	smask_group->source = cairo_pattern_reference (group->mask);
 	smask_group->source_res = pattern_res;
@@ -5227,8 +5257,11 @@ _cairo_pdf_surface_write_mask_group (cairo_pdf_surface_t	*surface,
 	    return status;
 
 	_cairo_output_stream_printf (surface->output,
-				     "0 0 %f %f re f\n",
-				     surface->width, surface->height);
+				     "%f %f %f %f re f\n",
+				     bbox.p1.x,
+				     bbox.p1.y,
+				     bbox.p2.x - bbox.p1.x,
+				     bbox.p2.y - bbox.p1.y);
 
 	status = _cairo_pdf_surface_unselect_pattern (surface);
 	if (unlikely (status))
@@ -5240,7 +5273,7 @@ _cairo_pdf_surface_write_mask_group (cairo_pdf_surface_t	*surface,
 	return status;
 
     /* Create source group */
-    status = _cairo_pdf_surface_open_group (surface, &group->source_res);
+    status = _cairo_pdf_surface_open_group (surface, &bbox, &group->source_res);
     if (unlikely (status))
 	return status;
 
@@ -5252,7 +5285,7 @@ _cairo_pdf_surface_write_mask_group (cairo_pdf_surface_t	*surface,
 	return status;
 
     if (gstate_res.id != 0) {
-	smask_group = _cairo_pdf_surface_create_smask_group (surface);
+	smask_group = _cairo_pdf_surface_create_smask_group (surface, &group->extents);
 	if (unlikely (smask_group == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -5283,8 +5316,11 @@ _cairo_pdf_surface_write_mask_group (cairo_pdf_surface_t	*surface,
 	    return status;
 
 	_cairo_output_stream_printf (surface->output,
-				     "0 0 %f %f re f\n",
-				     surface->width, surface->height);
+				     "%f %f %f %f re f\n",
+				     bbox.p1.x,
+				     bbox.p1.y,
+				     bbox.p2.x - bbox.p1.x,
+				     bbox.p2.y - bbox.p1.y);
 
 	status = _cairo_pdf_surface_unselect_pattern (surface);
 	if (unlikely (status))
@@ -5333,6 +5369,7 @@ _cairo_pdf_surface_write_smask_group (cairo_pdf_surface_t     *surface,
 {
     double old_width, old_height;
     cairo_status_t status;
+    cairo_box_double_t bbox;
 
     old_width = surface->width;
     old_height = surface->height;
@@ -5346,7 +5383,8 @@ _cairo_pdf_surface_write_smask_group (cairo_pdf_surface_t     *surface,
 	goto RESTORE_SIZE;
     }
 
-    status = _cairo_pdf_surface_open_group (surface, &group->group_res);
+    _get_bbox_from_extents (group->height, &group->extents, &bbox);
+    status = _cairo_pdf_surface_open_group (surface, &bbox, &group->group_res);
     if (unlikely (status))
 	return status;
 
@@ -5461,7 +5499,14 @@ _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface)
 
     _cairo_pdf_group_resources_clear (&surface->resources);
     if (surface->has_fallback_images) {
-	status = _cairo_pdf_surface_open_knockout_group (surface);
+	cairo_rectangle_int_t extents;
+
+	extents.x = 0;
+	extents.y = 0;
+	extents.width = ceil (surface->width);
+	extents.height = ceil (surface->height);
+	_get_bbox_from_extents (surface->height, &extents, &bbox);
+	status = _cairo_pdf_surface_open_knockout_group (surface, &bbox);
 	if (unlikely (status))
 	    return status;
 
@@ -5899,7 +5944,7 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
 	goto cleanup;
 
     if (gstate_res.id != 0) {
-	group = _cairo_pdf_surface_create_smask_group (surface);
+	group = _cairo_pdf_surface_create_smask_group (surface, &extents.bounded);
 	if (unlikely (group == NULL)) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto cleanup;
@@ -6001,6 +6046,13 @@ _cairo_pdf_surface_mask (void			*abstract_surface,
     assert (_cairo_pdf_surface_operation_supported (surface, op, source, &extents.bounded));
     assert (_cairo_pdf_surface_operation_supported (surface, op, mask, &extents.bounded));
 
+    /* get the accurate extents */
+    _cairo_pattern_get_ink_extents (source, &extents.source);
+    _cairo_pattern_get_ink_extents (mask, &extents.mask);
+    extents.bounded = extents.source;
+    if (! _cairo_rectangle_intersect (&extents.bounded, &extents.mask))
+	return CAIRO_STATUS_SUCCESS;
+
     status = _cairo_pdf_surface_set_clip (surface, &extents);
     if (unlikely (status))
 	goto cleanup;
@@ -6014,7 +6066,7 @@ _cairo_pdf_surface_mask (void			*abstract_surface,
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	goto cleanup;
 
-    group = _cairo_pdf_surface_create_smask_group (surface);
+    group = _cairo_pdf_surface_create_smask_group (surface, &extents.bounded);
     if (unlikely (group == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto cleanup;
@@ -6139,7 +6191,7 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 	goto cleanup;
 
     if (gstate_res.id != 0) {
-	group = _cairo_pdf_surface_create_smask_group (surface);
+	group = _cairo_pdf_surface_create_smask_group (surface, &extents.bounded);
 	if (unlikely (group == NULL)) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto cleanup;
@@ -6303,7 +6355,7 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 	goto cleanup;
 
     if (gstate_res.id != 0) {
-	group = _cairo_pdf_surface_create_smask_group (surface);
+	group = _cairo_pdf_surface_create_smask_group (surface, &extents.bounded);
 	if (unlikely (group == NULL)) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto cleanup;
@@ -6587,7 +6639,7 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 	goto cleanup;
 
     if (gstate_res.id != 0) {
-	group = _cairo_pdf_surface_create_smask_group (surface);
+	group = _cairo_pdf_surface_create_smask_group (surface, &extents.bounded);
 	if (unlikely (group == NULL)) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto cleanup;

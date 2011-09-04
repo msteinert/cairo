@@ -4376,6 +4376,50 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
     return;
 }
 
+/**
+ * _cairo_pattern_get_ink_extents:
+ *
+ * Return the "target-space" inked extents of @pattern in @extents.
+ **/
+void
+_cairo_pattern_get_ink_extents (const cairo_pattern_t         *pattern,
+				cairo_rectangle_int_t         *extents)
+{
+    if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE &&
+	pattern->extend == CAIRO_EXTEND_NONE)
+    {
+	const cairo_surface_pattern_t *surface_pattern =
+	    (const cairo_surface_pattern_t *) pattern;
+	cairo_surface_t *surface = surface_pattern->surface;
+
+	if (surface->type == CAIRO_SURFACE_TYPE_RECORDING) {
+	    cairo_matrix_t imatrix;
+	    double x1, y1, x2, y2, width, height;
+	    cairo_status_t status;
+
+	    cairo_recording_surface_ink_extents (surface, &x1, &y1, &width, &height);
+	    imatrix = pattern->matrix;
+	    status = cairo_matrix_invert (&imatrix);
+	    /* cairo_pattern_set_matrix ensures the matrix is invertible */
+	    assert (status == CAIRO_STATUS_SUCCESS);
+
+	    x2 = x1 + width;
+	    y2 = y1 + height;
+	    _cairo_matrix_transform_bounding_box (&imatrix,
+						  &x1, &y1, &x2, &y2,
+						  NULL);
+	    x1 = floor (x1);
+	    y1 = floor (y1);
+	    x2 = ceil (x2);
+	    y2 = ceil (y2);
+	    extents->x = x1; extents->width  = x2 - x1;
+	    extents->y = y1; extents->height = y2 - y1;
+	    return;
+	}
+    }
+
+    return _cairo_pattern_get_extents (pattern, extents);
+}
 
 static unsigned long
 _cairo_solid_pattern_hash (unsigned long hash,

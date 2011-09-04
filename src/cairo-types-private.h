@@ -271,6 +271,11 @@ typedef struct _cairo_distance_double {
     double dy;
 } cairo_distance_double_t;
 
+typedef struct _cairo_box_double {
+    cairo_point_double_t p1;
+    cairo_point_double_t p2;
+} cairo_box_double_t;
+
 typedef struct _cairo_line {
     cairo_point_t p1;
     cairo_point_t p2;

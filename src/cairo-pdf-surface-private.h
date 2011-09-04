@@ -101,6 +101,7 @@ typedef enum _cairo_pdf_operation {
 typedef struct _cairo_pdf_smask_group {
     double		  width;
     double		  height;
+    cairo_rectangle_int_t extents;
     cairo_pdf_resource_t  group_res;
     cairo_pdf_operation_t operation;
     cairo_pattern_t	 *source;
@@ -174,6 +175,7 @@ struct _cairo_pdf_surface {
 	cairo_output_stream_t *mem_stream;
 	cairo_output_stream_t *old_output;
 	cairo_pdf_resource_t   resource;
+	cairo_box_double_t     bbox;
 	cairo_bool_t is_knockout;
     } group_stream;
 

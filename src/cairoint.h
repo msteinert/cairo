@@ -407,6 +407,10 @@ _cairo_user_data_array_foreach (cairo_user_data_array_t     *array,
 cairo_private unsigned long
 _cairo_hash_string (const char *c);
 
+cairo_private void
+_cairo_pattern_get_ink_extents (const cairo_pattern_t	    *pattern,
+				cairo_rectangle_int_t       *extents);
+
 cairo_private unsigned long
 _cairo_hash_bytes (unsigned long hash,
 		   const void *bytes,
