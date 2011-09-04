@@ -112,8 +112,8 @@ _cairo_uint64_divrem (cairo_uint64_t num, cairo_uint64_t den)
  * warning: cast from function call of type ‘#cairo_uint64_t’ to
  * non-matching type ‘double’
  */
-static cairo_always_inline cairo_uint64_t I _cairo_double_to_uint64 (double i) { return i; }
-static cairo_always_inline double I _cairo_uint64_to_double (cairo_uint64_t i) { return i; }
+static cairo_always_inline cairo_const cairo_uint64_t _cairo_double_to_uint64 (double i) { return i; }
+static cairo_always_inline cairo_const double _cairo_uint64_to_double (cairo_uint64_t i) { return i; }
 
 #define			_cairo_uint32_to_uint64(i)  ((uint64_t) (i))
 #define			_cairo_uint64_to_uint32(i)  ((uint32_t) (i))
