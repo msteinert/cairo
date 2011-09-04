@@ -1105,10 +1105,10 @@ _get_jpeg_image_info (cairo_surface_t		 *source,
 static cairo_int_status_t
 _get_source_surface_size (cairo_surface_t         *source,
 			  int                     *width,
-			  int                     *height)
+			  int                     *height,
+			  cairo_rectangle_int_t   *extents)
 {
     cairo_int_status_t status;
-    cairo_rectangle_int_t extents;
     cairo_image_info_t info;
     const unsigned char *mime_data;
     unsigned long mime_data_length;
@@ -1117,33 +1117,39 @@ _get_source_surface_size (cairo_surface_t         *source,
 	if (source->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	     cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) source;
 
-	    *width  = sub->extents.width;
-	    *height = sub->extents.height;
-
+	     *extents = sub->extents;
+	     *width  = extents->width;
+	     *height = extents->height;
 	} else {
-	    cairo_recording_surface_t *recording_surface;
-	    cairo_box_t bbox;
+	    cairo_rectangle_int_t surf_extents;
+	    double x, y, w, h;
+	    cairo_bool_t bounded;
 
 	    if (_cairo_surface_is_snapshot (source))
 		source = _cairo_surface_snapshot_get_target (source);
 
-	    recording_surface = (cairo_recording_surface_t *) source;
-	    status = _cairo_recording_surface_get_bbox (recording_surface, &bbox, NULL);
-	    if (unlikely (status))
-		return status;
-
-	    _cairo_box_round_to_rectangle (&bbox, &extents);
-
-	    *width = extents.width;
-	    *height = extents.height;
+	    cairo_recording_surface_ink_extents (source, &x, &y,&w, &h);
+	    extents->x = floor (x);
+	    extents->y = floor (y);
+	    extents->width = ceil (x + w) - extents->x;
+	    extents->height = ceil (y + h) - extents->y;
+	    bounded = _cairo_surface_get_extents (source, &surf_extents);
+	    *width = surf_extents.width;
+	    *height = surf_extents.height;
 	}
+
 	return CAIRO_STATUS_SUCCESS;
     }
+
+    extents->x = 0;
+    extents->y = 0;
 
     status = _get_jpx_image_info (source, &info, &mime_data, &mime_data_length);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
 	*width = info.width;
 	*height = info.height;
+	extents->width = info.width;
+	extents->height = info.height;
 	return status;
     }
 
@@ -1151,14 +1157,16 @@ _get_source_surface_size (cairo_surface_t         *source,
     if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
 	*width = info.width;
 	*height = info.height;
+	extents->width = info.width;
+	extents->height = info.height;
 	return status;
     }
 
-    if (! _cairo_surface_get_extents (source, &extents))
+    if (! _cairo_surface_get_extents (source, extents))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    *width = extents.width;
-    *height = extents.height;
+    *width = extents->width;
+    *height = extents->height;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1170,7 +1178,8 @@ _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	*surface,
 				       cairo_bool_t              mask,
 				       cairo_pdf_resource_t	*surface_res,
 				       int                      *width,
-				       int                      *height)
+				       int                      *height,
+				       cairo_rectangle_int_t    *extents)
 {
     cairo_pdf_source_surface_t src_surface;
     cairo_pdf_source_surface_entry_t surface_key;
@@ -1205,6 +1214,7 @@ _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	*surface,
 	*surface_res = surface_entry->surface_res;
 	*width = surface_entry->width;
 	*height = surface_entry->height;
+	*extents = surface_entry->extents;
 
 	return CAIRO_STATUS_SUCCESS;
     }
@@ -1243,8 +1253,10 @@ _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	*surface,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
-    status = _get_source_surface_size (source, &surface_entry->width,
-				       &surface_entry->height);
+    status = _get_source_surface_size (source,
+				       &surface_entry->width,
+				       &surface_entry->height,
+				       &surface_entry->extents);
 
     status = _cairo_array_append (&surface->page_surfaces, &src_surface);
     if (unlikely (status)) {
@@ -1259,6 +1271,7 @@ _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	*surface,
     *surface_res = surface_entry->surface_res;
     *width = surface_entry->width;
     *height = surface_entry->height;
+    *extents = surface_entry->extents;
 
     return status;
 }
@@ -2573,12 +2586,13 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
     cairo_matrix_t cairo_p2d, pdf_p2d;
     cairo_extend_t extend = cairo_pattern_get_extend (&pattern->base);
     double xstep, ystep;
+    cairo_rectangle_int_t pattern_extents;
     int pattern_width = 0; /* squelch bogus compiler warning */
     int pattern_height = 0; /* squelch bogus compiler warning */
     int origin_x = 0; /* squelch bogus compiler warning */
     int origin_y = 0; /* squelch bogus compiler warning */
-    int bbox_x, bbox_y;
     char draw_surface[200];
+    cairo_box_double_t     bbox;
 
     if (pattern->base.extend == CAIRO_EXTEND_PAD &&
 	pattern->surface->type != CAIRO_SURFACE_TYPE_RECORDING)
@@ -2590,6 +2604,10 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
 							       &pattern_height,
 							       &origin_x,
 							       &origin_y);
+	pattern_extents.x = 0;
+	pattern_extents.y = 0;
+	pattern_extents.width = pattern_width;
+	pattern_extents.height = pattern_height;
     }
     else
     {
@@ -2599,13 +2617,12 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
 							FALSE,
 							&pattern_resource,
 							&pattern_width,
-							&pattern_height);
+							&pattern_height,
+							&pattern_extents);
     }
     if (unlikely (status))
 	return status;
 
-    bbox_x = pattern_width;
-    bbox_y = pattern_height;
     switch (extend) {
     case CAIRO_EXTEND_PAD:
     case CAIRO_EXTEND_NONE:
@@ -2641,10 +2658,12 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
 	ystep = pattern_height;
 	break;
     case CAIRO_EXTEND_REFLECT:
-	bbox_x = pattern_width*2;
-	bbox_y = pattern_height*2;
-	xstep = bbox_x;
-	ystep = bbox_y;
+	pattern_extents.x = 0;
+	pattern_extents.y = 0;
+	pattern_extents.width = pattern_width*2;
+	pattern_extents.height = pattern_height*2;
+	xstep = pattern_width*2;
+	ystep = pattern_height*2;
 	break;
 	/* All the rest (if any) should have been analyzed away, so this
 	 * case should be unreachable. */
@@ -2691,19 +2710,20 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
     cairo_matrix_translate (&pdf_p2d, 0.0, pattern_height);
     cairo_matrix_scale (&pdf_p2d, 1.0, -1.0);
 
+    _get_bbox_from_extents (pattern_height, &pattern_extents, &bbox);
     _cairo_pdf_surface_update_object (surface, pdf_pattern->pattern_res);
     status = _cairo_pdf_surface_open_stream (surface,
 				             &pdf_pattern->pattern_res,
 					     FALSE,
 					     "   /PatternType 1\n"
-					     "   /BBox [0 0 %d %d]\n"
+					     "   /BBox [ %f %f %f %f ]\n"
 					     "   /XStep %f\n"
 					     "   /YStep %f\n"
 					     "   /TilingType 1\n"
 					     "   /PaintType 1\n"
 					     "   /Matrix [ %f %f %f %f %f %f ]\n"
 					     "   /Resources << /XObject << /x%d %d 0 R >> >>\n",
-					     bbox_x, bbox_y,
+					     bbox.p1.x, bbox.p1.y, bbox.p2.x, bbox.p2.y,
 					     xstep, ystep,
 					     pdf_p2d.xx, pdf_p2d.yx,
 					     pdf_p2d.xy, pdf_p2d.yy,
@@ -3648,6 +3668,7 @@ _cairo_pdf_surface_paint_surface_pattern (cairo_pdf_surface_t     *surface,
     cairo_matrix_t cairo_p2d, pdf_p2d;
     cairo_status_t status;
     int alpha;
+    cairo_rectangle_int_t extents;
 
     status = _cairo_pdf_surface_add_source_surface (surface,
 						    source->surface,
@@ -3655,7 +3676,8 @@ _cairo_pdf_surface_paint_surface_pattern (cairo_pdf_surface_t     *surface,
 						    mask,
 						    &surface_res,
 						    &width,
-						    &height);
+						    &height,
+						    &extents);
     if (unlikely (status))
 	return status;
 
@@ -5500,6 +5522,7 @@ _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface)
     _cairo_pdf_group_resources_clear (&surface->resources);
     if (surface->has_fallback_images) {
 	cairo_rectangle_int_t extents;
+	cairo_box_double_t    bbox;
 
 	extents.x = 0;
 	extents.y = 0;
