@@ -1622,9 +1622,10 @@ _cairo_pdf_surface_close_group (cairo_pdf_surface_t *surface,
 }
 
 static cairo_status_t
-_cairo_pdf_surface_open_content_stream (cairo_pdf_surface_t  *surface,
-					cairo_pdf_resource_t *resource,
-					cairo_bool_t          is_form)
+_cairo_pdf_surface_open_content_stream (cairo_pdf_surface_t       *surface,
+					const cairo_box_double_t  *bbox,
+					cairo_pdf_resource_t      *resource,
+					cairo_bool_t               is_form)
 {
     cairo_status_t status;
 
@@ -1636,21 +1637,25 @@ _cairo_pdf_surface_open_content_stream (cairo_pdf_surface_t  *surface,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (is_form) {
+	assert (bbox != NULL);
+
 	status =
 	    _cairo_pdf_surface_open_stream (surface,
 					    resource,
 					    surface->compress_content,
 					    "   /Type /XObject\n"
 					    "   /Subtype /Form\n"
-					    "   /BBox [ 0 0 %f %f ]\n"
+					    "   /BBox [ %f %f %f %f ]\n"
 					    "   /Group <<\n"
 					    "      /Type /Group\n"
 					    "      /S /Transparency\n"
 					    "      /CS /DeviceRGB\n"
 					    "   >>\n"
 					    "   /Resources %d 0 R\n",
-					    surface->width,
-					    surface->height,
+					    bbox->p1.x,
+					    bbox->p1.y,
+					    bbox->p2.x,
+					    bbox->p2.y,
 					    surface->content_resources.id);
     } else {
 	status =
@@ -1845,9 +1850,14 @@ _cairo_pdf_surface_has_fallback_images (void		*abstract_surface,
 {
     cairo_status_t status;
     cairo_pdf_surface_t *surface = abstract_surface;
+    cairo_box_double_t bbox;
 
     surface->has_fallback_images = has_fallbacks;
-    status = _cairo_pdf_surface_open_content_stream (surface, NULL, has_fallbacks);
+    bbox.p1.x = 0;
+    bbox.p1.y = 0;
+    bbox.p2.x = surface->width;
+    bbox.p2.y = surface->height;
+    status = _cairo_pdf_surface_open_content_stream (surface, &bbox, NULL, has_fallbacks);
     if (unlikely (status))
 	return status;
 
@@ -2409,31 +2419,19 @@ BAIL:
 
 
 static cairo_status_t
-_cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t  *surface,
-					   cairo_surface_t      *source,
-					   cairo_pdf_resource_t  resource)
+_cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t        *surface,
+					   cairo_pdf_source_surface_t *pdf_source)
 {
     double old_width, old_height;
     cairo_paginated_mode_t old_paginated_mode;
     cairo_surface_clipper_t old_clipper;
-    cairo_rectangle_int_t recording_extents;
+    cairo_box_double_t bbox;
     cairo_int_status_t status;
     int alpha = 0;
+    cairo_surface_t *source = pdf_source->surface;
 
     if (_cairo_surface_is_snapshot (source))
 	source = _cairo_surface_snapshot_get_target (source);
-
-    if (! _cairo_surface_get_extents (source, &recording_extents)) {
-	cairo_box_t bbox;
-
-	status =
-	    _cairo_recording_surface_get_bbox ((cairo_recording_surface_t *) source,
-					       &bbox, NULL);
-	if (unlikely (status))
-	    return status;
-
-	_cairo_box_round_to_rectangle (&bbox, &recording_extents);
-    }
 
     old_width = surface->width;
     old_height = surface->height;
@@ -2443,15 +2441,16 @@ _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t  *surface,
 				 _cairo_pdf_surface_clipper_intersect_clip_path);
 
     _cairo_pdf_surface_set_size_internal (surface,
-					  recording_extents.width,
-					  recording_extents.height);
+					  pdf_source->hash_entry->width,
+					  pdf_source->hash_entry->height);
     /* Patterns are emitted after fallback images. The paginated mode
      * needs to be set to _RENDER while the recording surface is replayed
      * back to this surface.
      */
     surface->paginated_mode = CAIRO_PAGINATED_MODE_RENDER;
     _cairo_pdf_group_resources_clear (&surface->resources);
-    status = _cairo_pdf_surface_open_content_stream (surface, &resource, TRUE);
+    _get_bbox_from_extents (pdf_source->hash_entry->height, &pdf_source->hash_entry->extents, &bbox);
+    status = _cairo_pdf_surface_open_content_stream (surface, &bbox, &pdf_source->hash_entry->surface_res, TRUE);
     if (unlikely (status))
 	return status;
 
@@ -2496,6 +2495,7 @@ _cairo_pdf_surface_emit_recording_subsurface (cairo_pdf_surface_t  *surface,
     double old_width, old_height;
     cairo_paginated_mode_t old_paginated_mode;
     cairo_surface_clipper_t old_clipper;
+    cairo_box_double_t bbox;
     cairo_int_status_t status;
     int alpha = 0;
 
@@ -2515,7 +2515,8 @@ _cairo_pdf_surface_emit_recording_subsurface (cairo_pdf_surface_t  *surface,
      */
     surface->paginated_mode = CAIRO_PAGINATED_MODE_RENDER;
     _cairo_pdf_group_resources_clear (&surface->resources);
-    status = _cairo_pdf_surface_open_content_stream (surface, &resource, TRUE);
+    _get_bbox_from_extents (extents->height, extents, &bbox);
+    status = _cairo_pdf_surface_open_content_stream (surface, &bbox, &resource, TRUE);
     if (unlikely (status))
 	return status;
 
@@ -2564,8 +2565,7 @@ _cairo_pdf_surface_emit_surface (cairo_pdf_surface_t        *surface,
 								 src_surface->hash_entry->surface_res);
 	} else {
 	    return _cairo_pdf_surface_emit_recording_surface (surface,
-							      src_surface->surface,
-							      src_surface->hash_entry->surface_res);
+							      src_surface);
 	}
     } else {
 	return _cairo_pdf_surface_emit_image_surface (surface,
@@ -5555,7 +5555,7 @@ _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface)
 	    return status;
 
 	_cairo_pdf_group_resources_clear (&surface->resources);
-	status = _cairo_pdf_surface_open_content_stream (surface, NULL, FALSE);
+	status = _cairo_pdf_surface_open_content_stream (surface, NULL, NULL, FALSE);
 	if (unlikely (status))
 	    return status;
 
@@ -5808,6 +5808,7 @@ _cairo_pdf_surface_operation_supported (cairo_pdf_surface_t  *surface,
 static cairo_int_status_t
 _cairo_pdf_surface_start_fallback (cairo_pdf_surface_t *surface)
 {
+    cairo_box_double_t bbox;
     cairo_status_t status;
 
     status = _cairo_pdf_surface_close_content_stream (surface);
@@ -5819,7 +5820,11 @@ _cairo_pdf_surface_start_fallback (cairo_pdf_surface_t *surface)
 	return status;
 
     _cairo_pdf_group_resources_clear (&surface->resources);
-    return _cairo_pdf_surface_open_content_stream (surface, NULL, TRUE);
+    bbox.p1.x = 0;
+    bbox.p1.y = 0;
+    bbox.p2.x = surface->width;
+    bbox.p2.y = surface->height;
+    return _cairo_pdf_surface_open_content_stream (surface, &bbox, NULL, TRUE);
 }
 
 /* A PDF stencil mask is an A1 mask used with the current color */
