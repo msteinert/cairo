@@ -44,12 +44,6 @@
 #include <libgen.h>
 #endif
 
-/* 'ssize_t' does not exist in the C standard on win32.
- * We use 'ptrdiff_t', which is nearly equivalent. */
-#ifdef _MSC_VER
-typedef ptrdiff_t ssize_t;
-#endif
-
 #ifdef _MSC_VER
 static long long
 strtoll (const char  *nptr,

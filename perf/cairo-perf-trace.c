@@ -56,8 +56,6 @@
 #ifdef _MSC_VER
 #include "dirent-win32.h"
 
-typedef SSIZE_T ssize_t;
-
 static char *
 basename_no_ext (char *path)
 {
