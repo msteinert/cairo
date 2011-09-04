@@ -31,6 +31,8 @@
 #include "cairo-missing.h"
 
 #ifndef HAVE_STRNDUP
+#include "cairo-malloc-private.h"
+
 char *
 strndup (const char *s,
 	 size_t      n)
@@ -42,8 +44,9 @@ strndup (const char *s,
 	return NULL;
 
     len = strlen (s);
-    len = MIN (n, len);
-    sdup = (char *) malloc (len + 1);
+    if (len > n)
+	len = n;
+    sdup = (char *) _cairo_malloc (len + 1);
     if (sdup != NULL) {
 	memcpy (sdup, s, len);
 	sdup[len] = '\0';

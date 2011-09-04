@@ -6,5 +6,5 @@ all: inform $(CFG)/libcairo-missing.lib
 
 libcairo_missing_OBJECTS = $(patsubst %.c, $(CFG)/%-static.obj, $(libcairo_missing_sources))
 
-$(CFG)/libcairo-script-interpreter.lib: $(libcairo_missing_OBJECTS)
-	@$(AR) $(CAIRO_ARFLAGS) -OUT:$@ $(libcairo_missing_OBJECTS)
+$(CFG)/libcairo-missing.lib: $(libcairo_missing_OBJECTS)
+	@$(AR) $(CAIRO_ARFLAGS) -OUT:$@ $^

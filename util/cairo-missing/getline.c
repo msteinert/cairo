@@ -31,6 +31,7 @@
 #include "cairo-missing.h"
 
 #ifndef HAVE_GETLINE
+#include "cairo-malloc-private.h"
 
 #define GETLINE_MIN_BUFFER_SIZE 128
 ssize_t
@@ -45,20 +46,20 @@ getline (char	**lineptr,
     offset = 0;
     len = *n;
     line = *lineptr;
-    if (len < GETLINE_BUFFER_SIZE) {
-	len = GETLINE_BUFFER_SIZE;
+    if (len < GETLINE_MIN_BUFFER_SIZE) {
+	len = GETLINE_MIN_BUFFER_SIZE;
 	line = NULL;
     }
 
     if (line == NULL) {
-	line = (char *) malloc (len);
+	line = (char *) _cairo_malloc (len);
 	if (unlikely (line == NULL))
 	    return -1;
     }
 
     while (1) {
 	if (offset + 1 == len) {
-	    tmpline = (char *) cairo_realloc (line, len, 2);
+	    tmpline = (char *) _cairo_realloc_ab (line, len, 2);
 	    if (unlikely (tmpline == NULL)) {
 		if (line != *lineptr)
 		    free (line);
