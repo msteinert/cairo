@@ -1270,7 +1270,7 @@ _cairo_surface_observer_release_source_image (void                   *abstract_s
 {
     cairo_surface_observer_t *surface = abstract_surface;
 
-    return _cairo_surface_release_source_image (surface->target, image, image_extra);
+    _cairo_surface_release_source_image (surface->target, image, image_extra);
 }
 
 static cairo_surface_t *
