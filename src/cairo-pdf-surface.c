@@ -1953,7 +1953,6 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
     }
 
     i = 0;
-    bit = 7;
     for (y = 0; y < image->height; y++) {
 	if (image->format == CAIRO_FORMAT_A1) {
 	    pixel8 = (uint8_t *) (image->data + y * image->stride);
@@ -1966,6 +1965,7 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 	} else {
 	    pixel8 = (uint8_t *) (image->data + y * image->stride);
 	    pixel32 = (uint32_t *) (image->data + y * image->stride);
+	    bit = 7;
 	    for (x = 0; x < image->width; x++) {
 		if (image->format == CAIRO_FORMAT_ARGB32) {
 		    a = (*pixel32 & 0xff000000) >> 24;
@@ -1989,6 +1989,8 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 		    }
 		}
 	    }
+	    if (bit != 7)
+		i++;
 	}
     }
 
@@ -2071,10 +2073,10 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
     }
 
     i = 0;
-    bit = 7;
     for (y = 0; y < image->height; y++) {
 	pixel = (uint32_t *) (image->data + y * image->stride);
 
+	bit = 7;
 	for (x = 0; x < image->width; x++, pixel++) {
 	    int r, g, b;
 
@@ -2126,6 +2128,8 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
 		    break;
 	    }
 	}
+	if (bit != 7)
+	    i++;
     }
 
     need_smask = FALSE;
