@@ -2284,6 +2284,8 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 		    break;
 	    }
 	}
+	if (bit != 7)
+	    i++;
     }
 
     if (surface->ps_level == CAIRO_PS_LEVEL_2) {
