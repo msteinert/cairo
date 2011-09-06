@@ -2453,7 +2453,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 				     ps_image->height,
 				     interpolate,
 				     color == CAIRO_IMAGE_IS_MONOCHROME ? 1 : 8,
-				     color == CAIRO_IMAGE_IS_COLOR ? "0 1 0 1 0 1" : "0 1");
+				     stencil_mask ? "1 0" : color == CAIRO_IMAGE_IS_COLOR ? "0 1 0 1 0 1" : "0 1");
 	if (surface->use_string_datasource) {
 	    _cairo_output_stream_printf (surface->stream,
 					 "  /DataSource {\n"

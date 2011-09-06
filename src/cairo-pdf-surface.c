@@ -1972,7 +1972,8 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 						 "   /ImageMask true\n"
 						 "   /Width %d\n"
 						 "   /Height %d\n"
-						 "   /BitsPerComponent 1\n",
+						 "   /BitsPerComponent 1\n"
+						 "   /Decode [1 0]\n",
 						 image->width, image->height);
     } else {
 	stream_res->id = 0;
