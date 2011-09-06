@@ -1773,10 +1773,31 @@ pattern_supported (cairo_ps_surface_t *surface, const cairo_pattern_t *pattern)
     }
 }
 
+static cairo_bool_t
+mask_supported (cairo_ps_surface_t *surface, const cairo_pattern_t *mask)
+{
+    if (surface->ps_level == CAIRO_PS_LEVEL_2)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (mask->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) mask;
+	if (surface_pattern->surface->type == CAIRO_SURFACE_TYPE_IMAGE) {
+	    /* check if mask if opaque or bilevel alpha */
+	    if (_cairo_ps_surface_analyze_surface_pattern_transparency (surface, surface_pattern) == CAIRO_STATUS_SUCCESS) {
+		surface->ps_level_used = CAIRO_PS_LEVEL_3;
+		return TRUE;
+	    }
+	}
+    }
+
+    return FALSE;
+}
+
 static cairo_int_status_t
 _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
 				     cairo_operator_t       op,
 				     const cairo_pattern_t       *pattern,
+				     const cairo_pattern_t       *mask,
 				     const cairo_rectangle_int_t *extents)
 {
     double min_alpha;
@@ -1806,8 +1827,16 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
 	}
     }
 
-    if (op == CAIRO_OPERATOR_SOURCE)
-	return CAIRO_STATUS_SUCCESS;
+    if (op == CAIRO_OPERATOR_SOURCE) {
+	if (mask)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	else
+	    return CAIRO_STATUS_SUCCESS;
+    }
+
+    /* Mask is only supported when the mask is an image with opaque or bilevel alpha. */
+    if (mask && !mask_supported (surface, mask))
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* CAIRO_OPERATOR_OVER is only supported for opaque patterns. If
      * the pattern contains transparency, we return
@@ -1839,9 +1868,10 @@ static cairo_bool_t
 _cairo_ps_surface_operation_supported (cairo_ps_surface_t    *surface,
 				       cairo_operator_t       op,
 				       const cairo_pattern_t       *pattern,
+				       const cairo_pattern_t       *mask,
 				       const cairo_rectangle_int_t *extents)
 {
-    return _cairo_ps_surface_analyze_operation (surface, op, pattern, extents) != CAIRO_INT_STATUS_UNSUPPORTED;
+    return _cairo_ps_surface_analyze_operation (surface, op, pattern, mask, extents) != CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
 /* The "standard" implementation limit for PostScript string sizes is
@@ -2123,16 +2153,18 @@ static cairo_status_t
 _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 			      cairo_image_surface_t *image,
 			      cairo_operator_t	     op,
-			      cairo_filter_t         filter)
+			      cairo_filter_t         filter,
+			      cairo_bool_t           stencil_mask)
 {
     cairo_status_t status;
     unsigned char *data;
     unsigned long data_size;
     cairo_image_surface_t *ps_image = image;
-    int x, y, i;
+    int x, y, i, a;
     cairo_image_transparency_t transparency;
     cairo_bool_t use_mask;
-    uint32_t *pixel;
+    uint32_t *pixel32;
+    uint8_t *pixel8;
     int bit;
     cairo_image_color_t color;
     const char *interpolate;
@@ -2156,57 +2188,62 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 	break;
     }
 
-    transparency = _cairo_image_analyze_transparency (image);
-
-    /* PostScript can not represent the alpha channel, so we blend the
-       current image over a white (or black for CONTENT_COLOR
-       surfaces) RGB surface to eliminate it. */
-
-    if (op == CAIRO_OPERATOR_SOURCE ||
-	transparency == CAIRO_IMAGE_HAS_ALPHA ||
-	(transparency == CAIRO_IMAGE_HAS_BILEVEL_ALPHA &&
-	 surface->ps_level == CAIRO_PS_LEVEL_2))
-    {
-	status = _cairo_ps_surface_flatten_image_transparency (surface,
-							       image,
-							       &ps_image);
-	if (unlikely (status))
-	    return status;
-
+    if (stencil_mask) {
 	use_mask = FALSE;
-    } else if (transparency == CAIRO_IMAGE_IS_OPAQUE) {
-	use_mask = FALSE;
-    } else { /* transparency == CAIRO_IMAGE_HAS_BILEVEL_ALPHA */
-	use_mask = TRUE;
+	color = CAIRO_IMAGE_IS_MONOCHROME;
+    } else {
+	transparency = _cairo_image_analyze_transparency (image);
+
+	/* PostScript can not represent the alpha channel, so we blend the
+	   current image over a white (or black for CONTENT_COLOR
+	   surfaces) RGB surface to eliminate it. */
+
+	if (op == CAIRO_OPERATOR_SOURCE ||
+	    transparency == CAIRO_IMAGE_HAS_ALPHA ||
+	    (transparency == CAIRO_IMAGE_HAS_BILEVEL_ALPHA &&
+	     surface->ps_level == CAIRO_PS_LEVEL_2))
+	{
+	    status = _cairo_ps_surface_flatten_image_transparency (surface,
+								   image,
+								   &ps_image);
+	    if (unlikely (status))
+		return status;
+
+	    use_mask = FALSE;
+	} else if (transparency == CAIRO_IMAGE_IS_OPAQUE) {
+	    use_mask = FALSE;
+	} else { /* transparency == CAIRO_IMAGE_HAS_BILEVEL_ALPHA */
+	    use_mask = TRUE;
+	}
+
+	color = _cairo_image_analyze_color (ps_image);
     }
-
-    color = _cairo_image_analyze_color (ps_image);
 
     /* Type 2 (mask and image interleaved) has the mask and image
      * samples interleaved by row.  The mask row is first, one bit per
      * pixel with (bit 7 first). The row is padded to byte
      * boundaries. The image data is 3 bytes per pixel RGB format. */
     switch (color) {
-	case CAIRO_IMAGE_IS_COLOR:
-	case CAIRO_IMAGE_UNKNOWN_COLOR:
-	    if (use_mask)
-		data_size = ps_image->height * ((ps_image->width + 7)/8 + 3*ps_image->width);
-	    else
-		data_size = ps_image->height * ps_image->width * 3;
-	    break;
+    case CAIRO_IMAGE_IS_COLOR:
+    case CAIRO_IMAGE_UNKNOWN_COLOR:
+	if (use_mask)
+	    data_size = ps_image->height * ((ps_image->width + 7)/8 + 3*ps_image->width);
+	else
+	    data_size = ps_image->height * ps_image->width * 3;
+	break;
 
-	case CAIRO_IMAGE_IS_GRAYSCALE:
-	    if (use_mask)
-		data_size = ps_image->height * ((ps_image->width + 7)/8 + ps_image->width);
-	    else
-		data_size = ps_image->height * ps_image->width;
-	    break;
-	case CAIRO_IMAGE_IS_MONOCHROME:
-	    if (use_mask)
-		data_size = ps_image->height * ((ps_image->width + 7)/8) * 2;
-	    else
-		data_size = ps_image->height * ((ps_image->width + 7)/8);
-	    break;
+    case CAIRO_IMAGE_IS_GRAYSCALE:
+	if (use_mask)
+	    data_size = ps_image->height * ((ps_image->width + 7)/8 + ps_image->width);
+	else
+	    data_size = ps_image->height * ps_image->width;
+	break;
+    case CAIRO_IMAGE_IS_MONOCHROME:
+	if (use_mask)
+	    data_size = ps_image->height * ((ps_image->width + 7)/8) * 2;
+	else
+	    data_size = ps_image->height * ((ps_image->width + 7)/8);
+	break;
     }
     data = malloc (data_size);
     if (unlikely (data == NULL)) {
@@ -2216,45 +2253,70 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 
     i = 0;
     for (y = 0; y < ps_image->height; y++) {
-	if (use_mask) {
+	if (stencil_mask || use_mask) {
 	    /* mask row */
-	    pixel = (uint32_t *) (ps_image->data + y * ps_image->stride);
-	    bit = 7;
-	    for (x = 0; x < ps_image->width; x++, pixel++) {
-		if (bit == 7)
-		    data[i] = 0;
-		if (*pixel & 0xff000000)
-		    data[i] |= (1 << bit);
-		bit--;
-		if (bit < 0) {
-		    bit = 7;
-		    i++;
+	    if (ps_image->format == CAIRO_FORMAT_A1) {
+		pixel8 = (uint8_t *) (ps_image->data + y * ps_image->stride);
+
+		for (x = 0; x < (ps_image->width + 7) / 8; x++, pixel8++) {
+		    a = *pixel8;
+		    a = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (a);
+		    data[i++] = a;
 		}
+	    } else {
+		pixel8 = (uint8_t *) (ps_image->data + y * ps_image->stride);
+		pixel32 = (uint32_t *) (ps_image->data + y * ps_image->stride);
+		bit = 7;
+		for (x = 0; x < ps_image->width; x++) {
+		    if (ps_image->format == CAIRO_FORMAT_ARGB32) {
+			a = (*pixel32 & 0xff000000) >> 24;
+			pixel32++;
+		    } else {
+			a = *pixel8;
+			pixel8++;
+		    }
+
+		    if (transparency == CAIRO_IMAGE_HAS_ALPHA) {
+			data[i++] = a;
+		    } else { /* transparency == CAIRO_IMAGE_HAS_BILEVEL_ALPHA or CAIRO_IMAGE_IS_OPAQUE */
+			if (bit == 7)
+			    data[i] = 0;
+			if (a != 0)
+			    data[i] |= (1 << bit);
+			bit--;
+			if (bit < 0) {
+			    bit = 7;
+			    i++;
+			}
+		    }
+		}
+		if (bit != 7)
+		    i++;
 	    }
-	    if (bit != 7)
-		i++;
 	}
+	if (stencil_mask)
+	    continue;
 
 	/* image row*/
-	pixel = (uint32_t *) (ps_image->data + y * ps_image->stride);
+	pixel32 = (uint32_t *) (ps_image->data + y * ps_image->stride);
 	bit = 7;
-	for (x = 0; x < ps_image->width; x++, pixel++) {
+	for (x = 0; x < ps_image->width; x++, pixel32++) {
 	    int r, g, b;
 
 	    if (ps_image->format == CAIRO_FORMAT_ARGB32) {
 		/* At this point ARGB32 images are either opaque or
 		 * bilevel alpha so we don't need to unpremultiply. */
-		if (((*pixel & 0xff000000) >> 24) == 0) {
+		if (((*pixel32 & 0xff000000) >> 24) == 0) {
 		    r = g = b = 0;
 		} else {
-		    r = (*pixel & 0x00ff0000) >> 16;
-		    g = (*pixel & 0x0000ff00) >>  8;
-		    b = (*pixel & 0x000000ff) >>  0;
+		    r = (*pixel32 & 0x00ff0000) >> 16;
+		    g = (*pixel32 & 0x0000ff00) >>  8;
+		    b = (*pixel32 & 0x000000ff) >>  0;
 		}
 	    } else if (ps_image->format == CAIRO_FORMAT_RGB24) {
-		r = (*pixel & 0x00ff0000) >> 16;
-		g = (*pixel & 0x0000ff00) >>  8;
-		b = (*pixel & 0x000000ff) >>  0;
+		r = (*pixel32 & 0x00ff0000) >> 16;
+		g = (*pixel32 & 0x0000ff00) >>  8;
+		b = (*pixel32 & 0x000000ff) >>  0;
 	    } else {
 		r = g = b = 0;
 	    }
@@ -2374,8 +2436,12 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 				     interpolate,
 				     ps_image->height);
     } else {
+	if (!stencil_mask) {
+	    _cairo_output_stream_printf (surface->stream,
+					 "%s setcolorspace\n",
+					 color == CAIRO_IMAGE_IS_COLOR ? "/DeviceRGB" : "/DeviceGray");
+	}
 	_cairo_output_stream_printf (surface->stream,
-				     "%s setcolorspace\n"
 				     "8 dict dup begin\n"
 				     "  /ImageType 1 def\n"
 				     "  /Width %d def\n"
@@ -2383,7 +2449,6 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 				     "  /Interpolate %s def\n"
 				     "  /BitsPerComponent %d def\n"
 				     "  /Decode [ %s ] def\n",
-				     color == CAIRO_IMAGE_IS_COLOR ? "/DeviceRGB" : "/DeviceGray",
 				     ps_image->width,
 				     ps_image->height,
 				     interpolate,
@@ -2408,9 +2473,10 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 				     "  /Interpolate %s def\n"
 				     "  /ImageMatrix [ 1 0 0 -1 0 %d ] def\n"
 				     "end\n"
-				     "image\n",
+				     "%s\n",
 				     interpolate,
-				     ps_image->height);
+				     ps_image->height,
+				     stencil_mask ? "imagemask" : "image");
     }
 
     if (!surface->use_string_datasource) {
@@ -2848,7 +2914,8 @@ _cairo_ps_surface_emit_surface (cairo_ps_surface_t      *surface,
 				cairo_surface_pattern_t *pattern,
 				cairo_operator_t	 op,
 				int                      width,
-				int                      height)
+				int                      height,
+				cairo_bool_t             stencil_mask)
 {
     cairo_int_status_t status;
 
@@ -2870,7 +2937,7 @@ _cairo_ps_surface_emit_surface (cairo_ps_surface_t      *surface,
 	}
 
 	status = _cairo_ps_surface_emit_image (surface, surface->image,
-					       op, pattern->base.filter);
+					       op, pattern->base.filter, stencil_mask);
     }
 
     return status;
@@ -2926,7 +2993,8 @@ static cairo_status_t
 _cairo_ps_surface_paint_surface (cairo_ps_surface_t      *surface,
 				 cairo_surface_pattern_t *pattern,
 				 cairo_rectangle_int_t   *extents,
-				 cairo_operator_t	  op)
+				 cairo_operator_t	  op,
+				 cairo_bool_t             stencil_mask)
 {
     cairo_status_t status;
     int width, height;
@@ -2996,7 +3064,7 @@ _cairo_ps_surface_paint_surface (cairo_ps_surface_t      *surface,
 				     ps_p2d.x0, ps_p2d.y0);
     }
 
-    status = _cairo_ps_surface_emit_surface (surface, pattern, op, width, height);
+    status = _cairo_ps_surface_emit_surface (surface, pattern, op, width, height, stencil_mask);
     _cairo_ps_surface_release_surface (surface, pattern);
 
     return status;
@@ -3088,7 +3156,7 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
 				     xstep, ystep);
     }
     status = _cairo_ps_surface_emit_surface (surface, pattern, op,
-					     pattern_width, pattern_height);
+					     pattern_width, pattern_height, FALSE);
     if (unlikely (status))
 	return status;
 
@@ -3715,9 +3783,9 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 	return status;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _cairo_ps_surface_analyze_operation (surface, op, source, &extents.bounded);
+	return _cairo_ps_surface_analyze_operation (surface, op, source, NULL, &extents.bounded);
 
-    assert (_cairo_ps_surface_operation_supported (surface, op, source, &extents.bounded));
+    assert (_cairo_ps_surface_operation_supported (surface, op, source, NULL, &extents.bounded));
 
 #if DEBUG_PS
     _cairo_output_stream_printf (stream,
@@ -3739,7 +3807,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 	_cairo_output_stream_printf (stream, "q\n");
 	status = _cairo_ps_surface_paint_surface (surface,
 						 (cairo_surface_pattern_t *) source,
-						  &extents.bounded, op);
+						  &extents.bounded, op, FALSE);
 	if (unlikely (status))
 	    return status;
 
@@ -3752,6 +3820,55 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 	_cairo_output_stream_printf (stream, "0 0 %f %f rectfill\n",
 				     surface->width, surface->height);
     }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_cairo_ps_surface_mask (void			*abstract_surface,
+			cairo_operator_t	 op,
+			const cairo_pattern_t	*source,
+			const cairo_pattern_t	*mask,
+			const cairo_clip_t	*clip)
+{
+    cairo_ps_surface_t *surface = abstract_surface;
+    cairo_output_stream_t *stream = surface->stream;
+    cairo_composite_rectangles_t extents;
+    cairo_rectangle_int_t unbounded;
+    cairo_status_t status;
+
+    _cairo_ps_surface_get_extents (surface, &unbounded);
+    status = _cairo_composite_rectangles_init_for_mask (&extents, &unbounded,
+							op, source, mask, clip);
+    if (unlikely (status))
+	return status;
+
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return _cairo_ps_surface_analyze_operation (surface, op, source, mask, &extents.bounded);
+
+    assert (_cairo_ps_surface_operation_supported (surface, op, source, mask, &extents.bounded));
+
+#if DEBUG_PS
+    _cairo_output_stream_printf (stream,
+				 "%% _cairo_ps_surface_mask\n");
+#endif
+
+    status = _cairo_ps_surface_set_clip (surface, &extents);
+    if (unlikely (status))
+	return status;
+
+    status = _cairo_ps_surface_emit_pattern (surface, source, &extents.bounded, op);
+    if (unlikely (status))
+	return status;
+
+    _cairo_output_stream_printf (stream, "q\n");
+    status = _cairo_ps_surface_paint_surface (surface,
+					      (cairo_surface_pattern_t *) mask,
+					      &extents.bounded, op, TRUE);
+    if (unlikely (status))
+	return status;
+
+    _cairo_output_stream_printf (stream, "Q\n");
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -3796,9 +3913,9 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _cairo_ps_surface_analyze_operation (surface, op, source, &extents.bounded);
+	return _cairo_ps_surface_analyze_operation (surface, op, source, NULL, &extents.bounded);
 
-    assert (_cairo_ps_surface_operation_supported (surface, op, source, &extents.bounded));
+    assert (_cairo_ps_surface_operation_supported (surface, op, source, NULL, &extents.bounded));
 
 #if DEBUG_PS
     _cairo_output_stream_printf (surface->stream,
@@ -3854,9 +3971,9 @@ _cairo_ps_surface_fill (void		*abstract_surface,
     }
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _cairo_ps_surface_analyze_operation (surface, op, source, &extents.bounded);
+	return _cairo_ps_surface_analyze_operation (surface, op, source, NULL, &extents.bounded);
 
-    assert (_cairo_ps_surface_operation_supported (surface, op, source, &extents.bounded));
+    assert (_cairo_ps_surface_operation_supported (surface, op, source, NULL, &extents.bounded));
 
 #if DEBUG_PS
     _cairo_output_stream_printf (surface->stream,
@@ -3885,7 +4002,7 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 
 	status = _cairo_ps_surface_paint_surface (surface,
 						 (cairo_surface_pattern_t *) source,
-						  &extents.bounded, op);
+						  &extents.bounded, op, FALSE);
 	if (unlikely (status))
 	    return status;
 
@@ -3945,9 +4062,9 @@ _cairo_ps_surface_show_text_glyphs (void		       *abstract_surface,
     }
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _cairo_ps_surface_analyze_operation (surface, op, source, &extents.bounded);
+	return _cairo_ps_surface_analyze_operation (surface, op, source, NULL, &extents.bounded);
 
-    assert (_cairo_ps_surface_operation_supported (surface, op, source, &extents.bounded));
+    assert (_cairo_ps_surface_operation_supported (surface, op, source, NULL, &extents.bounded));
 
 #if DEBUG_PS
     _cairo_output_stream_printf (surface->stream,
@@ -4119,7 +4236,7 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     /* Here are the drawing functions */
 
     _cairo_ps_surface_paint, /* paint */
-    NULL, /* mask */
+    _cairo_ps_surface_mask,
     _cairo_ps_surface_stroke,
     _cairo_ps_surface_fill,
     NULL, /* show_glyphs */
