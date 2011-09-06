@@ -1884,6 +1884,7 @@ static cairo_status_t
 _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 			       cairo_image_surface_t	*image,
 			       cairo_bool_t              stencil_mask,
+			       const char               *interpolate,
 			       cairo_pdf_resource_t	*stream_res)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
@@ -1972,9 +1973,10 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 						 "   /ImageMask true\n"
 						 "   /Width %d\n"
 						 "   /Height %d\n"
+						 "   /Interpolate %s\n"
 						 "   /BitsPerComponent 1\n"
 						 "   /Decode [1 0]\n",
-						 image->width, image->height);
+						 image->width, image->height, interpolate);
     } else {
 	stream_res->id = 0;
 	status = _cairo_pdf_surface_open_stream (surface,
@@ -1985,8 +1987,9 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 						 "   /Width %d\n"
 						 "   /Height %d\n"
 						 "   /ColorSpace /DeviceGray\n"
+						 "   /Interpolate %s\n"
 						 "   /BitsPerComponent %d\n",
-						 image->width, image->height,
+						 image->width, image->height, interpolate,
 						 transparency == CAIRO_IMAGE_HAS_ALPHA ? 8 : 1);
     }
     if (unlikely (status))
@@ -2033,8 +2036,21 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
 	    image->format == CAIRO_FORMAT_A8 ||
 	    image->format == CAIRO_FORMAT_A1);
 
+    switch (filter) {
+    case CAIRO_FILTER_GOOD:
+    case CAIRO_FILTER_BEST:
+    case CAIRO_FILTER_BILINEAR:
+	interpolate = "true";
+	break;
+    case CAIRO_FILTER_FAST:
+    case CAIRO_FILTER_NEAREST:
+    case CAIRO_FILTER_GAUSSIAN:
+	interpolate = "false";
+	break;
+    }
+
     if (stencil_mask)
-	return _cairo_pdf_surface_emit_smask (surface, image, stencil_mask, image_res);
+	return _cairo_pdf_surface_emit_smask (surface, image, stencil_mask, interpolate, image_res);
 
     color = _cairo_image_analyze_color (image);
     switch (color) {
@@ -2122,25 +2138,12 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
     if (image->format == CAIRO_FORMAT_ARGB32 ||
 	image->format == CAIRO_FORMAT_A8 ||
 	image->format == CAIRO_FORMAT_A1) {
-	status = _cairo_pdf_surface_emit_smask (surface, image, FALSE, &smask);
+	status = _cairo_pdf_surface_emit_smask (surface, image, FALSE, interpolate, &smask);
 	if (unlikely (status))
 	    goto CLEANUP_RGB;
 
 	if (smask.id)
 	    need_smask = TRUE;
-    }
-
-    switch (filter) {
-    case CAIRO_FILTER_GOOD:
-    case CAIRO_FILTER_BEST:
-    case CAIRO_FILTER_BILINEAR:
-	interpolate = "true";
-	break;
-    case CAIRO_FILTER_FAST:
-    case CAIRO_FILTER_NEAREST:
-    case CAIRO_FILTER_GAUSSIAN:
-	interpolate = "false";
-	break;
     }
 
 #define IMAGE_DICTIONARY	"   /Type /XObject\n"		\
