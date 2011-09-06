@@ -1175,7 +1175,7 @@ static cairo_status_t
 _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	*surface,
 				       cairo_surface_t		*source,
 				       cairo_filter_t		 filter,
-				       cairo_bool_t              mask,
+				       cairo_bool_t              stencil_mask,
 				       cairo_pdf_resource_t	*surface_res,
 				       int                      *width,
 				       int                      *height,
@@ -1225,7 +1225,7 @@ _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	*surface,
 
     surface_entry->id = surface_key.id;
     surface_entry->interpolate = interpolate;
-    surface_entry->mask = mask;
+    surface_entry->stencil_mask = stencil_mask;
     cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_UNIQUE_ID,
 				 &unique_id, &unique_id_length);
     if (unique_id && unique_id_length > 0) {
@@ -1870,56 +1870,21 @@ _cairo_pdf_surface_supports_fine_grained_fallbacks (void *abstract_surface)
     return TRUE;
 }
 
-static cairo_status_t
-_cairo_pdf_surface_emit_imagemask (cairo_pdf_surface_t	 *surface,
-				   cairo_image_surface_t *image,
-				   cairo_pdf_resource_t	 *image_res)
-{
-    cairo_status_t status;
-    uint8_t *byte, output_byte;
-    int row, col, num_cols;
-
-
-    /* This is the only image format supported for stencil masking */
-    assert (image->format == CAIRO_FORMAT_A1);
-
-    status = _cairo_pdf_surface_open_stream (surface,
-					     image_res,
-					     TRUE,
-					     "   /Type /XObject\n"
-					     "   /Subtype /Image\n"
-					     "   /ImageMask true\n"
-					     "   /Width %d\n"
-					     "   /Height %d\n"
-					     "   /BitsPerComponent 1\n",
-					     image->width, image->height);
-    if (unlikely (status))
-	return status;
-
-    num_cols = (image->width + 7) / 8;
-    for (row = 0; row < image->height; row++) {
-	byte = image->data + row * image->stride;
-	for (col = 0; col < num_cols; col++) {
-	    output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);
-	    output_byte = ~output_byte;
-	    _cairo_output_stream_write (surface->output, &output_byte, 1);
-	    byte++;
-	}
-    }
-
-    return _cairo_pdf_surface_close_stream (surface);
-}
-
 /* Emit alpha channel from the image into the given data, providing
  * an id that can be used to reference the resulting SMask object.
  *
  * In the case that the alpha channel happens to be all opaque, then
  * no SMask object will be emitted and *id_ret will be set to 0.
+ *
+ * When stencil_mask is TRUE, stream_res is an an input specifying the
+ * resource to use. When stencil_mask is FALSE, a new resource will be
+ * created and returned in stream_res.
  */
 static cairo_status_t
 _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 			       cairo_image_surface_t	*image,
-			       cairo_pdf_resource_t	*stream_ret)
+			       cairo_bool_t              stencil_mask,
+			       cairo_pdf_resource_t	*stream_res)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     char *alpha;
@@ -1934,10 +1899,14 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 	    image->format == CAIRO_FORMAT_A8 ||
 	    image->format == CAIRO_FORMAT_A1 );
 
-    stream_ret->id = 0;
     transparency = _cairo_image_analyze_transparency (image);
-    if (transparency == CAIRO_IMAGE_IS_OPAQUE)
-	return status;
+    if (stencil_mask) {
+	assert (transparency == CAIRO_IMAGE_IS_OPAQUE ||
+		transparency == CAIRO_IMAGE_HAS_BILEVEL_ALPHA);
+    } else {
+	if (transparency == CAIRO_IMAGE_IS_OPAQUE)
+	    return status;
+    }
 
     if (transparency == CAIRO_IMAGE_HAS_BILEVEL_ALPHA) {
 	alpha_size = (image->width + 7) / 8 * image->height;
@@ -1977,7 +1946,7 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 
 		if (transparency == CAIRO_IMAGE_HAS_ALPHA) {
 		    alpha[i++] = a;
-		} else { /* transparency == CAIRO_IMAGE_HAS_BILEVEL_ALPHA */
+		} else { /* transparency == CAIRO_IMAGE_HAS_BILEVEL_ALPHA or CAIRO_IMAGE_IS_OPAQUE */
 		    if (bit == 7)
 			alpha[i] = 0;
 		    if (a != 0)
@@ -1994,21 +1963,37 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 	}
     }
 
-    status = _cairo_pdf_surface_open_stream (surface,
-					     NULL,
-					     TRUE,
-					     "   /Type /XObject\n"
-					     "   /Subtype /Image\n"
-					     "   /Width %d\n"
-					     "   /Height %d\n"
-					     "   /ColorSpace /DeviceGray\n"
-					     "   /BitsPerComponent %d\n",
-					     image->width, image->height,
-					     transparency == CAIRO_IMAGE_HAS_ALPHA ? 8 : 1);
+    if (stencil_mask) {
+	status = _cairo_pdf_surface_open_stream (surface,
+						 stream_res,
+						 TRUE,
+						 "   /Type /XObject\n"
+						 "   /Subtype /Image\n"
+						 "   /ImageMask true\n"
+						 "   /Width %d\n"
+						 "   /Height %d\n"
+						 "   /BitsPerComponent 1\n",
+						 image->width, image->height);
+    } else {
+	stream_res->id = 0;
+	status = _cairo_pdf_surface_open_stream (surface,
+						 NULL,
+						 TRUE,
+						 "   /Type /XObject\n"
+						 "   /Subtype /Image\n"
+						 "   /Width %d\n"
+						 "   /Height %d\n"
+						 "   /ColorSpace /DeviceGray\n"
+						 "   /BitsPerComponent %d\n",
+						 image->width, image->height,
+						 transparency == CAIRO_IMAGE_HAS_ALPHA ? 8 : 1);
+    }
     if (unlikely (status))
 	goto CLEANUP_ALPHA;
 
-    *stream_ret = surface->pdf_stream.self;
+    if (!stencil_mask)
+	*stream_res = surface->pdf_stream.self;
+
     _cairo_output_stream_write (surface->output, alpha, alpha_size);
     status = _cairo_pdf_surface_close_stream (surface);
 
@@ -2025,7 +2010,7 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
                                cairo_image_surface_t   *image,
                                cairo_pdf_resource_t    *image_res,
 			       cairo_filter_t           filter,
-			       cairo_bool_t             mask)
+			       cairo_bool_t             stencil_mask)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     char *data;
@@ -2047,8 +2032,8 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
 	    image->format == CAIRO_FORMAT_A8 ||
 	    image->format == CAIRO_FORMAT_A1);
 
-    if (mask)
-	return _cairo_pdf_surface_emit_imagemask (surface, image, image_res);
+    if (stencil_mask)
+	return _cairo_pdf_surface_emit_smask (surface, image, stencil_mask, image_res);
 
     color = _cairo_image_analyze_color (image);
     switch (color) {
@@ -2136,7 +2121,7 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
     if (image->format == CAIRO_FORMAT_ARGB32 ||
 	image->format == CAIRO_FORMAT_A8 ||
 	image->format == CAIRO_FORMAT_A1) {
-	status = _cairo_pdf_surface_emit_smask (surface, image, &smask);
+	status = _cairo_pdf_surface_emit_smask (surface, image, FALSE, &smask);
 	if (unlikely (status))
 	    goto CLEANUP_RGB;
 
@@ -2292,26 +2277,28 @@ _cairo_pdf_surface_emit_image_surface (cairo_pdf_surface_t     *surface,
 				       cairo_surface_t         *source,
 				       cairo_pdf_resource_t     resource,
 				       cairo_bool_t		interpolate,
-				       cairo_bool_t             mask)
+				       cairo_bool_t             stencil_mask)
 {
     cairo_image_surface_t *image;
     void *image_extra;
     cairo_int_status_t status;
 
-    status = _cairo_pdf_surface_emit_jpx_image (surface, source, resource);
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return status;
+    if (!stencil_mask) {
+	status = _cairo_pdf_surface_emit_jpx_image (surface, source, resource);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
 
-    status = _cairo_pdf_surface_emit_jpeg_image (surface, source, resource);
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return status;
+	status = _cairo_pdf_surface_emit_jpeg_image (surface, source, resource);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
 
     status = _cairo_surface_acquire_source_image (source, &image, &image_extra);
     if (unlikely (status))
 	return status;
 
     status = _cairo_pdf_surface_emit_image (surface, image,
-					    &resource, interpolate, mask);
+					    &resource, interpolate, stencil_mask);
     if (unlikely (status))
 	goto BAIL;
 
@@ -2576,7 +2563,7 @@ _cairo_pdf_surface_emit_surface (cairo_pdf_surface_t        *surface,
 						      src_surface->surface,
 						      src_surface->hash_entry->surface_res,
 						      src_surface->hash_entry->interpolate,
-						      src_surface->hash_entry->mask);
+						      src_surface->hash_entry->stencil_mask);
     }
 }
 
@@ -3665,7 +3652,7 @@ _cairo_pdf_surface_emit_pattern (cairo_pdf_surface_t *surface, cairo_pdf_pattern
 static cairo_status_t
 _cairo_pdf_surface_paint_surface_pattern (cairo_pdf_surface_t     *surface,
 					  cairo_surface_pattern_t *source,
-					  cairo_bool_t             mask)
+					  cairo_bool_t             stencil_mask)
 {
     cairo_pdf_resource_t surface_res;
     int width, height;
@@ -3677,7 +3664,7 @@ _cairo_pdf_surface_paint_surface_pattern (cairo_pdf_surface_t     *surface,
     status = _cairo_pdf_surface_add_source_surface (surface,
 						    source->surface,
 						    source->base.filter,
-						    mask,
+						    stencil_mask,
 						    &surface_res,
 						    &width,
 						    &height,
@@ -3713,7 +3700,7 @@ _cairo_pdf_surface_paint_surface_pattern (cairo_pdf_surface_t     *surface,
     if (unlikely (status))
 	return status;
 
-    if (mask) {
+    if (stencil_mask) {
 	_cairo_output_stream_printf (surface->output,
 				     "/x%d Do\n",
 				     surface_res.id);
@@ -5841,6 +5828,7 @@ _cairo_pdf_surface_emit_stencil_mask (cairo_pdf_surface_t   *surface,
     cairo_surface_pattern_t *surface_pattern;
     cairo_image_surface_t  *image;
     void		   *image_extra;
+    cairo_image_transparency_t transparency;
     cairo_pdf_resource_t pattern_res = {0};
 
     if (! (source->type == CAIRO_PATTERN_TYPE_SOLID &&
@@ -5860,7 +5848,10 @@ _cairo_pdf_surface_emit_stencil_mask (cairo_pdf_surface_t   *surface,
     if (image->base.status)
 	return image->base.status;
 
-    if (image->format != CAIRO_FORMAT_A1) {
+    transparency = _cairo_image_analyze_transparency (image);
+    if (transparency != CAIRO_IMAGE_IS_OPAQUE &&
+	transparency != CAIRO_IMAGE_HAS_BILEVEL_ALPHA)
+    {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto cleanup;
     }
