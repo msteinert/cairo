@@ -65,7 +65,7 @@ preamble (cairo_test_context_t *ctx)
 
 #if CAIRO_HAS_OS2_SURFACE
     cairo_os2_surface_set_hwnd (surface, 0);
-    cairo_os2_surface_set_size (surface, 0, 0);
+    cairo_os2_surface_set_size (surface, 0, 0, 0);
     cairo_os2_surface_set_manual_window_refresh (surface, FALSE);
 #endif
 
