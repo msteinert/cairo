@@ -42,6 +42,7 @@
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-surface-fallback-private.h"
+#include "cairo-image-surface-private.h"
 
 #if CAIRO_HAS_FC_FONT
 #include <fontconfig/fontconfig.h>
