@@ -36,6 +36,10 @@
 #include <signal.h>
 #endif
 
+#if HAVE_SYS_WAIT_H
+#include <sys/wait.h>
+#endif
+
 #if ! CAIRO_HAS_RECORDING_SURFACE
 #define CAIRO_SURFACE_TYPE_RECORDING CAIRO_INTERNAL_SURFACE_TYPE_RECORDING
 #endif
