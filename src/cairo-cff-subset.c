@@ -844,17 +844,32 @@ cairo_cff_font_read_name (cairo_cff_font_t *font)
     cairo_array_t index;
     cairo_int_status_t status;
     cff_index_element_t *element;
+    unsigned char *p;
+    int i, len;
 
     cff_index_init (&index);
     status = cff_index_read (&index, &font->current_ptr, font->data_end);
     if (!font->is_opentype) {
         element = _cairo_array_index (&index, 0);
-        font->ps_name = malloc (element->length + 1);
+	p = element->data;
+	len = element->length;
+
+	/* If font name is prefixed with a subset tag, strip it off. */
+	if (len > 7 && p[6] == '+') {
+	    for (i = 0; i < 6; i++)
+		if (p[i] < 'A' || p[i] > 'Z')
+		    break;
+	    if (i == 6) {
+		p += 7;
+		len -= 7;
+	    }
+	}
+        font->ps_name = malloc (len + 1);
         if (unlikely (font->ps_name == NULL))
             return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-        memcpy (font->ps_name, element->data, element->length);
-        font->ps_name[element->length] = 0;
+        memcpy (font->ps_name, p, len);
+        font->ps_name[len] = 0;
     }
     cff_index_fini (&index);
 
