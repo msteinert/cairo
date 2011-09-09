@@ -280,6 +280,7 @@ append_argv (int *argc, char ***argv, const char *str)
     int olen;
     int len;
     int i;
+    int args_to_add = 0;
 
     if (str == NULL)
 	return;
@@ -290,9 +291,9 @@ append_argv (int *argc, char ***argv, const char *str)
     doit = FALSE;
     do {
 	if (doit)
-	    *argv = xmalloc (sizeof (char *) * (1 + *argc) + olen);
+	    *argv = xmalloc (olen);
 
-	olen = sizeof (char *) * (1 + *argc);
+	olen = sizeof (char *) * (args_to_add + *argc);
 	for (i = 0; i < old_argc; i++) {
 	    len = strlen (old_argv[i]) + 1;
 	    if (doit) {
@@ -310,7 +311,10 @@ append_argv (int *argc, char ***argv, const char *str)
 		    (*argv)[i] = (char *) *argv + olen;
 		    memcpy ((*argv)[i], s, len);
 		    (*argv)[i][len] = '\0';
+		} else {
+		    olen += sizeof (char *);
 		}
+		args_to_add++;
 		olen += len + 1;
 		i++;
 	    }
@@ -321,13 +325,15 @@ append_argv (int *argc, char ***argv, const char *str)
 	    if (doit) {
 		(*argv)[i] = (char *) *argv + olen;
 		memcpy ((*argv)[i], s, len);
+	    } else {
+		olen += sizeof (char *);
 	    }
+	    args_to_add++;
 	    olen += len;
 	    i++;
 	}
     } while (doit++ == FALSE);
-    (*argv)[i] = NULL;
-    *argc += i;
+    *argc = i;
 }
 
 static void
