@@ -715,6 +715,7 @@ main (int argc, char **argv)
     unsigned int n, m;
     char targets[4096];
     int len;
+    char *cairo_tests_env;
 
 #ifdef _MSC_VER
     /* We don't want an assert dialog, we want stderr */
@@ -752,7 +753,9 @@ main (int argc, char **argv)
     }
 
     _parse_cmdline (&runner, &argc, &argv);
-    append_argv (&argc, &argv, getenv ("CAIRO_TESTS"));
+
+    cairo_tests_env = getenv("CAIRO_TESTS");
+    append_argv (&argc, &argv, cairo_tests_env);
 
     if (runner.full_test) {
 	runner.num_device_offsets = 2;
@@ -1071,6 +1074,9 @@ main (int argc, char **argv)
 	    break;
 
     }
+
+    if (cairo_tests_env)
+	free(argv);
 
     if (runner.list_only) {
 	printf ("\n");
