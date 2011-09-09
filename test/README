@@ -41,7 +41,7 @@ It should contain a (space-, comma-, etc-separated) list of backends to test.
 To limit the tests run, use the CAIRO_TESTS environment variable, which
 should be a space-separated list of tests to run.  For example:
 
-  CAIRO_TEST="zero-alpha" make test TARGETS=image,ps
+  CAIRO_TESTS="zero-alpha" make test TARGETS=image,ps
 
 Another very handy mechanism when trying to fix bugs is:
 
