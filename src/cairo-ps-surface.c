@@ -3605,11 +3605,25 @@ _cairo_ps_surface_emit_mesh_pattern (cairo_ps_surface_t     *surface,
 	return status;
 
     _cairo_output_stream_printf (surface->stream,
+				 "currentfile\n"
+				 "/ASCII85Decode filter /FlateDecode filter /ReusableStreamDecode filter\n");
+
+    status = _cairo_ps_surface_emit_base85_string (surface,
+						   shading.data,
+						   shading.data_length,
+						   CAIRO_PS_COMPRESS_DEFLATE,
+						   FALSE);
+    if (status)
+	return status;
+
+    _cairo_output_stream_printf (surface->stream,
+				 "\n"
+				 "/CairoData exch def\n"
 				 "<< /PatternType 2\n"
 				 "   /Shading\n"
 				 "   << /ShadingType %d\n"
 				 "      /ColorSpace /DeviceRGB\n"
-				 "      /DataSource currentfile /ASCII85Decode filter /FlateDecode filter\n"
+				 "      /DataSource CairoData\n"
 				 "      /BitsPerCoordinate %d\n"
 				 "      /BitsPerComponent %d\n"
 				 "      /BitsPerFlag %d\n"
@@ -3633,16 +3647,9 @@ _cairo_ps_surface_emit_mesh_pattern (cairo_ps_surface_t     *surface,
                                  pat_to_ps.xy, pat_to_ps.yy,
                                  pat_to_ps.x0, pat_to_ps.y0);
     _cairo_output_stream_printf (surface->stream,
-				 "makepattern\n");
-
-    status = _cairo_ps_surface_emit_base85_string (surface,
-						   shading.data,
-						   shading.data_length,
-						   CAIRO_PS_COMPRESS_DEFLATE,
-						   FALSE);
-    _cairo_output_stream_printf (surface->stream,
-				 "\n"
-				 "setpattern\n");
+				 "makepattern\n"
+				 "setpattern\n"
+				 "currentdict /CairoData undef\n");
 
     _cairo_pdf_shading_fini (&shading);
 
