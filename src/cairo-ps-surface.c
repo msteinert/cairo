@@ -3029,7 +3029,7 @@ _cairo_ps_surface_paint_surface (cairo_ps_surface_t      *surface,
 	double scale = cairo_p2d.xx;
 
 	_cairo_output_stream_printf (surface->stream,
-				     "%% Fallback Image: x=%f, y=%f, w=%d, h=%d res=%fdpi size=%ld\n",
+				     "%% Fallback Image: x=%f y=%f w=%d h=%d res=%fppi size=%ld\n",
 				     -cairo_p2d.x0/scale,
 				     -cairo_p2d.y0/scale,
 				     (int)(width/scale),
