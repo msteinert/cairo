@@ -238,13 +238,6 @@ set_clip_region (void *_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_bool_t
-has_snapshot (void *_dst,
-	      const cairo_pattern_t *pattern)
-{
-    return FALSE;
-}
-
 static cairo_surface_t *
 pattern_to_surface (cairo_surface_t *dst,
 		    const cairo_pattern_t *pattern,
@@ -412,7 +405,6 @@ no_traps_compositor_get (void)
 	compositor.release = release;
 	compositor.set_clip_region = set_clip_region;
 	compositor.pattern_to_surface = pattern_to_surface;
-	compositor.has_snapshot = has_snapshot;
 	compositor.draw_image_boxes = draw_image_boxes;
 	//compositor.copy_boxes = copy_boxes;
 	compositor.fill_boxes = fill_boxes;
