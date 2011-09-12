@@ -497,7 +497,7 @@ mono_scan_converter_render(struct mono_scan_converter *c,
 		e = e->next;
 	    }
 
-	    while (min_height >= 2 && polygon->y_buckets[j] == NULL)
+	    while (--min_height >= 1 && polygon->y_buckets[j] == NULL)
 		j++;
 	    if (j != i + 1)
 		step_edges (c, j - (i + 1));
