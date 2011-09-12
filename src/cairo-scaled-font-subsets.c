@@ -87,6 +87,7 @@ typedef struct _cairo_sub_font {
 struct _cairo_scaled_font_subsets {
     cairo_subsets_type_t type;
     cairo_bool_t use_latin_subset;
+    char latin_char_map[256];
 
     int max_glyphs_per_unscaled_subset_used;
     cairo_hash_table_t *unscaled_sub_fonts;
@@ -653,7 +654,10 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 	    if (latin_character > 0 ||
 		(latin_character == 0 && sub_font->num_glyphs_in_latin_subset > 0))
 	    {
-		is_latin = TRUE;
+		if (!sub_font->parent->latin_char_map[latin_character]) {
+		    sub_font->parent->latin_char_map[latin_character] = TRUE;
+		    is_latin = TRUE;
+		}
 	    }
 	}
 
@@ -759,6 +763,7 @@ static cairo_scaled_font_subsets_t *
 _cairo_scaled_font_subsets_create_internal (cairo_subsets_type_t type)
 {
     cairo_scaled_font_subsets_t *subsets;
+    int i;
 
     subsets = malloc (sizeof (cairo_scaled_font_subsets_t));
     if (unlikely (subsets == NULL)) {
@@ -771,6 +776,8 @@ _cairo_scaled_font_subsets_create_internal (cairo_subsets_type_t type)
     subsets->max_glyphs_per_unscaled_subset_used = 0;
     subsets->max_glyphs_per_scaled_subset_used = 0;
     subsets->num_sub_fonts = 0;
+    for (i = 0; i < 256; i++)
+	subsets->latin_char_map[i] = FALSE;
 
     subsets->unscaled_sub_fonts = _cairo_hash_table_create (_cairo_sub_fonts_equal);
     if (! subsets->unscaled_sub_fonts) {
