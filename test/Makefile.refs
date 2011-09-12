@@ -144,12 +144,12 @@ REFERENCE_IMAGES = \
 	clip-fill-nz-unbounded.xlib.rgb24.ref.png \
 	clip-fill-rule-pixel-aligned.ref.png \
 	clip-fill-rule-pixel-aligned.rgb24.ref.png \
+	clip-fill-rule.argb32.ref.png \
 	clip-fill-rule.image16.ref.png \
 	clip-fill-rule.pdf.argb32.ref.png \
 	clip-fill-rule.ps.argb32.ref.png \
 	clip-fill-rule.ps.rgb24.ref.png \
 	clip-fill-rule.quartz.rgb24.ref.png \
-	clip-fill-rule.ref.png \
 	clip-fill-rule.rgb24.ref.png \
 	clip-fill-rule.test-paginated.rgb24.ref.png \
 	clip-fill-rule.xlib.rgb24.ref.png \
@@ -170,12 +170,12 @@ REFERENCE_IMAGES = \
 	clip-image.ref.png \
 	clip-intersect.ref.png \
 	clip-mixed-antialias.ref.png \
+	clip-nesting.argb32.ref.png \
 	clip-nesting.pdf.argb32.ref.png \
 	clip-nesting.ps.argb32.ref.png \
 	clip-nesting.ps.rgb24.ref.png \
 	clip-nesting.quartz.argb32.ref.png \
 	clip-nesting.quartz.rgb24.ref.png \
-	clip-nesting.ref.png \
 	clip-nesting.rgb24.ref.png \
 	clip-nesting.test-paginated.rgb24.ref.png \
 	clip-nesting.xlib.rgb24.ref.png \
@@ -235,13 +235,13 @@ REFERENCE_IMAGES = \
 	clip-text.svg.ref.png \
 	clip-text.xlib.ref.png \
 	clip-twice-rectangle.ref.png \
+	clip-twice.argb32.ref.png \
 	clip-twice.image16.ref.png \
 	clip-twice.pdf.argb32.ref.png \
 	clip-twice.ps.argb32.ref.png \
 	clip-twice.ps.rgb24.ref.png \
 	clip-twice.quartz.argb32.ref.png \
 	clip-twice.quartz.rgb24.ref.png \
-	clip-twice.ref.png \
 	clip-twice.rgb24.ref.png \
 	clip-twice.test-paginated.argb32.ref.png \
 	clip-twice.test-paginated.rgb24.ref.png \
@@ -484,12 +484,12 @@ REFERENCE_IMAGES = \
 	fill-and-stroke.rgb24.ref.png \
 	fill-and-stroke.xlib.argb32.ref.png \
 	fill-and-stroke.xlib.rgb24.ref.png \
+	fill-degenerate-sort-order.argb32.ref.png \
 	fill-degenerate-sort-order.image16.ref.png \
 	fill-degenerate-sort-order.ps.argb32.xfail.png \
 	fill-degenerate-sort-order.ps.rgb24.xfail.png \
 	fill-degenerate-sort-order.quartz.argb32.ref.png \
 	fill-degenerate-sort-order.quartz.rgb24.ref.png \
-	fill-degenerate-sort-order.ref.png \
 	fill-degenerate-sort-order.rgb24.ref.png \
 	fill-degenerate-sort-order.xlib.ref.png \
 	fill-degenerate-sort-order.xlib.rgb24.ref.png \
@@ -749,9 +749,9 @@ REFERENCE_IMAGES = \
 	map-all-to-image.ref.png \
 	map-bit-to-image.ref.png \
 	map-to-image-fill.ref.png \
+	mask-alpha.argb32.ref.png \
 	mask-alpha.image16.ref.png \
 	mask-alpha.quartz.argb32.ref.png \
-	mask-alpha.ref.png \
 	mask-alpha.rgb24.ref.png \
 	mask-alpha.svg.rgb24.xfail.png \
 	mask-alpha.xlib.ref.png \
@@ -774,12 +774,12 @@ REFERENCE_IMAGES = \
 	mask-transformed-similar.quartz.ref.png \
 	mask-transformed-similar.ref.png \
 	mask-transformed-similar.svg.ref.png \
+	mask.argb32.ref.png \
 	mask.image16.ref.png \
 	mask.pdf.argb32.ref.png \
 	mask.pdf.rgb24.ref.png \
 	mask.quartz.argb32.ref.png \
 	mask.quartz.rgb24.ref.png \
-	mask.ref.png \
 	mask.rgb24.ref.png \
 	mask.svg.argb32.xfail.png \
 	mask.svg.rgb24.xfail.png \
@@ -828,11 +828,11 @@ REFERENCE_IMAGES = \
 	operator-alpha.rgb24.ref.png \
 	operator-alpha.svg12.argb32.xfail.png \
 	operator-alpha.svg12.rgb24.xfail.png \
+	operator-clear.argb32.ref.png \
 	operator-clear.ps2.argb32.ref.png \
 	operator-clear.ps3.argb32.ref.png \
 	operator-clear.quartz.argb32.ref.png \
 	operator-clear.quartz.rgb24.ref.png \
-	operator-clear.ref.png \
 	operator-clear.rgb24.ref.png \
 	operator-clear.svg12.argb32.xfail.png \
 	operator-clear.svg12.rgb24.xfail.png \

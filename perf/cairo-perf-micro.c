@@ -288,7 +288,8 @@ cairo_perf_run (cairo_perf_t	   *perf,
 	    if (count_func != NULL) {
 		double count = count_func (perf->cr, perf->size, perf->size);
 		fprintf (perf->summary,
-			 "%10lld/%d %#8.3f %#8.3f %#5.2f%% %3d: %.2f\n",
+			 "%.3f [%10lld/%d] %#8.3f %#8.3f %#5.2f%% %3d: %.2f\n",
+			 stats.min_ticks /(double) loops,
 			 (long long) stats.min_ticks, loops,
 			 _cairo_time_to_s (stats.min_ticks) * 1000.0 / loops,
 			 _cairo_time_to_s (stats.median_ticks) * 1000.0 / loops,
@@ -296,7 +297,8 @@ cairo_perf_run (cairo_perf_t	   *perf,
 			 count / _cairo_time_to_s (stats.min_ticks));
 	    } else {
 		fprintf (perf->summary,
-			 "%10lld/%d %#8.3f %#8.3f %#5.2f%% %3d\n",
+			 "%.3f [%10lld/%d] %#8.3f %#8.3f %#5.2f%% %3d\n",
+			 stats.min_ticks /(double) loops,
 			 (long long) stats.min_ticks, loops,
 			 _cairo_time_to_s (stats.min_ticks) * 1000.0 / loops,
 			 _cairo_time_to_s (stats.median_ticks) * 1000.0 / loops,
