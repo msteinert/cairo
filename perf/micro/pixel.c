@@ -28,6 +28,43 @@
 
 #include "cairo-perf.h"
 
+#include <pixman.h>
+
+static cairo_time_t
+pixel_direct (cairo_t *cr, int width, int height, int loops)
+{
+    cairo_surface_t *surface, *image;
+    uint32_t *data;
+    int stride, bpp;
+
+    surface = cairo_get_target (cr);
+    image = cairo_surface_map_to_image (surface, NULL);
+    data = (uint32_t *) cairo_image_surface_get_data (image);
+    stride = cairo_image_surface_get_stride (image) / sizeof (uint32_t);
+
+    switch (cairo_image_surface_get_format (image)) {
+    default:
+    case CAIRO_FORMAT_INVALID:
+    case CAIRO_FORMAT_A1: bpp = 0; break;
+    case CAIRO_FORMAT_A8: bpp = 8; break;
+    case CAIRO_FORMAT_RGB16_565: bpp = 16; break;
+    case CAIRO_FORMAT_RGB24:
+    case CAIRO_FORMAT_RGB30:
+    case CAIRO_FORMAT_ARGB32: bpp = 32; break;
+    }
+
+    cairo_perf_timer_start ();
+
+    while (loops--)
+	pixman_fill (data, stride, bpp, 0, 0, 1, 1, -1);
+
+    cairo_perf_timer_stop ();
+
+    cairo_surface_unmap_image (surface, image);
+
+    return cairo_perf_timer_elapsed ();
+}
+
 static cairo_time_t
 pixel_paint (cairo_t *cr, int width, int height, int loops)
 {
@@ -167,6 +204,7 @@ pixel (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
     cairo_set_source_rgb (cr, 1., 1., 1.);
 
+    cairo_perf_run (perf, "pixel-direct", pixel_direct, NULL);
     cairo_perf_run (perf, "pixel-paint", pixel_paint, NULL);
     cairo_perf_run (perf, "pixel-mask", pixel_mask, NULL);
     cairo_perf_run (perf, "pixel-rectangle", pixel_rectangle, NULL);
