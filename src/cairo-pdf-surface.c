@@ -6072,8 +6072,14 @@ _cairo_pdf_surface_mask (void			*abstract_surface,
     assert (_cairo_pdf_surface_operation_supported (surface, op, mask, &extents.bounded));
 
     /* get the accurate extents */
-    _cairo_pattern_get_ink_extents (source, &extents.source);
-    _cairo_pattern_get_ink_extents (mask, &extents.mask);
+    status = _cairo_pattern_get_ink_extents (source, &extents.source);
+    if (unlikely (status))
+	goto cleanup;
+
+    status = _cairo_pattern_get_ink_extents (mask, &extents.mask);
+    if (unlikely (status))
+	goto cleanup;
+
     extents.bounded = extents.source;
     if (! _cairo_rectangle_intersect (&extents.bounded, &extents.mask))
 	return CAIRO_STATUS_SUCCESS;
