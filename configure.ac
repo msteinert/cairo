@@ -548,9 +548,8 @@ CAIRO_ENABLE_SURFACE_BACKEND(pdf, PDF, yes, [
 
 dnl ===========================================================================
 
-# poppler-0.9.2 has an important bug fixes for user-font and an
-# enhancement not to gobble nearly 1GiB of memory during test/large-font.
-POPPLER_VERSION_REQUIRED=0.13.3
+# poppler-0.17.4 fixes text-pattern and text-transform
+POPPLER_VERSION_REQUIRED=0.17.4
 test_pdf=no
 any2ppm_pdf=no
 if test "x$use_pdf" = "xyes"; then
