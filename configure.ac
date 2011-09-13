@@ -19,7 +19,7 @@ LT_PREREQ([2.2])
 LT_INIT([win32-dll])
 
 # Api documentation
-GTK_DOC_CHECK([1.6])
+GTK_DOC_CHECK([1.15],[--flavour no-tmpl])
 
 AC_SYS_LARGEFILE
 
