@@ -83,7 +83,7 @@
 #include <zlib.h>
 #include <errno.h>
 
-#define DEBUG_PS 1
+#define DEBUG_PS 0
 
 #if DEBUG_PS
 #define DEBUG_FALLBACK(s) \
