@@ -1,18 +1,24 @@
-AC_PREREQ(2.59)
+AC_PREREQ([2.63])
 CAIRO_PARSE_VERSION
 AC_INIT([cairo],
 	[cairo_version_major.cairo_version_minor.cairo_version_micro],
-	[http://bugs.freedesktop.org/enter_bug.cgi?product=cairo])
+	[http://bugs.freedesktop.org/enter_bug.cgi?product=cairo],
+	[cairo],
+	[http://cairographics.org/])
 AC_CONFIG_AUX_DIR(build)
 AC_CONFIG_MACRO_DIR(build)
-AC_GNU_SOURCE
 AC_USE_SYSTEM_EXTENSIONS
 AC_CONFIG_SRCDIR(src/cairo.h)
 AC_CONFIG_HEADERS(config.h)
+
 AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
-AC_LIBTOOL_WIN32_DLL dnl Must be called before AC_PROG_LIBTOOL
-AC_PROG_LIBTOOL dnl ([1.4]) Don't remove!
+
+# Initialize libtool
+LT_PREREQ([2.2])
+LT_INIT([win32-dll])
+
+# Api documentation
 GTK_DOC_CHECK([1.6])
 
 AC_SYS_LARGEFILE
