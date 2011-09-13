@@ -35,6 +35,7 @@ _cairo_stats_compute (cairo_stats_t *stats,
     cairo_time_t sum, mean, delta, q1, q3, iqr;
     cairo_time_t outlier_min, outlier_max;
     int i, min_valid, num_valid;
+    double s;
 
     assert (num_values > 0);
 
@@ -83,13 +84,11 @@ _cairo_stats_compute (cairo_stats_t *stats,
 	sum = _cairo_time_add (sum, values[i]);
     mean = sum / num_valid;
 
-    sum = 0;
+    /* Let's use a normalized std. deviation for easier comparison. */
+    s = 0;
     for (i = min_valid; i < min_valid + num_valid; i++) {
-	delta = values[i] - mean;
-	sum += delta * delta;
+	double delta = (values[i] - mean) / (double)mean;
+	s += delta * delta;
     }
-
-    /* Let's use a std. deviation normalized to the mean for easier
-     * comparison. */
-    stats->std_dev = sqrt(sum / num_valid) / mean;
+    stats->std_dev = sqrt(s / num_valid);
 }
