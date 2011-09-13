@@ -1458,29 +1458,21 @@ composite_boxes (const cairo_traps_compositor_t *compositor,
 		 const cairo_rectangle_int_t	*extents,
 		 cairo_clip_t			*clip)
 {
-    const cairo_boxes_t *boxes = closure;
-    const struct _cairo_boxes_chunk *chunk;
-    struct composite_opacity_info info;
-    int i;
+    cairo_traps_t traps;
+    cairo_status_t status;
 
-    info.compositor = compositor;
-    info.op = op;
-    info.dst = dst;
+    status = _cairo_traps_init_boxes (&traps, closure);
+    if (unlikely (status))
+	return status;
 
-    info.src = src;
-    info.src_x = src_x;
-    info.src_y = src_y;
+    status = compositor->composite_traps (dst, op, src,
+					  src_x - dst_x, src_y - dst_y,
+					  dst_x, dst_y,
+					  extents,
+					  CAIRO_ANTIALIAS_DEFAULT, &traps);
+    _cairo_traps_fini (&traps);
 
-    info.opacity = 1. / (double) 0xffff;
-
-    /* XXX for lots of boxes create a clip region for the fully opaque areas */
-    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
-	for (i = 0; i < chunk->count; i++)
-	    do_unaligned_box(composite_opacity, &info,
-			     &chunk->base[i], dst_x, dst_y);
-    }
-
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_status_t

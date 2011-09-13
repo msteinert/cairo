@@ -127,7 +127,7 @@ polygon_init (struct polygon *polygon, int ymin, int ymax)
 	if (unlikely (NULL == polygon->y_buckets))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
-    memset (polygon->y_buckets, 0, h * sizeof (struct edge *)); 
+    memset (polygon->y_buckets, 0, h * sizeof (struct edge *));
 
     polygon->ymin = ymin;
     polygon->ymax = ymax;
