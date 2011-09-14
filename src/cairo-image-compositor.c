@@ -1166,15 +1166,14 @@ span_renderer_init (cairo_abstract_span_renderer_t	*_r,
     int mask_x, mask_y;
 
     if (op == CAIRO_OPERATOR_CLEAR) {
-	source = &_cairo_pattern_white.base;
-	op = PIXMAN_OP_OUT_REVERSE;
+	op = PIXMAN_OP_LERP_CLEAR;
     } else if (dst->base.is_clear &&
 	       (op == CAIRO_OPERATOR_SOURCE ||
 		op == CAIRO_OPERATOR_OVER ||
 		op == CAIRO_OPERATOR_ADD)) {
 	op = PIXMAN_OP_SRC;
     } else if (op == CAIRO_OPERATOR_SOURCE) {
-	op = PIXMAN_OP_LERP;
+	op = PIXMAN_OP_LERP_SRC;
     } else {
 	op = _pixman_operator (op);
     }
