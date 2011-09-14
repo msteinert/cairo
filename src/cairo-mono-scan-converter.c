@@ -363,7 +363,7 @@ row (struct mono_scan_converter *c, unsigned int mask)
 
 	winding += edge->dir;
 	if ((winding & mask) == 0) {
-	    if (I(next->x.quo) != xend) {
+	    if (I(next->x.quo) > xend + 1) {
 		add_span (c, xstart, xend);
 		xstart = INT_MIN;
 	    }
@@ -411,12 +411,12 @@ _mono_scan_converter_init(struct mono_scan_converter *c,
 
     c->head.vertical = 1;
     c->head.height_left = INT_MAX;
-    c->head.x.quo = INT_MIN;
+    c->head.x.quo = _cairo_fixed_from_int (_cairo_fixed_integer_part (INT_MIN));
     c->head.prev = NULL;
     c->head.next = &c->tail;
     c->tail.prev = &c->head;
     c->tail.next = NULL;
-    c->tail.x.quo = INT_MAX;
+    c->tail.x.quo = _cairo_fixed_from_int (_cairo_fixed_integer_part (INT_MAX));
     c->tail.height_left = INT_MAX;
     c->tail.vertical = 1;
 
