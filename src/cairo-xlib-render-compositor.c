@@ -42,6 +42,8 @@
 
 #include "cairoint.h"
 
+#if !CAIRO_HAS_XLIB_XCB_FUNCTIONS
+
 #include "cairo-xlib-private.h"
 
 #include "cairo-compositor-private.h"
@@ -1683,3 +1685,5 @@ _cairo_xlib_traps_compositor_get (void)
 
     return &compositor.base;
 }
+
+#endif /* !CAIRO_HAS_XLIB_XCB_FUNCTIONS */

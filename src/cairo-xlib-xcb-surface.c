@@ -48,6 +48,7 @@
 
 #include "cairo-default-context-private.h"
 #include "cairo-image-surface-private.h"
+#include "cairo-surface-backend-private.h"
 
 #include <X11/Xlib-xcb.h>
 #include <X11/Xlibint.h>	/* For XESetCloseDisplay */
@@ -119,14 +120,7 @@ _cairo_xlib_xcb_surface_map_to_image (void *abstract_surface,
 				      const cairo_rectangle_int_t *extents)
 {
     cairo_xlib_xcb_surface_t *surface = abstract_surface;
-    cairo_rectangle_t rect;
-
-    rect.x = extents->x;
-    rect.y = extents->y;
-    rect.width = extents->width;
-    rect.height = extents->height;
-
-    return cairo_surface_map_to_image (&surface->xcb->base, &rect);
+    return cairo_surface_map_to_image (&surface->xcb->base, extents);
 }
 
 static cairo_int_status_t
@@ -241,11 +235,9 @@ _cairo_xlib_xcb_surface_glyphs (void			*abstract_surface,
 				cairo_glyph_t		*glyphs,
 				int			 num_glyphs,
 				cairo_scaled_font_t	*scaled_font,
-				const cairo_clip_t	*clip,
-				int *num_remaining)
+				const cairo_clip_t	*clip)
 {
     cairo_xlib_xcb_surface_t *surface = abstract_surface;
-    *num_remaining = 0;
     return _cairo_surface_show_text_glyphs (&surface->xcb->base, op, source,
 					    NULL, 0,
 					    glyphs, num_glyphs,
@@ -285,28 +277,22 @@ static const cairo_surface_backend_t _cairo_xlib_xcb_surface_backend = {
 
     _cairo_xlib_xcb_surface_acquire_source_image,
     _cairo_xlib_xcb_surface_release_source_image,
-    NULL, NULL, NULL, /* dest acquire/release/clone */
-
-    NULL, /* composite */
-    NULL, /* fill */
-    NULL, /* trapezoids */
-    NULL, /* span */
-    NULL, /* check-span */
+    NULL, /* snapshot */
 
     NULL, /* copy_page */
     NULL, /* show_page */
+
     _cairo_xlib_xcb_surface_get_extents,
-    NULL, /* old-glyphs */
     _cairo_xlib_xcb_surface_get_font_options,
 
     _cairo_xlib_xcb_surface_flush,
     _cairo_xlib_xcb_surface_mark_dirty,
-    NULL, NULL, /* font/glyph fini */
 
     _cairo_xlib_xcb_surface_paint,
     _cairo_xlib_xcb_surface_mask,
     _cairo_xlib_xcb_surface_stroke,
     _cairo_xlib_xcb_surface_fill,
+    NULL, /* fill_stroke */
     _cairo_xlib_xcb_surface_glyphs,
 };
 
