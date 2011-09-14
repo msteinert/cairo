@@ -1019,6 +1019,7 @@ REFERENCE_IMAGES = \
 	radial-gradient.image16.ref.png \
 	radial-gradient.quartz.ref.png \
 	radial-gradient.ref.png \
+	random-clip.ref.png \
 	random-intersections-curves-eo.image16.ref.png \
 	random-intersections-curves-eo.pdf.ref.png \
 	random-intersections-curves-eo.ps.ref.png \
