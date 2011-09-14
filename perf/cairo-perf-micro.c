@@ -585,5 +585,6 @@ const cairo_perf_case_t perf_cases[] = {
     { FUNC(spiral), 512, 512 },
     { FUNC(wave), 500, 500 },
     { FUNC(fill_clip), 16, 512 },
+    { FUNC(tiger), 16, 1024 },
     { NULL }
 };

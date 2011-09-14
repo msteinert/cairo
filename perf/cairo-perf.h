@@ -227,5 +227,6 @@ CAIRO_PERF_DECL (a1_line);
 CAIRO_PERF_DECL (pixel);
 CAIRO_PERF_DECL (sierpinski);
 CAIRO_PERF_DECL (fill_clip);
+CAIRO_PERF_DECL (tiger);
 
 #endif

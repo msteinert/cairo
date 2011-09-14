@@ -20,6 +20,7 @@ libcairo_perf_micro_sources = \
 	subimage_copy.c		\
 	tessellate.c		\
 	text.c			\
+	tiger.c			\
 	glyphs.c		\
 	twin.c			\
 	unaligned-clip.c	\
