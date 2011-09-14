@@ -416,7 +416,7 @@ lerp (void			*_dst,
     cairo_image_source_t *mask = (cairo_image_source_t *)abstract_mask;
 
 #if PIXMAN_HAS_OP_LERP
-    pixman_image_composite32 (PIXMAN_OP_LERP,
+    pixman_image_composite32 (PIXMAN_OP_LERP_SRC,
 			      src->pixman_image, mask->pixman_image, dst->pixman_image,
 			      src_x,  src_y,
 			      mask_x, mask_y,
@@ -1404,8 +1404,12 @@ span_renderer_init (cairo_abstract_span_renderer_t	*_r,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (op == CAIRO_OPERATOR_CLEAR) {
+#if PIXMAN_HAS_OP_LERP
+	op = PIXMAN_OP_LERP_CLEAR;
+#else
 	source = &_cairo_pattern_white.base;
 	op = PIXMAN_OP_OUT_REVERSE;
+#endif
     } else if (dst->base.is_clear &&
 	       (op == CAIRO_OPERATOR_SOURCE ||
 		op == CAIRO_OPERATOR_OVER ||
@@ -1413,7 +1417,7 @@ span_renderer_init (cairo_abstract_span_renderer_t	*_r,
 	op = PIXMAN_OP_SRC;
     } else if (op == CAIRO_OPERATOR_SOURCE) {
 #if PIXMAN_HAS_OP_LERP
-	op = PIXMAN_OP_LERP;
+	op = PIXMAN_OP_LERP_SRC;
 #else
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 #endif
