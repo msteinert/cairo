@@ -760,7 +760,7 @@ clip_and_composite (const cairo_traps_compositor_t *compositor,
     cairo_surface_t *src;
     int src_x, src_y;
     cairo_region_t *clip_region = NULL;
-    cairo_status_t status;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     if (reduce_alpha_op (extents)) {
 	op = CAIRO_OPERATOR_ADD;
@@ -771,13 +771,6 @@ clip_and_composite (const cairo_traps_compositor_t *compositor,
 	op = CAIRO_OPERATOR_DEST_OUT;
 	source = NULL;
     }
-
-    src = compositor->pattern_to_surface (dst, source, FALSE,
-					  &extents->bounded,
-					  &extents->source_sample_area,
-					  &src_x, &src_y);
-    if (unlikely (src->status))
-	return src->status;
 
     compositor->acquire (dst);
 
@@ -803,6 +796,16 @@ clip_and_composite (const cairo_traps_compositor_t *compositor,
 	    }
 	}
     }
+
+    if (extents->bounded.width == 0 || extents->bounded.height == 0)
+	goto skip;
+
+    src = compositor->pattern_to_surface (dst, source, FALSE,
+					  &extents->bounded,
+					  &extents->source_sample_area,
+					  &src_x, &src_y);
+    if (unlikely (status = src->status))
+	goto error;
 
     if (op == CAIRO_OPERATOR_SOURCE) {
 	status = clip_and_composite_source (compositor, dst,
@@ -830,7 +833,9 @@ clip_and_composite (const cairo_traps_compositor_t *compositor,
 				extents->clip);
 	}
     }
+    cairo_surface_destroy (src);
 
+skip:
     if (status == CAIRO_STATUS_SUCCESS && ! extents->is_bounded) {
 	if (need_clip & NEED_CLIP_SURFACE)
 	    status = fixup_unbounded_with_mask (compositor, extents);
@@ -838,10 +843,10 @@ clip_and_composite (const cairo_traps_compositor_t *compositor,
 	    status = fixup_unbounded (compositor, extents, NULL);
     }
 
+error:
     if (clip_region)
 	compositor->set_clip_region (dst, NULL);
 
-    cairo_surface_destroy (src);
     compositor->release (dst);
 
     return status;
