@@ -13,8 +13,12 @@ REFERENCE_IMAGES = \
 	a1-clip-stroke.ref.png \
 	a1-image-sample.gl.xfail.png \
 	a1-image-sample.ref.png \
+	a1-line-width.pdf.ref.png \
+	a1-line-width.ps.ref.png \
 	a1-line-width.ref.png \
 	a1-mask-sample.ref.png \
+	a1-mask.pdf.ref.png \
+	a1-mask.ps.ref.png \
 	a1-mask.ref.png \
 	a1-rasterisation-rectangles.quartz.xfail.png \
 	a1-rasterisation-rectangles.ref.png \
@@ -22,6 +26,7 @@ REFERENCE_IMAGES = \
 	a1-rasterisation-triangles.ref.png \
 	a1-rectilinear-grid.ref.png \
 	a1-sample.ref.png \
+	a1-tiger.ref.png \
 	a1-traps-sample.quartz.xfail.png \
 	a1-traps-sample.ref.png \
 	a8-clear.quartz.ref.png \
@@ -90,6 +95,7 @@ REFERENCE_IMAGES = \
 	caps-sub-paths.image16.ref.png \
 	caps-sub-paths.ps.ref.png \
 	caps-sub-paths.ref.png \
+	caps-tails-curve.ps.ref.png \
 	caps-tails-curve.ref.png \
 	caps.image16.ref.png \
 	caps.ps.ref.png \
@@ -160,6 +166,7 @@ REFERENCE_IMAGES = \
 	clip-fill.xlib-fallback.ref.png \
 	clip-fill.xlib.ref.png \
 	clip-group-shapes-aligned-rectangles.ref.png \
+	clip-group-shapes-circles.ps.ref.png \
 	clip-group-shapes-circles.quartz.ref.png \
 	clip-group-shapes-circles.ref.png \
 	clip-group-shapes-circles.xlib.ref.png \
@@ -324,6 +331,7 @@ REFERENCE_IMAGES = \
 	dash-infinite-loop.ps.ref.png \
 	dash-infinite-loop.ref.png \
 	dash-no-dash.ref.png \
+	dash-offset-negative.pdf.ref.png \
 	dash-offset-negative.ref.png \
 	dash-offset.ref.png \
 	dash-scale.image16.ref.png \
@@ -384,8 +392,10 @@ REFERENCE_IMAGES = \
 	device-offset-scale.svg.xfail.png \
 	device-offset.ref.png \
 	device-offset.rgb24.ref.png \
+	drunkard-tails.ps.ref.png \
 	drunkard-tails.ref.png \
 	extend-pad-border.image16.ref.png \
+	extend-pad-border.pdf.ref.png \
 	extend-pad-border.ps.ref.png \
 	extend-pad-border.quartz.ref.png \
 	extend-pad-border.ref.png \
@@ -459,13 +469,13 @@ REFERENCE_IMAGES = \
 	fallback-resolution.ppi72x576.ref.png \
 	fallback-resolution.ppi72x72.ref.png \
 	fill-alpha-pattern.image16.ref.png \
+	fill-alpha-pattern.pdf.ref.png \
 	fill-alpha-pattern.ps3.argb32.ref.png \
-	fill-alpha-pattern.ps3.ref.png \
-	fill-alpha-pattern.ps3.rgb24.ref.png \
 	fill-alpha-pattern.quartz.ref.png \
 	fill-alpha-pattern.ref.png \
 	fill-alpha-pattern.xlib.ref.png \
 	fill-alpha.image16.ref.png \
+	fill-alpha.ps.argb32.ref.png \
 	fill-alpha.quartz.ref.png \
 	fill-alpha.ref.png \
 	fill-alpha.xlib.ref.png \
@@ -1319,6 +1329,8 @@ REFERENCE_IMAGES = \
 	text-glyph-range.ref.png \
 	text-pattern.pdf.argb32.ref.png \
 	text-pattern.pdf.rgb24.ref.png \
+	text-pattern.ps2.argb32.ref.png \
+	text-pattern.ps2.rgb24.ref.png \
 	text-pattern.ps3.argb32.ref.png \
 	text-pattern.ps3.rgb24.ref.png \
 	text-pattern.quartz.argb32.ref.png \
@@ -1336,10 +1348,13 @@ REFERENCE_IMAGES = \
 	text-rotate.xlib-fallback.ref.png \
 	text-rotate.xlib.ref.png \
 	text-transform.image16.ref.png \
-	text-transform.pdf.ref.png \
-	text-transform.ps.ref.png \
+	text-transform.pdf.argb32.ref.png \
+	text-transform.pdf.rgb24.ref.png \
+	text-transform.ps2.ref.png \
+	text-transform.ps3.ref.png \
 	text-transform.ref.png \
 	text-transform.svg.ref.png \
+	tiger.ref.png \
 	tighten-bounds.ref.png \
 	transforms.image16.ref.png \
 	transforms.ps2.ref.png \

@@ -127,7 +127,7 @@ cairo_test_trace_DEPENDENCIES = \
 endif
 
 BUILT_SOURCES += cairo-test-constructors.c
-EXTRA_DIST += $(BUILT_SOURCES) $(noinst_SCRIPTS) COPYING make-cairo-test-constructors.sh run-cairo-test-suite.sh generate_refs.sh
+EXTRA_DIST += $(BUILT_SOURCES) $(noinst_SCRIPTS) COPYING make-cairo-test-constructors.sh run-cairo-test-suite.sh generate_refs.sh tiger.inc
 CLEANFILES += $(BUILT_SOURCES)
 
 EXTRA_DIST +=		\
