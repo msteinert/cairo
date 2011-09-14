@@ -176,7 +176,6 @@ cairo_skia_surface_backend = {
     _cairo_skia_surface_unmap_image,
 
     _cairo_skia_surface_acquire_source_image,
-    NULL, /* acquire transformed */
     _cairo_skia_surface_release_source_image,
     NULL, /* snapshot */
 
