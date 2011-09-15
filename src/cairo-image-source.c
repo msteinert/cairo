@@ -639,7 +639,7 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
     } else
 	extend = CAIRO_EXTEND_NONE;
 
-    if (extents == CAIRO_EXTEND_NONE)
+    if (extend == CAIRO_EXTEND_NONE)
 	limit = *extents;
 
     clone = cairo_image_surface_create (dst->format, limit.width, limit.height);
@@ -653,6 +653,9 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
 			       &pattern->base.matrix);
 	if (tx | ty)
 	    cairo_matrix_translate (m, tx, ty);
+
+	status = cairo_matrix_invert (m);
+	assert (status == CAIRO_STATUS_SUCCESS);
     } else {
 	/* XXX extract scale factor for repeating patterns */
     }
@@ -673,8 +676,10 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
 	    pixman_image_unref (pixman_image);
 	    pixman_image= NULL;
 	}
+    } else {
+	*ix = -limit.x;
+	*iy = -limit.y;
     }
-
 
     return pixman_image;
 }
