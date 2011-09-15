@@ -273,6 +273,7 @@ cairo_ft_sources = cairo-ft-font.c
 # These are private, even though they look like public headers
 cairo_test_surfaces_private = \
 	test-compositor-surface.h \
+	test-compositor-surface-private.h \
 	test-null-compositor-surface.h \
 	test-paginated-surface.h \
 	$(NULL)
