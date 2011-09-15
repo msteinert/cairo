@@ -481,7 +481,7 @@ check-ref-missing:
 release-verify-sane-tests: check-ref-missing
 
 results.tar:
-	@tar cf $@ index.html testtable.js *.log; \
+	@tar cf $@ index.html testtable.js *.log output/*.log; \
 	for i in output/*.fail.png ; do \
 		testname=$${i#output/} ; \
 		testname=$${testname%%.*} ; \

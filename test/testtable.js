@@ -63,7 +63,7 @@ function fieldsToHTML (bColumns, values) {
     var r = Array ();
     for (var i = 0; i < fields.length; i++)
 	if (fields[i] == "test") {
-	    r.push (link (values[fields[i]], values[fields[i]] + ".log"));
+	    r.push (link (values[fields[i]], "output/" + values[fields[i]] + ".log"));
 	} else {
 	    tmpRE[i] = values[fields[i]];
 	    r.push (span (values[fields[i]], prefix + "/" + tmpRE.join ("/") + "/", fields[i]));
@@ -415,7 +415,7 @@ function parseTestList (listData) {
 	if (words.length >= 2 &&
 	    words[0][words[0].length-1] == ":" &&
 	    inArray (words[1], logResults))
-	    parseFile (words[0].substr (0, words[0].length-1) + ".log", parseTest);
+	    parseFile ("output/" + words[0].substr (0, words[0].length-1) + ".log", parseTest);
     }
 }
 

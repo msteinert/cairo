@@ -406,7 +406,7 @@ _parse_cmdline (cairo_test_runner_t *runner, int *argc, char **argv[])
 static void
 _runner_init (cairo_test_runner_t *runner)
 {
-    cairo_test_init (&runner->base, "cairo-test-suite");
+    cairo_test_init (&runner->base, "cairo-test-suite", ".");
 
     runner->passed = TRUE;
 

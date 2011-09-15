@@ -220,6 +220,7 @@ struct _cairo_test_context {
     const char *test_name;
 
     FILE *log_file;
+    const char *output;
     const char *srcdir; /* directory containing sources and input data */
     const char *refdir; /* directory containing reference images */
 

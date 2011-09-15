@@ -126,7 +126,8 @@ static void
 _cairo_test_init (cairo_test_context_t *ctx,
 		  const cairo_test_context_t *parent,
 		  const cairo_test_t *test,
-		  const char *test_name)
+		  const char *test_name,
+		  const char *output)
 {
     char *log_name;
 
@@ -138,6 +139,7 @@ _cairo_test_init (cairo_test_context_t *ctx,
 
     ctx->test = test;
     ctx->test_name = _cairo_test_fixup_name (test_name);
+    ctx->output = output;
 
     ctx->malloc_failure = 0;
 #if HAVE_MEMFAULT
@@ -151,7 +153,7 @@ _cairo_test_init (cairo_test_context_t *ctx,
     if (getenv ("CAIRO_TEST_TIMEOUT"))
 	ctx->timeout = atoi (getenv ("CAIRO_TEST_TIMEOUT"));
 
-    xasprintf (&log_name, "%s%s", ctx->test_name, CAIRO_TEST_LOG_SUFFIX);
+    xasprintf (&log_name, "%s/%s%s", ctx->output, ctx->test_name, CAIRO_TEST_LOG_SUFFIX);
     _xunlink (NULL, log_name);
 
     ctx->log_file = fopen (log_name, "a");
@@ -209,14 +211,15 @@ _cairo_test_context_init_for_test (cairo_test_context_t *ctx,
 				   const cairo_test_context_t *parent,
 				   const cairo_test_t *test)
 {
-    _cairo_test_init (ctx, parent, test, test->name);
+    _cairo_test_init (ctx, parent, test, test->name, CAIRO_TEST_OUTPUT_DIR);
 }
 
 void
 cairo_test_init (cairo_test_context_t *ctx,
-		 const char *test_name)
+		 const char *test_name,
+		 const char *output)
 {
-    _cairo_test_init (ctx, NULL, NULL, test_name);
+    _cairo_test_init (ctx, NULL, NULL, test_name, output);
 }
 
 static void
@@ -472,7 +475,7 @@ cairo_test_target_has_similar (const cairo_test_context_t *ctx,
 	return DIRECT;
 
     xasprintf (&path, "%s/%s",
-	       _cairo_test_mkdir (CAIRO_TEST_OUTPUT_DIR) ? CAIRO_TEST_OUTPUT_DIR : ".",
+	       _cairo_test_mkdir (ctx->output) ? ctx->output : ".",
 	       ctx->test_name);
 
     has_similar = DIRECT;
@@ -815,9 +818,9 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 						    target->file_extension);
     }
 
-    have_output_dir = _cairo_test_mkdir (CAIRO_TEST_OUTPUT_DIR);
+    have_output_dir = _cairo_test_mkdir (ctx->output);
     xasprintf (&base_path, "%s/%s",
-	       have_output_dir ? CAIRO_TEST_OUTPUT_DIR : ".",
+	       have_output_dir ? ctx->output : ".",
 	       base_name);
     xasprintf (&out_png_path, "%s" CAIRO_TEST_OUT_PNG, base_path);
     xasprintf (&diff_png_path, "%s" CAIRO_TEST_DIFF_PNG, base_path);
@@ -1865,7 +1868,7 @@ cairo_test_expecting (const cairo_test_t *test)
     cairo_test_status_t ret = CAIRO_TEST_SUCCESS;
     size_t num_threads;
 
-    _cairo_test_init (&ctx, NULL, test, test->name);
+    _cairo_test_init (&ctx, NULL, test, test->name, CAIRO_TEST_OUTPUT_DIR);
     printf ("%s\n", test->description);
 
 #if CAIRO_HAS_REAL_PTHREAD

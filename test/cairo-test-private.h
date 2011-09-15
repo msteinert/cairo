@@ -61,7 +61,8 @@ _cairo_test_context_init_for_test (cairo_test_context_t *ctx,
 
 void
 cairo_test_init (cairo_test_context_t *ctx,
-		 const char *test_name);
+		 const char *test_name,
+		 const char *output);
 
 cairo_test_status_t
 cairo_test (const cairo_test_t *test);
