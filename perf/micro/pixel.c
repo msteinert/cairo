@@ -213,3 +213,25 @@ pixel (cairo_perf_t *perf, cairo_t *cr, int width, int height)
     cairo_perf_run (perf, "pixel-circle", pixel_circle, NULL);
     cairo_perf_run (perf, "pixel-stroke", pixel_stroke, NULL);
 }
+
+cairo_bool_t
+a1_pixel_enabled (cairo_perf_t *perf)
+{
+    return cairo_perf_can_run (perf, "a1-pixel", NULL);
+}
+
+void
+a1_pixel (cairo_perf_t *perf, cairo_t *cr, int width, int height)
+{
+    cairo_set_source_rgb (cr, 1., 1., 1.);
+    cairo_set_antialias (cr, CAIRO_ANTIALIAS_NONE);
+
+    cairo_perf_run (perf, "a1-pixel-direct", pixel_direct, NULL);
+    cairo_perf_run (perf, "a1-pixel-paint", pixel_paint, NULL);
+    cairo_perf_run (perf, "a1-pixel-mask", pixel_mask, NULL);
+    cairo_perf_run (perf, "a1-pixel-rectangle", pixel_rectangle, NULL);
+    cairo_perf_run (perf, "a1-pixel-subrectangle", pixel_subrectangle, NULL);
+    cairo_perf_run (perf, "a1-pixel-triangle", pixel_triangle, NULL);
+    cairo_perf_run (perf, "a1-pixel-circle", pixel_circle, NULL);
+    cairo_perf_run (perf, "a1-pixel-stroke", pixel_stroke, NULL);
+}

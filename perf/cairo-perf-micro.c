@@ -545,6 +545,7 @@ main (int   argc,
 #define FUNC(f) f, f##_enabled
 const cairo_perf_case_t perf_cases[] = {
     { FUNC(pixel),  1, 1 },
+    { FUNC(a1_pixel),  1, 1 },
     { FUNC(paint),  64, 512},
     { FUNC(paint_with_alpha),  64, 512},
     { FUNC(fill),   64, 512},
