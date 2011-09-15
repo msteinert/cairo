@@ -2194,6 +2194,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
     if (stencil_mask) {
 	use_mask = FALSE;
 	color = CAIRO_IMAGE_IS_MONOCHROME;
+	transparency = CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
     } else {
 	transparency = _cairo_image_analyze_transparency (image);
 
@@ -2227,27 +2228,22 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
      * pixel with (bit 7 first). The row is padded to byte
      * boundaries. The image data is 3 bytes per pixel RGB format. */
     switch (color) {
-    case CAIRO_IMAGE_IS_COLOR:
+    default:
     case CAIRO_IMAGE_UNKNOWN_COLOR:
-	if (use_mask)
-	    data_size = ps_image->height * ((ps_image->width + 7)/8 + 3*ps_image->width);
-	else
-	    data_size = ps_image->height * ps_image->width * 3;
+	ASSERT_NOT_REACHED;
+    case CAIRO_IMAGE_IS_COLOR:
+	data_size = ps_image->width * 3;
 	break;
-
     case CAIRO_IMAGE_IS_GRAYSCALE:
-	if (use_mask)
-	    data_size = ps_image->height * ((ps_image->width + 7)/8 + ps_image->width);
-	else
-	    data_size = ps_image->height * ps_image->width;
+	data_size = ps_image->width;
 	break;
     case CAIRO_IMAGE_IS_MONOCHROME:
-	if (use_mask)
-	    data_size = ps_image->height * ((ps_image->width + 7)/8) * 2;
-	else
-	    data_size = ps_image->height * ((ps_image->width + 7)/8);
+	data_size = (ps_image->width + 7)/8;
 	break;
     }
+    if (use_mask)
+	data_size += (ps_image->width + 7)/8;
+    data_size *= ps_image->height;
     data = malloc (data_size);
     if (unlikely (data == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
