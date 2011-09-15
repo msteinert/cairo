@@ -1994,11 +1994,10 @@ _cairo_script_surface_create_similar (void	       *abstract_surface,
 
     _get_target (other);
     _cairo_output_stream_printf (ctx->stream,
-				 "%u %u //%s similar",
+				 "%u %u //%s similar dup /s%u exch def context\n",
 				 width, height,
-				 _content_to_string (content));
-    attach_snapshot (ctx, &surface->base);
-    _cairo_output_stream_printf (ctx->stream, " context\n");
+				 _content_to_string (content),
+				 surface->base.unique_id);
 
     surface->emitted = TRUE;
     surface->defined = TRUE;
