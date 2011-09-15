@@ -1780,7 +1780,7 @@ static cairo_bool_t
 mask_supported (cairo_ps_surface_t *surface, const cairo_pattern_t *mask)
 {
     if (surface->ps_level == CAIRO_PS_LEVEL_2)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return FALSE;
 
     if (mask->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) mask;
@@ -1839,7 +1839,7 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
 
     /* Mask is only supported when the mask is an image with opaque or bilevel alpha. */
     if (mask && !mask_supported (surface, mask))
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* CAIRO_OPERATOR_OVER is only supported for opaque patterns. If
      * the pattern contains transparency, we return
@@ -3846,7 +3846,7 @@ _cairo_ps_surface_mask (void			*abstract_surface,
     cairo_status_t status;
 
     status = _cairo_composite_rectangles_init_for_mask (&extents,
-						       	&surface->base,
+							&surface->base,
 							op, source, mask, clip);
     if (unlikely (status))
 	return status;
