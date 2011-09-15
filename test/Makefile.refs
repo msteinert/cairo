@@ -2113,6 +2113,7 @@ REFERENCE_IMAGES = \
 	reference/unantialiased-shapes.base.rgb24.ref.png \
 	reference/unantialiased-shapes.quartz.ref.png \
 	reference/unantialiased-shapes.ref.png \
+	reference/unbounded-operator.argb32.ref.png \
 	reference/unbounded-operator.base.argb32.ref.png \
 	reference/unbounded-operator.base.rgb24.ref.png \
 	reference/unbounded-operator.gl.argb32.xfail.png \
@@ -2123,7 +2124,6 @@ REFERENCE_IMAGES = \
 	reference/unbounded-operator.ps3.argb32.ref.png \
 	reference/unbounded-operator.quartz.argb32.ref.png \
 	reference/unbounded-operator.quartz.rgb24.ref.png \
-	reference/unbounded-operator.ref.png \
 	reference/unbounded-operator.rgb24.ref.png \
 	reference/unbounded-operator.svg12.argb32.ref.png \
 	reference/unbounded-operator.svg12.rgb24.xfail.png \
