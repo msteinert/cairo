@@ -1812,11 +1812,13 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
     }
 
     if (! pattern_supported (surface, pattern))
-    {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
 
     if (! (op == CAIRO_OPERATOR_SOURCE || op == CAIRO_OPERATOR_OVER))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* Mask is only supported when the mask is an image with opaque or bilevel alpha. */
+    if (mask && !mask_supported (surface, mask))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
@@ -1836,10 +1838,6 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
 	else
 	    return CAIRO_STATUS_SUCCESS;
     }
-
-    /* Mask is only supported when the mask is an image with opaque or bilevel alpha. */
-    if (mask && !mask_supported (surface, mask))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* CAIRO_OPERATOR_OVER is only supported for opaque patterns. If
      * the pattern contains transparency, we return
