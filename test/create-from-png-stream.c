@@ -54,7 +54,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_surface_t *surface;
     cairo_status_t status;
 
-    xasprintf (&filename, "%s/%s", ctx->srcdir,
+    xasprintf (&filename, "%s/reference/%s", ctx->srcdir,
 	       "create-from-png-stream.ref.png");
 
     file = fopen (filename, "rb");
