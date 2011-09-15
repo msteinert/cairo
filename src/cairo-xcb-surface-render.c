@@ -1827,7 +1827,7 @@ _clip_and_composite_combine (cairo_clip_t		*clip,
 			     const cairo_rectangle_int_t*extents)
 {
     cairo_xcb_surface_t *tmp;
-    cairo_surface_t *clip_surface;
+    cairo_xcb_surface_t *clip_surface;
     int clip_x, clip_y;
     xcb_render_picture_t clip_picture;
     cairo_status_t status;
@@ -1890,11 +1890,13 @@ _clip_and_composite_combine (cairo_clip_t		*clip,
     if (unlikely (status))
 	goto CLEANUP_SURFACE;
 
-    clip_surface = _cairo_clip_get_surface (clip, &dst->base, &clip_x, &clip_y);
-    if (unlikely (clip_surface->status))
+    clip_surface = (cairo_xcb_surface_t *) _cairo_clip_get_surface (clip, &dst->base, &clip_x, &clip_y);
+    status = clip_surface->base.status;
+    if (unlikely (status))
 	goto CLEANUP_SURFACE;
 
-    clip_picture = ((cairo_xcb_surface_t *) clip_surface)->picture;
+    assert (clip_surface->base.backend == &_cairo_xcb_surface_backend);
+    clip_picture = clip_surface->picture;
     assert (clip_picture != XCB_NONE);
 
     if (dst->base.is_clear) {
@@ -1926,7 +1928,7 @@ _clip_and_composite_combine (cairo_clip_t		*clip,
 						extents->x,     extents->y,
 						extents->width, extents->height);
     }
-    cairo_surface_destroy (clip_surface);
+    cairo_surface_destroy (&clip_surface->base);
 
  CLEANUP_SURFACE:
     cairo_surface_destroy (&tmp->base);
