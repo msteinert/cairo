@@ -371,13 +371,10 @@ _cairo_composite_rectangles_can_reduce_clip (cairo_composite_rectangles_t *compo
 					     cairo_clip_t *clip)
 {
     cairo_rectangle_int_t extents;
+    cairo_box_t box;
 
     if (clip == NULL)
 	return TRUE;
-
-    /* XXX In the not a region case, we could still search through the boxes */
-    if (! _cairo_clip_is_region (clip))
-	return FALSE;
 
     extents = composite->destination;
     if (composite->is_bounded & CAIRO_OPERATOR_BOUND_BY_SOURCE)
@@ -385,6 +382,6 @@ _cairo_composite_rectangles_can_reduce_clip (cairo_composite_rectangles_t *compo
     if (composite->is_bounded & CAIRO_OPERATOR_BOUND_BY_MASK)
 	_cairo_rectangle_intersect (&extents, &composite->mask);
 
-    return cairo_region_contains_rectangle (_cairo_clip_get_region (clip),
-					    &extents) == CAIRO_REGION_OVERLAP_IN;
+    _cairo_box_from_rectangle (&box, &extents);
+    return _cairo_clip_contains_box (clip, &box);
 }
