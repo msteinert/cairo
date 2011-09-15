@@ -47,6 +47,8 @@
 #include "cairo-tee-surface-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-surface-wrapper-private.h"
+#include "cairo-array-private.h"
+#include "cairo-image-surface-private.h"
 
 typedef struct _cairo_tee_surface {
     cairo_surface_t base;
@@ -408,34 +410,21 @@ static const cairo_surface_backend_t cairo_tee_surface_backend = {
 
     _cairo_tee_surface_acquire_source_image,
     _cairo_tee_surface_release_source_image,
-    NULL, NULL, /* dest_image */
-    NULL, /* clone_similar */
-    NULL, /* composite */
-    NULL, /* fill_rectangles */
-    NULL, /* composite_trapezoids */
-    NULL, /* create_span_renderer */
-    NULL, /* check_span_renderer */
+    _cairo_tee_surface_snapshot,
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_tee_surface_get_extents,
-    NULL, /* old_show_glyphs */
     _cairo_tee_surface_get_font_options,
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
-    NULL, /* scaled_font_fini */
-    NULL, /* scaled_glyph_fini */
 
     _cairo_tee_surface_paint,
     _cairo_tee_surface_mask,
     _cairo_tee_surface_stroke,
     _cairo_tee_surface_fill,
-    NULL, /* replaced by show_text_glyphs */
-
-    _cairo_tee_surface_snapshot,
-    NULL, /* is_similar */
     NULL, /* fill_stroke */
-    NULL, /* create_solid_pattern_surface */
-    NULL, /* can_repaint_solid_pattern_surface */
+
+    NULL, /* show_glyphs */
 
     _cairo_tee_surface_has_show_text_glyphs,
     _cairo_tee_surface_show_text_glyphs
