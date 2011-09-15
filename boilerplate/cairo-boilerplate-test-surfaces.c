@@ -270,7 +270,7 @@ _cairo_boilerplate_test_paginated_cleanup (void *closure)
 
 static const cairo_boilerplate_target_t targets[] = {
     {
-	"test-base", "image", NULL, NULL,
+	"test-base", "base", NULL, NULL,
 	CAIRO_SURFACE_TYPE_IMAGE,
 	CAIRO_CONTENT_COLOR_ALPHA, 0,
 	"_cairo_test_base_compositor_surface_create",
@@ -282,7 +282,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	NULL, NULL, NULL, TRUE, FALSE, FALSE
     },
     {
-	"test-base", "image", NULL, NULL,
+	"test-base", "base", NULL, NULL,
 	CAIRO_SURFACE_TYPE_IMAGE,
 	CAIRO_CONTENT_COLOR, 0,
 	"_cairo_test_base_compositor_surface_create",
