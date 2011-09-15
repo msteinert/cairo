@@ -67,6 +67,6 @@ draw (cairo_t *cr, int width, int height)
 CAIRO_TEST (bug_40410,
 	    "Exercises a bug found in 1.10.2 (and never again!)",
 	    "fill", /* keywords */
-	    NULL, /* requirements */
+	    "target=raster", /* requirements */
 	    WIDTH, HEIGHT,
 	    NULL, draw)

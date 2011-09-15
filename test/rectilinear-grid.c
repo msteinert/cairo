@@ -87,6 +87,6 @@ CAIRO_TEST (rectilinear_grid,
 CAIRO_TEST (a1_rectilinear_grid,
 	    "Test rectilinear rasterizer (covering whole pixels)",
 	    "rectilinear", /* keywords */
-	    NULL, /* requirements */
+	    "target=raster", /* requirements */
 	    SIZE, SIZE,
 	    NULL, aligned)

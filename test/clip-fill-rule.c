@@ -82,6 +82,6 @@ CAIRO_TEST (clip_fill_rule,
 CAIRO_TEST (a1_clip_fill_rule,
 	    "Tests interaction of clipping with cairo_set_fill_rule",
 	    "clip", /* keywords */
-	    NULL, /* requirements */
+	    "target=raster", /* requirements */
 	    STAR_SIZE * 2 + 2, STAR_SIZE + 2,
 	    NULL, a1_draw)
