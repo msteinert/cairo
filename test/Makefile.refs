@@ -320,6 +320,7 @@ REFERENCE_IMAGES = \
 	reference/clip-nesting.rgb24.ref.png \
 	reference/clip-nesting.test-paginated.rgb24.ref.png \
 	reference/clip-nesting.xlib.rgb24.ref.png \
+	reference/clip-operator.argb32.ref.png \
 	reference/clip-operator.base.argb32.ref.png \
 	reference/clip-operator.base.rgb24.ref.png \
 	reference/clip-operator.gl.argb32.ref.png \
@@ -332,7 +333,6 @@ REFERENCE_IMAGES = \
 	reference/clip-operator.ps3.rgb24.ref.png \
 	reference/clip-operator.quartz.argb32.ref.png \
 	reference/clip-operator.quartz.rgb24.ref.png \
-	reference/clip-operator.ref.png \
 	reference/clip-operator.rgb24.ref.png \
 	reference/clip-operator.svg12.argb32.xfail.png \
 	reference/clip-operator.svg12.rgb24.xfail.png \
