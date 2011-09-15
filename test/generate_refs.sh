@@ -8,5 +8,5 @@ cat <<EOF
 REFERENCE_IMAGES = \\
 EOF
 
-git ls-files '*.ref.png' '*.xfail.png' | sed 's/\(.*\)/	\1 \\/'
+git ls-files 'reference/*.ref.png' '*.xfail.png' | sed 's/\(.*\)/	\1 \\/'
 echo '	$(NULL)'

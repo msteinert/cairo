@@ -354,7 +354,7 @@ cairo_test_reference_filename (const cairo_test_context_t *ctx,
 
     if (target_name != NULL) {
 	/* Next look for a target/format-specific reference image. */
-	xasprintf (&ref_name, "%s/%s.%s.%s%s%s",
+	xasprintf (&ref_name, "%s/reference/%s.%s.%s%s%s",
 		   ctx->srcdir,
 		   test_name,
 		   target_name,
@@ -367,7 +367,7 @@ cairo_test_reference_filename (const cairo_test_context_t *ctx,
 	    goto done;
 
 	/* Next, look for target-specific reference image. */
-	xasprintf (&ref_name, "%s/%s.%s%s%s",
+	xasprintf (&ref_name, "%s/reference/%s.%s%s%s",
 		   ctx->srcdir,
 		   test_name,
 		   target_name,
@@ -381,7 +381,7 @@ cairo_test_reference_filename (const cairo_test_context_t *ctx,
 
     if (base_target_name != NULL) {
 	/* Next look for a base/format-specific reference image. */
-	xasprintf (&ref_name, "%s/%s.%s.%s%s%s",
+	xasprintf (&ref_name, "%s/reference/%s.%s.%s%s%s",
 		   ctx->srcdir,
 		   test_name,
 		   base_target_name,
@@ -394,7 +394,7 @@ cairo_test_reference_filename (const cairo_test_context_t *ctx,
 	    goto done;
 
 	/* Next, look for base-specific reference image. */
-	xasprintf (&ref_name, "%s/%s.%s%s%s",
+	xasprintf (&ref_name, "%s/reference/%s.%s%s%s",
 		   ctx->srcdir,
 		   test_name,
 		   base_target_name,
@@ -407,7 +407,7 @@ cairo_test_reference_filename (const cairo_test_context_t *ctx,
     }
 
     /* Next, look for format-specific reference image. */
-    xasprintf (&ref_name, "%s/%s.%s%s%s",
+    xasprintf (&ref_name, "%s/reference/%s.%s%s%s",
 	       ctx->srcdir,
 	       test_name,
 	       format,
@@ -419,7 +419,7 @@ cairo_test_reference_filename (const cairo_test_context_t *ctx,
 	goto done;
 
     /* Finally, look for the standard reference image. */
-    xasprintf (&ref_name, "%s/%s%s%s", ctx->srcdir,
+    xasprintf (&ref_name, "%s/reference/%s%s%s", ctx->srcdir,
 	       test_name,
 	       suffix,
 	       extension);
