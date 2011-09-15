@@ -883,6 +883,7 @@ REFERENCE_IMAGES = \
 	reference/ft-text-vertical-layout-type1.quartz.xfail.png \
 	reference/ft-text-vertical-layout-type1.ref.png \
 	reference/ft-text-vertical-layout-type1.svg.ref.png \
+	reference/ft-text-vertical-layout-type1.xfail.png \
 	reference/ft-text-vertical-layout-type1.xlib.ref.png \
 	reference/ft-text-vertical-layout-type3.base.argb32.ref.png \
 	reference/ft-text-vertical-layout-type3.base.rgb24.ref.png \
