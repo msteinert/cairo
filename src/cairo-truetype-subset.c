@@ -1137,13 +1137,13 @@ cairo_truetype_subset_init_internal (cairo_truetype_subset_t     *truetype_subse
     }
 
     if (font->base.font_name != NULL) {
-	truetype_subset->font_name = strdup (font->base.font_name);
-	if (unlikely (truetype_subset->font_name == NULL)) {
+	truetype_subset->family_name_utf8 = strdup (font->base.font_name);
+	if (unlikely (truetype_subset->family_name_utf8 == NULL)) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto fail2;
 	}
     } else {
-	truetype_subset->font_name = NULL;
+	truetype_subset->family_name_utf8 = NULL;
     }
 
     /* The widths array returned must contain only widths for the
@@ -1201,7 +1201,7 @@ cairo_truetype_subset_init_internal (cairo_truetype_subset_t     *truetype_subse
  fail4:
     free (truetype_subset->widths);
  fail3:
-    free (truetype_subset->font_name);
+    free (truetype_subset->family_name_utf8);
  fail2:
     free (truetype_subset->ps_name);
  fail1:
@@ -1228,7 +1228,7 @@ void
 _cairo_truetype_subset_fini (cairo_truetype_subset_t *subset)
 {
     free (subset->ps_name);
-    free (subset->font_name);
+    free (subset->family_name_utf8);
     free (subset->widths);
     free (subset->data);
     free (subset->string_offsets);
@@ -1395,6 +1395,107 @@ cleanup:
     return status;
 }
 
+static cairo_status_t
+find_name (tt_name_t *name, int name_id, int platform, int encoding, int language, char **str_out)
+{
+    tt_name_record_t *record;
+    int i, len;
+    char *str;
+    char *p;
+    cairo_bool_t has_tag;
+    cairo_status_t status;
+
+    str = NULL;
+    for (i = 0; i < be16_to_cpu (name->num_records); i++) {
+        record = &(name->records[i]);
+	if (be16_to_cpu (record->name) == name_id &&
+	    be16_to_cpu (record->platform) == platform &&
+            be16_to_cpu (record->encoding) == encoding &&
+	    (language == -1 || be16_to_cpu (record->language) == language)) {
+
+	    str = malloc (be16_to_cpu (record->length) + 1);
+	    if (str == NULL)
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+	    len = be16_to_cpu (record->length);
+	    memcpy (str,
+		    ((char*)name) + be16_to_cpu (name->strings_offset) + be16_to_cpu (record->offset),
+		    len);
+	    str[be16_to_cpu (record->length)] = 0;
+	    break;
+	}
+    }
+    if (str == NULL) {
+	*str_out = NULL;
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    if (platform == 3) { /* Win platform, unicode encoding */
+	/* convert to utf8 */
+	int size = 0;
+	char *utf8;
+	uint16_t *u = (uint16_t *) str;
+	int u_len = len/2;
+
+	for (i = 0; i < u_len; i++)
+	    size += _cairo_ucs4_to_utf8 (be16_to_cpu(u[i]), NULL);
+
+	utf8 = malloc (size + 1);
+	if (utf8 == NULL) {
+	    status =_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto fail;
+	}
+	p = utf8;
+	for (i = 0; i < u_len; i++)
+	    p += _cairo_ucs4_to_utf8 (be16_to_cpu(u[i]), p);
+	*p = 0;
+	free (str);
+	str = utf8;
+    } else if (platform == 1) { /* Mac platform, Mac Roman encoding */
+	/* Replace characters above 127 with underscores. We could use
+	 * a lookup table to convert to unicode but since most fonts
+	 * include a unicode name this is just a rarely used fallback. */
+	for (i = 0; i < len; i++) {
+	    if ((unsigned char)str[i] > 127)
+		str[i] = '_';
+	}
+    }
+
+    /* If font name is prefixed with a PDF subset tag, strip it off. */
+    p = str;
+    len = strlen (str);
+    has_tag = FALSE;
+    if (len > 7 && p[6] == '+') {
+	has_tag = TRUE;
+	for (i = 0; i < 6; i++) {
+	    if (p[i] < 'A' || p[i] > 'Z') {
+		has_tag = FALSE;
+		break;
+	    }
+	}
+    }
+    if (has_tag) {
+	p = malloc (len - 6);
+	if (unlikely (p == NULL)) {
+	    status =_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto fail;
+	}
+	memcpy (p, str + 7, len - 7);
+	p[len-7] = 0;
+	free (str);
+	str = p;
+    }
+
+    *str_out = str;
+
+    return CAIRO_STATUS_SUCCESS;
+
+  fail:
+    free (str);
+
+    return status;
+}
+
 cairo_int_status_t
 _cairo_truetype_read_font_name (cairo_scaled_font_t  	 *scaled_font,
 				char 	       		**ps_name_out,
@@ -1403,11 +1504,9 @@ _cairo_truetype_read_font_name (cairo_scaled_font_t  	 *scaled_font,
     cairo_status_t status;
     const cairo_scaled_font_backend_t *backend;
     tt_name_t *name;
-    tt_name_record_t *record;
     unsigned long size;
-    int i, j;
     char *ps_name = NULL;
-    char *font_name = NULL;
+    char *family_name = NULL;
 
     backend = scaled_font->backend;
     if (!backend->load_truetype_table)
@@ -1425,76 +1524,92 @@ _cairo_truetype_read_font_name (cairo_scaled_font_t  	 *scaled_font,
     if (name == NULL)
         return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-   status = backend->load_truetype_table (scaled_font,
+    status = backend->load_truetype_table (scaled_font,
 					   TT_TAG_name, 0,
 					   (unsigned char *) name,
 					   &size);
     if (status)
 	goto fail;
 
-    /* Extract the font name and PS name from the name table. At
-     * present this just looks for the Mac platform/Roman encoded font
-     * name. It should be extended to use any suitable font name in
-     * the name table.
-     */
-    for (i = 0; i < be16_to_cpu(name->num_records); i++) {
-        record = &(name->records[i]);
-        if ((be16_to_cpu (record->platform) == 1) &&
-            (be16_to_cpu (record->encoding) == 0)) {
+    /* Find PS Name (name_id = 6). OT spec says PS name must be one of
+     * the following two encodings */
+    status = find_name (name, 6, 3, 1, 0x409, &ps_name); /* win, unicode, english-us */
+    if (unlikely(status))
+	goto fail;
 
-	    if (be16_to_cpu (record->name) == 4) {
-		font_name = malloc (be16_to_cpu(record->length) + 1);
-		if (font_name == NULL) {
-		    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-		    goto fail;
-		}
-		strncpy(font_name,
-			((char*)name) + be16_to_cpu (name->strings_offset) + be16_to_cpu (record->offset),
-			be16_to_cpu (record->length));
-		font_name[be16_to_cpu (record->length)] = 0;
-	    }
+    if (!ps_name) {
+	status = find_name (name, 6, 1, 0, 0, &ps_name); /* mac, roman, english */
+	if (unlikely(status))
+	    goto fail;
+    }
 
-	    if (be16_to_cpu (record->name) == 6) {
-		ps_name = malloc (be16_to_cpu(record->length) + 1);
-		if (ps_name == NULL) {
-		    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-		    goto fail;
-		}
-		strncpy(ps_name,
-			((char*)name) + be16_to_cpu (name->strings_offset) + be16_to_cpu (record->offset),
-			be16_to_cpu (record->length));
-		ps_name[be16_to_cpu (record->length)] = 0;
-	    }
+    /* Find Family name (name_id = 1) */
+    status = find_name (name, 1, 3, 1, 0x409, &family_name); /* win, unicode, english-us */
+    if (unlikely(status))
+	goto fail;
 
-	    if (font_name && ps_name)
-		break;
-        }
+    if (!family_name) {
+	status = find_name (name, 1, 3, 0, 0x409, &family_name); /* win, symbol, english-us */
+	if (unlikely(status))
+	    goto fail;
+    }
+
+    if (!family_name) {
+	status = find_name (name, 1, 1, 0, 0, &family_name); /* mac, roman, english */
+	if (unlikely(status))
+	    goto fail;
+    }
+
+    if (!family_name) {
+	status = find_name (name, 1, 3, 1, -1, &family_name); /* win, unicode, any language */
+	if (unlikely(status))
+	    goto fail;
     }
 
     free (name);
 
-    /* Ensure PS name does not contain any spaces */
+    /* Ensure PS name is a valid PDF/PS name object. In PDF names are
+     * treated as UTF8 and non ASCII bytes, ' ', and '#' are encoded
+     * as '#' followed by 2 hex digits that encode the byte. By also
+     * encoding the characters in the reserved string we ensure the
+     * name is also PS compatible. */
     if (ps_name) {
-	for (i = 0, j = 0; ps_name[j]; j++) {
-	    if (ps_name[j] == ' ')
-		continue;
-	    ps_name[i++] = ps_name[j];
+	static const char *reserved = "()<>[]{}/%#\\";
+	char buf[128]; /* max name length is 127 bytes */
+	char *src = ps_name;
+	char *dst = buf;
+
+	while (*src && dst < buf + 127) {
+	    unsigned char c = *src;
+	    if (c < 0x21 || c > 0x7e || strchr (reserved, c)) {
+		if (dst + 4 > buf + 127)
+		    break;
+
+		snprintf (dst, 4, "#%02X", c);
+		src++;
+		dst += 3;
+	    } else {
+		*dst++ = *src++;
+	    }
 	}
-	ps_name[i] = '\0';
+	*dst = 0;
+	free (ps_name);
+	ps_name = strdup (buf);
+	if (ps_name == NULL) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto fail;
+	}
     }
 
     *ps_name_out = ps_name;
-    *font_name_out = font_name;
+    *font_name_out = family_name;
 
     return CAIRO_STATUS_SUCCESS;
 
 fail:
     free (name);
-
     free (ps_name);
-
-    free (font_name);
-
+    free (family_name);
     *ps_name_out = NULL;
     *font_name_out = NULL;
 

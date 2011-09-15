@@ -3960,6 +3960,61 @@ _cairo_pdf_surface_write_pages (cairo_pdf_surface_t *surface)
 }
 
 static cairo_status_t
+_utf8_to_pdf_string (const char *utf8, char **str_out)
+{
+    int i;
+    int len;
+    cairo_bool_t ascii;
+    char *str;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    ascii = TRUE;
+    len = strlen (utf8);
+    for (i = 0; i < len; i++) {
+	unsigned c = utf8[i];
+	if (c < 32 || c > 126 || c == '(' || c == ')' || c == '\\') {
+	    ascii = FALSE;
+	    break;
+	}
+    }
+
+    if (ascii) {
+	str = malloc (len + 3);
+	if (str == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+	str[0] = '(';
+	for (i = 0; i < len; i++)
+	    str[i+1] = utf8[i];
+	str[i+1] = ')';
+	str[i+2] = 0;
+    } else {
+	uint16_t *utf16 = NULL;
+	int utf16_len = 0;
+
+	status = _cairo_utf8_to_utf16 (utf8, -1, &utf16, &utf16_len);
+	if (unlikely (status))
+	    return status;
+
+	str = malloc (utf16_len*4 + 7);
+	if (str == NULL) {
+	    free (utf16);
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	}
+
+	strcpy (str, "<FEFF");
+	for (i = 0; i < utf16_len; i++)
+	    snprintf (str + 4*i + 5, 5, "%04X", utf16[i]);
+
+	strcat (str, ">");
+	free (utf16);
+    }
+    *str_out = str;
+
+    return status;
+}
+
+static cairo_status_t
 _cairo_pdf_surface_emit_unicode_for_glyph (cairo_pdf_surface_t	*surface,
 					   const char 		*utf8)
 {
@@ -4243,10 +4298,17 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
 				 tag,
 				 subset->ps_name);
 
-    if (subset->font_name) {
+    if (subset->family_name_utf8) {
+	char *pdf_str;
+
+	status = _utf8_to_pdf_string (subset->family_name_utf8, &pdf_str);
+	if (unlikely (status))
+	    return status;
+
 	_cairo_output_stream_printf (surface->output,
-				     "   /FontFamily (%s)\n",
-				     subset->font_name);
+				     "   /FontFamily %s\n",
+				     pdf_str);
+	free (pdf_str);
     }
 
     _cairo_output_stream_printf (surface->output,
@@ -4681,10 +4743,17 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 tag,
 				 subset.ps_name);
 
-    if (subset.font_name) {
+    if (subset.family_name_utf8) {
+	char *pdf_str;
+
+	status = _utf8_to_pdf_string (subset.family_name_utf8, &pdf_str);
+	if (unlikely (status))
+	    return status;
+
 	_cairo_output_stream_printf (surface->output,
-				     "   /FontFamily (%s)\n",
-				     subset.font_name);
+				     "   /FontFamily %s\n",
+				     pdf_str);
+	free (pdf_str);
     }
 
     _cairo_output_stream_printf (surface->output,

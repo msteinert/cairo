@@ -2837,13 +2837,13 @@ _cairo_cff_subset_init (cairo_cff_subset_t          *cff_subset,
     }
 
     if (font->font_name) {
-	cff_subset->font_name = strdup (font->font_name);
-	if (cff_subset->font_name == NULL) {
+	cff_subset->family_name_utf8 = strdup (font->font_name);
+	if (cff_subset->family_name_utf8 == NULL) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto fail2;
 	}
     } else {
-	cff_subset->font_name = NULL;
+	cff_subset->family_name_utf8 = NULL;
     }
 
     cff_subset->widths = calloc (sizeof (double), font->scaled_font_subset->num_glyphs);
@@ -2877,7 +2877,7 @@ _cairo_cff_subset_init (cairo_cff_subset_t          *cff_subset,
  fail4:
     free (cff_subset->widths);
  fail3:
-    free (cff_subset->font_name);
+    free (cff_subset->family_name_utf8);
  fail2:
     free (cff_subset->ps_name);
  fail1:
@@ -2890,7 +2890,7 @@ void
 _cairo_cff_subset_fini (cairo_cff_subset_t *subset)
 {
     free (subset->ps_name);
-    free (subset->font_name);
+    free (subset->family_name_utf8);
     free (subset->widths);
     free (subset->data);
 }
@@ -3249,7 +3249,7 @@ _cairo_cff_fallback_init (cairo_cff_subset_t          *cff_subset,
     if (unlikely (status))
 	goto fail2;
 
-    cff_subset->font_name = NULL;
+    cff_subset->family_name_utf8 = NULL;
     cff_subset->ps_name = strdup (font->ps_name);
     if (unlikely (cff_subset->ps_name == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
