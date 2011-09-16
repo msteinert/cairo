@@ -190,6 +190,51 @@ combine_in_boxes (cairo_image_surface_t *dst,
 }
 
 static cairo_image_surface_t *
+get_clip_surface (cairo_image_surface_t	*dst,
+		  const cairo_composite_rectangles_t *extents,
+		  int *clip_x,
+		  int *clip_y)
+{
+    cairo_image_surface_t *surface;
+    cairo_int_status_t status;
+
+    surface = (cairo_image_surface_t *)
+	_cairo_surface_create_similar_solid (&dst->base,
+					     CAIRO_CONTENT_ALPHA,
+					     extents->unbounded.width,
+					     extents->unbounded.height,
+					     CAIRO_COLOR_WHITE);
+    if (unlikely (surface->base.status))
+	return surface;
+
+    if (extents->clip->boxes) {
+	status = combine_in_boxes (surface,
+				   extents->clip->boxes,
+				   extents->clip->num_boxes,
+				   &extents->unbounded);
+	if (unlikely (status))
+	    goto error;
+    }
+
+    if (extents->clip->path) {
+	status = _cairo_clip_combine_with_surface (extents->clip,
+						   &surface->base,
+						   extents->unbounded.x,
+						   extents->unbounded.y);
+	if (unlikely (status))
+	    goto error;
+    }
+
+    *clip_x = extents->unbounded.x;
+    *clip_y = extents->unbounded.y;
+    return surface;
+
+error:
+    cairo_surface_destroy (&surface->base);
+    return (cairo_image_surface_t *)_cairo_surface_create_in_error (status);
+}
+
+static cairo_image_surface_t *
 create_composite_mask (cairo_image_surface_t	*dst,
 		       void			*draw_closure,
 		       draw_func_t		 draw_func,
@@ -317,7 +362,7 @@ clip_and_composite_combine (const cairo_composite_rectangles_t*extents,
 	goto error;
 
     clip = (cairo_image_surface_t *)
-	_cairo_clip_get_surface (extents->clip, &dst->base, &clip_x, &clip_y);
+	get_clip_surface (dst, extents, &clip_x, &clip_y);
     if (unlikely (clip->base.status))
 	goto error;
 
@@ -399,15 +444,14 @@ fixup_unbounded (const cairo_composite_rectangles_t *extents)
     int mask_x, mask_y;
 
     if (! _cairo_clip_is_region (extents->clip)) {
-	cairo_surface_t *clip;
+	cairo_image_surface_t *clip;
 
-	clip = _cairo_clip_get_surface (extents->clip, &dst->base,
-					&mask_x, &mask_y);
-	if (unlikely (clip->status))
-	    return clip->status;
+	clip = get_clip_surface (dst, extents, &mask_x, &mask_y);
+	if (unlikely (clip->base.status))
+	    return clip->base.status;
 
-	mask = pixman_image_ref (((cairo_image_surface_t *)clip)->pixman_image);
-	cairo_surface_destroy (clip);
+	mask = pixman_image_ref (clip->pixman_image);
+	cairo_surface_destroy (&clip->base);
     } else {
 	mask_x = mask_y = 0;
 	mask = _pixman_image_for_color (CAIRO_COLOR_WHITE);
