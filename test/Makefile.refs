@@ -351,6 +351,7 @@ REFERENCE_IMAGES = \
 	reference/clip-fill-eo-unbounded.rgb24.ref.png \
 	reference/clip-fill-eo-unbounded.svg12.rgb24.xfail.png \
 	reference/clip-fill-eo-unbounded.traps.argb32.ref.png \
+	reference/clip-fill-eo-unbounded.traps.rgb24.ref.png \
 	reference/clip-fill-eo-unbounded.xlib-fallback.rgb24.ref.png \
 	reference/clip-fill-no-op.base.argb32.ref.png \
 	reference/clip-fill-no-op.base.rgb24.ref.png \
@@ -459,6 +460,7 @@ REFERENCE_IMAGES = \
 	reference/clip-operator.svg12.rgb24.xfail.png \
 	reference/clip-operator.test-paginated.argb32.ref.png \
 	reference/clip-operator.traps.argb32.ref.png \
+	reference/clip-operator.traps.rgb24.ref.png \
 	reference/clip-operator.xlib-fallback.ref.png \
 	reference/clip-push-group.base.argb32.ref.png \
 	reference/clip-push-group.base.rgb24.ref.png \
@@ -499,6 +501,7 @@ REFERENCE_IMAGES = \
 	reference/clip-stroke-unbounded.rgb24.ref.png \
 	reference/clip-stroke-unbounded.svg12.rgb24.xfail.png \
 	reference/clip-stroke-unbounded.traps.argb32.ref.png \
+	reference/clip-stroke-unbounded.traps.rgb24.ref.png \
 	reference/clip-stroke-unbounded.xlib-fallback.rgb24.ref.png \
 	reference/clip-stroke.base.argb32.ref.png \
 	reference/clip-stroke.base.rgb24.ref.png \
@@ -1232,6 +1235,7 @@ REFERENCE_IMAGES = \
 	reference/hatchings.base.rgb24.ref.png \
 	reference/hatchings.ref.png \
 	reference/hatchings.traps.argb32.ref.png \
+	reference/hatchings.traps.rgb24.ref.png \
 	reference/horizontal-clip.base.argb32.ref.png \
 	reference/horizontal-clip.base.rgb24.ref.png \
 	reference/horizontal-clip.ref.png \
@@ -1684,10 +1688,10 @@ REFERENCE_IMAGES = \
 	reference/operator-clear.svg12.rgb24.xfail.png \
 	reference/operator-clear.traps.argb32.ref.png \
 	reference/operator-clear.traps.rgb24.ref.png \
+	reference/operator-source.argb32.ref.png \
 	reference/operator-source.base.argb32.ref.png \
 	reference/operator-source.base.rgb24.ref.png \
 	reference/operator-source.image16.ref.png \
-	reference/operator-source.ref.png \
 	reference/operator-source.rgb24.ref.png \
 	reference/operator-source.traps.argb32.ref.png \
 	reference/operator-source.traps.rgb24.ref.png \
@@ -2695,6 +2699,7 @@ REFERENCE_IMAGES = \
 	reference/tighten-bounds.base.rgb24.ref.png \
 	reference/tighten-bounds.ref.png \
 	reference/tighten-bounds.traps.argb32.ref.png \
+	reference/tighten-bounds.traps.rgb24.ref.png \
 	reference/transforms.base.argb32.ref.png \
 	reference/transforms.base.rgb24.ref.png \
 	reference/transforms.image16.ref.png \
