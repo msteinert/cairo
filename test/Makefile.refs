@@ -1510,6 +1510,7 @@ REFERENCE_IMAGES = \
 	reference/mask-alpha.base.argb32.ref.png \
 	reference/mask-alpha.base.rgb24.ref.png \
 	reference/mask-alpha.image16.ref.png \
+	reference/mask-alpha.ps.ref.png \
 	reference/mask-alpha.quartz.argb32.ref.png \
 	reference/mask-alpha.rgb24.ref.png \
 	reference/mask-alpha.svg.rgb24.xfail.png \
