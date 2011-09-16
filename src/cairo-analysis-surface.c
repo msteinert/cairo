@@ -410,8 +410,10 @@ _cairo_analysis_surface_mask (void			*abstract_surface,
 	cairo_int_status_t backend_mask_status = CAIRO_STATUS_SUCCESS;
 
 	if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
-	    const cairo_surface_pattern_t *surface_pattern = (const cairo_surface_pattern_t *) source;
-	    if (_cairo_surface_is_recording (surface_pattern->surface)) {
+	    cairo_surface_t *src_surface = ((cairo_surface_pattern_t *)source)->surface;
+	    if (_cairo_surface_is_snapshot (src_surface))
+		src_surface = _cairo_surface_snapshot_get_target (src_surface);
+	    if (_cairo_surface_is_recording (src_surface)) {
 		backend_source_status =
 		    _analyze_recording_surface_pattern (surface, source);
 		if (_cairo_int_status_is_error (backend_source_status))
@@ -420,8 +422,10 @@ _cairo_analysis_surface_mask (void			*abstract_surface,
 	}
 
 	if (mask->type == CAIRO_PATTERN_TYPE_SURFACE) {
-	    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) mask;
-	    if (_cairo_surface_is_recording (surface_pattern->surface)) {
+	    cairo_surface_t *mask_surface = ((cairo_surface_pattern_t *)mask)->surface;
+	    if (_cairo_surface_is_snapshot (mask_surface))
+		mask_surface = _cairo_surface_snapshot_get_target (mask_surface);
+	    if (_cairo_surface_is_recording (mask_surface)) {
 		backend_mask_status =
 		    _analyze_recording_surface_pattern (surface, mask);
 		if (_cairo_int_status_is_error (backend_mask_status))
