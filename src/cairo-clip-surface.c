@@ -130,6 +130,11 @@ _cairo_clip_get_surface (const cairo_clip_t *clip,
     copy->path = copy_path;
     _cairo_clip_destroy (copy);
 
+    if (unlikely (status)) {
+	cairo_surface_destroy (surface);
+	return _cairo_surface_create_in_error (status);
+    }
+
     *tx = clip->extents.x;
     *ty = clip->extents.y;
     return surface;
