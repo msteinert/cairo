@@ -808,6 +808,9 @@ _cairo_path_buf_add_points (cairo_path_buf_t       *buf,
 			    const cairo_point_t    *points,
 			    int		            num_points)
 {
+    if (buf->num_points == 0)
+	return;
+
     memcpy (buf->points + buf->num_points,
 	    points,
 	    sizeof (points[0]) * num_points);
