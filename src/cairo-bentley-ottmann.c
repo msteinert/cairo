@@ -1434,12 +1434,18 @@ _active_edges_to_traps (cairo_bo_edge_t	*pos,
     left = pos;
     while (pos != NULL) {
 	if (pos != left && pos->deferred_trap.right) {
-	    if (edges_colinear (left, pos)) {
+	    /* XXX It shouldn't be possible to here with 2 deferred traps
+	     * on colinear edges... See bug-bo-rictoz.
+	     */
+	    if (left->deferred_trap.right == NULL &&
+		edges_colinear (left, pos))
+	    {
 		/* continuation on left */
-		assert (left->deferred_trap.right == NULL);
 		left->deferred_trap = pos->deferred_trap;
 		pos->deferred_trap.right = NULL;
-	    } else {
+	    }
+	    else
+	    {
 		status = _cairo_bo_edge_end_trap (pos, top, traps);
 		if (unlikely (status))
 		    return status;
