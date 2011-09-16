@@ -2515,8 +2515,8 @@ _composite_boxes (cairo_xcb_surface_t *dst,
 		  cairo_boxes_t *boxes,
 		  const cairo_composite_rectangles_t *extents)
 {
-    cairo_bool_t need_clip_mask = extents->clip->path != NULL;
     cairo_clip_t *clip = extents->clip;
+    cairo_bool_t need_clip_mask = ! _cairo_clip_is_region (clip);
     cairo_region_t *clip_region = _cairo_clip_get_region (clip);
     cairo_status_t status;
 
