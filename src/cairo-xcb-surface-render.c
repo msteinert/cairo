@@ -1591,6 +1591,36 @@ _composite_traps (void *closure,
 
 /* low-level composite driver */
 
+static cairo_xcb_surface_t *
+get_clip_surface (const cairo_clip_t *clip,
+		  cairo_xcb_surface_t *target,
+		  int *tx, int *ty)
+{
+    cairo_surface_t *surface;
+    cairo_status_t status;
+
+    surface = _cairo_surface_create_similar_solid (&target->base,
+						   CAIRO_CONTENT_ALPHA,
+						   clip->extents.width,
+						   clip->extents.height,
+						   CAIRO_COLOR_WHITE);
+    if (unlikely (surface->status))
+	return (cairo_xcb_surface_t *) surface;
+
+    assert (surface->backend == &_cairo_xcb_surface_backend);
+    status = _cairo_clip_combine_with_surface (clip, surface,
+					       clip->extents.x, clip->extents.y);
+    if (unlikely (status)) {
+	cairo_surface_destroy (surface);
+	surface = _cairo_surface_create_in_error (status);
+    }
+
+    *tx = clip->extents.x;
+    *ty = clip->extents.y;
+
+    return (cairo_xcb_surface_t *) surface;
+}
+
 typedef cairo_int_status_t
 (*xcb_draw_func_t) (void				*closure,
 		    cairo_xcb_surface_t			*dst,
@@ -1890,7 +1920,7 @@ _clip_and_composite_combine (cairo_clip_t		*clip,
     if (unlikely (status))
 	goto CLEANUP_SURFACE;
 
-    clip_surface = (cairo_xcb_surface_t *) _cairo_clip_get_surface (clip, &dst->base, &clip_x, &clip_y);
+    clip_surface = get_clip_surface (clip, dst, &clip_x, &clip_y);
     status = clip_surface->base.status;
     if (unlikely (status))
 	goto CLEANUP_SURFACE;
@@ -2126,7 +2156,7 @@ _cairo_xcb_surface_fixup_unbounded_with_mask (cairo_xcb_surface_t *dst,
     cairo_xcb_surface_t *mask;
     int mask_x, mask_y;
 
-    mask = (cairo_xcb_surface_t *) _cairo_clip_get_surface (clip, &dst->base, &mask_x, &mask_y);
+    mask = get_clip_surface (clip, dst, &mask_x, &mask_y);
     if (unlikely (mask->base.status))
 	return mask->base.status;
 
@@ -2380,7 +2410,7 @@ _clip_and_composite (cairo_xcb_surface_t	*dst,
 
     if (need_clip & NEED_CLIP_REGION) {
 	clip_region = _cairo_clip_get_region (extents->clip);
-	if ((need_clip & FORCE_CLIP_REGION) == 0 &&
+	if ((need_clip & FORCE_CLIP_REGION) == 0 && clip_region != NULL &&
 	    cairo_region_contains_rectangle (clip_region,
 					     &extents->unbounded) == CAIRO_REGION_OVERLAP_IN)
 	    clip_region = NULL;
@@ -2527,21 +2557,20 @@ _composite_boxes (cairo_xcb_surface_t *dst,
 	cairo_surface_pattern_t mask;
 
 	if (need_clip_mask) {
-	    cairo_surface_t *clip_surface;
+	    cairo_xcb_surface_t *clip_surface;
 	    int clip_x, clip_y;
 
-	    clip_surface = _cairo_clip_get_surface (extents->clip,
-						    &dst->base,
-						    &clip_x, &clip_y);
-	    if (unlikely (clip_surface->status))
-		return clip_surface->status;
+	    clip_surface = get_clip_surface (extents->clip, dst,
+					     &clip_x, &clip_y);
+	    if (unlikely (clip_surface->base.status))
+		return clip_surface->base.status;
 
-	    _cairo_pattern_init_for_surface (&mask, clip_surface);
+	    _cairo_pattern_init_for_surface (&mask, &clip_surface->base);
 	    mask.base.filter = CAIRO_FILTER_NEAREST;
 	    cairo_matrix_init_translate (&mask.base.matrix,
 					 -clip_x,
 					 -clip_y);
-	    cairo_surface_destroy (clip_surface);
+	    cairo_surface_destroy (&clip_surface->base);
 
 	    if (op == CAIRO_OPERATOR_CLEAR) {
 		src = NULL;
