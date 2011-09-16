@@ -903,7 +903,7 @@ write_result (const char *trace, struct slave *slave)
 }
 
 static void
-write_trace (const char *trace, struct slave *slave)
+write_trace (const char *trace, const char *id, struct slave *slave)
 {
 #if CAIRO_HAS_SCRIPT_SURFACE
     cairo_device_t *script;
@@ -911,7 +911,7 @@ write_trace (const char *trace, struct slave *slave)
 
     assert (slave->is_recording);
 
-    xasprintf (&filename, "%s-fail.trace", trace);
+    xasprintf (&filename, "%s-%s.trace", trace, id);
 
     script = cairo_script_create (filename);
     cairo_script_from_recording_surface (script, slave->image);
@@ -1012,7 +1012,7 @@ test_run (void *base,
 {
     struct pollfd *pfd;
     int npfd, cnt, n, i;
-    int completion;
+    int completion, err = 0;
     cairo_bool_t ret = FALSE;
     unsigned long image;
 
@@ -1063,8 +1063,10 @@ test_run (void *base,
 	    if (! pfd[n].revents)
 		continue;
 
-	    if (pfd[n].revents & POLLHUP)
-		goto done;
+	    if (pfd[n].revents & POLLHUP) {
+		completion++;
+		continue;
+	    }
 
 	    for (i = 0; i < num_slaves; i++) {
 		if (slaves[i].fd == pfd[n].fd) {
@@ -1091,8 +1093,11 @@ test_run (void *base,
 			    allocate_image_for_slave (base,
 						      offset = image,
 						      &slaves[i]);
-			if (! writen (pfd[n].fd, &offset, sizeof (offset)))
-			    goto done;
+			if (! writen (pfd[n].fd, &offset, sizeof (offset))) {
+			    err = 1;
+			    completion++;
+			    continue;
+			}
 		    } else {
 			readn (pfd[n].fd,
 			       &slaves[i].image_ready,
@@ -1103,8 +1108,11 @@ test_run (void *base,
 				    slaves[i].image_ready,
 				    slaves[i].image_serial);
 			}
-			if (slaves[i].image_ready != slaves[i].image_serial)
-			    goto out;
+			if (slaves[i].image_ready != slaves[i].image_serial) {
+			    err = 1;
+			    completion++;
+			    continue;
+			}
 
 			/* Can anyone spell 'P·E·D·A·N·T'? */
 			if (! slaves[i].is_recording)
@@ -1120,6 +1128,12 @@ test_run (void *base,
 	}
 
 	if (completion == num_slaves) {
+	    if (err) {
+		if (DEBUG > 1)
+		    printf ("error detected\n");
+		goto out;
+	    }
+
 	    if (DEBUG > 1) {
 		printf ("all saves report completion\n");
 	    }
@@ -1139,12 +1153,17 @@ test_run (void *base,
 		write_images (trace, slaves, num_slaves);
 
 		if (slaves[0].is_recording)
-		    write_trace (trace, &slaves[0]);
+		    write_trace (trace, "fail", &slaves[0]);
 
 		goto out;
 	    }
 
 	    if (0) write_result (trace, &slaves[1]);
+	    if (0 && slaves[0].is_recording) {
+		char buf[80];
+		snprintf (buf, sizeof (buf), "%d", slaves[0].image_serial);
+		write_trace (trace, buf, &slaves[0]);
+	    }
 
 	    /* ack */
 	    for (i = 0; i < num_slaves; i++) {
