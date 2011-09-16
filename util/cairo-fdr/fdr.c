@@ -85,6 +85,12 @@ fdr_sighandler (int sig)
 }
 
 static void
+fdr_urgent_sighandler (int sig)
+{
+    fdr_dump_ringbuffer ();
+}
+
+static void
 fdr_atexit (void)
 {
     if (fdr_dump)
@@ -100,6 +106,9 @@ fdr_pending_signals (void)
 	initialized = 1;
 
 	signal (SIGUSR1, fdr_sighandler);
+
+	signal (SIGSEGV, fdr_urgent_sighandler);
+	signal (SIGABRT, fdr_urgent_sighandler);
 	atexit (fdr_atexit);
     }
 
@@ -302,4 +311,21 @@ cairo_surface_create_similar (cairo_surface_t *surface,
 
     return DLCALL (cairo_surface_create_similar,
 		   surface, content, width, height);
+}
+
+cairo_surface_t *
+cairo_surface_create_for_rectangle (cairo_surface_t *surface,
+                                    double		 x,
+                                    double		 y,
+                                    double		 width,
+                                    double		 height)
+{
+    cairo_surface_t *tee;
+
+    tee = fdr_surface_get_tee (surface);
+    if (tee != NULL)
+	surface = tee;
+
+    return DLCALL (cairo_surface_create_for_rectangle,
+		   surface, x, y, width, height);
 }
