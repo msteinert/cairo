@@ -101,13 +101,10 @@ CAIRO_ENABLE_SURFACE_BACKEND(xlib_xrender, Xlib Xrender, auto, [
 dnl ===========================================================================
 
 CAIRO_ENABLE_SURFACE_BACKEND(xcb, XCB, auto, [
-  xcb_REQUIRES="xcb >= 1.1.92 xcb-render >= 0.9.92"
+  xcb_REQUIRES="xcb >= 1.6 xcb-render >= 1.6"
   PKG_CHECK_MODULES(xcb, $xcb_REQUIRES, ,
 		    [AC_MSG_RESULT(no)
 		    use_xcb="no (requires $xcb_REQUIRES http://xcb.freedesktop.org)"])
-  if $PKG_CONFIG --atleast-version=1.4 xcb; then
-    CAIRO_CFLAGS="$CAIRO_CFLAGS -DXCB_GENERIC_ERROR_HAS_MAJOR_MINOR_CODES"
-  fi
 ])
 
 CAIRO_ENABLE_FUNCTIONS(xlib_xcb, Xlib/XCB, no, [

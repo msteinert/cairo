@@ -52,15 +52,9 @@ _cairo_boilerplate_xcb_handle_errors (xcb_target_closure_t *xtc)
 	if (ev->response_type == CAIRO_XCB_ERROR) {
 	    xcb_generic_error_t *error = (xcb_generic_error_t *) ev;
 
-#if XCB_GENERIC_ERROR_HAS_MAJOR_MINOR_CODES
 	    fprintf (stderr,
 		     "Detected error during xcb run: %d major=%d, minor=%d\n",
 		     error->error_code, error->major_code, error->minor_code);
-#else
-	    fprintf (stderr,
-		     "Detected error during xcb run: %d\n",
-		     error->error_code);
-#endif
 	} else {
 	    fprintf (stderr,
 		     "Detected unexpected event during xcb run: %d\n",
