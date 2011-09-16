@@ -8,7 +8,6 @@ REFERENCE_IMAGES = \
 	reference/a1-bug.ref.png \
 	reference/a1-bug.traps.argb32.ref.png \
 	reference/a1-bug.traps.rgb24.ref.png \
-	reference/a1-bug.xlib.ref.png \
 	reference/a1-clip-fill-equal.base.argb32.ref.png \
 	reference/a1-clip-fill-equal.base.rgb24.ref.png \
 	reference/a1-clip-fill-equal.ref.png \
@@ -111,7 +110,6 @@ REFERENCE_IMAGES = \
 	reference/aliasing.ref.png \
 	reference/aliasing.traps.argb32.ref.png \
 	reference/aliasing.traps.rgb24.ref.png \
-	reference/aliasing.xlib.ref.png \
 	reference/alpha-similar.base.argb32.ref.png \
 	reference/alpha-similar.base.rgb24.ref.png \
 	reference/alpha-similar.gl.argb32.xfail.png \
@@ -164,7 +162,6 @@ REFERENCE_IMAGES = \
 	reference/big-line.ref.png \
 	reference/big-line.traps.argb32.ref.png \
 	reference/big-line.traps.rgb24.ref.png \
-	reference/big-line.xlib.ref.png \
 	reference/big-little-box.argb32.ref.png \
 	reference/big-little-box.base.argb32.ref.png \
 	reference/big-little-box.base.rgb24.ref.png \
@@ -212,14 +209,12 @@ REFERENCE_IMAGES = \
 	reference/bug-extents.ref.png \
 	reference/bug-extents.traps.argb32.ref.png \
 	reference/bug-extents.traps.rgb24.ref.png \
-	reference/bug-extents.xlib.ref.png \
 	reference/bug-seams.base.argb32.ref.png \
 	reference/bug-seams.base.rgb24.ref.png \
 	reference/bug-seams.ref.png \
 	reference/bug-seams.traps.argb32.ref.png \
 	reference/bug-seams.traps.rgb24.ref.png \
 	reference/bug-seams.xlib-fallback.ref.png \
-	reference/bug-seams.xlib.ref.png \
 	reference/caps-joins-alpha.base.argb32.ref.png \
 	reference/caps-joins-alpha.base.rgb24.ref.png \
 	reference/caps-joins-alpha.image16.ref.png \
@@ -227,7 +222,6 @@ REFERENCE_IMAGES = \
 	reference/caps-joins-alpha.ref.png \
 	reference/caps-joins-alpha.traps.argb32.ref.png \
 	reference/caps-joins-alpha.traps.rgb24.ref.png \
-	reference/caps-joins-alpha.xlib.ref.png \
 	reference/caps-joins-curve.base.argb32.ref.png \
 	reference/caps-joins-curve.base.rgb24.ref.png \
 	reference/caps-joins-curve.image16.ref.png \
@@ -236,7 +230,6 @@ REFERENCE_IMAGES = \
 	reference/caps-joins-curve.ref.png \
 	reference/caps-joins-curve.traps.argb32.ref.png \
 	reference/caps-joins-curve.traps.rgb24.ref.png \
-	reference/caps-joins-curve.xlib.ref.png \
 	reference/caps-joins.base.argb32.ref.png \
 	reference/caps-joins.base.rgb24.ref.png \
 	reference/caps-joins.image16.ref.png \
@@ -328,7 +321,6 @@ REFERENCE_IMAGES = \
 	reference/clip-disjoint.ref.png \
 	reference/clip-disjoint.traps.argb32.ref.png \
 	reference/clip-disjoint.traps.rgb24.ref.png \
-	reference/clip-disjoint.xlib.ref.png \
 	reference/clip-empty-group.base.argb32.ref.png \
 	reference/clip-empty-group.base.rgb24.ref.png \
 	reference/clip-empty-group.ref.png \
@@ -354,8 +346,6 @@ REFERENCE_IMAGES = \
 	reference/clip-fill-eo-unbounded.svg12.rgb24.xfail.png \
 	reference/clip-fill-eo-unbounded.traps.argb32.ref.png \
 	reference/clip-fill-eo-unbounded.xlib-fallback.rgb24.ref.png \
-	reference/clip-fill-eo-unbounded.xlib.argb32.ref.png \
-	reference/clip-fill-eo-unbounded.xlib.rgb24.ref.png \
 	reference/clip-fill-no-op.base.argb32.ref.png \
 	reference/clip-fill-no-op.base.rgb24.ref.png \
 	reference/clip-fill-no-op.image16.ref.png \
@@ -372,8 +362,6 @@ REFERENCE_IMAGES = \
 	reference/clip-fill-nz-unbounded.svg12.rgb24.xfail.png \
 	reference/clip-fill-nz-unbounded.traps.argb32.ref.png \
 	reference/clip-fill-nz-unbounded.xlib-fallback.rgb24.ref.png \
-	reference/clip-fill-nz-unbounded.xlib.argb32.ref.png \
-	reference/clip-fill-nz-unbounded.xlib.rgb24.ref.png \
 	reference/clip-fill-rule-pixel-aligned.base.argb32.ref.png \
 	reference/clip-fill-rule-pixel-aligned.base.rgb24.ref.png \
 	reference/clip-fill-rule-pixel-aligned.ref.png \
@@ -392,7 +380,6 @@ REFERENCE_IMAGES = \
 	reference/clip-fill-rule.test-paginated.rgb24.ref.png \
 	reference/clip-fill-rule.traps.argb32.ref.png \
 	reference/clip-fill-rule.traps.rgb24.ref.png \
-	reference/clip-fill-rule.xlib.rgb24.ref.png \
 	reference/clip-fill.base.argb32.ref.png \
 	reference/clip-fill.base.rgb24.ref.png \
 	reference/clip-fill.image16.ref.png \
@@ -402,7 +389,6 @@ REFERENCE_IMAGES = \
 	reference/clip-fill.traps.argb32.ref.png \
 	reference/clip-fill.traps.rgb24.ref.png \
 	reference/clip-fill.xlib-fallback.ref.png \
-	reference/clip-fill.xlib.ref.png \
 	reference/clip-group-shapes-aligned-rectangles.base.argb32.ref.png \
 	reference/clip-group-shapes-aligned-rectangles.base.rgb24.ref.png \
 	reference/clip-group-shapes-aligned-rectangles.ref.png \
@@ -415,13 +401,11 @@ REFERENCE_IMAGES = \
 	reference/clip-group-shapes-circles.ref.png \
 	reference/clip-group-shapes-circles.traps.argb32.ref.png \
 	reference/clip-group-shapes-circles.traps.rgb24.ref.png \
-	reference/clip-group-shapes-circles.xlib.ref.png \
 	reference/clip-group-shapes-unaligned-rectangles.base.argb32.ref.png \
 	reference/clip-group-shapes-unaligned-rectangles.base.rgb24.ref.png \
 	reference/clip-group-shapes-unaligned-rectangles.ref.png \
 	reference/clip-group-shapes-unaligned-rectangles.traps.argb32.ref.png \
 	reference/clip-group-shapes-unaligned-rectangles.traps.rgb24.ref.png \
-	reference/clip-group-shapes-unaligned-rectangles.xlib.ref.png \
 	reference/clip-image.base.argb32.ref.png \
 	reference/clip-image.base.rgb24.ref.png \
 	reference/clip-image.image16.ref.png \
@@ -451,7 +435,6 @@ REFERENCE_IMAGES = \
 	reference/clip-nesting.test-paginated.rgb24.ref.png \
 	reference/clip-nesting.traps.argb32.ref.png \
 	reference/clip-nesting.traps.rgb24.ref.png \
-	reference/clip-nesting.xlib.rgb24.ref.png \
 	reference/clip-operator.argb32.ref.png \
 	reference/clip-operator.base.argb32.ref.png \
 	reference/clip-operator.base.rgb24.ref.png \
@@ -471,8 +454,6 @@ REFERENCE_IMAGES = \
 	reference/clip-operator.test-paginated.argb32.ref.png \
 	reference/clip-operator.traps.argb32.ref.png \
 	reference/clip-operator.xlib-fallback.ref.png \
-	reference/clip-operator.xlib.ref.png \
-	reference/clip-operator.xlib.rgb24.ref.png \
 	reference/clip-push-group.base.argb32.ref.png \
 	reference/clip-push-group.base.rgb24.ref.png \
 	reference/clip-push-group.image16.ref.png \
@@ -483,7 +464,6 @@ REFERENCE_IMAGES = \
 	reference/clip-push-group.svg.ref.png \
 	reference/clip-push-group.traps.argb32.ref.png \
 	reference/clip-push-group.traps.rgb24.ref.png \
-	reference/clip-push-group.xlib.ref.png \
 	reference/clip-rotate-image-surface-paint.base.argb32.ref.png \
 	reference/clip-rotate-image-surface-paint.base.rgb24.ref.png \
 	reference/clip-rotate-image-surface-paint.ref.png \
@@ -498,7 +478,6 @@ REFERENCE_IMAGES = \
 	reference/clip-shape.traps.argb32.ref.png \
 	reference/clip-shape.traps.rgb24.ref.png \
 	reference/clip-shape.xlib-fallback.ref.png \
-	reference/clip-shape.xlib.ref.png \
 	reference/clip-stroke-no-op.base.argb32.ref.png \
 	reference/clip-stroke-no-op.base.rgb24.ref.png \
 	reference/clip-stroke-no-op.image16.ref.png \
@@ -515,8 +494,6 @@ REFERENCE_IMAGES = \
 	reference/clip-stroke-unbounded.svg12.rgb24.xfail.png \
 	reference/clip-stroke-unbounded.traps.argb32.ref.png \
 	reference/clip-stroke-unbounded.xlib-fallback.rgb24.ref.png \
-	reference/clip-stroke-unbounded.xlib.argb32.ref.png \
-	reference/clip-stroke-unbounded.xlib.rgb24.ref.png \
 	reference/clip-stroke.base.argb32.ref.png \
 	reference/clip-stroke.base.rgb24.ref.png \
 	reference/clip-stroke.image16.ref.png \
@@ -526,7 +503,6 @@ REFERENCE_IMAGES = \
 	reference/clip-stroke.traps.argb32.ref.png \
 	reference/clip-stroke.traps.rgb24.ref.png \
 	reference/clip-stroke.xlib-fallback.ref.png \
-	reference/clip-stroke.xlib.ref.png \
 	reference/clip-text.base.argb32.ref.png \
 	reference/clip-text.base.rgb24.ref.png \
 	reference/clip-text.image16.ref.png \
@@ -536,7 +512,6 @@ REFERENCE_IMAGES = \
 	reference/clip-text.svg.ref.png \
 	reference/clip-text.traps.argb32.ref.png \
 	reference/clip-text.traps.rgb24.ref.png \
-	reference/clip-text.xlib.ref.png \
 	reference/clip-twice-rectangle.base.argb32.ref.png \
 	reference/clip-twice-rectangle.base.rgb24.ref.png \
 	reference/clip-twice-rectangle.ref.png \
@@ -556,8 +531,6 @@ REFERENCE_IMAGES = \
 	reference/clip-twice.test-paginated.rgb24.ref.png \
 	reference/clip-twice.traps.argb32.ref.png \
 	reference/clip-twice.traps.rgb24.ref.png \
-	reference/clip-twice.xlib.ref.png \
-	reference/clip-twice.xlib.rgb24.ref.png \
 	reference/clip-unbounded.base.argb32.ref.png \
 	reference/clip-unbounded.base.rgb24.ref.png \
 	reference/clip-unbounded.pdf.argb32.xfail.png \
@@ -579,7 +552,6 @@ REFERENCE_IMAGES = \
 	reference/clipped-group.traps.argb32.ref.png \
 	reference/clipped-group.traps.rgb24.ref.png \
 	reference/clipped-group.xlib-fallback.ref.png \
-	reference/clipped-group.xlib.ref.png \
 	reference/clipped-surface.base.argb32.ref.png \
 	reference/clipped-surface.base.rgb24.ref.png \
 	reference/clipped-surface.image16.ref.png \
@@ -689,7 +661,6 @@ REFERENCE_IMAGES = \
 	reference/dash-curve.ref.png \
 	reference/dash-curve.traps.argb32.ref.png \
 	reference/dash-curve.traps.rgb24.ref.png \
-	reference/dash-curve.xlib.ref.png \
 	reference/dash-infinite-loop.base.argb32.ref.png \
 	reference/dash-infinite-loop.base.rgb24.ref.png \
 	reference/dash-infinite-loop.ps.ref.png \
@@ -748,7 +719,6 @@ REFERENCE_IMAGES = \
 	reference/degenerate-arc.ref.png \
 	reference/degenerate-arc.traps.argb32.ref.png \
 	reference/degenerate-arc.traps.rgb24.ref.png \
-	reference/degenerate-arc.xlib.ref.png \
 	reference/degenerate-arcs.base.argb32.ref.png \
 	reference/degenerate-arcs.base.rgb24.ref.png \
 	reference/degenerate-arcs.image16.ref.png \
@@ -770,7 +740,6 @@ REFERENCE_IMAGES = \
 	reference/degenerate-dash.ref.png \
 	reference/degenerate-dash.traps.argb32.ref.png \
 	reference/degenerate-dash.traps.rgb24.ref.png \
-	reference/degenerate-dash.xlib.ref.png \
 	reference/degenerate-linear-gradient.base.argb32.ref.png \
 	reference/degenerate-linear-gradient.base.rgb24.ref.png \
 	reference/degenerate-linear-gradient.ref.png \
@@ -793,7 +762,6 @@ REFERENCE_IMAGES = \
 	reference/degenerate-pen.ref.png \
 	reference/degenerate-pen.traps.argb32.ref.png \
 	reference/degenerate-pen.traps.rgb24.ref.png \
-	reference/degenerate-pen.xlib.ref.png \
 	reference/degenerate-radial-gradient.base.argb32.ref.png \
 	reference/degenerate-radial-gradient.base.rgb24.ref.png \
 	reference/degenerate-radial-gradient.ref.png \
@@ -975,7 +943,6 @@ REFERENCE_IMAGES = \
 	reference/fill-alpha-pattern.ref.png \
 	reference/fill-alpha-pattern.traps.argb32.ref.png \
 	reference/fill-alpha-pattern.traps.rgb24.ref.png \
-	reference/fill-alpha-pattern.xlib.ref.png \
 	reference/fill-alpha.base.argb32.ref.png \
 	reference/fill-alpha.base.rgb24.ref.png \
 	reference/fill-alpha.image16.ref.png \
@@ -984,7 +951,6 @@ REFERENCE_IMAGES = \
 	reference/fill-alpha.ref.png \
 	reference/fill-alpha.traps.argb32.ref.png \
 	reference/fill-alpha.traps.rgb24.ref.png \
-	reference/fill-alpha.xlib.ref.png \
 	reference/fill-and-stroke-alpha-add.base.argb32.ref.png \
 	reference/fill-and-stroke-alpha-add.base.rgb24.ref.png \
 	reference/fill-and-stroke-alpha-add.image16.ref.png \
@@ -1010,8 +976,6 @@ REFERENCE_IMAGES = \
 	reference/fill-and-stroke.rgb24.ref.png \
 	reference/fill-and-stroke.traps.argb32.ref.png \
 	reference/fill-and-stroke.traps.rgb24.ref.png \
-	reference/fill-and-stroke.xlib.argb32.ref.png \
-	reference/fill-and-stroke.xlib.rgb24.ref.png \
 	reference/fill-degenerate-sort-order.argb32.ref.png \
 	reference/fill-degenerate-sort-order.base.argb32.ref.png \
 	reference/fill-degenerate-sort-order.base.rgb24.ref.png \
@@ -1023,8 +987,6 @@ REFERENCE_IMAGES = \
 	reference/fill-degenerate-sort-order.rgb24.ref.png \
 	reference/fill-degenerate-sort-order.traps.argb32.ref.png \
 	reference/fill-degenerate-sort-order.traps.rgb24.ref.png \
-	reference/fill-degenerate-sort-order.xlib.ref.png \
-	reference/fill-degenerate-sort-order.xlib.rgb24.ref.png \
 	reference/fill-empty.argb32.ref.png \
 	reference/fill-empty.base.argb32.ref.png \
 	reference/fill-empty.base.rgb24.ref.png \
@@ -1040,7 +1002,6 @@ REFERENCE_IMAGES = \
 	reference/fill-image.ref.png \
 	reference/fill-image.traps.argb32.ref.png \
 	reference/fill-image.traps.rgb24.ref.png \
-	reference/fill-image.xlib.ref.png \
 	reference/fill-missed-stop.base.argb32.ref.png \
 	reference/fill-missed-stop.base.rgb24.ref.png \
 	reference/fill-missed-stop.pdf.argb32.ref.png \
@@ -1065,8 +1026,6 @@ REFERENCE_IMAGES = \
 	reference/fill-rule.rgb24.ref.png \
 	reference/fill-rule.traps.argb32.ref.png \
 	reference/fill-rule.traps.rgb24.ref.png \
-	reference/fill-rule.xlib.ref.png \
-	reference/fill-rule.xlib.rgb24.ref.png \
 	reference/filter-bilinear-extents.base.argb32.ref.png \
 	reference/filter-bilinear-extents.base.rgb24.ref.png \
 	reference/filter-bilinear-extents.image16.ref.png \
@@ -1116,8 +1075,6 @@ REFERENCE_IMAGES = \
 	reference/finer-grained-fallbacks.traps.argb32.ref.png \
 	reference/finer-grained-fallbacks.traps.rgb24.ref.png \
 	reference/finer-grained-fallbacks.xlib-fallback.ref.png \
-	reference/finer-grained-fallbacks.xlib.ref.png \
-	reference/finer-grained-fallbacks.xlib.rgb24.ref.png \
 	reference/font-matrix-translation.base.argb32.ref.png \
 	reference/font-matrix-translation.base.rgb24.ref.png \
 	reference/font-matrix-translation.image16.ref.png \
@@ -1168,7 +1125,6 @@ REFERENCE_IMAGES = \
 	reference/ft-text-vertical-layout-type1.traps.argb32.ref.png \
 	reference/ft-text-vertical-layout-type1.traps.rgb24.ref.png \
 	reference/ft-text-vertical-layout-type1.xfail.png \
-	reference/ft-text-vertical-layout-type1.xlib.ref.png \
 	reference/ft-text-vertical-layout-type3.base.argb32.ref.png \
 	reference/ft-text-vertical-layout-type3.base.rgb24.ref.png \
 	reference/ft-text-vertical-layout-type3.image16.ref.png \
@@ -1179,7 +1135,6 @@ REFERENCE_IMAGES = \
 	reference/ft-text-vertical-layout-type3.svg.ref.png \
 	reference/ft-text-vertical-layout-type3.traps.argb32.ref.png \
 	reference/ft-text-vertical-layout-type3.traps.rgb24.ref.png \
-	reference/ft-text-vertical-layout-type3.xlib.ref.png \
 	reference/get-group-target.base.argb32.ref.png \
 	reference/get-group-target.base.rgb24.ref.png \
 	reference/get-group-target.ref.png \
@@ -1251,7 +1206,6 @@ REFERENCE_IMAGES = \
 	reference/group-unaligned.traps.argb32.ref.png \
 	reference/group-unaligned.traps.rgb24.ref.png \
 	reference/group-unaligned.xlib-fallback.ref.png \
-	reference/group-unaligned.xlib.ref.png \
 	reference/halo-transform.base.argb32.ref.png \
 	reference/halo-transform.base.rgb24.ref.png \
 	reference/halo-transform.image16.ref.png \
@@ -1260,7 +1214,6 @@ REFERENCE_IMAGES = \
 	reference/halo-transform.ref.png \
 	reference/halo-transform.traps.argb32.ref.png \
 	reference/halo-transform.traps.rgb24.ref.png \
-	reference/halo-transform.xlib.ref.png \
 	reference/halo.base.argb32.ref.png \
 	reference/halo.base.rgb24.ref.png \
 	reference/halo.image16.ref.png \
@@ -1269,12 +1222,10 @@ REFERENCE_IMAGES = \
 	reference/halo.ref.png \
 	reference/halo.traps.argb32.ref.png \
 	reference/halo.traps.rgb24.ref.png \
-	reference/halo.xlib.ref.png \
 	reference/hatchings.base.argb32.ref.png \
 	reference/hatchings.base.rgb24.ref.png \
 	reference/hatchings.ref.png \
 	reference/hatchings.traps.argb32.ref.png \
-	reference/hatchings.xlib.ref.png \
 	reference/horizontal-clip.base.argb32.ref.png \
 	reference/horizontal-clip.base.rgb24.ref.png \
 	reference/horizontal-clip.ref.png \
@@ -1309,7 +1260,6 @@ REFERENCE_IMAGES = \
 	reference/image-bug-710072-unaligned.ref.png \
 	reference/image-bug-710072-unaligned.traps.argb32.ref.png \
 	reference/image-bug-710072-unaligned.traps.rgb24.ref.png \
-	reference/image-bug-710072-unaligned.xlib.ref.png \
 	reference/image-surface-source.argb32.ref.png \
 	reference/image-surface-source.base.argb32.ref.png \
 	reference/image-surface-source.base.rgb24.ref.png \
@@ -1392,7 +1342,6 @@ REFERENCE_IMAGES = \
 	reference/large-twin-antialias-mixed.ref.png \
 	reference/large-twin-antialias-mixed.traps.argb32.ref.png \
 	reference/large-twin-antialias-mixed.traps.rgb24.ref.png \
-	reference/large-twin-antialias-mixed.xlib.ref.png \
 	reference/leaky-dash.base.argb32.ref.png \
 	reference/leaky-dash.base.rgb24.ref.png \
 	reference/leaky-dash.ps2.argb32.ref.png \
@@ -1412,7 +1361,6 @@ REFERENCE_IMAGES = \
 	reference/leaky-dashed-rectangle.ref.png \
 	reference/leaky-dashed-rectangle.traps.argb32.ref.png \
 	reference/leaky-dashed-rectangle.traps.rgb24.ref.png \
-	reference/leaky-dashed-rectangle.xlib.ref.png \
 	reference/leaky-dashed-stroke.base.argb32.ref.png \
 	reference/leaky-dashed-stroke.base.rgb24.ref.png \
 	reference/leaky-dashed-stroke.image16.ref.png \
@@ -1421,7 +1369,6 @@ REFERENCE_IMAGES = \
 	reference/leaky-dashed-stroke.ref.png \
 	reference/leaky-dashed-stroke.traps.argb32.ref.png \
 	reference/leaky-dashed-stroke.traps.rgb24.ref.png \
-	reference/leaky-dashed-stroke.xlib.ref.png \
 	reference/leaky-polygon.base.argb32.ref.png \
 	reference/leaky-polygon.base.rgb24.ref.png \
 	reference/leaky-polygon.image16.ref.png \
@@ -1512,7 +1459,6 @@ REFERENCE_IMAGES = \
 	reference/linear-gradient-subset.ref.png \
 	reference/linear-gradient-subset.traps.argb32.ref.png \
 	reference/linear-gradient-subset.traps.rgb24.ref.png \
-	reference/linear-gradient-subset.xlib.ref.png \
 	reference/linear-gradient.base.argb32.ref.png \
 	reference/linear-gradient.base.rgb24.ref.png \
 	reference/linear-gradient.image16.ref.png \
@@ -1521,7 +1467,6 @@ REFERENCE_IMAGES = \
 	reference/linear-gradient.ref.png \
 	reference/linear-gradient.traps.argb32.ref.png \
 	reference/linear-gradient.traps.rgb24.ref.png \
-	reference/linear-gradient.xlib.ref.png \
 	reference/linear-step-function.base.argb32.ref.png \
 	reference/linear-step-function.base.rgb24.ref.png \
 	reference/linear-step-function.traps.argb32.ref.png \
@@ -1570,8 +1515,6 @@ REFERENCE_IMAGES = \
 	reference/mask-alpha.svg.rgb24.xfail.png \
 	reference/mask-alpha.traps.argb32.ref.png \
 	reference/mask-alpha.traps.rgb24.ref.png \
-	reference/mask-alpha.xlib.ref.png \
-	reference/mask-alpha.xlib.rgb24.ref.png \
 	reference/mask-ctm.base.argb32.ref.png \
 	reference/mask-ctm.base.rgb24.ref.png \
 	reference/mask-ctm.ref.png \
@@ -1619,8 +1562,6 @@ REFERENCE_IMAGES = \
 	reference/mask.svg.rgb24.xfail.png \
 	reference/mask.traps.argb32.ref.png \
 	reference/mask.traps.rgb24.ref.png \
-	reference/mask.xlib.ref.png \
-	reference/mask.xlib.rgb24.ref.png \
 	reference/mesh-pattern-accuracy.base.argb32.ref.png \
 	reference/mesh-pattern-accuracy.base.rgb24.ref.png \
 	reference/mesh-pattern-accuracy.image16.ref.png \
@@ -1736,8 +1677,6 @@ REFERENCE_IMAGES = \
 	reference/operator-clear.svg12.rgb24.xfail.png \
 	reference/operator-clear.traps.argb32.ref.png \
 	reference/operator-clear.traps.rgb24.ref.png \
-	reference/operator-clear.xlib.argb32.ref.png \
-	reference/operator-clear.xlib.rgb24.ref.png \
 	reference/operator-source.base.argb32.ref.png \
 	reference/operator-source.base.rgb24.ref.png \
 	reference/operator-source.image16.ref.png \
@@ -1746,8 +1685,6 @@ REFERENCE_IMAGES = \
 	reference/operator-source.traps.argb32.ref.png \
 	reference/operator-source.traps.rgb24.ref.png \
 	reference/operator-source.xlib-fallback.ref.png \
-	reference/operator-source.xlib.ref.png \
-	reference/operator-source.xlib.rgb24.ref.png \
 	reference/operator.base.argb32.ref.png \
 	reference/operator.base.rgb24.ref.png \
 	reference/operator.ref.png \
@@ -1767,8 +1704,6 @@ REFERENCE_IMAGES = \
 	reference/over-above-source.svg12.rgb24.xfail.png \
 	reference/over-above-source.traps.argb32.ref.png \
 	reference/over-above-source.traps.rgb24.ref.png \
-	reference/over-above-source.xlib.ref.png \
-	reference/over-above-source.xlib.rgb24.ref.png \
 	reference/over-around-source.base.argb32.ref.png \
 	reference/over-around-source.base.rgb24.ref.png \
 	reference/over-around-source.image16.ref.png \
@@ -1784,8 +1719,6 @@ REFERENCE_IMAGES = \
 	reference/over-around-source.svg12.rgb24.xfail.png \
 	reference/over-around-source.traps.argb32.ref.png \
 	reference/over-around-source.traps.rgb24.ref.png \
-	reference/over-around-source.xlib.ref.png \
-	reference/over-around-source.xlib.rgb24.ref.png \
 	reference/over-below-source.base.argb32.ref.png \
 	reference/over-below-source.base.rgb24.ref.png \
 	reference/over-below-source.pdf.argb32.ref.png \
@@ -1810,8 +1743,6 @@ REFERENCE_IMAGES = \
 	reference/over-between-source.svg12.rgb24.xfail.png \
 	reference/over-between-source.traps.argb32.ref.png \
 	reference/over-between-source.traps.rgb24.ref.png \
-	reference/over-between-source.xlib.ref.png \
-	reference/over-between-source.xlib.rgb24.ref.png \
 	reference/overlapping-boxes.argb32.ref.png \
 	reference/overlapping-boxes.base.argb32.ref.png \
 	reference/overlapping-boxes.base.rgb24.ref.png \
@@ -1867,7 +1798,6 @@ REFERENCE_IMAGES = \
 	reference/paint-with-alpha-clip.ref.png \
 	reference/paint-with-alpha-clip.traps.argb32.ref.png \
 	reference/paint-with-alpha-clip.traps.rgb24.ref.png \
-	reference/paint-with-alpha-clip.xlib.ref.png \
 	reference/paint-with-alpha-solid-clip.base.argb32.ref.png \
 	reference/paint-with-alpha-solid-clip.base.rgb24.ref.png \
 	reference/paint-with-alpha-solid-clip.ref.png \
@@ -1944,7 +1874,6 @@ REFERENCE_IMAGES = \
 	reference/path-append.traps.argb32.ref.png \
 	reference/path-append.traps.rgb24.ref.png \
 	reference/path-append.xlib-fallback.ref.png \
-	reference/path-append.xlib.ref.png \
 	reference/path-stroke-twice.base.argb32.ref.png \
 	reference/path-stroke-twice.base.rgb24.ref.png \
 	reference/path-stroke-twice.image16.ref.png \
@@ -2014,7 +1943,6 @@ REFERENCE_IMAGES = \
 	reference/push-group-color.ref.png \
 	reference/push-group-color.traps.argb32.ref.png \
 	reference/push-group-color.traps.rgb24.ref.png \
-	reference/push-group-color.xlib.ref.png \
 	reference/push-group-path-offset.base.argb32.ref.png \
 	reference/push-group-path-offset.base.rgb24.ref.png \
 	reference/push-group-path-offset.ref.png \
@@ -2029,8 +1957,6 @@ REFERENCE_IMAGES = \
 	reference/push-group.rgb24.ref.png \
 	reference/push-group.traps.argb32.ref.png \
 	reference/push-group.traps.rgb24.ref.png \
-	reference/push-group.xlib.ref.png \
-	reference/push-group.xlib.rgb24.ref.png \
 	reference/quartz-surface-source.argb32.ref.png \
 	reference/quartz-surface-source.ps2.ref.png \
 	reference/quartz-surface-source.ps3.ref.png \
@@ -2049,8 +1975,6 @@ REFERENCE_IMAGES = \
 	reference/radial-gradient-mask-source.quartz.rgb24.ref.png \
 	reference/radial-gradient-mask-source.traps.argb32.ref.png \
 	reference/radial-gradient-mask-source.traps.rgb24.ref.png \
-	reference/radial-gradient-mask-source.xlib.argb32.ref.png \
-	reference/radial-gradient-mask-source.xlib.rgb24.ref.png \
 	reference/radial-gradient-mask.base.argb32.ref.png \
 	reference/radial-gradient-mask.base.rgb24.ref.png \
 	reference/radial-gradient-mask.image16.ref.png \
@@ -2095,7 +2019,6 @@ REFERENCE_IMAGES = \
 	reference/random-intersections-curves-eo.traps.argb32.ref.png \
 	reference/random-intersections-curves-eo.traps.rgb24.ref.png \
 	reference/random-intersections-curves-eo.xlib-fallback.ref.png \
-	reference/random-intersections-curves-eo.xlib.ref.png \
 	reference/random-intersections-curves-nz.base.argb32.ref.png \
 	reference/random-intersections-curves-nz.base.rgb24.ref.png \
 	reference/random-intersections-curves-nz.image16.ref.png \
@@ -2106,7 +2029,6 @@ REFERENCE_IMAGES = \
 	reference/random-intersections-curves-nz.traps.argb32.ref.png \
 	reference/random-intersections-curves-nz.traps.rgb24.ref.png \
 	reference/random-intersections-curves-nz.xlib-fallback.ref.png \
-	reference/random-intersections-curves-nz.xlib.ref.png \
 	reference/random-intersections-eo.base.argb32.ref.png \
 	reference/random-intersections-eo.base.rgb24.ref.png \
 	reference/random-intersections-eo.image16.ref.png \
@@ -2115,7 +2037,6 @@ REFERENCE_IMAGES = \
 	reference/random-intersections-eo.ref.png \
 	reference/random-intersections-eo.traps.argb32.ref.png \
 	reference/random-intersections-eo.traps.rgb24.ref.png \
-	reference/random-intersections-eo.xlib.ref.png \
 	reference/random-intersections-nonzero.base.argb32.ref.png \
 	reference/random-intersections-nonzero.base.rgb24.ref.png \
 	reference/random-intersections-nonzero.image16.ref.png \
@@ -2124,7 +2045,6 @@ REFERENCE_IMAGES = \
 	reference/random-intersections-nonzero.ref.png \
 	reference/random-intersections-nonzero.traps.argb32.ref.png \
 	reference/random-intersections-nonzero.traps.rgb24.ref.png \
-	reference/random-intersections-nonzero.xlib.ref.png \
 	reference/record-extend-none-similar.ref.png \
 	reference/record-extend-none-similar.traps.argb32.ref.png \
 	reference/record-extend-none-similar.traps.rgb24.ref.png \
@@ -2213,8 +2133,6 @@ REFERENCE_IMAGES = \
 	reference/recording-surface-over.svg.rgb24.ref.png \
 	reference/recording-surface-over.traps.argb32.ref.png \
 	reference/recording-surface-over.traps.rgb24.ref.png \
-	reference/recording-surface-over.xlib.argb32.ref.png \
-	reference/recording-surface-over.xlib.rgb24.ref.png \
 	reference/recording-surface-source.argb32.ref.png \
 	reference/recording-surface-source.base.argb32.ref.png \
 	reference/recording-surface-source.base.rgb24.ref.png \
@@ -2299,7 +2217,6 @@ REFERENCE_IMAGES = \
 	reference/rotated-clip.ref.png \
 	reference/rotated-clip.traps.argb32.ref.png \
 	reference/rotated-clip.traps.rgb24.ref.png \
-	reference/rotated-clip.xlib.ref.png \
 	reference/rounded-rectangle-fill.base.argb32.ref.png \
 	reference/rounded-rectangle-fill.base.rgb24.ref.png \
 	reference/rounded-rectangle-fill.image16.ref.png \
@@ -2308,7 +2225,6 @@ REFERENCE_IMAGES = \
 	reference/rounded-rectangle-fill.ref.png \
 	reference/rounded-rectangle-fill.traps.argb32.ref.png \
 	reference/rounded-rectangle-fill.traps.rgb24.ref.png \
-	reference/rounded-rectangle-fill.xlib.ref.png \
 	reference/rounded-rectangle-stroke.base.argb32.ref.png \
 	reference/rounded-rectangle-stroke.base.rgb24.ref.png \
 	reference/rounded-rectangle-stroke.image16.ref.png \
@@ -2316,7 +2232,6 @@ REFERENCE_IMAGES = \
 	reference/rounded-rectangle-stroke.ref.png \
 	reference/rounded-rectangle-stroke.traps.argb32.ref.png \
 	reference/rounded-rectangle-stroke.traps.rgb24.ref.png \
-	reference/rounded-rectangle-stroke.xlib.ref.png \
 	reference/scale-down-source-surface-paint.base.argb32.ref.png \
 	reference/scale-down-source-surface-paint.base.rgb24.ref.png \
 	reference/scale-down-source-surface-paint.ref.png \
@@ -2336,7 +2251,6 @@ REFERENCE_IMAGES = \
 	reference/scale-offset-image.traps.rgb24.ref.png \
 	reference/scale-offset-image.xfail.png \
 	reference/scale-offset-image.xlib-fallback.xfail.png \
-	reference/scale-offset-image.xlib.ref.png \
 	reference/scale-offset-similar.base.argb32.ref.png \
 	reference/scale-offset-similar.base.rgb24.ref.png \
 	reference/scale-offset-similar.gl.ref.png \
@@ -2390,7 +2304,6 @@ REFERENCE_IMAGES = \
 	reference/self-intersecting.ref.png \
 	reference/self-intersecting.traps.argb32.ref.png \
 	reference/self-intersecting.traps.rgb24.ref.png \
-	reference/self-intersecting.xlib.ref.png \
 	reference/set-source.base.argb32.ref.png \
 	reference/set-source.base.rgb24.ref.png \
 	reference/set-source.ref.png \
@@ -2445,7 +2358,6 @@ REFERENCE_IMAGES = \
 	reference/smask-fill.svg.ref.png \
 	reference/smask-fill.traps.argb32.ref.png \
 	reference/smask-fill.traps.rgb24.ref.png \
-	reference/smask-fill.xlib.ref.png \
 	reference/smask-image-mask.base.argb32.ref.png \
 	reference/smask-image-mask.base.rgb24.ref.png \
 	reference/smask-image-mask.ref.png \
@@ -2477,7 +2389,6 @@ REFERENCE_IMAGES = \
 	reference/smask-stroke.ref.png \
 	reference/smask-stroke.traps.argb32.ref.png \
 	reference/smask-stroke.traps.rgb24.ref.png \
-	reference/smask-stroke.xlib.ref.png \
 	reference/smask-text.base.argb32.ref.png \
 	reference/smask-text.base.rgb24.ref.png \
 	reference/smask-text.image16.ref.png \
@@ -2491,7 +2402,6 @@ REFERENCE_IMAGES = \
 	reference/smask-text.traps.argb32.ref.png \
 	reference/smask-text.traps.rgb24.ref.png \
 	reference/smask-text.xlib-fallback.ref.png \
-	reference/smask-text.xlib.ref.png \
 	reference/smask.base.argb32.ref.png \
 	reference/smask.base.rgb24.ref.png \
 	reference/smask.image16.ref.png \
@@ -2504,7 +2414,6 @@ REFERENCE_IMAGES = \
 	reference/smask.traps.argb32.ref.png \
 	reference/smask.traps.rgb24.ref.png \
 	reference/smask.xlib-fallback.ref.png \
-	reference/smask.xlib.ref.png \
 	reference/solid-pattern-cache-stress.base.argb32.ref.png \
 	reference/solid-pattern-cache-stress.base.rgb24.ref.png \
 	reference/solid-pattern-cache-stress.ref.png \
@@ -2544,7 +2453,6 @@ REFERENCE_IMAGES = \
 	reference/spline-decomposition.svg.ref.png \
 	reference/spline-decomposition.traps.argb32.ref.png \
 	reference/spline-decomposition.traps.rgb24.ref.png \
-	reference/spline-decomposition.xlib.ref.png \
 	reference/stroke-ctm-caps.base.argb32.ref.png \
 	reference/stroke-ctm-caps.base.rgb24.ref.png \
 	reference/stroke-ctm-caps.image16.ref.png \
@@ -2563,7 +2471,6 @@ REFERENCE_IMAGES = \
 	reference/stroke-image.ref.png \
 	reference/stroke-image.traps.argb32.ref.png \
 	reference/stroke-image.traps.rgb24.ref.png \
-	reference/stroke-image.xlib.ref.png \
 	reference/stroke-open-box.base.argb32.ref.png \
 	reference/stroke-open-box.base.rgb24.ref.png \
 	reference/stroke-open-box.ref.png \
@@ -2617,7 +2524,6 @@ REFERENCE_IMAGES = \
 	reference/subsurface.ref.png \
 	reference/subsurface.traps.argb32.ref.png \
 	reference/subsurface.traps.rgb24.ref.png \
-	reference/subsurface.xlib.ref.png \
 	reference/surface-pattern-big-scale-down.base.argb32.ref.png \
 	reference/surface-pattern-big-scale-down.base.rgb24.ref.png \
 	reference/surface-pattern-big-scale-down.ps.ref.png \
@@ -2636,8 +2542,6 @@ REFERENCE_IMAGES = \
 	reference/surface-pattern-operator.rgb24.ref.png \
 	reference/surface-pattern-operator.traps.argb32.ref.png \
 	reference/surface-pattern-operator.traps.rgb24.ref.png \
-	reference/surface-pattern-operator.xlib.argb32.ref.png \
-	reference/surface-pattern-operator.xlib.rgb24.ref.png \
 	reference/surface-pattern-scale-down-extend-none.base.argb32.ref.png \
 	reference/surface-pattern-scale-down-extend-none.base.rgb24.ref.png \
 	reference/surface-pattern-scale-down-extend-none.quartz.ref.png \
@@ -2756,7 +2660,6 @@ REFERENCE_IMAGES = \
 	reference/text-rotate.traps.argb32.ref.png \
 	reference/text-rotate.traps.rgb24.ref.png \
 	reference/text-rotate.xlib-fallback.ref.png \
-	reference/text-rotate.xlib.ref.png \
 	reference/text-transform.base.argb32.ref.png \
 	reference/text-transform.base.rgb24.ref.png \
 	reference/text-transform.image16.ref.png \
@@ -2804,35 +2707,29 @@ REFERENCE_IMAGES = \
 	reference/trap-clip.test-paginated.argb32.ref.png \
 	reference/trap-clip.traps.argb32.ref.png \
 	reference/trap-clip.traps.rgb24.ref.png \
-	reference/trap-clip.xlib.ref.png \
-	reference/trap-clip.xlib.rgb24.ref.png \
 	reference/twin-antialias-gray.base.argb32.ref.png \
 	reference/twin-antialias-gray.base.rgb24.ref.png \
 	reference/twin-antialias-gray.image16.ref.png \
 	reference/twin-antialias-gray.ref.png \
 	reference/twin-antialias-gray.traps.argb32.ref.png \
 	reference/twin-antialias-gray.traps.rgb24.ref.png \
-	reference/twin-antialias-gray.xlib.ref.png \
 	reference/twin-antialias-mixed.base.argb32.ref.png \
 	reference/twin-antialias-mixed.base.rgb24.ref.png \
 	reference/twin-antialias-mixed.image16.ref.png \
 	reference/twin-antialias-mixed.ref.png \
 	reference/twin-antialias-mixed.traps.argb32.ref.png \
 	reference/twin-antialias-mixed.traps.rgb24.ref.png \
-	reference/twin-antialias-mixed.xlib.ref.png \
 	reference/twin-antialias-none.base.argb32.ref.png \
 	reference/twin-antialias-none.base.rgb24.ref.png \
 	reference/twin-antialias-none.ref.png \
 	reference/twin-antialias-none.traps.argb32.ref.png \
 	reference/twin-antialias-none.traps.rgb24.ref.png \
-	reference/twin-antialias-none.xlib.ref.png \
 	reference/twin-antialias-subpixel.base.argb32.ref.png \
 	reference/twin-antialias-subpixel.base.rgb24.ref.png \
 	reference/twin-antialias-subpixel.image16.ref.png \
 	reference/twin-antialias-subpixel.ref.png \
 	reference/twin-antialias-subpixel.traps.argb32.ref.png \
 	reference/twin-antialias-subpixel.traps.rgb24.ref.png \
-	reference/twin-antialias-subpixel.xlib.ref.png \
 	reference/twin.base.argb32.ref.png \
 	reference/twin.base.rgb24.ref.png \
 	reference/twin.image16.ref.png \
@@ -2841,7 +2738,6 @@ REFERENCE_IMAGES = \
 	reference/twin.svg.ref.png \
 	reference/twin.traps.argb32.ref.png \
 	reference/twin.traps.rgb24.ref.png \
-	reference/twin.xlib.ref.png \
 	reference/unaligned-box.base.argb32.ref.png \
 	reference/unaligned-box.base.rgb24.ref.png \
 	reference/unaligned-box.ref.png \
@@ -2869,7 +2765,6 @@ REFERENCE_IMAGES = \
 	reference/unbounded-operator.svg12.rgb24.xfail.png \
 	reference/unbounded-operator.traps.argb32.ref.png \
 	reference/unbounded-operator.traps.rgb24.ref.png \
-	reference/unbounded-operator.xlib.rgb24.ref.png \
 	reference/unclosed-strokes.base.argb32.ref.png \
 	reference/unclosed-strokes.base.rgb24.ref.png \
 	reference/unclosed-strokes.ref.png \
@@ -2897,7 +2792,6 @@ REFERENCE_IMAGES = \
 	reference/user-font-proxy.svg.ref.png \
 	reference/user-font-proxy.traps.argb32.ref.png \
 	reference/user-font-proxy.traps.rgb24.ref.png \
-	reference/user-font-proxy.xlib.ref.png \
 	reference/user-font-rescale.base.argb32.ref.png \
 	reference/user-font-rescale.base.rgb24.ref.png \
 	reference/user-font-rescale.image16.ref.png \
@@ -2917,7 +2811,6 @@ REFERENCE_IMAGES = \
 	reference/user-font.svg.ref.png \
 	reference/user-font.traps.argb32.ref.png \
 	reference/user-font.traps.rgb24.ref.png \
-	reference/user-font.xlib.ref.png \
 	reference/white-in-noop.base.argb32.ref.png \
 	reference/white-in-noop.base.rgb24.ref.png \
 	reference/white-in-noop.ref.png \
