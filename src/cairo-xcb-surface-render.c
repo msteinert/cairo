@@ -2517,7 +2517,6 @@ _composite_boxes (cairo_xcb_surface_t *dst,
 {
     cairo_clip_t *clip = extents->clip;
     cairo_bool_t need_clip_mask = ! _cairo_clip_is_region (clip);
-    cairo_region_t *clip_region = _cairo_clip_get_region (clip);
     cairo_status_t status;
 
     /* If the boxes are not pixel-aligned, we will need to compute a real mask */
@@ -2529,11 +2528,6 @@ _composite_boxes (cairo_xcb_surface_t *dst,
     {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
-
-    if (clip_region != NULL &&
-	cairo_region_contains_rectangle (clip_region,
-					 &extents->bounded) == CAIRO_REGION_OVERLAP_IN)
-	clip_region = NULL;
 
     status = _cairo_xcb_connection_acquire (dst->connection);
     if (unlikely (status))
