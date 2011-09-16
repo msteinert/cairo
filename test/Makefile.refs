@@ -2357,6 +2357,7 @@ REFERENCE_IMAGES = \
 	reference/smask-fill.base.argb32.ref.png \
 	reference/smask-fill.base.rgb24.ref.png \
 	reference/smask-fill.image16.ref.png \
+	reference/smask-fill.pdf.ref.png \
 	reference/smask-fill.quartz.ref.png \
 	reference/smask-fill.ref.png \
 	reference/smask-fill.svg.ref.png \
@@ -2364,13 +2365,14 @@ REFERENCE_IMAGES = \
 	reference/smask-fill.traps.rgb24.ref.png \
 	reference/smask-image-mask.base.argb32.ref.png \
 	reference/smask-image-mask.base.rgb24.ref.png \
+	reference/smask-image-mask.pdf.ref.png \
 	reference/smask-image-mask.ref.png \
 	reference/smask-image-mask.traps.argb32.ref.png \
 	reference/smask-image-mask.traps.rgb24.ref.png \
 	reference/smask-mask.base.argb32.ref.png \
 	reference/smask-mask.base.rgb24.ref.png \
 	reference/smask-mask.image16.ref.png \
-	reference/smask-mask.pdf.xfail.png \
+	reference/smask-mask.pdf.ref.png \
 	reference/smask-mask.quartz.ref.png \
 	reference/smask-mask.ref.png \
 	reference/smask-mask.svg.ref.png \
@@ -2379,7 +2381,7 @@ REFERENCE_IMAGES = \
 	reference/smask-paint.base.argb32.ref.png \
 	reference/smask-paint.base.rgb24.ref.png \
 	reference/smask-paint.image16.ref.png \
-	reference/smask-paint.pdf.xfail.png \
+	reference/smask-paint.pdf.ref.png \
 	reference/smask-paint.quartz.ref.png \
 	reference/smask-paint.ref.png \
 	reference/smask-paint.svg.ref.png \
