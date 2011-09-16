@@ -642,8 +642,13 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
     if (extend == CAIRO_EXTEND_NONE)
 	limit = *extents;
 
-    clone = cairo_image_surface_create (is_mask ? CAIRO_FORMAT_A8 : dst->format,
-					limit.width, limit.height);
+    if (dst->base.content == source->content)
+	clone = cairo_image_surface_create (dst->format,
+					    limit.width, limit.height);
+    else
+	clone = _cairo_image_surface_create_with_content (source->content,
+							  limit.width,
+							  limit.height);
     cairo_surface_set_device_offset (clone, limit.x, limit.y);
 
     m = NULL;
