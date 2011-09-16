@@ -323,7 +323,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	"test-mask", "mask", NULL, NULL,
 	CAIRO_SURFACE_TYPE_IMAGE,
 	CAIRO_CONTENT_COLOR_ALPHA, 0,
-	"_cairo_test_traps_compositor_surface_create",
+	"_cairo_test_mask_compositor_surface_create",
 	_cairo_boilerplate_test_mask_compositor_create_surface,
 	cairo_surface_create_similar,
 	NULL, NULL,

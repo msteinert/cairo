@@ -568,7 +568,7 @@ static const cairo_boilerplate_target_t targets[] = {
     /* Acceleration architectures may make the results differ by a
      * bit, so we set the error tolerance to 1. */
     {
-	"xlib", "xlib", NULL, "xlib-fallback",
+	"xlib", "traps", NULL, "xlib-fallback",
 	CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR_ALPHA, 1,
 	"cairo_xlib_surface_create_with_xrender_format",
 	_cairo_boilerplate_xlib_create_surface,
@@ -582,7 +582,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	TRUE, FALSE, FALSE
     },
     {
-	"xlib", "xlib", NULL, "xlib-fallback",
+	"xlib", "traps", NULL, "xlib-fallback",
 	CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR, 1,
 	"cairo_xlib_surface_create_with_xrender_format",
 	_cairo_boilerplate_xlib_create_surface,
@@ -596,7 +596,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	FALSE, FALSE, FALSE
     },
     {
-	"xlib-window", "xlib", NULL, NULL,
+	"xlib-window", "traps", NULL, NULL,
 	CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR, 1,
 	"cairo_xlib_surface_create",
 	_cairo_boilerplate_xlib_window_create_surface,
