@@ -53,12 +53,14 @@ _cairo_boilerplate_xcb_handle_errors (xcb_target_closure_t *xtc)
 	    xcb_generic_error_t *error = (xcb_generic_error_t *) ev;
 
 	    fprintf (stderr,
-		     "Detected error during xcb run: %d major=%d, minor=%d\n",
-		     error->error_code, error->major_code, error->minor_code);
+		     "Detected error during xcb run: error=%d, "
+		     "seqno=0x%02x, major=%d, minor=%d\n",
+		     error->error_code, error->sequence,
+		     error->major_code, error->minor_code);
 	} else {
 	    fprintf (stderr,
-		     "Detected unexpected event during xcb run: %d\n",
-		     ev->response_type);
+		     "Detected unexpected event during xcb run: type=%d, seqno=0x%02x\n",
+		     ev->response_type, ev->sequence);
 	}
 	free (ev);
 
