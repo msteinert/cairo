@@ -201,6 +201,9 @@ REFERENCE_IMAGES = \
 	reference/bug-bo-rectangular.ref.png \
 	reference/bug-bo-rectangular.traps.argb32.ref.png \
 	reference/bug-bo-rectangular.traps.rgb24.ref.png \
+	reference/bug-bo-ricotz.base.ref.png \
+	reference/bug-bo-ricotz.ref.png \
+	reference/bug-bo-ricotz.traps.ref.png \
 	reference/bug-extents.base.argb32.ref.png \
 	reference/bug-extents.base.rgb24.ref.png \
 	reference/bug-extents.image16.ref.png \

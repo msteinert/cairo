@@ -23,6 +23,7 @@ test_sources = \
 	bilevel-image.c					\
 	bug-40410.c					\
 	bug-bo-rectangular.c				\
+	bug-bo-ricotz.c					\
 	bug-extents.c					\
 	bug-seams.c					\
 	caps.c						\
