@@ -2316,11 +2316,17 @@ REFERENCE_IMAGES = \
 	reference/set-source.traps.rgb24.ref.png \
 	reference/shape-general-convex.base.argb32.ref.png \
 	reference/shape-general-convex.base.rgb24.ref.png \
+	reference/shape-general-convex.ps.ref.png \
 	reference/shape-general-convex.ref.png \
 	reference/shape-general-convex.traps.argb32.ref.png \
 	reference/shape-general-convex.traps.rgb24.ref.png \
 	reference/shape-sierpinski.base.argb32.ref.png \
 	reference/shape-sierpinski.base.rgb24.ref.png \
+	reference/shape-sierpinski.pdf.argb32.ref.png \
+	reference/shape-sierpinski.pdf.rgb24.ref.png \
+	reference/shape-sierpinski.ps.ref.png \
+	reference/shape-sierpinski.ps3.argb32.ref.png \
+	reference/shape-sierpinski.ps3.rgb24.ref.png \
 	reference/shape-sierpinski.ref.png \
 	reference/shape-sierpinski.traps.argb32.ref.png \
 	reference/shape-sierpinski.traps.rgb24.ref.png \
