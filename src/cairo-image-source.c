@@ -639,8 +639,11 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
     } else
 	extend = CAIRO_EXTEND_NONE;
 
-    if (extend == CAIRO_EXTEND_NONE)
+    if (extend == CAIRO_EXTEND_NONE) {
 	limit = *extents;
+	if (! _cairo_rectangle_intersect (&limit, sample))
+	    return _pixman_transparent_image ();
+    }
 
     if (dst->base.content == source->content)
 	clone = cairo_image_surface_create (dst->format,
