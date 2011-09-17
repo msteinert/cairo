@@ -33,6 +33,9 @@ draw (cairo_t *cr, int width, int height)
     double angle;
     int i, j;
 
+    cairo_set_source_rgb (cr, 0, 0, 1);
+    cairo_paint (cr);
+
     angle = 0.0;
 
     for (i = 0; i < 4; i++) {
