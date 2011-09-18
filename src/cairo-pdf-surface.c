@@ -6145,13 +6145,15 @@ _cairo_pdf_surface_mask (void			*abstract_surface,
     if (unlikely (status))
 	goto cleanup;
 
+    if (! _cairo_rectangle_intersect (&extents.bounded, &extents.source))
+	goto cleanup;
+
     status = _cairo_pattern_get_ink_extents (mask, &extents.mask);
     if (unlikely (status))
 	goto cleanup;
 
-    extents.bounded = extents.source;
     if (! _cairo_rectangle_intersect (&extents.bounded, &extents.mask))
-	return CAIRO_STATUS_SUCCESS;
+	goto cleanup;
 
     status = _cairo_pdf_surface_set_clip (surface, &extents);
     if (unlikely (status))
