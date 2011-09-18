@@ -1081,11 +1081,11 @@ _cairo_quartz_setup_gradient_source (cairo_quartz_drawing_state_t *state,
 
 static cairo_int_status_t
 _cairo_quartz_setup_state (cairo_quartz_drawing_state_t *state,
-			   cairo_composite_rectangles_int_t *extents)
+			   cairo_composite_rectangles_t *extents)
 {
-    cairo_quartz_surface_t       *surface = extents->surface;
+    cairo_quartz_surface_t       *surface = (cairo_quartz_surface_t *) extents->surface;
     cairo_operator_t              op = extents->op;
-    const cairo_pattern_t        *source = &extents->surface_pattern.base;
+    const cairo_pattern_t        *source = &extents->source_pattern.base;
     const cairo_clip_t           *clip = extents->clip;
     cairo_bool_t needs_temp;
     cairo_status_t status;
@@ -1316,9 +1316,9 @@ _cairo_quartz_setup_state (cairo_quartz_drawing_state_t *state,
 
 static void
 _cairo_quartz_teardown_state (cairo_quartz_drawing_state_t *state,
-			      cairo_composite_rectangles_int_t *extents)
+			      cairo_composite_rectangles_t *extents)
 {
-    cairo_quartz_surface_t *surfce = (cairo_quartz_surface_t *)extents;
+    cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) extents->surface;
 
     if (state->layer) {
 	CGContextDrawLayerInRect (surface->cgContext,
@@ -1557,16 +1557,19 @@ _cairo_quartz_surface_map_to_image (void *abstract_surface,
 {
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
     cairo_image_surface_t *image;
-    cairo_surface_t *surface;
+    cairo_surface_t *subsurface;
+    cairo_status_t status;
 
     status = _cairo_quartz_get_image (surface, &image);
     if (unlikely (status))
-	return _cairo_surace_create_in_error (status);
+	return _cairo_surface_create_in_error (status);
 
-    surface = _cairo_surface_create_for_rectangle_int (&image->base, extents);
+    /* Is this legitimate? shouldn't it return an image surface? */
+
+    subsurface = _cairo_surface_create_for_rectangle_int (&image->base, extents);
     cairo_surface_destroy (&image->base);
 
-    return surface;
+    return subsurface;
 }
 
 static cairo_int_status_t
@@ -1574,6 +1577,8 @@ _cairo_quartz_surface_unmap_image (void *abstract_surface,
 				   cairo_image_surface_t *image)
 {
     cairo_surface_destroy (&image->base);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_surface_t *
@@ -1624,7 +1629,7 @@ _cairo_quartz_surface_get_extents (void *abstract_surface,
 
 static cairo_int_status_t
 _cairo_quartz_cg_paint (const cairo_compositor_t *compositor,
-			cairo_composite_rectangles_int_t *extents)
+			cairo_composite_rectangles_t *extents)
 {
     cairo_quartz_drawing_state_t state;
     cairo_int_status_t rv;
@@ -1645,15 +1650,11 @@ BAIL:
 }
 
 static cairo_int_status_t
-_cairo_quartz_cg_mask_with_surface (cairo_composite_extents_t *extents,
-				    cairo_surface_t        *mask_surf,
-				    const cairo_matrix_t   *mask_mat,
-				    CGInterpolationQuality filter)
+_cairo_quartz_cg_mask_with_surface (cairo_composite_rectangles_t *extents,
+				    cairo_surface_t              *mask_surf,
+				    const cairo_matrix_t         *mask_mat,
+				    CGInterpolationQuality        filter)
 {
-    cairo_quartz_surface_t *surface = extents->surface;
-    cairo_operator_t op = extents->op;
-    const cairo_pattern_t *source = &extents->surface_pattern.base;
-    cairo_clip_t *clip = extents->clip;
     CGRect rect;
     CGImageRef img;
     cairo_status_t status;
@@ -1720,10 +1721,9 @@ _cairo_quartz_cg_mask_with_solid (cairo_quartz_surface_t *surface,
 
 static cairo_int_status_t
 _cairo_quartz_cg_mask (const cairo_compositor_t *compositor,
-		       cairo_composite_rectangles_int_t *extents)
+		       cairo_composite_rectangles_t *extents)
 {
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *)extents->surface;
-    cairo_operator_t op = extents->op;
     const cairo_pattern_t *source = &extents->source_pattern.base;
     const cairo_pattern_t *mask = &extents->mask_pattern.base;
     cairo_surface_t *mask_surf;
@@ -1811,13 +1811,12 @@ BAIL:
 
 static cairo_int_status_t
 _cairo_quartz_cg_fill (const cairo_compositor_t *compositor,
-		       cairo_composite_rectangles_int_t *extents,
+		       cairo_composite_rectangles_t *extents,
 		       const cairo_path_fixed_t *path,
 		       cairo_fill_rule_t fill_rule,
 		       double tolerance,
 		       cairo_antialias_t antialias)
 {
-    cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *)extents->surface;
     cairo_quartz_drawing_state_t state;
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
 
@@ -1855,7 +1854,7 @@ BAIL:
 
 static cairo_int_status_t
 _cairo_quartz_cg_stroke (const cairo_compositor_t *compositor,
-			 cairo_composite_rectangles_int_t *extents,
+			 cairo_composite_rectangles_t *extents,
 			 const cairo_path_fixed_t *path,
 			 const cairo_stroke_style_t *style,
 			 const cairo_matrix_t *ctm,
@@ -1863,7 +1862,6 @@ _cairo_quartz_cg_stroke (const cairo_compositor_t *compositor,
 			 double tolerance,
 			 cairo_antialias_t antialias)
 {
-    cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *)extents->surface;
     cairo_quartz_drawing_state_t state;
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
     CGAffineTransform strokeTransform, invStrokeTransform;
@@ -1935,13 +1933,12 @@ BAIL:
 #if CAIRO_HAS_QUARTZ_FONT
 static cairo_int_status_t
 _cairo_quartz_cg_glyphs (const cairo_compositor_t *compositor,
-			 cairo_composite_rectangles_int_t *extents,
+			 cairo_composite_rectangles_t *extents,
+			 cairo_scaled_font_t *scaled_font,
 			 cairo_glyph_t *glyphs,
 			 int num_glyphs,
-			 cairo_scaled_font_t *scaled_font,
 			 cairo_bool_t overlap)
 {
-    cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *)_surface;
     CGAffineTransform textTransform, invTextTransform;
     CGGlyph glyphs_static[CAIRO_STACK_ARRAY_LENGTH (CGSize)];
     CGSize cg_advances_static[CAIRO_STACK_ARRAY_LENGTH (CGSize)];
@@ -2147,13 +2144,12 @@ _cairo_quartz_surface_glyphs (void *surface,
 			      cairo_glyph_t *glyphs,
 			      int num_glyphs,
 			      cairo_scaled_font_t *scaled_font,
-			      const cairo_clip_t *clip,
-			      int *remaining_glyphs)
+			      const cairo_clip_t *clip)
 {
     return _cairo_compositor_glyphs (&_cairo_quartz_cg_compositor,
 				     surface, op, source,
 				     glyphs, num_glyphs, scaled_font,
-				     clip, remaining_glyphs);
+				     clip);
 }
 
 static cairo_status_t
@@ -2227,7 +2223,7 @@ static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
     _cairo_quartz_surface_mask,
     _cairo_quartz_surface_stroke,
     _cairo_quartz_surface_fill,
-    NULL  /* fill-stroke */
+    NULL,  /* fill-stroke */
     _cairo_quartz_surface_glyphs,
 };
 
