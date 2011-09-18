@@ -6104,6 +6104,8 @@ _cairo_pdf_surface_mask (void			*abstract_surface,
     cairo_pdf_smask_group_t *group;
     cairo_composite_rectangles_t extents;
     cairo_int_status_t status;
+    cairo_rectangle_int_t r;
+    cairo_box_t box;
 
     status = _cairo_composite_rectangles_init_for_mask (&extents,
 							&surface->base,
@@ -6141,18 +6143,25 @@ _cairo_pdf_surface_mask (void			*abstract_surface,
     assert (_cairo_pdf_surface_operation_supported (surface, op, mask, &extents.bounded));
 
     /* get the accurate extents */
-    status = _cairo_pattern_get_ink_extents (source, &extents.source);
+    status = _cairo_pattern_get_ink_extents (source, &r);
     if (unlikely (status))
 	goto cleanup;
 
-    if (! _cairo_rectangle_intersect (&extents.bounded, &extents.source))
-	goto cleanup;
-
-    status = _cairo_pattern_get_ink_extents (mask, &extents.mask);
+    /* XXX slight impedance mismatch */
+    _cairo_box_from_rectangle (&box, &r);
+    status = _cairo_composite_rectangles_intersect_source_extents (&extents,
+								   &box);
     if (unlikely (status))
 	goto cleanup;
 
-    if (! _cairo_rectangle_intersect (&extents.bounded, &extents.mask))
+    status = _cairo_pattern_get_ink_extents (mask, &r);
+    if (unlikely (status))
+	goto cleanup;
+
+    _cairo_box_from_rectangle (&box, &r);
+    status = _cairo_composite_rectangles_intersect_mask_extents (&extents,
+								 &box);
+    if (unlikely (status))
 	goto cleanup;
 
     status = _cairo_pdf_surface_set_clip (surface, &extents);
