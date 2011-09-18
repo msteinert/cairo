@@ -98,7 +98,7 @@ cairo_test_suite_DEPENDENCIES = \
 	$(top_builddir)/src/libcairo.la
 if BUILD_ANY2PPM
 cairo_test_suite_DEPENDENCIES += \
-	any2ppm
+	any2ppm$(EXEEXT)
 endif
 
 if HAVE_SHM
