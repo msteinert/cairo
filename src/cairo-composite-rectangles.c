@@ -172,6 +172,60 @@ _cairo_composite_rectangles_intersect (cairo_composite_rectangles_t *extents,
 }
 
 cairo_int_status_t
+_cairo_composite_rectangles_intersect_source_extents (cairo_composite_rectangles_t *extents,
+						      const cairo_box_t *box)
+{
+    cairo_rectangle_int_t rect;
+    cairo_clip_t *clip;
+
+    _cairo_box_round_to_rectangle (box, &rect);
+    if (rect.x == extents->source.x &&
+	rect.y == extents->source.y &&
+	rect.width  == extents->source.width &&
+	rect.height == extents->source.height)
+    {
+	return CAIRO_INT_STATUS_SUCCESS;
+    }
+
+    _cairo_rectangle_intersect (&extents->source, &rect);
+
+    rect = extents->bounded;
+    if (! _cairo_rectangle_intersect (&extents->bounded, &extents->source) &&
+	extents->is_bounded & CAIRO_OPERATOR_BOUND_BY_SOURCE)
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
+    if (rect.width  == extents->bounded.width &&
+	rect.height == extents->bounded.height)
+	return CAIRO_INT_STATUS_SUCCESS;
+
+    if (extents->is_bounded == (CAIRO_OPERATOR_BOUND_BY_MASK | CAIRO_OPERATOR_BOUND_BY_SOURCE))
+	extents->unbounded = extents->bounded;
+
+    clip = extents->clip;
+    extents->clip = _cairo_clip_reduce_for_composite (clip, extents);
+    if (clip != extents->clip)
+	_cairo_clip_destroy (clip);
+
+    if (_cairo_clip_is_all_clipped (extents->clip))
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
+    if (extents->source_pattern.base.type != CAIRO_PATTERN_TYPE_SOLID)
+	_cairo_pattern_sampled_area (&extents->source_pattern.base,
+				     &extents->bounded,
+				     &extents->source_sample_area);
+    if (extents->mask_pattern.base.type != CAIRO_PATTERN_TYPE_SOLID) {
+	_cairo_pattern_sampled_area (&extents->mask_pattern.base,
+				     &extents->bounded,
+				     &extents->mask_sample_area);
+	if (extents->mask_sample_area.width == 0 ||
+	    extents->mask_sample_area.height == 0)
+	    return CAIRO_INT_STATUS_NOTHING_TO_DO;
+    }
+
+    return CAIRO_INT_STATUS_SUCCESS;
+}
+
+cairo_int_status_t
 _cairo_composite_rectangles_intersect_mask_extents (cairo_composite_rectangles_t *extents,
 						    const cairo_box_t *box)
 {
@@ -201,11 +255,8 @@ _cairo_composite_rectangles_intersect_mask_extents (cairo_composite_rectangles_t
     if (extents->is_bounded == (CAIRO_OPERATOR_BOUND_BY_MASK | CAIRO_OPERATOR_BOUND_BY_SOURCE))
 	extents->unbounded = extents->bounded;
 
-    extents->mask = mask;
     clip = extents->clip;
-
     extents->clip = _cairo_clip_reduce_for_composite (clip, extents);
-
     if (clip != extents->clip)
 	_cairo_clip_destroy (clip);
 
