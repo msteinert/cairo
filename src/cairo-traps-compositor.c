@@ -1053,13 +1053,13 @@ composite_aligned_boxes (const cairo_traps_compositor_t *compositor,
 	int mask_x = 0, mask_y = 0;
 
 	if (need_clip_mask) {
-	    mask = _cairo_clip_get_surface (extents->clip, dst,
-					    &mask_x, &mask_y);
+	    mask = traps_get_clip_surface (compositor, dst, extents->clip,
+					   &extents->bounded);
 	    if (unlikely (mask->status))
 		return mask->status;
 
-	    mask_x = -mask_x;
-	    mask_y = -mask_y;
+	    mask_x = -extents->bounded.x;
+	    mask_y = -extents->bounded.y;
 
 	    if (op == CAIRO_OPERATOR_CLEAR) {
 		source = NULL;
