@@ -676,12 +676,10 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
 
     m = NULL;
     if (extend == CAIRO_EXTEND_NONE) {
-	m = &matrix;
-	cairo_matrix_multiply (m,
-			       &dst->base.device_transform,
-			       &pattern->base.matrix);
+	matrix = pattern->base.matrix;
 	if (tx | ty)
-	    cairo_matrix_translate (m, tx, ty);
+	    cairo_matrix_translate (&matrix, tx, ty);
+	m = &matrix;
     } else {
 	/* XXX extract scale factor for repeating patterns */
     }
