@@ -452,6 +452,113 @@ _cairo_clip_translate (cairo_clip_t *clip, int tx, int ty)
     return clip;
 }
 
+static cairo_status_t
+_cairo_path_fixed_add_box (cairo_path_fixed_t *path,
+			   const cairo_box_t *box)
+{
+    cairo_status_t status;
+
+    status = _cairo_path_fixed_move_to (path, box->p1.x, box->p1.y);
+    if (unlikely (status))
+	return status;
+
+    status = _cairo_path_fixed_line_to (path, box->p2.x, box->p1.y);
+    if (unlikely (status))
+	return status;
+
+    status = _cairo_path_fixed_line_to (path, box->p2.x, box->p2.y);
+    if (unlikely (status))
+	return status;
+
+    status = _cairo_path_fixed_line_to (path, box->p1.x, box->p2.y);
+    if (unlikely (status))
+	return status;
+
+    return _cairo_path_fixed_close_path (path);
+}
+
+static cairo_status_t
+_cairo_path_fixed_init_from_boxes (cairo_path_fixed_t *path,
+				   const cairo_boxes_t *boxes)
+{
+    cairo_status_t status;
+    const struct _cairo_boxes_chunk *chunk;
+    int i;
+
+    _cairo_path_fixed_init (path);
+    if (boxes->num_boxes == 0)
+	return CAIRO_STATUS_SUCCESS;
+
+    for (chunk = &boxes->chunks; chunk; chunk = chunk->next) {
+	for (i = 0; i < chunk->count; i++) {
+	    status = _cairo_path_fixed_add_box (path, &chunk->base[i]);
+	    if (unlikely (status)) {
+		_cairo_path_fixed_fini (path);
+		return status;
+	    }
+	}
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_clip_t *
+_cairo_clip_intersect_clip_path_transformed (cairo_clip_t *clip,
+					     const cairo_clip_path_t *clip_path,
+					     const cairo_matrix_t *m)
+{
+    cairo_path_fixed_t path;
+
+    if (clip_path->prev)
+	clip = _cairo_clip_intersect_clip_path_transformed (clip,
+							    clip_path->prev,
+							    m);
+
+    if (_cairo_path_fixed_init_copy (&path, &clip_path->path))
+	return _cairo_clip_set_all_clipped (clip);
+
+    clip =  _cairo_clip_intersect_path (clip,
+				       &path,
+				       clip_path->fill_rule,
+				       clip_path->tolerance,
+				       clip_path->antialias);
+    _cairo_path_fixed_fini (&path);
+
+    return clip;
+}
+
+cairo_clip_t *
+_cairo_clip_transform (cairo_clip_t *clip, const cairo_matrix_t *m)
+{
+    cairo_clip_t *copy;
+
+    if (_cairo_matrix_is_translation (m))
+	return _cairo_clip_translate (clip, m->x0, m->y0);
+
+    copy = _cairo_clip_create ();
+
+    if (clip->num_boxes) {
+	cairo_path_fixed_t path;
+	cairo_boxes_t boxes;
+
+	_cairo_boxes_init_for_array (&boxes, clip->boxes, clip->num_boxes);
+	_cairo_path_fixed_init_from_boxes (&path, &boxes);
+	_cairo_path_fixed_transform (&path, m);
+
+	copy = _cairo_clip_intersect_path (copy, &path,
+					   CAIRO_FILL_RULE_WINDING,
+					   0.1,
+					   CAIRO_ANTIALIAS_DEFAULT);
+
+	_cairo_path_fixed_fini (&path);
+    }
+
+    if (clip->path)
+	copy = _cairo_clip_intersect_clip_path_transformed (copy, clip->path,m);
+
+    return copy;
+}
+
 cairo_clip_t *
 _cairo_clip_copy_with_translation (const cairo_clip_t *clip, int tx, int ty)
 {
