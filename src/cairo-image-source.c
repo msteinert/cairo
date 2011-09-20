@@ -623,7 +623,7 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
     if (_cairo_surface_get_extents (source, &limit)) {
 	if (sample->x >= limit.x &&
 	    sample->y >= limit.y &&
-	    sample->x + sample->width <= limit.x + limit.width &&
+	    sample->x + sample->width  <= limit.x + limit.width &&
 	    sample->y + sample->height <= limit.y + limit.height)
 	{
 	    extend = CAIRO_EXTEND_NONE;
@@ -640,9 +640,29 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
 	extend = CAIRO_EXTEND_NONE;
 
     if (extend == CAIRO_EXTEND_NONE) {
-	limit = *extents;
 	if (! _cairo_rectangle_intersect (&limit, sample))
 	    return _pixman_transparent_image ();
+
+	if (! _cairo_matrix_is_identity (&pattern->base.matrix)) {
+	    double x1, y1, x2, y2;
+
+	    matrix = pattern->base.matrix;
+	    status = cairo_matrix_invert (&matrix);
+	    assert (status == CAIRO_STATUS_SUCCESS);
+
+	    x1 = limit.x;
+	    y1 = limit.y;
+	    x2 = limit.x + limit.width;
+	    y2 = limit.y + limit.height;
+
+	    _cairo_matrix_transform_bounding_box (&matrix,
+						  &x1, &y1, &x2, &y2, NULL);
+
+	    limit.x = floor (x1);
+	    limit.y = floor (y1);
+	    limit.width  = ceil (x2) - limit.x;
+	    limit.height = ceil (y2) - limit.y;
+	}
     }
 
     if (dst->base.content == source->content)
@@ -652,7 +672,7 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
 	clone = _cairo_image_surface_create_with_content (source->content,
 							  limit.width,
 							  limit.height);
-    cairo_surface_set_device_offset (clone, limit.x, limit.y);
+    cairo_surface_set_device_offset (clone, -limit.x, -limit.y);
 
     m = NULL;
     if (extend == CAIRO_EXTEND_NONE) {
@@ -662,9 +682,6 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
 			       &pattern->base.matrix);
 	if (tx | ty)
 	    cairo_matrix_translate (m, tx, ty);
-
-	status = cairo_matrix_invert (m);
-	assert (status == CAIRO_STATUS_SUCCESS);
     } else {
 	/* XXX extract scale factor for repeating patterns */
     }
