@@ -94,6 +94,8 @@
 #define DEBUG 0
 
 #define ignore_image_differences 0 /* XXX make me a cmdline option! */
+#define write_results 1
+#define write_traces 1
 
 #define DATA_SIZE (256 << 20)
 #define SHM_PATH_XXX "/.shmem-cairo-trace"
@@ -701,6 +703,12 @@ matches_reference (struct slave *slave)
     a = slave->image;
     b = slave->reference->image;
 
+    if (a == b)
+	return TRUE;
+
+    if (a == NULL || b == NULL)
+	return FALSE;
+
     if (cairo_surface_status (a) || cairo_surface_status (b))
 	return FALSE;
 
@@ -1064,6 +1072,7 @@ test_run (void *base,
 		continue;
 
 	    if (pfd[n].revents & POLLHUP) {
+		pfd[n].events = pfd[n].revents = 0;
 		completion++;
 		continue;
 	    }
@@ -1094,6 +1103,7 @@ test_run (void *base,
 						      offset = image,
 						      &slaves[i]);
 			if (! writen (pfd[n].fd, &offset, sizeof (offset))) {
+			    pfd[n].events = pfd[n].revents = 0;
 			    err = 1;
 			    completion++;
 			    continue;
@@ -1109,6 +1119,7 @@ test_run (void *base,
 				    slaves[i].image_serial);
 			}
 			if (slaves[i].image_ready != slaves[i].image_serial) {
+			    pfd[n].events = pfd[n].revents = 0;
 			    err = 1;
 			    completion++;
 			    continue;
@@ -1127,7 +1138,7 @@ test_run (void *base,
 	    cnt--;
 	}
 
-	if (completion == num_slaves) {
+	if (completion >= num_slaves) {
 	    if (err) {
 		if (DEBUG > 1)
 		    printf ("error detected\n");
@@ -1158,8 +1169,8 @@ test_run (void *base,
 		goto out;
 	    }
 
-	    if (0) write_result (trace, &slaves[1]);
-	    if (0 && slaves[0].is_recording) {
+	    if (write_results) write_result (trace, &slaves[1]);
+	    if (write_traces && slaves[0].is_recording) {
 		char buf[80];
 		snprintf (buf, sizeof (buf), "%d", slaves[0].image_serial);
 		write_trace (trace, buf, &slaves[0]);
