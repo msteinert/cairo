@@ -787,7 +787,7 @@ _cairo_xcb_surface_fallback (cairo_xcb_surface_t *surface,
 	    return _cairo_surface_create_in_error (status);
 
     if (surface->fallback)
-	return surface->fallback;
+	return &surface->fallback->base;
 
     image = (cairo_image_surface_t *)
 	    _get_image (surface, TRUE, 0, 0, surface->width, surface->height);
