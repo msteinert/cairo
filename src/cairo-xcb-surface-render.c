@@ -3429,7 +3429,8 @@ _cairo_xcb_surface_render_paint (cairo_xcb_surface_t	*surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    if (source->type == CAIRO_PATTERN_TYPE_SOLID &&
+    if (composite->clip == NULL &&
+	source->type == CAIRO_PATTERN_TYPE_SOLID &&
 	(op == CAIRO_OPERATOR_SOURCE ||
 	 op == CAIRO_OPERATOR_CLEAR ||
 	 (surface->base.is_clear &&
