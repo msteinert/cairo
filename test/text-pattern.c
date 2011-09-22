@@ -25,11 +25,12 @@
 
 #include "cairo-test.h"
 
-#define IMAGE_WIDTH 64
+#define IMAGE_WIDTH 128
 #define IMAGE_HEIGHT 64
 
-static cairo_test_status_t
-draw (cairo_t *cr, int width, int height)
+
+static void
+draw_text_pattern (cairo_t *cr, double alpha)
 {
     cairo_pattern_t *pat;
 
@@ -37,11 +38,9 @@ draw (cairo_t *cr, int width, int height)
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
 
-    cairo_scale (cr, width, height);
-
     pat = cairo_pattern_create_linear (0.0, 0.0, 1, 1);
-    cairo_pattern_add_color_stop_rgba (pat, 1, 1, 0, 0, 1);
-    cairo_pattern_add_color_stop_rgba (pat, 0, 0, 0, 1, 1);
+    cairo_pattern_add_color_stop_rgba (pat, 1, 1, 0, 0, alpha);
+    cairo_pattern_add_color_stop_rgba (pat, 0, 0, 0, 1, alpha);
     cairo_set_source (cr, pat);
 
     /* test rectangle - make sure the gradient is set correctly */
@@ -53,6 +52,15 @@ draw (cairo_t *cr, int width, int height)
     cairo_show_text (cr, "cairo");
 
     cairo_pattern_destroy (pat);
+}
+
+static cairo_test_status_t
+draw (cairo_t *cr, int width, int height)
+{
+    cairo_scale (cr, width/2, height);
+    draw_text_pattern (cr, 1.0);
+    cairo_translate (cr, 1, 0);
+    draw_text_pattern (cr, 0.5);
 
     return CAIRO_TEST_SUCCESS;
 }
