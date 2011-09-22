@@ -291,6 +291,7 @@ test_sources = \
 	source-clip-scale.c				\
 	source-surface-scale-paint.c			\
 	spline-decomposition.c				\
+	stroke-pattern.c                                \
 	subsurface.c                                    \
 	subsurface-image-repeat.c                       \
 	subsurface-repeat.c                             \
