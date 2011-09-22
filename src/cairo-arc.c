@@ -133,7 +133,7 @@ _arc_segments_needed (double	      angle,
 
    for some value of h.
 
-   "Approximation of circular arcs by cubic poynomials", Michael
+   "Approximation of circular arcs by cubic polynomials", Michael
    Goldapp, Computer Aided Geometric Design 8 (1991) 227-238, provides
    various values of h along with error analysis for each.
 
