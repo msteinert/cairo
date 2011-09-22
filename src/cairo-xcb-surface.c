@@ -781,6 +781,14 @@ _cairo_xcb_surface_fallback (cairo_xcb_surface_t *surface,
     cairo_image_surface_t *image;
     cairo_status_t status;
 
+    status = _cairo_composite_rectangles_add_to_damage (composite,
+							&surface->fallback_damage);
+    if (unlikely (status))
+	    return _cairo_surface_create_in_error (status);
+
+    if (surface->fallback)
+	return surface->fallback;
+
     image = (cairo_image_surface_t *)
 	    _get_image (surface, TRUE, 0, 0, surface->width, surface->height);
 
@@ -791,10 +799,6 @@ _cairo_xcb_surface_fallback (cairo_xcb_surface_t *surface,
 	surface->fallback = image;
     }
 
-    status = _cairo_composite_rectangles_add_to_damage (composite,
-							&surface->fallback_damage);
-    if (unlikely (status))
-	    return _cairo_surface_create_in_error (status);
     return &surface->fallback->base;
 }
 
