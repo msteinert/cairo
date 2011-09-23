@@ -2533,6 +2533,8 @@ REFERENCE_IMAGES = \
 	reference/subsurface-repeat.ref.png \
 	reference/subsurface-repeat.traps.argb32.ref.png \
 	reference/subsurface-repeat.traps.rgb24.ref.png \
+	reference/subsurface-scale.base.ref.png \
+	reference/subsurface-scale.ref.png \
 	reference/subsurface-similar-repeat.base.argb32.ref.png \
 	reference/subsurface-similar-repeat.base.rgb24.ref.png \
 	reference/subsurface-similar-repeat.ref.png \
@@ -2665,7 +2667,6 @@ REFERENCE_IMAGES = \
 	reference/text-pattern.quartz.argb32.ref.png \
 	reference/text-pattern.quartz.rgb24.ref.png \
 	reference/text-pattern.ref.png \
-	reference/text-pattern.rgb24.ref.png \
 	reference/text-pattern.svg.argb32.ref.png \
 	reference/text-pattern.svg.rgb24.ref.png \
 	reference/text-pattern.traps.argb32.ref.png \
