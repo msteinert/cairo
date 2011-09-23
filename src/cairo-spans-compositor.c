@@ -782,6 +782,11 @@ clip_and_composite_polygon (const cairo_spans_compositor_t	*compositor,
 {
     cairo_int_status_t status;
 
+    /* XXX simply uses polygon limits.point extemities, tessellation? */
+    status = trim_extents_to_polygon (extents, polygon);
+    if (unlikely (status))
+	return status;
+
     if (_cairo_polygon_is_empty (polygon)) {
 	cairo_boxes_t boxes;
 
@@ -789,13 +794,9 @@ clip_and_composite_polygon (const cairo_spans_compositor_t	*compositor,
 	    return CAIRO_STATUS_SUCCESS;
 
 	_cairo_boxes_init (&boxes);
+	extents->bounded.width = extents->bounded.height = 0;
 	return fixup_unbounded_boxes (compositor, extents, &boxes);
     }
-
-#if 0 /* XXX not accurate currently... */
-    if (antialias == CAIRO_ANTIALIAS_NONE)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-#endif
 
     if (extents->is_bounded && extents->clip->path) {
 	cairo_polygon_t clipper;
@@ -824,10 +825,6 @@ clip_and_composite_polygon (const cairo_spans_compositor_t	*compositor,
 	    }
 	}
     }
-
-    status = trim_extents_to_polygon (extents, polygon);
-    if (unlikely (status))
-	return status;
 
     return composite_polygon (compositor, extents,
 			      polygon, fill_rule, antialias);
