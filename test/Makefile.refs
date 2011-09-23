@@ -2103,6 +2103,7 @@ REFERENCE_IMAGES = \
 	reference/record-paint.traps.argb32.ref.png \
 	reference/record-paint.traps.rgb24.ref.png \
 	reference/record-select-font-face.ref.png \
+	reference/record-select-font-face.xfail.png \
 	reference/record-self-intersecting.ref.png \
 	reference/record-text-transform.ref.png \
 	reference/recording-surface-extend-none.argb32.ref.png \
