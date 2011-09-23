@@ -2698,9 +2698,10 @@ REFERENCE_IMAGES = \
 	reference/tiger.ref.png \
 	reference/tiger.traps.argb32.ref.png \
 	reference/tiger.traps.rgb24.ref.png \
+	reference/tighten-bounds.argb32.ref.png \
 	reference/tighten-bounds.base.argb32.ref.png \
 	reference/tighten-bounds.base.rgb24.ref.png \
-	reference/tighten-bounds.ref.png \
+	reference/tighten-bounds.rgb24.ref.png \
 	reference/tighten-bounds.traps.argb32.ref.png \
 	reference/tighten-bounds.traps.rgb24.ref.png \
 	reference/transforms.base.argb32.ref.png \
