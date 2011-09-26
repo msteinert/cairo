@@ -45,6 +45,8 @@
 #include "cairoint.h"
 
 #include "cairo-win32-private.h"
+
+#include "cairo-array-private.h"
 #include "cairo-error-private.h"
 #include "cairo-image-surface-private.h"
 #include "cairo-pattern-private.h"
@@ -1388,6 +1390,7 @@ _cairo_win32_scaled_font_glyph_init (void		       *abstract_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
+#if 0
 static cairo_int_status_t
 _cairo_win32_scaled_font_show_glyphs (void			*abstract_font,
 				      cairo_operator_t		 op,
@@ -1496,13 +1499,7 @@ _cairo_win32_scaled_font_show_glyphs (void			*abstract_font,
 	if (scaled_font->quality == CLEARTYPE_QUALITY)
 	    mask.base.has_component_alpha = TRUE;
 
-	status = _cairo_surface_composite (op, pattern,
-					   &mask.base,
-					   &surface->base,
-					   source_x, source_y,
-					   0, 0,
-					   dest_x, dest_y,
-					   width, height,
+	status = _cairo_surface_mask (&surface->base, op, pattern, &mask.base,
 					   clip_region);
 
 	_cairo_pattern_fini (&mask.base);
@@ -1510,6 +1507,7 @@ _cairo_win32_scaled_font_show_glyphs (void			*abstract_font,
 	return status;
     }
 }
+#endif
 
 static cairo_int_status_t
 _cairo_win32_scaled_font_load_truetype_table (void	       *abstract_font,
@@ -1963,7 +1961,6 @@ const cairo_scaled_font_backend_t _cairo_win32_scaled_font_backend = {
     _cairo_win32_scaled_font_glyph_init,
     NULL, /* _cairo_win32_scaled_font_text_to_glyphs, FIXME */
     _cairo_win32_scaled_font_ucs4_to_index,
-    _cairo_win32_scaled_font_show_glyphs,
     _cairo_win32_scaled_font_load_truetype_table,
     _cairo_win32_scaled_font_index_to_ucs4,
     _cairo_win32_scaled_font_is_synthetic,
@@ -2218,14 +2215,11 @@ cairo_win32_font_face_create_for_logfontw_hfont (LOGFONTW *logfont, HFONT font)
     if (unlikely (status))
 	goto FAIL;
 
-DONE:
     _cairo_win32_font_face_hash_table_unlock ();
-
     return &font_face->base;
 
 FAIL:
     _cairo_win32_font_face_hash_table_unlock ();
-
     return (cairo_font_face_t *)&_cairo_font_face_nil;
 }
 

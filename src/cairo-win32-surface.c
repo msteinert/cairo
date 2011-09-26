@@ -57,6 +57,7 @@
 #include "cairo-win32-private.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-surface-fallback-private.h"
+#include "cairo-surface-backend-private.h"
 
 #include <wchar.h>
 #include <windows.h>
@@ -644,65 +645,6 @@ _cairo_win32_surface_release_source_image (void                   *abstract_surf
 
     if (local)
 	cairo_surface_destroy ((cairo_surface_t *)local);
-}
-
-static cairo_status_t
-_cairo_win32_surface_acquire_dest_image (void                    *abstract_surface,
-					 cairo_rectangle_int_t   *interest_rect,
-					 cairo_image_surface_t  **image_out,
-					 cairo_rectangle_int_t   *image_rect,
-					 void                   **image_extra)
-{
-    cairo_win32_surface_t *surface = abstract_surface;
-    cairo_win32_surface_t *local = NULL;
-    cairo_status_t status;
-
-    if (surface->image) {
-	GdiFlush();
-
-	*image_out = (cairo_image_surface_t *) surface->image;
-	*image_extra = NULL;
-	*image_rect = surface->extents;
-	return CAIRO_STATUS_SUCCESS;
-    }
-
-    status = _cairo_win32_surface_get_subimage (abstract_surface,
-						interest_rect->x,
-						interest_rect->y,
-						interest_rect->width,
-						interest_rect->height,
-						&local);
-    if (status)
-	return status;
-
-    *image_out = (cairo_image_surface_t *) local->image;
-    *image_extra = local;
-    *image_rect = *interest_rect;
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static void
-_cairo_win32_surface_release_dest_image (void                    *abstract_surface,
-					 cairo_rectangle_int_t   *interest_rect,
-					 cairo_image_surface_t   *image,
-					 cairo_rectangle_int_t   *image_rect,
-					 void                    *image_extra)
-{
-    cairo_win32_surface_t *surface = abstract_surface;
-    cairo_win32_surface_t *local = image_extra;
-
-    if (!local)
-	return;
-
-    if (!BitBlt (surface->dc,
-		 image_rect->x, image_rect->y,
-		 image_rect->width, image_rect->height,
-		 local->dc,
-		 0, 0,
-		 SRCCOPY))
-	_cairo_win32_print_gdi_error ("_cairo_win32_surface_release_dest_image");
-
-    cairo_surface_destroy ((cairo_surface_t *)local);
 }
 
 cairo_status_t
@@ -1380,6 +1322,7 @@ UNSUPPORTED:
     if (dst->image) {
 	GdiFlush();
 
+#if 0
 	return dst->image->backend->composite (op, pattern, mask_pattern,
 					       dst->image,
 					       src_x, src_y,
@@ -1387,6 +1330,7 @@ UNSUPPORTED:
 					       dst_x, dst_y,
 					       width, height,
 					       clip_region);
+#endif
     }
 
     return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1583,7 +1527,6 @@ _cairo_win32_surface_show_glyphs_internal (void			 *surface,
 					   int			  num_glyphs,
 					   cairo_scaled_font_t	 *scaled_font,
 					   const cairo_clip_t	 *clip,
-					   int			 *remaining_glyphs,
 					   cairo_bool_t		  glyph_indexing)
 {
 #if CAIRO_HAS_WIN32_FONT
@@ -1733,8 +1676,7 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 				  cairo_glyph_t		*glyphs,
 				  int			 num_glyphs,
 				  cairo_scaled_font_t	*scaled_font,
-				  const cairo_clip_t          *clip,
-				  int			*remaining_glyphs)
+				  const cairo_clip_t    *clip)
 {
     return _cairo_win32_surface_show_glyphs_internal (surface,
 						      op,
@@ -1743,7 +1685,6 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 						      num_glyphs,
 						      scaled_font,
 						      clip,
-						      remaining_glyphs,
 						      TRUE);
 }
 
@@ -1985,166 +1926,6 @@ cairo_win32_surface_get_image (cairo_surface_t *surface)
     return ((cairo_win32_surface_t*)surface)->image;
 }
 
-static cairo_bool_t
-_cairo_win32_surface_is_similar (void *surface_a,
-	                         void *surface_b)
-{
-    cairo_win32_surface_t *a = surface_a;
-    cairo_win32_surface_t *b = surface_b;
-
-    return a->dc == b->dc;
-}
-
-typedef struct _cairo_win32_surface_span_renderer {
-    cairo_span_renderer_t base;
-
-    cairo_operator_t op;
-    const cairo_pattern_t *pattern;
-    cairo_antialias_t antialias;
-
-    uint8_t *mask_data;
-    uint32_t mask_stride;
-
-    cairo_image_surface_t *mask;
-    cairo_win32_surface_t *dst;
-    cairo_region_t *clip_region;
-
-    cairo_composite_rectangles_t composite_rectangles;
-} cairo_win32_surface_span_renderer_t;
-
-static cairo_status_t
-_cairo_win32_surface_span_renderer_render_rows (
-    void				*abstract_renderer,
-    int					 y,
-    int					 height,
-    const cairo_half_open_span_t	*spans,
-    unsigned				 num_spans)
-{
-    cairo_win32_surface_span_renderer_t *renderer = abstract_renderer;
-    while (height--)
-	_cairo_image_surface_span_render_row (y++, spans, num_spans, renderer->mask_data, renderer->mask_stride);
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static void
-_cairo_win32_surface_span_renderer_destroy (void *abstract_renderer)
-{
-    cairo_win32_surface_span_renderer_t *renderer = abstract_renderer;
-    if (!renderer) return;
-
-    if (renderer->mask != NULL)
-	cairo_surface_destroy (&renderer->mask->base);
-
-    free (renderer);
-}
-
-static cairo_status_t
-_cairo_win32_surface_span_renderer_finish (void *abstract_renderer)
-{
-    cairo_win32_surface_span_renderer_t *renderer = abstract_renderer;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
-
-    if (renderer->pattern == NULL || renderer->mask == NULL)
-	return CAIRO_STATUS_SUCCESS;
-
-    status = cairo_surface_status (&renderer->mask->base);
-    if (status == CAIRO_STATUS_SUCCESS) {
-	cairo_composite_rectangles_t *rects = &renderer->composite_rectangles;
-	cairo_win32_surface_t *dst = renderer->dst;
-	cairo_pattern_t *mask_pattern = cairo_pattern_create_for_surface (&renderer->mask->base);
-	/* composite onto the image surface directly if we can */
-	if (dst->image) {
-	    GdiFlush(); /* XXX: I'm not sure if this needed or not */
-
-	    status = dst->image->backend->composite (renderer->op,
-		    renderer->pattern, mask_pattern, dst->image,
-		    rects->bounded.x, rects->bounded.y,
-		    0, 0,		/* mask.x, mask.y */
-		    rects->bounded.x, rects->bounded.y,
-		    rects->bounded.width, rects->bounded.height,
-		    renderer->clip_region);
-	} else {
-	    /* otherwise go through the fallback_composite path which
-	     * will do the appropriate surface acquisition */
-	    status = _cairo_surface_fallback_composite (
-		    renderer->op,
-		    renderer->pattern, mask_pattern, &dst->base,
-		    rects->bounded.x, rects->bounded.y,
-		    0, 0,		/* mask.x, mask.y */
-		    rects->bounded.x, rects->bounded.y,
-		    rects->bounded.width, rects->bounded.height,
-		    renderer->clip_region);
-	}
-	cairo_pattern_destroy (mask_pattern);
-
-    }
-    if (status != CAIRO_STATUS_SUCCESS)
-	return _cairo_span_renderer_set_error (abstract_renderer,
-					       status);
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_bool_t
-_cairo_win32_surface_check_span_renderer (cairo_operator_t	  op,
-					  const cairo_pattern_t  *pattern,
-					  void			 *abstract_dst,
-					  cairo_antialias_t	  antialias)
-{
-    (void) op;
-    (void) pattern;
-    (void) abstract_dst;
-    (void) antialias;
-    return TRUE;
-}
-
-static cairo_span_renderer_t *
-_cairo_win32_surface_create_span_renderer (cairo_operator_t	 op,
-					   const cairo_pattern_t  *pattern,
-					   void			*abstract_dst,
-					   cairo_antialias_t	 antialias,
-					   const cairo_composite_rectangles_t *rects,
-					   cairo_region_t	*clip_region)
-{
-    cairo_win32_surface_t *dst = abstract_dst;
-    cairo_win32_surface_span_renderer_t *renderer;
-    cairo_status_t status;
-    int width = rects->bounded.width;
-    int height = rects->bounded.height;
-
-    renderer = calloc(1, sizeof(*renderer));
-    if (renderer == NULL)
-	return _cairo_span_renderer_create_in_error (CAIRO_STATUS_NO_MEMORY);
-
-    renderer->base.destroy = _cairo_win32_surface_span_renderer_destroy;
-    renderer->base.finish = _cairo_win32_surface_span_renderer_finish;
-    renderer->base.render_rows = _cairo_win32_surface_span_renderer_render_rows;
-    renderer->op = op;
-    renderer->pattern = pattern;
-    renderer->antialias = antialias;
-    renderer->dst = dst;
-    renderer->clip_region = clip_region;
-
-    renderer->composite_rectangles = *rects;
-
-    /* TODO: support rendering to A1 surfaces (or: go add span
-     * compositing to pixman.) */
-    renderer->mask = (cairo_image_surface_t *)
-	cairo_image_surface_create (CAIRO_FORMAT_A8,
-				    width, height);
-
-    status = cairo_surface_status (&renderer->mask->base);
-
-    if (status != CAIRO_STATUS_SUCCESS) {
-	_cairo_win32_surface_span_renderer_destroy (renderer);
-	return _cairo_span_renderer_create_in_error (status);
-    }
-
-    renderer->mask_data = renderer->mask->data - rects->bounded.x - rects->bounded.y * renderer->mask->stride;
-    renderer->mask_stride = renderer->mask->stride;
-    return &renderer->base;
-}
-
-
 static const cairo_surface_backend_t cairo_win32_surface_backend = {
     CAIRO_SURFACE_TYPE_WIN32,
     _cairo_win32_surface_finish,
@@ -2158,32 +1939,23 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
 
     _cairo_win32_surface_acquire_source_image,
     _cairo_win32_surface_release_source_image,
-    _cairo_win32_surface_acquire_dest_image,
-    _cairo_win32_surface_release_dest_image,
-    NULL, /* clone similar */
-    _cairo_win32_surface_composite,
-    _cairo_win32_surface_fill_rectangles,
-    NULL, /* composite_trapezoids */
-    _cairo_win32_surface_create_span_renderer,
-    _cairo_win32_surface_check_span_renderer,
+    NULL,  /* snapshot */
+
     NULL, /* copy_page */
     NULL, /* show_page */
+
     _cairo_win32_surface_get_extents,
-    NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
+
     _cairo_win32_surface_flush,
     NULL, /* mark_dirty_rectangle */
-    NULL, /* scaled_font_fini */
-    NULL, /* scaled_glyph_fini */
 
     NULL, /* paint */
     NULL, /* mask */
     NULL, /* stroke */
     NULL, /* fill */
+    NULL, /* fill/stroke */
     _cairo_win32_surface_show_glyphs,
-
-    NULL,  /* snapshot */
-    _cairo_win32_surface_is_similar,
 };
 
 /* Notes:

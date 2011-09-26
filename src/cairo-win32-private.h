@@ -172,7 +172,6 @@ _cairo_win32_surface_show_glyphs_internal (void			 *surface,
 					   int			  num_glyphs,
 					   cairo_scaled_font_t	 *scaled_font,
 					   const cairo_clip_t	 *clip,
-					   int			 *remaining_glyphs,
 					   cairo_bool_t		  glyph_indices);
 
 cairo_int_status_t
@@ -182,26 +181,13 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 				  cairo_glyph_t		*glyphs,
 				  int			 num_glyphs,
 				  cairo_scaled_font_t	*scaled_font,
-				  const cairo_clip_t	*clip,
-				  int			*remaining_glyphs);
+				  const cairo_clip_t	*clip);
 
 cairo_surface_t *
 _cairo_win32_surface_create_similar (void	    *abstract_src,
 				     cairo_content_t content,
 				     int	     width,
 				     int	     height);
-
-cairo_status_t
-_cairo_win32_surface_clone_similar (void *abstract_surface,
-				    cairo_surface_t *src,
-				    cairo_content_t content,
-				    int src_x,
-				    int src_y,
-				    int width,
-				    int height,
-				    int *clone_offset_x,
-				    int *clone_offset_y,
-				    cairo_surface_t **clone_out);
 
 static inline void
 _cairo_matrix_to_win32_xform (const cairo_matrix_t *m,

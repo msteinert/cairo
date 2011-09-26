@@ -1441,8 +1441,7 @@ _cairo_win32_printing_surface_emit_win32_glyphs (cairo_win32_surface_t 	*surface
 						 cairo_glyph_t        	*glyphs,
 						 int			 num_glyphs,
 						 cairo_scaled_font_t  	*scaled_font,
-						 const cairo_clip_t	*clip,
-						 int			*remaining_glyphs)
+						 const cairo_clip_t	*clip)
 {
     cairo_matrix_t ctm;
     cairo_glyph_t  *unicode_glyphs;
@@ -1504,7 +1503,6 @@ _cairo_win32_printing_surface_emit_win32_glyphs (cairo_win32_surface_t 	*surface
 		i - first + 1,
 		scaled_font,
 		clip,
-		remaining_glyphs,
 		! sequence_is_unicode);
 	    first = i + 1;
 	    if (i < num_glyphs - 1)
@@ -1529,8 +1527,7 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
                                            cairo_glyph_t        *glyphs,
                                            int			 num_glyphs,
                                            cairo_scaled_font_t  *scaled_font,
-					   const cairo_clip_t	*clip,
-					   int			*remaining_glyphs)
+					   const cairo_clip_t	*clip)
 {
     cairo_win32_surface_t *surface = abstract_surface;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
@@ -1612,8 +1609,7 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
 								glyphs,
 								num_glyphs,
 								scaled_font,
-								clip,
-								remaining_glyphs);
+								clip);
     }
 #endif
 
@@ -1884,9 +1880,6 @@ static const cairo_surface_backend_t cairo_win32_printing_surface_backend = {
 
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
-
-    NULL, /* scaled_font_fini */
-    NULL, /* scaled_glyph_fini */
 
     _cairo_win32_printing_surface_paint,
     NULL, /* mask */
