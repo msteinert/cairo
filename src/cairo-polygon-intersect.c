@@ -59,7 +59,6 @@ typedef struct _cairo_bo_edge cairo_bo_edge_t;
 typedef struct _cairo_bo_deferred {
     cairo_bo_edge_t *other;
     int32_t top;
-    int dir;
 } cairo_bo_deferred_t;
 
 struct _cairo_bo_edge {
@@ -1157,19 +1156,15 @@ edges_end (cairo_bo_edge_t	*left,
 {
     cairo_bo_deferred_t *l = &left->deferred;
     cairo_bo_edge_t *right = l->other;
-    cairo_bo_deferred_t *r = &right->deferred;
 
+    assert(right->deferred.other == NULL);
     if (likely (l->top < bot)) {
-	_cairo_polygon_add_line (polygon, &left->edge.line,
-				 l->top, bot, l->dir);
-	_cairo_polygon_add_line (polygon, &right->edge.line,
-				 l->top, bot, r->dir);
+	_cairo_polygon_add_line (polygon, &left->edge.line, l->top, bot, 1);
+	_cairo_polygon_add_line (polygon, &right->edge.line, l->top, bot, -1);
     }
 
     l->other = NULL;
-    r->other = NULL;
 }
-
 
 static inline void
 edges_start_or_continue (cairo_bo_edge_t	*left,
@@ -1177,21 +1172,14 @@ edges_start_or_continue (cairo_bo_edge_t	*left,
 			 int			 top,
 			 cairo_polygon_t	*polygon)
 {
-    if (left->deferred.other == right) {
-	assert (right->deferred.other == left);
-	assert (left->deferred.dir == 1);
-	assert (right->deferred.dir == -1);
+    if (left->deferred.other == right)
 	return;
-    }
 
     if (left->deferred.other != NULL) {
-	assert (left->deferred.dir == 1);
 	if (right != NULL && edges_colinear (left->deferred.other, right)) {
 	    /* continuation on right, so just swap edges */
-	    left->deferred.other->deferred.other = NULL;
+	    assert (left->deferred.other->deferred.other == NULL);
 	    left->deferred.other = right;
-	    right->deferred.other = left;
-	    right->deferred.dir = -1;
 	    return;
 	}
 
@@ -1200,12 +1188,7 @@ edges_start_or_continue (cairo_bo_edge_t	*left,
 
     if (right != NULL && ! edges_colinear (left, right)) {
 	left->deferred.top = top;
-	left->deferred.dir = 1;
 	left->deferred.other = right;
-
-	right->deferred.top = top;
-	right->deferred.dir = -1;
-	right->deferred.other = left;
     }
 }
 
@@ -1259,7 +1242,6 @@ active_edges (cairo_bo_edge_t		*left,
 		left = left->next;
 	}
 }
-
 
 static cairo_status_t
 intersection_sweep (cairo_bo_event_t   **start_events,
