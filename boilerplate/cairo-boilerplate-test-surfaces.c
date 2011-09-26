@@ -124,6 +124,9 @@ _cairo_boilerplate_test_no_fallback_compositor_create_surface (const char		   *n
 							       int			    id,
 							       void			  **closure)
 {
+    if (mode == CAIRO_BOILERPLATE_MODE_TEST)
+	return NULL;
+
     *closure = NULL;
     return _cairo_test_no_fallback_compositor_surface_create (content, ceil (width), ceil (height));
 }
@@ -139,6 +142,9 @@ _cairo_boilerplate_test_no_traps_compositor_create_surface (const char		   *name
 							 int			    id,
 							 void			  **closure)
 {
+    if (mode == CAIRO_BOILERPLATE_MODE_TEST)
+	return NULL;
+
     *closure = NULL;
     return _cairo_test_no_traps_compositor_surface_create (content, ceil (width), ceil (height));
 }
@@ -154,6 +160,9 @@ _cairo_boilerplate_test_no_spans_compositor_create_surface (const char		   *name
 							 int			    id,
 							 void			  **closure)
 {
+    if (mode == CAIRO_BOILERPLATE_MODE_TEST)
+	return NULL;
+
     *closure = NULL;
     return _cairo_test_no_spans_compositor_surface_create (content, ceil (width), ceil (height));
 }
