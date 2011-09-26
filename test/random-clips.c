@@ -150,6 +150,9 @@ draw (cairo_t *cr, int width, int height)
 	cairo_clip (cr);
 
 	nz_fill_stroke (cr);
+
+	cairo_set_source_rgba (cr, 1, 1, 1, 0.5);
+	cairo_paint (cr);
     } cairo_restore (cr);
 
     cairo_translate (cr, STEP, 0);
@@ -162,6 +165,9 @@ draw (cairo_t *cr, int width, int height)
 	cairo_clip (cr);
 
 	nz_fill_stroke (cr);
+
+	cairo_set_source_rgba (cr, 1, 1, 1, 0.5);
+	cairo_paint (cr);
     } cairo_restore (cr);
 
     cairo_translate (cr, -2*STEP, STEP);
@@ -174,6 +180,9 @@ draw (cairo_t *cr, int width, int height)
 	cairo_clip (cr);
 
 	nz_fill_stroke (cr);
+
+	cairo_set_source_rgba (cr, 1, 1, 1, 0.5);
+	cairo_paint (cr);
     } cairo_restore (cr);
 
     cairo_translate (cr, STEP, 0);
@@ -186,6 +195,9 @@ draw (cairo_t *cr, int width, int height)
 	cairo_clip (cr);
 
 	nz_fill_stroke (cr);
+
+	cairo_set_source_rgba (cr, 1, 1, 1, 0.5);
+	cairo_paint (cr);
     } cairo_restore (cr);
 
     cairo_translate (cr, STEP, 0);
@@ -204,6 +216,9 @@ draw (cairo_t *cr, int width, int height)
 	cairo_clip (cr);
 
 	nz_fill_stroke (cr);
+
+	cairo_set_source_rgba (cr, 1, 1, 1, 0.5);
+	cairo_paint (cr);
     } cairo_restore (cr);
 
     return CAIRO_TEST_SUCCESS;

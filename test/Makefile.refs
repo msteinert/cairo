@@ -2016,8 +2016,8 @@ REFERENCE_IMAGES = \
 	reference/radial-gradient.traps.argb32.ref.png \
 	reference/radial-gradient.traps.rgb24.ref.png \
 	reference/radial-outer-focus.xfail.png \
-	reference/random-clip.base.argb32.ref.png \
-	reference/random-clip.base.rgb24.ref.png \
+	reference/random-clip.base.argb32.xfail.png \
+	reference/random-clip.base.rgb24.xfail.png \
 	reference/random-clip.ref.png \
 	reference/random-clip.traps.argb32.ref.png \
 	reference/random-clip.traps.rgb24.ref.png \
