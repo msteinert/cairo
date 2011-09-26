@@ -132,6 +132,8 @@ _gl_destroy (void *device)
     for (n = 0; n < ARRAY_LENGTH (ctx->glyph_cache); n++)
 	_cairo_gl_glyph_cache_fini (ctx, &ctx->glyph_cache[n]);
 
+    _cairo_array_fini (&ctx->tristrip_indices);
+
     cairo_region_destroy (ctx->clip_region);
 
     free (ctx->vb_mem);
@@ -163,7 +165,8 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 
     _cairo_device_init (&ctx->base, &_cairo_gl_device_backend);
 
-    ctx->compositor = _cairo_gl_span_compositor_get ();
+    //ctx->compositor = _cairo_gl_span_compositor_get ();
+    ctx->compositor = _cairo_gl_msaa_compositor_get ();
 
     memset (ctx->glyph_cache, 0, sizeof (ctx->glyph_cache));
     cairo_list_init (&ctx->fonts);
@@ -226,6 +229,8 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
     }
+
+    _cairo_array_init (&ctx->tristrip_indices, sizeof(int));
 
     /* PBO for any sort of texture upload */
     dispatch->GenBuffers (1, &ctx->texture_load_pbo);

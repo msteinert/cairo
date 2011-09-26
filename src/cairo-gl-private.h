@@ -56,6 +56,7 @@
 #include "cairo-rtree-private.h"
 #include "cairo-scaled-font-private.h"
 #include "cairo-spans-compositor-private.h"
+#include "cairo-array-private.h"
 
 #include <assert.h>
 
@@ -291,6 +292,7 @@ struct _cairo_gl_context {
     unsigned int vb_offset;
     unsigned int vertex_size;
     cairo_region_t *clip_region;
+    cairo_array_t tristrip_indices;
 
     cairo_bool_t has_mesa_pack_invert;
     cairo_gl_dispatch_t dispatch;
@@ -488,6 +490,15 @@ _cairo_gl_composite_emit_glyph (cairo_gl_context_t *ctx,
 
 cairo_private void
 _cairo_gl_composite_flush (cairo_gl_context_t *ctx);
+
+cairo_private cairo_status_t
+_cairo_gl_composite_begin_tristrip (cairo_gl_composite_t	*setup,
+				    cairo_gl_context_t		**ctx_out);
+
+cairo_int_status_t
+_cairo_gl_composite_emit_quad_as_tristrip (cairo_gl_context_t	*ctx,
+					   cairo_gl_composite_t	*setup,
+					   cairo_point_t	 quad[4]);
 
 cairo_private void
 _cairo_gl_context_destroy_operand (cairo_gl_context_t *ctx,
