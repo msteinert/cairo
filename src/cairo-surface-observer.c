@@ -45,9 +45,12 @@
 #include "cairo-pattern-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-recording-surface-private.h"
-#include "cairo-script-private.h"
 #include "cairo-surface-subsurface-private.h"
 #include "cairo-reference-count-private.h"
+
+#if CAIRO_HAS_SCRIPT_SURFACE
+#include "cairo-script-private.h"
+#endif
 
 static const cairo_surface_backend_t _cairo_surface_observer_backend;
 
@@ -1767,6 +1770,7 @@ replay_record (cairo_observation_t *log,
 	       cairo_observation_record_t *r,
 	       cairo_device_t *script)
 {
+#if CAIRO_HAS_SCRIPT_SURFACE
     cairo_surface_t *surface;
     cairo_int_status_t status;
 
@@ -1784,6 +1788,9 @@ replay_record (cairo_observation_t *log,
     assert (status == CAIRO_INT_STATUS_SUCCESS);
 
     return TRUE;
+#else
+    return FALSE;
+#endif
 }
 
 static cairo_time_t
@@ -1807,8 +1814,12 @@ _cairo_observation_print (cairo_output_stream_t *stream,
     cairo_device_t *script;
     cairo_time_t total;
 
+#if CAIRO_HAS_SCRIPT_SURFAC
     script = _cairo_script_context_create_internal (stream);
     _cairo_script_context_attach_snapshots (script, FALSE);
+#else
+    script = NULL;
+#endif
 
     total = _cairo_observation_total_elapsed (log);
 
