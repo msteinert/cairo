@@ -52,6 +52,9 @@ typedef struct _cairo_abstract_span_renderer {
 struct cairo_spans_compositor {
     cairo_compositor_t base;
 
+    unsigned int flags;
+#define CAIRO_SPANS_COMPOSITOR_HAS_LERP 0x1
+
     /* pixel-aligned fast paths */
     cairo_int_status_t (*fill_boxes)	(void			*surface,
 					 cairo_operator_t	 op,

@@ -231,8 +231,8 @@ fixup_unbounded_mask (const cairo_spans_compositor_t *compositor,
 
     status = _cairo_composite_rectangles_init_for_boxes (&composite,
 							 extents->surface,
-							 CAIRO_OPERATOR_DEST_OUT,
-							 &_cairo_pattern_white.base,
+							 CAIRO_OPERATOR_CLEAR,
+							 &_cairo_pattern_clear.base,
 							 boxes,
 							 NULL);
     if (unlikely (status))
@@ -282,8 +282,8 @@ fixup_unbounded_polygon (const cairo_spans_compositor_t *compositor,
 
     status = _cairo_composite_rectangles_init_for_polygon (&composite,
 							   extents->surface,
-							   CAIRO_OPERATOR_DEST_OUT,
-							   &_cairo_pattern_white.base,
+							   CAIRO_OPERATOR_CLEAR,
+							   &_cairo_pattern_clear.base,
 							   &polygon,
 							   NULL);
     if (unlikely (status))
@@ -464,8 +464,8 @@ composite_aligned_boxes (const cairo_spans_compositor_t		*compositor,
 
     if (op == CAIRO_OPERATOR_SOURCE && (need_clip_mask || ! no_mask)) {
 	/* SOURCE with a mask is actually a LERP in cairo semantics */
-	/* XXX push this choice down to the backend */
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	if ((compositor->flags & CAIRO_SPANS_COMPOSITOR_HAS_LERP) == 0)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
     /* Are we just copying a recording surface? */
@@ -549,11 +549,6 @@ composite_aligned_boxes (const cairo_spans_compositor_t		*compositor,
 		mask_x = src_x;
 		mask_y = src_y;
 	    }
-	}
-
-	if (mask && op == CAIRO_OPERATOR_CLEAR) {
-	    source = &_cairo_pattern_white.base;
-	    op = CAIRO_OPERATOR_DEST_OUT;
 	}
 
 	src = compositor->pattern_to_surface (dst, source, FALSE,

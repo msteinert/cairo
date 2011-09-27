@@ -465,7 +465,32 @@ composite_boxes (void			*_dst,
 
     /* XXX consider using a region? saves multiple prepare-composite */
 
-    op = _pixman_operator (op);
+    if (((cairo_surface_t *)_dst)->is_clear &&
+	(op == CAIRO_OPERATOR_SOURCE ||
+	 op == CAIRO_OPERATOR_OVER ||
+	 op == CAIRO_OPERATOR_ADD)) {
+	op = PIXMAN_OP_SRC;
+    } else if (mask) {
+	if (op == CAIRO_OPERATOR_CLEAR) {
+#if PIXMAN_HAS_OP_LERP
+	    op = PIXMAN_OP_LERP_CLEAR;
+#else
+	    src = _pixman_image_for_color (CAIRO_COLOR_WHITE);
+	    op = PIXMAN_OP_OUT_REVERSE;
+#endif
+	} else if (op == CAIRO_OPERATOR_SOURCE) {
+#if PIXMAN_HAS_OP_LERP
+	    op = PIXMAN_OP_LERP_SRC;
+#else
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+#endif
+	} else {
+	    op = _pixman_operator (op);
+	}
+    } else {
+	op = _pixman_operator (op);
+    }
+
     for (chunk = &boxes->chunks; chunk; chunk = chunk->next) {
 	for (i = 0; i < chunk->count; i++) {
 	    int x1 = _cairo_fixed_integer_part (chunk->base[i].p1.x);
@@ -1532,6 +1557,11 @@ _cairo_image_spans_compositor_get (void)
     if (compositor.base.delegate == NULL) {
 	_cairo_spans_compositor_init (&compositor,
 				      _cairo_image_traps_compositor_get());
+
+	compositor.flags = 0;
+#if PIXMAN_HAS_OP_LERP
+	compositor.flags |= CAIRO_SPANS_COMPOSITOR_HAS_LERP;
+#endif
 
 	//compositor.acquire = acquire;
 	//compositor.release = release;
