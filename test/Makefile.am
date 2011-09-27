@@ -2,8 +2,6 @@ include $(top_srcdir)/build/Makefile.am.common
 
 include $(top_srcdir)/test/Makefile.sources
 
-include $(top_srcdir)/test/Makefile.refs
-
 SUBDIRS=pdiff .
 
 # Then we have a collection of tests that are only run if certain
@@ -141,7 +139,7 @@ romedalen.png		\
 scarab.jpg		\
 surface-source.c	\
 testtable.js		\
-$(REFERENCE_IMAGES)
+reference
 
 # Any test for which the code committed to CVS is expected to fail
 # should be listed here.
@@ -451,35 +449,6 @@ check-ref-dups:
 	( cd "$(srcdir)" && sha1sum *.ref.png | sort ) > ref.hash; \
 	join ref.hash ref.hash | grep -v -E '( .*.ref.png).*\1' | cut -d' ' -f 1-2 | sort -u
 
-# Not exactly the best script in the world...
-check-ref-missing:
-	@cd "$(srcdir)"; \
-	LANG=C; \
-	ret=true; \
-	grep '\.png \\$$' Makefile.refs | sed 's/ \\$$//' | tr -d '\t' > ref.list; \
-	if ! (find . -name '*.ref.png' ; find . -name '*.xfail.png' ; find . -name '*.new.png' ) \
-		| cut -d/ -f2- | sort | diff -u ref.list - ; then \
-		echo "*** Error: Sanity check failed"; \
-		echo "The reference images marked with '-' are not included in the distribution."; \
-		echo "You probably need to generate them and add them to git."; \
-		echo "The reference images marked with '+' are not listed in Makefile.refs."; \
-		echo "You probably need to add them there (and maybe to git)."; \
-		echo "Please remember to preserve the lexicographical order."; \
-		ret=false; \
-	fi >&2; \
-	if ! git ls-files "*.ref.png" "*.xfail.png" "*.new.png" | sort | diff -u ref.list - ; then \
-		echo "*** Error: Sanity check failed"; \
-		echo "The reference images marked with '-' are not included in the distribution."; \
-		echo "You probably need to add them to git."; \
-		echo "The reference images marked with '+' are not listed in Makefile.refs."; \
-		echo "You probably need to add them there."; \
-		echo "Please remember to preserve the lexicographical order."; \
-		ret=false; \
-	fi >&2; \
-	$$ret
-
-release-verify-sane-tests: check-ref-missing
-
 results.tar:
 	@tar cf $@ index.html testtable.js *.log output/*.log; \
 	for i in output/*.fail.png ; do \
@@ -491,6 +460,6 @@ results.tar:
 results.tar.gz: results.tar
 	gzip -c $< > $@
 
-.PHONY: check-valgrind test recheck retest check-ref-dups check-ref-missing release-verify-sane-tests
+.PHONY: check-valgrind test recheck retest check-ref-dups
 
 EXTRA_DIST += Makefile.win32
