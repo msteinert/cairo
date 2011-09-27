@@ -2164,6 +2164,8 @@ cairo_set_source_surface (cairo_t *cr, cairo_surface_t *surface, double x, doubl
     _enter_trace ();
     _emit_line_info ();
     if (cr != NULL && surface != NULL && _write_lock ()) {
+	Object *obj = _get_object (SURFACE, surface);
+
 	if (_is_current (SURFACE, surface, 0) &&
 	    _is_current (CONTEXT, cr, 1))
 	{
@@ -2175,12 +2177,16 @@ cairo_set_source_surface (cairo_t *cr, cairo_surface_t *surface, double x, doubl
 	    _trace_printf ("exch ");
 	    _exch_operands ();
 	    _consume_operand ();
+	} else if (obj->defined) {
+	    _emit_context (cr);
+	    _trace_printf ("s%ld ", obj->token);
 	} else {
 	    _emit_context (cr);
-	    _trace_printf ("s%ld ", _get_surface_id (surface));
+	    _trace_printf ("%d index ",
+			   current_stack_depth - obj->operand - 1);
 	}
 
-	if (_get_object (SURFACE, surface)->foreign)
+	if (obj->foreign)
 	    _emit_source_image (surface);
 
 	_trace_printf ("pattern");
@@ -2703,6 +2709,7 @@ cairo_mask_surface (cairo_t *cr, cairo_surface_t *surface, double x, double y)
     _enter_trace ();
     _emit_line_info ();
     if (cr != NULL && surface != NULL && _write_lock ()) {
+	Object *obj = _get_object (SURFACE, surface);
 	if (_is_current (SURFACE, surface, 0) &&
 	    _is_current (CONTEXT, cr, 1))
 	{
@@ -2714,9 +2721,13 @@ cairo_mask_surface (cairo_t *cr, cairo_surface_t *surface, double x, double y)
 	    _trace_printf ("exch ");
 	    _exch_operands ();
 	    _consume_operand ();
+	} else if (obj->defined){
+	    _emit_context (cr);
+	    _trace_printf ("s%ld ", obj->token);
 	} else {
 	    _emit_context (cr);
-	    _trace_printf ("s%ld ", _get_surface_id (surface));
+	    _trace_printf ("%d index ",
+			   current_stack_depth - obj->operand - 1);
 	}
 	_trace_printf ("pattern");
 
