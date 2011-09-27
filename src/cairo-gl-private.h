@@ -116,7 +116,7 @@ typedef struct _cairo_gl_surface {
 
     GLuint tex; /* GL texture object containing our data. */
     GLuint fb; /* GL framebuffer object wrapping our data. */
-    GLuint depth; /* GL framebuffer object holding depth */
+    GLuint depth_stencil; /* GL renderbuffer object for holding stencil buffer clip. */
     int owns_tex;
     cairo_bool_t needs_update;
 } cairo_gl_surface_t;
@@ -254,6 +254,14 @@ typedef struct _cairo_gl_dispatch {
 				    GLint level);
     GLenum (*CheckFramebufferStatus) (GLenum target);
     void (*DeleteFramebuffers) (GLsizei n, const GLuint* framebuffers);
+    void (*GenRenderbuffers) (GLsizei n, GLuint *renderbuffers);
+    void (*BindRenderbuffer) (GLenum target, GLuint renderbuffer);
+    void (*RenderbufferStorage) (GLenum target, GLenum internal_format,
+				 GLsizei width, GLsizei height);
+    void (*FramebufferRenderbuffer) (GLenum target, GLenum attachment,
+				     GLenum renderbuffer_ttarget, GLuint renderbuffer);
+    void (*DeleteRenderbuffers) (GLsizei n, GLuint *renderbuffers);
+
 } cairo_gl_dispatch_t;
 
 struct _cairo_gl_context {
@@ -299,6 +307,7 @@ struct _cairo_gl_context {
     GLfloat modelviewprojection_matrix[16];
     cairo_gl_flavor_t gl_flavor;
     cairo_bool_t has_map_buffer;
+    cairo_bool_t has_packed_depth_stencil;
 
     void (*acquire) (void *ctx);
     void (*release) (void *ctx);

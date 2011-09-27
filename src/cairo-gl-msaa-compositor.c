@@ -81,8 +81,8 @@ _draw_traps (cairo_gl_context_t		*ctx,
 	     cairo_gl_composite_t	*setup,
 	     cairo_traps_t		*traps)
 {
-    int i;
     cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
+    int i;
 
     for (i = 0; i < traps->num_traps; i++) {
 	cairo_trapezoid_t *trap = traps->traps + i;
@@ -91,6 +91,84 @@ _draw_traps (cairo_gl_context_t		*ctx,
     }
 
    return status;
+}
+
+static cairo_int_status_t
+_draw_clip (cairo_gl_context_t		*ctx,
+	    cairo_gl_composite_t	*setup,
+	    cairo_clip_t		*clip)
+{
+    cairo_int_status_t status;
+    cairo_traps_t traps;
+
+    cairo_polygon_t polygon;
+    cairo_antialias_t antialias;
+    cairo_fill_rule_t fill_rule;
+
+    status = _cairo_clip_get_polygon (clip, &polygon, &fill_rule, &antialias);
+    if (unlikely (status))
+	return status;
+
+    if (antialias != CAIRO_ANTIALIAS_NONE) {
+	_cairo_polygon_fini (&polygon);
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    _cairo_traps_init (&traps);
+    status = _cairo_bentley_ottmann_tessellate_polygon (&traps,
+							&polygon,
+							fill_rule);
+    _cairo_polygon_fini (&polygon);
+    if (unlikely (status))
+	return status;
+
+    status = _draw_traps (ctx, setup, &traps);
+
+    _cairo_traps_fini (&traps);
+    return status;
+}
+
+static void
+_disable_stencil_buffer (void)
+{
+    glDisable (GL_STENCIL_TEST);
+    glDepthMask (GL_FALSE);
+}
+
+static cairo_int_status_t
+_draw_clip_to_stencil_buffer (cairo_gl_context_t	*ctx,
+			      cairo_gl_composite_t	*setup,
+			      cairo_clip_t		*clip)
+{
+    cairo_int_status_t status;
+
+    assert (! _cairo_clip_is_all_clipped (clip));
+
+    if (! setup->dst->depth_stencil)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    glDepthMask (GL_TRUE);
+    glEnable (GL_STENCIL_TEST);
+    glClearStencil (0);
+    glClear (GL_STENCIL_BUFFER_BIT);
+    glStencilOp (GL_REPLACE, GL_REPLACE, GL_REPLACE);
+    glStencilFunc (GL_EQUAL, 1, 0xffffffff);
+    glColorMask (0, 0, 0, 0);
+
+    status = _draw_clip (ctx, setup, clip);
+    if (unlikely (status)) {
+	_disable_stencil_buffer ();
+	return status;
+    }
+
+    /* We want to only render to the stencil buffer, so draw everything now. */
+    _cairo_gl_composite_flush (ctx);
+
+    glColorMask (1, 1, 1, 1);
+    glStencilOp (GL_KEEP, GL_KEEP, GL_KEEP);
+    glStencilFunc (GL_EQUAL, 1, 0xffffffff);
+
+    return status;;
 }
 
 static cairo_int_status_t
@@ -137,10 +215,6 @@ _cairo_gl_msaa_compositor_fill (const cairo_compositor_t	*compositor,
     if (antialias != CAIRO_ANTIALIAS_NONE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (! _cairo_composite_rectangles_can_reduce_clip (composite,
-						       composite->clip))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
     _cairo_traps_init (&traps);
     status = _cairo_path_fixed_fill_to_traps (path, fill_rule, tolerance, &traps);
     if (unlikely (status))
@@ -169,6 +243,18 @@ _cairo_gl_msaa_compositor_fill (const cairo_compositor_t	*compositor,
     if (unlikely (status))
 	goto cleanup_setup;
 
+    glScissor (composite->unbounded.x, composite->unbounded.y,
+	       composite->unbounded.width, composite->unbounded.height);
+    glEnable (GL_SCISSOR_TEST);
+
+    if (! _cairo_composite_rectangles_can_reduce_clip (composite,
+						       composite->clip))
+    {
+	status = _draw_clip_to_stencil_buffer (ctx, &setup, composite->clip);
+	if (unlikely (status))
+	    goto cleanup_setup;
+    }
+
     status = _draw_traps (ctx, &setup, &traps);
     if (unlikely (status))
         goto cleanup_setup;
@@ -176,8 +262,12 @@ _cairo_gl_msaa_compositor_fill (const cairo_compositor_t	*compositor,
     _cairo_gl_composite_flush (ctx);
 cleanup_setup:
     _cairo_gl_composite_fini (&setup);
-    if (ctx)
+
+    if (ctx) {
+	glDisable (GL_SCISSOR_TEST);
+	_disable_stencil_buffer ();
 	status = _cairo_gl_context_release (ctx, status);
+    }
 cleanup_traps:
     _cairo_traps_fini (&traps);
 

@@ -109,6 +109,11 @@ cairo_private cairo_gl_dispatch_entry_t dispatch_fbo_entries[] = {
     DISPATCH_ENTRY_EXT (FramebufferTexture2D),
     DISPATCH_ENTRY_EXT (CheckFramebufferStatus),
     DISPATCH_ENTRY_EXT (DeleteFramebuffers),
+    DISPATCH_ENTRY_EXT (GenRenderbuffers),
+    DISPATCH_ENTRY_EXT (BindRenderbuffer),
+    DISPATCH_ENTRY_EXT (RenderbufferStorage),
+    DISPATCH_ENTRY_EXT (FramebufferRenderbuffer),
+    DISPATCH_ENTRY_EXT (DeleteRenderbuffers),
     DISPATCH_ENTRY_LAST
 };
 
