@@ -619,7 +619,10 @@ _cairo_path_fixed_stroke_rectilinear_to_boxes (const cairo_path_fixed_t	*path,
     }
 
     if (! rectilinear_stroker.dash.dashed &&
-	_cairo_path_fixed_is_stroke_box (path, &box))
+	_cairo_path_fixed_is_stroke_box (path, &box) &&
+	/* if the segments overlap we need to feed them into the tessellator */
+	box.p2.x - box.p1.x > 2* rectilinear_stroker.half_line_width &&
+	box.p2.y - box.p1.y > 2* rectilinear_stroker.half_line_width)
     {
 	cairo_box_t b;
 
