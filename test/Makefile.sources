@@ -169,6 +169,7 @@ test_sources = \
 	leaky-dashed-stroke.c				\
 	leaky-polygon.c					\
 	line-width.c					\
+	line-width-large-overlap.c			\
 	line-width-overlap.c				\
 	line-width-scale.c				\
 	line-width-tolerance.c				\
