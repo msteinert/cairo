@@ -327,8 +327,10 @@ out:
     return surface;
 
 error:
-    cairo_surface_destroy (surface);
-    surface = _cairo_surface_create_in_error (status);
+    if (status != CAIRO_INT_STATUS_NOTHING_TO_DO) {
+	cairo_surface_destroy (surface);
+	surface = _cairo_surface_create_in_error (status);
+    }
     compositor->release (surface);
     return surface;
 }
@@ -355,6 +357,9 @@ clip_and_composite_with_mask (const cairo_traps_compositor_t *compositor,
     if (unlikely (mask->status))
 	return mask->status;
 
+    if (mask->is_clear)
+	goto skip;
+
     if (src != NULL || dst->content != CAIRO_CONTENT_ALPHA) {
 	compositor->composite (dst, op, src, mask,
 			       extents->bounded.x + src_x,
@@ -369,8 +374,9 @@ clip_and_composite_with_mask (const cairo_traps_compositor_t *compositor,
 			       extents->bounded.x,      extents->bounded.y,
 			       extents->bounded.width,  extents->bounded.height);
     }
-    cairo_surface_destroy (mask);
 
+skip:
+    cairo_surface_destroy (mask);
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -468,6 +474,9 @@ clip_and_composite_source (const cairo_traps_compositor_t	*compositor,
     if (unlikely (mask->status))
 	return mask->status;
 
+    if (mask->is_clear)
+	goto skip;
+
     if (dst->is_clear) {
 	compositor->composite (dst, CAIRO_OPERATOR_SOURCE, src, mask,
 			       extents->bounded.x + src_x, extents->bounded.y + src_y,
@@ -482,6 +491,7 @@ clip_and_composite_source (const cairo_traps_compositor_t	*compositor,
 			  extents->bounded.width, extents->bounded.height);
     }
 
+skip:
     cairo_surface_destroy (mask);
 
     return CAIRO_STATUS_SUCCESS;

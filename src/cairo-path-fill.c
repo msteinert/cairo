@@ -53,7 +53,6 @@ typedef struct cairo_filler {
     cairo_point_t last_move_to;
 } cairo_filler_t;
 
-
 static cairo_status_t
 _cairo_filler_line_to (void *closure,
 		       const cairo_point_t *point)
@@ -185,15 +184,22 @@ _cairo_filler_ra_line_to (void *closure,
 }
 
 static cairo_status_t
+_cairo_filler_ra_close (void *closure)
+{
+    cairo_filler_ra_t *filler = closure;
+    return _cairo_filler_ra_line_to (closure, &filler->last_move_to);
+}
+
+static cairo_status_t
 _cairo_filler_ra_move_to (void *closure,
 			  const cairo_point_t *point)
 {
-    cairo_filler_t *filler = closure;
+    cairo_filler_ra_t *filler = closure;
     cairo_status_t status;
     cairo_point_t p;
 
     /* close current subpath */
-    status = _cairo_filler_close (closure);
+    status = _cairo_filler_ra_close (closure);
     if (unlikely (status))
 	return status;
 
@@ -228,13 +234,13 @@ _cairo_path_fixed_fill_rectilinear_to_polygon (const cairo_path_fixed_t *path,
     status = _cairo_path_fixed_interpret_flat (path,
 					       _cairo_filler_ra_move_to,
 					       _cairo_filler_ra_line_to,
-					       _cairo_filler_close,
+					       _cairo_filler_ra_close,
 					       &filler,
 					       0.);
     if (unlikely (status))
 	return status;
 
-    return _cairo_filler_close (&filler);
+    return _cairo_filler_ra_close (&filler);
 }
 
 cairo_status_t

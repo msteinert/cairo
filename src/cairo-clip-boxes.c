@@ -142,7 +142,7 @@ _cairo_clip_intersect_rectilinear_path (cairo_clip_t *clip,
 							  fill_rule,
 							  antialias,
 							  &boxes);
-    if (likely (status == CAIRO_STATUS_SUCCESS))
+    if (likely (status == CAIRO_STATUS_SUCCESS && boxes.num_boxes))
 	clip = _cairo_clip_intersect_boxes (clip, &boxes);
     else
 	clip = _cairo_clip_set_all_clipped (clip);
@@ -297,7 +297,9 @@ _cairo_clip_intersect_boxes (cairo_clip_t *clip,
 	boxes = &clip_boxes;
     }
 
-    if (boxes->num_boxes == 1) {
+    if (boxes->num_boxes == 0) {
+	return _cairo_clip_set_all_clipped (clip);
+    } else if (boxes->num_boxes == 1) {
 	clip->boxes = &clip->embedded_box;
 	clip->boxes[0] = boxes->chunks.base[0];
 	clip->num_boxes = 1;

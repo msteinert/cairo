@@ -1079,7 +1079,7 @@ _cairo_image_bounded_spans (void *abstract_renderer,
 	    pixman_image_compositor_blt (r->compositor,
 					 spans[0].x, y,
 					 spans[1].x - spans[0].x, height,
-					  r->opacity * spans[0].coverage);
+					 r->opacity * spans[0].coverage);
 	}
 	spans++;
     } while (--num_spans > 1);
