@@ -354,21 +354,22 @@ static void
 usage (const char *argv0)
 {
     fprintf (stderr,
-"Usage: %s [-l] [-r] [-v] [-i iterations] [test-names ... | traces ...]\n"
-"       %s -l\n"
+"Usage: %s [-clrsv] [-i iterations] [-t tile-size] [-x exclude-file] [test-names ... | traces ...]\n"
 "\n"
 "Run the cairo performance test suite over the given tests (all by default)\n"
 "The command-line arguments are interpreted as follows:\n"
 "\n"
+"  -c	use surface cache; keep a cache of surfaces to be reused\n"
+"  -i	iterations; specify the number of iterations per test case\n"
+"  -l	list only; just list selected test case names without executing\n"
 "  -r	raw; display each time measurement instead of summary statistics\n"
 "  -s	sync; only sum the elapsed time of the indiviual operations\n"
+"  -t	tile size; draw to tiled surfaces\n"
 "  -v	verbose; in raw mode also show the summaries\n"
-"  -i	iterations; specify the number of iterations per test case\n"
-"  -x   exclude; specify a file to read a list of traces to exclude\n"
-"  -l	list only; just list selected test case names without executing\n"
+"  -x	exclude; specify a file to read a list of traces to exclude\n"
 "\n"
 "If test names are given they are used as sub-string matches so a command\n"
-"such as \"cairo-perf-trace firefox\" can be used to run all firefox traces.\n"
+"such as \"%s firefox\" can be used to run all firefox traces.\n"
 "Alternatively, you can specify a list of filenames to execute.\n",
 	     argv0, argv0);
 }

@@ -1527,17 +1527,16 @@ static void
 usage (const char *argv0)
 {
     fprintf (stderr,
-"Usage: %s [-x exclude-file] [test-names ... | traces ...]\n"
-"       %s -l\n"
+"Usage: %s [-l] [-x exclude-file] [test-names ... | traces ...]\n"
 "\n"
 "Run the cairo test suite over the given traces (all by default).\n"
 "The command-line arguments are interpreted as follows:\n"
 "\n"
-"  -x   exclude; specify a file to read a list of traces to exclude\n"
 "  -l	list only; just list selected test case names without executing\n"
+"  -x	exclude; specify a file to read a list of traces to exclude\n"
 "\n"
 "If test names are given they are used as sub-string matches so a command\n"
-"such as \"cairo-test-trace firefox\" can be used to run all firefox traces.\n"
+"such as \"%s firefox\" can be used to run all firefox traces.\n"
 "Alternatively, you can specify a list of filenames to execute.\n",
 	     argv0, argv0);
 }

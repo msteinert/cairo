@@ -315,19 +315,19 @@ static void
 usage (const char *argv0)
 {
     fprintf (stderr,
-"Usage: %s [-l] [-r] [-v] [-i iterations] [test-names ...]\n"
-"       %s -l\n"
+"Usage: %s [-flrv] [-i iterations] [test-names ...]\n"
 "\n"
 "Run the cairo performance test suite over the given tests (all by default)\n"
 "The command-line arguments are interpreted as follows:\n"
 "\n"
-"  -r	raw; display each time measurement instead of summary statistics\n"
-"  -v	verbose; in raw mode also show the summaries\n"
+"  -f	fast; faster, less accurate\n"
 "  -i	iterations; specify the number of iterations per test case\n"
 "  -l	list only; just list selected test case names without executing\n"
+"  -r	raw; display each time measurement instead of summary statistics\n"
+"  -v	verbose; in raw mode also show the summaries\n"
 "\n"
 "If test names are given they are used as sub-string matches so a command\n"
-"such as \"cairo-perf text\" can be used to run all text test cases.\n",
+"such as \"%s text\" can be used to run all text test cases.\n",
 	     argv0, argv0);
 }
 

@@ -341,7 +341,6 @@ usage (const char *argv0)
 {
     fprintf (stderr,
 	     "Usage: %s [-afkxsl] [test-names|keywords ...]\n"
-	     "       %s -l\n"
 	     "\n"
 	     "Run the cairo conformance test suite over the given tests (all by default)\n"
 	     "The command-line arguments are interpreted as follows:\n"
@@ -350,15 +349,15 @@ usage (const char *argv0)
 	     "          skips similar surface and device offset testing.\n"
 	     "  -f	foreground; do not fork\n"
 	     "  -k	match tests by keyword\n"
+	     "  -l	list only; just list selected test case names without executing\n"
 	     "  -s	include slow, long running tests\n"
 	     "  -x	exit on first failure\n"
-	     "  -l	list only; just list selected test case names without executing\n"
 	     "\n"
 	     "If test names are given they are used as matches either to a specific\n"
 	     "test case or to a keyword, so a command such as\n"
-	     "\"cairo-test-suite -k text\" can be used to run all text test cases, and\n"
-	     "\"cairo-test-suite text-transform\" to run the individual case.\n",
-	     argv0, argv0);
+	     "\"%s -k text\" can be used to run all text test cases, and\n"
+	     "\"%s text-transform\" to run the individual case.\n",
+	     argv0, argv0, argv0);
 }
 
 static void
