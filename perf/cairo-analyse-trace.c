@@ -330,7 +330,7 @@ parse_options (cairo_perf_t *perf,
     perf->num_exclude_names = 0;
 
     while (1) {
-	c = _cairo_getopt (argc, argv, "i:x:lrvc");
+	c = _cairo_getopt (argc, argv, "i:lx:");
 	if (c == -1)
 	    break;
 

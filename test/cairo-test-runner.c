@@ -367,7 +367,7 @@ _parse_cmdline (cairo_test_runner_t *runner, int *argc, char **argv[])
     int c;
 
     while (1) {
-	c = _cairo_getopt (*argc, *argv, ":afkxsl");
+	c = _cairo_getopt (*argc, *argv, ":afklsx");
 	if (c == -1)
 	    break;
 
@@ -375,20 +375,20 @@ _parse_cmdline (cairo_test_runner_t *runner, int *argc, char **argv[])
 	case 'a':
 	    runner->full_test = TRUE;
 	    break;
-	case 's':
-	    runner->slow = TRUE;
+	case 'f':
+	    runner->foreground = TRUE;
+	    break;
+	case 'k':
+	    runner->keyword_match = TRUE;
 	    break;
 	case 'l':
 	    runner->list_only = TRUE;
 	    break;
-	case 'f':
-	    runner->foreground = TRUE;
+	case 's':
+	    runner->slow = TRUE;
 	    break;
 	case 'x':
 	    runner->exit_on_failure = TRUE;
-	    break;
-	case 'k':
-	    runner->keyword_match = TRUE;
 	    break;
 	default:
 	    fprintf (stderr, "Internal error: unhandled option: %c\n", c);

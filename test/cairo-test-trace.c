@@ -1554,7 +1554,7 @@ parse_options (test_trace_t *test, int argc, char *argv[])
     test->num_exclude_names = 0;
 
     while (1) {
-	c = _cairo_getopt (argc, argv, "x:l");
+	c = _cairo_getopt (argc, argv, "lx:");
 	if (c == -1)
 	    break;
 

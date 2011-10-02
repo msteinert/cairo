@@ -361,11 +361,16 @@ parse_options (cairo_perf_t *perf,
     perf->summary = stdout;
 
     while (1) {
-	c = _cairo_getopt (argc, argv, "i:lrvf");
+	c = _cairo_getopt (argc, argv, "fi:lrv");
 	if (c == -1)
 	    break;
 
 	switch (c) {
+	case 'f':
+	    perf->fast_and_sloppy = TRUE;
+	    if (ms == NULL)
+		perf->ms_per_iteration = CAIRO_PERF_ITERATION_MS_FAST;
+	    break;
 	case 'i':
 	    perf->exact_iterations = TRUE;
 	    perf->iterations = strtoul (optarg, &end, 10);
@@ -381,11 +386,6 @@ parse_options (cairo_perf_t *perf,
 	case 'r':
 	    perf->raw = TRUE;
 	    perf->summary = NULL;
-	    break;
-	case 'f':
-	    perf->fast_and_sloppy = TRUE;
-	    if (ms == NULL)
-		perf->ms_per_iteration = CAIRO_PERF_ITERATION_MS_FAST;
 	    break;
 	case 'v':
 	    verbose = 1;

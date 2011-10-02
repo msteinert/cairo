@@ -445,24 +445,19 @@ parse_options (cairo_perf_t *perf,
     perf->num_exclude_names = 0;
 
     while (1) {
-	c = _cairo_getopt (argc, argv, "t:i:x:lsrvc");
+	c = _cairo_getopt (argc, argv, "ci:lrst:vx:");
 	if (c == -1)
 	    break;
 
 	switch (c) {
+	case 'c':
+	    use_surface_cache = 1;
+	    break;
 	case 'i':
 	    perf->exact_iterations = TRUE;
 	    perf->iterations = strtoul (optarg, &end, 10);
 	    if (*end != '\0') {
 		fprintf (stderr, "Invalid argument for -i (not an integer): %s\n",
-			 optarg);
-		exit (1);
-	    }
-	    break;
-	case 't':
-	    perf->tile_size = strtoul (optarg, &end, 10);
-	    if (*end != '\0') {
-		fprintf (stderr, "Invalid argument for -t (not an integer): %s\n",
 			 optarg);
 		exit (1);
 	    }
@@ -477,11 +472,16 @@ parse_options (cairo_perf_t *perf,
 	case 's':
 	    perf->observe = TRUE;
 	    break;
+	case 't':
+	    perf->tile_size = strtoul (optarg, &end, 10);
+	    if (*end != '\0') {
+		fprintf (stderr, "Invalid argument for -t (not an integer): %s\n",
+			 optarg);
+		exit (1);
+	    }
+	    break;
 	case 'v':
 	    verbose = 1;
-	    break;
-	case 'c':
-	    use_surface_cache = 1;
 	    break;
 	case 'x':
 	    if (! read_excludes (perf, optarg)) {
