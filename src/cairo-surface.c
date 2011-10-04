@@ -1035,7 +1035,7 @@ cairo_surface_get_mime_data (cairo_surface_t		*surface,
     num_slots = surface->mime_data.num_elements;
     slots = _cairo_array_index (&surface->mime_data, 0);
     for (i = 0; i < num_slots; i++) {
-	if (strcmp ((char *) slots[i].key, mime_type) == 0) {
+	if (slots[i].key != NULL && strcmp ((char *) slots[i].key, mime_type) == 0) {
 	    cairo_mime_data_t *mime_data = slots[i].user_data;
 
 	    *data = mime_data->data;
