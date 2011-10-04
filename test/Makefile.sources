@@ -202,6 +202,7 @@ test_sources = \
 	mesh-pattern-transformed.c		        \
 	mime-data.c					\
 	mime-surface.c					\
+	mime-surface-api.c				\
 	miter-precision.c				\
 	move-to-show-surface.c				\
 	new-sub-path.c					\
