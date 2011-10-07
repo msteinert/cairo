@@ -47,6 +47,11 @@
 #include "cairo-gl-private.h"
 #include "cairo-traps-private.h"
 
+struct _tristrip_composite_info {
+    cairo_gl_composite_t	setup;
+    cairo_gl_context_t		*ctx;
+};
+
 static cairo_int_status_t
 _draw_trap (cairo_gl_context_t		*ctx,
 	    cairo_gl_composite_t	*setup,
@@ -91,6 +96,33 @@ _draw_traps (cairo_gl_context_t		*ctx,
     }
 
    return status;
+}
+
+static cairo_int_status_t
+_draw_triangle_fan (cairo_gl_context_t		*ctx,
+		    cairo_gl_composite_t	*setup,
+		    const cairo_point_t		*midpt,
+		    const cairo_point_t		*points,
+		    int				 npoints)
+{
+    int i;
+
+    /* Our strategy here is to not even try to build a triangle fan, but to
+       draw each triangle as if it was an unconnected member of a triangle strip. */
+    for (i = 1; i < npoints; i++) {
+	cairo_int_status_t status;
+	cairo_point_t triangle[3];
+
+	triangle[0] = *midpt;
+	triangle[1] = points[i - 1];
+	triangle[2] = points[i];
+
+	status = _cairo_gl_composite_emit_triangle_as_tristrip (ctx, setup, triangle);
+	if (unlikely (status))
+	    return status;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
@@ -185,6 +217,36 @@ _cairo_gl_msaa_compositor_mask (const cairo_compositor_t	*compositor,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
+static cairo_status_t
+_stroke_shaper_add_triangle (void			*closure,
+			     const cairo_point_t	 triangle[3])
+{
+    struct _tristrip_composite_info *info = closure;
+    return _cairo_gl_composite_emit_triangle_as_tristrip (info->ctx,
+							  &info->setup,
+							  triangle);
+}
+
+static cairo_status_t
+_stroke_shaper_add_triangle_fan (void			*closure,
+				 const cairo_point_t	*midpoint,
+				 const cairo_point_t	*points,
+				 int			 npoints)
+{
+    struct _tristrip_composite_info *info = closure;
+    return _draw_triangle_fan (info->ctx, &info->setup,
+			       midpoint, points, npoints);
+}
+
+static cairo_status_t
+_stroke_shaper_add_quad (void			*closure,
+			 const cairo_point_t	 quad[4])
+{
+    struct _tristrip_composite_info *info = closure;
+    return _cairo_gl_composite_emit_quad_as_tristrip (info->ctx, &info->setup,
+						      quad);
+}
+
 static cairo_int_status_t
 _cairo_gl_msaa_compositor_stroke (const cairo_compositor_t	*compositor,
 				  cairo_composite_rectangles_t	*composite,
@@ -195,7 +257,74 @@ _cairo_gl_msaa_compositor_stroke (const cairo_compositor_t	*compositor,
 				  double			 tolerance,
 				  cairo_antialias_t		 antialias)
 {
-    return CAIRO_INT_STATUS_UNSUPPORTED;
+    cairo_int_status_t status;
+    cairo_gl_surface_t *dst = (cairo_gl_surface_t *) composite->surface;
+    struct _tristrip_composite_info info;
+
+    if (antialias != CAIRO_ANTIALIAS_NONE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    status = _cairo_gl_composite_init (&info.setup,
+				       composite->op,
+				       dst,
+				       FALSE, /* assume_component_alpha */
+				       &composite->bounded);
+    if (unlikely (status))
+	return status;
+
+    info.ctx = NULL;
+
+    status = _cairo_gl_composite_set_source (&info.setup,
+					     &composite->source_pattern.base,
+					     composite->bounded.x,
+					     composite->bounded.y,
+					     composite->bounded.x,
+					     composite->bounded.y,
+					     composite->bounded.width,
+					     composite->bounded.height);
+    if (unlikely (status))
+	goto finish;
+
+    status = _cairo_gl_composite_begin_tristrip (&info.setup, &info.ctx);
+    if (unlikely (status))
+	goto finish;
+
+    glScissor (composite->unbounded.x, composite->unbounded.y,
+	       composite->unbounded.width, composite->unbounded.height);
+    glEnable (GL_SCISSOR_TEST);
+
+    if (! _cairo_composite_rectangles_can_reduce_clip (composite,
+						       composite->clip))
+    {
+	status = _draw_clip_to_stencil_buffer (info.ctx, &info.setup, composite->clip);
+	if (unlikely (status))
+	    goto finish;
+    }
+
+    status = _cairo_path_fixed_stroke_to_shaper ((cairo_path_fixed_t *) path,
+						 style,
+						 ctm,
+						 ctm_inverse,
+						 tolerance,
+						 _stroke_shaper_add_triangle,
+						 _stroke_shaper_add_triangle_fan,
+						 _stroke_shaper_add_quad,
+						 &info);
+    if (unlikely (status))
+	goto finish;
+
+    _cairo_gl_composite_flush (info.ctx);
+
+finish:
+    _cairo_gl_composite_fini (&info.setup);
+
+    if (info.ctx) {
+	glDisable (GL_SCISSOR_TEST);
+	_disable_stencil_buffer ();
+	status = _cairo_gl_context_release (info.ctx, status);
+    }
+
+    return status;
 }
 
 static cairo_int_status_t
