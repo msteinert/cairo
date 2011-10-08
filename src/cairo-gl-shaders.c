@@ -866,8 +866,10 @@ cairo_gl_shader_get_fragment_source (cairo_gl_context_t *ctx,
     cairo_gl_shader_emit_color (stream, ctx, mask, CAIRO_GL_TEX_MASK);
 
     coverage_str = "";
-    if (use_coverage)
-	coverage_str = " * coverage.a";
+    if (use_coverage) {
+	_cairo_output_stream_printf (stream, "varying float coverage;\n");
+	coverage_str = " * coverage";
+    }
 
     _cairo_output_stream_printf (stream,
         "void main()\n"
