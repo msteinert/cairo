@@ -68,6 +68,10 @@ draw (cairo_t *cr, int width, int height)
 	return result;
     }
 
+    /* Pretend we modify the surface data (which detaches the PNG mime data) */
+    cairo_surface_flush (surface);
+    cairo_surface_mark_dirty (surface);
+
     cairo_set_source_surface (cr, surface, 0, 0);
     cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_NEAREST);
     cairo_paint (cr);
