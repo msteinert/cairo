@@ -34,6 +34,10 @@
 
 #include <X11/Xutil.h> /* for XDestroyImage */
 
+#if !CAIRO_HAS_XLIB_XRENDER_SURFACE
+#define PolyModePrecise			    0
+#endif
+
 static const cairo_user_data_key_t key;
 
 typedef struct _xlib_target_closure {
