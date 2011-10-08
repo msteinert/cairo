@@ -213,7 +213,7 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
         return CAIRO_INT_STATUS_UNSUPPORTED;
 
     hash = _cairo_gl_gradient_hash (n_stops, stops);
-    
+
     gradient = _cairo_gl_gradient_lookup (ctx, hash, n_stops, stops);
     if (gradient) {
         *gradient_out = _cairo_gl_gradient_reference (gradient);

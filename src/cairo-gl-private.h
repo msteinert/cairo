@@ -664,6 +664,12 @@ _cairo_gl_composite_glyphs (void			*_dst,
 			    int				 dst_y,
 			    cairo_composite_glyphs_info_t *info);
 
+cairo_private cairo_surface_t *
+_cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
+				  cairo_content_t	content,
+				  int			width,
+				  int			height);
+
 slim_hidden_proto (cairo_gl_surface_create);
 slim_hidden_proto (cairo_gl_surface_create_for_texture);
 

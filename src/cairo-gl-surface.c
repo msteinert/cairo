@@ -392,7 +392,7 @@ _cairo_gl_surface_create_scratch_for_texture (cairo_gl_context_t   *ctx,
     return &surface->base;
 }
 
-static cairo_surface_t *
+cairo_surface_t *
 _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
 				  cairo_content_t	content,
 				  int			width,
@@ -715,13 +715,12 @@ _cairo_gl_surface_create_similar (void		 *abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_gl_surface_fill_alpha_channel (void *abstract_dst,
+_cairo_gl_surface_fill_alpha_channel (cairo_gl_surface_t *dst,
+				      cairo_gl_context_t *ctx,
 				      int x, int y,
 				      int width, int height)
 {
-    cairo_gl_surface_t *dst = abstract_dst;
     cairo_gl_composite_t setup;
-    cairo_gl_context_t *ctx;
     cairo_status_t status;
 
     _cairo_gl_composite_flush (ctx);
@@ -849,7 +848,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	 * texture data.
 	 */
 	if (!has_alpha) {
-	    _cairo_gl_surface_fill_alpha_channel (dst,
+	    _cairo_gl_surface_fill_alpha_channel (dst, ctx,
 						  dst_x, dst_y,
 						  width, height);
 	}
