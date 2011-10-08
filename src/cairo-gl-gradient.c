@@ -226,7 +226,7 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
 
     tex_width = _cairo_gl_gradient_sample_width (n_stops, stops);
 
-    CAIRO_REFERENCE_COUNT_INIT (&gradient->ref_count, 1);
+    CAIRO_REFERENCE_COUNT_INIT (&gradient->ref_count, 2);
     gradient->cache_entry.hash = hash;
     gradient->cache_entry.size = tex_width;
     gradient->device = &ctx->base;
@@ -272,8 +272,8 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
     }
 
     /* we ignore errors here and just return an uncached gradient */
-    if (likely (! _cairo_cache_insert (&ctx->gradients, &gradient->cache_entry)))
-        _cairo_gl_gradient_reference (gradient);
+    if (unlikely (_cairo_cache_insert (&ctx->gradients, &gradient->cache_entry)))
+	CAIRO_REFERENCE_COUNT_INIT (&gradient->ref_count, 1);
 
     *gradient_out = gradient;
     return CAIRO_STATUS_SUCCESS;

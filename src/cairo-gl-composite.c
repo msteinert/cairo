@@ -69,7 +69,7 @@ _cairo_gl_composite_set_source_operand (cairo_gl_composite_t *setup,
 					const cairo_gl_operand_t *source)
 {
     _cairo_gl_operand_destroy (&setup->src);
-    setup->src = *source;
+    _cairo_gl_operand_copy (&setup->src, source);
 }
 
 void
@@ -104,7 +104,7 @@ _cairo_gl_composite_set_mask_operand (cairo_gl_composite_t *setup,
 {
     _cairo_gl_operand_destroy (&setup->mask);
     if (mask)
-	setup->mask = *mask;
+	_cairo_gl_operand_copy (&setup->mask, mask);
 }
 
 void
@@ -242,7 +242,6 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
-        _cairo_gl_gradient_reference (operand->gradient.gradient);
         glActiveTexture (GL_TEXTURE0 + tex_unit);
         glBindTexture (ctx->tex_target, operand->gradient.gradient->tex);
         _cairo_gl_texture_set_extend (ctx, ctx->tex_target, operand->gradient.extend);
@@ -292,7 +291,6 @@ _cairo_gl_context_destroy_operand (cairo_gl_context_t *ctx,
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
-        _cairo_gl_gradient_destroy (ctx->operands[tex_unit].gradient.gradient);
         dispatch->DisableVertexAttribArray (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit);
         break;
     }

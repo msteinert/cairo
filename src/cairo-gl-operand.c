@@ -313,6 +313,30 @@ _cairo_gl_gradient_operand_init (cairo_gl_operand_t *operand,
 }
 
 void
+_cairo_gl_operand_copy (cairo_gl_operand_t *dst,
+			const cairo_gl_operand_t *src)
+{
+    *dst = *src;
+    switch (dst->type) {
+    case CAIRO_GL_OPERAND_CONSTANT:
+	break;
+    case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
+	_cairo_gl_gradient_reference (dst->gradient.gradient);
+	break;
+    case CAIRO_GL_OPERAND_TEXTURE:
+	break;
+    default:
+    case CAIRO_GL_OPERAND_COUNT:
+        ASSERT_NOT_REACHED;
+    case CAIRO_GL_OPERAND_NONE:
+        break;
+    }
+}
+
+void
 _cairo_gl_operand_destroy (cairo_gl_operand_t *operand)
 {
     switch (operand->type) {

@@ -640,6 +640,10 @@ _cairo_gl_operand_emit (cairo_gl_operand_t *operand,
                         uint8_t alpha);
 
 cairo_private void
+_cairo_gl_operand_copy (cairo_gl_operand_t *dst,
+			const cairo_gl_operand_t *src);
+
+cairo_private void
 _cairo_gl_operand_destroy (cairo_gl_operand_t *operand);
 
 cairo_private const cairo_compositor_t *
