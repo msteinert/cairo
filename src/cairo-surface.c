@@ -1314,6 +1314,7 @@ cairo_surface_flush (cairo_surface_t *surface)
 
     /* update the current snapshots *before* the user updates the surface */
     _cairo_surface_detach_snapshots (surface);
+    _cairo_surface_detach_mime_data (surface);
 
     if (surface->backend->flush) {
 	status = surface->backend->flush (surface);
