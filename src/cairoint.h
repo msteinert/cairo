@@ -1951,6 +1951,9 @@ cairo_private void
 _cairo_debug_print_polygon (FILE *stream, cairo_polygon_t *polygon);
 
 cairo_private void
+_cairo_debug_print_traps (FILE *file, const cairo_traps_t *traps);
+
+cairo_private void
 _cairo_debug_print_clip (FILE *stream, const cairo_clip_t *clip);
 
 #endif
