@@ -195,6 +195,7 @@ typedef struct _cairo_cff_font {
     cairo_bool_t         type2_find_width;
     cairo_bool_t         type2_found_width;
     int                  type2_width;
+    cairo_bool_t         type2_has_path;
 
 } cairo_cff_font_t;
 
@@ -1536,6 +1537,7 @@ cairo_cff_parse_charstring (cairo_cff_font_t *font,
 
 	    font->type2_stack_size = 0;
 	    font->type2_find_width = FALSE;
+	    font->type2_has_path = TRUE;
 	    p++;
 	} else if (*p == TYPE2_hmoveto || *p == TYPE2_vmoveto) {
 	    if (font->type2_find_width && font->type2_stack_size > 1)
@@ -1543,8 +1545,12 @@ cairo_cff_parse_charstring (cairo_cff_font_t *font,
 
 	    font->type2_stack_size = 0;
 	    font->type2_find_width = FALSE;
+	    font->type2_has_path = TRUE;
 	    p++;
 	} else if (*p == TYPE2_endchar) {
+	    if (!font->type2_has_path && font->type2_stack_size > 3)
+		return CAIRO_INT_STATUS_UNSUPPORTED; /* seac (Ref Appendix C of Type 2 Charstring Format */
+
 	    if (font->type2_find_width && font->type2_stack_size > 0)
 		font->type2_found_width = TRUE;
 
@@ -1645,6 +1651,7 @@ cairo_cff_find_width_and_subroutines_used (cairo_cff_font_t  *font,
     font->type2_find_width = TRUE;
     font->type2_found_width = FALSE;
     font->type2_width = 0;
+    font->type2_has_path = FALSE;
 
     status = cairo_cff_parse_charstring (font, charstring, length, glyph_id, TRUE);
     if (status)
