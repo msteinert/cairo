@@ -288,8 +288,10 @@ _cairo_clip_intersect_boxes (cairo_clip_t *clip,
 
     if (clip->num_boxes) {
 	_cairo_boxes_init_for_array (&clip_boxes, clip->boxes, clip->num_boxes);
-	if (unlikely (_cairo_boxes_intersect (&clip_boxes, boxes, &clip_boxes)))
-	    return _cairo_clip_set_all_clipped (clip);
+	if (unlikely (_cairo_boxes_intersect (&clip_boxes, boxes, &clip_boxes))) {
+	    clip = _cairo_clip_set_all_clipped (clip);
+	    goto out;
+	}
 
 	if (clip->boxes != &clip->embedded_box)
 	    free (clip->boxes);
@@ -299,7 +301,8 @@ _cairo_clip_intersect_boxes (cairo_clip_t *clip,
     }
 
     if (boxes->num_boxes == 0) {
-	return _cairo_clip_set_all_clipped (clip);
+	clip = _cairo_clip_set_all_clipped (clip);
+	goto out;
     } else if (boxes->num_boxes == 1) {
 	clip->boxes = &clip->embedded_box;
 	clip->boxes[0] = boxes->chunks.base[0];
@@ -308,8 +311,6 @@ _cairo_clip_intersect_boxes (cairo_clip_t *clip,
 	clip->boxes = _cairo_boxes_to_array (boxes, &clip->num_boxes, TRUE);
     }
     _cairo_boxes_extents (boxes, &limits);
-    if (boxes == &clip_boxes)
-	_cairo_boxes_fini (&clip_boxes);
 
     _cairo_box_round_to_rectangle (&limits, &extents);
     if (clip->path == NULL)
@@ -322,6 +323,10 @@ _cairo_clip_intersect_boxes (cairo_clip_t *clip,
 	clip->region = NULL;
     }
     clip->is_region = FALSE;
+
+out:
+    if (boxes == &clip_boxes)
+	_cairo_boxes_fini (&clip_boxes);
 
     return clip;
 }
