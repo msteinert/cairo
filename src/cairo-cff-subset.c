@@ -144,6 +144,7 @@ typedef struct _cairo_cff_font {
     cairo_array_t        charstrings_index;
     cairo_array_t        global_sub_index;
     cairo_array_t        local_sub_index;
+    unsigned char       *charset;
     int                  num_glyphs;
     cairo_bool_t         is_cid;
     cairo_bool_t         is_opentype;
@@ -1176,6 +1177,15 @@ cairo_cff_font_read_top_dict (cairo_cff_font_t *font)
         goto fail;
     font->num_glyphs = _cairo_array_num_elements (&font->charstrings_index);
 
+    operand = cff_dict_get_operands (font->top_dict, CHARSET_OP, &size);
+    if (font->is_cid && !operand)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    decode_integer (operand, &offset);
+    font->charset = font->data + offset;
+    if (font->charset >= font->data_end)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     if (!font->is_opentype)
         cairo_cff_font_read_font_metrics (font, font->top_dict);
 
@@ -1660,16 +1670,91 @@ cairo_cff_find_width_and_subroutines_used (cairo_cff_font_t  *font,
 }
 
 static cairo_int_status_t
+cairo_cff_font_get_gid_for_cid (cairo_cff_font_t  *font, unsigned long cid, unsigned long *gid)
+{
+    unsigned char *p;
+    unsigned long first_gid;
+    unsigned long first_cid;
+    int num_left;
+    unsigned long c, g;
+
+    if (cid == 0) {
+	*gid = 0;
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    switch (font->charset[0]) {
+	/* Format 0 */
+	case 0:
+	    p = font->charset + 1;
+	    g = 1;
+	    while (g <= (unsigned)font->num_glyphs && p < font->data_end) {
+		c = be16_to_cpu( *((uint16_t *)p) );
+		if (c == cid) {
+		    *gid = g;
+		    return CAIRO_STATUS_SUCCESS;
+		}
+		g++;
+		p += 2;
+	    }
+	    break;
+
+	/* Format 1 */
+	case 1:
+	    first_gid = 1;
+	    p = font->charset + 1;
+	    while (first_gid <= (unsigned)font->num_glyphs && p + 2 < font->data_end) {
+		first_cid = be16_to_cpu( *((uint16_t *)p) );
+		num_left = p[2];
+		if (cid >= first_cid && cid <= first_cid + num_left) {
+		    *gid = first_gid + cid - first_cid;
+		    return CAIRO_STATUS_SUCCESS;
+		}
+		first_gid += num_left + 1;
+		p += 3;
+	    }
+	    break;
+
+	/* Format 2 */
+	case 2:
+	    first_gid = 1;
+	    p = font->charset + 1;
+	    while (first_gid <= (unsigned)font->num_glyphs && p + 3 < font->data_end) {
+		first_cid = be16_to_cpu( *((uint16_t *)p) );
+		num_left = be16_to_cpu( *((uint16_t *)(p+2)) );
+		if (cid >= first_cid && cid <= first_cid + num_left) {
+		    *gid = first_gid + cid - first_cid;
+		    return CAIRO_STATUS_SUCCESS;
+		}
+		first_gid += num_left + 1;
+		p += 4;
+	    }
+	    break;
+
+	default:
+	    break;
+    }
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+static cairo_int_status_t
 cairo_cff_font_subset_charstrings_and_subroutines (cairo_cff_font_t  *font)
 {
     cff_index_element_t *element;
     unsigned int i;
     cairo_int_status_t status;
-    unsigned long glyph;
+    unsigned long glyph, cid;
 
     font->subset_subroutines = TRUE;
     for (i = 0; i < font->scaled_font_subset->num_glyphs; i++) {
-	glyph = font->scaled_font_subset->glyphs[i];
+	if (font->is_cid) {
+	    cid = font->scaled_font_subset->glyphs[i];
+	    status = cairo_cff_font_get_gid_for_cid (font, cid, &glyph);
+	    if (unlikely (status))
+		return status;
+	} else {
+	    glyph = font->scaled_font_subset->glyphs[i];
+	}
         element = _cairo_array_index (&font->charstrings_index, glyph);
         status = cff_index_append (&font->charstrings_subset_index,
                                    element->data,
@@ -1704,6 +1789,8 @@ cairo_cff_font_subset_fontdict (cairo_cff_font_t  *font)
     unsigned int i;
     int fd;
     int *reverse_map;
+    unsigned long cid, gid;
+    cairo_int_status_t status;
 
     font->fdselect_subset = calloc (font->scaled_font_subset->num_glyphs,
                                      sizeof (int));
@@ -1727,7 +1814,12 @@ cairo_cff_font_subset_fontdict (cairo_cff_font_t  *font)
 
     font->num_subset_fontdicts = 0;
     for (i = 0; i < font->scaled_font_subset->num_glyphs; i++) {
-        fd = font->fdselect[font->scaled_font_subset->glyphs[i]];
+	cid = font->scaled_font_subset->glyphs[i];
+	status = cairo_cff_font_get_gid_for_cid (font, cid, &gid);
+	if (unlikely (status))
+	    return status;
+
+        fd = font->fdselect[gid];
         if (reverse_map[fd] < 0) {
             font->fd_subset_map[font->num_subset_fontdicts] = fd;
             reverse_map[fd] = font->num_subset_fontdicts++;
