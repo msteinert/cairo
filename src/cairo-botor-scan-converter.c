@@ -1072,7 +1072,7 @@ coverage_reset (struct coverage *cells)
     coverage_rewind (cells);
 }
 
-inline static struct cell *
+static struct cell *
 coverage_alloc (sweep_line_t *sweep_line,
 		struct cell *tail,
 		int x)
