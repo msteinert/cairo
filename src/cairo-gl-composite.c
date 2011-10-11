@@ -656,8 +656,8 @@ _cairo_gl_composite_emit_vertex (cairo_gl_context_t *ctx,
     *vb++ = x;
     *vb++ = y;
 
-    _cairo_gl_operand_emit (&ctx->operands[CAIRO_GL_TEX_SOURCE], &vb, x, y, alpha);
-    _cairo_gl_operand_emit (&ctx->operands[CAIRO_GL_TEX_MASK  ], &vb, x, y, alpha);
+    _cairo_gl_operand_emit (&ctx->operands[CAIRO_GL_TEX_SOURCE], &vb, x, y);
+    _cairo_gl_operand_emit (&ctx->operands[CAIRO_GL_TEX_MASK  ], &vb, x, y);
 
     if (ctx->spans) {
 	union fi {
@@ -706,7 +706,7 @@ _cairo_gl_composite_emit_glyph_vertex (cairo_gl_context_t *ctx,
     *vb++ = x;
     *vb++ = y;
 
-    _cairo_gl_operand_emit (&ctx->operands[CAIRO_GL_TEX_SOURCE], &vb, x, y, 0);
+    _cairo_gl_operand_emit (&ctx->operands[CAIRO_GL_TEX_SOURCE], &vb, x, y);
 
     *vb++ = glyph_x;
     *vb++ = glyph_y;

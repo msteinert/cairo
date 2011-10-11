@@ -636,8 +636,7 @@ cairo_private void
 _cairo_gl_operand_emit (cairo_gl_operand_t *operand,
                         GLfloat ** vb,
                         GLfloat x,
-                        GLfloat y,
-                        uint8_t alpha);
+                        GLfloat y);
 
 cairo_private void
 _cairo_gl_operand_copy (cairo_gl_operand_t *dst,
