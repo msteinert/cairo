@@ -298,6 +298,37 @@ _stroke_shaper_add_quad (void			*closure,
 }
 
 static cairo_int_status_t
+_prevent_overlapping_drawing (cairo_gl_context_t *ctx,
+			      cairo_gl_composite_t *setup,
+			      cairo_composite_rectangles_t *composite,
+			      cairo_bool_t used_stencil_buffer_for_clip)
+{
+    if (! _cairo_gl_ensure_stencil (ctx, setup->dst))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (_cairo_pattern_is_opaque (&composite->source_pattern.base,
+				  &composite->source_sample_area))
+	return CAIRO_INT_STATUS_SUCCESS;
+
+   if (used_stencil_buffer_for_clip == FALSE) {
+	/* Enable the stencil buffer, even if we have no clip so that
+	   we can use it below to prevent overlapping shapes. We initialize
+	   it all to one here which represents infinite clip. */
+	glDepthMask (GL_TRUE);
+	glEnable (GL_STENCIL_TEST);
+	glClearStencil (1);
+	glClear (GL_STENCIL_BUFFER_BIT);
+	glStencilFunc (GL_EQUAL, 1, 1);
+    }
+
+    /* This means that once we draw to a particular pixel nothing else can
+       be drawn there until the stencil buffer is reset or the stencil test
+       is disabled. */
+    glStencilOp (GL_ZERO, GL_ZERO, GL_ZERO);
+    return CAIRO_INT_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
 _cairo_gl_msaa_compositor_stroke (const cairo_compositor_t	*compositor,
 				  cairo_composite_rectangles_t	*composite,
 				  const cairo_path_fixed_t	*path,
@@ -337,6 +368,11 @@ _cairo_gl_msaa_compositor_stroke (const cairo_compositor_t	*compositor,
 
     status = _scissor_and_clip (info.ctx, &info.setup, composite,
 				&used_stencil_buffer_for_clip);
+    if (unlikely (status))
+	goto finish;
+
+    status = _prevent_overlapping_drawing (info.ctx, &info.setup, composite,
+					   used_stencil_buffer_for_clip);
     if (unlikely (status))
 	goto finish;
 
