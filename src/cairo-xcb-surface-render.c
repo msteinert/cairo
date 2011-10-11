@@ -4727,7 +4727,7 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
-    if (surface->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_GLYPHS && 0) {
+    if (surface->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_GLYPHS) {
 	_cairo_scaled_font_freeze_cache (scaled_font);
 
 	status = _can_composite_glyphs (surface, &composite->bounded,
