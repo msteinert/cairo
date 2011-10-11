@@ -534,7 +534,7 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_SOURCE, &setup->src, vertex_size, dst_size);
     _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_MASK, &setup->mask, vertex_size, dst_size + src_size);
     if (setup->spans)
-	_cairo_gl_context_setup_spans (ctx, vertex_size, dst_size + src_size);
+	_cairo_gl_context_setup_spans (ctx, vertex_size, dst_size + src_size + mask_size);
     else
 	ctx->dispatch.DisableVertexAttribArray (CAIRO_GL_COLOR_ATTRIB_INDEX);
 
