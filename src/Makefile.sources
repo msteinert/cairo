@@ -366,6 +366,7 @@ cairo_gl_sources = cairo-gl-composite.c \
 		   cairo-gl-info.c \
 		   cairo-gl-operand.c \
 		   cairo-gl-shaders.c \
+		   cairo-gl-msaa-compositor.c \
 		   cairo-gl-spans-compositor.c \
 		   cairo-gl-traps-compositor.c \
 		   cairo-gl-surface.c

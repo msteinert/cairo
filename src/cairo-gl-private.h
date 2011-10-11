@@ -646,6 +646,9 @@ cairo_private void
 _cairo_gl_operand_destroy (cairo_gl_operand_t *operand);
 
 cairo_private const cairo_compositor_t *
+_cairo_gl_msaa_compositor_get (void);
+
+cairo_private const cairo_compositor_t *
 _cairo_gl_span_compositor_get (void);
 
 cairo_private const cairo_compositor_t *
