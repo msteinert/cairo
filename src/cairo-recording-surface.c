@@ -1099,6 +1099,7 @@ _cairo_recording_surface_snapshot (void *abstract_other)
 
     surface->indices = NULL;
     surface->num_indices = 0;
+    surface->optimize_clears = TRUE;
 
     _cairo_array_init (&surface->commands, sizeof (cairo_command_t *));
     status = _cairo_recording_surface_replay (&other->base, &surface->base);
