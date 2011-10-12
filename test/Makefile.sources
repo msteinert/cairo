@@ -58,6 +58,7 @@ test_sources = \
 	clip-nesting.c					\
 	clip-operator.c					\
 	clip-push-group.c				\
+	clip-polygons.c					\
 	clip-rectilinear.c				\
 	clip-shape.c					\
 	clip-stroke.c					\
