@@ -94,7 +94,7 @@ _cairo_surface_clipper_intersect_clip_boxes (cairo_surface_clipper_t *clipper,
 					   CAIRO_FILL_RULE_WINDING,
 					   0.,
 					   CAIRO_ANTIALIAS_DEFAULT);
-    _cairo_path_fixed_init (&path);
+    _cairo_path_fixed_fini (&path);
 
     return status;
 }
