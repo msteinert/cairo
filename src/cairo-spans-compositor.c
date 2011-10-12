@@ -810,6 +810,9 @@ clip_and_composite_polygon (const cairo_spans_compositor_t	*compositor,
 	    cairo_clip_t *old_clip;
 
 	    if (clip_antialias == antialias) {
+		/* refresh limits after trimming extents */
+		_cairo_polygon_limit_to_clip(polygon, extents->clip);
+
 		status = _cairo_polygon_intersect (polygon, fill_rule,
 						   &clipper, clip_fill_rule);
 		_cairo_polygon_fini (&clipper);

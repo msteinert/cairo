@@ -48,23 +48,11 @@ _cairo_polygon_add_edge (cairo_polygon_t *polygon,
 			 int dir);
 
 void
-_cairo_polygon_init (cairo_polygon_t *polygon,
+_cairo_polygon_limit (cairo_polygon_t *polygon,
 		     const cairo_box_t *limits,
 		     int num_limits)
 {
     int n;
-
-    VG (VALGRIND_MAKE_MEM_UNDEFINED (polygon, sizeof (cairo_polygon_t)));
-
-    polygon->status = CAIRO_STATUS_SUCCESS;
-
-    polygon->num_edges = 0;
-
-    polygon->edges = polygon->edges_embedded;
-    polygon->edges_size = ARRAY_LENGTH (polygon->edges_embedded);
-
-    polygon->extents.p1.x = polygon->extents.p1.y = INT32_MAX;
-    polygon->extents.p2.x = polygon->extents.p2.y = INT32_MIN;
 
     polygon->limits = limits;
     polygon->num_limits = num_limits;
@@ -85,6 +73,36 @@ _cairo_polygon_init (cairo_polygon_t *polygon,
 		polygon->limit.p2.y = limits[n].p2.y;
 	}
     }
+}
+
+void
+_cairo_polygon_limit_to_clip (cairo_polygon_t *polygon,
+			      const cairo_clip_t *clip)
+{
+    if (clip)
+	_cairo_polygon_limit (polygon, clip->boxes, clip->num_boxes);
+    else
+	_cairo_polygon_limit (polygon, 0, 0);
+}
+
+void
+_cairo_polygon_init (cairo_polygon_t *polygon,
+		     const cairo_box_t *limits,
+		     int num_limits)
+{
+    VG (VALGRIND_MAKE_MEM_UNDEFINED (polygon, sizeof (cairo_polygon_t)));
+
+    polygon->status = CAIRO_STATUS_SUCCESS;
+
+    polygon->num_edges = 0;
+
+    polygon->edges = polygon->edges_embedded;
+    polygon->edges_size = ARRAY_LENGTH (polygon->edges_embedded);
+
+    polygon->extents.p1.x = polygon->extents.p1.y = INT32_MAX;
+    polygon->extents.p2.x = polygon->extents.p2.y = INT32_MIN;
+
+    _cairo_polygon_limit (polygon, limits, num_limits);
 }
 
 void
