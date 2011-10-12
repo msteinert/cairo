@@ -661,6 +661,21 @@ _cairo_recording_surface_commit (cairo_recording_surface_t *surface,
     return _cairo_array_append (&surface->commands, &command);
 }
 
+static void
+_cairo_recording_surface_reset (cairo_recording_surface_t *surface)
+{
+    /* Reset the commands and temporaries */
+    _cairo_recording_surface_finish (surface);
+
+    surface->bbtree.left = surface->bbtree.right = NULL;
+    surface->bbtree.chain = INVALID_CHAIN;
+
+    surface->indices = NULL;
+    surface->num_indices = 0;
+
+    _cairo_array_init (&surface->commands, sizeof (cairo_command_t *));
+}
+
 static cairo_int_status_t
 _cairo_recording_surface_paint (void			  *abstract_surface,
 				cairo_operator_t	   op,
@@ -674,8 +689,7 @@ _cairo_recording_surface_paint (void			  *abstract_surface,
 
     if (op == CAIRO_OPERATOR_CLEAR && clip == NULL) {
 	if (surface->optimize_clears) {
-	    _cairo_recording_surface_destroy_bbtree (surface);
-	    surface->commands.num_elements = 0;
+	    _cairo_recording_surface_reset (surface);
 	    return CAIRO_STATUS_SUCCESS;
 	}
     }
