@@ -212,7 +212,7 @@ cleanup_polygon:
     _cairo_polygon_fini (&polygon);
 error:
     cairo_surface_destroy (surface);
-    return _cairo_surface_create_in_error (status);
+    return _cairo_int_surface_create_in_error (status);
 }
 
 static cairo_int_status_t
@@ -226,8 +226,12 @@ fixup_unbounded_mask (const cairo_spans_compositor_t *compositor,
 
     clip = get_clip_surface (compositor, extents->surface, extents->clip,
 			     &extents->unbounded);
-    if (unlikely (clip->status))
+    if (unlikely (clip->status)) {
+	if ((cairo_int_status_t)clip->status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    return CAIRO_STATUS_SUCCESS;
+
 	return clip->status;
+    }
 
     status = _cairo_composite_rectangles_init_for_boxes (&composite,
 							 extents->surface,

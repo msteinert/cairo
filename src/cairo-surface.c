@@ -147,6 +147,9 @@ static DEFINE_NIL_SURFACE(CAIRO_STATUS_INVALID_SIZE, _cairo_surface_nil_invalid_
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_DEVICE_TYPE_MISMATCH, _cairo_surface_nil_device_type_mismatch);
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_DEVICE_ERROR, _cairo_surface_nil_device_error);
 
+static DEFINE_NIL_SURFACE(CAIRO_INT_STATUS_UNSUPPORTED, _cairo_surface_nil_unsupported);
+static DEFINE_NIL_SURFACE(CAIRO_INT_STATUS_NOTHING_TO_DO, _cairo_surface_nil_nothing_to_do);
+
 /**
  * _cairo_surface_set_error:
  * @surface: a surface
@@ -2259,6 +2262,7 @@ _cairo_surface_set_resolution (cairo_surface_t *surface,
 cairo_surface_t *
 _cairo_surface_create_in_error (cairo_status_t status)
 {
+    assert (status < CAIRO_STATUS_LAST_STATUS);
     switch (status) {
     case CAIRO_STATUS_NO_MEMORY:
 	return (cairo_surface_t *) &_cairo_surface_nil;
@@ -2315,6 +2319,23 @@ _cairo_surface_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED:
     case CAIRO_STATUS_INVALID_MESH_CONSTRUCTION:
     case CAIRO_STATUS_DEVICE_FINISHED:
+    default:
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_surface_t *) &_cairo_surface_nil;
+    }
+}
+
+cairo_surface_t *
+_cairo_int_surface_create_in_error (cairo_int_status_t status)
+{
+    if (status < CAIRO_INT_STATUS_LAST_STATUS)
+	return _cairo_surface_create_in_error (status);
+
+    switch ((int)status) {
+    case CAIRO_INT_STATUS_UNSUPPORTED:
+	return (cairo_surface_t *) &_cairo_surface_nil_unsupported;
+    case CAIRO_INT_STATUS_NOTHING_TO_DO:
+	return (cairo_surface_t *) &_cairo_surface_nil_nothing_to_do;
     default:
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t *) &_cairo_surface_nil;

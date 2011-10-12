@@ -102,4 +102,7 @@ struct _cairo_surface {
     cairo_font_options_t font_options;
 };
 
+cairo_private cairo_surface_t *
+_cairo_int_surface_create_in_error (cairo_int_status_t status);
+
 #endif /* CAIRO_SURFACE_PRIVATE_H */
