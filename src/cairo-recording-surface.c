@@ -694,6 +694,15 @@ _cairo_recording_surface_paint (void			  *abstract_surface,
 	}
     }
 
+    if (clip == NULL && surface->optimize_clears &&
+	source->type == CAIRO_PATTERN_TYPE_SOLID &&
+	(op == CAIRO_OPERATOR_SOURCE ||
+	 (op == CAIRO_OPERATOR_OVER &&
+	  (surface->base.is_clear || _cairo_pattern_is_opaque_solid (source)))))
+    {
+	_cairo_recording_surface_reset (surface);
+    }
+
     status = _cairo_composite_rectangles_init_for_paint (&composite,
 							 &surface->base,
 							 op, source,
