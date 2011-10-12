@@ -809,4 +809,5 @@ void
 _cairo_clip_reset_static_data (void)
 {
     _freed_pool_reset (&clip_path_pool);
+    _freed_pool_reset (&clip_pool);
 }
