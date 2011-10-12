@@ -119,7 +119,7 @@ floored_muldivrem(int x, int a, int b)
 static cairo_status_t
 polygon_init (struct polygon *polygon, int ymin, int ymax)
 {
-    unsigned h = ymax - ymin;
+    unsigned h = ymax - ymin + 1;
 
     polygon->y_buckets = polygon->y_buckets_embedded;
     if (h > ARRAY_LENGTH (polygon->y_buckets_embedded)) {
@@ -128,6 +128,7 @@ polygon_init (struct polygon *polygon, int ymin, int ymax)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
     memset (polygon->y_buckets, 0, h * sizeof (struct edge *));
+    polygon->y_buckets[h-1] = (void *)-1;
 
     polygon->ymin = ymin;
     polygon->ymax = ymax;
