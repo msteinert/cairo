@@ -156,7 +156,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_operand_t *operand,
     if (src->surface->backend->type == CAIRO_SURFACE_TYPE_IMAGE) {
 	status = _cairo_gl_surface_draw_image (surface,
 				      (cairo_image_surface_t *)src->surface,
-				      src_x, src_y,
+				      0, 0,
 				      width, height,
 				      0, 0);
 
@@ -166,9 +166,8 @@ _cairo_gl_pattern_texture_setup (cairo_gl_operand_t *operand,
 	cairo_surface_t *image;
 
 	image = cairo_surface_map_to_image (&surface->base, NULL);
-	status = _cairo_surface_offset_paint (image, src_x, src_y,
-					      CAIRO_OPERATOR_SOURCE, _src,
-					      NULL);
+	status = _cairo_surface_paint (image, CAIRO_OPERATOR_SOURCE,
+				       _src, NULL);
 	cairo_surface_unmap_image (&surface->base, image);
 
 	attributes->extend = CAIRO_EXTEND_NONE;
@@ -185,7 +184,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_operand_t *operand,
      * (unnormalized src -> unnormalized src) to
      * (unnormalized dst -> unnormalized src)
      */
-    cairo_matrix_init_translate (&m, -dst_x, -dst_y);
+    cairo_matrix_init_translate (&m, src_x - dst_x, src_y - dst_y);
     cairo_matrix_multiply (&attributes->matrix, &m, &src->base.matrix);
 
     /* Translate the matrix from
