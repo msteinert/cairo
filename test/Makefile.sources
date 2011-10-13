@@ -315,6 +315,7 @@ test_sources = \
 	surface-pattern-scale-down-extend.c		\
 	surface-pattern-scale-up.c			\
 	text-antialias.c				\
+	text-antialias-subpixel.c			\
 	text-cache-crash.c				\
 	text-glyph-range.c				\
 	text-pattern.c					\
