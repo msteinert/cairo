@@ -362,7 +362,7 @@ _cairo_gl_msaa_compositor_stroke (const cairo_compositor_t	*compositor,
     if (unlikely (status))
 	goto finish;
 
-    status = _cairo_gl_composite_begin_tristrip (&info.setup, &info.ctx);
+    status = _cairo_gl_composite_begin (&info.setup, &info.ctx);
     if (unlikely (status))
 	goto finish;
 
@@ -439,7 +439,7 @@ _cairo_gl_msaa_compositor_fill (const cairo_compositor_t	*compositor,
     if (unlikely (status))
 	goto cleanup_setup;
 
-    status = _cairo_gl_composite_begin_tristrip (&setup, &ctx);
+    status = _cairo_gl_composite_begin (&setup, &ctx);
     if (unlikely (status))
 	goto cleanup_setup;
 

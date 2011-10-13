@@ -794,9 +794,12 @@ _cairo_gl_composite_emit_tristrip_vertex (cairo_gl_context_t	*ctx,
 					  const cairo_point_t	*point)
 {
     GLfloat *vb = (GLfloat *) (void *) &ctx->vb[ctx->vb_offset];
+    GLfloat x = _cairo_fixed_to_double (point->x);
+    GLfloat y = _cairo_fixed_to_double (point->y);
 
-    *vb++ = _cairo_fixed_to_double (point->x);
-    *vb++ = _cairo_fixed_to_double (point->y);
+    *vb++ = x;
+    *vb++ = y;
+    _cairo_gl_operand_emit (&ctx->operands[CAIRO_GL_TEX_SOURCE], &vb, x, y);
 
     ctx->vb_offset += ctx->vertex_size;
 }
@@ -845,6 +848,10 @@ _cairo_gl_composite_emit_quad_as_tristrip (cairo_gl_context_t	*ctx,
 					   cairo_gl_composite_t	*setup,
 					   const cairo_point_t	quad[4])
 {
+    if (_cairo_array_num_elements (&ctx->tristrip_indices) == 0 &&
+	! _cairo_gl_context_is_flushed (ctx))
+	_cairo_gl_composite_flush (ctx);
+
     _cairo_gl_composite_prepare_buffer (ctx, 4);
 
     _cairo_gl_composite_emit_tristrip_vertex (ctx, &quad[0]);
@@ -864,68 +871,14 @@ _cairo_gl_composite_emit_triangle_as_tristrip (cairo_gl_context_t	*ctx,
 					       cairo_gl_composite_t	*setup,
 					       const cairo_point_t	 triangle[3])
 {
+    if (_cairo_array_num_elements (&ctx->tristrip_indices) == 0 &&
+	! _cairo_gl_context_is_flushed (ctx))
+	_cairo_gl_composite_flush (ctx);
+
     _cairo_gl_composite_prepare_buffer (ctx, 3);
 
     _cairo_gl_composite_emit_tristrip_vertex (ctx, &triangle[0]);
     _cairo_gl_composite_emit_tristrip_vertex (ctx, &triangle[1]);
     _cairo_gl_composite_emit_tristrip_vertex (ctx, &triangle[2]);
     return _cairo_gl_composite_append_vertex_indices (ctx, 3);
-}
-
-cairo_status_t
-_cairo_gl_composite_begin_tristrip (cairo_gl_composite_t	*setup,
-				    cairo_gl_context_t		**ctx_out)
-{
-    cairo_gl_context_t *ctx;
-    cairo_status_t status;
-    cairo_gl_shader_t *shader;
-    int src_size, dst_size;
-
-    cairo_gl_operand_t default_mask;
-    memset (&default_mask, 0, sizeof (cairo_gl_operand_t));
-
-    assert (setup->dst);
-
-    status = _cairo_gl_context_acquire (setup->dst->base.device, &ctx);
-    if (unlikely (status))
-	return status;
-    *ctx_out = ctx;
-
-    /* Finish any pending operations from other GL compositors. */
-    if (! _cairo_gl_context_is_flushed (ctx))
-	_cairo_gl_composite_flush (ctx);
-
-    glEnable (GL_BLEND);
-
-    status = _cairo_gl_get_shader_by_type (ctx,
-					   &setup->src,
-					   &default_mask,
-					   setup->spans,
-					   CAIRO_GL_SHADER_IN_NORMAL,
-                                           &shader);
-    if (unlikely (status)) {
-	status = _cairo_gl_context_release (ctx, status);
-	return status;
-    }
-
-    _cairo_gl_context_set_destination (ctx, setup->dst);
-
-    _cairo_gl_set_operator (ctx, setup->op, FALSE);
-    _cairo_gl_set_shader (ctx, shader);
-    _cairo_gl_composite_bind_to_shader (ctx, setup);
-
-    dst_size  = 2 * sizeof (GLfloat);
-    src_size  = _cairo_gl_operand_get_vertex_size (setup->src.type);
-
-    ctx->vertex_size = dst_size + src_size;
-
-    ctx->dispatch.BindBuffer (GL_ARRAY_BUFFER, ctx->vbo);
-    ctx->dispatch.VertexAttribPointer (CAIRO_GL_VERTEX_ATTRIB_INDEX, 2,
-				       GL_FLOAT, GL_FALSE, ctx->vertex_size, NULL);
-    ctx->dispatch.EnableVertexAttribArray (CAIRO_GL_VERTEX_ATTRIB_INDEX);
-
-    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_SOURCE, &setup->src,
-				     ctx->vertex_size, dst_size);
-
-    return status;
 }

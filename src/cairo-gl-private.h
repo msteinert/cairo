@@ -511,10 +511,6 @@ _cairo_gl_composite_emit_glyph (cairo_gl_context_t *ctx,
 cairo_private void
 _cairo_gl_composite_flush (cairo_gl_context_t *ctx);
 
-cairo_private cairo_status_t
-_cairo_gl_composite_begin_tristrip (cairo_gl_composite_t	*setup,
-				    cairo_gl_context_t		**ctx_out);
-
 cairo_private cairo_int_status_t
 _cairo_gl_composite_emit_quad_as_tristrip (cairo_gl_context_t	*ctx,
 					   cairo_gl_composite_t	*setup,
