@@ -54,18 +54,19 @@
 #include "cairo-surface-offset-private.h"
 #include "cairo-surface-observer-private.h"
 #include "cairo-surface-snapshot-private.h"
+#include "cairo-surface-subsurface-private.h"
 
 #define PIXMAN_MAX_INT ((pixman_fixed_1 >> 1) - pixman_fixed_e) /* need to ensure deltas also fit */
 
 static cairo_surface_t *
 unwrap_surface (cairo_surface_t *surface, int *tx, int *ty)
 {
-    *tx = *ty = 0;
-
     if (_cairo_surface_is_paginated (surface))
 	surface = _cairo_paginated_surface_get_recording (surface);
     if (_cairo_surface_is_snapshot (surface))
 	surface = _cairo_surface_snapshot_get_target (surface);
+    if (_cairo_surface_is_subsurface (surface))
+	surface = _cairo_surface_subsurface_get_target_with_offset (surface, tx, ty);
     if (_cairo_surface_is_observer (surface))
 	surface = _cairo_surface_observer_get_target (surface);
     return surface;
@@ -567,15 +568,17 @@ native_source (cairo_xlib_surface_t *dst,
 	is_contained = TRUE;
     }
 
-    if (pattern->base.filter == CAIRO_FILTER_NEAREST && is_contained) {
+    if (pattern->base.filter == CAIRO_FILTER_NEAREST && is_contained &&
+	_cairo_matrix_is_translation (&pattern->base.matrix))
+    {
 	*src_x += pattern->base.matrix.x0;
 	*src_y += pattern->base.matrix.y0;
 	_cairo_xlib_surface_ensure_picture (src);
 	return cairo_surface_reference (&src->base);
     }
 
-    /* As these are frequent and meant to be fast we track pictures for
-     * enative surface and minimse update requests.
+    /* As these are frequent and meant to be fast, we track pictures for
+     * native surface and minimise update requests.
      */
     source = &src->embedded_source;
     if (source->picture == None) {
@@ -891,9 +894,9 @@ _cairo_xlib_source_create_for_pattern (cairo_surface_t *_dst,
     cairo_xlib_surface_t *dst = (cairo_xlib_surface_t *)_dst;
     int tx, ty;
 
-    if (pattern == NULL || pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
-	*src_x = *src_y = 0;
+    *src_x = *src_y = 0;
 
+    if (pattern == NULL || pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
 	if (pattern == NULL)
 	    pattern = &_cairo_pattern_white.base;
 

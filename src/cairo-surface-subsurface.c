@@ -577,6 +577,7 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
     }
 
     surface->target = cairo_surface_reference (target);
+    surface->base.type = surface->target->type;
 
     return &surface->base;
 }
@@ -609,6 +610,7 @@ _cairo_surface_create_for_rectangle_int (cairo_surface_t *target,
     surface->extents.x += target->device_transform.x0;
     surface->extents.y += target->device_transform.y0;
     surface->target = cairo_surface_reference (target);
+    surface->base.type = surface->target->type;
 
     return &surface->base;
 }
