@@ -576,6 +576,19 @@ _cairo_gl_composite_draw_tristrip (cairo_gl_context_t *ctx)
 {
     cairo_array_t* indices = &ctx->tristrip_indices;
     const int *indices_array = _cairo_array_index_const (indices, 0);
+
+
+    if (ctx->pre_shader) {
+	cairo_gl_shader_t *prev_shader = ctx->current_shader;
+
+	_cairo_gl_set_shader (ctx, ctx->pre_shader);
+	_cairo_gl_set_operator (ctx, CAIRO_OPERATOR_DEST_OUT, TRUE);
+	glDrawElements (GL_TRIANGLE_STRIP, _cairo_array_num_elements (indices), GL_UNSIGNED_INT, indices_array);
+
+	_cairo_gl_set_shader (ctx, prev_shader);
+	_cairo_gl_set_operator (ctx, CAIRO_OPERATOR_ADD, TRUE);
+    }
+
     glDrawElements (GL_TRIANGLE_STRIP, _cairo_array_num_elements (indices), GL_UNSIGNED_INT, indices_array);
     _cairo_array_truncate (indices, 0);
 }
@@ -696,6 +709,17 @@ _cairo_gl_composite_emit_vertex (cairo_gl_context_t *ctx,
     ctx->vb_offset += ctx->vertex_size;
 }
 
+static void
+_cairo_gl_composite_emit_point (cairo_gl_context_t	*ctx,
+				const cairo_point_t	*point,
+				uint8_t alpha)
+{
+    _cairo_gl_composite_emit_vertex (ctx,
+				     _cairo_fixed_to_double (point->x),
+				     _cairo_fixed_to_double (point->y),
+				     alpha);
+}
+
 void
 _cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
                                GLfloat x1,
@@ -789,21 +813,6 @@ _cairo_gl_composite_init (cairo_gl_composite_t *setup,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
-_cairo_gl_composite_emit_tristrip_vertex (cairo_gl_context_t	*ctx,
-					  const cairo_point_t	*point)
-{
-    GLfloat *vb = (GLfloat *) (void *) &ctx->vb[ctx->vb_offset];
-    GLfloat x = _cairo_fixed_to_double (point->x);
-    GLfloat y = _cairo_fixed_to_double (point->y);
-
-    *vb++ = x;
-    *vb++ = y;
-    _cairo_gl_operand_emit (&ctx->operands[CAIRO_GL_TEX_SOURCE], &vb, x, y);
-
-    ctx->vb_offset += ctx->vertex_size;
-}
-
 static cairo_int_status_t
 _cairo_gl_composite_append_vertex_indices (cairo_gl_context_t	*ctx,
 					   int			 number_of_new_indices)
@@ -854,14 +863,14 @@ _cairo_gl_composite_emit_quad_as_tristrip (cairo_gl_context_t	*ctx,
 
     _cairo_gl_composite_prepare_buffer (ctx, 4);
 
-    _cairo_gl_composite_emit_tristrip_vertex (ctx, &quad[0]);
-    _cairo_gl_composite_emit_tristrip_vertex (ctx, &quad[1]);
+    _cairo_gl_composite_emit_point (ctx, &quad[0], 0);
+    _cairo_gl_composite_emit_point (ctx, &quad[1], 0);
 
     /* Cairo stores quad vertices in counter-clockwise order, but we need to
        emit them from top to bottom in the triangle strip, so we need to reverse
        the order of the last two vertices. */
-    _cairo_gl_composite_emit_tristrip_vertex (ctx, &quad[3]);
-    _cairo_gl_composite_emit_tristrip_vertex (ctx, &quad[2]);
+    _cairo_gl_composite_emit_point (ctx, &quad[3], 0);
+    _cairo_gl_composite_emit_point (ctx, &quad[2], 0);
 
     return _cairo_gl_composite_append_vertex_indices (ctx, 4);
 }
@@ -877,8 +886,8 @@ _cairo_gl_composite_emit_triangle_as_tristrip (cairo_gl_context_t	*ctx,
 
     _cairo_gl_composite_prepare_buffer (ctx, 3);
 
-    _cairo_gl_composite_emit_tristrip_vertex (ctx, &triangle[0]);
-    _cairo_gl_composite_emit_tristrip_vertex (ctx, &triangle[1]);
-    _cairo_gl_composite_emit_tristrip_vertex (ctx, &triangle[2]);
+    _cairo_gl_composite_emit_point (ctx, &triangle[0], 0);
+    _cairo_gl_composite_emit_point (ctx, &triangle[1], 0);
+    _cairo_gl_composite_emit_point (ctx, &triangle[2], 0);
     return _cairo_gl_composite_append_vertex_indices (ctx, 3);
 }
