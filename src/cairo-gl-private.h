@@ -56,6 +56,7 @@
 #include "cairo-rtree-private.h"
 #include "cairo-scaled-font-private.h"
 #include "cairo-spans-compositor-private.h"
+#include "cairo-array-private.h"
 
 #include <assert.h>
 
@@ -115,7 +116,7 @@ typedef struct _cairo_gl_surface {
 
     GLuint tex; /* GL texture object containing our data. */
     GLuint fb; /* GL framebuffer object wrapping our data. */
-    GLuint depth; /* GL framebuffer object holding depth */
+    GLuint depth_stencil; /* GL renderbuffer object for holding stencil buffer clip. */
     int owns_tex;
     cairo_bool_t needs_update;
 } cairo_gl_surface_t;
@@ -253,6 +254,14 @@ typedef struct _cairo_gl_dispatch {
 				    GLint level);
     GLenum (*CheckFramebufferStatus) (GLenum target);
     void (*DeleteFramebuffers) (GLsizei n, const GLuint* framebuffers);
+    void (*GenRenderbuffers) (GLsizei n, GLuint *renderbuffers);
+    void (*BindRenderbuffer) (GLenum target, GLuint renderbuffer);
+    void (*RenderbufferStorage) (GLenum target, GLenum internal_format,
+				 GLsizei width, GLsizei height);
+    void (*FramebufferRenderbuffer) (GLenum target, GLenum attachment,
+				     GLenum renderbuffer_ttarget, GLuint renderbuffer);
+    void (*DeleteRenderbuffers) (GLsizei n, GLuint *renderbuffers);
+
 } cairo_gl_dispatch_t;
 
 struct _cairo_gl_context {
@@ -291,12 +300,14 @@ struct _cairo_gl_context {
     unsigned int vb_offset;
     unsigned int vertex_size;
     cairo_region_t *clip_region;
+    cairo_array_t tristrip_indices;
 
     cairo_bool_t has_mesa_pack_invert;
     cairo_gl_dispatch_t dispatch;
     GLfloat modelviewprojection_matrix[16];
     cairo_gl_flavor_t gl_flavor;
     cairo_bool_t has_map_buffer;
+    cairo_bool_t has_packed_depth_stencil;
 
     void (*acquire) (void *ctx);
     void (*release) (void *ctx);
@@ -489,6 +500,20 @@ _cairo_gl_composite_emit_glyph (cairo_gl_context_t *ctx,
 cairo_private void
 _cairo_gl_composite_flush (cairo_gl_context_t *ctx);
 
+cairo_private cairo_status_t
+_cairo_gl_composite_begin_tristrip (cairo_gl_composite_t	*setup,
+				    cairo_gl_context_t		**ctx_out);
+
+cairo_private cairo_int_status_t
+_cairo_gl_composite_emit_quad_as_tristrip (cairo_gl_context_t	*ctx,
+					   cairo_gl_composite_t	*setup,
+					   const cairo_point_t	 quad[4]);
+
+cairo_private cairo_int_status_t
+_cairo_gl_composite_emit_triangle_as_tristrip (cairo_gl_context_t	*ctx,
+					       cairo_gl_composite_t	*setup,
+					       const cairo_point_t	 triangle[3]);
+
 cairo_private void
 _cairo_gl_context_destroy_operand (cairo_gl_context_t *ctx,
                                    cairo_gl_tex_t tex_unit);
@@ -636,8 +661,7 @@ cairo_private void
 _cairo_gl_operand_emit (cairo_gl_operand_t *operand,
                         GLfloat ** vb,
                         GLfloat x,
-                        GLfloat y,
-                        uint8_t alpha);
+                        GLfloat y);
 
 cairo_private void
 _cairo_gl_operand_copy (cairo_gl_operand_t *dst,
@@ -645,6 +669,9 @@ _cairo_gl_operand_copy (cairo_gl_operand_t *dst,
 
 cairo_private void
 _cairo_gl_operand_destroy (cairo_gl_operand_t *operand);
+
+cairo_private const cairo_compositor_t *
+_cairo_gl_msaa_compositor_get (void);
 
 cairo_private const cairo_compositor_t *
 _cairo_gl_span_compositor_get (void);

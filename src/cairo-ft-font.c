@@ -1344,25 +1344,26 @@ _render_glyph_outline (FT_Face                    face,
 
 	switch (render_mode) {
 	case FT_RENDER_MODE_LCD:
-	    if (font_options->subpixel_order == CAIRO_SUBPIXEL_ORDER_BGR) {
+	    if (font_options->subpixel_order == CAIRO_SUBPIXEL_ORDER_BGR)
 		rgba = FC_RGBA_BGR;
-	    } else {
+	    else
 		rgba = FC_RGBA_RGB;
-	    }
-	case FT_RENDER_MODE_LCD_V:
-	    if (font_options->subpixel_order == CAIRO_SUBPIXEL_ORDER_VBGR) {
-		rgba = FC_RGBA_VBGR;
-	    } else {
-		rgba = FC_RGBA_VRGB;
-		}
 	    break;
+
+	case FT_RENDER_MODE_LCD_V:
+	    if (font_options->subpixel_order == CAIRO_SUBPIXEL_ORDER_VBGR)
+		rgba = FC_RGBA_VBGR;
+	    else
+		rgba = FC_RGBA_VRGB;
+	    break;
+
 	case FT_RENDER_MODE_MONO:
 	case FT_RENDER_MODE_LIGHT:
 	case FT_RENDER_MODE_NORMAL:
 	case FT_RENDER_MODE_MAX:
 	default:
 	    break;
-	    }
+	}
 
 #if HAVE_FT_LIBRARY_SETLCDFILTER
 	FT_Library_SetLcdFilter (library, lcd_filter);

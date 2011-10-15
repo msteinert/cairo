@@ -423,7 +423,7 @@ _cairo_clip_translate (cairo_clip_t *clip, int tx, int ty)
     cairo_clip_path_t *clip_path;
 
     if (clip == NULL || _cairo_clip_is_all_clipped (clip))
-	return (cairo_clip_t *)clip;
+	return clip;
 
     if (tx == 0 && ty == 0)
 	return clip;
@@ -532,6 +532,9 @@ _cairo_clip_transform (cairo_clip_t *clip, const cairo_matrix_t *m)
 {
     cairo_clip_t *copy;
 
+    if (clip == NULL || _cairo_clip_is_all_clipped (clip))
+	return clip;
+
     if (_cairo_matrix_is_translation (m))
 	return _cairo_clip_translate (clip, m->x0, m->y0);
 
@@ -556,6 +559,7 @@ _cairo_clip_transform (cairo_clip_t *clip, const cairo_matrix_t *m)
     if (clip->path)
 	copy = _cairo_clip_intersect_clip_path_transformed (copy, clip->path,m);
 
+    _cairo_clip_destroy (clip);
     return copy;
 }
 
@@ -809,4 +813,5 @@ void
 _cairo_clip_reset_static_data (void)
 {
     _freed_pool_reset (&clip_path_pool);
+    _freed_pool_reset (&clip_pool);
 }

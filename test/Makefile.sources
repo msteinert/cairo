@@ -58,6 +58,7 @@ test_sources = \
 	clip-nesting.c					\
 	clip-operator.c					\
 	clip-push-group.c				\
+	clip-polygons.c					\
 	clip-rectilinear.c				\
 	clip-shape.c					\
 	clip-stroke.c					\
@@ -314,6 +315,7 @@ test_sources = \
 	surface-pattern-scale-down-extend.c		\
 	surface-pattern-scale-up.c			\
 	text-antialias.c				\
+	text-antialias-subpixel.c			\
 	text-cache-crash.c				\
 	text-glyph-range.c				\
 	text-pattern.c					\

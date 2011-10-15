@@ -919,10 +919,10 @@ _cairo_gl_surface_finish (void *abstract_surface)
     if (ctx->current_target == surface)
 	ctx->current_target = NULL;
 
-    if (surface->depth)
-        ctx->dispatch.DeleteFramebuffers (1, &surface->depth);
     if (surface->fb)
         ctx->dispatch.DeleteFramebuffers (1, &surface->fb);
+    if (surface->depth_stencil)
+        ctx->dispatch.DeleteRenderbuffers (1, &surface->depth_stencil);
     if (surface->owns_tex)
 	glDeleteTextures (1, &surface->tex);
 

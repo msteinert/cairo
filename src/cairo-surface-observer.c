@@ -1774,7 +1774,7 @@ replay_record (cairo_observation_t *log,
     cairo_surface_t *surface;
     cairo_int_status_t status;
 
-    if (log->record == NULL)
+    if (log->record == NULL || script == NULL)
 	return FALSE;
 
     surface = cairo_script_surface_create (script,
@@ -1814,7 +1814,7 @@ _cairo_observation_print (cairo_output_stream_t *stream,
     cairo_device_t *script;
     cairo_time_t total;
 
-#if CAIRO_HAS_SCRIPT_SURFAC
+#if CAIRO_HAS_SCRIPT_SURFACE
     script = _cairo_script_context_create_internal (stream);
     _cairo_script_context_attach_snapshots (script, FALSE);
 #else

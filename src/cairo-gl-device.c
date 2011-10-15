@@ -132,6 +132,8 @@ _gl_destroy (void *device)
     for (n = 0; n < ARRAY_LENGTH (ctx->glyph_cache); n++)
 	_cairo_gl_glyph_cache_fini (ctx, &ctx->glyph_cache[n]);
 
+    _cairo_array_fini (&ctx->tristrip_indices);
+
     cairo_region_destroy (ctx->clip_region);
 
     free (ctx->vb_mem);
@@ -163,7 +165,8 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 
     _cairo_device_init (&ctx->base, &_cairo_gl_device_backend);
 
-    ctx->compositor = _cairo_gl_span_compositor_get ();
+    //ctx->compositor = _cairo_gl_span_compositor_get ();
+    ctx->compositor = _cairo_gl_msaa_compositor_get ();
 
     memset (ctx->glyph_cache, 0, sizeof (ctx->glyph_cache));
     cairo_list_init (&ctx->fonts);
@@ -204,6 +207,12 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     ctx->has_mesa_pack_invert =
 	_cairo_gl_has_extension ("GL_MESA_pack_invert");
 
+    ctx->has_packed_depth_stencil =
+	((gl_flavor == CAIRO_GL_FLAVOR_DESKTOP &&
+	 _cairo_gl_has_extension ("GL_EXT_packed_depth_stencil")) ||
+	(gl_flavor == CAIRO_GL_FLAVOR_ES &&
+	 _cairo_gl_has_extension ("GL_OES_packed_depth_stencil")));
+
     ctx->current_operator = -1;
     ctx->gl_flavor = gl_flavor;
 
@@ -226,6 +235,8 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
     }
+
+    _cairo_array_init (&ctx->tristrip_indices, sizeof(int));
 
     /* PBO for any sort of texture upload */
     dispatch->GenBuffers (1, &ctx->texture_load_pbo);
@@ -251,7 +262,7 @@ _cairo_gl_context_activate (cairo_gl_context_t *ctx,
     if (ctx->max_textures <= (GLint) tex_unit) {
         if (tex_unit < 2) {
             _cairo_gl_composite_flush (ctx);
-            _cairo_gl_context_destroy_operand (ctx, ctx->max_textures - 1);   
+            _cairo_gl_context_destroy_operand (ctx, ctx->max_textures - 1);
         }
         glActiveTexture (ctx->max_textures - 1);
     } else {
@@ -283,6 +294,24 @@ _cairo_gl_ensure_framebuffer (cairo_gl_context_t *ctx,
     glDrawBuffer (GL_COLOR_ATTACHMENT0);
     glReadBuffer (GL_COLOR_ATTACHMENT0);
 #endif
+
+    if (ctx->has_packed_depth_stencil) {
+#if CAIRO_HAS_GL_SURFACE
+	GLenum internal_format = GL_DEPTH_STENCIL;
+#elif CAIRO_HAS_GLESV2_SURFACE
+	GLenum internal_format = GL_DEPTH24_STENCIL8_OES,
+#endif
+
+	dispatch->GenRenderbuffers (1, &surface->depth_stencil);
+	dispatch->BindRenderbuffer (GL_RENDERBUFFER, surface->depth_stencil);
+	dispatch->RenderbufferStorage (GL_RENDERBUFFER, internal_format,
+				       surface->width, surface->height);
+
+	ctx->dispatch.FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
+					       GL_RENDERBUFFER, surface->depth_stencil);
+	ctx->dispatch.FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+					       GL_RENDERBUFFER, surface->depth_stencil);
+    }
 
     status = dispatch->CheckFramebufferStatus (GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
@@ -362,6 +391,7 @@ _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
     } else {
         ctx->make_current (ctx, surface);
         ctx->dispatch.BindFramebuffer (GL_FRAMEBUFFER, 0);
+
 #if CAIRO_HAS_GL_SURFACE
         glDrawBuffer (GL_BACK_LEFT);
         glReadBuffer (GL_BACK_LEFT);

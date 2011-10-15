@@ -1543,6 +1543,15 @@ _cairo_polygon_init_box_array (cairo_polygon_t *polygon,
 			       int num_boxes);
 
 cairo_private void
+_cairo_polygon_limit (cairo_polygon_t *polygon,
+		     const cairo_box_t *limits,
+		     int num_limits);
+
+cairo_private void
+_cairo_polygon_limit_to_clip (cairo_polygon_t *polygon,
+			      const cairo_clip_t *clip);
+
+cairo_private void
 _cairo_polygon_fini (cairo_polygon_t *polygon);
 
 cairo_private cairo_status_t

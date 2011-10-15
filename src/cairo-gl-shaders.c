@@ -315,6 +315,7 @@ typedef struct _cairo_shader_cache_entry {
     cairo_gl_operand_type_t src;
     cairo_gl_operand_type_t mask;
     cairo_gl_operand_type_t dest;
+    cairo_bool_t use_coverage;
     cairo_gl_shader_in_t in;
     GLint src_gl_filter;
     cairo_bool_t src_border_fade;
@@ -334,6 +335,7 @@ _cairo_gl_shader_cache_equal_desktop (const void *key_a, const void *key_b)
     return a->src  == b->src  &&
            a->mask == b->mask &&
            a->dest == b->dest &&
+	   a->use_coverage == b->use_coverage &&
            a->in   == b->in;
 }
 
@@ -351,6 +353,7 @@ _cairo_gl_shader_cache_equal_gles2 (const void *key_a, const void *key_b)
     return a->src  == b->src  &&
 	   a->mask == b->mask &&
 	   a->dest == b->dest &&
+	   a->use_coverage == b->use_coverage &&
 	   a->in   == b->in   &&
 	   a->src_gl_filter == b->src_gl_filter &&
 	   a->src_border_fade == b->src_border_fade &&
@@ -361,7 +364,7 @@ _cairo_gl_shader_cache_equal_gles2 (const void *key_a, const void *key_b)
 static unsigned long
 _cairo_gl_shader_cache_hash (const cairo_shader_cache_entry_t *entry)
 {
-    return (entry->src << 24) | (entry->mask << 16) | (entry->dest << 8) | (entry->in);
+    return (entry->src << 24) | (entry->mask << 16) | (entry->dest << 8) | (entry->in << 1) | entry->use_coverage;
 }
 
 static void
@@ -1065,6 +1068,7 @@ _cairo_gl_get_shader_by_type (cairo_gl_context_t *ctx,
     lookup.src = source->type;
     lookup.mask = mask->type;
     lookup.dest = CAIRO_GL_OPERAND_NONE;
+    lookup.use_coverage = use_coverage;
     lookup.in = in;
     lookup.src_gl_filter = _cairo_gl_operand_get_gl_filter (source);
     lookup.src_border_fade = _cairo_gl_shader_needs_border_fade (source);

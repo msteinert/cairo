@@ -4,6 +4,7 @@
  * Copyright © 2009 Chris Wilson
  * Copyright © 2005,2010 Red Hat, Inc
  * Copyright © 2011 Linaro Limited
+ * Copyright © 2011 Samsung Electronics
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -38,6 +39,8 @@
  *	Chris Wilson <chris@chris-wilson.co.uk>
  *	Eric Anholt <eric@anholt.net>
  *	Alexandros Frantzis <alexandros.frantzis@linaro.org>
+ *	Henry Song <hsong@sisa.samsung.com>
+ *	Martin Robinson <mrobinson@igalia.com>
  */
 
 #include "cairoint.h"
@@ -534,7 +537,7 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_SOURCE, &setup->src, vertex_size, dst_size);
     _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_MASK, &setup->mask, vertex_size, dst_size + src_size);
     if (setup->spans)
-	_cairo_gl_context_setup_spans (ctx, vertex_size, dst_size + src_size);
+	_cairo_gl_context_setup_spans (ctx, vertex_size, dst_size + src_size + mask_size);
     else
 	ctx->dispatch.DisableVertexAttribArray (CAIRO_GL_COLOR_ATTRIB_INDEX);
 
@@ -571,6 +574,15 @@ FAIL:
 }
 
 static inline void
+_cairo_gl_composite_draw_tristrip (cairo_gl_context_t *ctx)
+{
+    cairo_array_t* indices = &ctx->tristrip_indices;
+    const int *indices_array = _cairo_array_index_const (indices, 0);
+    glDrawElements (GL_TRIANGLE_STRIP, _cairo_array_num_elements (indices), GL_UNSIGNED_INT, indices_array);
+    _cairo_array_truncate (indices, 0);
+}
+
+static inline void
 _cairo_gl_composite_draw (cairo_gl_context_t *ctx,
 			  unsigned int count)
 {
@@ -589,6 +601,19 @@ _cairo_gl_composite_draw (cairo_gl_context_t *ctx,
     }
 }
 
+static void
+_cairo_gl_composite_unmap_vertex_buffer (cairo_gl_context_t *ctx)
+{
+    if (ctx->has_map_buffer)
+	ctx->dispatch.UnmapBuffer (GL_ARRAY_BUFFER);
+    else
+	ctx->dispatch.BufferData (GL_ARRAY_BUFFER, ctx->vb_offset,
+				  ctx->vb, GL_DYNAMIC_DRAW);
+
+    ctx->vb = NULL;
+    ctx->vb_offset = 0;
+}
+
 void
 _cairo_gl_composite_flush (cairo_gl_context_t *ctx)
 {
@@ -598,17 +623,11 @@ _cairo_gl_composite_flush (cairo_gl_context_t *ctx)
         return;
 
     count = ctx->vb_offset / ctx->vertex_size;
+    _cairo_gl_composite_unmap_vertex_buffer (ctx);
 
-    if (ctx->has_map_buffer)
-	ctx->dispatch.UnmapBuffer (GL_ARRAY_BUFFER);
-    else
-	ctx->dispatch.BufferData (GL_ARRAY_BUFFER, ctx->vb_offset,
-				  ctx->vb, GL_DYNAMIC_DRAW);
-
-    ctx->vb = NULL;
-    ctx->vb_offset = 0;
-
-    if (ctx->clip_region) {
+    if ( _cairo_array_num_elements (&ctx->tristrip_indices) > 0) {
+	_cairo_gl_composite_draw_tristrip (ctx);
+    } else if (ctx->clip_region) {
 	int i, num_rectangles = cairo_region_num_rectangles (ctx->clip_region);
 
 	for (i = 0; i < num_rectangles; i++) {
@@ -656,8 +675,8 @@ _cairo_gl_composite_emit_vertex (cairo_gl_context_t *ctx,
     *vb++ = x;
     *vb++ = y;
 
-    _cairo_gl_operand_emit (&ctx->operands[CAIRO_GL_TEX_SOURCE], &vb, x, y, alpha);
-    _cairo_gl_operand_emit (&ctx->operands[CAIRO_GL_TEX_MASK  ], &vb, x, y, alpha);
+    _cairo_gl_operand_emit (&ctx->operands[CAIRO_GL_TEX_SOURCE], &vb, x, y);
+    _cairo_gl_operand_emit (&ctx->operands[CAIRO_GL_TEX_MASK  ], &vb, x, y);
 
     if (ctx->spans) {
 	union fi {
@@ -706,7 +725,7 @@ _cairo_gl_composite_emit_glyph_vertex (cairo_gl_context_t *ctx,
     *vb++ = x;
     *vb++ = y;
 
-    _cairo_gl_operand_emit (&ctx->operands[CAIRO_GL_TEX_SOURCE], &vb, x, y, 0);
+    _cairo_gl_operand_emit (&ctx->operands[CAIRO_GL_TEX_SOURCE], &vb, x, y);
 
     *vb++ = glyph_x;
     *vb++ = glyph_y;
@@ -766,4 +785,145 @@ _cairo_gl_composite_init (cairo_gl_composite_t *setup,
     setup->op = op;
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+static void
+_cairo_gl_composite_emit_tristrip_vertex (cairo_gl_context_t	*ctx,
+					  const cairo_point_t	*point)
+{
+    GLfloat *vb = (GLfloat *) (void *) &ctx->vb[ctx->vb_offset];
+
+    *vb++ = _cairo_fixed_to_double (point->x);
+    *vb++ = _cairo_fixed_to_double (point->y);
+
+    ctx->vb_offset += ctx->vertex_size;
+}
+
+static cairo_int_status_t
+_cairo_gl_composite_append_vertex_indices (cairo_gl_context_t	*ctx,
+					   int			 number_of_new_indices)
+{
+    cairo_int_status_t status = CAIRO_INT_STATUS_SUCCESS;
+    cairo_array_t *indices = &ctx->tristrip_indices;
+    int number_of_indices = _cairo_array_num_elements (indices);
+    int current_vertex_index = 0;
+    int i;
+
+    assert (number_of_new_indices > 0);
+
+    /* If any preexisting triangle triangle strip indices exist on this
+       context, we insert a set of degenerate triangles from the last
+       preexisting vertex to our first one. */
+    if (number_of_indices > 0) {
+	const int *indices_array = _cairo_array_index_const (indices, 0);
+	current_vertex_index = indices_array[number_of_indices - 1];
+
+	status = _cairo_array_append (indices, &current_vertex_index);
+	if (unlikely (status))
+	    return status;
+
+	current_vertex_index++;
+	status =_cairo_array_append (indices, &current_vertex_index);
+	if (unlikely (status))
+	    return status;
+    }
+
+    for (i = 0; i < number_of_new_indices; i++) {
+	status = _cairo_array_append (indices, &current_vertex_index);
+	current_vertex_index++;
+	if (unlikely (status))
+	    return status;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_int_status_t
+_cairo_gl_composite_emit_quad_as_tristrip (cairo_gl_context_t	*ctx,
+					   cairo_gl_composite_t	*setup,
+					   const cairo_point_t	quad[4])
+{
+    _cairo_gl_composite_prepare_buffer (ctx, 4);
+
+    _cairo_gl_composite_emit_tristrip_vertex (ctx, &quad[0]);
+    _cairo_gl_composite_emit_tristrip_vertex (ctx, &quad[1]);
+
+    /* Cairo stores quad vertices in counter-clockwise order, but we need to
+       emit them from top to bottom in the triangle strip, so we need to reverse
+       the order of the last two vertices. */
+    _cairo_gl_composite_emit_tristrip_vertex (ctx, &quad[3]);
+    _cairo_gl_composite_emit_tristrip_vertex (ctx, &quad[2]);
+
+    return _cairo_gl_composite_append_vertex_indices (ctx, 4);
+}
+
+cairo_int_status_t
+_cairo_gl_composite_emit_triangle_as_tristrip (cairo_gl_context_t	*ctx,
+					       cairo_gl_composite_t	*setup,
+					       const cairo_point_t	 triangle[3])
+{
+    _cairo_gl_composite_prepare_buffer (ctx, 3);
+
+    _cairo_gl_composite_emit_tristrip_vertex (ctx, &triangle[0]);
+    _cairo_gl_composite_emit_tristrip_vertex (ctx, &triangle[1]);
+    _cairo_gl_composite_emit_tristrip_vertex (ctx, &triangle[2]);
+    return _cairo_gl_composite_append_vertex_indices (ctx, 3);
+}
+
+cairo_status_t
+_cairo_gl_composite_begin_tristrip (cairo_gl_composite_t	*setup,
+				    cairo_gl_context_t		**ctx_out)
+{
+    cairo_gl_context_t *ctx;
+    cairo_status_t status;
+    cairo_gl_shader_t *shader;
+    int src_size, dst_size;
+
+    cairo_gl_operand_t default_mask;
+    memset (&default_mask, 0, sizeof (cairo_gl_operand_t));
+
+    assert (setup->dst);
+
+    status = _cairo_gl_context_acquire (setup->dst->base.device, &ctx);
+    if (unlikely (status))
+	return status;
+    *ctx_out = ctx;
+
+    /* Finish any pending operations from other GL compositors. */
+    if (! _cairo_gl_context_is_flushed (ctx))
+	_cairo_gl_composite_flush (ctx);
+
+    glEnable (GL_BLEND);
+
+    status = _cairo_gl_get_shader_by_type (ctx,
+					   &setup->src,
+					   &default_mask,
+					   setup->spans,
+					   CAIRO_GL_SHADER_IN_NORMAL,
+                                           &shader);
+    if (unlikely (status)) {
+	status = _cairo_gl_context_release (ctx, status);
+	return status;
+    }
+
+    _cairo_gl_context_set_destination (ctx, setup->dst);
+
+    _cairo_gl_set_operator (ctx, setup->op, FALSE);
+    _cairo_gl_set_shader (ctx, shader);
+    _cairo_gl_composite_bind_to_shader (ctx, setup);
+
+    dst_size  = 2 * sizeof (GLfloat);
+    src_size  = _cairo_gl_operand_get_vertex_size (setup->src.type);
+
+    ctx->vertex_size = dst_size + src_size;
+
+    ctx->dispatch.BindBuffer (GL_ARRAY_BUFFER, ctx->vbo);
+    ctx->dispatch.VertexAttribPointer (CAIRO_GL_VERTEX_ATTRIB_INDEX, 2,
+				       GL_FLOAT, GL_FALSE, ctx->vertex_size, NULL);
+    ctx->dispatch.EnableVertexAttribArray (CAIRO_GL_VERTEX_ATTRIB_INDEX);
+
+    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_SOURCE, &setup->src,
+				     ctx->vertex_size, dst_size);
+
+    return status;
 }
