@@ -247,6 +247,16 @@ _stroke_shaper_add_quad (void			*closure,
 						      quad);
 }
 
+static void
+_scissor_to_rectangle (cairo_gl_surface_t *surface,
+		       const cairo_rectangle_int_t *r)
+{
+    int y = _cairo_gl_y_flip (surface, r->y);
+
+    glScissor (r->x, y, r->width, r->height);
+    glEnable (GL_SCISSOR_TEST);
+}
+
 static cairo_int_status_t
 _cairo_gl_msaa_compositor_stroke (const cairo_compositor_t	*compositor,
 				  cairo_composite_rectangles_t	*composite,
@@ -289,10 +299,7 @@ _cairo_gl_msaa_compositor_stroke (const cairo_compositor_t	*compositor,
     if (unlikely (status))
 	goto finish;
 
-    glScissor (composite->unbounded.x, composite->unbounded.y,
-	       composite->unbounded.width, composite->unbounded.height);
-    glEnable (GL_SCISSOR_TEST);
-
+    _scissor_to_rectangle (dst, &composite->unbounded);
     if (! _cairo_composite_rectangles_can_reduce_clip (composite,
 						       composite->clip))
     {
@@ -372,10 +379,7 @@ _cairo_gl_msaa_compositor_fill (const cairo_compositor_t	*compositor,
     if (unlikely (status))
 	goto cleanup_setup;
 
-    glScissor (composite->unbounded.x, composite->unbounded.y,
-	       composite->unbounded.width, composite->unbounded.height);
-    glEnable (GL_SCISSOR_TEST);
-
+    _scissor_to_rectangle (dst, &composite->unbounded);
     if (! _cairo_composite_rectangles_can_reduce_clip (composite,
 						       composite->clip))
     {
