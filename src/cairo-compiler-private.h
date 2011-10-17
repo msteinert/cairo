@@ -208,8 +208,10 @@
 #endif
 
 #ifdef _MSC_VER
+#ifndef __cplusplus
 #undef inline
 #define inline __inline
+#endif
 #endif
 
 #if defined(_MSC_VER) && defined(_M_IX86)
