@@ -167,8 +167,6 @@ _cairo_test_init (cairo_test_context_t *ctx,
     ctx->ref_image = NULL;
     ctx->ref_image_flattened = NULL;
 
-    ctx->thread = 0;
-
     if (parent != NULL) {
 	ctx->targets_to_test = parent->targets_to_test;
 	ctx->num_targets = parent->num_targets;
@@ -225,9 +223,6 @@ cairo_test_init (cairo_test_context_t *ctx,
 void
 cairo_test_fini (cairo_test_context_t *ctx)
 {
-    if (ctx->thread != 0)
-	return;
-
     if (ctx->log_file == NULL)
 	return;
 
@@ -647,7 +642,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
     cairo_surface_t *surface = NULL;
     cairo_t *cr;
     const char *empty_str = "";
-    char *offset_str, *thread_str;
+    char *offset_str;
     char *base_name, *base_path;
     char *out_png_path;
     char *ref_path = NULL, *ref_png_path, *cmp_png_path = NULL;
@@ -678,24 +673,16 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	xasprintf (&offset_str, ".%d", dev_offset);
     else
 	offset_str = (char *) empty_str;
-    if (ctx->thread)
-	xasprintf (&thread_str, ".thread%d", ctx->thread);
-    else
-	thread_str = (char *) empty_str;
 
-    xasprintf (&base_name, "%s.%s.%s%s%s%s",
+    xasprintf (&base_name, "%s.%s.%s%s%s",
 	       ctx->test_name,
 	       target->name,
 	       format,
 	       similar ? ".similar" : "",
-	       offset_str,
-	       thread_str);
+	       offset_str);
 
     if (offset_str != empty_str)
       free (offset_str);
-    if (thread_str != empty_str)
-      free (thread_str);
-
 
     ref_png_path = cairo_test_reference_filename (ctx,
 						  base_name,
@@ -834,7 +821,7 @@ REPEAT:
 					ctx->test->width + 25 * NUM_DEVICE_OFFSETS,
 					ctx->test->height + 25 * NUM_DEVICE_OFFSETS,
 					CAIRO_BOILERPLATE_MODE_TEST,
-					ctx->thread,
+					0,
 					&closure);
     if (surface == NULL) {
 	cairo_test_log (ctx, "Error: Failed to set %s target\n", target->name);
@@ -962,15 +949,13 @@ REPEAT:
 	cairo_surface_destroy (surface);
 	if (target->cleanup)
 	    target->cleanup (closure);
-	if (ctx->thread == 0) {
-	    cairo_debug_reset_static_data ();
+	cairo_debug_reset_static_data ();
 #if HAVE_FCFINI
-	    FcFini ();
+	FcFini ();
 #endif
-	    if (MEMFAULT_COUNT_LEAKS () > 0) {
-		MEMFAULT_PRINT_FAULTS ();
-		MEMFAULT_PRINT_LEAKS ();
-	    }
+	if (MEMFAULT_COUNT_LEAKS () > 0) {
+	    MEMFAULT_PRINT_FAULTS ();
+	    MEMFAULT_PRINT_LEAKS ();
 	}
 
 	goto REPEAT;
@@ -1019,15 +1004,13 @@ REPEAT:
 	    cairo_surface_destroy (surface);
 	    if (target->cleanup)
 		target->cleanup (closure);
-	    if (ctx->thread == 0) {
-		cairo_debug_reset_static_data ();
+	    cairo_debug_reset_static_data ();
 #if HAVE_FCFINI
-		FcFini ();
+	    FcFini ();
 #endif
-		if (MEMFAULT_COUNT_LEAKS () > 0) {
-		    MEMFAULT_PRINT_FAULTS ();
-		    MEMFAULT_PRINT_LEAKS ();
-		}
+	    if (MEMFAULT_COUNT_LEAKS () > 0) {
+		MEMFAULT_PRINT_FAULTS ();
+		MEMFAULT_PRINT_LEAKS ();
 	    }
 
 	    goto REPEAT;
@@ -1438,37 +1421,33 @@ UNWIND_SURFACE:
 	target->cleanup (closure);
 
 #if HAVE_MEMFAULT
-    if (ctx->thread == 0) {
-	cairo_debug_reset_static_data ();
+    cairo_debug_reset_static_data ();
 
 #if HAVE_FCFINI
-	FcFini ();
+    FcFini ();
 #endif
 
-	if (MEMFAULT_COUNT_LEAKS () > 0) {
-	    if (ret != CAIRO_TEST_FAILURE)
-		MEMFAULT_PRINT_FAULTS ();
-	    MEMFAULT_PRINT_LEAKS ();
-	}
+    if (MEMFAULT_COUNT_LEAKS () > 0) {
+	if (ret != CAIRO_TEST_FAILURE)
+	    MEMFAULT_PRINT_FAULTS ();
+	MEMFAULT_PRINT_LEAKS ();
     }
 
     if (ret == CAIRO_TEST_SUCCESS && --malloc_failure_iterations > 0)
 	goto REPEAT;
 #endif
 
-    if (ctx->thread == 0) {
-	if (have_output)
-	    cairo_test_log (ctx, "OUTPUT: %s\n", out_png_path);
+    if (have_output)
+	cairo_test_log (ctx, "OUTPUT: %s\n", out_png_path);
 
-	if (have_result) {
-	    if (cmp_png_path == NULL) {
-		/* XXX presume we matched the normal ref last time */
-		cmp_png_path = ref_png_path;
-	    }
-	    cairo_test_log (ctx,
-		            "REFERENCE: %s\nDIFFERENCE: %s\n",
-			    cmp_png_path, diff_png_path);
+    if (have_result) {
+	if (cmp_png_path == NULL) {
+	    /* XXX presume we matched the normal ref last time */
+	    cmp_png_path = ref_png_path;
 	}
+	cairo_test_log (ctx,
+			"REFERENCE: %s\nDIFFERENCE: %s\n",
+			cmp_png_path, diff_png_path);
     }
 
 UNWIND_STRINGS:
@@ -1538,16 +1517,14 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 		    target->name,
 		    dev_offset);
 
-    if (ctx->thread == 0) {
-	printf ("%s.%s.%s [%d]%s:\t", ctx->test_name, target->name,
-		cairo_boilerplate_content_name (target->content),
-		dev_offset,
-		similar ? " (similar)": "");
-	fflush (stdout);
-    }
+    printf ("%s.%s.%s [%d]%s:\t", ctx->test_name, target->name,
+	    cairo_boilerplate_content_name (target->content),
+	    dev_offset,
+	    similar ? " (similar)": "");
+    fflush (stdout);
 
 #if defined(HAVE_SIGNAL_H) && defined(HAVE_SETJMP_H)
-    if (ctx->thread == 0 && ! RUNNING_ON_VALGRIND) {
+    if (! RUNNING_ON_VALGRIND) {
 	void (* volatile old_segfault_handler)(int);
 	void (* volatile old_segfpe_handler)(int);
 	void (* volatile old_sigpipe_handler)(int);
@@ -1596,141 +1573,100 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
     status = cairo_test_for_target (ctx, target, dev_offset, similar);
 #endif
 
-    if (ctx->thread == 0) {
-	cairo_test_log (ctx,
-		"TEST: %s TARGET: %s FORMAT: %s OFFSET: %d SIMILAR: %d RESULT: ",
-			ctx->test_name, target->name,
-			cairo_boilerplate_content_name (target->content),
-			dev_offset, similar);
-	switch (status) {
-	case CAIRO_TEST_SUCCESS:
-	    printf ("PASS\n");
-	    cairo_test_log (ctx, "PASS\n");
-	    break;
+    cairo_test_log (ctx,
+		    "TEST: %s TARGET: %s FORMAT: %s OFFSET: %d SIMILAR: %d RESULT: ",
+		    ctx->test_name, target->name,
+		    cairo_boilerplate_content_name (target->content),
+		    dev_offset, similar);
+    switch (status) {
+    case CAIRO_TEST_SUCCESS:
+	printf ("PASS\n");
+	cairo_test_log (ctx, "PASS\n");
+	break;
 
-	case CAIRO_TEST_UNTESTED:
-	    printf ("UNTESTED\n");
-	    cairo_test_log (ctx, "UNTESTED\n");
-	    break;
+    case CAIRO_TEST_UNTESTED:
+	printf ("UNTESTED\n");
+	cairo_test_log (ctx, "UNTESTED\n");
+	break;
 
-	default:
-	case CAIRO_TEST_CRASHED:
-	    if (print_fail_on_stdout && ctx->thread == 0) {
-		printf ("!!!CRASHED!!!\n");
-	    } else {
-		/* eat the test name */
-		printf ("\r");
-		fflush (stdout);
-	    }
-	    cairo_test_log (ctx, "CRASHED\n");
-	    fprintf (stderr, "%s.%s.%s [%d]%s:\t%s!!!CRASHED!!!%s\n",
-		     ctx->test_name, target->name,
-		     cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
-		     fail_face, normal_face);
-	    break;
-
-	case CAIRO_TEST_ERROR:
-	    if (print_fail_on_stdout && ctx->thread == 0) {
-		printf ("!!!ERROR!!!\n");
-	    } else {
-		/* eat the test name */
-		printf ("\r");
-		fflush (stdout);
-	    }
-	    cairo_test_log (ctx, "ERROR\n");
-	    fprintf (stderr, "%s.%s.%s [%d]%s:\t%s!!!ERROR!!!%s\n",
-		     ctx->test_name, target->name,
-		     cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
-		     fail_face, normal_face);
-	    break;
-
-	case CAIRO_TEST_XFAILURE:
-	    if (print_fail_on_stdout && ctx->thread == 0) {
-		printf ("XFAIL\n");
-	    } else {
-		/* eat the test name */
-		printf ("\r");
-		fflush (stdout);
-	    }
-	    fprintf (stderr, "%s.%s.%s [%d]%s:\t%sXFAIL%s\n",
-		     ctx->test_name, target->name,
-		     cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
-		     xfail_face, normal_face);
-	    cairo_test_log (ctx, "XFAIL\n");
-	    break;
-
-	case CAIRO_TEST_NEW:
-	    if (print_fail_on_stdout && ctx->thread == 0) {
-		printf ("NEW\n");
-	    } else {
-		/* eat the test name */
-		printf ("\r");
-		fflush (stdout);
-	    }
-	    fprintf (stderr, "%s.%s.%s [%d]%s:\t%sNEW%s\n",
-		     ctx->test_name, target->name,
-		     cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
-		     fail_face, normal_face);
-	    cairo_test_log (ctx, "NEW\n");
-	    break;
-
-	case CAIRO_TEST_NO_MEMORY:
-	case CAIRO_TEST_FAILURE:
-	    if (print_fail_on_stdout && ctx->thread == 0) {
-		printf ("FAIL\n");
-	    } else {
-		/* eat the test name */
-		printf ("\r");
-		fflush (stdout);
-	    }
-	    fprintf (stderr, "%s.%s.%s [%d]%s:\t%sFAIL%s\n",
-		     ctx->test_name, target->name,
-		     cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
-		     fail_face, normal_face);
-	    cairo_test_log (ctx, "FAIL\n");
-	    break;
-	}
-	fflush (stdout);
-    } else {
-#if HAVE_FLOCKFILE && HAVE_FUNLOCKFILE
-	flockfile (stdout);
-#endif
-	printf ("%s.%s.%s %d [%d]:\t",
-		ctx->test_name, target->name,
-		cairo_boilerplate_content_name (target->content),
-		ctx->thread,
-		dev_offset);
-	switch (status) {
-	case CAIRO_TEST_SUCCESS:
-	    printf ("PASS\n");
-	    break;
-	case CAIRO_TEST_UNTESTED:
-	    printf ("UNTESTED\n");
-	    break;
-	default:
-	case CAIRO_TEST_CRASHED:
+    default:
+    case CAIRO_TEST_CRASHED:
+	if (print_fail_on_stdout) {
 	    printf ("!!!CRASHED!!!\n");
-	    break;
-	case CAIRO_TEST_ERROR:
-	    printf ("!!!ERRORED!!!\n");
-	    break;
-	case CAIRO_TEST_XFAILURE:
-	    printf ("XFAIL\n");
-	    break;
-	case CAIRO_TEST_NEW:
-	    printf ("NEW\n");
-	    break;
-	case CAIRO_TEST_NO_MEMORY:
-	case CAIRO_TEST_FAILURE:
-	    printf ("FAIL\n");
-	    break;
+	} else {
+	    /* eat the test name */
+	    printf ("\r");
+	    fflush (stdout);
 	}
+	cairo_test_log (ctx, "CRASHED\n");
+	fprintf (stderr, "%s.%s.%s [%d]%s:\t%s!!!CRASHED!!!%s\n",
+		 ctx->test_name, target->name,
+		 cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
+		 fail_face, normal_face);
+	break;
 
-	fflush (stdout);
-#if  HAVE_FLOCKFILE && HAVE_FUNLOCKFILE
-	funlockfile (stdout);
-#endif
+    case CAIRO_TEST_ERROR:
+	if (print_fail_on_stdout) {
+	    printf ("!!!ERROR!!!\n");
+	} else {
+	    /* eat the test name */
+	    printf ("\r");
+	    fflush (stdout);
+	}
+	cairo_test_log (ctx, "ERROR\n");
+	fprintf (stderr, "%s.%s.%s [%d]%s:\t%s!!!ERROR!!!%s\n",
+		 ctx->test_name, target->name,
+		 cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
+		 fail_face, normal_face);
+	break;
+
+    case CAIRO_TEST_XFAILURE:
+	if (print_fail_on_stdout) {
+	    printf ("XFAIL\n");
+	} else {
+	    /* eat the test name */
+	    printf ("\r");
+	    fflush (stdout);
+	}
+	fprintf (stderr, "%s.%s.%s [%d]%s:\t%sXFAIL%s\n",
+		 ctx->test_name, target->name,
+		 cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
+		 xfail_face, normal_face);
+	cairo_test_log (ctx, "XFAIL\n");
+	break;
+
+    case CAIRO_TEST_NEW:
+	if (print_fail_on_stdout) {
+	    printf ("NEW\n");
+	} else {
+	    /* eat the test name */
+	    printf ("\r");
+	    fflush (stdout);
+	}
+	fprintf (stderr, "%s.%s.%s [%d]%s:\t%sNEW%s\n",
+		 ctx->test_name, target->name,
+		 cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
+		 fail_face, normal_face);
+	cairo_test_log (ctx, "NEW\n");
+	break;
+
+    case CAIRO_TEST_NO_MEMORY:
+    case CAIRO_TEST_FAILURE:
+	if (print_fail_on_stdout) {
+	    printf ("FAIL\n");
+	} else {
+	    /* eat the test name */
+	    printf ("\r");
+	    fflush (stdout);
+	}
+	fprintf (stderr, "%s.%s.%s [%d]%s:\t%sFAIL%s\n",
+		 ctx->test_name, target->name,
+		 cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
+		 fail_face, normal_face);
+	cairo_test_log (ctx, "FAIL\n");
+	break;
     }
+    fflush (stdout);
 
     return status;
 }

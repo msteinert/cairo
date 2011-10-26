@@ -237,8 +237,6 @@ struct _cairo_test_context {
     int last_fault_count;
 
     int timeout;
-
-    int thread;
 };
 
 /* Retrieve the test context from the cairo_t, used for logging, paths etc */
