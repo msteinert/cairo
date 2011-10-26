@@ -388,11 +388,9 @@ cairo_perf_report_load (cairo_perf_report_t *report,
     if (name == NULL)
 	name = "stdin";
 
-    configuration = xmalloc (strlen (name) * sizeof (char) + 1);
-    strcpy (configuration, name);
+    configuration = xstrdup (name);
     baseName = basename (configuration);
-    report->configuration = xmalloc (strlen (baseName) * sizeof (char) + 1);
-    strcpy (report->configuration, baseName);
+    report->configuration = xstrdup (baseName);
     free (configuration);
 
     dot = strrchr (report->configuration, '.');

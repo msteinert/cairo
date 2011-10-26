@@ -105,11 +105,9 @@ static int cairo_test_timeout = 60;
 static char *
 _cairo_test_fixup_name (const char *original)
 {
-    int len = strlen (original);
     char *name, *s;
 
-    name = xmalloc (len + 1);
-    s = memcpy (name, original, len + 1);
+    s = name = xstrdup (original);
     while ((s = strchr (s, '_')) != NULL)
 	*s++ = '-';
 
@@ -505,7 +503,6 @@ cairo_test_get_reference_image (cairo_test_context_t *ctx,
 				cairo_bool_t flatten)
 {
     cairo_surface_t *surface;
-    int len;
 
     if (ctx->ref_name != NULL) {
 	if (strcmp (ctx->ref_name, filename) == 0)
@@ -525,10 +522,7 @@ cairo_test_get_reference_image (cairo_test_context_t *ctx,
     if (cairo_surface_status (surface))
 	return surface;
 
-    len = strlen (filename);
-    ctx->ref_name = xmalloc (len + 1);
-    memcpy (ctx->ref_name, filename, len + 1);
-
+    ctx->ref_name = xstrdup (filename);
     ctx->ref_image = surface;
     return _cairo_test_flatten_reference_image (ctx, flatten);
 }
