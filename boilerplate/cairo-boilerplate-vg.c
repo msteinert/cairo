@@ -78,7 +78,6 @@ _cairo_boilerplate_vg_create_surface_glx (const char		    *name,
 					  double		     max_width,
 					  double		     max_height,
 					  cairo_boilerplate_mode_t   mode,
-					  int			     id,
 					  void			   **closure)
 {
     int rgba_attribs[] = {
@@ -207,7 +206,6 @@ _cairo_boilerplate_vg_create_surface_egl (const char		    *name,
 					  double		     max_width,
 					  double		     max_height,
 					  cairo_boilerplate_mode_t   mode,
-					  int			     id,
 					  void			   **closure)
 {
     int rgba_attribs[] = {

@@ -44,7 +44,6 @@ _cairo_boilerplate_test_base_compositor_create_surface (const char		   *name,
 							double		    max_width,
 							double		    max_height,
 							cairo_boilerplate_mode_t mode,
-							int			    id,
 							void		  **closure)
 {
     *closure = NULL;
@@ -60,7 +59,6 @@ _cairo_boilerplate_test_fallback_compositor_create_surface (const char		   *name
 							    double		    max_width,
 							    double		    max_height,
 							    cairo_boilerplate_mode_t mode,
-							    int			    id,
 							    void		  **closure)
 {
     *closure = NULL;
@@ -75,7 +73,6 @@ _cairo_boilerplate_test_mask_compositor_create_surface (const char		   *name,
 							 double			    max_width,
 							 double			    max_height,
 							 cairo_boilerplate_mode_t   mode,
-							 int			    id,
 							 void			  **closure)
 {
     *closure = NULL;
@@ -91,7 +88,6 @@ _cairo_boilerplate_test_traps_compositor_create_surface (const char		   *name,
 							 double			    max_width,
 							 double			    max_height,
 							 cairo_boilerplate_mode_t   mode,
-							 int			    id,
 							 void			  **closure)
 {
     *closure = NULL;
@@ -106,7 +102,6 @@ _cairo_boilerplate_test_spans_compositor_create_surface (const char		   *name,
 							 double			    max_width,
 							 double			    max_height,
 							 cairo_boilerplate_mode_t   mode,
-							 int			    id,
 							 void			  **closure)
 {
     *closure = NULL;
@@ -121,7 +116,6 @@ _cairo_boilerplate_test_no_fallback_compositor_create_surface (const char		   *n
 							       double			    max_width,
 							       double			    max_height,
 							       cairo_boilerplate_mode_t   mode,
-							       int			    id,
 							       void			  **closure)
 {
     if (mode == CAIRO_BOILERPLATE_MODE_TEST)
@@ -139,7 +133,6 @@ _cairo_boilerplate_test_no_traps_compositor_create_surface (const char		   *name
 							 double			    max_width,
 							 double			    max_height,
 							 cairo_boilerplate_mode_t   mode,
-							 int			    id,
 							 void			  **closure)
 {
     if (mode == CAIRO_BOILERPLATE_MODE_TEST)
@@ -157,7 +150,6 @@ _cairo_boilerplate_test_no_spans_compositor_create_surface (const char		   *name
 							 double			    max_width,
 							 double			    max_height,
 							 cairo_boilerplate_mode_t   mode,
-							 int			    id,
 							 void			  **closure)
 {
     if (mode == CAIRO_BOILERPLATE_MODE_TEST)
@@ -182,7 +174,6 @@ _cairo_boilerplate_test_paginated_create_surface (const char		    *name,
 						  double		     max_width,
 						  double		     max_height,
 						  cairo_boilerplate_mode_t   mode,
-						  int			     id,
 						  void			   **closure)
 {
     test_paginated_closure_t *tpc;

@@ -74,7 +74,6 @@ _cairo_boilerplate_gl_create_surface (const char		*name,
 				      double			 max_width,
 				      double			 max_height,
 				      cairo_boilerplate_mode_t	 mode,
-				      int			 id,
 				      void		       **closure)
 {
     int rgba_attribs[] = { GLX_RGBA,
@@ -151,7 +150,6 @@ _cairo_boilerplate_gl_create_window (const char 	       *name,
 				     double			max_width,
 				     double			max_height,
 				     cairo_boilerplate_mode_t	mode,
-				     int			id,
 				     void		      **closure)
 {
     int rgba_attribs[] = { GLX_RGBA,
@@ -232,7 +230,6 @@ _cairo_boilerplate_gl_create_window_db (const char		  *name,
 					double			   max_width,
 					double			   max_height,
 					cairo_boilerplate_mode_t   mode,
-					int			   id,
 					void			 **closure)
 {
     int rgba_attribs[] = { GLX_RGBA,

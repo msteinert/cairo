@@ -169,7 +169,6 @@ _cairo_boilerplate_win32_printing_create_surface (const char		    *name,
 						  double		     max_width,
 						  double		     max_height,
 						  cairo_boilerplate_mode_t   mode,
-						  int			     id,
 						  void			   **closure)
 {
     win32_target_closure_t *ptc;

@@ -591,7 +591,6 @@ spawn_target (const char *socket_path,
 					 1, 1,
 					 1, 1,
 					 CAIRO_BOILERPLATE_MODE_TEST,
-					 0,
 					 &tr.closure);
     if (tr.surface == NULL) {
 	fprintf (stderr,

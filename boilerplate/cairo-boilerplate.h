@@ -124,7 +124,6 @@ typedef cairo_surface_t *
 				       double			  max_width,
 				       double			  max_height,
 				       cairo_boilerplate_mode_t   mode,
-				       int			  id,
 				       void			**closure);
 
 typedef cairo_surface_t *

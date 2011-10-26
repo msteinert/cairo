@@ -72,7 +72,6 @@ _cairo_boilerplate_egl_create_surface (const char		 *name,
 				       double			  max_width,
 				       double			  max_height,
 				       cairo_boilerplate_mode_t   mode,
-				       int			  id,
 				       void			**closure)
 {
     egl_target_closure_t *gltc;

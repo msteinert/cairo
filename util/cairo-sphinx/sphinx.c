@@ -1378,7 +1378,7 @@ do_client (int fd,
 
     client.surface = client.target->create_surface (NULL, content, 1, 1, 1, 1,
 						    CAIRO_BOILERPLATE_MODE_TEST,
-						    0, &closure);
+						    &closure);
     if (client.surface == NULL) {
 	fprintf (stderr, "Failed to create target surface: %s.\n",
 		 client.target->name);

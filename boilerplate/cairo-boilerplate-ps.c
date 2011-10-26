@@ -82,7 +82,6 @@ _cairo_boilerplate_ps_create_surface (const char		*name,
 				      double			 max_width,
 				      double			 max_height,
 				      cairo_boilerplate_mode_t	 mode,
-				      int			 id,
 				      void		       **closure)
 {
     ps_target_closure_t *ptc;
@@ -144,14 +143,13 @@ _cairo_boilerplate_ps2_create_surface (const char		 *name,
 				       double			  max_width,
 				       double			  max_height,
 				       cairo_boilerplate_mode_t   mode,
-				       int			  id,
 				       void			**closure)
 {
     return _cairo_boilerplate_ps_create_surface (name, content,
 						 CAIRO_PS_LEVEL_2,
 						 width, height,
 						 max_width, max_height,
-						 mode, id,
+						 mode,
 						 closure);
 }
 
@@ -163,14 +161,13 @@ _cairo_boilerplate_ps3_create_surface (const char		 *name,
 				       double			  max_width,
 				       double			  max_height,
 				       cairo_boilerplate_mode_t   mode,
-				       int			  id,
 				       void			**closure)
 {
     return _cairo_boilerplate_ps_create_surface (name, content,
 						 CAIRO_PS_LEVEL_3,
 						 width, height,
 						 max_width, max_height,
-						 mode, id,
+						 mode,
 						 closure);
 }
 

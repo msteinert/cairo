@@ -288,7 +288,6 @@ preamble (cairo_test_context_t *ctx)
 					    WIDTH, HEIGHT,
 					    WIDTH, HEIGHT,
 					    CAIRO_BOILERPLATE_MODE_TEST,
-					    0,
 					    &closure);
 
 	if (surface == NULL) {

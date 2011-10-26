@@ -436,7 +436,6 @@ cairo_test_target_has_similar (const cairo_test_context_t *ctx,
 						ctx->test->width + 25 * NUM_DEVICE_OFFSETS,
 						ctx->test->height + 25 * NUM_DEVICE_OFFSETS,
 						CAIRO_BOILERPLATE_MODE_TEST,
-						0,
 						&closure);
 	    if (surface == NULL)
 		goto out;
@@ -821,7 +820,6 @@ REPEAT:
 					ctx->test->width + 25 * NUM_DEVICE_OFFSETS,
 					ctx->test->height + 25 * NUM_DEVICE_OFFSETS,
 					CAIRO_BOILERPLATE_MODE_TEST,
-					0,
 					&closure);
     if (surface == NULL) {
 	cairo_test_log (ctx, "Error: Failed to set %s target\n", target->name);

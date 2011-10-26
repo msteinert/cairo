@@ -62,7 +62,6 @@ _cairo_boilerplate_svg_create_surface (const char		 *name,
 				       double			  max_width,
 				       double			  max_height,
 				       cairo_boilerplate_mode_t   mode,
-				       int			  id,
 				       void			**closure)
 {
     svg_target_closure_t *ptc;
@@ -117,7 +116,6 @@ _cairo_boilerplate_svg11_create_surface (const char		   *name,
 					 double 		    max_width,
 					 double 		    max_height,
 					 cairo_boilerplate_mode_t   mode,
-					 int			    id,
 					 void			  **closure)
 {
     /* current default, but be explicit in case the default changes */
@@ -125,7 +123,7 @@ _cairo_boilerplate_svg11_create_surface (const char		   *name,
 						  CAIRO_SVG_VERSION_1_1,
 						  width, height,
 						  max_width, max_height,
-						  mode, id,
+						  mode,
 						  closure);
 }
 
@@ -137,14 +135,13 @@ _cairo_boilerplate_svg12_create_surface (const char		   *name,
 					 double 		    max_width,
 					 double 		    max_height,
 					 cairo_boilerplate_mode_t   mode,
-					 int			    id,
 					 void			  **closure)
 {
     return _cairo_boilerplate_svg_create_surface (name, content,
 						  CAIRO_SVG_VERSION_1_2,
 						  width, height,
 						  max_width, max_height,
-						  mode, id,
+						  mode,
 						  closure);
 }
 

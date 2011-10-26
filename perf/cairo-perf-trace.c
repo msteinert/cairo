@@ -699,7 +699,6 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 					       1, 1,
 					       1, 1,
 					       CAIRO_BOILERPLATE_MODE_PERF,
-					       0,
 					       &args.closure);
 	if (perf->observe) {
 	    cairo_surface_t *obs;

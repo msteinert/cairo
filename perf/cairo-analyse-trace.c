@@ -418,7 +418,6 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 				   1, 1,
 				   1, 1,
 				   CAIRO_BOILERPLATE_MODE_PERF,
-				   0,
 				   &args.closure);
     args.surface =
 	    cairo_surface_create_observer (real,

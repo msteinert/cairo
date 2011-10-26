@@ -109,7 +109,6 @@ _cairo_boilerplate_wgl_create_surface (const char		 *name,
 				       double			  max_width,
 				       double			  max_height,
 				       cairo_boilerplate_mode_t   mode,
-				       int			  id,
 				       void			**closure)
 {
     wgl_target_closure_t *wgltc;
@@ -146,7 +145,6 @@ _cairo_boilerplate_wgl_for_create_window (const char		    *name,
 					  double		     max_width,
 					  double		     max_height,
 					  cairo_boilerplate_mode_t   mode,
-					  int			     id,
 					  void			   **closure)
 {
     wgl_target_closure_t *wgltc;

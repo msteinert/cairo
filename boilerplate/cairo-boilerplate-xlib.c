@@ -280,7 +280,6 @@ _cairo_boilerplate_xlib_create_surface (const char		  *name,
 					double			   max_width,
 					double			   max_height,
 					cairo_boilerplate_mode_t   mode,
-					int			   id,
 					void			 **closure)
 {
     xlib_target_closure_t *xtc;
@@ -323,13 +322,11 @@ _cairo_boilerplate_xlib_window_create_surface (const char		 *name,
 					       double			  max_width,
 					       double			  max_height,
 					       cairo_boilerplate_mode_t   mode,
-					       int			  id,
 					       void			**closure)
 {
     xlib_target_closure_t *xtc;
     Display *dpy;
-    Screen *scr;
-    int screen, x, y;
+    int screen;
     XSetWindowAttributes attr;
     cairo_surface_t *surface;
 
@@ -374,25 +371,9 @@ _cairo_boilerplate_xlib_window_create_surface (const char		 *name,
 	return NULL;
     }
 
-    /* tile the windows so threads do not overlap */
-    scr = XScreenOfDisplay (dpy, screen);
-    x = 10; y = 15;
-    if (id-- > 1) do {
-	x += max_width;
-	if (x + max_width > WidthOfScreen (scr)) {
-	    x = 10;
-	    y += max_height;
-	    if (y + max_height > HeightOfScreen (scr)) {
-		XCloseDisplay (dpy);
-		free (xtc);
-		return NULL;
-	    }
-	}
-    } while (--id);
-
     attr.override_redirect = True;
     xtc->drawable = XCreateWindow (dpy, DefaultRootWindow (dpy),
-				   x, y,
+				   0, 0,
 				   width, height, 0,
 				   DefaultDepth (dpy, screen),
 				   InputOutput,
@@ -475,13 +456,11 @@ _cairo_boilerplate_xlib_fallback_create_surface (const char		   *name,
 						 double 		    max_width,
 						 double 		    max_height,
 						 cairo_boilerplate_mode_t   mode,
-						 int			    id,
 						 void			  **closure)
 {
     xlib_target_closure_t *xtc;
     Display *dpy;
-    Screen *scr;
-    int screen, x, y;
+    int screen;
     XSetWindowAttributes attr;
     cairo_surface_t *surface;
 
@@ -526,25 +505,9 @@ _cairo_boilerplate_xlib_fallback_create_surface (const char		   *name,
 	return NULL;
     }
 
-    /* tile the windows so threads do not overlap */
-    scr = XScreenOfDisplay (dpy, screen);
-    x = y = 0;
-    if (id-- > 1) do {
-	x += max_width;
-	if (x + max_width > WidthOfScreen (scr)) {
-	    x = 0;
-	    y += max_height;
-	    if (y + max_height > HeightOfScreen (scr)) {
-		XCloseDisplay (dpy);
-		free (xtc);
-		return NULL;
-	    }
-	}
-    } while (--id);
-
     attr.override_redirect = True;
     xtc->drawable = XCreateWindow (dpy, DefaultRootWindow (dpy),
-				   x, y,
+				   0, 0,
 				   width, height, 0,
 				   DefaultDepth (dpy, screen),
 				   InputOutput,

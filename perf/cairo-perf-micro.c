@@ -508,7 +508,6 @@ main (int   argc,
 						    perf.size, perf.size,
 						    perf.size, perf.size,
 						    CAIRO_BOILERPLATE_MODE_PERF,
-						    0,
 						    &closure);
 		if (surface == NULL) {
 		    fprintf (stderr,

@@ -382,7 +382,6 @@ preamble (cairo_test_context_t *ctx)
 					    SIZE, SIZE,
 					    SIZE, SIZE,
 					    CAIRO_BOILERPLATE_MODE_TEST,
-					    0,
 					    &closure);
 
 	if (surface == NULL) {
@@ -417,7 +416,6 @@ preamble (cairo_test_context_t *ctx)
 						SIZE + 25, SIZE + 25,
 						SIZE + 25, SIZE + 25,
 						CAIRO_BOILERPLATE_MODE_TEST,
-						0,
 						&closure);
 	    if (surface == NULL || cairo_surface_status (surface)) {
 		cairo_test_log (ctx, "Failed to generate surface: %s.%s\n",

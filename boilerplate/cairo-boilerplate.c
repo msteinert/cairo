@@ -132,7 +132,6 @@ _cairo_boilerplate_image_create_surface (const char		   *name,
 					 double 		    max_width,
 					 double 		    max_height,
 					 cairo_boilerplate_mode_t   mode,
-					 int			    id,
 					 void			  **closure)
 {
     cairo_format_t format;
@@ -188,7 +187,6 @@ _cairo_boilerplate_image16_create_surface (const char		     *name,
 					   double		      max_width,
 					   double		      max_height,
 					   cairo_boilerplate_mode_t   mode,
-					   int			      id,
 					   void			    **closure)
 {
     *closure = NULL;
@@ -243,7 +241,6 @@ _cairo_boilerplate_recording_create_surface (const char 	       *name,
 					     double			max_width,
 					     double			max_height,
 					     cairo_boilerplate_mode_t	mode,
-					     int			id,
 					     void		      **closure)
 {
     cairo_rectangle_t extents;
