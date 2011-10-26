@@ -254,10 +254,6 @@ void
 cairo_test_logv (const cairo_test_context_t *ctx,
 	        const char *fmt, va_list ap) CAIRO_BOILERPLATE_PRINTF_FORMAT(2, 0);
 
-void
-cairo_test_log_path (const cairo_test_context_t *ctx,
-		     const cairo_path_t *path);
-
 /* Helper functions that take care of finding source images even when
  * building in a non-srcdir manner, (i.e. the tests will be run in a
  * directory that is different from the one where the source image

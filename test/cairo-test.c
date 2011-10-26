@@ -222,17 +222,6 @@ cairo_test_init (cairo_test_context_t *ctx,
     _cairo_test_init (ctx, NULL, NULL, test_name, output);
 }
 
-static void
-cairo_test_init_thread (cairo_test_context_t *ctx,
-			cairo_test_context_t *master,
-			int thread)
-{
-    MF (MEMFAULT_DISABLE_FAULTS ());
-
-    *ctx = *master;
-    ctx->thread = thread;
-}
-
 void
 cairo_test_fini (cairo_test_context_t *ctx)
 {
@@ -282,42 +271,6 @@ cairo_test_log (const cairo_test_context_t *ctx, const char *fmt, ...)
     va_start (va, fmt);
     vfprintf (file, fmt, va);
     va_end (va);
-}
-
-void
-cairo_test_log_path (const cairo_test_context_t *ctx,
-		     const cairo_path_t *path)
-{
-  int i;
-
-  for (i = 0; i < path->num_data; i += path->data[i].header.length) {
-    cairo_path_data_t *data = &path->data[i];
-    switch (data->header.type) {
-    case CAIRO_PATH_MOVE_TO:
-	cairo_test_log (ctx,
-		        "    cairo_move_to (cr, %g, %g);\n",
-			data[1].point.x, data[1].point.y);
-        break;
-    case CAIRO_PATH_LINE_TO:
-	cairo_test_log (ctx,
-		        "    cairo_line_to (cr, %g, %g);\n",
-			data[1].point.x, data[1].point.y);
-	break;
-    case CAIRO_PATH_CURVE_TO:
-	cairo_test_log (ctx,
-		        "    cairo_curve_to (cr, %g, %g, %g, %g, %g, %g);\n",
-			data[1].point.x, data[1].point.y,
-			data[2].point.x, data[2].point.y,
-			data[3].point.x, data[3].point.y);
-	break;
-    case CAIRO_PATH_CLOSE_PATH:
-	cairo_test_log (ctx,
-		        "    cairo_close_path (cr);\n\n");
-	break;
-    default:
-	assert (0);
-    }
-  }
 }
 
 static void
@@ -1780,143 +1733,6 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
     }
 
     return status;
-}
-
-cairo_test_status_t
-_cairo_test_context_run (cairo_test_context_t *ctx)
-{
-    size_t i, j;
-    cairo_test_status_t ret;
-
-    ret = CAIRO_TEST_UNTESTED;
-    if (ctx->test->preamble != NULL)
-	ret = ctx->test->preamble (ctx);
-
-    if (ctx->test->draw == NULL)
-	return ret;
-
-    /* The intended logic here is that we return overall SUCCESS
-     * iff. there is at least one tested backend and that all tested
-     * backends return SUCCESS, OR, there's backends were manually
-     * limited, and none were tested.
-     * In other words:
-     *
-     *  if      backends limited and no backend tested
-     *          -> SUCCESS
-     *	else if any backend not SUCCESS
-     *		-> FAILURE
-     *	else if all backends UNTESTED
-     *		-> FAILURE
-     *	else    (== some backend SUCCESS)
-     *		-> SUCCESS
-     *
-     * Also, on a crash, run no further tests.
-     */
-    for (i = 0; i < ctx->num_targets && ret != CAIRO_TEST_CRASHED; i++) {
-	const cairo_boilerplate_target_t *target = ctx->targets_to_test[(i + ctx->thread) % ctx->num_targets];
-
-	for (j = 0; j < NUM_DEVICE_OFFSETS; j++) {
-	    int dev_offset = ((j + ctx->thread) % NUM_DEVICE_OFFSETS) * 25;
-	    cairo_test_similar_t similar, has_similar;
-
-	    has_similar = cairo_test_target_has_similar (ctx, target);
-	    for (similar = DIRECT; similar <= has_similar; similar++) {
-		cairo_status_t status;
-
-		status = _cairo_test_context_run_for_target (ctx,
-							     target,
-							     similar,
-							     dev_offset);
-		if (ret == CAIRO_TEST_UNTESTED)
-		    ret = status;
-	    }
-	}
-    }
-
-    return ret;
-}
-
-#if CAIRO_HAS_REAL_PTHREAD
-typedef struct _cairo_test_thread {
-    pthread_t thread;
-    cairo_test_context_t *ctx;
-    size_t id;
-} cairo_test_thread_t;
-
-static void *
-cairo_test_run_threaded (void *closure)
-{
-    cairo_test_thread_t *arg = closure;
-    cairo_test_context_t ctx;
-    cairo_test_status_t ret;
-
-    cairo_test_init_thread (&ctx, arg->ctx, arg->id);
-
-    ret = _cairo_test_context_run (&ctx);
-
-    cairo_test_fini (&ctx);
-
-    return (void *) ret;
-}
-#endif
-
-
-static cairo_test_status_t
-cairo_test_expecting (const cairo_test_t *test)
-{
-    cairo_test_context_t ctx;
-    cairo_test_status_t ret = CAIRO_TEST_SUCCESS;
-    size_t num_threads;
-
-    _cairo_test_init (&ctx, NULL, test, test->name, CAIRO_TEST_OUTPUT_DIR);
-    printf ("%s\n", test->description);
-
-#if CAIRO_HAS_REAL_PTHREAD
-    num_threads = 0;
-    if (getenv ("CAIRO_TEST_NUM_THREADS"))
-	num_threads = atoi (getenv ("CAIRO_TEST_NUM_THREADS"));
-    if (num_threads > 1) {
-	cairo_test_thread_t *threads;
-	size_t n;
-
-	threads = xmalloc (sizeof (cairo_test_thread_t) * num_threads);
-	for (n = 0; n < num_threads; n++) {
-	    threads[n].ctx = &ctx;
-	    threads[n].id = n + 1;
-	    pthread_create (&threads[n].thread, NULL,
-		    cairo_test_run_threaded, &threads[n]);
-	}
-	for (n = 0; n < num_threads; n++) {
-	    void *tmp;
-	    pthread_join (threads[n].thread, &tmp);
-	    if (ret == CAIRO_TEST_SUCCESS)
-		ret = (cairo_test_status_t) tmp;
-	}
-	free (threads);
-    }
-
-    if (ret == CAIRO_TEST_SUCCESS)
-#endif
-	ret = _cairo_test_context_run (&ctx);
-
-    if (ret != CAIRO_TEST_SUCCESS)
-        printf ("Check %s%s out for more information.\n", ctx.test_name, CAIRO_TEST_LOG_SUFFIX);
-
-    cairo_test_fini (&ctx);
-
-    return ret;
-}
-
-cairo_test_status_t
-cairo_test (const cairo_test_t *test)
-{
-#ifdef _MSC_VER
-    /* We don't want an assert dialog, we want stderr */
-    _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
-    _CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
-#endif
-
-    return cairo_test_expecting (test);
 }
 
 const cairo_test_context_t *
