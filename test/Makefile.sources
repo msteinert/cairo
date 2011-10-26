@@ -228,6 +228,7 @@ test_sources = \
 	paint-with-alpha.c				\
 	partial-clip-text.c				\
 	partial-coverage.c				\
+	pass-through.c					\
 	path-append.c					\
 	path-stroke-twice.c				\
 	path-precision.c				\
