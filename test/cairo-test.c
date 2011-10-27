@@ -261,10 +261,9 @@ void
 cairo_test_log (const cairo_test_context_t *ctx, const char *fmt, ...)
 {
     va_list va;
-    FILE *file = ctx && ctx->log_file ? ctx->log_file : stderr;
 
     va_start (va, fmt);
-    vfprintf (file, fmt, va);
+    cairo_test_logv (ctx, fmt, va);
     va_end (va);
 }
 
