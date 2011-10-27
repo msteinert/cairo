@@ -687,12 +687,15 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	xlib_masks.red_mask = surface->r_mask;
 	xlib_masks.green_mask = surface->g_mask;
 	xlib_masks.blue_mask = surface->b_mask;
-	_pixman_format_from_masks (&xlib_masks, &pixman_format);
-	return _cairo_image_surface_create_with_pixman_format (NULL,
-							       pixman_format,
-							       extents->width,
-							       extents->height,
-							       0);
+	if (_pixman_format_from_masks (&xlib_masks, &pixman_format) &&
+	    _cairo_format_from_pixman_format (pixman_format) != CAIRO_FORMAT_INVALID)
+	{
+	    return _cairo_image_surface_create_with_pixman_format (NULL,
+								   pixman_format,
+								   extents->width,
+								   extents->height,
+								   0);
+	}
     }
 
     status = _cairo_xlib_display_acquire (surface->base.device, &display);
