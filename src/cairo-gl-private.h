@@ -542,15 +542,6 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 			       const cairo_clip_t	*clip,
 			       int			*remaining_glyphs);
 
-static inline int
-_cairo_gl_y_flip (cairo_gl_surface_t *surface, int y)
-{
-    if (surface->fb)
-	return y;
-    else
-	return (surface->height - 1) - y;
-}
-
 cairo_private cairo_status_t
 _cairo_gl_context_init_shaders (cairo_gl_context_t *ctx);
 

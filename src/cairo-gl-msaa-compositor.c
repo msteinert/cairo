@@ -251,8 +251,9 @@ static void
 _scissor_to_rectangle (cairo_gl_surface_t *surface,
 		       const cairo_rectangle_int_t *r)
 {
-    int y = _cairo_gl_y_flip (surface, r->y);
-
+    int y = r->y;
+    if (_cairo_gl_surface_is_texture (surface) == FALSE)
+	y = surface->height - (r->y + r->height);
     glScissor (r->x, y, r->width, r->height);
     glEnable (GL_SCISSOR_TEST);
 }
