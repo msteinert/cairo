@@ -74,7 +74,7 @@ _cairo_clip_path_create (cairo_clip_t *clip)
     return clip_path;
 }
 
-static cairo_clip_path_t *
+cairo_clip_path_t *
 _cairo_clip_path_reference (cairo_clip_path_t *clip_path)
 {
     assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&clip_path->ref_count));

@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2005 Red Hat, Inc.
+ * Copyright © 2011 Intel Corporation.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -19,46 +19,36 @@
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+ * http://www.mozilla.og/MPL/
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY
  * OF ANY KIND, either express or implied. See the LGPL or the MPL for
  * the specific language governing rights and limitations.
  *
- * The Original Code is the cairo graphics library.
- *
- * The Initial Developer of the Original Code is Red Hat, Inc.
- *
  * Contributor(s):
- *	Carl D. Worth <cworth@redhat.com>
+ *      Robert Bragg <robert@linux.intel.com>
  */
 
-#ifndef CAIRO_DEFAULT_CONTEXT_PRIVATE_H
-#define CAIRO_DEFAULT_CONTEXT_PRIVATE_H
+#ifndef CAIRO_COGL_UTILS_PRIVATE_H
+#define CAIRO_COGL_UTILS_PRIVATE_H
 
-#include "cairo-private.h"
-#include "cairo-gstate-private.h"
 #include "cairo-path-fixed-private.h"
+#include <cogl/cogl2-experimental.h>
 
-typedef struct _cairo_default_context cairo_default_context_t;
+CoglPath *
+_cairo_cogl_util_path_from_cairo (const cairo_path_fixed_t *path,
+				  cairo_fill_rule_t fill_rule,
+				  float tolerance);
 
-struct _cairo_default_context {
-    cairo_t base;
+int
+_cairo_cogl_util_next_p2 (int a);
 
-    cairo_gstate_t *gstate;
-    cairo_gstate_t  gstate_tail[2];
-    cairo_gstate_t *gstate_freelist;
+#define CAIRO_FIXED_ONE_FLOAT ((float)(1 << CAIRO_FIXED_FRAC_BITS))
 
-    cairo_path_fixed_t path[1];
-};
+static inline float
+_cairo_cogl_util_fixed_to_float (cairo_fixed_t f)
+{
+    return ((float) f) / CAIRO_FIXED_ONE_FLOAT;
+}
 
-cairo_private cairo_t *
-_cairo_default_context_create (void *target);
-
-cairo_status_t
-_cairo_default_context_init (cairo_default_context_t *cr, void *target);
-
-void
-_cairo_default_context_fini (cairo_default_context_t *cr);
-
-#endif /* CAIRO_DEFAULT_CONTEXT_PRIVATE_H */
+#endif /* CAIRO_COGL_UTILS_PRIVATE_H */

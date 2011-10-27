@@ -962,7 +962,7 @@ _cairo_image_source_finish (void *abstract_surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static const cairo_surface_backend_t cairo_image_source_backend = {
+const cairo_surface_backend_t _cairo_image_source_backend = {
     CAIRO_SURFACE_TYPE_IMAGE,
     _cairo_image_source_finish,
     NULL, /* read-only wrapper */
@@ -993,7 +993,7 @@ _cairo_image_source_create_for_pattern (cairo_surface_t *dst,
     }
 
     _cairo_surface_init (&source->base,
-			 &cairo_image_source_backend,
+			 &_cairo_image_source_backend,
 			 NULL, /* device */
 			 CAIRO_CONTENT_COLOR_ALPHA);
 

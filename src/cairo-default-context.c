@@ -63,11 +63,9 @@ _cairo_default_context_reset_static_data (void)
     _freed_pool_reset (&context_pool);
 }
 
-static void
-_cairo_default_context_destroy (void *abstract_cr)
+void
+_cairo_default_context_fini (cairo_default_context_t *cr)
 {
-    cairo_default_context_t *cr = abstract_cr;
-
     while (cr->gstate != &cr->gstate_tail[0]) {
 	if (_cairo_gstate_restore (&cr->gstate, &cr->gstate_freelist))
 	    break;
@@ -84,6 +82,14 @@ _cairo_default_context_destroy (void *abstract_cr)
     _cairo_path_fixed_fini (cr->path);
 
     _cairo_fini (&cr->base);
+}
+
+static void
+_cairo_default_context_destroy (void *abstract_cr)
+{
+    cairo_default_context_t *cr = abstract_cr;
+
+    _cairo_default_context_fini (cr);
 
     /* mark the context as invalid to protect against misuse */
     cr->base.status = CAIRO_STATUS_NULL_POINTER;
@@ -1381,6 +1387,19 @@ static const cairo_backend_t _cairo_default_context_backend = {
     _cairo_default_context_show_page,
 };
 
+cairo_status_t
+_cairo_default_context_init (cairo_default_context_t *cr, void *target)
+{
+    _cairo_init (&cr->base, &_cairo_default_context_backend);
+    _cairo_path_fixed_init (cr->path);
+
+    cr->gstate = &cr->gstate_tail[0];
+    cr->gstate_freelist = &cr->gstate_tail[1];
+    cr->gstate_tail[1].next = NULL;
+
+    return _cairo_gstate_init (cr->gstate, target);
+}
+
 cairo_t *
 _cairo_default_context_create (void *target)
 {
@@ -1394,14 +1413,7 @@ _cairo_default_context_create (void *target)
 	    return _cairo_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
-    _cairo_init (&cr->base, &_cairo_default_context_backend);
-    _cairo_path_fixed_init (cr->path);
-
-    cr->gstate = &cr->gstate_tail[0];
-    cr->gstate_freelist = &cr->gstate_tail[1];
-    cr->gstate_tail[1].next = NULL;
-
-    status = _cairo_gstate_init (cr->gstate, target);
+    status = _cairo_default_context_init (cr, target);
     if (unlikely (status)) {
 	_freed_pool_put (&context_pool, cr);
 	return _cairo_create_in_error (status);

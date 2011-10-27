@@ -38,3 +38,4 @@ cairo_boilerplate_xcb_sources = cairo-boilerplate-xcb.c
 cairo_boilerplate_xlib_headers = cairo-boilerplate-xlib.h
 cairo_boilerplate_xlib_sources = cairo-boilerplate-xlib.c
 cairo_boilerplate_vg_sources = cairo-boilerplate-vg.c
+cairo_boilerplate_cogl_sources = cairo-boilerplate-cogl.c

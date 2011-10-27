@@ -401,6 +401,11 @@ _cairo_ft_font_reset_static_data (void);
 cairo_private void
 _cairo_win32_font_reset_static_data (void);
 
+#if CAIRO_HAS_COGL_SURFACE
+void
+_cairo_cogl_context_reset_static_data (void);
+#endif
+
 /* the font backend interface */
 
 struct _cairo_unscaled_font_backend {
@@ -1958,6 +1963,9 @@ _cairo_debug_print_path (FILE *stream, cairo_path_fixed_t *path);
 
 cairo_private void
 _cairo_debug_print_polygon (FILE *stream, cairo_polygon_t *polygon);
+
+cairo_private void
+_cairo_debug_print_traps (FILE *file, const cairo_traps_t *traps);
 
 cairo_private void
 _cairo_debug_print_clip (FILE *stream, const cairo_clip_t *clip);

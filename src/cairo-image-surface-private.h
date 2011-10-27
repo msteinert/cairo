@@ -74,6 +74,7 @@ typedef struct _cairo_image_source {
 } cairo_image_source_t;
 
 cairo_private extern const cairo_surface_backend_t _cairo_image_surface_backend;
+cairo_private extern const cairo_surface_backend_t _cairo_image_source_backend;
 
 cairo_private const cairo_compositor_t *
 _cairo_image_mask_compositor_get (void);
@@ -161,6 +162,20 @@ static inline cairo_bool_t
 _cairo_surface_is_image (const cairo_surface_t *surface)
 {
     return surface->backend == &_cairo_image_surface_backend;
+}
+
+/**
+ * _cairo_surface_is_image_source:
+ * @surface: a #cairo_surface_t
+ *
+ * Checks if a surface is an #cairo_image_source_t
+ *
+ * Return value: %TRUE if the surface is an image source
+ **/
+static inline cairo_bool_t
+_cairo_surface_is_image_source (const cairo_surface_t *surface)
+{
+    return surface->backend == &_cairo_image_source_backend;
 }
 
 CAIRO_END_DECLS

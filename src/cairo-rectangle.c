@@ -272,7 +272,8 @@ _cairo_box_intersects_line_segment (cairo_box_t *box, cairo_line_t *line)
 
 static cairo_status_t
 _cairo_box_add_spline_point (void *closure,
-			     const cairo_point_t *point)
+			     const cairo_point_t *point,
+			     const cairo_slope_t *tangent)
 {
     _cairo_box_add_point (closure, point);
 
