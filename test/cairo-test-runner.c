@@ -107,7 +107,7 @@ typedef enum {
     GT
 } cairo_test_compare_op_t;
 
-static cairo_test_t *tests;
+static cairo_test_list_t *tests;
 
 static void CAIRO_BOILERPLATE_PRINTF_FORMAT(2,3)
 _log (cairo_test_context_t *ctx,
@@ -123,18 +123,6 @@ _log (cairo_test_context_t *ctx,
     va_start (ap, fmt);
     cairo_test_logv (ctx, fmt, ap);
     va_end (ap);
-}
-
-static void
-_tests_reverse (void)
-{
-    cairo_test_t *list, *next;
-
-    for (list = tests, tests = NULL; list != NULL; list = next) {
-	next = list->next;
-	list->next = tests;
-	tests = list;
-    }
 }
 
 static cairo_test_list_t *
@@ -709,7 +697,7 @@ int
 main (int argc, char **argv)
 {
     cairo_test_runner_t runner;
-    cairo_test_t *test;
+    cairo_test_list_t *test_list;
     cairo_test_status_t *target_status;
     unsigned int n, m;
     char targets[4096];
@@ -723,7 +711,7 @@ main (int argc, char **argv)
 #endif
 
     _cairo_test_runner_register_tests ();
-    _tests_reverse ();
+    tests = _list_reverse (tests);
 
     memset (&runner, 0, sizeof (runner));
     runner.num_device_offsets = 1;
@@ -768,7 +756,8 @@ main (int argc, char **argv)
 				 runner.base.num_targets);
     }
 
-    for (test = tests; test != NULL; test = test->next) {
+    for (test_list = tests; test_list != NULL; test_list = test_list->next) {
+	const cairo_test_t *test = test_list->test;
 	cairo_test_context_t ctx;
 	cairo_test_status_t status;
 	cairo_bool_t failed = FALSE, xfailed = FALSE, error = FALSE, crashed = FALSE, skipped = TRUE;
@@ -1097,6 +1086,5 @@ main (int argc, char **argv)
 void
 cairo_test_register (cairo_test_t *test)
 {
-    test->next = tests;
-    tests = test;
+    tests = _list_prepend (tests, test);
 }

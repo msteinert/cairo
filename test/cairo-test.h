@@ -153,7 +153,6 @@ typedef cairo_test_status_t
 (cairo_test_draw_function_t) (cairo_t *cr, int width, int height);
 
 struct _cairo_test {
-    struct _cairo_test *next;
     const char *name;
     const char *description;
     const char *keywords;
@@ -194,7 +193,7 @@ struct _cairo_test {
 void _register_##name (void); \
 void _register_##name (void) { \
     static cairo_test_t test = { \
-	NULL, #name, description, \
+	#name, description, \
 	keywords, requirements, \
 	width, height, \
 	preamble, draw \
