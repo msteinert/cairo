@@ -283,7 +283,7 @@ static const cairo_boilerplate_target_t targets[] = {
      * tests. XXX: I'd still like to chase these down at some point.
      * For now just set the svg error tolerance to 1. */
     {
-	"svg11", "svg", NULL, NULL,
+	"svg11", "svg", ".svg", NULL,
 	CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA, 1,
 	"cairo_svg_surface_create",
 	_cairo_boilerplate_svg11_create_surface,
@@ -296,7 +296,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	NULL, NULL, FALSE, TRUE, TRUE
     },
     {
-	"svg11", "svg", NULL, NULL,
+	"svg11", "svg", ".svg", NULL,
 	CAIRO_SURFACE_TYPE_RECORDING, CAIRO_CONTENT_COLOR, 1,
 	"cairo_svg_surface_create",
 	_cairo_boilerplate_svg11_create_surface,
@@ -309,7 +309,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	NULL, NULL, FALSE, TRUE, TRUE
     },
     {
-	"svg12", "svg", NULL, NULL,
+	"svg12", "svg", ".svg", NULL,
 	CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA, 1,
 	"cairo_svg_surface_create",
 	_cairo_boilerplate_svg12_create_surface,
@@ -322,7 +322,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	NULL, NULL, FALSE, TRUE, TRUE
     },
     {
-	"svg12", "svg", NULL, NULL,
+	"svg12", "svg", ".svg", NULL,
 	CAIRO_SURFACE_TYPE_RECORDING, CAIRO_CONTENT_COLOR, 1,
 	"cairo_svg_surface_create",
 	_cairo_boilerplate_svg12_create_surface,
