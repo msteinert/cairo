@@ -228,8 +228,7 @@ cairo_test_fini (cairo_test_context_t *ctx)
 	fclose (ctx->log_file);
     ctx->log_file = NULL;
 
-    if (ctx->ref_name != NULL)
-	free (ctx->ref_name);
+    free (ctx->ref_name);
     cairo_surface_destroy (ctx->ref_image);
     cairo_surface_destroy (ctx->ref_image_flattened);
 
@@ -1387,18 +1386,11 @@ REPEAT:
     }
 
 UNWIND_CAIRO:
-    if (test_filename != NULL) {
-	free (test_filename);
-	test_filename = NULL;
-    }
-    if (fail_filename != NULL) {
-	free (fail_filename);
-	fail_filename = NULL;
-    }
-    if (pass_filename != NULL) {
-	free (pass_filename);
-	pass_filename = NULL;
-    }
+    free (test_filename);
+    free (fail_filename);
+    free (pass_filename);
+
+    test_filename = fail_filename = pass_filename = NULL;
 
 #if HAVE_MEMFAULT
     if (ret == CAIRO_TEST_FAILURE)
@@ -1442,32 +1434,19 @@ UNWIND_SURFACE:
     }
 
 UNWIND_STRINGS:
-    if (out_png_path)
-      free (out_png_path);
-    if (ref_png_path)
-      free (ref_png_path);
-    if (base_ref_png_path)
-      free (base_ref_png_path);
-    if (ref_path)
-      free (ref_path);
-    if (new_png_path)
-      free (new_png_path);
-    if (base_new_png_path)
-      free (base_new_png_path);
-    if (new_path)
-      free (new_path);
-    if (xfail_png_path)
-      free (xfail_png_path);
-    if (base_xfail_png_path)
-      free (base_xfail_png_path);
-    if (xfail_path)
-      free (xfail_path);
-    if (diff_png_path)
-      free (diff_png_path);
-    if (base_path)
-      free (base_path);
-    if (base_name)
-      free (base_name);
+    free (out_png_path);
+    free (ref_png_path);
+    free (base_ref_png_path);
+    free (ref_path);
+    free (new_png_path);
+    free (base_new_png_path);
+    free (new_path);
+    free (xfail_png_path);
+    free (base_xfail_png_path);
+    free (xfail_path);
+    free (diff_png_path);
+    free (base_path);
+    free (base_name);
 
     return ret;
 }

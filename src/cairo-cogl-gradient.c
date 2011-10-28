@@ -635,8 +635,7 @@ _cairo_cogl_get_linear_gradient (cairo_cogl_device_t *device,
     return CAIRO_INT_STATUS_SUCCESS;
 
 BAIL:
-    if (entry)
-	free (entry);
+    free (entry);
     if (gradient)
 	_cairo_cogl_linear_gradient_destroy (gradient);
     return status;

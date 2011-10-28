@@ -2011,10 +2011,8 @@ _cairo_cogl_get_path_stroke_meta (cairo_cogl_surface_t *surface,
     return meta;
 
 BAIL:
-    if (meta_path)
-	free (meta_path);
-    if (meta)
-	free (meta);
+    free (meta_path);
+    free (meta);
     return NULL;
 }
 
@@ -2266,10 +2264,8 @@ _cairo_cogl_get_path_fill_meta (cairo_cogl_surface_t *surface)
     return meta;
 
 BAIL:
-    if (meta_path)
-	free (meta_path);
-    if (meta)
-	free (meta);
+    free (meta_path);
+    free (meta);
     return NULL;
 }
 
