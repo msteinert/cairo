@@ -102,6 +102,24 @@ static int cairo_test_timeout = 60;
 
 #define NUM_DEVICE_OFFSETS 2
 
+static cairo_bool_t
+_cairo_test_mkdir (const char *path)
+{
+#if ! HAVE_MKDIR
+    return FALSE;
+#elif HAVE_MKDIR == 1
+    if (mkdir (path) == 0)
+	return TRUE;
+#elif HAVE_MKDIR == 2
+    if (mkdir (path, 0770) == 0)
+	return TRUE;
+#else
+#error Bad value for HAVE_MKDIR
+#endif
+
+    return errno == EEXIST;
+}
+
 static char *
 _cairo_test_fixup_name (const char *original)
 {
@@ -138,6 +156,8 @@ _cairo_test_init (cairo_test_context_t *ctx,
     ctx->test = test;
     ctx->test_name = _cairo_test_fixup_name (test_name);
     ctx->output = output;
+
+    _cairo_test_mkdir (ctx->output);
 
     ctx->malloc_failure = 0;
 #if HAVE_MEMFAULT
@@ -379,24 +399,6 @@ cairo_test_reference_filename (const cairo_test_context_t *ctx,
 
 done:
     return ref_name;
-}
-
-static cairo_bool_t
-_cairo_test_mkdir (const char *path)
-{
-#if ! HAVE_MKDIR
-    return FALSE;
-#elif HAVE_MKDIR == 1
-    if (mkdir (path) == 0)
-	return TRUE;
-#elif HAVE_MKDIR == 2
-    if (mkdir (path, 0770) == 0)
-	return TRUE;
-#else
-#error Bad value for HAVE_MKDIR
-#endif
-
-    return errno == EEXIST;
 }
 
 cairo_test_similar_t
