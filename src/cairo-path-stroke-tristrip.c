@@ -236,7 +236,7 @@ outer_close (struct stroker *stroker,
     int	clockwise;
 
     if (in->cw.x == out->cw.x && in->cw.y == out->cw.y &&
-	in->ccw.x == out->ccw.x && out->ccw.y == out->ccw.y)
+	in->ccw.x == out->ccw.x && in->ccw.y == out->ccw.y)
     {
 	return;
     }
@@ -422,7 +422,7 @@ outer_join (struct stroker *stroker,
     const cairo_point_t	*inpt, *outpt;
 
     if (in->cw.x == out->cw.x && in->cw.y == out->cw.y &&
-	in->ccw.x == out->ccw.x && out->ccw.y == out->ccw.y)
+	in->ccw.x == out->ccw.x && in->ccw.y == out->ccw.y)
     {
 	return;
     }
