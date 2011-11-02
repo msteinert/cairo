@@ -269,6 +269,7 @@ _cairo_gl_context_setup_spans (cairo_gl_context_t *ctx,
 				   GL_UNSIGNED_BYTE, GL_TRUE, vertex_size,
 				   (void *) (uintptr_t) vertex_offset);
     dispatch->EnableVertexAttribArray (CAIRO_GL_COLOR_ATTRIB_INDEX);
+    ctx->spans = TRUE;
 }
 
 void
@@ -520,9 +521,11 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     mask_size = _cairo_gl_operand_get_vertex_size (setup->mask.type);
 
     vertex_size = dst_size + src_size + mask_size;
-    if (ctx->vertex_size != vertex_size) {
+    if (setup->spans)
+	    vertex_size += sizeof (GLfloat);
+
+    if (ctx->vertex_size != vertex_size)
         _cairo_gl_composite_flush (ctx);
-    }
 
     _cairo_gl_context_set_destination (ctx, setup->dst);
 
