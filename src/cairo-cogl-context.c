@@ -31,7 +31,7 @@
 
 /* so long as we can verify that the ctm doesn't change multiple times
  * during the construction of a path we can build a shadow
- * cairo_path_fixed_t in user coordinates that we can use to create a
+ * #cairo_path_fixed_t in user coordinates that we can use to create a
  * hash value for caching tessellations of that path.
  *
  * We need to hook into all the points where the ctm can be changed
@@ -44,13 +44,15 @@
  * When a draw operation is hit we can then check that the
  * path_ctm_age == 0 and if so we create a hash of the path.
  *
- * We use this hash to lookup a cairo_cogl_path_meta_t struct which
+ * We use this hash to lookup a #cairo_cogl_path_meta_t struct which
  * may contain tessellated triangles for the path or may just contain
  * a count of how many times the path has been re-seen (we only cache
  * tessellated triangles if there is evidence that the path is being
  * used multiple times because there is a cost involved in allocating
  * a separate buffer for the triangles).
  */
+
+#include "cairoint.h"
 
 #include "cairo-cogl-context-private.h"
 #include "cairo-freed-pool-private.h"
@@ -88,7 +90,7 @@ _cairo_cogl_context_rectangle_real (cairo_cogl_context_t *cr,
  * because rectangles are perhaps the most common shape drawn with cairo.
  *
  * Basically we have a speculative store for a rectangle path that doesn't
- * need to use the cairo_path_fixed_t api to describe a rectangle in terms of
+ * need to use the #cairo_path_fixed_t api to describe a rectangle in terms of
  * (move_to,rel_line_to,rel_line_to,_rel_line_to,close) because if you profile
  * heavy rectangle drawing with Cairo that process can be overly expensive.
  *
@@ -590,7 +592,7 @@ _cairo_cogl_context_rectangle (void *abstract_cr,
 }
 
 /* Since the surface backend drawing operator functions don't get
- * passed the current cairo_t context we don't have a good way
+ * passed the current #cairo_t context we don't have a good way
  * to get our user-coordinates path into our surface operator
  * functions.
  *
