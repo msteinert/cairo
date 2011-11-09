@@ -953,8 +953,7 @@ _cairo_xml_surface_glyphs (void			    *abstract_surface,
 			   cairo_glyph_t	    *glyphs,
 			   int			     num_glyphs,
 			   cairo_scaled_font_t	    *scaled_font,
-			   const cairo_clip_t	    *clip,
-			   int			    *remaining_glyphs)
+			   const cairo_clip_t       *clip)
 {
     cairo_xml_surface_t *surface = abstract_surface;
     cairo_xml_t *xml = to_xml (surface);
@@ -988,7 +987,6 @@ _cairo_xml_surface_glyphs (void			    *abstract_surface,
     _cairo_xml_indent (xml, -2);
     _cairo_xml_printf (xml, "</glyphs>");
 
-    *remaining_glyphs = 0;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -996,6 +994,7 @@ static const cairo_surface_backend_t
 _cairo_xml_surface_backend = {
     CAIRO_SURFACE_TYPE_XML,
     NULL,
+
     _cairo_default_context_create,
 
     _cairo_xml_surface_create_similar,
@@ -1003,39 +1002,25 @@ _cairo_xml_surface_backend = {
     NULL, /* map_to_image */
     NULL, /* unmap_image */
 
-    NULL, NULL, /* source image */
-    NULL, NULL, /* dst image */
-    NULL, /* clone_similar */
-    NULL, /* composite */
-    NULL, /* fill_rectangles */
-    NULL, /* composite_trapezoids */
-    NULL, /* create_span_renderer */
-    NULL, /* check_span_renderer */
-    NULL, NULL, /* copy/show page */
+    NULL, /* acquire source image */
+    NULL, /* release source image */
+    NULL, /* snapshot */
+
+    NULL, /* copy page */
+    NULL, /* show page */
+
     _cairo_xml_surface_get_extents,
-    NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
+
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
-    NULL, /* font fini */
-    NULL, /* scaled_glyph_fini */
 
-    /* The 5 high level operations */
     _cairo_xml_surface_paint,
     _cairo_xml_surface_mask,
     _cairo_xml_surface_stroke,
     _cairo_xml_surface_fill,
-    _cairo_xml_surface_glyphs,
-
-    NULL, /* snapshot */
-
-    NULL, /* is_similar */
     NULL, /* fill_stroke */
-    NULL, /* create_solid_pattern_surface */
-    NULL, /* can_repaint_solid_pattern_surface */
-
-    /* The alternate high-level text operation */
-    NULL, NULL, /* has, show_text_glyphs */
+    _cairo_xml_surface_glyphs,
 };
 
 static cairo_surface_t *
