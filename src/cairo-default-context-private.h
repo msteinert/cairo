@@ -55,10 +55,10 @@ struct _cairo_default_context {
 cairo_private cairo_t *
 _cairo_default_context_create (void *target);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_default_context_init (cairo_default_context_t *cr, void *target);
 
-void
+cairo_private void
 _cairo_default_context_fini (cairo_default_context_t *cr);
 
 #endif /* CAIRO_DEFAULT_CONTEXT_PRIVATE_H */
