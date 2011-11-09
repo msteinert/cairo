@@ -768,7 +768,7 @@ base64_end (csi_t *ctx, csi_scanner_t *scan)
 	longjmp (scan->jmpbuf, status);
 }
 
-static inline void
+static void
 scan_read (csi_scanner_t *scan, csi_file_t *src, void *ptr, int len)
 {
     uint8_t *data = ptr;
