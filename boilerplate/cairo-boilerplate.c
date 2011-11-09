@@ -678,8 +678,6 @@ cairo_boilerplate_get_targets (int	    *pnum_targets,
 const cairo_boilerplate_target_t *
 cairo_boilerplate_get_image_target (cairo_content_t content)
 {
-    struct cairo_boilerplate_target_list *list;
-
     if (cairo_boilerplate_targets == NULL)
 	_cairo_boilerplate_register_all ();
 

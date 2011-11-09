@@ -32,7 +32,7 @@ _cairo_stats_compute (cairo_stats_t *stats,
 		      cairo_time_t  *values,
 		      int	     num_values)
 {
-    cairo_time_t sum, mean, delta, q1, q3, iqr;
+    cairo_time_t sum, mean, q1, q3, iqr;
     cairo_time_t outlier_min, outlier_max;
     int i, min_valid, num_valid;
     double s;
