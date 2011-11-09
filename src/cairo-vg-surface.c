@@ -41,6 +41,7 @@
 #include "cairo-cache-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
+#include "cairo-image-surface-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-surface-clipper-private.h"
@@ -248,7 +249,7 @@ _vg_format_to_pixman (VGImageFormat format,
 	/* RGB{A,X} channel ordering */
     case VG_sRGBX_8888: return PIXMAN_r8g8b8x8;
     case VG_sRGBA_8888: *needs_premult_fixup = TRUE; return PIXMAN_r8g8b8a8;
-    case VG_sRGBA_8888_PRE: return PIXMAN_r8b8g8a8;
+    case VG_sRGBA_8888_PRE: return PIXMAN_r8g8b8a8;
     case VG_sRGB_565: return PIXMAN_r5g6b5;
     case VG_sRGBA_5551: return 0;
     case VG_sRGBA_4444: return 0;
@@ -466,7 +467,7 @@ _vg_surface_get_extents (void                  *abstract_surface,
 
 typedef struct _vg_path {
     VGPath path;
-    cairo_matrix_t *ctm_inverse;
+    const cairo_matrix_t *ctm_inverse;
 
     VGubyte gseg[MAX_SEG];
     VGfloat gdata[MAX_SEG*3*2];
@@ -1057,16 +1058,16 @@ setup_source (cairo_vg_context_t *context,
 }
 
 static cairo_int_status_t
-_vg_surface_stroke (void                 *abstract_surface,
-		    cairo_operator_t      op,
-		    const cairo_pattern_t*source,
-		    cairo_path_fixed_t   *path,
-		    cairo_stroke_style_t *style,
-		    cairo_matrix_t       *ctm,
-		    cairo_matrix_t       *ctm_inverse,
-		    double                tolerance,
-		    cairo_antialias_t     antialias,
-		    cairo_clip_t	 *clip)
+_vg_surface_stroke (void                       *abstract_surface,
+		    cairo_operator_t            op,
+		    const cairo_pattern_t      *source,
+		    const cairo_path_fixed_t   *path,
+		    const cairo_stroke_style_t *style,
+		    const cairo_matrix_t       *ctm,
+		    const cairo_matrix_t       *ctm_inverse,
+		    double                      tolerance,
+		    cairo_antialias_t           antialias,
+		    const cairo_clip_t         *clip)
 {
     cairo_vg_surface_t *surface = abstract_surface;
     cairo_vg_context_t *context;
@@ -1133,14 +1134,14 @@ _vg_surface_stroke (void                 *abstract_surface,
 }
 
 static cairo_int_status_t
-_vg_surface_fill (void                  *abstract_surface,
-		  cairo_operator_t       op,
-		  const cairo_pattern_t *source,
-		  cairo_path_fixed_t    *path,
-		  cairo_fill_rule_t      fill_rule,
-		  double                 tolerance,
-		  cairo_antialias_t      antialias,
-		  cairo_clip_t		*clip)
+_vg_surface_fill (void                     *abstract_surface,
+		  cairo_operator_t          op,
+		  const cairo_pattern_t    *source,
+		  const cairo_path_fixed_t *path,
+		  cairo_fill_rule_t         fill_rule,
+		  double                    tolerance,
+		  cairo_antialias_t         antialias,
+		  const cairo_clip_t       *clip)
 {
     cairo_vg_surface_t *surface = abstract_surface;
     cairo_vg_context_t *context;
@@ -1200,10 +1201,10 @@ _vg_surface_fill (void                  *abstract_surface,
 }
 
 static cairo_int_status_t
-_vg_surface_paint (void             *abstract_surface,
-		   cairo_operator_t  op,
-		   const cairo_pattern_t  *source,
-		   cairo_clip_t	     *clip)
+_vg_surface_paint (void                  *abstract_surface,
+		   cairo_operator_t       op,
+		   const cairo_pattern_t *source,
+		   const cairo_clip_t    *clip)
 {
     cairo_vg_surface_t *surface = abstract_surface;
     cairo_vg_context_t *context;
@@ -1268,10 +1269,10 @@ _vg_surface_paint (void             *abstract_surface,
 
 static cairo_int_status_t
 _vg_surface_mask (void                   *abstract_surface,
-		  cairo_operator_t       op,
+		  cairo_operator_t        op,
 		  const cairo_pattern_t  *source,
 		  const cairo_pattern_t  *mask,
-		  cairo_clip_t		 *clip)
+		  const cairo_clip_t     *clip)
 {
     cairo_vg_surface_t *surface = abstract_surface;
     cairo_status_t status;
@@ -1314,8 +1315,7 @@ _vg_surface_show_glyphs (void			*abstract_surface,
 			 cairo_glyph_t		*glyphs,
 			 int			 num_glyphs,
 			 cairo_scaled_font_t	*scaled_font,
-			 cairo_clip_t		*clip,
-			 int			*remaining_glyphs)
+			 const cairo_clip_t     *clip)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_path_fixed_t path;
@@ -1450,79 +1450,6 @@ _vg_surface_release_source_image (void                    *abstract_surface,
 }
 
 static cairo_status_t
-_vg_surface_acquire_dest_image (void                    *abstract_surface,
-				cairo_rectangle_int_t   *interest_rect,
-				cairo_image_surface_t  **image_out,
-				cairo_rectangle_int_t   *image_rect_out,
-				void                   **image_extra)
-{
-    cairo_vg_surface_t *surface =  abstract_surface;
-
-    *image_rect_out = *interest_rect;
-    *image_extra = NULL;
-    return _vg_get_image (surface,
-			  interest_rect->x, interest_rect->y,
-			  interest_rect->width, interest_rect->height,
-			  image_out);
-}
-
-static void
-unpremultiply_argb (uint8_t *data,
-		    int	     width,
-		    int	     height,
-		    int	     stride)
-{
-    int i;
-
-    while (height--) {
-	uint32_t *row = (uint32_t *) data;
-
-	for (i = 0; i < width; i ++) {
-	    uint32_t p = row[i];
-	    uint8_t  alpha;
-
-	    alpha = p >> 24;
-	    if (alpha == 0) {
-		row[i] = 0;
-	    } else if (alpha != 0xff) {
-		uint8_t r = (((p >> 16) & 0xff) * 255 + alpha / 2) / alpha;
-		uint8_t g = (((p >>  8) & 0xff) * 255 + alpha / 2) / alpha;
-		uint8_t b = (((p >>  0) & 0xff) * 255 + alpha / 2) / alpha;
-		row[i] = (alpha << 24) | (r << 16) | (g << 8) | (b << 0);
-	    }
-	}
-
-	data += stride;
-    }
-}
-
-static void
-_vg_surface_release_dest_image (void                    *abstract_surface,
-				cairo_rectangle_int_t   *interest_rect,
-				cairo_image_surface_t   *image,
-				cairo_rectangle_int_t   *image_rect,
-				void                    *image_extra)
-{
-    cairo_vg_surface_t *surface = abstract_surface;
-    cairo_bool_t needs_unpremultiply;
-
-    _vg_format_to_pixman (surface->format, &needs_unpremultiply);
-    if (needs_unpremultiply) {
-	unpremultiply_argb (image->data,
-			    image->width, image->height,
-			    image->stride);
-    }
-
-    vgImageSubData (surface->image,
-		    image->data, image->stride,
-		    surface->format,
-		    image_rect->x, image_rect->y,
-		    image_rect->width, image_rect->height);
-
-    cairo_surface_destroy (&image->base);
-}
-
-static cairo_status_t
 _vg_surface_finish (void *abstract_surface)
 {
     cairo_vg_surface_t *surface = abstract_surface;
@@ -1552,6 +1479,7 @@ _vg_surface_finish (void *abstract_surface)
 static const cairo_surface_backend_t cairo_vg_surface_backend = {
     CAIRO_SURFACE_TYPE_VG,
     _vg_surface_finish,
+
     _cairo_default_context_create, /* XXX */
 
     _vg_surface_create_similar,
@@ -1561,34 +1489,23 @@ static const cairo_surface_backend_t cairo_vg_surface_backend = {
 
     _vg_surface_acquire_source_image,
     _vg_surface_release_source_image,
-    _vg_surface_acquire_dest_image,
-    _vg_surface_release_dest_image,
-
-    NULL, /* clone_similar */
-    NULL, /* composite */
-    NULL, /* fill_rectangles */
-    NULL, /* composite_trapezoids */
-    NULL, /* create_span_renderer */
-    NULL, /* check_span_renderer */
+    NULL, /* snapshot */
 
     NULL, /* copy_page */
     NULL, /* show_page */
+
     _vg_surface_get_extents,
-    NULL, /* old_show_glyphs */
     _vg_surface_get_font_options, /* get_font_options */
+
     NULL, /* flush */
-    NULL, /* mark_dirty_rectangle */
-    NULL, /* scaled_font_fini */
-    NULL, /* scaled_glyph_fini */
+    NULL, /* mark dirty */
 
     _vg_surface_paint,
     _vg_surface_mask,
     _vg_surface_stroke,
     _vg_surface_fill,
+    NULL, /* fill-stroke */
     _vg_surface_show_glyphs,
-
-    NULL, /* snapshot */
-    NULL, /* is_similar */
 };
 
 static cairo_surface_t *
