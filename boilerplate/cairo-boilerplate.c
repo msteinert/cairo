@@ -789,7 +789,8 @@ any2ppm_daemon_exists (void)
 FILE *
 cairo_boilerplate_open_any2ppm (const char   *filename,
 				int	      page,
-				unsigned int  flags)
+				unsigned int  flags,
+				int        (**close_cb) (FILE *))
 {
     char command[4096];
 #if HAS_DAEMON
@@ -824,10 +825,13 @@ cairo_boilerplate_open_any2ppm (const char   *filename,
 	goto POPEN;
     }
 
+    *close_cb = fclose;
     return fdopen (sk, "r");
 
 POPEN:
 #endif
+
+    *close_cb = pclose;
     sprintf (command, "./any2ppm %s %d", filename, page);
     return popen (command, "r");
 }
@@ -921,10 +925,11 @@ cairo_boilerplate_convert_to_image (const char *filename,
     FILE *file;
     unsigned int flags = 0;
     cairo_surface_t *image;
+    int (*close_cb) (FILE *);
     int ret;
 
   RETRY:
-    file = cairo_boilerplate_open_any2ppm (filename, page, flags);
+    file = cairo_boilerplate_open_any2ppm (filename, page, flags, &close_cb);
     if (file == NULL) {
 	switch (errno) {
 	case ENOMEM:
@@ -935,7 +940,7 @@ cairo_boilerplate_convert_to_image (const char *filename,
     }
 
     image = cairo_boilerplate_image_surface_create_from_ppm_stream (file);
-    ret = pclose (file);
+    ret = close_cb (file);
     /* check for fatal errors from the interpreter */
     if (ret) { /* any2pmm should never die... */
 	cairo_surface_destroy (image);
