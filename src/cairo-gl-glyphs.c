@@ -343,10 +343,10 @@ render_glyphs (cairo_gl_surface_t	*dst,
 }
 
 static cairo_int_status_t
-render_glyphs_via_mask (cairo_gl_surface_t	*dst,
-			   cairo_operator_t	 op,
-			   const cairo_surface_t	*source,
-			   cairo_composite_glyphs_info_t *info)
+render_glyphs_via_mask (cairo_gl_surface_t *dst,
+			cairo_operator_t  op,
+			cairo_surface_t *source,
+			cairo_composite_glyphs_info_t *info)
 {
     cairo_surface_t *mask;
     cairo_status_t status;
@@ -371,19 +371,23 @@ render_glyphs_via_mask (cairo_gl_surface_t	*dst,
 			    &_cairo_pattern_white.base,
 			    info, &has_component_alpha);
     if (likely (status == CAIRO_STATUS_SUCCESS)) {
-	/* XXX composite */
-#if 0
 	cairo_surface_pattern_t mask_pattern;
-        mask->is_clear = FALSE;
+	cairo_surface_pattern_t source_pattern;
+
+	mask->is_clear = FALSE;
 	_cairo_pattern_init_for_surface (&mask_pattern, mask);
 	mask_pattern.base.has_component_alpha = has_component_alpha;
+
 	cairo_matrix_init_translate (&mask_pattern.base.matrix,
 		                     -info->extents.x, -info->extents.y);
+
+	_cairo_pattern_init_for_surface (&source_pattern, source);
 	status = _cairo_surface_mask (&dst->base, op,
-		                      source, &mask_pattern.base,
+		                      &source_pattern.base, &mask_pattern.base,
 				      NULL);
+
 	_cairo_pattern_fini (&mask_pattern.base);
-#endif
+	_cairo_pattern_fini (&source_pattern.base);
     } else {
 	for (i = 0; i < info->num_glyphs; i++) {
 	    info->glyphs[i].x += info->extents.x;
