@@ -77,6 +77,8 @@
 #include <libspectre/spectre.h>
 #endif
 
+#include <errno.h>
+
 #if HAVE_UNISTD_H && HAVE_FCNTL_H && HAVE_SIGNAL_H && HAVE_SYS_STAT_H && HAVE_SYS_SOCKET_H && HAVE_SYS_POLL_H && HAVE_SYS_UN_H
 #include <fcntl.h>
 #include <signal.h>
@@ -84,7 +86,6 @@
 #include <sys/socket.h>
 #include <sys/poll.h>
 #include <sys/un.h>
-#include <errno.h>
 
 #define SOCKET_PATH "./.any2ppm"
 #define TIMEOUT 60000 /* 60 seconds */
@@ -268,8 +269,13 @@ _cairo_script_render_page (const char *filename,
     cairo_surface_t *surface = NULL;
     cairo_status_t status;
     const cairo_script_interpreter_hooks_t hooks = {
-	.closure = &surface,
-	.surface_create = _create_image,
+	&surface,
+	_create_image,
+	NULL, /* surface_destroy */
+	NULL, /* context_create */
+	NULL, /* context_destroy */
+	NULL, /* show_page */
+	NULL  /* copy_page */
     };
 
     csi = cairo_script_interpreter_create ();
