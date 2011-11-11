@@ -2,9 +2,17 @@ top_srcdir = ..
 include $(top_srcdir)/build/Makefile.win32.common
 include $(top_srcdir)/test/Makefile.sources
 
-CFLAGS += -I$(top_srcdir)/boilerplate -I./pdiff
+CFLAGS += \
+	-I$(top_srcdir)/boilerplate \
+	-I$(top_srcdir)/util/cairo-script/ \
+	-I./pdiff \
+	$(NULL)
 
-TEST_LIBS = ./pdiff/$(CFG)/pdiff.lib $(top_builddir)/src/$(CFG)/cairo-static.lib $(top_builddir)/boilerplate/$(CFG)/boiler.lib
+TEST_LIBS = \
+	./pdiff/$(CFG)/pdiff.lib \
+	$(top_builddir)/boilerplate/$(CFG)/boiler.lib \
+	$(top_builddir)/src/$(CFG)/cairo-static.lib \
+	$(NULL)
 
 all: inform $(CFG)/cairo-test-suite.exe
 
@@ -15,8 +23,17 @@ SOURCES = $(cairo_test_suite_sources) $(test_sources) cairo-test-constructors.c
 
 OBJECTS = $(patsubst %.c, $(CFG)/%-static.obj, $(SOURCES))
 
+ANY2PPM_OBJS = \
+	$(CFG)/any2ppm-static.obj \
+	$(top_builddir)/util/cairo-script/$(CFG)/libcairo-script-interpreter.lib \
+	$(top_builddir)/src/$(CFG)/cairo-static.lib \
+	$(NULL)
+
 $(CFG)/cairo-test-suite.exe: $(OBJECTS) $(TEST_LIBS)
 	@$(LD) $(CAIRO_LDFLAGS) -OUT:$@ $(OBJECTS) $(TEST_LIBS) $(CAIRO_LIBS)
+
+$(CFG)/any2ppm.exe: $(ANY2PPM_OBJS)
+	$(LD) $(CAIRO_LDFLAGS) -OUT:$@ $^ $(CAIRO_LIBS)
 
 ./pdiff/$(CFG)/pdiff.lib:
 	$(MAKE) -C pdiff -f Makefile.win32
@@ -27,9 +44,12 @@ $(top_builddir)/src/$(CFG)/cairo-static.lib:
 $(top_builddir)/boilerplate/$(CFG)/boiler.lib:
 	$(MAKE) -C $(top_srcdir)/boilerplate -f Makefile.win32
 
+$(top_builddir)/util/cairo-script/$(CFG)/libcairo-script-interpreter.lib:
+	$(MAKE) -C $(top_srcdir)/util/cairo-script -f Makefile.win32
+
 .PHONY: check test
 
-check: inform $(CFG)/cairo-test-suite.exe
+check: inform $(CFG)/any2ppm.exe $(CFG)/cairo-test-suite.exe
 	./$(CFG)/cairo-test-suite.exe
 
 test: inform check
