@@ -1050,10 +1050,11 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	picture = NULL;
     }
 
-    if (source->type == CAIRO_SURFACE_TYPE_XCB && ((cairo_xcb_surface_t *) source)->fallback == NULL)
+    if (source->type == CAIRO_SURFACE_TYPE_XCB)
     {
 	if (source->backend->type == CAIRO_SURFACE_TYPE_XCB) {
-	    if (((cairo_xcb_surface_t *) source)->screen == target->screen) {
+	    cairo_xcb_surface_t *xcb = (cairo_xcb_surface_t *) source;
+	    if (xcb->screen == target->screen && xcb->fallback == NULL) {
 		picture = _copy_to_picture ((cairo_xcb_surface_t *) source);
 		if (unlikely (picture->base.status))
 		    return picture;
@@ -1063,7 +1064,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	    cairo_xcb_surface_t *xcb = (cairo_xcb_surface_t *) sub->target;
 
 	    /* XXX repeat interval with source clipping? */
-	    if (FALSE && xcb->screen == target->screen) {
+	    if (FALSE && xcb->screen == target->screen && xcb->fallback == NULL) {
 		xcb_rectangle_t rect;
 
 		picture = _copy_to_picture (xcb);
@@ -1088,7 +1089,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	    cairo_surface_snapshot_t *snap = (cairo_surface_snapshot_t *) source;
 	    cairo_xcb_surface_t *xcb = (cairo_xcb_surface_t *) snap->target;
 
-	    if (xcb->screen == target->screen) {
+	    if (xcb->screen == target->screen && xcb->fallback == NULL) {
 		picture = _copy_to_picture (xcb);
 		if (unlikely (picture->base.status))
 		    return picture;
@@ -1096,11 +1097,12 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	}
     }
 #if CAIRO_HAS_XLIB_XCB_FUNCTIONS
-    else if (source->type == CAIRO_SURFACE_TYPE_XLIB && ((cairo_xlib_xcb_surface_t *) source)->xcb->fallback == NULL)
+    else if (source->type == CAIRO_SURFACE_TYPE_XLIB)
     {
 	if (source->backend->type == CAIRO_SURFACE_TYPE_XLIB) {
-	    if (((cairo_xlib_xcb_surface_t *) source)->xcb->screen == target->screen) {
-		picture = _copy_to_picture (((cairo_xlib_xcb_surface_t *) source)->xcb);
+	    cairo_xcb_surface_t *xcb = ((cairo_xlib_xcb_surface_t *) source)->xcb;
+	    if (xcb->screen == target->screen && xcb->fallback == NULL) {
+		picture = _copy_to_picture (xcb);
 		if (unlikely (picture->base.status))
 		    return picture;
 	    }
@@ -1108,7 +1110,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	    cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) source;
 	    cairo_xcb_surface_t *xcb = ((cairo_xlib_xcb_surface_t *) sub->target)->xcb;
 
-	    if (FALSE && xcb->screen == target->screen) {
+	    if (FALSE && xcb->screen == target->screen && xcb->fallback == NULL) {
 		xcb_rectangle_t rect;
 
 		picture = _copy_to_picture (xcb);
@@ -1133,7 +1135,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	    cairo_surface_snapshot_t *snap = (cairo_surface_snapshot_t *) source;
 	    cairo_xcb_surface_t *xcb = ((cairo_xlib_xcb_surface_t *) snap->target)->xcb;
 
-	    if (xcb->screen == target->screen) {
+	    if (xcb->screen == target->screen && xcb->fallback == NULL) {
 		picture = _copy_to_picture (xcb);
 		if (unlikely (picture->base.status))
 		    return picture;
