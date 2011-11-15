@@ -577,7 +577,7 @@ _cairo_xcb_connection_allocate_shm_info (cairo_xcb_connection_t *connection,
 	    connection->flags &= ~CAIRO_XCB_HAS_SHM;
 	free (pool);
 	CAIRO_MUTEX_UNLOCK (connection->shm_mutex);
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     pool->base = shmat (pool->shmid, NULL, 0);
