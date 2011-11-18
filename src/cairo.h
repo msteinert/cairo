@@ -2139,7 +2139,7 @@ cairo_surface_create_for_rectangle (cairo_surface_t	*target,
 
 typedef enum {
 	CAIRO_SURFACE_OBSERVER_NORMAL = 0,
-	CAIRO_SURFACE_OBSERVER_RECORD_OPERATIONS = 0x1,
+	CAIRO_SURFACE_OBSERVER_RECORD_OPERATIONS = 0x1
 } cairo_surface_observer_mode_t;
 
 cairo_public cairo_surface_t *
