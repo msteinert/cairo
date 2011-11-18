@@ -576,7 +576,7 @@ main (int   argc,
 
     reports = xmalloc ((argc-1) * sizeof (cairo_perf_report_t));
     for (i = 1; i < argc; i++ )
-	cairo_perf_report_load (&reports[i-1], argv[i], NULL);
+	cairo_perf_report_load (&reports[i-1], argv[i], i, NULL);
 
     cases = test_cases_from_reports (reports, argc-1);
 

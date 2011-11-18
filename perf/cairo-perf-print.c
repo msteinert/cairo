@@ -65,7 +65,7 @@ main (int	  argc,
     for (i = 1; i < argc; i++ ) {
 	cairo_perf_report_t report;
 
-	cairo_perf_report_load (&report, argv[i], NULL);
+	cairo_perf_report_load (&report, argv[i], i, NULL);
 	report_print (&report);
     }
 
