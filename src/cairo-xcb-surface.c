@@ -241,7 +241,7 @@ _cairo_xcb_surface_create_shm_image (cairo_xcb_connection_t *connection,
 						      might_reuse,
 						      &shm_info);
     if (unlikely (status)) {
-	if (status == CAIRO_INT_STATUS_UNUSPPORTED)
+	if (status == CAIRO_INT_STATUS_UNSUPPORTED)
 	    return NULL;
 
 	return _cairo_surface_create_in_error (status);
