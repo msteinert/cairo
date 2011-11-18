@@ -240,8 +240,12 @@ _cairo_xcb_surface_create_shm_image (cairo_xcb_connection_t *connection,
 						      stride * height,
 						      might_reuse,
 						      &shm_info);
-    if (unlikely (status))
+    if (unlikely (status)) {
+	if (status == CAIRO_INT_STATUS_UNUSPPORTED)
+	    return NULL;
+
 	return _cairo_surface_create_in_error (status);
+    }
 
     image = _cairo_image_surface_create_with_pixman_format (shm_info->mem,
 							    pixman_format,
@@ -354,9 +358,7 @@ _get_image (cairo_xcb_surface_t		 *surface,
     if (use_shm) {
 	image = _get_shm_image (surface, x, y, width, height);
 	if (image) {
-	    /* XXX This only wants to catch SHM exhaustion,
-	     * not other allocation failures. */
-	    if (image->status != CAIRO_STATUS_NO_MEMORY) {
+	    if (image->status) {
 		_cairo_xcb_connection_release (connection);
 		return image;
 	    }
