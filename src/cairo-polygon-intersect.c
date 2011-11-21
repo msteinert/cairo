@@ -1172,6 +1172,8 @@ edges_start_or_continue (cairo_bo_edge_t	*left,
 			 int			 top,
 			 cairo_polygon_t	*polygon)
 {
+    assert (right->deferred.other == NULL);
+
     if (left->deferred.other == right)
 	return;
 
@@ -1233,13 +1235,11 @@ active_edges (cairo_bo_edge_t		*left,
 		}
 
 		right = right->next;
-	    } while (right);
+	    } while (1);
 
 	    edges_start_or_continue (left, right, top, polygon);
 
-	    left = right;
-	    if (left != NULL)
-		left = left->next;
+	    left = right->next;
 	}
 }
 
@@ -1323,6 +1323,11 @@ intersection_sweep (cairo_bo_event_t   **start_events,
 	    /* skip this intersection if its edges are not adjacent */
 	    if (e2 != e1->next)
 		break;
+
+	    if (e1->deferred.other)
+		edges_end (e1, sweep_line.current_y, polygon);
+	    if (e2->deferred.other)
+		edges_end (e2, sweep_line.current_y, polygon);
 
 	    left = e1->prev;
 	    right = e2->next;
