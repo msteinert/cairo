@@ -79,7 +79,7 @@ _cairo_surface_is_subsurface (cairo_surface_t *surface)
     return surface->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE;
 }
 
-void
+cairo_private void
 _cairo_surface_subsurface_set_snapshot (cairo_surface_t *surface,
 					cairo_surface_t *snapshot);
 #endif /* CAIRO_SURFACE_SUBSURFACE_PRIVATE_H */
