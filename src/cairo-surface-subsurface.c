@@ -50,6 +50,7 @@ _cairo_surface_subsurface_finish (void *abstract_surface)
     cairo_surface_subsurface_t *surface = abstract_surface;
 
     cairo_surface_destroy (surface->target);
+    cairo_surface_destroy (surface->snapshot);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -471,6 +472,8 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
     surface->target = cairo_surface_reference (target);
     surface->base.type = surface->target->type;
 
+    surface->snapshot = NULL;
+
     return &surface->base;
 }
 
@@ -501,9 +504,34 @@ _cairo_surface_create_for_rectangle_int (cairo_surface_t *target,
     surface->extents = *extents;
     surface->extents.x += target->device_transform.x0;
     surface->extents.y += target->device_transform.y0;
+
     surface->target = cairo_surface_reference (target);
     surface->base.type = surface->target->type;
+
+    surface->snapshot = NULL;
 
     return &surface->base;
 }
 /* XXX observe mark-dirty */
+
+static void
+_cairo_surface_subsurface_detach_snapshot (cairo_surface_t *surface)
+{
+    cairo_surface_subsurface_t *ss = (cairo_surface_subsurface_t *) surface;
+
+    cairo_surface_destroy (ss->snapshot);
+    ss->snapshot = NULL;
+}
+
+void
+_cairo_surface_subsurface_set_snapshot (cairo_surface_t *surface,
+					cairo_surface_t *snapshot)
+{
+    cairo_surface_subsurface_t *ss = (cairo_surface_subsurface_t *) surface;
+
+    assert (ss->snapshot == NULL);
+    ss->snapshot = cairo_surface_reference (snapshot);
+
+    _cairo_surface_attach_snapshot (ss->target, &ss->base,
+				    _cairo_surface_subsurface_detach_snapshot);
+}

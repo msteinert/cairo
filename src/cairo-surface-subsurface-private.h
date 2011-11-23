@@ -45,6 +45,7 @@ struct _cairo_surface_subsurface {
     cairo_rectangle_int_t extents;
 
     cairo_surface_t *target;
+    cairo_surface_t *snapshot;
 };
 
 static inline cairo_surface_t *
@@ -78,4 +79,7 @@ _cairo_surface_is_subsurface (cairo_surface_t *surface)
     return surface->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE;
 }
 
+void
+_cairo_surface_subsurface_set_snapshot (cairo_surface_t *surface,
+					cairo_surface_t *snapshot);
 #endif /* CAIRO_SURFACE_SUBSURFACE_PRIVATE_H */
