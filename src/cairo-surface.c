@@ -150,6 +150,8 @@ static DEFINE_NIL_SURFACE(CAIRO_STATUS_DEVICE_ERROR, _cairo_surface_nil_device_e
 static DEFINE_NIL_SURFACE(CAIRO_INT_STATUS_UNSUPPORTED, _cairo_surface_nil_unsupported);
 static DEFINE_NIL_SURFACE(CAIRO_INT_STATUS_NOTHING_TO_DO, _cairo_surface_nil_nothing_to_do);
 
+static void _cairo_surface_finish (cairo_surface_t *surface);
+
 /**
  * _cairo_surface_set_error:
  * @surface: a surface
@@ -841,7 +843,7 @@ cairo_surface_destroy (cairo_surface_t *surface)
     assert (surface->snapshot_of == NULL);
 
     if (! surface->finished)
-	cairo_surface_finish (surface);
+	_cairo_surface_finish (surface);
 
     /* paranoid check that nobody took a reference whilst finishing */
     assert (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&surface->ref_count));
@@ -880,6 +882,31 @@ cairo_surface_get_reference_count (cairo_surface_t *surface)
     return CAIRO_REFERENCE_COUNT_GET_VALUE (&surface->ref_count);
 }
 
+static void
+_cairo_surface_finish (cairo_surface_t *surface)
+{
+    cairo_status_t status;
+
+    cairo_surface_flush (surface);
+
+    /* update the snapshots *before* we declare the surface as finished */
+    _cairo_surface_detach_snapshots (surface);
+    if (surface->snapshot_of != NULL)
+	_cairo_surface_detach_snapshot (surface);
+
+    surface->finished = TRUE;
+
+    /* call finish even if in error mode */
+    if (surface->backend->finish) {
+	status = surface->backend->finish (surface);
+	if (unlikely (status))
+	    _cairo_surface_set_error (surface, status);
+    }
+
+    assert (surface->snapshot_of == NULL);
+    assert (!_cairo_surface_has_snapshots (surface));
+}
+
 /**
  * cairo_surface_finish:
  * @surface: the #cairo_surface_t to finish
@@ -902,8 +929,6 @@ cairo_surface_get_reference_count (cairo_surface_t *surface)
 void
 cairo_surface_finish (cairo_surface_t *surface)
 {
-    cairo_status_t status;
-
     if (surface == NULL)
 	return;
 
@@ -913,24 +938,10 @@ cairo_surface_finish (cairo_surface_t *surface)
     if (surface->finished)
 	return;
 
-    cairo_surface_flush (surface);
-
-    /* update the snapshots *before* we declare the surface as finished */
-    _cairo_surface_detach_snapshots (surface);
-    if (surface->snapshot_of != NULL)
-	_cairo_surface_detach_snapshot (surface);
-
-    surface->finished = TRUE;
-
-    /* call finish even if in error mode */
-    if (surface->backend->finish) {
-	status = surface->backend->finish (surface);
-	if (unlikely (status))
-	    _cairo_surface_set_error (surface, status);
-    }
-
-    assert (surface->snapshot_of == NULL);
-    assert (!_cairo_surface_has_snapshots (surface));
+    /* We have to becareful when decoupling potential reference cycles */
+    cairo_surface_reference (surface);
+    _cairo_surface_finish (surface);
+    cairo_surface_destroy (surface);
 }
 slim_hidden_def (cairo_surface_finish);
 

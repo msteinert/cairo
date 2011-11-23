@@ -57,9 +57,7 @@ _cairo_xcb_screen_finish (cairo_xcb_screen_t *screen)
 					   cairo_xcb_surface_t,
 					   link)->base;
 
-	cairo_surface_reference (surface);
 	cairo_surface_finish (surface);
-	cairo_surface_destroy (surface);
     }
 
     while (! cairo_list_is_empty (&screen->pictures)) {
@@ -69,9 +67,7 @@ _cairo_xcb_screen_finish (cairo_xcb_screen_t *screen)
 					   cairo_xcb_picture_t,
 					   link)->base;
 
-	cairo_surface_reference (surface);
 	cairo_surface_finish (surface);
-	cairo_surface_destroy (surface);
     }
 
     for (i = 0; i < screen->solid_cache_size; i++)
