@@ -349,6 +349,28 @@ _cairo_gl_operator_is_supported (cairo_operator_t op)
     return op < CAIRO_OPERATOR_SATURATE;
 }
 
+static void
+_cairo_gl_surface_embedded_operand_init (cairo_gl_surface_t *surface)
+{
+    cairo_gl_operand_t *operand = &surface->operand;
+    cairo_surface_attributes_t *attributes = &operand->texture.attributes;
+
+    operand->type = CAIRO_GL_OPERAND_TEXTURE;
+    operand->texture.surface = surface;
+    operand->texture.tex = surface->tex;
+
+    if (_cairo_gl_device_requires_power_of_two_textures (surface->base.device)) {
+	cairo_matrix_init_identity (&attributes->matrix);
+    } else {
+	cairo_matrix_init_scale (&attributes->matrix,
+				 1.0 / surface->width,
+				 1.0 / surface->height);
+    }
+
+    attributes->extend = CAIRO_EXTEND_NONE;
+    attributes->filter = CAIRO_FILTER_NEAREST;
+}
+
 void
 _cairo_gl_surface_init (cairo_device_t *device,
 			cairo_gl_surface_t *surface,
@@ -363,6 +385,8 @@ _cairo_gl_surface_init (cairo_device_t *device,
     surface->width = width;
     surface->height = height;
     surface->needs_update = FALSE;
+
+    _cairo_gl_surface_embedded_operand_init (surface);
 }
 
 static cairo_surface_t *

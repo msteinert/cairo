@@ -94,6 +94,8 @@
 /* VBO size that we allocate, smaller size means we gotta flush more often */
 #define CAIRO_GL_VBO_SIZE 16384
 
+typedef struct _cairo_gl_surface cairo_gl_surface_t;
+
 /* GL flavor */
 typedef enum cairo_gl_flavor {
     CAIRO_GL_FLAVOR_NONE = 0,
@@ -109,29 +111,6 @@ enum {
     CAIRO_GL_TEXCOORD1_ATTRIB_INDEX = CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + 1
 };
 
-typedef struct _cairo_gl_surface {
-    cairo_surface_t base;
-
-    int width, height;
-
-    GLuint tex; /* GL texture object containing our data. */
-    GLuint fb; /* GL framebuffer object wrapping our data. */
-    GLuint depth_stencil; /* GL renderbuffer object for holding stencil buffer clip. */
-    int owns_tex;
-    cairo_bool_t needs_update;
-} cairo_gl_surface_t;
-
-typedef struct cairo_gl_glyph_cache {
-    cairo_rtree_t rtree;
-    cairo_surface_pattern_t pattern;
-} cairo_gl_glyph_cache_t;
-
-typedef enum cairo_gl_tex {
-    CAIRO_GL_TEX_SOURCE = 0,
-    CAIRO_GL_TEX_MASK = 1,
-    CAIRO_GL_TEX_TEMP = 2
-} cairo_gl_tex_t;
-
 typedef enum cairo_gl_operand_type {
     CAIRO_GL_OPERAND_NONE,
     CAIRO_GL_OPERAND_CONSTANT,
@@ -143,29 +122,6 @@ typedef enum cairo_gl_operand_type {
 
     CAIRO_GL_OPERAND_COUNT
 } cairo_gl_operand_type_t;
-
-typedef struct cairo_gl_shader_impl cairo_gl_shader_impl_t;
-
-typedef struct cairo_gl_shader {
-    GLuint fragment_shader;
-    GLuint program;
-} cairo_gl_shader_t;
-
-typedef enum cairo_gl_shader_in {
-    CAIRO_GL_SHADER_IN_NORMAL,
-    CAIRO_GL_SHADER_IN_CA_SOURCE,
-    CAIRO_GL_SHADER_IN_CA_SOURCE_ALPHA,
-
-    CAIRO_GL_SHADER_IN_COUNT
-} cairo_gl_shader_in_t;
-
-typedef enum cairo_gl_var_type {
-  CAIRO_GL_VAR_NONE,
-  CAIRO_GL_VAR_TEXCOORDS,
-} cairo_gl_var_type_t;
-
-#define cairo_gl_var_type_hash(src,mask,spans,dest) ((spans) << 3) | ((mask) << 2 | (src << 1) | (dest))
-#define CAIRO_GL_VAR_TYPE_MAX ((CAIRO_GL_VAR_TEXCOORDS << 3) | (CAIRO_GL_VAR_TEXCOORDS << 2) | (CAIRO_GL_VAR_TEXCOORDS << 1) | CAIRO_GL_VAR_TEXCOORDS)
 
 /* This union structure describes a potential source or mask operand to the
  * compositing equation.
@@ -197,6 +153,53 @@ typedef struct cairo_gl_source {
 
     cairo_gl_operand_t operand;
 } cairo_gl_source_t;
+
+struct _cairo_gl_surface {
+    cairo_surface_t base;
+    cairo_gl_operand_t operand;
+
+    int width, height;
+
+    GLuint tex; /* GL texture object containing our data. */
+    GLuint fb; /* GL framebuffer object wrapping our data. */
+    GLuint depth_stencil; /* GL renderbuffer object for holding stencil buffer clip. */
+    int owns_tex;
+    cairo_bool_t needs_update;
+};
+
+typedef struct cairo_gl_glyph_cache {
+    cairo_rtree_t rtree;
+    cairo_surface_pattern_t pattern;
+} cairo_gl_glyph_cache_t;
+
+typedef enum cairo_gl_tex {
+    CAIRO_GL_TEX_SOURCE = 0,
+    CAIRO_GL_TEX_MASK = 1,
+    CAIRO_GL_TEX_TEMP = 2
+} cairo_gl_tex_t;
+
+typedef struct cairo_gl_shader_impl cairo_gl_shader_impl_t;
+
+typedef struct cairo_gl_shader {
+    GLuint fragment_shader;
+    GLuint program;
+} cairo_gl_shader_t;
+
+typedef enum cairo_gl_shader_in {
+    CAIRO_GL_SHADER_IN_NORMAL,
+    CAIRO_GL_SHADER_IN_CA_SOURCE,
+    CAIRO_GL_SHADER_IN_CA_SOURCE_ALPHA,
+
+    CAIRO_GL_SHADER_IN_COUNT
+} cairo_gl_shader_in_t;
+
+typedef enum cairo_gl_var_type {
+  CAIRO_GL_VAR_NONE,
+  CAIRO_GL_VAR_TEXCOORDS,
+} cairo_gl_var_type_t;
+
+#define cairo_gl_var_type_hash(src,mask,spans,dest) ((spans) << 3) | ((mask) << 2 | (src << 1) | (dest))
+#define CAIRO_GL_VAR_TYPE_MAX ((CAIRO_GL_VAR_TEXCOORDS << 3) | (CAIRO_GL_VAR_TEXCOORDS << 2) | (CAIRO_GL_VAR_TEXCOORDS << 1) | CAIRO_GL_VAR_TEXCOORDS)
 
 typedef void (*cairo_gl_generic_func_t)(void);
 typedef cairo_gl_generic_func_t (*cairo_gl_get_proc_addr_func_t)(const char *procname);
