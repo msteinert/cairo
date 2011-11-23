@@ -58,18 +58,18 @@
 
 #define PIXMAN_MAX_INT ((pixman_fixed_1 >> 1) - pixman_fixed_e) /* need to ensure deltas also fit */
 
-static cairo_surface_t *
-unwrap_surface (cairo_surface_t *surface, int *tx, int *ty)
+static cairo_xlib_surface_t *
+unwrap_surface (cairo_surface_t *surface)
 {
     if (_cairo_surface_is_paginated (surface))
 	surface = _cairo_paginated_surface_get_recording (surface);
     if (_cairo_surface_is_snapshot (surface))
 	surface = _cairo_surface_snapshot_get_target (surface);
     if (_cairo_surface_is_subsurface (surface))
-	surface = _cairo_surface_subsurface_get_target_with_offset (surface, tx, ty);
+	surface = _cairo_surface_subsurface_get_target (surface);
     if (_cairo_surface_is_observer (surface))
 	surface = _cairo_surface_observer_get_target (surface);
-    return surface;
+    return (cairo_xlib_surface_t *)surface;
 }
 
 static cairo_status_t
@@ -542,6 +542,85 @@ solid_source (cairo_xlib_surface_t *dst,
 }
 
 static cairo_surface_t *
+embedded_source (cairo_xlib_surface_t *dst,
+		 const cairo_surface_pattern_t *pattern,
+		 cairo_xlib_surface_t *src,
+		 const cairo_rectangle_int_t *extents,
+		 int *src_x, int *src_y)
+{
+    cairo_xlib_source_t *source;
+    Display *dpy = dst->display->display;
+    cairo_int_status_t status;
+    XTransform xtransform;
+    XRenderPictureAttributes pa;
+    unsigned mask = 0;
+
+    /* As these are frequent and meant to be fast, we track pictures for
+     * native surface and minimise update requests.
+     */
+    source = &src->embedded_source;
+    if (source->picture == None) {
+	XRenderPictureAttributes pa;
+
+	_cairo_surface_init (&source->base,
+			     &cairo_xlib_source_backend,
+			     NULL, /* device */
+			     CAIRO_CONTENT_COLOR_ALPHA);
+
+	pa.subwindow_mode = IncludeInferiors;
+	source->picture = XRenderCreatePicture (dpy,
+						src->drawable,
+						src->xrender_format,
+						CPSubwindowMode, &pa);
+
+	source->has_component_alpha = 0;
+	source->has_matrix = 0;
+	source->filter = CAIRO_FILTER_NEAREST;
+	source->extend = CAIRO_EXTEND_NONE;
+    }
+
+    status = _cairo_matrix_to_pixman_matrix_offset (&pattern->base.matrix,
+						    pattern->base.filter,
+						    extents->x + extents->width / 2,
+						    extents->y + extents->height / 2,
+						    (pixman_transform_t *)&xtransform,
+						    src_x, src_y);
+
+    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO) {
+	if (source->has_matrix) {
+	    source->has_matrix = 0;
+	    memcpy (&xtransform, &identity, sizeof (identity));
+	    status = CAIRO_INT_STATUS_SUCCESS;
+	}
+    } else
+	source->has_matrix = 1;
+    if (status == CAIRO_INT_STATUS_SUCCESS)
+	XRenderSetPictureTransform (dpy, source->picture, &xtransform);
+
+    if (source->filter != pattern->base.filter) {
+	picture_set_filter (dpy, source->picture, pattern->base.filter);
+	source->filter = pattern->base.filter;
+    }
+
+    if (source->has_component_alpha != pattern->base.has_component_alpha) {
+	pa.component_alpha = pattern->base.has_component_alpha;
+	mask |= CPComponentAlpha;
+	source->has_component_alpha = pattern->base.has_component_alpha;
+    }
+
+    if (source->extend != pattern->base.extend) {
+	pa.repeat = extend_to_repeat (pattern->base.extend);
+	mask |= CPRepeat;
+	source->extend = pattern->base.extend;
+    }
+
+    if (mask)
+	XRenderChangePicture (dpy, source->picture, mask, &pa);
+
+    return cairo_surface_reference (&source->base);
+}
+
+static cairo_surface_t *
 subsurface_source (cairo_xlib_surface_t *dst,
 		   const cairo_surface_pattern_t *pattern,
 		   cairo_bool_t is_mask,
@@ -553,7 +632,6 @@ subsurface_source (cairo_xlib_surface_t *dst,
     cairo_xlib_surface_t *src;
     cairo_xlib_source_t *source;
     Display *dpy = dst->display->display;
-    cairo_bool_t is_contained = FALSE;
     cairo_int_status_t status;
     cairo_surface_pattern_t local_pattern;
     XTransform xtransform;
@@ -566,19 +644,26 @@ subsurface_source (cairo_xlib_surface_t *dst,
 	sample->x + sample->width  <= sub->extents.width &&
 	sample->y + sample->height <= sub->extents.height)
     {
-	is_contained = TRUE;
-    }
-
-    if (pattern->base.filter == CAIRO_FILTER_NEAREST && is_contained &&
-	_cairo_matrix_is_translation (&pattern->base.matrix))
-    {
 	src = (cairo_xlib_surface_t *) sub->target;
-	_cairo_xlib_surface_ensure_picture (src);
 
-	*src_x += pattern->base.matrix.x0 + sub->extents.x;
-	*src_y += pattern->base.matrix.y0 + sub->extents.y;
+	if (pattern->base.filter == CAIRO_FILTER_NEAREST &&
+	    _cairo_matrix_is_translation (&pattern->base.matrix))
+	{
+	    *src_x += pattern->base.matrix.x0 + sub->extents.x;
+	    *src_y += pattern->base.matrix.y0 + sub->extents.y;
 
-	return cairo_surface_reference (&src->base);
+	    _cairo_xlib_surface_ensure_picture (src);
+	    return cairo_surface_reference (&src->base);
+	}
+	else
+	{
+	    cairo_surface_pattern_t local_pattern = *pattern;
+	    local_pattern.base.matrix.x0 += sub->extents.x;
+	    local_pattern.base.matrix.y0 += sub->extents.y;
+	    local_pattern.base.extend = CAIRO_EXTEND_NONE;
+	    return embedded_source (dst, &local_pattern, src, extents,
+				    src_x, src_y);
+	}
     }
 
     if (sub->snapshot) {
@@ -669,30 +754,18 @@ native_source (cairo_xlib_surface_t *dst,
 	       int *src_x, int *src_y)
 {
     cairo_xlib_surface_t *src = (cairo_xlib_surface_t *) pattern->surface;
-    cairo_xlib_source_t *source;
-    Display *dpy = dst->display->display;
-    cairo_bool_t is_contained = FALSE;
-    cairo_int_status_t status;
-    XTransform xtransform;
-    XRenderPictureAttributes pa;
-    int mask = 0;
 
     if (_cairo_surface_is_subsurface (pattern->surface))
 	return subsurface_source (dst, pattern, is_mask,
 				  extents, sample,
 				  src_x, src_y);
 
-    src = (cairo_xlib_surface_t *)
-	    unwrap_surface (pattern->surface, src_x, src_y);
+    src = unwrap_surface (pattern->surface);
 
-    if (sample->x >= 0 && sample->y >= 0 &&
+    if (pattern->base.filter == CAIRO_FILTER_NEAREST &&
+	sample->x >= 0 && sample->y >= 0 &&
 	sample->x + sample->width  <= src->width &&
-	sample->y + sample->height <= src->height)
-    {
-	is_contained = TRUE;
-    }
-
-    if (pattern->base.filter == CAIRO_FILTER_NEAREST && is_contained &&
+	sample->y + sample->height <= src->height &&
 	_cairo_matrix_is_translation (&pattern->base.matrix))
     {
 	*src_x += pattern->base.matrix.x0;
@@ -701,74 +774,7 @@ native_source (cairo_xlib_surface_t *dst,
 	return cairo_surface_reference (&src->base);
     }
 
-    /* As these are frequent and meant to be fast, we track pictures for
-     * native surface and minimise update requests.
-     */
-    source = &src->embedded_source;
-    if (source->picture == None) {
-	Picture picture;
-	XRenderPictureAttributes pa;
-	int mask = 0;
-
-	pa.subwindow_mode = IncludeInferiors;
-	mask |= CPSubwindowMode;
-
-	picture = XRenderCreatePicture (dpy,
-					src->drawable,
-					src->xrender_format,
-					mask, &pa);
-
-	_cairo_surface_init (&source->base,
-			     &cairo_xlib_source_backend,
-			     NULL, /* device */
-			     CAIRO_CONTENT_COLOR_ALPHA);
-	source->picture = picture;
-
-	source->has_component_alpha = 0;
-	source->has_matrix = 0;
-	source->filter = CAIRO_FILTER_NEAREST;
-	source->extend = CAIRO_EXTEND_NONE;
-    }
-
-    status = _cairo_matrix_to_pixman_matrix_offset (&pattern->base.matrix,
-						    pattern->base.filter,
-						    extents->x + extents->width / 2,
-						    extents->y + extents->height / 2,
-						    (pixman_transform_t *)&xtransform,
-						    src_x, src_y);
-
-    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO) {
-	if (source->has_matrix) {
-	    source->has_matrix = 0;
-	    memcpy (&xtransform, &identity, sizeof (identity));
-	    status = CAIRO_INT_STATUS_SUCCESS;
-	}
-    } else
-	source->has_matrix = 1;
-    if (status == CAIRO_INT_STATUS_SUCCESS)
-	XRenderSetPictureTransform (dpy, source->picture, &xtransform);
-
-    if (source->filter != pattern->base.filter) {
-	picture_set_filter (dpy, source->picture, pattern->base.filter);
-	source->filter = pattern->base.filter;
-    }
-
-    if (source->has_component_alpha != pattern->base.has_component_alpha) {
-	pa.component_alpha = pattern->base.has_component_alpha;
-	mask |= CPComponentAlpha;
-	source->has_component_alpha = pattern->base.has_component_alpha;
-    }
-
-    if (source->extend != pattern->base.extend) {
-	pa.repeat = extend_to_repeat (pattern->base.extend);
-	mask |= CPRepeat;
-	source->extend = pattern->base.extend;
-    }
-
-    if (mask)
-	XRenderChangePicture (dpy, source->picture, mask, &pa);
-
-    return cairo_surface_reference (&source->base);
+    return embedded_source (dst, pattern, src, extents, src_x, src_y);
 }
 
 #if 0
@@ -1016,7 +1022,6 @@ _cairo_xlib_source_create_for_pattern (cairo_surface_t *_dst,
 				       int *src_x, int *src_y)
 {
     cairo_xlib_surface_t *dst = (cairo_xlib_surface_t *)_dst;
-    int tx, ty;
 
     *src_x = *src_y = 0;
 
@@ -1032,7 +1037,7 @@ _cairo_xlib_source_create_for_pattern (cairo_surface_t *_dst,
 	    cairo_surface_pattern_t *spattern = (cairo_surface_pattern_t *)pattern;
 	    if (spattern->surface->type == CAIRO_SURFACE_TYPE_XLIB &&
 		_cairo_xlib_surface_same_screen (dst,
-						 (cairo_xlib_surface_t *)unwrap_surface (spattern->surface, &tx, &ty)))
+						 unwrap_surface (spattern->surface)))
 		return native_source (dst, spattern, is_mask,
 				      extents, sample,
 				      src_x, src_y);
