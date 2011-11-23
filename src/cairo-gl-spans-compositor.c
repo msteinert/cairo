@@ -477,6 +477,9 @@ _cairo_gl_span_renderer_fini (cairo_abstract_span_renderer_t *_r,
 {
     cairo_gl_span_renderer_t *r = (cairo_gl_span_renderer_t *) _r;
 
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+	return;
+
     if (status == CAIRO_INT_STATUS_SUCCESS)
 	r->base.finish (r);
 
