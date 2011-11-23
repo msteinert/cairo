@@ -313,8 +313,12 @@ fill_reduces_to_source (cairo_operator_t op,
 			const cairo_color_t *color,
 			cairo_xlib_surface_t *dst)
 {
-    if (dst->base.is_clear || CAIRO_COLOR_IS_OPAQUE (color))
-	return op == CAIRO_OPERATOR_OVER || op == CAIRO_OPERATOR_ADD;
+    if (dst->base.is_clear || CAIRO_COLOR_IS_OPAQUE (color)) {
+	if (op == CAIRO_OPERATOR_OVER)
+	    return TRUE;
+	if (op == CAIRO_OPERATOR_ADD)
+	    return (dst->base.content & CAIRO_CONTENT_COLOR) == 0;
+    }
 
     return FALSE;
 }
