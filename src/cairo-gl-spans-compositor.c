@@ -279,12 +279,6 @@ FAIL:
     return status;
 }
 
-typedef struct cairo_gl_source {
-    cairo_surface_t base;
-
-    cairo_gl_operand_t operand;
-} cairo_gl_source_t;
-
 static cairo_status_t
 _cairo_gl_source_finish (void *abstract_surface)
 {
@@ -329,6 +323,25 @@ pattern_to_surface (cairo_surface_t *dst,
 	cairo_surface_destroy (&source->base);
 	return _cairo_surface_create_in_error (status);
     }
+
+    return &source->base;
+}
+
+cairo_surface_t *
+_cairo_gl_white_source (void)
+{
+    cairo_gl_source_t *source;
+
+    source = malloc (sizeof (*source));
+    if (unlikely (source == NULL))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+
+    _cairo_surface_init (&source->base,
+			 &cairo_gl_source_backend,
+			 NULL, /* device */
+			 CAIRO_CONTENT_COLOR_ALPHA);
+
+    _cairo_gl_solid_operand_init (&source->operand, CAIRO_COLOR_WHITE);
 
     return &source->base;
 }

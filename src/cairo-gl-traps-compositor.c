@@ -150,12 +150,6 @@ FAIL:
     return status;
 }
 
-typedef struct cairo_gl_source {
-    cairo_surface_t base;
-
-    cairo_gl_operand_t operand;
-} cairo_gl_source_t;
-
 static cairo_status_t
 _cairo_gl_source_finish (void *abstract_surface)
 {

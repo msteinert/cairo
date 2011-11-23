@@ -192,6 +192,12 @@ typedef struct cairo_gl_operand {
     unsigned int vertex_offset;
 } cairo_gl_operand_t;
 
+typedef struct cairo_gl_source {
+    cairo_surface_t base;
+
+    cairo_gl_operand_t operand;
+} cairo_gl_source_t;
+
 typedef void (*cairo_gl_generic_func_t)(void);
 typedef cairo_gl_generic_func_t (*cairo_gl_get_proc_addr_func_t)(const char *procname);
 
@@ -691,6 +697,9 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
 				  cairo_content_t	content,
 				  int			width,
 				  int			height);
+
+cairo_private cairo_surface_t *
+_cairo_gl_white_source (void);
 
 slim_hidden_proto (cairo_gl_surface_create);
 slim_hidden_proto (cairo_gl_surface_create_for_texture);

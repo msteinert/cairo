@@ -213,11 +213,18 @@ _cairo_gl_font_fini (cairo_scaled_font_private_t *_priv,
     free (priv);
 }
 
+static inline cairo_gl_operand_t *
+source_to_operand (cairo_surface_t *surface)
+{
+    cairo_gl_source_t *source = (cairo_gl_source_t *) surface;
+    return &source->operand;
+}
+
 static cairo_status_t
 render_glyphs (cairo_gl_surface_t	*dst,
 	       int dst_x, int dst_y,
 	       cairo_operator_t	 op,
-	       const cairo_pattern_t	*source,
+	       cairo_surface_t	*source,
 	       cairo_composite_glyphs_info_t *info,
 	       cairo_bool_t		*has_component_alpha)
 {
@@ -238,17 +245,8 @@ render_glyphs (cairo_gl_surface_t	*dst,
     if (unlikely (status))
 	goto FINISH;
 
-    status = _cairo_gl_composite_set_source (&setup, source,
-                                             info->extents.x,
-					     info->extents.y,
-                                             dst_x, dst_y,
-                                             info->extents.width,
-                                             info->extents.height);
-    if (unlikely (status))
-	goto FINISH;
-
-
-    //_cairo_gl_composite_set_clip_region (&setup, _cairo_clip_get_region (extents->clip));
+    _cairo_gl_composite_set_source_operand (&setup,
+					    source_to_operand (source));
 
     for (i = 0; i < info->num_glyphs; i++) {
 	cairo_scaled_glyph_t *scaled_glyph;
@@ -368,7 +366,7 @@ render_glyphs_via_mask (cairo_gl_surface_t *dst,
 
     status = render_glyphs ((cairo_gl_surface_t *) mask, 0, 0,
 			    CAIRO_OPERATOR_ADD,
-			    &_cairo_pattern_white.base,
+			    _cairo_gl_white_source (),
 			    info, &has_component_alpha);
     if (likely (status == CAIRO_STATUS_SUCCESS)) {
 	cairo_surface_pattern_t mask_pattern;
