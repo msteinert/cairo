@@ -284,11 +284,6 @@ _cairo_surface_subsurface_get_font_options (void *abstract_surface,
 	surface->target->backend->get_font_options (surface->target, options);
 }
 
-struct extra {
-    cairo_image_surface_t *image;
-    void *image_extra;
-};
-
 static cairo_status_t
 _cairo_surface_subsurface_acquire_source_image (void                    *abstract_surface,
 						cairo_image_surface_t  **image_out,
@@ -329,15 +324,6 @@ _cairo_surface_subsurface_release_source_image (void                   *abstract
 						cairo_image_surface_t  *image,
 						void                   *abstract_extra)
 {
-    cairo_surface_subsurface_t *surface = abstract_surface;
-
-    if (abstract_extra != NULL) {
-	struct extra *extra = abstract_extra;
-
-	_cairo_surface_release_source_image (surface->target, extra->image, extra->image_extra);
-	free (extra);
-    }
-
     cairo_surface_destroy (&image->base);
 }
 
