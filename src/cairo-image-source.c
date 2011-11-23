@@ -855,35 +855,6 @@ _pixman_image_for_surface (cairo_image_surface_t *dst,
 	if (unlikely (status))
 	    return NULL;
 
-	if (sample->x >= 0 && sample->y >= 0 &&
-	    sample->x + sample->width  <= image->width &&
-	    sample->y + sample->height <= image->height)
-	{
-	    extend = CAIRO_EXTEND_NONE;
-	}
-
-	if (sample->width == 1 && sample->height == 1) {
-	    if (sample->x < 0 ||
-		sample->y < 0 ||
-		sample->x >= image->width ||
-		sample->y >= image->height)
-	    {
-		if (extend == CAIRO_EXTEND_NONE) {
-		    pixman_image = _pixman_transparent_image ();
-		    _cairo_surface_release_source_image (pattern->surface, image, extra);
-		    return pixman_image;
-		}
-	    }
-	    else
-	    {
-		pixman_image = _pixel_to_solid (image, sample->x, sample->y);
-                if (pixman_image) {
-                    _cairo_surface_release_source_image (pattern->surface, image, extra);
-                    return pixman_image;
-                }
-	    }
-	}
-
 	pixman_image = pixman_image_create_bits (image->pixman_format,
 						 image->width,
 						 image->height,
