@@ -294,128 +294,34 @@ _cairo_surface_subsurface_acquire_source_image (void                    *abstrac
 						cairo_image_surface_t  **image_out,
 						void                   **extra_out)
 {
-    cairo_rectangle_int_t target_extents;
     cairo_surface_subsurface_t *surface = abstract_surface;
-    cairo_image_surface_t *image;
+    cairo_surface_pattern_t pattern;
+    cairo_surface_t *image;
     cairo_status_t status;
-    struct extra *extra;
-    uint8_t *data;
-    cairo_bool_t ret;
 
-    if (surface->target->type == CAIRO_SURFACE_TYPE_RECORDING) {
-	cairo_surface_t *meta, *snapshot;
+    image = _cairo_image_surface_create_with_content (surface->base.content,
+						      surface->extents.width,
+						      surface->extents.height);
+    if (unlikely (image->status))
+	return image->status;
 
-	snapshot = _cairo_surface_has_snapshot (&surface->base,
-						&_cairo_image_surface_backend);
-	if (snapshot != NULL) {
-	    *image_out = (cairo_image_surface_t *) cairo_surface_reference (snapshot);
-	    *extra_out = NULL;
-	    return CAIRO_STATUS_SUCCESS;
-	}
-
-	meta = surface->target;
-	if (_cairo_surface_is_snapshot (meta))
-	    meta = _cairo_surface_snapshot_get_target (meta);
-
-	if (! _cairo_surface_has_snapshot (meta, &_cairo_image_surface_backend)) {
-	    cairo_surface_pattern_t pattern;
-
-	    image = (cairo_image_surface_t *)
-		_cairo_image_surface_create_with_content (meta->content,
-							  surface->extents.width,
-							  surface->extents.height);
-	    if (unlikely (image->base.status))
-		return image->base.status;
-
-	    _cairo_pattern_init_for_surface (&pattern, &image->base);
-	    cairo_matrix_init_translate (&pattern.base.matrix,
-					 -surface->extents.x, -surface->extents.y);
-	    pattern.base.filter = CAIRO_FILTER_NEAREST;
-	    status = _cairo_surface_paint (&image->base,
-					   CAIRO_OPERATOR_SOURCE,
-					   &pattern.base, NULL);
-	    _cairo_pattern_fini (&pattern.base);
-	    if (unlikely (status)) {
-		cairo_surface_destroy (&image->base);
-		return status;
-	    }
-
-	    _cairo_surface_attach_snapshot (&surface->base, &image->base, NULL);
-
-	    *image_out = image;
-	    *extra_out = NULL;
-	    return CAIRO_STATUS_SUCCESS;
-	}
+    _cairo_pattern_init_for_surface (&pattern, surface->target);
+    cairo_matrix_init_translate (&pattern.base.matrix,
+				 surface->extents.x,
+				 surface->extents.y);
+    pattern.base.filter = CAIRO_FILTER_NEAREST;
+    status = _cairo_surface_paint (image,
+				   CAIRO_OPERATOR_SOURCE,
+				   &pattern.base, NULL);
+    _cairo_pattern_fini (&pattern.base);
+    if (unlikely (status)) {
+	cairo_surface_destroy (image);
+	return status;
     }
 
-    extra = malloc (sizeof (struct extra));
-    if (unlikely (extra == NULL))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    status = _cairo_surface_acquire_source_image (surface->target, &extra->image, &extra->image_extra);
-    if (unlikely (status))
-	goto CLEANUP;
-
-    ret = _cairo_surface_get_extents (&extra->image->base, &target_extents);
-    assert (ret);
-
-    /* only copy if we need to perform sub-byte manipulation */
-    if (PIXMAN_FORMAT_BPP (extra->image->pixman_format) >= 8 &&
-	target_extents.x <= surface->extents.x &&
-	target_extents.y <= surface->extents.y &&
-	surface->extents.x + surface->extents.width <= target_extents.x + target_extents.width &&
-	surface->extents.y + surface->extents.height <= target_extents.y + target_extents.height) {
-
-	assert ((PIXMAN_FORMAT_BPP (extra->image->pixman_format) % 8) == 0);
-
-	data = extra->image->data + surface->extents.y * extra->image->stride;
-	data += PIXMAN_FORMAT_BPP (extra->image->pixman_format) / 8 * surface->extents.x;
-
-	image = (cairo_image_surface_t *)
-	    _cairo_image_surface_create_with_pixman_format (data,
-							    extra->image->pixman_format,
-							    surface->extents.width,
-							    surface->extents.height,
-							    extra->image->stride);
-	if (unlikely ((status = image->base.status)))
-	    goto CLEANUP_IMAGE;
-
-        image->base.is_clear = FALSE;
-    } else {
-	cairo_surface_pattern_t pattern;
-
-	image = (cairo_image_surface_t *)
-	    _cairo_image_surface_create_with_pixman_format (NULL,
-							    extra->image->pixman_format,
-							    surface->extents.width,
-							    surface->extents.height,
-							    0);
-	if (unlikely ((status = image->base.status)))
-	    goto CLEANUP_IMAGE;
-
-	_cairo_pattern_init_for_surface (&pattern, &image->base);
-	cairo_matrix_init_translate (&pattern.base.matrix,
-				     -surface->extents.x, -surface->extents.y);
-	pattern.base.filter = CAIRO_FILTER_NEAREST;
-	status = _cairo_surface_paint (&image->base,
-				       CAIRO_OPERATOR_SOURCE,
-				       &pattern.base, NULL);
-	_cairo_pattern_fini (&pattern.base);
-	if (unlikely (status)) {
-	    cairo_surface_destroy (&image->base);
-	    return status;
-	}
-    }
-
-    *image_out = image;
-    *extra_out = extra;
+    *image_out = (cairo_image_surface_t *)image;
+    *extra_out = NULL;
     return CAIRO_STATUS_SUCCESS;
-
-CLEANUP_IMAGE:
-    _cairo_surface_release_source_image (surface->target, extra->image, extra->image_extra);
-CLEANUP:
-    free (extra);
-    return status;
 }
 
 static void
