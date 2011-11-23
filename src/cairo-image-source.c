@@ -767,7 +767,6 @@ _pixman_image_for_surface (cairo_image_surface_t *dst,
 
 #if PIXMAN_HAS_ATOMIC_OPS
 	    /* avoid allocating a 'pattern' image if we can reuse the original */
-	    *ix = *iy = 0;
 	    if (extend == CAIRO_EXTEND_NONE &&
 		_cairo_matrix_is_pixman_translation (&pattern->base.matrix,
 						     pattern->base.filter,
@@ -826,23 +825,26 @@ _pixman_image_for_surface (cairo_image_surface_t *dst,
 
 	    /* Avoid sub-byte offsets, force a copy in that case. */
 	    if (PIXMAN_FORMAT_BPP (source->pixman_format) >= 8) {
-		void *data = source->data
-		    + sub->extents.x * PIXMAN_FORMAT_BPP(source->pixman_format)/8
-		    + sub->extents.y * source->stride;
-		pixman_image = pixman_image_create_bits (source->pixman_format,
-							 sub->extents.width,
-							 sub->extents.height,
-							 data,
-							 source->stride);
-		if (unlikely (pixman_image == NULL))
-		    return NULL;
+		if (is_contained) {
+		    void *data = source->data
+			+ sub->extents.x * PIXMAN_FORMAT_BPP(source->pixman_format)/8
+			+ sub->extents.y * source->stride;
+		    pixman_image = pixman_image_create_bits (source->pixman_format,
+							     sub->extents.width,
+							     sub->extents.height,
+							     data,
+							     source->stride);
+		    if (unlikely (pixman_image == NULL))
+			return NULL;
+		} else {
+		    /* XXX for a simple translation and EXTEND_NONE we can
+		     * fix up the pattern matrix instead.
+		     */
+		}
 	    }
 	}
     }
 
-#if PIXMAN_HAS_ATOMIC_OPS
-    *ix = *iy = 0;
-#endif
     if (pixman_image == NULL) {
 	struct acquire_source_cleanup *cleanup;
 	cairo_image_surface_t *image;
