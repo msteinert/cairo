@@ -287,12 +287,8 @@ _cairo_gl_msaa_compositor_stroke (const cairo_compositor_t	*compositor,
 
     status = _cairo_gl_composite_set_source (&info.setup,
 					     &composite->source_pattern.base,
-					     composite->bounded.x,
-					     composite->bounded.y,
-					     composite->bounded.x,
-					     composite->bounded.y,
-					     composite->bounded.width,
-					     composite->bounded.height);
+					     &composite->source_sample_area,
+					     &composite->bounded);
     if (unlikely (status))
 	goto finish;
 
@@ -367,12 +363,8 @@ _cairo_gl_msaa_compositor_fill (const cairo_compositor_t	*compositor,
 
     status = _cairo_gl_composite_set_source (&setup,
 					     &composite->source_pattern.base,
-					     composite->bounded.x,
-					     composite->bounded.y,
-					     composite->bounded.x,
-					     composite->bounded.y,
-					     composite->bounded.width,
-					     composite->bounded.height);
+					     &composite->source_sample_area,
+					     &composite->bounded);
     if (unlikely (status))
 	goto cleanup_setup;
 

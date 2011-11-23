@@ -55,16 +55,12 @@
 cairo_int_status_t
 _cairo_gl_composite_set_source (cairo_gl_composite_t *setup,
 			        const cairo_pattern_t *pattern,
-                                int src_x, int src_y,
-                                int dst_x, int dst_y,
-                                int width, int height)
+				const cairo_rectangle_int_t *sample,
+				const cairo_rectangle_int_t *extents)
 {
     _cairo_gl_operand_destroy (&setup->src);
-    return _cairo_gl_operand_init (&setup->src, pattern,
-                                   setup->dst,
-                                   src_x, src_y,
-                                   dst_x, dst_y,
-                                   width, height);
+    return _cairo_gl_operand_init (&setup->src, pattern, setup->dst,
+				   sample, extents);
 }
 
 void
@@ -86,19 +82,15 @@ _cairo_gl_composite_set_solid_source (cairo_gl_composite_t *setup,
 cairo_int_status_t
 _cairo_gl_composite_set_mask (cairo_gl_composite_t *setup,
 			      const cairo_pattern_t *pattern,
-                              int src_x, int src_y,
-                              int dst_x, int dst_y,
-                              int width, int height)
+			      const cairo_rectangle_int_t *sample,
+			      const cairo_rectangle_int_t *extents)
 {
     _cairo_gl_operand_destroy (&setup->mask);
     if (pattern == NULL)
         return CAIRO_STATUS_SUCCESS;
 
-    return _cairo_gl_operand_init (&setup->mask, pattern,
-                                   setup->dst,
-                                   src_x, src_y,
-                                   dst_x, dst_y,
-                                   width, height);
+    return _cairo_gl_operand_init (&setup->mask, pattern, setup->dst,
+				   sample, extents);
 }
 
 void

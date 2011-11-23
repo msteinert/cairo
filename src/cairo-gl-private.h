@@ -455,9 +455,9 @@ _cairo_gl_composite_set_clip_region (cairo_gl_composite_t *setup,
 cairo_private cairo_int_status_t
 _cairo_gl_composite_set_source (cairo_gl_composite_t *setup,
 			        const cairo_pattern_t *pattern,
-                                int src_x, int src_y,
-                                int dst_x, int dst_y,
-                                int width, int height);
+				const cairo_rectangle_int_t *sample,
+				const cairo_rectangle_int_t *extents);
+
 cairo_private void
 _cairo_gl_composite_set_solid_source (cairo_gl_composite_t *setup,
 				      const cairo_color_t *color);
@@ -469,9 +469,8 @@ _cairo_gl_composite_set_source_operand (cairo_gl_composite_t *setup,
 cairo_private cairo_int_status_t
 _cairo_gl_composite_set_mask (cairo_gl_composite_t *setup,
 			      const cairo_pattern_t *pattern,
-                              int src_x, int src_y,
-                              int dst_x, int dst_y,
-                              int width, int height);
+			      const cairo_rectangle_int_t *sample,
+			      const cairo_rectangle_int_t *extents);
 
 cairo_private void
 _cairo_gl_composite_set_mask_operand (cairo_gl_composite_t *setup,
@@ -625,9 +624,9 @@ cairo_private cairo_int_status_t
 _cairo_gl_operand_init (cairo_gl_operand_t *operand,
 		        const cairo_pattern_t *pattern,
 		        cairo_gl_surface_t *dst,
-		        int src_x, int src_y,
-		        int dst_x, int dst_y,
-		        int width, int height);
+			const cairo_rectangle_int_t *sample,
+			const cairo_rectangle_int_t *extents);
+
 cairo_private void
 _cairo_gl_solid_operand_init (cairo_gl_operand_t *operand,
 	                      const cairo_color_t *color);

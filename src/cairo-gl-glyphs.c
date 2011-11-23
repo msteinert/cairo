@@ -277,7 +277,8 @@ render_glyphs (cairo_gl_surface_t	*dst,
 
             status = _cairo_gl_composite_set_mask (&setup,
                                                    &cache->pattern.base,
-                                                   0, 0, 0, 0, 0, 0);
+						   &_cairo_unbounded_rectangle,
+						   &_cairo_unbounded_rectangle);
             if (unlikely (status))
                 goto FINISH;
 

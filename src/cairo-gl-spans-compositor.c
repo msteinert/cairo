@@ -315,10 +315,9 @@ pattern_to_surface (cairo_surface_t *dst,
 			 CAIRO_CONTENT_COLOR_ALPHA);
 
     *src_x = *src_y = 0;
-    status = _cairo_gl_operand_init (&source->operand, pattern, (cairo_gl_surface_t *)dst,
-				     extents->x, extents->y,
-				     extents->x, extents->y,
-				     extents->width, extents->height);
+    status = _cairo_gl_operand_init (&source->operand, pattern,
+				     (cairo_gl_surface_t *)dst,
+				     sample, extents);
     if (unlikely (status)) {
 	cairo_surface_destroy (&source->base);
 	return _cairo_surface_create_in_error (status);
@@ -425,12 +424,8 @@ _cairo_gl_span_renderer_init (cairo_abstract_span_renderer_t	*_r,
         goto FAIL;
 
     status = _cairo_gl_composite_set_source (&r->setup, source,
-					     composite->unbounded.x,
-					     composite->unbounded.y,
-					     composite->unbounded.x,
-					     composite->unbounded.y,
-					     composite->unbounded.width,
-					     composite->unbounded.height);
+					     &composite->source_sample_area,
+					     &composite->unbounded);
     if (unlikely (status))
         goto FAIL;
 
@@ -440,12 +435,8 @@ _cairo_gl_span_renderer_init (cairo_abstract_span_renderer_t	*_r,
     } else {
 	status = _cairo_gl_composite_set_mask (&r->setup,
 					       &composite->mask_pattern.base,
-					       composite->unbounded.x,
-					       composite->unbounded.y,
-					       composite->unbounded.x,
-					       composite->unbounded.y,
-					       composite->unbounded.width,
-					       composite->unbounded.height);
+					       &composite->mask_sample_area,
+					       &composite->unbounded);
 	if (unlikely (status))
 	    goto FAIL;
     }

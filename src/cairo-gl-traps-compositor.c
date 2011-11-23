@@ -186,10 +186,9 @@ pattern_to_surface (cairo_surface_t *dst,
 			 CAIRO_CONTENT_COLOR_ALPHA);
 
     *src_x = *src_y = 0;
-    status = _cairo_gl_operand_init (&source->operand, pattern, (cairo_gl_surface_t *)dst,
-				     extents->x, extents->y,
-				     extents->x, extents->y,
-				     extents->width, extents->height);
+    status = _cairo_gl_operand_init (&source->operand, pattern,
+				     (cairo_gl_surface_t *)dst,
+				     sample, extents);
     if (unlikely (status)) {
 	cairo_surface_destroy (&source->base);
 	return _cairo_surface_create_in_error (status);
