@@ -551,6 +551,7 @@ subsurface_source (cairo_xlib_surface_t *dst,
 {
     cairo_surface_subsurface_t *sub;
     cairo_xlib_surface_t *src;
+    cairo_xlib_source_t *source;
     Display *dpy = dst->display->display;
     cairo_bool_t is_contained = FALSE;
     cairo_int_status_t status;
@@ -580,32 +581,44 @@ subsurface_source (cairo_xlib_surface_t *dst,
 	return cairo_surface_reference (&src->base);
     }
 
-    src = (cairo_xlib_surface_t *)
-	_cairo_surface_create_similar_scratch (&dst->base,
-					       sub->base.content,
-					       sub->extents.width,
-					       sub->extents.height);
-    if (src->base.type != CAIRO_SURFACE_TYPE_XLIB) {
-	cairo_surface_destroy (&src->base);
-	return _cairo_surface_create_in_error (CAIRO_STATUS_NO_MEMORY);
+    if (sub->snapshot) {
+	src = (cairo_xlib_surface_t *) cairo_surface_reference (sub->snapshot);
+	source = &src->embedded_source;
+    } else {
+	src = (cairo_xlib_surface_t *)
+	    _cairo_surface_create_similar_scratch (&dst->base,
+						   sub->base.content,
+						   sub->extents.width,
+						   sub->extents.height);
+	if (src->base.type != CAIRO_SURFACE_TYPE_XLIB) {
+	    cairo_surface_destroy (&src->base);
+	    return _cairo_surface_create_in_error (CAIRO_STATUS_NO_MEMORY);
+	}
+
+	_cairo_pattern_init_for_surface (&local_pattern, sub->target);
+	cairo_matrix_init_translate (&local_pattern.base.matrix,
+				     sub->extents.x, sub->extents.y);
+	local_pattern.base.filter = CAIRO_FILTER_NEAREST;
+	status = _cairo_surface_paint (&src->base,
+				       CAIRO_OPERATOR_SOURCE,
+				       &local_pattern.base,
+				       NULL);
+	_cairo_pattern_fini (&local_pattern.base);
+
+	if (unlikely (status)) {
+	    cairo_surface_destroy (&src->base);
+	    return _cairo_surface_create_in_error (status);
+	}
+
+	_cairo_xlib_surface_ensure_picture (src);
+	_cairo_surface_subsurface_set_snapshot (&sub->base, &src->base);
+
+	source = &src->embedded_source;
+	source->has_component_alpha = 0;
+	source->has_matrix = 0;
+	source->filter = CAIRO_FILTER_NEAREST;
+	source->extend = CAIRO_EXTEND_NONE;
     }
-
-    _cairo_pattern_init_for_surface (&local_pattern, sub->target);
-    cairo_matrix_init_translate (&local_pattern.base.matrix,
-				 sub->extents.x, sub->extents.y);
-    local_pattern.base.filter = CAIRO_FILTER_NEAREST;
-    status = _cairo_surface_paint (&src->base,
-				   CAIRO_OPERATOR_SOURCE,
-				   &local_pattern.base,
-				   NULL);
-    _cairo_pattern_fini (&local_pattern.base);
-
-    if (unlikely (status)) {
-	cairo_surface_destroy (&src->base);
-	return _cairo_surface_create_in_error (status);
-    }
-
-    _cairo_xlib_surface_ensure_picture (src);
 
     status = _cairo_matrix_to_pixman_matrix_offset (&pattern->base.matrix,
 						    pattern->base.filter,
@@ -613,20 +626,32 @@ subsurface_source (cairo_xlib_surface_t *dst,
 						    extents->y + extents->height / 2,
 						    (pixman_transform_t *)&xtransform,
 						    src_x, src_y);
+    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO) {
+	if (source->has_matrix) {
+	    source->has_matrix = 0;
+	    memcpy (&xtransform, &identity, sizeof (identity));
+	    status = CAIRO_INT_STATUS_SUCCESS;
+	}
+    } else
+	source->has_matrix = 1;
     if (status == CAIRO_INT_STATUS_SUCCESS)
 	XRenderSetPictureTransform (dpy, src->picture, &xtransform);
 
-    if (pattern->base.filter != CAIRO_FILTER_NEAREST)
+    if (source->filter != pattern->base.filter) {
 	picture_set_filter (dpy, src->picture, pattern->base.filter);
-
-    if (pattern->base.has_component_alpha) {
-	pa.component_alpha = 1;
-	mask |= CPComponentAlpha;
+	source->filter = pattern->base.filter;
     }
 
-    if (pattern->base.extend != CAIRO_EXTEND_NONE) {
+    if (source->has_component_alpha != pattern->base.has_component_alpha) {
+	pa.component_alpha = pattern->base.has_component_alpha;
+	mask |= CPComponentAlpha;
+	source->has_component_alpha = pattern->base.has_component_alpha;
+    }
+
+    if (source->extend != pattern->base.extend) {
 	pa.repeat = extend_to_repeat (pattern->base.extend);
 	mask |= CPRepeat;
+	source->extend = pattern->base.extend;
     }
 
     if (mask)
