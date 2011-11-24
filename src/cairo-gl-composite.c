@@ -476,8 +476,9 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
 
     glEnable (GL_BLEND);
 
-    component_alpha = ((setup->mask.type == CAIRO_GL_OPERAND_TEXTURE) &&
-                       setup->mask.texture.attributes.has_component_alpha);
+    component_alpha =
+	setup->mask.type == CAIRO_GL_OPERAND_TEXTURE &&
+	setup->mask.texture.attributes.has_component_alpha;
 
     /* Do various magic for component alpha */
     if (component_alpha) {

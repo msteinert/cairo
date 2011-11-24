@@ -127,6 +127,7 @@ _cairo_gl_subsurface_operand_init (cairo_gl_operand_t *operand,
 
     attributes->extend = src->base.extend;
     attributes->filter = src->base.filter;
+    attributes->has_component_alpha = src->base.has_component_alpha;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -186,6 +187,7 @@ _cairo_gl_surface_operand_init (cairo_gl_operand_t *operand,
 
     attributes->extend = src->base.extend;
     attributes->filter = src->base.filter;
+    attributes->has_component_alpha = src->base.has_component_alpha;
     return CAIRO_STATUS_SUCCESS;
 }
 

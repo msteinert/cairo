@@ -971,6 +971,12 @@ composite_glyphs (void				*_dst,
     return status;
 }
 
+static cairo_int_status_t
+check_composite (const cairo_composite_rectangles_t *extents)
+{
+    return CAIRO_STATUS_SUCCESS;
+}
+
 const cairo_compositor_t *
 _cairo_image_traps_compositor_get (void)
 {
@@ -986,7 +992,7 @@ _cairo_image_traps_compositor_get (void)
 	compositor.draw_image_boxes = draw_image_boxes;
 	//compositor.copy_boxes = copy_boxes;
 	compositor.fill_boxes = fill_boxes;
-	//compositor.check_composite = check_composite;
+	compositor.check_composite = check_composite;
 	compositor.composite = composite;
 	compositor.lerp = lerp;
 	//compositor.check_composite_boxes = check_composite_boxes;

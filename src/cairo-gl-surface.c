@@ -355,6 +355,8 @@ _cairo_gl_surface_embedded_operand_init (cairo_gl_surface_t *surface)
     cairo_gl_operand_t *operand = &surface->operand;
     cairo_surface_attributes_t *attributes = &operand->texture.attributes;
 
+    memset (operand, 0, sizeof (cairo_gl_operand_t));
+
     operand->type = CAIRO_GL_OPERAND_TEXTURE;
     operand->texture.surface = surface;
     operand->texture.tex = surface->tex;

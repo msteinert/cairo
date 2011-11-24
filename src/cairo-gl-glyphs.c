@@ -59,11 +59,15 @@ typedef struct _cairo_gl_glyph {
 } cairo_gl_glyph_t;
 
 static void
-_cairo_gl_glyph_fini (cairo_scaled_glyph_private_t *_priv,
+_cairo_gl_glyph_fini (cairo_scaled_glyph_private_t *glyph_private,
 		      cairo_scaled_glyph_t *scaled_glyph,
 		      cairo_scaled_font_t  *scaled_font)
 {
-    cairo_gl_glyph_t *priv = cairo_container_of (_priv, cairo_gl_glyph_t, base);
+    cairo_gl_glyph_t *priv = cairo_container_of (glyph_private,
+						 cairo_gl_glyph_t,
+						 base);
+
+    cairo_list_del (&glyph_private->link);
 
     priv->node.owner = NULL;
     if (! priv->node.pinned) {
@@ -302,7 +306,7 @@ render_glyphs (cairo_gl_surface_t	*dst,
 		scaled_glyph->dev_private_key = cache;
 		scaled_glyph->dev_private = cairo_container_of (priv,
 								cairo_gl_glyph_t,
-								base);;
+								base);
 	    } else {
 		status = _cairo_gl_glyph_cache_add_glyph (ctx, cache, scaled_glyph);
 

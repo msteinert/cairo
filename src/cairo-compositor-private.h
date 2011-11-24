@@ -211,6 +211,9 @@ struct cairo_traps_compositor {
 				 cairo_boxes_t		*boxes);
 
     cairo_int_status_t
+	(*check_composite) (const cairo_composite_rectangles_t *extents);
+
+    cairo_int_status_t
 	(*composite)		(void			*dst,
 				 cairo_operator_t	 op,
 				 cairo_surface_t	*src,

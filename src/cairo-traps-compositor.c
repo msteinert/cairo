@@ -1797,6 +1797,10 @@ _cairo_traps_compositor_paint (const cairo_compositor_t *_compositor,
     cairo_boxes_t boxes;
     cairo_int_status_t status;
 
+    status = compositor->check_composite (extents);
+    if (unlikely (status))
+	return status;
+
      _cairo_clip_steal_boxes (extents->clip, &boxes);
      status = clip_and_composite_boxes (compositor, extents, &boxes);
      _cairo_clip_unsteal_boxes (extents->clip, &boxes);
@@ -1810,6 +1814,10 @@ _cairo_traps_compositor_mask (const cairo_compositor_t *_compositor,
 {
     const cairo_traps_compositor_t *compositor = (cairo_traps_compositor_t*)_compositor;
     cairo_int_status_t status;
+
+    status = compositor->check_composite (extents);
+    if (unlikely (status))
+	return status;
 
     if (extents->mask_pattern.base.type == CAIRO_PATTERN_TYPE_SOLID &&
 	extents->clip->path == NULL) {
@@ -1852,6 +1860,10 @@ _cairo_traps_compositor_stroke (const cairo_compositor_t *_compositor,
 {
     const cairo_traps_compositor_t *compositor = (cairo_traps_compositor_t *)_compositor;
     cairo_int_status_t status;
+
+    status = compositor->check_composite (extents);
+    if (unlikely (status))
+	return status;
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
     if (_cairo_path_fixed_stroke_is_rectilinear (path)) {
@@ -1911,6 +1923,10 @@ _cairo_traps_compositor_fill (const cairo_compositor_t *_compositor,
 {
     const cairo_traps_compositor_t *compositor = (cairo_traps_compositor_t *)_compositor;
     cairo_int_status_t status;
+
+    status = compositor->check_composite (extents);
+    if (unlikely (status))
+	return status;
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
     if (_cairo_path_fixed_fill_is_rectilinear (path)) {
@@ -1994,6 +2010,10 @@ _cairo_traps_compositor_glyphs (const cairo_compositor_t	*_compositor,
 {
     const cairo_traps_compositor_t *compositor = (cairo_traps_compositor_t *)_compositor;
     cairo_int_status_t status;
+
+    status = compositor->check_composite (extents);
+    if (unlikely (status))
+	return status;
 
     _cairo_scaled_font_freeze_cache (scaled_font);
     status = compositor->check_composite_glyphs (extents,

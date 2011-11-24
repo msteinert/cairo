@@ -392,6 +392,12 @@ no_fallback_compositor_get (void)
     return &__cairo_no_compositor;
 }
 
+static cairo_int_status_t
+check_composite (const cairo_composite_rectangles_t *extents)
+{
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static const cairo_compositor_t *
 no_traps_compositor_get (void)
 {
@@ -408,7 +414,7 @@ no_traps_compositor_get (void)
 	compositor.draw_image_boxes = draw_image_boxes;
 	//compositor.copy_boxes = copy_boxes;
 	compositor.fill_boxes = fill_boxes;
-	//compositor.check_composite = check_composite;
+	compositor.check_composite = check_composite;
 	compositor.composite = composite;
 	compositor.lerp = lerp;
 	//compositor.check_composite_boxes = check_composite_boxes;
