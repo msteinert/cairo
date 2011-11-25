@@ -889,6 +889,96 @@ _pixman_image_for_surface (cairo_image_surface_t *dst,
     return pixman_image;
 }
 
+struct raster_source_cleanup {
+    const cairo_pattern_t *pattern;
+    cairo_surface_t *surface;
+    cairo_image_surface_t *image;
+    void *image_extra;
+};
+
+static void
+_raster_source_cleanup (pixman_image_t *pixman_image,
+			void *closure)
+{
+    struct raster_source_cleanup *data = closure;
+
+    _cairo_surface_release_source_image (data->surface,
+					 data->image,
+					 data->image_extra);
+
+    _cairo_raster_source_pattern_release (data->pattern,
+					  data->surface);
+
+    free (data);
+}
+
+static pixman_image_t *
+_pixman_image_for_raster (cairo_image_surface_t *dst,
+			  const cairo_raster_source_pattern_t *pattern,
+			  cairo_bool_t is_mask,
+			  const cairo_rectangle_int_t *extents,
+			  const cairo_rectangle_int_t *sample,
+			  int *ix, int *iy)
+{
+    pixman_image_t *pixman_image;
+    struct raster_source_cleanup *cleanup;
+    cairo_image_surface_t *image;
+    void *extra;
+    cairo_status_t status;
+    cairo_surface_t *surface;
+
+    *ix = *iy = 0;
+
+    surface = _cairo_raster_source_pattern_acquire (&pattern->base,
+						    &dst->base, NULL);
+    if (unlikely (surface == NULL || surface->status))
+	return NULL;
+
+    status = _cairo_surface_acquire_source_image (surface, &image, &extra);
+    if (unlikely (status)) {
+	_cairo_raster_source_pattern_release (&pattern->base, surface);
+	return NULL;
+    }
+
+    assert (image->width == pattern->extents.width);
+    assert (image->height == pattern->extents.height);
+
+    pixman_image = pixman_image_create_bits (image->pixman_format,
+					     image->width,
+					     image->height,
+					     (uint32_t *) image->data,
+					     image->stride);
+    if (unlikely (pixman_image == NULL)) {
+	_cairo_surface_release_source_image (surface, image, extra);
+	_cairo_raster_source_pattern_release (&pattern->base, surface);
+	return NULL;
+    }
+
+    cleanup = malloc (sizeof (*cleanup));
+    if (unlikely (cleanup == NULL)) {
+	pixman_image_unref (pixman_image);
+	_cairo_surface_release_source_image (surface, image, extra);
+	_cairo_raster_source_pattern_release (&pattern->base, surface);
+	return NULL;
+    }
+
+    cleanup->pattern = &pattern->base;
+    cleanup->surface = surface;
+    cleanup->image = image;
+    cleanup->image_extra = extra;
+    pixman_image_set_destroy_function (pixman_image,
+				       _raster_source_cleanup, cleanup);
+
+    if (! _pixman_image_set_properties (pixman_image,
+					&pattern->base, extents,
+					ix, iy)) {
+	pixman_image_unref (pixman_image);
+	pixman_image= NULL;
+    }
+
+    return pixman_image;
+}
+
 pixman_image_t *
 _pixman_image_for_pattern (cairo_image_surface_t *dst,
 			   const cairo_pattern_t *pattern,
@@ -923,6 +1013,11 @@ _pixman_image_for_pattern (cairo_image_surface_t *dst,
 					  is_mask, extents, sample,
 					  tx, ty);
 
+    case CAIRO_PATTERN_TYPE_RASTER_SOURCE:
+	return _pixman_image_for_raster (dst,
+					 (const cairo_raster_source_pattern_t *) pattern,
+					 is_mask, extents, sample,
+					 tx, ty);
     }
 }
 

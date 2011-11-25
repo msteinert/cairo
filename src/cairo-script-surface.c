@@ -53,8 +53,9 @@
 #include "cairo-error-private.h"
 #include "cairo-list-private.h"
 #include "cairo-image-surface-private.h"
-#include "cairo-recording-surface-private.h"
 #include "cairo-output-stream-private.h"
+#include "cairo-pattern-private.h"
+#include "cairo-recording-surface-private.h"
 #include "cairo-scaled-font-private.h"
 #include "cairo-surface-clipper-private.h"
 #include "cairo-surface-snapshot-private.h"
@@ -1469,7 +1470,6 @@ _emit_image_surface (cairo_script_surface_t *surface,
 
 	_cairo_output_stream_puts (ctx->stream, "~> set-mime-data\n");
     }
-    attach_snapshot (ctx, &image->base);
 
     return CAIRO_INT_STATUS_SUCCESS;
 }
@@ -1574,6 +1574,30 @@ _emit_surface_pattern (cairo_script_surface_t *surface,
 }
 
 static cairo_int_status_t
+_emit_raster_pattern (cairo_script_surface_t *surface,
+		      const cairo_pattern_t *pattern)
+{
+    cairo_surface_t *source;
+    cairo_int_status_t status;
+
+    source = _cairo_raster_source_pattern_acquire (pattern, &surface->base, NULL);
+    if (unlikely (source == NULL)) {
+	ASSERT_NOT_REACHED;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+    if (unlikely (source->status))
+	return source->status;
+
+    status = _emit_image_surface_pattern (surface, source);
+    _cairo_raster_source_pattern_release (pattern, source);
+    if (unlikely (status))
+	return status;
+
+    _cairo_output_stream_puts (to_context(surface)->stream, "pattern");
+    return CAIRO_INT_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
 _emit_pattern (cairo_script_surface_t *surface,
 	       const cairo_pattern_t *pattern)
 {
@@ -1601,6 +1625,10 @@ _emit_pattern (cairo_script_surface_t *surface,
 	break;
     case CAIRO_PATTERN_TYPE_SURFACE:
 	status = _emit_surface_pattern (surface, pattern);
+	is_default_extend = pattern->extend == CAIRO_EXTEND_SURFACE_DEFAULT;
+	break;
+    case CAIRO_PATTERN_TYPE_RASTER_SOURCE:
+	status = _emit_raster_pattern (surface, pattern);
 	is_default_extend = pattern->extend == CAIRO_EXTEND_SURFACE_DEFAULT;
 	break;
 

@@ -1769,6 +1769,8 @@ pattern_supported (cairo_ps_surface_t *surface, const cairo_pattern_t *pattern)
 
     case CAIRO_PATTERN_TYPE_SURFACE:
 	return surface_pattern_supported ((cairo_surface_pattern_t *) pattern);
+    case CAIRO_PATTERN_TYPE_RASTER_SOURCE:
+	return FALSE;
 
     default:
 	ASSERT_NOT_REACHED;
@@ -3713,6 +3715,9 @@ _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface,
 					  (cairo_mesh_pattern_t *) pattern);
 	if (unlikely (status))
 	    return status;
+	break;
+
+    case CAIRO_PATTERN_TYPE_RASTER_SOURCE: /* XXX */
 	break;
     }
 

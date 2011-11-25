@@ -2035,6 +2035,7 @@ _cairo_svg_surface_emit_pattern (cairo_svg_surface_t   *surface,
 						       output, is_stroke, parent_matrix);
 
     case CAIRO_PATTERN_TYPE_MESH:
+    case CAIRO_PATTERN_TYPE_RASTER_SOURCE:
 	ASSERT_NOT_REACHED;
     }
     return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);

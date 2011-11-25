@@ -165,7 +165,6 @@ cairo_sources = \
 	cairo-matrix.c \
 	cairo-mask-compositor.c \
 	cairo-mesh-pattern-rasterizer.c \
-	cairo-mime-surface.c \
 	cairo-misc.c \
 	cairo-mono-scan-converter.c \
 	cairo-mutex.c \
@@ -187,6 +186,7 @@ cairo_sources = \
 	cairo-polygon.c \
 	cairo-polygon-intersect.c \
 	cairo-polygon-reduce.c \
+	cairo-raster-source-pattern.c \
 	cairo-recording-surface.c \
 	cairo-rectangle.c \
 	cairo-rectangular-scan-converter.c \

@@ -3621,6 +3621,7 @@ _cairo_pdf_surface_emit_pattern (cairo_pdf_surface_t *surface, cairo_pdf_pattern
 
     switch (pdf_pattern->pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
+    case CAIRO_PATTERN_TYPE_RASTER_SOURCE:
 	ASSERT_NOT_REACHED;
 	status = _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
 	break;
@@ -5742,7 +5743,7 @@ _pattern_supported (const cairo_pattern_t *pattern)
     case CAIRO_PATTERN_TYPE_SOLID:
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
-    case CAIRO_PATTERN_TYPE_MESH:	
+    case CAIRO_PATTERN_TYPE_MESH:
 	return TRUE;
 
     case CAIRO_PATTERN_TYPE_SURFACE:
@@ -5750,6 +5751,7 @@ _pattern_supported (const cairo_pattern_t *pattern)
 
     default:
 	ASSERT_NOT_REACHED;
+    case CAIRO_PATTERN_TYPE_RASTER_SOURCE: /* XXX */
 	return FALSE;
     }
 }

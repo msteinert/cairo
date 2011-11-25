@@ -184,6 +184,9 @@ classify_pattern (const cairo_pattern_t *pattern,
     case CAIRO_PATTERN_TYPE_MESH:
 	classify = 6;
 	break;
+    case CAIRO_PATTERN_TYPE_RASTER_SOURCE:
+	classify = 7;
+	break;
     }
     return classify;
 }
@@ -1687,7 +1690,8 @@ static const char *pattern_names[] = {
     "solid",
     "linear",
     "radial",
-    "mesh"
+    "mesh",
+    "raster"
 };
 static void
 print_pattern (cairo_output_stream_t *stream,

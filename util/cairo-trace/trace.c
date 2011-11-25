@@ -3511,24 +3511,24 @@ cairo_image_surface_create_for_data (unsigned char *data, cairo_format_t format,
     return ret;
 }
 
-cairo_surface_t *
-cairo_mime_surface_create (void *data, cairo_content_t content, int width, int height)
+cairo_pattern_t *
+cairo_pattern_create_raster_source (void *data, cairo_content_t content, int width, int height)
 {
-    cairo_surface_t *ret;
+    cairo_pattern_t *ret;
 
     _enter_trace ();
 
-    ret = DLCALL (cairo_mime_surface_create, data, content, width, height);
+    ret = DLCALL (cairo_pattern_create_raster_source, data, content, width, height);
 
     _emit_line_info ();
     if (_write_lock ()) {
-	Object *obj = _create_surface (ret);
+	long pattern_id = _create_pattern_id (ret);
 	cairo_format_t format;
 	cairo_surface_t *image;
 	cairo_t *cr;
 
-	/* Impossible to accurately record the interaction with a mime-surface
-	 * so just suck all the data into an image upfront */
+	/* Impossible to accurately record the interaction with this custom
+	 * pattern so just suck all the data into an image upfront */
 	switch (content) {
 	case CAIRO_CONTENT_ALPHA: format = CAIRO_FORMAT_A8; break;
 	case CAIRO_CONTENT_COLOR: format = CAIRO_FORMAT_RGB24; break;
@@ -3536,23 +3536,20 @@ cairo_mime_surface_create (void *data, cairo_content_t content, int width, int h
 	case CAIRO_CONTENT_COLOR_ALPHA: format = CAIRO_FORMAT_ARGB32; break;
 	}
 
-	_trace_printf ("%% mime-surface\n");
+	_trace_printf ("%% raster-source\n");
 
 	image = DLCALL (cairo_image_surface_create, format, width, height);
 	cr = DLCALL (cairo_create, image);
-	DLCALL (cairo_set_source_surface, cr, ret, 0, 0);
+	DLCALL (cairo_set_source, cr, ret);
 	DLCALL (cairo_paint, cr);
 	DLCALL (cairo_destroy, cr);
 
 	_emit_image (image, NULL);
 	DLCALL (cairo_surface_destroy, image);
-	_trace_printf (" dup /s%ld exch def\n",
-		       obj->token);
+	_trace_printf (" pattern dup /s%ld exch def\n",
+		       pattern_id);
 
-	obj->width = width;
-	obj->height = height;
-	obj->defined = TRUE;
-	_push_object (obj);
+	_push_operand (PATTERN, ret);
 	_write_unlock ();
     }
 

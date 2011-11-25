@@ -2260,8 +2260,7 @@ cairo_surface_status (cairo_surface_t *surface);
  * @CAIRO_SURFACE_TYPE_SKIA: The surface is of type Skia, since 1.10
  * @CAIRO_SURFACE_TYPE_SUBSURFACE: The surface is a subsurface created with
  *   cairo_surface_create_for_rectangle(), since 1.10
- * @CAIRO_SURFACE_TYPE_MIME: The surface is a callback (mime) surface, since 1.12
- * @CAIRO_SURFACE_TYPE_COGL: This surface is of type Cogl
+ * @CAIRO_SURFACE_TYPE_COGL: This surface is of type Cogl, since 1.12
  *
  * #cairo_surface_type_t is used to describe the type of a given
  * surface. The surface types are also known as "backends" or "surface
@@ -2312,7 +2311,6 @@ typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_XML,
     CAIRO_SURFACE_TYPE_SKIA,
     CAIRO_SURFACE_TYPE_SUBSURFACE,
-    CAIRO_SURFACE_TYPE_MIME,
     CAIRO_SURFACE_TYPE_COGL
 } cairo_surface_type_t;
 
@@ -2472,55 +2470,73 @@ cairo_public cairo_bool_t
 cairo_recording_surface_get_extents (cairo_surface_t *surface,
 				     cairo_rectangle_t *extents);
 
-/* Mime-surface (callback) functions */
+/* raster-source pattern (callback) functions */
 
-typedef cairo_surface_t *(*cairo_mime_surface_acquire_t) (cairo_surface_t *mime_surface,
-							  void *callback_data,
-							  cairo_surface_t *target,
-							  const cairo_rectangle_int_t *sample_extents,
-							  cairo_rectangle_int_t *surface_extents);
+typedef cairo_surface_t *
+(*cairo_raster_source_acquire_func_t) (cairo_pattern_t *pattern,
+				       void *callback_data,
+				       cairo_surface_t *target,
+				       const cairo_rectangle_int_t *extents);
 
-typedef void (*cairo_mime_surface_release_t) (cairo_surface_t *mime_surface,
-					      void *callback_data,
-					      cairo_surface_t *image_surface);
+typedef void
+(*cairo_raster_source_release_func_t) (cairo_pattern_t *pattern,
+				       void *callback_data,
+				       cairo_surface_t *surface);
 
-typedef cairo_surface_t *(*cairo_mime_surface_snapshot_t) (cairo_surface_t *mime_surface,
-							   void *callback_data);
-typedef void (*cairo_mime_surface_destroy_t) (cairo_surface_t *mime_surface,
-					      void *callback_data);
+typedef cairo_status_t
+(*cairo_raster_source_snapshot_func_t) (cairo_pattern_t *pattern,
+					void *callback_data);
 
-cairo_public cairo_surface_t *
-cairo_mime_surface_create (void *data, cairo_content_t content, int width, int height);
+typedef cairo_status_t
+(*cairo_raster_source_copy_func_t) (cairo_pattern_t *pattern,
+				    void *callback_data,
+				    const cairo_pattern_t *other);
+
+typedef void
+(*cairo_raster_source_finish_func_t) (cairo_pattern_t *pattern,
+				      void *callback_data);
+
+cairo_public cairo_pattern_t *
+cairo_pattern_create_raster_source (void *user_data,
+				    cairo_content_t content,
+				    int width, int height);
 
 cairo_public void
-cairo_mime_surface_set_callback_data (cairo_surface_t *surface,
-				      void *data);
+cairo_raster_source_pattern_set_callback_data (cairo_pattern_t *pattern,
+					       void *data);
 
 cairo_public void *
-cairo_mime_surface_get_callback_data (cairo_surface_t *surface);
+cairo_raster_source_pattern_get_callback_data (cairo_pattern_t *pattern);
 
 cairo_public void
-cairo_mime_surface_set_acquire (cairo_surface_t *surface,
-				cairo_mime_surface_acquire_t acquire,
-				cairo_mime_surface_release_t release);
+cairo_raster_source_pattern_set_acquire (cairo_pattern_t *pattern,
+					 cairo_raster_source_acquire_func_t acquire,
+					 cairo_raster_source_release_func_t release);
 
 cairo_public void
-cairo_mime_surface_get_acquire (cairo_surface_t *surface,
-				cairo_mime_surface_acquire_t *acquire,
-				cairo_mime_surface_release_t *release);
+cairo_raster_source_pattern_get_acquire (cairo_pattern_t *pattern,
+					 cairo_raster_source_acquire_func_t *acquire,
+					 cairo_raster_source_release_func_t *release);
 cairo_public void
-cairo_mime_surface_set_snapshot (cairo_surface_t *surface,
-				 cairo_mime_surface_snapshot_t snapshot);
+cairo_raster_source_pattern_set_snapshot (cairo_pattern_t *pattern,
+					  cairo_raster_source_snapshot_func_t snapshot);
 
-cairo_public cairo_mime_surface_snapshot_t
-cairo_mime_surface_get_snapshot (cairo_surface_t *surface);
+cairo_public cairo_raster_source_snapshot_func_t
+cairo_raster_source_pattern_get_snapshot (cairo_pattern_t *pattern);
 
 cairo_public void
-cairo_mime_surface_set_destroy (cairo_surface_t *surface,
-				cairo_mime_surface_destroy_t destroy);
+cairo_raster_source_pattern_set_copy (cairo_pattern_t *pattern,
+				      cairo_raster_source_copy_func_t copy);
 
-cairo_public cairo_mime_surface_destroy_t
-cairo_mime_surface_get_destroy (cairo_surface_t *surface);
+cairo_public cairo_raster_source_copy_func_t
+cairo_raster_source_pattern_get_copy (cairo_pattern_t *pattern);
+
+cairo_public void
+cairo_raster_source_pattern_set_finish (cairo_pattern_t *pattern,
+					cairo_raster_source_finish_func_t finish);
+
+cairo_public cairo_raster_source_finish_func_t
+cairo_raster_source_pattern_get_finish (cairo_pattern_t *pattern);
 
 /* Pattern creation functions */
 
@@ -2575,6 +2591,7 @@ cairo_pattern_set_user_data (cairo_pattern_t		 *pattern,
  * @CAIRO_PATTERN_TYPE_LINEAR: The pattern is a linear gradient.
  * @CAIRO_PATTERN_TYPE_RADIAL: The pattern is a radial gradient.
  * @CAIRO_PATTERN_TYPE_MESH: The pattern is a mesh.
+ * @CAIRO_PATTERN_TYPE_RASTER_SOURCE: The pattern is a user pattern providing raster data, since 1.12.
  *
  * #cairo_pattern_type_t is used to describe the type of a given pattern.
  *
@@ -2603,7 +2620,8 @@ typedef enum _cairo_pattern_type {
     CAIRO_PATTERN_TYPE_SURFACE,
     CAIRO_PATTERN_TYPE_LINEAR,
     CAIRO_PATTERN_TYPE_RADIAL,
-    CAIRO_PATTERN_TYPE_MESH
+    CAIRO_PATTERN_TYPE_MESH,
+    CAIRO_PATTERN_TYPE_RASTER_SOURCE
 } cairo_pattern_type_t;
 
 cairo_public cairo_pattern_type_t

@@ -1242,9 +1242,10 @@ _cairo_xcb_picture_for_pattern (cairo_xcb_surface_t *target,
 	return _cairo_xcb_surface_picture (target,
 					   (cairo_surface_pattern_t *) pattern,
 					   extents);
-    case CAIRO_PATTERN_TYPE_MESH:
     default:
 	ASSERT_NOT_REACHED;
+    case CAIRO_PATTERN_TYPE_MESH:
+    case CAIRO_PATTERN_TYPE_RASTER_SOURCE:
 	return _render_to_picture (target, pattern, extents);
     }
 }
