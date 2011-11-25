@@ -86,31 +86,38 @@ _cairo_gl_subsurface_clone_operand_init (cairo_gl_operand_t *operand,
 
     sub = (cairo_surface_subsurface_t *) src->surface;
 
-    status = _cairo_gl_context_acquire (dst->base.device, &ctx);
-    if (unlikely (status))
-	return status;
+    if (sub->snapshot) {
+	surface = (cairo_gl_surface_t *)
+	    cairo_surface_reference (sub->snapshot);
+    } else {
+	status = _cairo_gl_context_acquire (dst->base.device, &ctx);
+	if (unlikely (status))
+	    return status;
 
-    surface = (cairo_gl_surface_t *)
-	_cairo_gl_surface_create_scratch (ctx,
-					  sub->target->content,
-					  extents->width, extents->height);
-    if (surface->base.status)
-	return _cairo_gl_context_release (ctx, surface->base.status);
+	surface = (cairo_gl_surface_t *)
+	    _cairo_gl_surface_create_scratch (ctx,
+					      sub->target->content,
+					      extents->width, extents->height);
+	if (surface->base.status)
+	    return _cairo_gl_context_release (ctx, surface->base.status);
 
-    _cairo_pattern_init_for_surface (&local_pattern, sub->target);
-    cairo_matrix_init_translate (&local_pattern.base.matrix,
-				 sub->extents.x, sub->extents.y);
-    local_pattern.base.filter = CAIRO_FILTER_NEAREST;
-    status = _cairo_surface_paint (&surface->base,
-				   CAIRO_OPERATOR_SOURCE,
-				   &local_pattern.base,
-				   NULL);
-    _cairo_pattern_fini (&local_pattern.base);
+	_cairo_pattern_init_for_surface (&local_pattern, sub->target);
+	cairo_matrix_init_translate (&local_pattern.base.matrix,
+				     sub->extents.x, sub->extents.y);
+	local_pattern.base.filter = CAIRO_FILTER_NEAREST;
+	status = _cairo_surface_paint (&surface->base,
+				       CAIRO_OPERATOR_SOURCE,
+				       &local_pattern.base,
+				       NULL);
+	_cairo_pattern_fini (&local_pattern.base);
 
-    status = _cairo_gl_context_release (ctx, status);
-    if (unlikely (status)) {
-	cairo_surface_destroy (&surface->base);
-	return status;
+	status = _cairo_gl_context_release (ctx, status);
+	if (unlikely (status)) {
+	    cairo_surface_destroy (&surface->base);
+	    return status;
+	}
+
+	_cairo_surface_subsurface_set_snapshot (&sub->base, &surface->base);
     }
 
     attributes = &operand->texture.attributes;
