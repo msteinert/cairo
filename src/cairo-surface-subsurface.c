@@ -529,7 +529,9 @@ _cairo_surface_subsurface_set_snapshot (cairo_surface_t *surface,
 {
     cairo_surface_subsurface_t *ss = (cairo_surface_subsurface_t *) surface;
 
-    assert (ss->snapshot == NULL);
+    if (ss->snapshot)
+	_cairo_surface_detach_snapshot (ss->snapshot);
+
     ss->snapshot = cairo_surface_reference (snapshot);
 
     _cairo_surface_attach_snapshot (ss->target, &ss->base,

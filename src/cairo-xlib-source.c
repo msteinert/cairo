@@ -666,7 +666,7 @@ subsurface_source (cairo_xlib_surface_t *dst,
 	}
     }
 
-    if (sub->snapshot) {
+    if (sub->snapshot && sub->snapshot->type == CAIRO_SURFACE_TYPE_XLIB) {
 	src = (cairo_xlib_surface_t *) cairo_surface_reference (sub->snapshot);
 	source = &src->embedded_source;
     } else {

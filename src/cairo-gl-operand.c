@@ -86,7 +86,7 @@ _cairo_gl_subsurface_clone_operand_init (cairo_gl_operand_t *operand,
 
     sub = (cairo_surface_subsurface_t *) src->surface;
 
-    if (sub->snapshot) {
+    if (sub->snapshot && sub->snapshot->type == CAIRO_SURFACE_TYPE_GL) {
 	surface = (cairo_gl_surface_t *)
 	    cairo_surface_reference (sub->snapshot);
     } else {
