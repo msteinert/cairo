@@ -158,10 +158,9 @@ _cairo_gl_subsurface_operand_init (cairo_gl_operand_t *operand,
 
     sub = (cairo_surface_subsurface_t *) src->surface;
 
-    if (src->base.extend == CAIRO_EXTEND_NONE &&
-	(sample->x < 0 || sample->y < 0 ||
-	 sample->x + sample->width  > sub->extents.width ||
-	 sample->y + sample->height > sub->extents.height))
+    if (sample->x < 0 || sample->y < 0 ||
+	sample->x + sample->width  > sub->extents.width ||
+	sample->y + sample->height > sub->extents.height)
     {
 	return _cairo_gl_subsurface_clone_operand_init (operand, _src,
 							dst, sample, extents);
