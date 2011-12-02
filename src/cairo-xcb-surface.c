@@ -1149,7 +1149,7 @@ _cairo_xcb_screen_from_visual (xcb_connection_t *connection,
 
 /**
  * cairo_xcb_surface_create:
- * @xcb_connection: an XCB connection
+ * @connection: an XCB connection
  * @drawable: an XCB drawable
  * @visual: the visual to use for drawing to @drawable. The depth
  *          of the visual must match the depth of the drawable.
@@ -1179,7 +1179,7 @@ _cairo_xcb_screen_from_visual (xcb_connection_t *connection,
  * occurs. You can use cairo_surface_status() to check for this.
  **/
 cairo_surface_t *
-cairo_xcb_surface_create (xcb_connection_t  *xcb_connection,
+cairo_xcb_surface_create (xcb_connection_t  *connection,
 			  xcb_drawable_t     drawable,
 			  xcb_visualtype_t  *visual,
 			  int		     width,
@@ -1192,7 +1192,7 @@ cairo_xcb_surface_create (xcb_connection_t  *xcb_connection,
     xcb_render_pictformat_t xrender_format;
     int depth;
 
-    if (xcb_connection_has_error (xcb_connection))
+    if (xcb_connection_has_error (connection))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_WRITE_ERROR));
 
     if (unlikely (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX))
@@ -1200,7 +1200,7 @@ cairo_xcb_surface_create (xcb_connection_t  *xcb_connection,
     if (unlikely (width <= 0 || height <= 0))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
 
-    xcb_screen = _cairo_xcb_screen_from_visual (xcb_connection, visual, &depth);
+    xcb_screen = _cairo_xcb_screen_from_visual (connection, visual, &depth);
     if (unlikely (xcb_screen == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_VISUAL));
 
@@ -1223,7 +1223,7 @@ cairo_xcb_surface_create (xcb_connection_t  *xcb_connection,
     if (! _pixman_format_from_masks (&image_masks, &pixman_format))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
 
-    screen = _cairo_xcb_screen_get (xcb_connection, xcb_screen);
+    screen = _cairo_xcb_screen_get (connection, xcb_screen);
     if (unlikely (screen == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
@@ -1242,11 +1242,11 @@ slim_hidden_def (cairo_xcb_surface_create);
 
 /**
  * cairo_xcb_surface_create_for_bitmap:
- * @xcb_connection: an XCB connection
- * @xcb_screen: the XCB screen associated with @bitmap
+ * @connection: an XCB connection
+ * @screen: the XCB screen associated with @bitmap
  * @bitmap: an XCB drawable (a Pixmap with depth 1)
- * @width: the current width of @drawable
- * @height: the current height of @drawable
+ * @width: the current width of @bitmap
+ * @height: the current height of @bitmap
  *
  * Creates an XCB surface that draws to the given bitmap.
  * This will be drawn to as a %CAIRO_FORMAT_A1 object.
@@ -1260,15 +1260,15 @@ slim_hidden_def (cairo_xcb_surface_create);
  * occurs. You can use cairo_surface_status() to check for this.
  **/
 cairo_surface_t *
-cairo_xcb_surface_create_for_bitmap (xcb_connection_t	*xcb_connection,
-				     xcb_screen_t	*xcb_screen,
+cairo_xcb_surface_create_for_bitmap (xcb_connection_t	*connection,
+				     xcb_screen_t	*screen,
 				     xcb_pixmap_t	 bitmap,
 				     int		 width,
 				     int		 height)
 {
-    cairo_xcb_screen_t *screen;
+    cairo_xcb_screen_t *cairo_xcb_screen;
 
-    if (xcb_connection_has_error (xcb_connection))
+    if (xcb_connection_has_error (connection))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_WRITE_ERROR));
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
@@ -1276,13 +1276,13 @@ cairo_xcb_surface_create_for_bitmap (xcb_connection_t	*xcb_connection,
     if (unlikely (width <= 0 || height <= 0))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
 
-    screen = _cairo_xcb_screen_get (xcb_connection, xcb_screen);
-    if (unlikely (screen == NULL))
+    cairo_xcb_screen = _cairo_xcb_screen_get (connection, screen);
+    if (unlikely (cairo_xcb_screen == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    return _cairo_xcb_surface_create_internal (screen, bitmap, FALSE,
+    return _cairo_xcb_surface_create_internal (cairo_xcb_screen, bitmap, FALSE,
 					       PIXMAN_a1,
-					       screen->connection->standard_formats[CAIRO_FORMAT_A1],
+					       cairo_xcb_screen->connection->standard_formats[CAIRO_FORMAT_A1],
 					       width, height);
 }
 #if CAIRO_HAS_XLIB_XCB_FUNCTIONS
@@ -1321,18 +1321,18 @@ slim_hidden_def (cairo_xcb_surface_create_for_bitmap);
  * occurs. You can use cairo_surface_status() to check for this.
  **/
 cairo_surface_t *
-cairo_xcb_surface_create_with_xrender_format (xcb_connection_t	    *xcb_connection,
-					      xcb_screen_t	    *xcb_screen,
+cairo_xcb_surface_create_with_xrender_format (xcb_connection_t	    *connection,
+					      xcb_screen_t	    *screen,
 					      xcb_drawable_t	     drawable,
 					      xcb_render_pictforminfo_t *format,
 					      int		     width,
 					      int		     height)
 {
-    cairo_xcb_screen_t *screen;
+    cairo_xcb_screen_t *cairo_xcb_screen;
     cairo_format_masks_t image_masks;
     pixman_format_code_t pixman_format;
 
-    if (xcb_connection_has_error (xcb_connection))
+    if (xcb_connection_has_error (connection))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_WRITE_ERROR));
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
@@ -1364,11 +1364,11 @@ cairo_xcb_surface_create_with_xrender_format (xcb_connection_t	    *xcb_connecti
     if (! _pixman_format_from_masks (&image_masks, &pixman_format))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
 
-    screen = _cairo_xcb_screen_get (xcb_connection, xcb_screen);
-    if (unlikely (screen == NULL))
+    cairo_xcb_screen = _cairo_xcb_screen_get (connection, screen);
+    if (unlikely (cairo_xcb_screen == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    return _cairo_xcb_surface_create_internal (screen,
+    return _cairo_xcb_surface_create_internal (cairo_xcb_screen,
 					       drawable,
 					       FALSE,
 					       pixman_format,
