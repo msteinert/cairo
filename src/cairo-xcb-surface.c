@@ -229,7 +229,7 @@ _cairo_xcb_surface_create_shm_image (cairo_xcb_connection_t *connection,
 {
     cairo_surface_t *image;
     cairo_xcb_shm_info_t *shm_info;
-    cairo_status_t status;
+    cairo_int_status_t status;
     size_t stride;
 
     *shm_info_out = NULL;
