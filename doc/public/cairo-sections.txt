@@ -154,6 +154,15 @@ cairo_xlib_surface_get_xrender_format
 </SECTION>
 
 <SECTION>
+<FILE>cairo-xcb</FILE>
+CAIRO_HAS_XCB_SURFACE
+cairo_xcb_surface_create
+cairo_xcb_surface_create_for_bitmap
+cairo_xcb_surface_create_with_xrender_format
+cairo_xcb_surface_set_size
+</SECTION>
+
+<SECTION>
 <FILE>cairo-svg</FILE>
 CAIRO_HAS_SVG_SURFACE
 cairo_svg_surface_create
