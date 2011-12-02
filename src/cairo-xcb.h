@@ -75,6 +75,12 @@ cairo_xcb_surface_set_size (cairo_surface_t *surface,
 			    int		     width,
 			    int		     height);
 
+cairo_public void
+cairo_xcb_surface_set_drawable (cairo_surface_t *surface,
+				xcb_drawable_t	drawable,
+				int		width,
+				int		height);
+
 cairo_public xcb_connection_t *
 cairo_xcb_device_get_connection (cairo_device_t *device);
 

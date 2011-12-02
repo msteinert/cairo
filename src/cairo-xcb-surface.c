@@ -1430,3 +1430,71 @@ cairo_xcb_surface_set_size (cairo_surface_t *abstract_surface,
 #if CAIRO_HAS_XLIB_XCB_FUNCTIONS
 slim_hidden_def (cairo_xcb_surface_set_size);
 #endif
+
+/**
+ * cairo_xcb_surface_set_drawable:
+ * @surface: a #cairo_surface_t for the XCB backend
+ * @drawable: the new drawable of the surface
+ * @width: the new width of the surface
+ * @height: the new height of the surface
+ *
+ * Informs cairo of the new drawable and size of the XCB drawable underlying the
+ * surface.
+ *
+ **/
+void
+cairo_xcb_surface_set_drawable (cairo_surface_t	*abstract_surface,
+				xcb_drawable_t	drawable,
+				int            	width,
+				int             height)
+{
+    cairo_xcb_surface_t *surface;
+
+    if (unlikely (abstract_surface->status))
+	return;
+    if (unlikely (abstract_surface->finished)) {
+	_cairo_surface_set_error (abstract_surface,
+				  _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
+	return;
+    }
+
+
+    if (abstract_surface->type != CAIRO_SURFACE_TYPE_XCB) {
+	_cairo_surface_set_error (abstract_surface,
+				  _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
+	return;
+    }
+
+    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX || width <= 0 || height <= 0) {
+	_cairo_surface_set_error (abstract_surface,
+				  _cairo_error (CAIRO_STATUS_INVALID_SIZE));
+	return;
+    }
+
+    surface = (cairo_xcb_surface_t *) abstract_surface;
+
+    if (surface->owns_pixmap)
+	    return;
+
+    if (surface->drawable != drawable) {
+	    cairo_status_t status;
+	    status = _cairo_xcb_connection_acquire (surface->connection);
+	    if (unlikely (status))
+		    return;
+
+	    if (surface->picture != XCB_NONE) {
+		    _cairo_xcb_connection_render_free_picture (surface->connection,
+							       surface->picture);
+		    surface->picture = XCB_NONE;
+	    }
+
+	    _cairo_xcb_connection_release (surface->connection);
+
+	    surface->drawable = drawable;
+    }
+    surface->width  = width;
+    surface->height = height;
+}
+#if CAIRO_HAS_XLIB_XCB_FUNCTIONS
+slim_hidden_def (cairo_xcb_surface_set_drawable);
+#endif
