@@ -642,6 +642,12 @@ cairo_set_tolerance (cairo_t *cr, double tolerance);
  * @CAIRO_ANTIALIAS_SUBPIXEL: Perform antialiasing by taking
  *  advantage of the order of subpixel elements on devices
  *  such as LCD panels
+ * @CAIRO_ANTIALIAS_FAST: Hint that the backend should perform some
+ * antialiasing but prefer speed over quality, since 1.12
+ * @CAIRO_ANTIALIAS_GOOD: The backend should balance quality against
+ * performance, since 1.12
+ * @CAIRO_ANTIALIAS_BEST: Hint that the backend should render at the highest
+ * quality, sacrificing speed if necessary, since 1.12
  *
  * Specifies the type of antialiasing to do when rendering text or shapes.
  *
