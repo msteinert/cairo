@@ -201,6 +201,7 @@ CAIRO_MIME_TYPE_UNIQUE_ID
 cairo_surface_t
 cairo_content_t
 cairo_surface_create_similar
+cairo_surface_create_similar_image
 cairo_surface_create_for_rectangle
 cairo_surface_reference
 cairo_surface_destroy
@@ -226,6 +227,8 @@ cairo_surface_show_page
 cairo_surface_has_show_text_glyphs
 cairo_surface_set_mime_data
 cairo_surface_get_mime_data
+cairo_surface_map_to_image
+cairo_surface_unmap_image
 </SECTION>
 
 <SECTION>
