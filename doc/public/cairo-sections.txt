@@ -631,3 +631,16 @@ cairo_status_string
 CAIRO_FONT_TYPE_ATSUI
 cairo_atsui_font_face_create_for_atsu_font_id
 </SECTION>
+
+<SECTION>
+<FILE>cairo-script</FILE>
+cairo_script_create
+cairo_script_create_for_stream
+cairo_script_from_recording_surface
+cairo_script_get_mode
+cairo_script_mode_t
+cairo_script_set_mode
+cairo_script_surface_create
+cairo_script_surface_create_for_target
+cairo_script_write_comment
+</SECTION>
