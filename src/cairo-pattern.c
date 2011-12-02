@@ -2206,8 +2206,8 @@ _extend_range (double range[2], double value, cairo_bool_t valid)
     return TRUE;
 }
 
-/**
- * _cairo_radial_pattern_focus_is_inside
+/*
+ * _cairo_radial_pattern_focus_is_inside:
  *
  * Returns %TRUE if and only if the focus point exists and is
  * contained in one of the two extreme circles. This condition is
@@ -2219,7 +2219,7 @@ _extend_range (double range[2], double value, cairo_bool_t valid)
  * considered as contained in the circle, hence this function returns
  * %FALSE.
  *
- **/
+ */
 cairo_bool_t
 _cairo_radial_pattern_focus_is_inside (const cairo_radial_pattern_t *radial)
 {
