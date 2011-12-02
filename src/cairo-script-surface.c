@@ -42,6 +42,28 @@
  * without having to copy and hold the data in memory.
  */
 
+/**
+ * SECTION:cairo-script
+ * @Title: Script Surfaces
+ * @Short_Description: Rendering to replayable scripts
+ * @See_Also: #cairo_surface_t
+ *
+ * The script surface provides the ability to render to a native
+ * script that matches the cairo drawing model. The scripts can
+ * be replayed using tools under the util/cairo-script directoriy,
+ * or with cairo-perf-trace.
+ */
+
+/**
+ * CAIRO_HAS_SCRIPT_SURFACE:
+ *
+ * Defined if the script surface backend is available.
+ * The script surface backend is always built in since 1.12.
+ *
+ * @Since: 1.10
+ */
+
+
 #include "cairoint.h"
 
 #include "cairo-script.h"
@@ -3694,6 +3716,21 @@ _cairo_script_context_create (cairo_output_stream_t *stream)
     return &ctx->base;
 }
 
+/**
+ * cairo_script_create:
+ * @filename: the name (path) of the file to write the script to
+ *
+ * Creates a output device for emitting the script, used when
+ * creating the individual surfaces.
+ *
+ * Return value: a pointer to the newly created device. The caller
+ * owns the surface and should call cairo_device_destroy() when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" device if an error such as out of memory
+ * occurs. You can use cairo_device_status() to check for this.
+ **/
 cairo_device_t *
 cairo_script_create (const char *filename)
 {
@@ -3707,6 +3744,22 @@ cairo_script_create (const char *filename)
     return _cairo_script_context_create (stream);
 }
 
+/**
+ * cairo_script_create_for_stream:
+ * @write_func: callback function passed the bytes written to the script
+ * @closure: user data to be passed to the callback
+ *
+ * Creates a output device for emitting the script, used when
+ * creating the individual surfaces.
+ *
+ * Return value: a pointer to the newly created device. The caller
+ * owns the surface and should call cairo_device_destroy() when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" device if an error such as out of memory
+ * occurs. You can use cairo_device_status() to check for this.
+ **/
 cairo_device_t *
 cairo_script_create_for_stream (cairo_write_func_t	 write_func,
 				void			*closure)
@@ -3721,12 +3774,20 @@ cairo_script_create_for_stream (cairo_write_func_t	 write_func,
     return _cairo_script_context_create (stream);
 }
 
+/**
+ * cairo_script_write_comment:
+ * @script: the script (output device)
+ * @comment: the string to emit
+ * @len:the length of the sting to write, or -1 to use strlen()
+ *
+ * Emit a string verbatim into the script.
+ **/
 void
-cairo_script_write_comment (cairo_device_t *device,
+cairo_script_write_comment (cairo_device_t *script,
 			    const char *comment,
 			    int len)
 {
-    cairo_script_context_t *context = (cairo_script_context_t *) device;
+    cairo_script_context_t *context = (cairo_script_context_t *) script;
 
     if (len < 0)
 	len = strlen (comment);
@@ -3736,36 +3797,68 @@ cairo_script_write_comment (cairo_device_t *device,
     _cairo_output_stream_puts (context->stream, "\n");
 }
 
+/**
+ * cairo_script_set_mode:
+ * @script: The script (output device)
+ * @mode: the new mode
+ *
+ * Change the output mode of the script
+ **/
 void
-cairo_script_set_mode (cairo_device_t *device,
+cairo_script_set_mode (cairo_device_t *script,
 		       cairo_script_mode_t mode)
 {
-    cairo_script_context_t *context = (cairo_script_context_t *) device;
+    cairo_script_context_t *context = (cairo_script_context_t *) script;
 
     context->mode = mode;
 }
 
+/**
+ * cairo_script_get_mode:
+ * @script: The script (output device) to query
+ *
+ * Queries the script for its current output mode.
+ *
+ * Return value: the current output mode of the script
+ **/
 cairo_script_mode_t
-cairo_script_get_mode (cairo_device_t *device)
+cairo_script_get_mode (cairo_device_t *script)
 {
-    cairo_script_context_t *context = (cairo_script_context_t *) device;
+    cairo_script_context_t *context = (cairo_script_context_t *) script;
 
     return context->mode;
 }
 
+/**
+ * cairo_script_surface_create:
+ * @script: the script (output device)
+ * @content: the content of the surface
+ * @width: width in pixels
+ * @height: height in pixels
+ *
+ * Create a new surface that will emit its rendering through @script
+ *
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy() when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if an error such as out of memory
+ * occurs. You can use cairo_surface_status() to check for this.
+ **/
 cairo_surface_t *
-cairo_script_surface_create (cairo_device_t *device,
+cairo_script_surface_create (cairo_device_t *script,
 			     cairo_content_t content,
 			     double width,
 			     double height)
 {
     cairo_rectangle_t *extents, r;
 
-    if (unlikely (device->backend->type != CAIRO_DEVICE_TYPE_SCRIPT))
+    if (unlikely (script->backend->type != CAIRO_DEVICE_TYPE_SCRIPT))
 	return _cairo_surface_create_in_error (CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
 
-    if (unlikely (device->status))
-	return _cairo_surface_create_in_error (device->status);
+    if (unlikely (script->status))
+	return _cairo_surface_create_in_error (script->status);
 
     extents = NULL;
     if (width > 0 && height > 0) {
@@ -3774,24 +3867,40 @@ cairo_script_surface_create (cairo_device_t *device,
 	r.height = height;
 	extents = &r;
     }
-    return &_cairo_script_surface_create_internal ((cairo_script_context_t *) device,
+    return &_cairo_script_surface_create_internal ((cairo_script_context_t *) script,
 						   content, extents,
 						   NULL)->base;
 }
 slim_hidden_def (cairo_script_surface_create);
 
+/**
+ * cairo_script_surface_create_for_target:
+ * @script: the script (output device)
+ * @target: a target surface to wrap
+ *
+ * Create a pxoy surface that will render to @target and record
+ * the operations to @device.
+ *
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy() when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if an error such as out of memory
+ * occurs. You can use cairo_surface_status() to check for this.
+ **/
 cairo_surface_t *
-cairo_script_surface_create_for_target (cairo_device_t *device,
+cairo_script_surface_create_for_target (cairo_device_t *script,
 					cairo_surface_t *target)
 {
     cairo_rectangle_int_t extents;
     cairo_rectangle_t rect, *r;
 
-    if (unlikely (device->backend->type != CAIRO_DEVICE_TYPE_SCRIPT))
+    if (unlikely (script->backend->type != CAIRO_DEVICE_TYPE_SCRIPT))
 	return _cairo_surface_create_in_error (CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
 
-    if (unlikely (device->status))
-	return _cairo_surface_create_in_error (device->status);
+    if (unlikely (script->status))
+	return _cairo_surface_create_in_error (script->status);
 
     if (unlikely (target->status))
 	return _cairo_surface_create_in_error (target->status);
@@ -3803,24 +3912,33 @@ cairo_script_surface_create_for_target (cairo_device_t *device,
 	rect.height = extents.height;
 	r= &rect;
     }
-    return &_cairo_script_surface_create_internal ((cairo_script_context_t *) device,
+    return &_cairo_script_surface_create_internal ((cairo_script_context_t *) script,
 						   target->content, r,
 						   target)->base;
 }
 
+/**
+ * cairo_script_from_recording_surface:
+ * @script: the script (output device)
+ * @recording_surface: the recording surface to replay
+ *
+ * Converts the record operations in @recording_surface into a script.
+ *
+ * Return value: #CAIRO_STATUS_SUCCESS on successful completion or an error code.
+ **/
 cairo_status_t
-cairo_script_from_recording_surface (cairo_device_t *device,
+cairo_script_from_recording_surface (cairo_device_t *script,
 				     cairo_surface_t *recording_surface)
 {
     cairo_rectangle_t r, *extents;
     cairo_surface_t *surface;
     cairo_status_t status;
 
-    if (unlikely (device->backend->type != CAIRO_DEVICE_TYPE_SCRIPT))
+    if (unlikely (script->backend->type != CAIRO_DEVICE_TYPE_SCRIPT))
 	return _cairo_error (CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
 
-    if (unlikely (device->status))
-	return _cairo_error (device->status);
+    if (unlikely (script->status))
+	return _cairo_error (script->status);
 
     if (unlikely (recording_surface->status))
 	return recording_surface->status;
@@ -3832,7 +3950,7 @@ cairo_script_from_recording_surface (cairo_device_t *device,
     if (_cairo_recording_surface_get_bounds (recording_surface, &r))
 	extents = &r;
 
-    surface = &_cairo_script_surface_create_internal ((cairo_script_context_t *) device,
+    surface = &_cairo_script_surface_create_internal ((cairo_script_context_t *) script,
 						      recording_surface->content,
 						      extents,
 						      NULL)->base;
