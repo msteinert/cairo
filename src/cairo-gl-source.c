@@ -65,6 +65,9 @@ _cairo_gl_pattern_to_source (cairo_surface_t *dst,
     cairo_gl_source_t *source;
     cairo_int_status_t status;
 
+    if (pattern == NULL)
+	return _cairo_gl_white_source ();
+
     source = malloc (sizeof (*source));
     if (unlikely (source == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
