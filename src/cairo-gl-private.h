@@ -342,8 +342,6 @@ typedef struct _cairo_gl_font {
     cairo_list_t			link;
 } cairo_gl_font_t;
 
-cairo_private extern const cairo_surface_backend_t _cairo_gl_surface_backend;
-
 static cairo_always_inline GLenum
 _cairo_gl_get_error (void)
 {

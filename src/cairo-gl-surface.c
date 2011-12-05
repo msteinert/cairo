@@ -49,6 +49,8 @@
 #include "cairo-image-surface-private.h"
 #include "cairo-surface-backend-private.h"
 
+static const cairo_surface_backend_t _cairo_gl_surface_backend;
+
 static cairo_status_t
 _cairo_gl_surface_flush (void *abstract_surface);
 
@@ -379,6 +381,8 @@ _cairo_gl_surface_init (cairo_device_t *device,
 			cairo_content_t content,
 			int width, int height)
 {
+    assert (width > 0 && height > 0);
+
     _cairo_surface_init (&surface->base,
 			 &_cairo_gl_surface_backend,
 			 device,
@@ -401,7 +405,6 @@ _cairo_gl_surface_create_scratch_for_texture (cairo_gl_context_t   *ctx,
     cairo_gl_surface_t *surface;
 
     assert (width <= ctx->max_framebuffer_size && height <= ctx->max_framebuffer_size);
-
     surface = calloc (1, sizeof (cairo_gl_surface_t));
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
@@ -1233,7 +1236,7 @@ _cairo_gl_surface_glyphs (void			*surface,
 				     clip);
 }
 
-const cairo_surface_backend_t _cairo_gl_surface_backend = {
+static const cairo_surface_backend_t _cairo_gl_surface_backend = {
     CAIRO_SURFACE_TYPE_GL,
     _cairo_gl_surface_finish,
     _cairo_default_context_create,
