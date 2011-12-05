@@ -82,7 +82,6 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_context_t *ctx,
 				 cairo_scaled_glyph_t  *scaled_glyph)
 {
     cairo_image_surface_t *glyph_surface = scaled_glyph->surface;
-    cairo_gl_surface_t *cache_surface;
     cairo_gl_glyph_t *glyph_private;
     cairo_rtree_node_t *node = NULL;
     cairo_int_status_t status;
@@ -109,11 +108,9 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_context_t *ctx,
     if (status)
 	return status;
 
-    cache_surface = (cairo_gl_surface_t *) cache->pattern.surface;
-
     /* XXX: Make sure we use the mask texture. This should work automagically somehow */
     glActiveTexture (GL_TEXTURE1);
-    status = _cairo_gl_surface_draw_image (cache_surface,
+    status = _cairo_gl_surface_draw_image (cache->operand.texture.surface,
                                            glyph_surface,
                                            0, 0,
                                            glyph_surface->width, glyph_surface->height,
@@ -137,10 +134,10 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_context_t *ctx,
     glyph_private->p2.x = node->x + glyph_surface->width;
     glyph_private->p2.y = node->y + glyph_surface->height;
     if (! _cairo_gl_device_requires_power_of_two_textures (&ctx->base)) {
-	glyph_private->p1.x /= cache_surface->width;
-	glyph_private->p1.y /= cache_surface->height;
-	glyph_private->p2.x /= cache_surface->width;
-	glyph_private->p2.y /= cache_surface->height;
+	glyph_private->p1.x /= cache->operand.texture.surface->width;
+	glyph_private->p2.x /= cache->operand.texture.surface->width;
+	glyph_private->p1.y /= cache->operand.texture.surface->height;
+	glyph_private->p1.y /= cache->operand.texture.surface->height;
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -180,21 +177,22 @@ cairo_gl_context_get_glyph_cache (cairo_gl_context_t *ctx,
 	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
     }
 
-    if (unlikely (cache->pattern.surface == NULL)) {
+    if (unlikely (cache->operand.texture.surface == NULL)) {
         cairo_surface_t *surface;
+
         surface = cairo_gl_surface_create (&ctx->base,
                                            content,
                                            GLYPH_CACHE_WIDTH,
                                            GLYPH_CACHE_HEIGHT);
-        if (unlikely (surface->status)) {
-            cairo_status_t status = surface->status;
-            cairo_surface_destroy (surface);
-            return status;
-        }
+        if (unlikely (surface->status))
+            return surface->status;
+
         _cairo_surface_release_device_reference (surface);
-        _cairo_pattern_init_for_surface (&cache->pattern, surface);
-        cairo_surface_destroy (surface);
-        cache->pattern.base.has_component_alpha = (content == CAIRO_CONTENT_COLOR_ALPHA);
+
+	cache->operand = ((cairo_gl_surface_t *)surface)->operand;
+	cache->operand.texture.surface = (cairo_gl_surface_t *)surface;
+	cache->operand.texture.attributes.has_component_alpha =
+	    content == CAIRO_CONTENT_COLOR_ALPHA;
     }
 
     *cache_out = cache;
@@ -272,14 +270,8 @@ render_glyphs (cairo_gl_surface_t	*dst,
 
 	    last_format = scaled_glyph->surface->format;
 
-            status = _cairo_gl_composite_set_mask (&setup,
-                                                   &cache->pattern.base,
-						   &_cairo_unbounded_rectangle,
-						   &_cairo_unbounded_rectangle);
-            if (unlikely (status))
-                goto FINISH;
-
-	    *has_component_alpha |= cache->pattern.base.has_component_alpha;
+	    _cairo_gl_composite_set_mask_operand (&setup, &cache->operand);
+	    *has_component_alpha |= cache->operand.texture.attributes.has_component_alpha;
 
             /* XXX: _cairo_gl_composite_begin() acquires the context a
              * second time. Need to refactor this loop so this doesn't happen.
@@ -469,9 +461,5 @@ _cairo_gl_glyph_cache_fini (cairo_gl_context_t *ctx,
 			    cairo_gl_glyph_cache_t *cache)
 {
     _cairo_rtree_fini (&cache->rtree);
-
-    if (cache->pattern.surface) {
-        _cairo_pattern_fini (&cache->pattern.base);
-        cache->pattern.surface = NULL;
-    }
+    cairo_surface_destroy (&cache->operand.texture.surface->base);
 }

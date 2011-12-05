@@ -168,7 +168,7 @@ struct _cairo_gl_surface {
 
 typedef struct cairo_gl_glyph_cache {
     cairo_rtree_t rtree;
-    cairo_surface_pattern_t pattern;
+    cairo_gl_operand_t operand;
 } cairo_gl_glyph_cache_t;
 
 typedef enum cairo_gl_tex {
