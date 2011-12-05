@@ -1042,6 +1042,8 @@ _cairo_gl_surface_map_to_image (void      *abstract_surface,
 	return _cairo_surface_create_in_error (status);
     }
 
+    cairo_surface_set_device_offset (&image->base, -extents->x, -extents->y);
+
     /* This is inefficient, as we'd rather just read the thing without making
      * it the destination.  But then, this is the fallback path, so let's not
      * fall back instead.
