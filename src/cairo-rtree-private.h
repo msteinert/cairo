@@ -112,6 +112,11 @@ _cairo_rtree_evict_random (cairo_rtree_t	 *rtree,
 		           int			  height,
 		           cairo_rtree_node_t	**out);
 
+cairo_private void
+_cairo_rtree_foreach (cairo_rtree_t *rtree,
+		      void (*func)(cairo_rtree_node_t *, void *data),
+		      void *data);
+
 static inline void *
 _cairo_rtree_pin (cairo_rtree_t *rtree, cairo_rtree_node_t *node)
 {

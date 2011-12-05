@@ -368,6 +368,34 @@ _cairo_rtree_reset (cairo_rtree_t *rtree)
     cairo_list_add (&rtree->root.link, &rtree->available);
 }
 
+static void
+_cairo_rtree_node_foreach (cairo_rtree_node_t *node,
+			   void (*func)(cairo_rtree_node_t *, void *data),
+			   void *data)
+{
+    int i;
+
+    for (i = 0; i < 4 && node->children[i] != NULL; i++)
+	_cairo_rtree_node_foreach(node->children[i], func, data);
+
+    func(node, data);
+}
+
+void
+_cairo_rtree_foreach (cairo_rtree_t *rtree,
+		      void (*func)(cairo_rtree_node_t *, void *data),
+		      void *data)
+{
+    int i;
+
+    if (rtree->root.state == CAIRO_RTREE_NODE_OCCUPIED) {
+	func(&rtree->root, data);
+    } else {
+	for (i = 0; i < 4 && rtree->root.children[i] != NULL; i++)
+	    _cairo_rtree_node_foreach (rtree->root.children[i], func, data);
+    }
+}
+
 void
 _cairo_rtree_fini (cairo_rtree_t *rtree)
 {
