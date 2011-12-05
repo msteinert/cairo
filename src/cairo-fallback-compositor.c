@@ -55,8 +55,8 @@ _cairo_fallback_compositor_paint (const cairo_compositor_t	*_compositor,
 
     image = cairo_surface_map_to_image (extents->surface, &extents->unbounded);
     status = _cairo_surface_offset_paint (image,
-					  -extents->unbounded.x,
-					  -extents->unbounded.y,
+					  extents->unbounded.x,
+					  extents->unbounded.y,
 					  extents->op,
 					  &extents->source_pattern.base,
 					  extents->clip);
