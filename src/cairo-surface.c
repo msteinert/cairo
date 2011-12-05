@@ -380,7 +380,7 @@ _cairo_surface_has_snapshot (cairo_surface_t *surface,
     return NULL;
 }
 
-static void
+void
 _cairo_surface_begin_modification (cairo_surface_t *surface)
 {
     assert (surface->status == CAIRO_STATUS_SUCCESS);

@@ -1379,6 +1379,18 @@ cairo_xcb_surface_create_with_xrender_format (xcb_connection_t	    *connection,
 slim_hidden_def (cairo_xcb_surface_create_with_xrender_format);
 #endif
 
+/* This does the necessary fixup when a surface's drawable or size changed. */
+static void
+_drawable_changed (cairo_xcb_surface_t *surface)
+{
+    _cairo_surface_begin_modification (&surface->base);
+    _cairo_boxes_clear (&surface->fallback_damage);
+    cairo_surface_destroy (&surface->fallback->base);
+
+    surface->deferred_clear = FALSE;
+    surface->fallback = NULL;
+}
+
 /**
  * cairo_xcb_surface_set_size:
  * @surface: a #cairo_surface_t for the XCB backend
@@ -1394,6 +1406,9 @@ slim_hidden_def (cairo_xcb_surface_create_with_xrender_format);
  *
  * A pixmap can never change size, so it is never necessary to call
  * this function on a surface created for a pixmap.
+ *
+ * If cairo_surface_flush() wasn't called, some pending operations
+ * might be discarded.
  **/
 void
 cairo_xcb_surface_set_size (cairo_surface_t *abstract_surface,
@@ -1424,6 +1439,8 @@ cairo_xcb_surface_set_size (cairo_surface_t *abstract_surface,
     }
 
     surface = (cairo_xcb_surface_t *) abstract_surface;
+
+    _drawable_changed(surface);
     surface->width  = width;
     surface->height = height;
 }
@@ -1441,11 +1458,13 @@ slim_hidden_def (cairo_xcb_surface_set_size);
  * Informs cairo of the new drawable and size of the XCB drawable underlying the
  * surface.
  *
+ * If cairo_surface_flush() wasn't called, some pending operations
+ * might be discarded.
  **/
 void
-cairo_xcb_surface_set_drawable (cairo_surface_t	*abstract_surface,
-				xcb_drawable_t	drawable,
-				int            	width,
+cairo_xcb_surface_set_drawable (cairo_surface_t *abstract_surface,
+				xcb_drawable_t  drawable,
+				int             width,
 				int             height)
 {
     cairo_xcb_surface_t *surface;
@@ -1473,8 +1492,11 @@ cairo_xcb_surface_set_drawable (cairo_surface_t	*abstract_surface,
 
     surface = (cairo_xcb_surface_t *) abstract_surface;
 
+    /* XXX: and what about this case? */
     if (surface->owns_pixmap)
 	    return;
+
+    _drawable_changed (surface);
 
     if (surface->drawable != drawable) {
 	    cairo_status_t status;

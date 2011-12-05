@@ -561,6 +561,13 @@ test_cairo_xcb_surface_set_size (cairo_surface_t *surface)
     return CAIRO_TEST_SUCCESS;
 }
 
+static cairo_test_status_t
+test_cairo_xcb_surface_set_drawable (cairo_surface_t *surface)
+{
+    cairo_xcb_surface_set_drawable (surface, 0, 5, 5);
+    return CAIRO_TEST_SUCCESS;
+}
+
 #endif
 
 #if CAIRO_HAS_XLIB_SURFACE
@@ -704,6 +711,7 @@ struct {
 #endif
 #if CAIRO_HAS_XCB_SURFACE
     TEST (cairo_xcb_surface_set_size, CAIRO_SURFACE_TYPE_XCB, TRUE),
+    TEST (cairo_xcb_surface_set_drawable, CAIRO_SURFACE_TYPE_XCB, TRUE),
 #endif
 #if CAIRO_HAS_XLIB_SURFACE
     TEST (cairo_xlib_surface_set_size, CAIRO_SURFACE_TYPE_XLIB, TRUE),

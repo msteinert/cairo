@@ -1374,6 +1374,9 @@ _cairo_surface_has_snapshot (cairo_surface_t *surface,
 cairo_private void
 _cairo_surface_detach_snapshot (cairo_surface_t *snapshot);
 
+cairo_private void
+_cairo_surface_begin_modification (cairo_surface_t *surface);
+
 cairo_private_no_warn cairo_bool_t
 _cairo_surface_get_extents (cairo_surface_t         *surface,
 			    cairo_rectangle_int_t   *extents);
