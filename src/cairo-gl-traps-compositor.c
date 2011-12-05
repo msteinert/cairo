@@ -150,63 +150,6 @@ FAIL:
     return status;
 }
 
-static cairo_status_t
-_cairo_gl_source_finish (void *abstract_surface)
-{
-    cairo_gl_source_t *source = abstract_surface;
-
-    _cairo_gl_operand_destroy (&source->operand);
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static const cairo_surface_backend_t cairo_gl_source_backend = {
-    CAIRO_SURFACE_TYPE_GL,
-    _cairo_gl_source_finish,
-    NULL, /* read-only wrapper */
-};
-
-static cairo_surface_t *
-pattern_to_surface (cairo_surface_t *dst,
-		    const cairo_pattern_t *pattern,
-		    cairo_bool_t is_mask,
-		    const cairo_rectangle_int_t *extents,
-		    const cairo_rectangle_int_t *sample,
-		    int *src_x, int *src_y)
-{
-    cairo_gl_source_t *source;
-    cairo_int_status_t status;
-
-    if (pattern == NULL)
-	return _cairo_gl_white_source ();
-
-    source = malloc (sizeof (*source));
-    if (unlikely (source == NULL))
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
-
-    _cairo_surface_init (&source->base,
-			 &cairo_gl_source_backend,
-			 NULL, /* device */
-			 CAIRO_CONTENT_COLOR_ALPHA);
-
-    *src_x = *src_y = 0;
-    status = _cairo_gl_operand_init (&source->operand, pattern,
-				     (cairo_gl_surface_t *)dst,
-				     sample, extents);
-    if (unlikely (status)) {
-	cairo_surface_destroy (&source->base);
-	return _cairo_surface_create_in_error (status);
-    }
-
-    return &source->base;
-}
-
-static inline cairo_gl_operand_t *
-source_to_operand (cairo_surface_t *surface)
-{
-    cairo_gl_source_t *source = (cairo_gl_source_t *)surface;
-    return surface ? &source->operand : NULL;
-}
-
 static cairo_int_status_t
 composite_boxes (void			*_dst,
 		 cairo_operator_t	op,
@@ -544,7 +487,7 @@ _cairo_gl_traps_compositor_get (void)
 	compositor.acquire = acquire;
 	compositor.release = release;
 	compositor.set_clip_region = set_clip_region;
-	compositor.pattern_to_surface = pattern_to_surface;
+	compositor.pattern_to_surface = _cairo_gl_pattern_to_source;
 	compositor.draw_image_boxes = draw_image_boxes;
 	//compositor.copy_boxes = copy_boxes;
 	compositor.fill_boxes = fill_boxes;

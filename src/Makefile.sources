@@ -369,6 +369,7 @@ cairo_gl_sources = cairo-gl-composite.c \
 		   cairo-gl-msaa-compositor.c \
 		   cairo-gl-spans-compositor.c \
 		   cairo-gl-traps-compositor.c \
+		   cairo-gl-source.c \
 		   cairo-gl-surface.c
 
 cairo_glesv2_headers = $(cairo_gl_headers)

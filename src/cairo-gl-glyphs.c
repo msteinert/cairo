@@ -217,13 +217,6 @@ _cairo_gl_font_fini (cairo_scaled_font_private_t *_priv,
     free (priv);
 }
 
-static inline cairo_gl_operand_t *
-source_to_operand (cairo_surface_t *surface)
-{
-    cairo_gl_source_t *source = (cairo_gl_source_t *) surface;
-    return &source->operand;
-}
-
 static cairo_status_t
 render_glyphs (cairo_gl_surface_t	*dst,
 	       int dst_x, int dst_y,
