@@ -647,7 +647,11 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
 	return;
     }
 
-    ASSERT_NOT_REACHED;
+    cairo_xcb_surface_set_drawable (&surface->xcb->base, drawable, width, height);
+    if (unlikely (surface->xcb->base.status)) {
+	status = _cairo_surface_set_error (abstract_surface,
+		                           _cairo_error (surface->xcb->base.status));
+    }
 }
 
 Display *
