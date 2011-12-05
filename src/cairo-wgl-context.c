@@ -246,6 +246,9 @@ cairo_gl_surface_create_for_dc (cairo_device_t	*device,
     if (device->backend->type != CAIRO_DEVICE_TYPE_GL)
         return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
 
+    if (width <= 0 || height <= 0)
+        return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+
     surface = calloc (1, sizeof (cairo_wgl_surface_t));
     if (unlikely (surface == NULL))
         return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
