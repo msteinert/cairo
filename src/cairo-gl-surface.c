@@ -409,8 +409,8 @@ _cairo_gl_surface_create_scratch_for_texture (cairo_gl_context_t   *ctx,
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    _cairo_gl_surface_init (&ctx->base, surface, content, width, height);
     surface->tex = tex;
+    _cairo_gl_surface_init (&ctx->base, surface, content, width, height);
 
     /* Create the texture used to store the surface's data. */
     _cairo_gl_context_activate (ctx, CAIRO_GL_TEX_TEMP);
