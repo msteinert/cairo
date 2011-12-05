@@ -779,6 +779,7 @@ _cairo_gl_composite_init (cairo_gl_composite_t *setup,
 
     setup->dst = dst;
     setup->op = op;
+    setup->clip_region = dst->clip_region;
 
     return CAIRO_STATUS_SUCCESS;
 }

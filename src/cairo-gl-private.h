@@ -164,6 +164,8 @@ struct _cairo_gl_surface {
     GLuint depth_stencil; /* GL renderbuffer object for holding stencil buffer clip. */
     int owns_tex;
     cairo_bool_t needs_update;
+
+    cairo_region_t *clip_region;
 };
 
 typedef struct cairo_gl_glyph_cache {

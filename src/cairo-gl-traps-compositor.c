@@ -69,7 +69,7 @@ set_clip_region (void *_surface,
 {
     cairo_gl_surface_t *surface = _surface;
 
-    //surface->clip_region = region;
+    surface->clip_region = region;
     return CAIRO_STATUS_SUCCESS;
 }
 
