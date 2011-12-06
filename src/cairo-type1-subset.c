@@ -1094,7 +1094,7 @@ cairo_type1_font_subset_write_private_dict (cairo_type1_font_subset_t *font,
     const char *p, *subrs, *charstrings, *array_start, *array_end, *dict_start, *dict_end;
     const char *closefile_token;
     char buffer[32], *subr_count_end, *glyph_count_end;
-    int num_charstrings, length;
+    int length;
     const cairo_scaled_font_backend_t *backend;
     unsigned int i;
 
@@ -1160,7 +1160,7 @@ skip_subrs:
 
     /* Scan past /CharStrings and the integer following it. */
     p = charstrings + strlen ("/CharStrings");
-    num_charstrings = strtol (p, &glyph_count_end, 10);
+    strtol (p, &glyph_count_end, 10);
     if (p == glyph_count_end)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -1513,7 +1513,7 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
                           cairo_bool_t                   hex_encode)
 {
     cairo_type1_font_subset_t font;
-    cairo_status_t status, status_ignored;
+    cairo_status_t status;
     unsigned long length;
     unsigned int i;
     char buf[30];
@@ -1579,7 +1579,7 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
  fail2:
     free (type1_subset->base_font);
  fail1:
-    status_ignored = _cairo_type1_font_subset_fini (&font);
+    _cairo_type1_font_subset_fini (&font);
 
     return status;
 }
