@@ -2820,6 +2820,7 @@ _cairo_ps_surface_acquire_surface (cairo_ps_surface_t      *surface,
     cairo_surface_t	   *pad_image;
     int x = 0;
     int y = 0;
+    int w, h;
 
     surface->acquired_image = NULL;
     surface->image = NULL;
@@ -2866,32 +2867,42 @@ _cairo_ps_surface_acquire_surface (cairo_ps_surface_t      *surface,
 	    _cairo_box_from_rectangle (&box, extents);
 	    _cairo_matrix_transform_bounding_box_fixed (&pattern->base.matrix, &box, NULL);
 	    _cairo_box_round_to_rectangle (&box, &rect);
-	    x = -rect.x;
-	    y = -rect.y;
 
-	    pad_image =
-		_cairo_image_surface_create_with_pixman_format (NULL,
-								surface->acquired_image->pixman_format,
-								rect.width, rect.height,
-								0);
-	    if (pad_image->status) {
-		status = pad_image->status;
-		goto BAIL;
-	    }
+	    /* Check if image needs padding to fill extents. */
+	    w = surface->acquired_image->width;
+	    h = surface->acquired_image->height;
+	    if (_cairo_fixed_integer_ceil(box.p1.x) < 0 ||
+		_cairo_fixed_integer_ceil(box.p1.y) < 0 ||
+		_cairo_fixed_integer_floor(box.p2.y) > w ||
+		_cairo_fixed_integer_floor(box.p2.y) > h)
+	    {
+		x = -rect.x;
+		y = -rect.y;
 
-	    _cairo_pattern_init_for_surface (&pad_pattern, &surface->acquired_image->base);
-	    cairo_matrix_init_translate (&pad_pattern.base.matrix, -x, -y);
-	    pad_pattern.base.extend = CAIRO_EXTEND_PAD;
-	    status = _cairo_surface_paint (pad_image,
-					   CAIRO_OPERATOR_SOURCE,
-					   &pad_pattern.base,
-					   NULL);
-	    _cairo_pattern_fini (&pad_pattern.base);
-	    if (unlikely (status)) {
-		if (pad_image != &surface->acquired_image->base)
-		    cairo_surface_destroy (pad_image);
+		pad_image =
+		    _cairo_image_surface_create_with_pixman_format (NULL,
+								    surface->acquired_image->pixman_format,
+								    rect.width, rect.height,
+								    0);
+		if (pad_image->status) {
+		    status = pad_image->status;
+		    goto BAIL;
+		}
 
-		goto BAIL;
+		_cairo_pattern_init_for_surface (&pad_pattern, &surface->acquired_image->base);
+		cairo_matrix_init_translate (&pad_pattern.base.matrix, -x, -y);
+		pad_pattern.base.extend = CAIRO_EXTEND_PAD;
+		status = _cairo_surface_paint (pad_image,
+					       CAIRO_OPERATOR_SOURCE,
+					       &pad_pattern.base,
+					       NULL);
+		_cairo_pattern_fini (&pad_pattern.base);
+		if (unlikely (status)) {
+		    if (pad_image != &surface->acquired_image->base)
+			cairo_surface_destroy (pad_image);
+
+		    goto BAIL;
+		}
 	    }
 	}
 
