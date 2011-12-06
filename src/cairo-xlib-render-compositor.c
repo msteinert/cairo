@@ -217,7 +217,7 @@ copy_boxes (void *_dst,
 	}
 	assert (j == boxes->num_boxes);
 
-	XSetClipRectangles (dst->dpy, gc, 0, 0, rects, j, YSorted);
+	XSetClipRectangles (dst->dpy, gc, 0, 0, rects, j, Unsorted);
 
 	XCopyArea (dst->dpy, src->drawable, dst->drawable, gc,
 		   extents->x + dx, extents->y + dy,
