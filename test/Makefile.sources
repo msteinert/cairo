@@ -75,6 +75,7 @@ test_sources = \
 	composite-integer-translate-source.c		\
 	composite-integer-translate-over.c		\
 	composite-integer-translate-over-repeat.c	\
+	copy-disjoint.c					\
 	copy-path.c					\
 	coverage.c					\
 	create-for-stream.c				\
@@ -120,6 +121,7 @@ test_sources = \
 	fill-and-stroke-alpha.c				\
 	fill-and-stroke-alpha-add.c			\
 	fill-degenerate-sort-order.c			\
+	fill-disjoint.c					\
 	fill-empty.c					\
 	fill-image.c				        \
 	fill-missed-stop.c				\
