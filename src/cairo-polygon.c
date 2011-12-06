@@ -41,6 +41,38 @@
 #include "cairo-contour-private.h"
 #include "cairo-error-private.h"
 
+#define DEBUG_POLYGON 0
+
+#if DEBUG_POLYGON && !NDEBUG
+static void
+assert_last_edge_is_valid(cairo_polygon_t *polygon,
+			  const cairo_box_t *limit)
+{
+    cairo_edge_t *edge;
+    cairo_fixed_t x;
+
+    edge = &polygon->edges[polygon->num_edges-1];
+
+    assert (edge->bottom > edge->top);
+    assert (edge->top >= limit->p1.y);
+    assert (edge->bottom <= limit->p2.y);
+
+    x = _cairo_edge_compute_intersection_x_for_y (&edge->line.p1,
+						  &edge->line.p2,
+						  edge->top);
+    assert (x >= limit->p1.x);
+    assert (x <= limit->p2.x);
+
+    x = _cairo_edge_compute_intersection_x_for_y (&edge->line.p1,
+						  &edge->line.p2,
+						  edge->bottom);
+    assert (x >= limit->p1.x);
+    assert (x <= limit->p2.x);
+}
+#else
+#define assert_last_edge_is_valid(p, l)
+#endif
+
 static void
 _cairo_polygon_add_edge (cairo_polygon_t *polygon,
 			 const cairo_point_t *p1,
@@ -340,16 +372,19 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 	     * clip vertically by restricting top and bottom */
 
 	    _add_edge (polygon, p1, p2, top_y, bot_y, dir);
+	    assert_last_edge_is_valid (polygon, limits);
 	} else if (pright <= limits->p1.x) {
 	    /* Projection of the edge to the left of the box:
 	     * replace with the left side of the box (clipped top/bottom) */
 
 	    _add_edge (polygon, &limits->p1, &bot_left, top_y, bot_y, dir);
+	    assert_last_edge_is_valid (polygon, limits);
 	} else if (limits->p2.x <= pleft) {
 	    /* Projection of the edge to the right of the box:
 	     * replace with the right side of the box (clipped top/bottom) */
 
 	    _add_edge (polygon, &top_right, &limits->p2, top_y, bot_y, dir);
+	    assert_last_edge_is_valid (polygon, limits);
 	} else {
 	    /* The edge and the box intersect in a generic way */
 	    cairo_fixed_t left_y, right_y;
@@ -392,6 +427,7 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 		if (top_y < left_y) {
 		    _add_edge (polygon, &limits->p1, &bot_left,
 			       top_y, left_y, dir);
+		    assert_last_edge_is_valid (polygon, limits);
 		    top_y = left_y;
 		}
 
@@ -399,6 +435,7 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 		if (bot_y > right_y) {
 		    _add_edge (polygon, &top_right, &limits->p2,
 			       right_y, bot_y, dir);
+		    assert_last_edge_is_valid (polygon, limits);
 		    bot_y = right_y;
 		}
 	    } else {
@@ -406,6 +443,7 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 		if (top_y < right_y) {
 		    _add_edge (polygon, &top_right, &limits->p2,
 			       top_y, right_y, dir);
+		    assert_last_edge_is_valid (polygon, limits);
 		    top_y = right_y;
 		}
 
@@ -413,12 +451,15 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 		if (bot_y > left_y) {
 		    _add_edge (polygon, &limits->p1, &bot_left,
 			       left_y, bot_y, dir);
+		    assert_last_edge_is_valid (polygon, limits);
 		    bot_y = left_y;
 		}
 	    }
 
-	    if (top_y != bot_y)
+	    if (top_y != bot_y) {
 		_add_edge (polygon, p1, p2, top_y, bot_y, dir);
+		assert_last_edge_is_valid (polygon, limits);
+	    }
 	}
     }
 }
