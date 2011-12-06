@@ -2511,6 +2511,8 @@ _cairo_ps_surface_emit_jpeg_image (cairo_ps_surface_t    *surface,
     const unsigned char *mime_data;
     unsigned long mime_data_length;
     cairo_image_info_t info;
+    const char *colorspace;
+    const char *decode;
 
     cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_JPEG,
 				 &mime_data, &mime_data_length);
@@ -2523,8 +2525,22 @@ _cairo_ps_surface_emit_jpeg_image (cairo_ps_surface_t    *surface,
     if (unlikely (status))
 	return status;
 
-    if (info.num_components != 1 && info.num_components != 3)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    switch (info.num_components) {
+	case 1:
+	    colorspace = "/DeviceGray";
+	    decode = "0 1";
+	    break;
+	case 3:
+	    colorspace = "/DeviceRGB";
+	    decode =  "0 1 0 1 0 1";
+	    break;
+	case 4:
+	    colorspace = "/DeviceCMYK";
+	    decode =  "0 1 0 1 0 1 0 1";
+	    break;
+	default:
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     if (surface->use_string_datasource) {
 	/* Emit the image data as a base85-encoded string which will
@@ -2547,18 +2563,18 @@ _cairo_ps_surface_emit_jpeg_image (cairo_ps_surface_t    *surface,
     }
 
     _cairo_output_stream_printf (surface->stream,
-				 "/%s setcolorspace\n"
+				 "%s setcolorspace\n"
 				 "8 dict dup begin\n"
 				 "  /ImageType 1 def\n"
 				 "  /Width %d def\n"
 				 "  /Height %d def\n"
 				 "  /BitsPerComponent %d def\n"
 				 "  /Decode [ %s ] def\n",
-				 info.num_components == 1 ? "DeviceGray" : "DeviceRGB",
+				 colorspace,
 				 info.width,
 				 info.height,
 				 info.bits_per_component,
-                                 info.num_components == 1 ? "0 1" : "0 1 0 1 0 1");
+                                 decode);
 
     if (surface->use_string_datasource) {
 	_cairo_output_stream_printf (surface->stream,
