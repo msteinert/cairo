@@ -60,6 +60,7 @@ typedef struct _cairo_pdf_group_resources {
     cairo_array_t alphas;
     cairo_array_t smasks;
     cairo_array_t patterns;
+    cairo_array_t shadings;
     cairo_array_t xobjects;
     cairo_array_t fonts;
 } cairo_pdf_group_resources_t;
@@ -89,6 +90,7 @@ typedef struct _cairo_pdf_pattern {
     cairo_pattern_t *pattern;
     cairo_pdf_resource_t pattern_res;
     cairo_pdf_resource_t gstate_res;
+    cairo_bool_t is_shading;
 } cairo_pdf_pattern_t;
 
 typedef enum _cairo_pdf_operation {
