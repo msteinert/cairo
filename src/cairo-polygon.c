@@ -423,6 +423,9 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 	    top_left_to_bottom_right = (p1->x < p2->x) == (p1->y < p2->y);
 
 	    if (top_left_to_bottom_right) {
+		if (_cairo_edge_compute_intersection_x_for_y (p1, p2, left_y) < limits->p1.x)
+		    left_y++;
+
 		left_y = MIN (left_y, bot_y);
 		if (top_y < left_y) {
 		    _add_edge (polygon, &limits->p1, &bot_left,
@@ -430,6 +433,9 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 		    assert_last_edge_is_valid (polygon, limits);
 		    top_y = left_y;
 		}
+
+		if (_cairo_edge_compute_intersection_x_for_y (p1, p2, right_y) > limits->p1.y)
+		    right_y--;
 
 		right_y = MAX (right_y, top_y);
 		if (bot_y > right_y) {
@@ -439,6 +445,9 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 		    bot_y = right_y;
 		}
 	    } else {
+		if (_cairo_edge_compute_intersection_x_for_y (p1, p2, right_y) > limits->p2.x)
+		    right_y++;
+
 		right_y = MIN (right_y, bot_y);
 		if (top_y < right_y) {
 		    _add_edge (polygon, &top_right, &limits->p2,
@@ -446,6 +455,9 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 		    assert_last_edge_is_valid (polygon, limits);
 		    top_y = right_y;
 		}
+
+		if (_cairo_edge_compute_intersection_x_for_y (p1, p2, left_y) < limits->p1.x)
+		    left_y--;
 
 		left_y = MAX (left_y, top_y);
 		if (bot_y > left_y) {
