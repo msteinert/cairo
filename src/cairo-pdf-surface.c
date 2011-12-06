@@ -3238,11 +3238,27 @@ _cairo_pdf_surface_emit_repeating_function (cairo_pdf_surface_t      *surface,
 
 static cairo_status_t
 cairo_pdf_surface_emit_transparency_group (cairo_pdf_surface_t  *surface,
+					   cairo_pdf_pattern_t  *pdf_pattern,
 					   cairo_pdf_resource_t  gstate_resource,
 					   cairo_pdf_resource_t  gradient_mask)
 {
     cairo_pdf_resource_t smask_resource;
     cairo_status_t status;
+    char buf[100];
+
+    if (pdf_pattern->is_shading) {
+	snprintf(buf, sizeof(buf),
+		 "         /Shading\n"
+		 "            << /sh%d %d 0 R >>\n",
+		 gradient_mask.id,
+		 gradient_mask.id);
+    } else {
+	snprintf(buf, sizeof(buf),
+		 "         /Pattern\n"
+		 "            << /p%d %d 0 R >>\n",
+		 gradient_mask.id,
+		 gradient_mask.id);
+    }
 
     status = _cairo_pdf_surface_open_stream (surface,
 					     NULL,
@@ -3255,8 +3271,7 @@ cairo_pdf_surface_emit_transparency_group (cairo_pdf_surface_t  *surface,
 					     "      << /ExtGState\n"
 					     "            << /a0 << /ca 1 /CA 1 >>"
 					     "      >>\n"
-					     "         /Pattern\n"
-					     "            << /p%d %d 0 R >>\n"
+					     "%s"
 					     "      >>\n"
 					     "   /Group\n"
 					     "      << /Type /Group\n"
@@ -3265,24 +3280,29 @@ cairo_pdf_surface_emit_transparency_group (cairo_pdf_surface_t  *surface,
 					     "      >>\n",
 					     surface->width,
 					     surface->height,
-					     gradient_mask.id,
-					     gradient_mask.id);
+					     buf);
     if (unlikely (status))
 	return status;
 
-    _cairo_output_stream_printf (surface->output,
-                                 "q\n"
-                                 "/a0 gs\n"
-                                 "/Pattern cs /p%d scn\n"
-                                 "0 0 %f %f re\n"
-                                 "f\n"
-                                 "Q\n",
-                                 gradient_mask.id,
-                                 surface->width,
-                                 surface->height);
+    if (pdf_pattern->is_shading) {
+	_cairo_output_stream_printf (surface->output,
+				     "/a0 gs /sh%d sh\n",
+				     gradient_mask.id);
+    } else {
+	_cairo_output_stream_printf (surface->output,
+				     "q\n"
+				     "/a0 gs\n"
+				     "/Pattern cs /p%d scn\n"
+				     "0 0 %f %f re\n"
+				     "f\n"
+				     "Q\n",
+				     gradient_mask.id,
+				     surface->width,
+				     surface->height);
+    }
 
-     status = _cairo_pdf_surface_close_stream (surface);
-     if (unlikely (status))
+    status = _cairo_pdf_surface_close_stream (surface);
+    if (unlikely (status))
 	return status;
 
     smask_resource = _cairo_pdf_surface_new_object (surface);
@@ -3522,11 +3542,8 @@ _cairo_pdf_surface_emit_gradient (cairo_pdf_surface_t    *surface,
 					    &pat_to_pdf, &start, &end, domain,
 					    "/DeviceGray", alpha_function);
 
-        status = _cairo_pdf_surface_add_pattern (surface, mask_resource);
-        if (unlikely (status))
-            return status;
-
 	status = cairo_pdf_surface_emit_transparency_group (surface,
+							    pdf_pattern,
 						            pdf_pattern->gstate_res,
 							    mask_resource);
 	if (unlikely (status))
@@ -3671,6 +3688,7 @@ _cairo_pdf_surface_emit_mesh_pattern (cairo_pdf_surface_t    *surface,
 				     res.id);
 
 	status = cairo_pdf_surface_emit_transparency_group (surface,
+							    pdf_pattern,
 						            pdf_pattern->gstate_res,
 							    mask_resource);
 	if (unlikely (status))
@@ -3825,8 +3843,6 @@ _cairo_pdf_surface_paint_gradient (cairo_pdf_surface_t         *surface,
     if (unlikely (status))
 	return status;
 
-    assert (gstate_res.id == 0);
-
     pat_to_pdf = source->matrix;
     status = cairo_matrix_invert (&pat_to_pdf);
     /* cairo_pattern_set_matrix ensures the matrix is invertible */
@@ -3845,19 +3861,29 @@ _cairo_pdf_surface_paint_gradient (cairo_pdf_surface_t         *surface,
 				     pat_to_pdf.x0, pat_to_pdf.y0);
     }
 
-    status = _cairo_pdf_surface_add_alpha (surface, 1.0, &alpha);
-    if (unlikely (status))
-	return status;
-
     status = _cairo_pdf_surface_add_shading (surface, shading_res);
     if (unlikely (status))
 	return status;
 
+    if (gstate_res.id != 0) {
+	status = _cairo_pdf_surface_add_smask (surface, gstate_res);
+	if (unlikely (status))
+	    return status;
 
-    _cairo_output_stream_printf (surface->output,
-				 "/a%d gs /sh%d sh\n",
-				 alpha,
-				 shading_res.id);
+	_cairo_output_stream_printf (surface->output,
+				     "/s%d gs /sh%d sh\n",
+				     gstate_res.id,
+				     shading_res.id);
+    } else {
+	status = _cairo_pdf_surface_add_alpha (surface, 1.0, &alpha);
+	if (unlikely (status))
+	    return status;
+
+	_cairo_output_stream_printf (surface->output,
+				     "/a%d gs /sh%d sh\n",
+				     alpha,
+				     shading_res.id);
+    }
 
     return status;
 }
@@ -3891,8 +3917,6 @@ _cairo_pdf_surface_paint_pattern (cairo_pdf_surface_t          *surface,
 static cairo_bool_t
 _can_paint_pattern (const cairo_pattern_t *pattern)
 {
-    double min_alpha;
-
     switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
 	return FALSE;
@@ -3903,8 +3927,7 @@ _can_paint_pattern (const cairo_pattern_t *pattern)
 
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
-	_cairo_pattern_alpha_range (pattern, &min_alpha, NULL);
-	return CAIRO_ALPHA_IS_OPAQUE (min_alpha);
+	return TRUE;
 
     case CAIRO_PATTERN_TYPE_MESH:
 	return FALSE;
