@@ -1161,19 +1161,17 @@ _cairo_gl_surface_paint (void			*surface,
 			 const cairo_pattern_t	*source,
 			 const cairo_clip_t	*clip)
 {
-#if 0
     /* simplify the common case of clearing the surface */
     if (clip == NULL) {
         if (op == CAIRO_OPERATOR_CLEAR)
-            return _cairo_gl_surface_clear (abstract_surface, CAIRO_COLOR_TRANSPARENT);
+            return _cairo_gl_surface_clear (surface, CAIRO_COLOR_TRANSPARENT);
        else if (source->type == CAIRO_PATTERN_TYPE_SOLID &&
                 (op == CAIRO_OPERATOR_SOURCE ||
                  (op == CAIRO_OPERATOR_OVER && _cairo_pattern_is_opaque_solid (source)))) {
-            return _cairo_gl_surface_clear (abstract_surface,
+            return _cairo_gl_surface_clear (surface,
                                             &((cairo_solid_pattern_t *) source)->color);
         }
     }
-#endif
 
     return _cairo_compositor_paint (get_compositor (surface), surface,
 				    op, source, clip);
