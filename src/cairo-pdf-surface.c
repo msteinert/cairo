@@ -2330,6 +2330,7 @@ _cairo_pdf_surface_emit_jpeg_image (cairo_pdf_surface_t   *surface,
     const unsigned char *mime_data;
     unsigned long mime_data_length;
     cairo_image_info_t info;
+    const char *colorspace;
 
     cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_JPEG,
 				 &mime_data, &mime_data_length);
@@ -2342,8 +2343,19 @@ _cairo_pdf_surface_emit_jpeg_image (cairo_pdf_surface_t   *surface,
     if (unlikely (status))
 	return status;
 
-    if (info.num_components != 1 && info.num_components != 3)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    switch (info.num_components) {
+	case 1:
+	    colorspace = "/DeviceGray";
+	    break;
+	case 3:
+	    colorspace = "/DeviceRGB";
+	    break;
+	case 4:
+	    colorspace = "/DeviceCMYK";
+	    break;
+	default:
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     status = _cairo_pdf_surface_open_stream (surface,
 					     &res,
@@ -2357,7 +2369,7 @@ _cairo_pdf_surface_emit_jpeg_image (cairo_pdf_surface_t   *surface,
 					     "   /Filter /DCTDecode\n",
 					     info.width,
 					     info.height,
-					     info.num_components == 1 ? "/DeviceGray" : "/DeviceRGB",
+					     colorspace,
 					     info.bits_per_component);
     if (unlikely (status))
 	return status;
