@@ -614,6 +614,7 @@ void
 _cairo_gl_composite_flush (cairo_gl_context_t *ctx)
 {
     unsigned int count;
+    int i;
 
     if (_cairo_gl_context_is_flushed (ctx))
         return;
@@ -637,6 +638,9 @@ _cairo_gl_composite_flush (cairo_gl_context_t *ctx)
     } else {
         _cairo_gl_composite_draw (ctx, count);
     }
+
+    for (i = 0; i < ARRAY_LENGTH (&ctx->glyph_cache); i++)
+	_cairo_gl_glyph_cache_unlock (&ctx->glyph_cache[i]);
 }
 
 static void

@@ -54,9 +54,28 @@
 typedef struct _cairo_gl_glyph {
     cairo_rtree_node_t node;
     cairo_scaled_glyph_private_t base;
+    cairo_scaled_glyph_t *glyph;
     cairo_gl_glyph_cache_t *cache;
     struct { float x, y; } p1, p2;
 } cairo_gl_glyph_t;
+
+static void
+_cairo_gl_node_destroy (cairo_rtree_node_t *node)
+{
+    cairo_gl_glyph_t *priv = cairo_container_of (node, cairo_gl_glyph_t, node);
+    cairo_scaled_glyph_t *glyph;
+
+    glyph = priv->glyph;
+    if (glyph == NULL)
+	    return;
+
+    if (glyph->dev_private_key == priv->cache) {
+	    glyph->dev_private = NULL;
+	    glyph->dev_private_key = NULL;
+    }
+    cairo_list_del (&priv->base.link);
+    priv->glyph = NULL;
+}
 
 static void
 _cairo_gl_glyph_fini (cairo_scaled_glyph_private_t *glyph_private,
@@ -67,13 +86,15 @@ _cairo_gl_glyph_fini (cairo_scaled_glyph_private_t *glyph_private,
 						 cairo_gl_glyph_t,
 						 base);
 
-    cairo_list_del (&glyph_private->link);
+    assert (priv->glyph);
 
-    priv->node.owner = NULL;
-    if (! priv->node.pinned) {
-	/* XXX thread-safety? Probably ok due to the frozen scaled-font. */
+    _cairo_gl_node_destroy (&priv->node);
+
+    /* XXX thread-safety? Probably ok due to the frozen scaled-font. */
+    if (! priv->node.pinned)
 	_cairo_rtree_node_remove (&priv->cache->rtree, &priv->node);
-    }
+
+    assert (priv->glyph == NULL);
 }
 
 static cairo_int_status_t
@@ -119,11 +140,11 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_context_t *ctx,
 
     glyph_private = (cairo_gl_glyph_t *) node;
     glyph_private->cache = cache;
+    glyph_private->glyph = scaled_glyph;
     _cairo_scaled_glyph_attach_private (scaled_glyph,
 					&glyph_private->base,
 					cache,
 					_cairo_gl_glyph_fini);
-    glyph_private->node.owner = (void*)scaled_glyph;
 
     scaled_glyph->dev_private = glyph_private;
     scaled_glyph->dev_private_key = cache;
@@ -196,12 +217,6 @@ cairo_gl_context_get_glyph_cache (cairo_gl_context_t *ctx,
 
     *cache_out = cache;
     return CAIRO_STATUS_SUCCESS;
-}
-
-static void
-_cairo_gl_glyph_cache_unlock (cairo_gl_glyph_cache_t *cache)
-{
-    _cairo_rtree_unpin (&cache->rtree);
 }
 
 static cairo_status_t
@@ -445,26 +460,14 @@ _cairo_gl_glyph_cache_init (cairo_gl_glyph_cache_t *cache)
 		       GLYPH_CACHE_WIDTH,
 		       GLYPH_CACHE_HEIGHT,
 		       GLYPH_CACHE_MIN_SIZE,
-		       sizeof (cairo_gl_glyph_t));
-}
-
-static void
-_cairo_gl_glyph_cache_fini_glyph (cairo_rtree_node_t *node,
-				  void *cache)
-{
-    cairo_gl_glyph_t *glyph_private = (cairo_gl_glyph_t *) node;
-    if (glyph_private->node.owner) {
-	cairo_list_del (&glyph_private->base.link);
-	glyph_private->node.owner = NULL;
-    }
+		       sizeof (cairo_gl_glyph_t),
+		       _cairo_gl_node_destroy);
 }
 
 void
 _cairo_gl_glyph_cache_fini (cairo_gl_context_t *ctx,
 			    cairo_gl_glyph_cache_t *cache)
 {
-    _cairo_rtree_foreach (&cache->rtree,
-			  _cairo_gl_glyph_cache_fini_glyph, NULL);
     _cairo_rtree_fini (&cache->rtree);
     cairo_surface_destroy (&cache->surface->base);
 }
