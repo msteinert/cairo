@@ -176,7 +176,7 @@ _draw_clip_to_stencil_buffer (cairo_gl_context_t	*ctx,
 
     assert (! _cairo_clip_is_all_clipped (clip));
 
-    if (! setup->dst->depth_stencil)
+    if (! _cairo_gl_ensure_stencil (ctx, setup->dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     glDepthMask (GL_TRUE);

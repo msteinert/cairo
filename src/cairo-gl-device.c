@@ -295,24 +295,6 @@ _cairo_gl_ensure_framebuffer (cairo_gl_context_t *ctx,
     glReadBuffer (GL_COLOR_ATTACHMENT0);
 #endif
 
-    if (ctx->has_packed_depth_stencil) {
-#if CAIRO_HAS_GL_SURFACE
-	GLenum internal_format = GL_DEPTH_STENCIL;
-#elif CAIRO_HAS_GLESV2_SURFACE
-	GLenum internal_format = GL_DEPTH24_STENCIL8_OES,
-#endif
-
-	dispatch->GenRenderbuffers (1, &surface->depth_stencil);
-	dispatch->BindRenderbuffer (GL_RENDERBUFFER, surface->depth_stencil);
-	dispatch->RenderbufferStorage (GL_RENDERBUFFER, internal_format,
-				       surface->width, surface->height);
-
-	ctx->dispatch.FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
-					       GL_RENDERBUFFER, surface->depth_stencil);
-	ctx->dispatch.FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-					       GL_RENDERBUFFER, surface->depth_stencil);
-    }
-
     status = dispatch->CheckFramebufferStatus (GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
 	const char *str;
@@ -331,6 +313,43 @@ _cairo_gl_ensure_framebuffer (cairo_gl_context_t *ctx,
 		 "destination is framebuffer incomplete: %s [%#x]\n",
 		 str, status);
     }
+}
+
+cairo_bool_t
+_cairo_gl_ensure_stencil (cairo_gl_context_t *ctx,
+			  cairo_gl_surface_t *surface)
+{
+	cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
+#if CAIRO_HAS_GL_SURFACE
+	GLenum internal_format = GL_DEPTH_STENCIL;
+#elif CAIRO_HAS_GLESV2_SURFACE
+	GLenum internal_format = GL_DEPTH24_STENCIL8_OES;
+#endif
+
+	if (surface->depth_stencil)
+		return TRUE;
+
+	if (! ctx->has_packed_depth_stencil)
+		return FALSE;
+
+	_cairo_gl_ensure_framebuffer (ctx, surface);
+
+	dispatch->GenRenderbuffers (1, &surface->depth_stencil);
+	dispatch->BindRenderbuffer (GL_RENDERBUFFER, surface->depth_stencil);
+	dispatch->RenderbufferStorage (GL_RENDERBUFFER, internal_format,
+				       surface->width, surface->height);
+
+	ctx->dispatch.FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
+					       GL_RENDERBUFFER, surface->depth_stencil);
+	ctx->dispatch.FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+					       GL_RENDERBUFFER, surface->depth_stencil);
+	if (dispatch->CheckFramebufferStatus (GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		ctx->dispatch.DeleteRenderbuffers (1, &surface->depth_stencil);
+		surface->depth_stencil = 0;
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 /*

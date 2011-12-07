@@ -440,6 +440,10 @@ _cairo_gl_context_activate (cairo_gl_context_t *ctx,
 cairo_private cairo_bool_t
 _cairo_gl_operator_is_supported (cairo_operator_t op);
 
+cairo_private cairo_bool_t
+_cairo_gl_ensure_stencil (cairo_gl_context_t *ctx,
+			  cairo_gl_surface_t *surface);
+
 cairo_private cairo_status_t
 _cairo_gl_composite_init (cairo_gl_composite_t *setup,
                           cairo_operator_t op,
