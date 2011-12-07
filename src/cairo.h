@@ -2479,26 +2479,96 @@ cairo_recording_surface_get_extents (cairo_surface_t *surface,
 
 /* raster-source pattern (callback) functions */
 
+/**
+ * cairo_raster_source_acquire_func_t:
+ * @pattern: the pattern being rendered from
+ * @callback_data: the user data supplied during creation
+ * @target: the rendering target surface
+ * @extents: rectangular region of interest in pixels in sample space
+ *
+ * #cairo_raster_source_acquire_func_t is the type of function which is
+ * called when a pattern is being rendered from. It should create a surface
+ * that provides the pixel data for the region of interest as defined by
+ * extents, though the surface itself does not have to be limited to that
+ * area. For convenience the surface should probably be of image type,
+ * created with cairo_surface_create_similar_image() for the target (which
+ * enables the number of copies to be reduced during transfer to the
+ * device). Anothjr option, might be to return a similar surface to the
+ * target for explicit handling by the application of a set of cached sources
+ * on the device. The region of sample data provided should be defined using
+ * cairo_surface_set_device_offset() to specify the top-left corner of the
+ * sample data (along with width and height of the surface).
+ *
+ * Returns: a #cairo_surface_t
+ *
+ * Since: 1.12
+ **/
 typedef cairo_surface_t *
 (*cairo_raster_source_acquire_func_t) (cairo_pattern_t *pattern,
 				       void *callback_data,
 				       cairo_surface_t *target,
 				       const cairo_rectangle_int_t *extents);
 
+/**
+ * cairo_raster_source_release_func_t:
+ * @pattern: the pattern being rendered from
+ * @callback_data: the user data supplied during creation
+ * @surface: the surface created during acquire
+ *
+ * #cairo_raster_source_release_func_t is the type of function which is
+ * called when the pixel data is no longer being access by the pattern
+ * for the rendering operation. Typically this function will simply
+ * destroy the surface created during acquire.
+ *
+ * Since: 1.12
+ **/
 typedef void
 (*cairo_raster_source_release_func_t) (cairo_pattern_t *pattern,
 				       void *callback_data,
 				       cairo_surface_t *surface);
 
+/**
+ * cairo_raster_source_snapshot_func_t:
+ * @pattern: the pattern being rendered from
+ * @callback_data: the user data supplied during creation
+ *
+ * #cairo_raster_source_release_func_t is the type of function which is
+ * called when the pixel data needs to be preserved for later use
+ * during printing. This pattern will be accessed again later, and it
+ * is expected to provide the pixel data that was current at the time
+ * of snapshotting.
+ *
+ * Since: 1.12
+ **/
 typedef cairo_status_t
 (*cairo_raster_source_snapshot_func_t) (cairo_pattern_t *pattern,
 					void *callback_data);
 
+/**
+ * cairo_raster_source_copy_func_t:
+ * @pattern: the pattern being rendered from
+ * @callback_data: the user data supplied during creation
+ *
+ * #cairo_raster_source_copy_func_t is the type of function which is
+ * called when the pattern gets copied as a normal part of rendering.
+ *
+ * Since: 1.12
+ **/
 typedef cairo_status_t
 (*cairo_raster_source_copy_func_t) (cairo_pattern_t *pattern,
 				    void *callback_data,
 				    const cairo_pattern_t *other);
 
+/**
+ * cairo_raster_source_finish_func_t:
+ * @pattern: the pattern being rendered from
+ * @callback_data: the user data supplied during creation
+ *
+ * #cairo_raster_source_copy_func_t is the type of function which is
+ * called when the pattern (or a copy thereof) is no longer required.
+ *
+ * Since: 1.12
+ **/
 typedef void
 (*cairo_raster_source_finish_func_t) (cairo_pattern_t *pattern,
 				      void *callback_data);

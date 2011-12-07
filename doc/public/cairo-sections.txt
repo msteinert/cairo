@@ -323,6 +323,26 @@ cairo_pattern_get_user_data
 </SECTION>
 
 <SECTION>
+<FILE>cairo-raster-source</FILE>
+cairo_pattern_create_raster_source
+cairo_raster_source_pattern_set_callback_data
+cairo_raster_source_pattern_get_callback_data
+cairo_raster_source_pattern_set_acquire
+cairo_raster_source_pattern_get_acquire
+cairo_raster_source_pattern_set_snapshot
+cairo_raster_source_pattern_get_snapshot
+cairo_raster_source_pattern_set_copy
+cairo_raster_source_pattern_get_copy
+cairo_raster_source_pattern_set_finish
+cairo_raster_source_pattern_get_finish
+cairo_raster_source_acquire_func_t
+cairo_raster_source_release_func_t
+cairo_raster_source_snapshot_func_t
+cairo_raster_source_copy_func_t
+cairo_raster_source_finish_func_t
+</SECTION>
+
+<SECTION>
 <FILE>cairo-matrix</FILE>
 cairo_matrix_t
 cairo_matrix_init
