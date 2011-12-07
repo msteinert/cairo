@@ -229,9 +229,13 @@ render_glyphs (cairo_gl_surface_t	*dst,
     if (unlikely (status))
 	goto FINISH;
 
-    _cairo_gl_composite_set_source_operand (&setup,
-					    source_to_operand (source));
+    if (source == NULL) {
+	    _cairo_gl_composite_set_solid_source (&setup, CAIRO_COLOR_WHITE);
+    } else {
+	    _cairo_gl_composite_set_source_operand (&setup,
+						    source_to_operand (source));
 
+    }
     for (i = 0; i < info->num_glyphs; i++) {
 	cairo_scaled_glyph_t *scaled_glyph;
 	cairo_gl_glyph_t *glyph;
@@ -344,8 +348,7 @@ render_glyphs_via_mask (cairo_gl_surface_t *dst,
     }
 
     status = render_glyphs ((cairo_gl_surface_t *) mask, 0, 0,
-			    CAIRO_OPERATOR_ADD,
-			    _cairo_gl_white_source (),
+			    CAIRO_OPERATOR_ADD, NULL,
 			    info, &has_component_alpha);
     if (likely (status == CAIRO_STATUS_SUCCESS)) {
 	cairo_surface_pattern_t mask_pattern;
