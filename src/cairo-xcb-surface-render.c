@@ -3546,7 +3546,7 @@ _cairo_xcb_surface_render_stroke_via_mask (cairo_xcb_surface_t		*dst,
 
     x = extents->bounded.x;
     y = extents->bounded.y;
-    image = _cairo_xcb_surface_create_similar_image (dst, CAIRO_CONTENT_ALPHA,
+    image = _cairo_xcb_surface_create_similar_image (dst, CAIRO_FORMAT_A8,
 						     extents->bounded.width,
 						     extents->bounded.height);
     if (unlikely (image->status))
@@ -3687,8 +3687,7 @@ _cairo_xcb_surface_render_fill_via_mask (cairo_xcb_surface_t	*dst,
 
     x = extents->bounded.x;
     y = extents->bounded.y;
-    image = _cairo_xcb_surface_create_similar_image (dst,
-						     CAIRO_CONTENT_ALPHA,
+    image = _cairo_xcb_surface_create_similar_image (dst, CAIRO_FORMAT_A8,
 						     extents->bounded.width,
 						     extents->bounded.height);
     if (unlikely (image->status))
@@ -3798,7 +3797,8 @@ _cairo_xcb_surface_render_glyphs_via_mask (cairo_xcb_surface_t		*dst,
 
     x = extents->bounded.x;
     y = extents->bounded.y;
-    image = _cairo_xcb_surface_create_similar_image (dst, content,
+    image = _cairo_xcb_surface_create_similar_image (dst,
+						     _cairo_format_from_content (content),
 						     extents->bounded.width,
 						     extents->bounded.height);
     if (unlikely (image->status))
