@@ -254,7 +254,6 @@ _cairo_gl_pattern_texture_setup (cairo_gl_operand_t *operand,
     }
 
     *operand = surface->operand;
-    operand->texture.surface = surface;
     operand->texture.attributes.matrix.x0 -= extents->x * operand->texture.attributes.matrix.xx;
     operand->texture.attributes.matrix.y0 -= extents->y * operand->texture.attributes.matrix.yy;
     return CAIRO_STATUS_SUCCESS;

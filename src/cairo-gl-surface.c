@@ -360,7 +360,7 @@ _cairo_gl_surface_embedded_operand_init (cairo_gl_surface_t *surface)
     memset (operand, 0, sizeof (cairo_gl_operand_t));
 
     operand->type = CAIRO_GL_OPERAND_TEXTURE;
-    operand->texture.surface = NULL;
+    operand->texture.surface = surface;
     operand->texture.tex = surface->tex;
 
     if (_cairo_gl_device_requires_power_of_two_textures (surface->base.device)) {
