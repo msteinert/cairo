@@ -124,6 +124,7 @@ _cairo_gl_subsurface_clone_operand_init (cairo_gl_operand_t *operand,
 
     operand->type = CAIRO_GL_OPERAND_TEXTURE;
     operand->texture.surface = surface;
+    operand->texture.owns_surface = surface;
     operand->texture.tex = surface->tex;
 
     if (_cairo_gl_device_requires_power_of_two_textures (dst->base.device)) {
@@ -254,6 +255,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_operand_t *operand,
     }
 
     *operand = surface->operand;
+    operand->texture.owns_surface = surface;
     operand->texture.attributes.matrix.x0 -= extents->x * operand->texture.attributes.matrix.xx;
     operand->texture.attributes.matrix.y0 -= extents->y * operand->texture.attributes.matrix.yy;
     return CAIRO_STATUS_SUCCESS;
@@ -375,6 +377,7 @@ _cairo_gl_operand_copy (cairo_gl_operand_t *dst,
 	_cairo_gl_gradient_reference (dst->gradient.gradient);
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
+	cairo_surface_reference (&dst->texture.owns_surface->base);
 	break;
     default:
     case CAIRO_GL_OPERAND_COUNT:
@@ -397,6 +400,7 @@ _cairo_gl_operand_destroy (cairo_gl_operand_t *operand)
 	_cairo_gl_gradient_destroy (operand->gradient.gradient);
 	break;
     case CAIRO_GL_OPERAND_TEXTURE:
+	cairo_surface_destroy (&operand->texture.owns_surface->base);
 	break;
     default:
     case CAIRO_GL_OPERAND_COUNT:

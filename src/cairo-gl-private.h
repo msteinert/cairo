@@ -132,6 +132,7 @@ typedef struct cairo_gl_operand {
 	struct {
 	    GLuint tex;
 	    cairo_gl_surface_t *surface;
+	    cairo_gl_surface_t *owns_surface;
 	    cairo_surface_attributes_t attributes;
 	} texture;
 	struct {
