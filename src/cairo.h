@@ -2493,7 +2493,7 @@ cairo_recording_surface_get_extents (cairo_surface_t *surface,
  * area. For convenience the surface should probably be of image type,
  * created with cairo_surface_create_similar_image() for the target (which
  * enables the number of copies to be reduced during transfer to the
- * device). Anothjr option, might be to return a similar surface to the
+ * device). Another option, might be to return a similar surface to the
  * target for explicit handling by the application of a set of cached sources
  * on the device. The region of sample data provided should be defined using
  * cairo_surface_set_device_offset() to specify the top-left corner of the
@@ -2532,7 +2532,7 @@ typedef void
  * @pattern: the pattern being rendered from
  * @callback_data: the user data supplied during creation
  *
- * #cairo_raster_source_release_func_t is the type of function which is
+ * #cairo_raster_source_snapshot_func_t is the type of function which is
  * called when the pixel data needs to be preserved for later use
  * during printing. This pattern will be accessed again later, and it
  * is expected to provide the pixel data that was current at the time
@@ -2564,7 +2564,7 @@ typedef cairo_status_t
  * @pattern: the pattern being rendered from
  * @callback_data: the user data supplied during creation
  *
- * #cairo_raster_source_copy_func_t is the type of function which is
+ * #cairo_raster_source_finish_func_t is the type of function which is
  * called when the pattern (or a copy thereof) is no longer required.
  *
  * Since: 1.12
