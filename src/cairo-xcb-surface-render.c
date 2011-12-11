@@ -42,6 +42,8 @@
 #include "cairo-surface-snapshot-private.h"
 #include "cairo-surface-subsurface-private.h"
 #include "cairo-traps-private.h"
+#include "cairo-recording-surface-private.h"
+#include "cairo-paginated-private.h"
 
 #define PIXMAN_MAX_INT ((pixman_fixed_1 >> 1) - pixman_fixed_e) /* need to ensure deltas also fit */
 
@@ -1060,6 +1062,66 @@ _cairo_xcb_surface_setup_surface_picture(cairo_xcb_picture_t *picture,
 }
 
 static cairo_xcb_picture_t *
+record_to_picture (cairo_surface_t *target,
+		   const cairo_surface_pattern_t *pattern,
+		   const cairo_rectangle_int_t *extents)
+{
+    cairo_surface_pattern_t tmp_pattern;
+    cairo_xcb_picture_t *picture;
+    cairo_status_t status;
+    cairo_matrix_t matrix;
+    cairo_surface_t *tmp;
+    cairo_surface_t *source = pattern->surface;
+
+    /* XXX: The following is more or less copied from cairo-xlibs-ource.c,
+     * record_source() and recording_pattern_get_surface(), can we share a
+     * single version?
+     */
+
+    /* First get the 'real' recording surface */
+    if (_cairo_surface_is_paginated (source))
+	source = _cairo_paginated_surface_get_recording (source);
+    if (_cairo_surface_is_snapshot (source))
+	source = _cairo_surface_snapshot_get_target (source);
+    assert (_cairo_surface_is_recording (source));
+
+    /* Now draw the recording surface to an xcb surface */
+    tmp = _cairo_surface_create_similar_scratch (target,
+						 source->content,
+						 extents->width,
+						 extents->height);
+    if (tmp->status != CAIRO_STATUS_SUCCESS) {
+	return (cairo_xcb_picture_t *) tmp;
+    }
+
+    cairo_matrix_init_translate (&matrix, extents->x, extents->y);
+    status = _cairo_recording_surface_replay_with_clip (source,
+							&matrix, tmp,
+							NULL);
+    if (unlikely (status)) {
+	cairo_surface_destroy (tmp);
+	return (cairo_xcb_picture_t *) _cairo_surface_create_in_error (status);
+    }
+
+    /* Now that we have drawn this to an xcb surface, try again with that */
+    _cairo_pattern_init_static_copy (&tmp_pattern.base, &pattern->base);
+    tmp_pattern.surface = tmp;
+
+    if (extents->x | extents->y) {
+	cairo_matrix_t *pmatrix = &tmp_pattern.base.matrix;
+
+	cairo_matrix_init_translate (&matrix, -extents->x, -extents->y);
+	cairo_matrix_multiply (pmatrix, pmatrix, &matrix);
+    }
+
+    picture = _copy_to_picture ((cairo_xcb_surface_t *) tmp);
+    if (picture->base.status == CAIRO_STATUS_SUCCESS)
+	_cairo_xcb_surface_setup_surface_picture (picture, &tmp_pattern, extents);
+    cairo_surface_destroy (tmp);
+    return picture;
+}
+
+static cairo_xcb_picture_t *
 _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 			    const cairo_surface_pattern_t *pattern,
 			    const cairo_rectangle_int_t *extents)
@@ -1177,6 +1239,14 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	/* pixmap from texture */
     }
 #endif
+    else if (source->type == CAIRO_SURFACE_TYPE_RECORDING)
+    {
+	/* We have to skip the call to attach_snapshot() because we possibly
+	 * only drew part of the recording surface.
+	 * TODO: When can we safely attach a snapshot?
+	 */
+	return record_to_picture(&target->base, pattern, extents);
+    }
 
     if (picture == NULL) {
 	cairo_image_surface_t *image;
