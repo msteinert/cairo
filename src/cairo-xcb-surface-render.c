@@ -1032,6 +1032,33 @@ _copy_to_picture (cairo_xcb_surface_t *source)
     return picture;
 }
 
+static void
+_cairo_xcb_surface_setup_surface_picture(cairo_xcb_picture_t *picture,
+					 const cairo_surface_pattern_t *pattern,
+					 const cairo_rectangle_int_t *extents)
+{
+    cairo_filter_t filter;
+
+    filter = pattern->base.filter;
+    if (filter != CAIRO_FILTER_NEAREST &&
+	_cairo_matrix_has_unity_scale (&pattern->base.matrix) &&
+	_cairo_fixed_is_integer (_cairo_fixed_from_double (pattern->base.matrix.x0)) &&
+	_cairo_fixed_is_integer (_cairo_fixed_from_double (pattern->base.matrix.y0)))
+    {
+	filter = CAIRO_FILTER_NEAREST;
+    }
+    _cairo_xcb_picture_set_filter (picture, filter);
+
+    _cairo_xcb_picture_set_matrix (picture,
+				   &pattern->base.matrix, filter,
+				   extents->x + extents->width/2.,
+				   extents->y + extents->height/2.);
+
+
+    _cairo_xcb_picture_set_extend (picture, pattern->base.extend);
+    _cairo_xcb_picture_set_component_alpha (picture, pattern->base.has_component_alpha);
+}
+
 static cairo_xcb_picture_t *
 _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 			    const cairo_surface_pattern_t *pattern,
@@ -1039,14 +1066,14 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 {
     cairo_surface_t *source = pattern->surface;
     cairo_xcb_picture_t *picture;
-    cairo_filter_t filter;
 
     picture = (cairo_xcb_picture_t *)
 	_cairo_surface_has_snapshot (source, &_cairo_xcb_picture_backend);
     if (picture != NULL) {
 	if (picture->screen == target->screen) {
 	    picture = (cairo_xcb_picture_t *) cairo_surface_reference (&picture->base);
-	    goto setup_picture;
+	    _cairo_xcb_surface_setup_surface_picture (picture, pattern, extents);
+	    return picture;
 	}
 	picture = NULL;
     }
@@ -1191,26 +1218,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 				    &picture->base,
 				    NULL);
 
-setup_picture:
-    filter = pattern->base.filter;
-    if (filter != CAIRO_FILTER_NEAREST &&
-	_cairo_matrix_has_unity_scale (&pattern->base.matrix) &&
-	_cairo_fixed_is_integer (_cairo_fixed_from_double (pattern->base.matrix.x0)) &&
-	_cairo_fixed_is_integer (_cairo_fixed_from_double (pattern->base.matrix.y0)))
-    {
-	filter = CAIRO_FILTER_NEAREST;
-    }
-    _cairo_xcb_picture_set_filter (picture, filter);
-
-    _cairo_xcb_picture_set_matrix (picture,
-				   &pattern->base.matrix, filter,
-				   extents->x + extents->width/2.,
-				   extents->y + extents->height/2.);
-
-
-    _cairo_xcb_picture_set_extend (picture, pattern->base.extend);
-    _cairo_xcb_picture_set_component_alpha (picture, pattern->base.has_component_alpha);
-
+    _cairo_xcb_surface_setup_surface_picture (picture, pattern, extents);
     return picture;
 }
 
