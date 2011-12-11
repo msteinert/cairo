@@ -468,6 +468,7 @@ _cairo_xcb_picture_set_matrix (cairo_xcb_picture_t *picture,
     ignored = _cairo_matrix_to_pixman_matrix_offset (matrix, filter, xc, yc,
 						     pixman_transform,
 						     &picture->x, &picture->y);
+    (void) ignored;
 
     if (memcmp (&picture->transform, &transform, sizeof (xcb_render_transform_t))) {
 	_cairo_xcb_connection_render_set_picture_transform (_picture_to_connection (picture),
