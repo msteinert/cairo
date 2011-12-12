@@ -695,7 +695,10 @@ cairo_gl_surface_swapbuffers (cairo_surface_t *abstract_surface)
         if (unlikely (status))
             return;
 
-        cairo_surface_flush (abstract_surface);
+	/* For swapping on EGL, at least, we need a valid context/target. */
+	_cairo_gl_context_set_destination (ctx, surface);
+	/* And in any case we should flush any pending operations. */
+	_cairo_gl_composite_flush (ctx);
 
 	ctx->swap_buffers (ctx, surface);
 
