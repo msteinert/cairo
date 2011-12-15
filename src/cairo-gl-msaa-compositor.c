@@ -141,10 +141,16 @@ _draw_clip (cairo_gl_context_t		*ctx,
     if (unlikely (status))
 	return status;
 
-    if (antialias != CAIRO_ANTIALIAS_NONE) {
-	_cairo_polygon_fini (&polygon);
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
+    /* We ignore the antialias mode of the clip here, since the user requested
+     * unantialiased rendering of their path and we expect that this stencil
+     * based rendering of the clip to be a reasonable approximation to
+     * the intersection between that clip and the path.
+     *
+     * In other words, what the user expects when they try to perform
+     * a geometric intersection between an unantialiased polygon and an
+     * antialiased polygon is open to interpretation. And we choose the fast
+     * option.
+     */
 
     _cairo_traps_init (&traps);
     status = _cairo_bentley_ottmann_tessellate_polygon (&traps,
