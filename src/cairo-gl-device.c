@@ -161,12 +161,22 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
     int gl_version = _cairo_gl_get_version ();
     cairo_gl_flavor_t gl_flavor = _cairo_gl_get_flavor ();
+    const char *env;
     int n;
 
     _cairo_device_init (&ctx->base, &_cairo_gl_device_backend);
 
-    //ctx->compositor = _cairo_gl_span_compositor_get ();
-    ctx->compositor = _cairo_gl_msaa_compositor_get ();
+    ctx->compositor = _cairo_gl_span_compositor_get ();
+
+    /* XXX The choice of compositor should be made automatically at runtime.
+     * However, it is useful to force one particular compositor whilst
+     * testing.
+     */
+    env = getenv ("CAIRO_GL_COMPOSITOR");
+    if (env) {
+	if (strcmp(env, "msaa") == 0)
+	    ctx->compositor = _cairo_gl_msaa_compositor_get ();
+    }
 
     memset (ctx->glyph_cache, 0, sizeof (ctx->glyph_cache));
     cairo_list_init (&ctx->fonts);
