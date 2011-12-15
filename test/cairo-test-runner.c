@@ -35,10 +35,7 @@
 
 #include <pixman.h> /* for version information */
 
-/* Coregraphics doesn't seem to like being forked and reports:
- * "The process has forked and you cannot use this CoreFoundation functionality safely. You MUST exec()."
- * so we don't for on OS X */
-#define SHOULD_FORK HAVE_FORK && HAVE_WAITPID && !__APPLE__
+#define SHOULD_FORK HAVE_FORK && HAVE_WAITPID
 #if SHOULD_FORK
 #if HAVE_UNISTD_H
 #include <unistd.h>
