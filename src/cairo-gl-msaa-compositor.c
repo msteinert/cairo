@@ -189,6 +189,7 @@ _draw_clip_to_stencil_buffer (cairo_gl_context_t	*ctx,
 
     status = _draw_clip (ctx, setup, clip);
     if (unlikely (status)) {
+	glColorMask (1, 1, 1, 1);
 	_disable_stencil_buffer ();
 	return status;
     }
