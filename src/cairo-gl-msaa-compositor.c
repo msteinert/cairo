@@ -210,6 +210,49 @@ _draw_clip_to_stencil_buffer (cairo_gl_context_t	*ctx,
     return status;;
 }
 
+static void
+_scissor_to_rectangle (cairo_gl_surface_t *surface,
+		       const cairo_rectangle_int_t *r)
+{
+    int y = r->y;
+    if (_cairo_gl_surface_is_texture (surface) == FALSE)
+	y = surface->height - (r->y + r->height);
+    glScissor (r->x, y, r->width, r->height);
+    glEnable (GL_SCISSOR_TEST);
+}
+
+static cairo_int_status_t
+_scissor_and_clip (cairo_gl_context_t		*ctx,
+		   cairo_gl_composite_t		*setup,
+		   cairo_composite_rectangles_t	*composite,
+		   cairo_bool_t			*used_stencil_buffer)
+{
+    cairo_gl_surface_t *dst = (cairo_gl_surface_t *) composite->surface;
+    cairo_rectangle_int_t *bounds = &composite->unbounded;
+    cairo_clip_t *clip = composite->clip;
+    cairo_rectangle_int_t r;
+
+    *used_stencil_buffer = FALSE;
+
+    if (_cairo_composite_rectangles_can_reduce_clip (composite, clip)) {
+	_scissor_to_rectangle (dst, bounds);
+	return CAIRO_INT_STATUS_SUCCESS;
+    }
+
+    /* If we cannot reduce the clip to a rectangular region,
+       we scissor and clip using the stencil buffer */
+    if (clip->num_boxes > 1 || clip->path != NULL) {
+	*used_stencil_buffer = TRUE;
+	_scissor_to_rectangle (dst, bounds);
+	return _draw_clip_to_stencil_buffer (ctx, setup, clip);
+    }
+
+    /* Always interpret the clip path as ANTIALIAS_NONE */
+    _cairo_box_round_to_rectangle (clip->boxes, &r);
+    _scissor_to_rectangle (dst, &r);
+    return CAIRO_INT_STATUS_SUCCESS;
+}
+
 static cairo_int_status_t
 _cairo_gl_msaa_compositor_paint (const cairo_compositor_t	*compositor,
 				 cairo_composite_rectangles_t	*composite)
@@ -254,17 +297,6 @@ _stroke_shaper_add_quad (void			*closure,
 						      quad);
 }
 
-static void
-_scissor_to_rectangle (cairo_gl_surface_t *surface,
-		       const cairo_rectangle_int_t *r)
-{
-    int y = r->y;
-    if (_cairo_gl_surface_is_texture (surface) == FALSE)
-	y = surface->height - (r->y + r->height);
-    glScissor (r->x, y, r->width, r->height);
-    glEnable (GL_SCISSOR_TEST);
-}
-
 static cairo_int_status_t
 _cairo_gl_msaa_compositor_stroke (const cairo_compositor_t	*compositor,
 				  cairo_composite_rectangles_t	*composite,
@@ -278,6 +310,7 @@ _cairo_gl_msaa_compositor_stroke (const cairo_compositor_t	*compositor,
     cairo_int_status_t status;
     cairo_gl_surface_t *dst = (cairo_gl_surface_t *) composite->surface;
     struct _tristrip_composite_info info;
+    cairo_bool_t used_stencil_buffer_for_clip;
 
     if (antialias != CAIRO_ANTIALIAS_NONE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -303,14 +336,10 @@ _cairo_gl_msaa_compositor_stroke (const cairo_compositor_t	*compositor,
     if (unlikely (status))
 	goto finish;
 
-    _scissor_to_rectangle (dst, &composite->unbounded);
-    if (! _cairo_composite_rectangles_can_reduce_clip (composite,
-						       composite->clip))
-    {
-	status = _draw_clip_to_stencil_buffer (info.ctx, &info.setup, composite->clip);
-	if (unlikely (status))
-	    goto finish;
-    }
+    status = _scissor_and_clip (info.ctx, &info.setup, composite,
+				&used_stencil_buffer_for_clip);
+    if (unlikely (status))
+	goto finish;
 
     status = _cairo_path_fixed_stroke_to_shaper ((cairo_path_fixed_t *) path,
 						 style,
@@ -351,6 +380,7 @@ _cairo_gl_msaa_compositor_fill (const cairo_compositor_t	*compositor,
     cairo_gl_context_t *ctx = NULL;
     cairo_int_status_t status;
     cairo_traps_t traps;
+    cairo_bool_t used_stencil_buffer;
 
     if (antialias != CAIRO_ANTIALIAS_NONE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -379,14 +409,10 @@ _cairo_gl_msaa_compositor_fill (const cairo_compositor_t	*compositor,
     if (unlikely (status))
 	goto cleanup_setup;
 
-    _scissor_to_rectangle (dst, &composite->unbounded);
-    if (! _cairo_composite_rectangles_can_reduce_clip (composite,
-						       composite->clip))
-    {
-	status = _draw_clip_to_stencil_buffer (ctx, &setup, composite->clip);
-	if (unlikely (status))
-	    goto cleanup_setup;
-    }
+    status = _scissor_and_clip (ctx, &setup, composite,
+				&used_stencil_buffer);
+    if (unlikely (status))
+	goto cleanup_setup;
 
     status = _draw_traps (ctx, &setup, &traps);
     if (unlikely (status))
