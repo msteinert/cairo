@@ -51,6 +51,10 @@ static void
 _scissor_to_rectangle (cairo_gl_surface_t	*surface,
 		       const cairo_rectangle_int_t	*rect);
 
+static cairo_bool_t
+should_fall_back (cairo_gl_surface_t *surface,
+		  cairo_antialias_t antialias);
+
 struct _tristrip_composite_info {
     cairo_gl_composite_t	setup;
     cairo_gl_context_t		*ctx;
@@ -339,6 +343,14 @@ static cairo_bool_t
 should_fall_back (cairo_gl_surface_t *surface,
 		  cairo_antialias_t antialias)
 {
+    /* Multisampling OpenGL ES surfaces only maintain one multisampling
+       framebuffer and thus must use the spans compositor to do non-antialiased
+       rendering. */
+    if (((cairo_gl_context_t *) surface->base.device)->gl_flavor == CAIRO_GL_FLAVOR_ES
+	 && surface->supports_msaa
+	 && antialias == CAIRO_ANTIALIAS_NONE)
+	return TRUE;
+
     if (antialias == CAIRO_ANTIALIAS_FAST)
 	return TRUE;
     if (antialias == CAIRO_ANTIALIAS_NONE)

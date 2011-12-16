@@ -167,8 +167,8 @@ struct _cairo_gl_surface {
 #if CAIRO_HAS_GL_SURFACE
     GLuint msaa_rb; /* The ARB MSAA path uses a renderbuffer. */
     GLuint msaa_fb;
-    GLuint msaa_depth_stencil;
 #endif
+    GLuint msaa_depth_stencil;
 
     cairo_bool_t supports_msaa;
     cairo_bool_t msaa_active; /* Whether the multisampling
@@ -283,16 +283,15 @@ typedef struct _cairo_gl_dispatch {
     void (*FramebufferRenderbuffer) (GLenum target, GLenum attachment,
 				     GLenum renderbuffer_ttarget, GLuint renderbuffer);
     void (*DeleteRenderbuffers) (GLsizei n, GLuint *renderbuffers);
-#if CAIRO_HAS_GL_SURFACE
     void (*BlitFramebuffer) (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
 			     GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
 			     GLbitfield mask, GLenum filter);
-    void (*RenderbufferStorageMultisample) (GLenum target,
-					    GLsizei samples,
+    void (*RenderbufferStorageMultisample) (GLenum target, GLsizei samples,
 					    GLenum internalformat,
-					    GLsizei width,
-					    GLsizei height);
-#endif
+					    GLsizei width, GLsizei height);
+    void (*FramebufferTexture2DMultisample) (GLenum target, GLenum attachment,
+					     GLenum textarget, GLuint texture,
+					     GLint level, GLsizei samples);
 } cairo_gl_dispatch_t;
 
 struct _cairo_gl_context {

@@ -81,6 +81,10 @@ _resolve_multisampling (cairo_gl_surface_t *surface)
     if (surface->base.device == NULL)
 	return CAIRO_INT_STATUS_SUCCESS;
 
+    /* GLES surfaces do not need explicit resolution. */
+    if (((cairo_gl_context_t *) surface->base.device)->gl_flavor == CAIRO_GL_FLAVOR_ES)
+	return CAIRO_INT_STATUS_SUCCESS;
+
     status = _cairo_gl_context_acquire (surface->base.device, &ctx);
     if (unlikely (status))
 	return status;
