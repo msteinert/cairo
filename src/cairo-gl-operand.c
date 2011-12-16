@@ -245,7 +245,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_operand_t *operand,
 					  extents->width, extents->height);
 
     image = cairo_surface_map_to_image (&surface->base, NULL);
-    status = _cairo_surface_offset_paint (image, -extents->x, -extents->y,
+    status = _cairo_surface_offset_paint (image, extents->x, extents->y,
 					  CAIRO_OPERATOR_SOURCE, _src, NULL);
     cairo_surface_unmap_image (&surface->base, image);
     status = _cairo_gl_context_release (ctx, status);
