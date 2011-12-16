@@ -114,6 +114,10 @@ cairo_private cairo_gl_dispatch_entry_t dispatch_fbo_entries[] = {
     DISPATCH_ENTRY_EXT (RenderbufferStorage),
     DISPATCH_ENTRY_EXT (FramebufferRenderbuffer),
     DISPATCH_ENTRY_EXT (DeleteRenderbuffers),
+#if CAIRO_HAS_GL_SURFACE
+    DISPATCH_ENTRY_EXT (BlitFramebuffer),
+    DISPATCH_ENTRY_EXT (RenderbufferStorageMultisample),
+#endif
     DISPATCH_ENTRY_LAST
 };
 

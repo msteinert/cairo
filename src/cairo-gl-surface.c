@@ -392,6 +392,10 @@ _cairo_gl_surface_init (cairo_device_t *device,
     surface->height = height;
     surface->needs_update = FALSE;
 
+    /* Support for multisampling in non-texture surfaces is still spotty. */
+    surface->supports_msaa = FALSE;
+    surface->msaa_active = FALSE;
+
     _cairo_gl_surface_embedded_operand_init (surface);
 }
 
@@ -411,6 +415,8 @@ _cairo_gl_surface_create_scratch_for_texture (cairo_gl_context_t   *ctx,
 
     surface->tex = tex;
     _cairo_gl_surface_init (&ctx->base, surface, content, width, height);
+
+    surface->supports_msaa = ctx->supports_msaa;
 
     /* Create the texture used to store the surface's data. */
     _cairo_gl_context_activate (ctx, CAIRO_GL_TEX_TEMP);
@@ -487,7 +493,7 @@ _cairo_gl_surface_clear (cairo_gl_surface_t  *surface,
     if (unlikely (status))
 	return status;
 
-    _cairo_gl_context_set_destination (ctx, surface);
+    _cairo_gl_context_set_destination (ctx, surface, surface->msaa_active);
     if (surface->base.content & CAIRO_CONTENT_COLOR) {
         r = color->red   * color->alpha;
         g = color->green * color->alpha;
@@ -698,7 +704,7 @@ cairo_gl_surface_swapbuffers (cairo_surface_t *abstract_surface)
             return;
 
 	/* For swapping on EGL, at least, we need a valid context/target. */
-	_cairo_gl_context_set_destination (ctx, surface);
+	_cairo_gl_context_set_destination (ctx, surface, FALSE);
 	/* And in any case we should flush any pending operations. */
 	_cairo_gl_composite_flush (ctx);
 
@@ -970,6 +976,15 @@ _cairo_gl_surface_finish (void *abstract_surface)
     if (surface->owns_tex)
 	glDeleteTextures (1, &surface->tex);
 
+#if CAIRO_HAS_GL_SURFACE
+    if (surface->msaa_depth_stencil)
+	ctx->dispatch.DeleteRenderbuffers (1, &surface->msaa_depth_stencil);
+    if (surface->msaa_fb)
+	ctx->dispatch.DeleteFramebuffers (1, &surface->msaa_fb);
+    if (surface->msaa_rb)
+	ctx->dispatch.DeleteRenderbuffers (1, &surface->msaa_rb);
+#endif
+
     return _cairo_gl_context_release (ctx, status);
 }
 
@@ -1056,7 +1071,7 @@ _cairo_gl_surface_map_to_image (void      *abstract_surface,
      * fall back instead.
      */
     _cairo_gl_composite_flush (ctx);
-    _cairo_gl_context_set_destination (ctx, surface);
+    _cairo_gl_context_set_destination (ctx, surface, FALSE);
 
     invert = ! _cairo_gl_surface_is_texture (surface) &&
 	    ctx->has_mesa_pack_invert;

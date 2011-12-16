@@ -468,8 +468,9 @@ _cairo_gl_composite_begin_component_alpha  (cairo_gl_context_t *ctx,
 }
 
 cairo_status_t
-_cairo_gl_composite_begin (cairo_gl_composite_t *setup,
-                           cairo_gl_context_t **ctx_out)
+_cairo_gl_composite_begin_multisample (cairo_gl_composite_t *setup,
+				       cairo_gl_context_t **ctx_out,
+				       cairo_bool_t multisampling)
 {
     unsigned int dst_size, src_size, mask_size, vertex_size;
     cairo_gl_context_t *ctx;
@@ -529,7 +530,7 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     if (ctx->vertex_size != vertex_size)
         _cairo_gl_composite_flush (ctx);
 
-    _cairo_gl_context_set_destination (ctx, setup->dst);
+    _cairo_gl_context_set_destination (ctx, setup->dst, multisampling);
 
     if (_cairo_gl_context_is_flushed (ctx)) {
         ctx->dispatch.BindBuffer (GL_ARRAY_BUFFER, ctx->vbo);
@@ -576,6 +577,13 @@ FAIL:
         status = _cairo_gl_context_release (ctx, status);
 
     return status;
+}
+
+cairo_status_t
+_cairo_gl_composite_begin (cairo_gl_composite_t *setup,
+                           cairo_gl_context_t **ctx_out)
+{
+    return _cairo_gl_composite_begin_multisample (setup, ctx_out, FALSE);
 }
 
 static inline void

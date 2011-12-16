@@ -163,6 +163,17 @@ struct _cairo_gl_surface {
     GLuint tex; /* GL texture object containing our data. */
     GLuint fb; /* GL framebuffer object wrapping our data. */
     GLuint depth_stencil; /* GL renderbuffer object for holding stencil buffer clip. */
+
+#if CAIRO_HAS_GL_SURFACE
+    GLuint msaa_rb; /* The ARB MSAA path uses a renderbuffer. */
+    GLuint msaa_fb;
+    GLuint msaa_depth_stencil;
+#endif
+
+    cairo_bool_t supports_msaa;
+    cairo_bool_t msaa_active; /* Whether the multisampling
+			         framebuffer is active or not. */
+
     int owns_tex;
     cairo_bool_t needs_update;
 
@@ -272,7 +283,16 @@ typedef struct _cairo_gl_dispatch {
     void (*FramebufferRenderbuffer) (GLenum target, GLenum attachment,
 				     GLenum renderbuffer_ttarget, GLuint renderbuffer);
     void (*DeleteRenderbuffers) (GLsizei n, GLuint *renderbuffers);
-
+#if CAIRO_HAS_GL_SURFACE
+    void (*BlitFramebuffer) (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
+			     GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
+			     GLbitfield mask, GLenum filter);
+    void (*RenderbufferStorageMultisample) (GLenum target,
+					    GLsizei samples,
+					    GLenum internalformat,
+					    GLsizei width,
+					    GLsizei height);
+#endif
 } cairo_gl_dispatch_t;
 
 struct _cairo_gl_context {
@@ -286,6 +306,9 @@ struct _cairo_gl_context {
     GLint max_texture_size;
     GLint max_textures;
     GLenum tex_target;
+
+    GLint num_samples;
+    cairo_bool_t supports_msaa;
 
     const cairo_gl_shader_impl_t *shader_impl;
 
@@ -433,7 +456,13 @@ _cairo_gl_context_release (cairo_gl_context_t *ctx, cairo_status_t status)
 }
 
 cairo_private void
-_cairo_gl_context_set_destination (cairo_gl_context_t *ctx, cairo_gl_surface_t *surface);
+_cairo_gl_activate_surface_as_nonmultisampling (cairo_gl_context_t *ctx,
+						cairo_gl_surface_t *surface);
+
+cairo_private void
+_cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
+				   cairo_gl_surface_t *surface,
+				   cairo_bool_t multisampling);
 
 cairo_private void
 _cairo_gl_context_activate (cairo_gl_context_t *ctx,
@@ -489,6 +518,11 @@ _cairo_gl_composite_set_spans (cairo_gl_composite_t *setup);
 cairo_private cairo_status_t
 _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
                            cairo_gl_context_t **ctx);
+
+cairo_private cairo_status_t
+_cairo_gl_composite_begin_multisample (cairo_gl_composite_t *setup,
+				       cairo_gl_context_t **ctx_out,
+				       cairo_bool_t multisampling);
 
 cairo_private void
 _cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
