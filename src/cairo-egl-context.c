@@ -112,7 +112,8 @@ _egl_destroy (void *abstract_ctx)
 
     eglMakeCurrent (ctx->display,
 		    EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    eglDestroySurface (ctx->display, ctx->dummy_surface);
+    if (ctx->dummy_surface != EGL_NO_SURFACE)
+        eglDestroySurface (ctx->display, ctx->dummy_surface);
 }
 
 static cairo_bool_t
