@@ -264,7 +264,7 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 	}
     }
 
-    _cairo_array_init (&ctx->tristrip_indices, sizeof(int));
+    _cairo_array_init (&ctx->tristrip_indices, sizeof (unsigned short));
 
     /* PBO for any sort of texture upload */
     dispatch->GenBuffers (1, &ctx->texture_load_pbo);

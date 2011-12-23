@@ -590,7 +590,7 @@ static inline void
 _cairo_gl_composite_draw_tristrip (cairo_gl_context_t *ctx)
 {
     cairo_array_t* indices = &ctx->tristrip_indices;
-    const int *indices_array = _cairo_array_index_const (indices, 0);
+    const unsigned short *indices_array = _cairo_array_index_const (indices, 0);
 
 
     if (ctx->pre_shader) {
@@ -598,13 +598,13 @@ _cairo_gl_composite_draw_tristrip (cairo_gl_context_t *ctx)
 
 	_cairo_gl_set_shader (ctx, ctx->pre_shader);
 	_cairo_gl_set_operator (ctx, CAIRO_OPERATOR_DEST_OUT, TRUE);
-	glDrawElements (GL_TRIANGLE_STRIP, _cairo_array_num_elements (indices), GL_UNSIGNED_INT, indices_array);
+	glDrawElements (GL_TRIANGLE_STRIP, _cairo_array_num_elements (indices), GL_UNSIGNED_SHORT, indices_array);
 
 	_cairo_gl_set_shader (ctx, prev_shader);
 	_cairo_gl_set_operator (ctx, CAIRO_OPERATOR_ADD, TRUE);
     }
 
-    glDrawElements (GL_TRIANGLE_STRIP, _cairo_array_num_elements (indices), GL_UNSIGNED_INT, indices_array);
+    glDrawElements (GL_TRIANGLE_STRIP, _cairo_array_num_elements (indices), GL_UNSIGNED_SHORT, indices_array);
     _cairo_array_truncate (indices, 0);
 }
 
@@ -835,7 +835,7 @@ _cairo_gl_composite_append_vertex_indices (cairo_gl_context_t	*ctx,
     cairo_int_status_t status = CAIRO_INT_STATUS_SUCCESS;
     cairo_array_t *indices = &ctx->tristrip_indices;
     int number_of_indices = _cairo_array_num_elements (indices);
-    int current_vertex_index = 0;
+    unsigned short current_vertex_index = 0;
     int i;
 
     assert (number_of_new_indices > 0);
@@ -844,7 +844,7 @@ _cairo_gl_composite_append_vertex_indices (cairo_gl_context_t	*ctx,
        context, we insert a set of degenerate triangles from the last
        preexisting vertex to our first one. */
     if (number_of_indices > 0) {
-	const int *indices_array = _cairo_array_index_const (indices, 0);
+	const unsigned short *indices_array = _cairo_array_index_const (indices, 0);
 	current_vertex_index = indices_array[number_of_indices - 1];
 
 	status = _cairo_array_append (indices, &current_vertex_index);
