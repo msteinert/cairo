@@ -278,6 +278,22 @@ _scissor_and_clip (cairo_gl_context_t		*ctx,
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
+static cairo_bool_t
+_should_use_unbounded_surface (cairo_composite_rectangles_t *composite)
+{
+    cairo_gl_surface_t *dst = (cairo_gl_surface_t *) composite->surface;
+    cairo_rectangle_int_t *source = &composite->source;
+
+    if (composite->is_bounded)
+	return FALSE;
+
+    /* This isn't just an optimization. It also detects when painting is used
+       to paint back the unbounded surface, preventing infinite recursion. */
+    return ! (source->x <= 0 && source->y <= 0 &&
+              source->height + source->y >= dst->height &&
+              source->width + source->x >= dst->width);
+}
+
 static cairo_surface_t*
 _prepare_unbounded_surface (cairo_gl_surface_t *dst)
 {
@@ -331,13 +347,6 @@ should_fall_back (cairo_gl_surface_t *surface,
 }
 
 static cairo_int_status_t
-_cairo_gl_msaa_compositor_paint (const cairo_compositor_t	*compositor,
-				 cairo_composite_rectangles_t	*composite)
-{
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-static cairo_int_status_t
 _cairo_gl_msaa_compositor_mask (const cairo_compositor_t	*compositor,
 				cairo_composite_rectangles_t	*composite)
 {
@@ -368,17 +377,26 @@ _cairo_gl_msaa_compositor_mask (const cairo_compositor_t	*compositor,
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    if (composite->is_bounded == FALSE) {
+    if (_should_use_unbounded_surface (composite)) {
 	cairo_surface_t* surface = _prepare_unbounded_surface (dst);
 
 	if (unlikely (surface == NULL))
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
+	/* This may be a paint operation. */
+	if (composite->original_mask_pattern == NULL) {
+	    status = _cairo_compositor_paint (compositor, surface,
+					      CAIRO_OPERATOR_SOURCE,
+					      &composite->source_pattern.base,
+					      NULL);
+	} else {
 	    status = _cairo_compositor_mask (compositor, surface,
 					     CAIRO_OPERATOR_SOURCE,
 					     &composite->source_pattern.base,
 					     &composite->mask_pattern.base,
 					     NULL);
+	}
+
 	if (unlikely (status)) {
 	    cairo_surface_destroy (surface);
 	    return status;
@@ -401,10 +419,12 @@ _cairo_gl_msaa_compositor_mask (const cairo_compositor_t	*compositor,
     if (unlikely (status))
 	goto finish;
 
-    status = _cairo_gl_composite_set_mask (&setup,
-					   &composite->mask_pattern.base,
-					   &composite->source_sample_area,
-					   &composite->bounded);
+    if (composite->original_mask_pattern != NULL) {
+	status = _cairo_gl_composite_set_mask (&setup,
+					       &composite->mask_pattern.base,
+					       &composite->mask_sample_area,
+					       &composite->bounded);
+    }
     if (unlikely (status))
 	goto finish;
 
@@ -431,6 +451,13 @@ finish:
     }
 
     return status;
+}
+
+static cairo_int_status_t
+_cairo_gl_msaa_compositor_paint (const cairo_compositor_t	*compositor,
+				 cairo_composite_rectangles_t	*composite)
+{
+    return _cairo_gl_msaa_compositor_mask (compositor, composite);
 }
 
 static cairo_status_t
