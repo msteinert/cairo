@@ -297,6 +297,28 @@ static void set_report_color (struct chart *chart, int report)
     cairo_set_source_rgb (chart->cr, color.red, color.green, color.blue);
 }
 
+static void set_report_gradient (struct chart *chart, int report,
+				 double x, double y, double w, double h)
+{
+    struct color color;
+    cairo_pattern_t *p;
+
+    hsv_to_rgb (6. / chart->num_reports * report, .7, .7, &color);
+
+    p = cairo_pattern_create_linear (x, 0, x+w, 0);
+    cairo_pattern_add_color_stop_rgba (p, 0.0,
+				       color.red, color.green, color.blue,
+				       .50);
+    cairo_pattern_add_color_stop_rgba (p, 0.5,
+				       color.red, color.green, color.blue,
+				       .50);
+    cairo_pattern_add_color_stop_rgba (p, 1.0,
+				       color.red, color.green, color.blue,
+				       1.0);
+    cairo_set_source (chart->cr, p);
+    cairo_pattern_destroy (p);
+}
+
 static void
 test_background (struct chart *c,
 		 int	       test)
@@ -327,8 +349,6 @@ add_chart (struct chart *c,
     if (fabs (value) < 0.1)
 	return;
 
-    set_report_color (c, report);
-
     if (c->relative) {
 	cairo_text_extents_t extents;
 	char buf[80];
@@ -339,11 +359,21 @@ add_chart (struct chart *c,
 	dx = c->width / (double) (c->num_tests * c->num_reports);
 	x = dx * (c->num_reports * test + report - .5);
 
+	set_report_gradient (c, report,
+			     floor (x), c->height / 2.,
+			     floor (x + dx) - floor (x),
+			     ceil (-dy*value - c->height/2.) + c->height/2.);
+
 	cairo_rectangle (c->cr,
 			 floor (x), c->height / 2.,
 			 floor (x + dx) - floor (x),
 			 ceil (-dy*value - c->height/2.) + c->height/2.);
-	cairo_fill (c->cr);
+	cairo_fill_preserve (c->cr);
+	cairo_save (c->cr);
+	cairo_clip_preserve (c->cr);
+	set_report_color (c, report);
+	cairo_stroke (c->cr);
+	cairo_restore (c->cr);
 
 	/* Skip the label if the difference between the two is less than 0.1% */
 	if (fabs (value) < 0.1)
@@ -393,11 +423,21 @@ add_chart (struct chart *c,
 	dx = c->width / (double) (c->num_tests * (c->num_reports+1));
 	x = dx * ((c->num_reports+1) * test + report + .5);
 
+	set_report_gradient (c, report,
+			 floor (x), c->height,
+			 floor (x + dx) - floor (x),
+			 floor (c->height - dy*value) - c->height);
+
 	cairo_rectangle (c->cr,
 			 floor (x), c->height,
 			 floor (x + dx) - floor (x),
 			 floor (c->height - dy*value) - c->height);
-	cairo_fill (c->cr);
+	cairo_fill_preserve (c->cr);
+	cairo_save (c->cr);
+	cairo_clip_preserve (c->cr);
+	set_report_color (c, report);
+	cairo_stroke (c->cr);
+	cairo_restore (c->cr);
     }
 }
 
