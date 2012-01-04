@@ -331,7 +331,6 @@ add_chart (struct chart *c,
 
     if (c->relative) {
 	cairo_text_extents_t extents;
-	cairo_bool_t show_label;
 	char buf[80];
 	double y;
 
@@ -346,11 +345,15 @@ add_chart (struct chart *c,
 			 ceil (-dy*value - c->height/2.) + c->height/2.);
 	cairo_fill (c->cr);
 
+	/* Skip the label if the difference between the two is less than 0.1% */
+	if (fabs (value) < 0.1)
+		return;
+
 	cairo_save (c->cr);
 	cairo_set_font_size (c->cr, dx - 2);
 
 	if (value < 0) {
-	    sprintf (buf, "%.1f", value/100 - 1);
+	    sprintf (buf, "%.1f", -value/100 + 1);
 	} else {
 	    sprintf (buf, "%.1f", value/100 + 1);
 	}
@@ -364,21 +367,26 @@ add_chart (struct chart *c,
 	    y = c->height/2;
 	}
 
+	if (y < 0) {
+	    if (y > -extents.width - 6)
+		    y -= extents.width + 6;
+	} else {
+	    if (y < extents.width + 6)
+		    y += extents.width + 6;
+	}
+
 	cairo_translate (c->cr,
 			 floor (x) + (floor (x + dx) - floor (x))/2,
 			 floor (y) + c->height/2.);
 	cairo_rotate (c->cr, -M_PI/2);
 	if (y < 0) {
 	    cairo_move_to (c->cr, -extents.x_bearing -extents.width - 4, -extents.y_bearing/2);
-	    show_label = y < -extents.width - 6;
 	} else {
 	    cairo_move_to (c->cr, 2, -extents.y_bearing/2);
-	    show_label = y > extents.width + 6;
 	}
 
 	cairo_set_source_rgb (c->cr, .95, .95, .95);
-	if (show_label)
-	    cairo_show_text (c->cr, buf);
+	cairo_show_text (c->cr, buf);
 	cairo_restore (c->cr);
     } else {
 	dy = (c->height - PAD) / c->max_value;
