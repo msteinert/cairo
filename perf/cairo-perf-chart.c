@@ -487,10 +487,10 @@ done:
 	cairo_text_extents (c->cr, buf, &extents);
 
 	cairo_set_source_rgba (c->cr, .75, 0, 0, .95);
-	cairo_move_to (c->cr, -extents.x_bearing, floor (y) - (extents.height/2 + extents.y_bearing) + .5);
+	cairo_move_to (c->cr, 1-extents.x_bearing, floor (y) - (extents.height/2 + extents.y_bearing) + .5);
 	cairo_show_text (c->cr, buf);
 
-	cairo_move_to (c->cr, c->width-extents.width+extents.x_bearing, floor (y) - (extents.height/2 + extents.y_bearing) + .5);
+	cairo_move_to (c->cr, c->width-extents.width-1, floor (y) - (extents.height/2 + extents.y_bearing) + .5);
 	cairo_show_text (c->cr, buf);
 
 	cairo_set_source_rgba (c->cr, .75, 0, 0, .5);
@@ -548,17 +548,17 @@ done:
 	cairo_text_extents (c->cr, buf, &extents);
 
 	cairo_set_source_rgba (c->cr, .75, 0, 0, .95);
-	cairo_move_to (c->cr, -extents.x_bearing, floor (mid + y) - (extents.height/2 + extents.y_bearing)+ .5);
+	cairo_move_to (c->cr, 1-extents.x_bearing, floor (mid + y) - (extents.height/2 + extents.y_bearing) + .5);
 	cairo_show_text (c->cr, buf);
 
-	cairo_move_to (c->cr, c->width-extents.width+extents.x_bearing, floor (mid + y) - (extents.height/2 + extents.y_bearing)+ .5);
+	cairo_move_to (c->cr, c->width-extents.width-1, floor (mid + y) - (extents.height/2 + extents.y_bearing) + .5);
 	cairo_show_text (c->cr, buf);
 
 	cairo_set_source_rgba (c->cr, 0, .75, 0, .95);
-	cairo_move_to (c->cr, -extents.x_bearing, ceil (mid - y) - (extents.height/2 + extents.y_bearing)+ .5);
+	cairo_move_to (c->cr, 1-extents.x_bearing, ceil (mid - y) - (extents.height/2 + extents.y_bearing) + .5);
 	cairo_show_text (c->cr, buf);
 
-	cairo_move_to (c->cr, c->width-extents.width+extents.x_bearing, ceil (mid - y) - (extents.height/2 + extents.y_bearing)+ .5);
+	cairo_move_to (c->cr, c->width-extents.width-1, ceil (mid - y) - (extents.height/2 + extents.y_bearing) + .5);
 	cairo_show_text (c->cr, buf);
 
 	/* trim the dashes to no obscure the labels */
@@ -567,7 +567,7 @@ done:
 		       ceil (extents.width + extents.x_bearing + 2),
 		       floor (mid + y) + .5);
 	cairo_line_to (c->cr,
-		       floor (c->width - (extents.width + extents.x_bearing + 2)),
+		       floor (c->width - (extents.width + 2)),
 		       floor (mid + y) + .5);
 	cairo_stroke (c->cr);
 
@@ -576,7 +576,7 @@ done:
 		       ceil (extents.width + extents.x_bearing + 2),
 		       ceil (mid - y) + .5);
 	cairo_line_to (c->cr,
-		       floor (c->width - (extents.width + extents.x_bearing + 2)),
+		       floor (c->width - (extents.width + 2)),
 		       ceil (mid - y) + .5);
 	cairo_stroke (c->cr);
 

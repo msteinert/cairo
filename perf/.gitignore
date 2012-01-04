@@ -5,6 +5,7 @@ cairo-perf
 cairo-perf-micro
 cairo-perf-print
 cairo-perf-trace
+cairo-perf-chart
 cairo-perf-compare-backends
 cairo-perf-diff-files
 cairo-perf-graph-files
