@@ -1634,7 +1634,8 @@ _cairo_quartz_cg_paint (const cairo_compositor_t *compositor,
     cairo_quartz_drawing_state_t state;
     cairo_int_status_t rv;
 
-    ND ((stderr, "%p _cairo_quartz_surface_paint op %d source->type %d\n", surface, op, source->type));
+    ND ((stderr, "%p _cairo_quartz_surface_paint op %d source->type %d\n",
+	 extents->surface, extents->op, extents->source_pattern.base.type));
 
     rv = _cairo_quartz_setup_state (&state, extents);
     if (unlikely (rv))
@@ -1732,7 +1733,9 @@ _cairo_quartz_cg_mask (const cairo_compositor_t *compositor,
     cairo_bool_t need_temp;
     CGInterpolationQuality filter;
 
-    ND ((stderr, "%p _cairo_quartz_surface_mask op %d source->type %d mask->type %d\n", surface, op, source->type, mask->type));
+    ND ((stderr, "%p _cairo_quartz_surface_mask op %d source->type %d mask->type %d\n",
+	 extents->surface, extents->op, extents->source_pattern.base.type,
+	 extents->mask_pattern.base.type));
 
     if (mask->type == CAIRO_PATTERN_TYPE_SOLID)
 	return _cairo_quartz_cg_mask_with_solid (surface, extents);
@@ -1820,7 +1823,8 @@ _cairo_quartz_cg_fill (const cairo_compositor_t *compositor,
     cairo_quartz_drawing_state_t state;
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
 
-    ND ((stderr, "%p _cairo_quartz_surface_fill op %d source->type %d\n", surface, op, source->type));
+    ND ((stderr, "%p _cairo_quartz_surface_fill op %d source->type %d\n",
+	 extents->surface, extents->op, extents->source_pattern.base.type));
 
     rv = _cairo_quartz_setup_state (&state, extents);
     if (unlikely (rv))
@@ -1866,7 +1870,8 @@ _cairo_quartz_cg_stroke (const cairo_compositor_t *compositor,
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
     CGAffineTransform strokeTransform, invStrokeTransform;
 
-    ND ((stderr, "%p _cairo_quartz_surface_stroke op %d source->type %d\n", surface, op, source->type));
+    ND ((stderr, "%p _cairo_quartz_surface_stroke op %d source->type %d\n",
+	 extents->surface, extents->op, extents->source_pattern.base.type));
 
     rv = _cairo_quartz_setup_state (&state, extents);
     if (unlikely (rv))
