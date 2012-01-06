@@ -2275,6 +2275,7 @@ _cairo_quartz_surface_create_internal (CGContextRef cgContext,
 	surface->cgContext = NULL;
 	surface->cgContextBaseCTM = CGAffineTransformIdentity;
 	surface->imageData = NULL;
+	surface->base.is_clear = TRUE;
 	return surface;
     }
 
@@ -2437,6 +2438,8 @@ cairo_quartz_surface_create (cairo_format_t format,
 	// create_internal will have set an error
 	return &surf->base;
     }
+
+    surf->base.is_clear = TRUE;
 
     surf->imageData = imageData;
     surf->imageSurfaceEquiv = cairo_image_surface_create_for_data (imageData, format, width, height, stride);
