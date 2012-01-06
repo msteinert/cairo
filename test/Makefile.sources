@@ -210,6 +210,7 @@ test_sources = \
 	mime-surface-api.c				\
 	miter-precision.c				\
 	move-to-show-surface.c				\
+	negative-stride-image.c				\
 	new-sub-path.c					\
 	nil-surface.c					\
 	operator.c					\
