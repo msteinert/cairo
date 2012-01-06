@@ -1980,6 +1980,7 @@ _cairo_quartz_cg_glyphs (const cairo_compositor_t *compositor,
 
     switch (scaled_font->options.antialias) {
 	case CAIRO_ANTIALIAS_SUBPIXEL:
+	case CAIRO_ANTIALIAS_BEST:
 	    CGContextSetShouldAntialias (state.cgMaskContext, TRUE);
 	    CGContextSetShouldSmoothFonts (state.cgMaskContext, TRUE);
 	    if (CGContextSetAllowsFontSmoothingPtr &&
@@ -1993,6 +1994,8 @@ _cairo_quartz_cg_glyphs (const cairo_compositor_t *compositor,
 	    CGContextSetShouldAntialias (state.cgMaskContext, FALSE);
 	    break;
 	case CAIRO_ANTIALIAS_GRAY:
+	case CAIRO_ANTIALIAS_GOOD:
+	case CAIRO_ANTIALIAS_FAST:
 	    CGContextSetShouldAntialias (state.cgMaskContext, TRUE);
 	    CGContextSetShouldSmoothFonts (state.cgMaskContext, FALSE);
 	    break;
