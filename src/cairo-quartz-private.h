@@ -80,10 +80,10 @@ typedef struct cairo_quartz_image_surface {
     cairo_image_surface_t *imageSurface;
 } cairo_quartz_image_surface_t;
 
-cairo_bool_t
+cairo_private cairo_bool_t
 _cairo_quartz_verify_surface_size(int width, int height);
 
-CGImageRef
+cairo_private CGImageRef
 CairoQuartzCreateCGImage (cairo_format_t format,
 			      unsigned int width,
 			      unsigned int height,
@@ -94,7 +94,7 @@ CairoQuartzCreateCGImage (cairo_format_t format,
 			      CGDataProviderReleaseDataCallback releaseCallback,
 			      void *releaseInfo);
 
-CGFontRef
+cairo_private CGFontRef
 _cairo_quartz_scaled_font_get_cg_font_ref (cairo_scaled_font_t *sfont);
 
 #else
