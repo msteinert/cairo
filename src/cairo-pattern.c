@@ -3132,18 +3132,18 @@ static cairo_bool_t
 _surface_is_opaque (const cairo_surface_pattern_t *pattern,
 		    const cairo_rectangle_int_t *sample)
 {
+    cairo_rectangle_int_t extents;
+
     if (pattern->surface->content & CAIRO_CONTENT_ALPHA)
 	return FALSE;
 
     if (pattern->base.extend != CAIRO_EXTEND_NONE)
 	return TRUE;
 
+    if (! _cairo_surface_get_extents (pattern->surface, &extents))
+	return TRUE;
+
     if (sample != NULL) {
-	cairo_rectangle_int_t extents;
-
-	if (! _cairo_surface_get_extents (pattern->surface, &extents))
-	    return TRUE;
-
 	if (sample->x >= extents.x &&
 	    sample->y >= extents.y &&
 	    sample->x + sample->width  <= extents.x + extents.width &&
