@@ -631,10 +631,7 @@ cairo_surface_map_to_image (cairo_surface_t  *surface,
 	/* If this surface is bounded, we can't map parts
 	 * that are outside of it. */
 	if (likely (surface->backend->get_extents (surface, &surface_extents))) {
-	    if (unlikely (extents->x < surface_extents.x ||
-			  extents->y < surface_extents.y ||
-			  extents->x + extents->width > surface_extents.x + surface_extents.width ||
-			  extents->y + extents->height > surface_extents.y + surface_extents.height))
+	    if (unlikely (! _cairo_rectangle_contains_rectangle (&surface_extents, extents)))
 		return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_SIZE);
 	}
     }

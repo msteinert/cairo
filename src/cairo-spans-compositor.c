@@ -421,15 +421,7 @@ recording_pattern_contains_sample (const cairo_pattern_t *pattern,
     if (surface->unbounded)
 	return TRUE;
 
-    if (sample->x >= surface->extents.x &&
-	sample->y >= surface->extents.y &&
-	sample->x + sample->width <= surface->extents.x + surface->extents.width &&
-	sample->y + sample->height <= surface->extents.y + surface->extents.height)
-    {
-	return TRUE;
-    }
-
-    return FALSE;
+    return _cairo_rectangle_contains_rectangle (&surface->extents, sample);
 }
 
 static cairo_bool_t

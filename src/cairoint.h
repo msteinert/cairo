@@ -310,6 +310,16 @@ _cairo_rectangle_intersects (const cairo_rectangle_int_t *dst,
 	     src->y + (int) src->height <= dst->y);
 }
 
+static inline cairo_bool_t
+_cairo_rectangle_contains_rectangle (const cairo_rectangle_int_t *a,
+				     const cairo_rectangle_int_t *b)
+{
+    return (a->x <= b->x &&
+	    a->x + (int) a->width >= b->x + (int) b->width &&
+	    a->y <= b->y &&
+	    a->y + (int) a->height >= b->y + (int) b->height);
+}
+
 cairo_private void
 _cairo_rectangle_int_from_double (cairo_rectangle_int_t *recti,
 				  const cairo_rectangle_t *rectf);

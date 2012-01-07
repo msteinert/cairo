@@ -3143,17 +3143,10 @@ _surface_is_opaque (const cairo_surface_pattern_t *pattern,
     if (! _cairo_surface_get_extents (pattern->surface, &extents))
 	return TRUE;
 
-    if (sample != NULL) {
-	if (sample->x >= extents.x &&
-	    sample->y >= extents.y &&
-	    sample->x + sample->width  <= extents.x + extents.width &&
-	    sample->y + sample->height <= extents.y + extents.height)
-	{
-	    return TRUE;
-	}
-    }
+    if (sample == NULL)
+	return FALSE;
 
-    return FALSE;
+    return _cairo_rectangle_contains_rectangle (&extents, sample);
 }
 
 static cairo_bool_t
@@ -3166,17 +3159,10 @@ _raster_source_is_opaque (const cairo_raster_source_pattern_t *pattern,
     if (pattern->base.extend != CAIRO_EXTEND_NONE)
 	return TRUE;
 
-    if (sample != NULL) {
-	if (sample->x >= pattern->extents.x &&
-	    sample->y >= pattern->extents.y &&
-	    sample->x + sample->width  <= pattern->extents.x + pattern->extents.width &&
-	    sample->y + sample->height <= pattern->extents.y + pattern->extents.height)
-	{
-	    return TRUE;
-	}
-    }
+    if (sample == NULL)
+	return FALSE;
 
-    return FALSE;
+    return _cairo_rectangle_contains_rectangle (&pattern->extents, sample);
 }
 
 static cairo_bool_t
