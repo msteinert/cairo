@@ -1304,6 +1304,14 @@ _cairo_surface_paint (cairo_surface_t	*surface,
 		      const cairo_pattern_t *source,
 		      const cairo_clip_t	    *clip);
 
+cairo_private cairo_image_surface_t *
+_cairo_surface_map_to_image (cairo_surface_t  *surface,
+			     const cairo_rectangle_int_t *extents);
+
+cairo_private cairo_int_status_t
+_cairo_surface_unmap_image (cairo_surface_t       *surface,
+			    cairo_image_surface_t *image);
+
 cairo_private cairo_status_t
 _cairo_surface_mask (cairo_surface_t	*surface,
 		     cairo_operator_t	 op,

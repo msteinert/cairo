@@ -599,6 +599,135 @@ cairo_surface_create_similar_image (cairo_surface_t  *other,
 slim_hidden_def (cairo_surface_create_similar_image);
 
 /**
+ * _cairo_surface_map_to_image:
+ * @surface: an existing surface used to extract the image from
+ * @extents: limit the extraction to an rectangular region
+ *
+ * Returns an image surface that is the most efficient mechanism for
+ * modifying the backing store of the target surface. The region
+ * retrieved is limited to @extents.
+ *
+ * Note, the use of the original surface as a target or source whilst
+ * it is mapped is undefined. The result of mapping the surface
+ * multiple times is undefined. Calling cairo_surface_destroy() or
+ * cairo_surface_finish() on the resulting image surface results in
+ * undefined behavior. Changing the device transform of the image
+ * surface or of @surface before the image surface is unmapped results
+ * in undefined behavior.
+ *
+ * Assumes that @surface is valid (CAIRO_STATUS_SUCCESS,
+ * non-finished).
+ *
+ * Return value: a pointer to the newly allocated image surface. The
+ * caller must use _cairo_surface_unmap_image() to destroy this image
+ * surface.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if @other is already in an error state
+ * or any other error occurs.
+ *
+ * The returned image might have a %CAIRO_FORMAT_INVALID format.
+ **/
+cairo_image_surface_t *
+_cairo_surface_map_to_image (cairo_surface_t  *surface,
+			     const cairo_rectangle_int_t *extents)
+{
+    cairo_image_surface_t *image = NULL;
+
+    assert (extents != NULL);
+
+    /* TODO: require map_to_image != NULL */
+    if (surface->backend->map_to_image)
+	image = (cairo_image_surface_t *) surface->backend->map_to_image (surface, extents);
+
+    if (image == NULL)
+	image = _cairo_image_surface_clone_subimage (surface, extents);
+
+    return image;
+}
+
+/**
+ * _cairo_surface_unmap_image:
+ * @surface: the surface passed to _cairo_surface_map_to_image().
+ * @image: the currently mapped image
+ *
+ * Unmaps the image surface as returned from
+ * _cairo_surface_map_to_image().
+ *
+ * The content of the image will be uploaded to the target surface.
+ * Afterwards, the image is destroyed.
+ *
+ * Using an image surface which wasn't returned by
+ * _cairo_surface_map_to_image() results in undefined behavior.
+ *
+ * An image surface in error status can be passed to
+ * _cairo_surface_unmap_image().
+ *
+ * Return value: the unmap status.
+ *
+ * Even if the unmap status is not successful, @image is destroyed.
+ **/
+cairo_int_status_t
+_cairo_surface_unmap_image (cairo_surface_t       *surface,
+			    cairo_image_surface_t *image)
+{
+    cairo_surface_pattern_t pattern;
+    cairo_rectangle_int_t extents;
+    cairo_clip_t *clip;
+    cairo_int_status_t status;
+
+    /* map_to_image can return error surfaces */
+    if (unlikely (image->base.status)) {
+	status = image->base.status;
+	goto destroy;
+    }
+
+    /* If the image is untouched just skip the update */
+    if (image->base.serial == 0) {
+	status = CAIRO_STATUS_SUCCESS;
+	goto destroy;
+    }
+
+    /* TODO: require unmap_image != NULL */
+    if (surface->backend->unmap_image &&
+	! _cairo_image_surface_is_clone (image))
+    {
+	status = surface->backend->unmap_image (surface, image);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    goto destroy;
+    }
+
+    _cairo_pattern_init_for_surface (&pattern, &image->base);
+    pattern.base.filter = CAIRO_FILTER_NEAREST;
+
+    /* We have to apply the translate from map_to_image's extents.x and .y */
+    cairo_matrix_init_translate (&pattern.base.matrix,
+				 image->base.device_transform.x0,
+				 image->base.device_transform.y0);
+
+    /* And we also have to clip the operation to the image's extents */
+    extents.x = image->base.device_transform_inverse.x0;
+    extents.y = image->base.device_transform_inverse.y0;
+    extents.width  = image->width;
+    extents.height = image->height;
+    clip = _cairo_clip_intersect_rectangle (NULL, &extents);
+
+    status = _cairo_surface_paint (surface,
+				   CAIRO_OPERATOR_SOURCE,
+				   &pattern.base,
+				   clip);
+
+    _cairo_pattern_fini (&pattern.base);
+    _cairo_clip_destroy (clip);
+
+destroy:
+    cairo_surface_finish (&image->base);
+    cairo_surface_destroy (&image->base);
+
+    return status;
+}
+
+/**
  * cairo_surface_map_to_image:
  * @surface: an existing surface used to extract the image from
  * @extents: limit the extraction to an rectangular region
@@ -607,17 +736,22 @@ slim_hidden_def (cairo_surface_create_similar_image);
  * modifying the backing store of the target surface. The region retrieved
  * may be limited to the @extents or %NULL for the whole surface
  *
- * Note, the use of the original surface as a target or source whilst it is
- * mapped is undefined. The result of mapping the surface multiple times is
- * undefined. Calling cairo_surface_destroy() or cairo_surface_finish() on the
- * resulting image surface results in undefined behavior.
+ * Note, the use of the original surface as a target or source whilst
+ * it is mapped is undefined. The result of mapping the surface
+ * multiple times is undefined. Calling cairo_surface_destroy() or
+ * cairo_surface_finish() on the resulting image surface results in
+ * undefined behavior. Changing the device transform of the image
+ * surface or of @surface before the image surface is unmapped results
+ * in undefined behavior.
  *
  * Return value: a pointer to the newly allocated image surface. The caller
  * must use cairo_surface_unmap_image() to destroy this image surface.
  *
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if @other is already in an error state
- * or any other error occurs.
+ * or any other error occurs. If the returned pointer does not have an
+ * error status, it is guaranteed to be an image surface whose format
+ * is not %CAIRO_FORMAT_INVALID.
  *
  * Since: 1.12
  **/
@@ -626,7 +760,9 @@ cairo_surface_map_to_image (cairo_surface_t  *surface,
 			    const cairo_rectangle_int_t *extents)
 {
     cairo_rectangle_int_t rect;
-    cairo_surface_t *image;
+    cairo_surface_t *imagesurf;
+    cairo_image_surface_t *image;
+    cairo_status_t status;
 
     if (unlikely (surface->status))
 	return _cairo_surface_create_in_error (surface->status);
@@ -649,37 +785,28 @@ cairo_surface_map_to_image (cairo_surface_t  *surface,
 	}
     }
 
-    image = NULL;
-    if (surface->backend->map_to_image)
-	image = surface->backend->map_to_image (surface, extents);
+    image = _cairo_surface_map_to_image (surface, extents);
+    imagesurf = &image->base;
 
-    if (image == NULL) {
-	cairo_surface_pattern_t pattern;
-	cairo_status_t status;
-
-	image = cairo_surface_create_similar_image (surface,
-						    _cairo_format_from_content (surface->content),
-						    extents->width,
-						    extents->height);
-	cairo_surface_set_device_offset (image, -extents->x, -extents->y);
-
-	_cairo_pattern_init_for_surface (&pattern, surface);
-	pattern.base.filter = CAIRO_FILTER_NEAREST;
-
-	status = _cairo_surface_paint (image,
-				       CAIRO_OPERATOR_SOURCE,
-				       &pattern.base,
-				       NULL);
-
-	_cairo_pattern_fini (&pattern.base);
-
-	if (unlikely (status)) {
-	    cairo_surface_destroy (image);
-	    image = _cairo_surface_create_in_error (status);
-	}
+    status = cairo_surface_status (imagesurf);
+    if (unlikely (status)) {
+	cairo_surface_destroy (imagesurf);
+	return _cairo_surface_create_in_error (status);
     }
 
-    return image;
+    if (cairo_image_surface_get_format (imagesurf) == CAIRO_FORMAT_INVALID) {
+	cairo_surface_destroy (imagesurf);
+	image = _cairo_image_surface_clone_subimage (surface, extents);
+	imagesurf = &image->base;
+    }
+
+    status = cairo_surface_status (imagesurf);
+    if (unlikely (status)) {
+	cairo_surface_destroy (imagesurf);
+	return _cairo_surface_create_in_error (status);
+    }
+
+    return imagesurf;
 }
 slim_hidden_def (cairo_surface_map_to_image);
 
@@ -702,7 +829,7 @@ void
 cairo_surface_unmap_image (cairo_surface_t *surface,
 			   cairo_surface_t *image)
 {
-    cairo_int_status_t status;
+    cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
 
     if (unlikely (surface->status)) {
 	status = surface->status;
@@ -712,7 +839,6 @@ cairo_surface_unmap_image (cairo_surface_t *surface,
 	status = _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 	goto error;
     }
-
     if (unlikely (image->status)) {
 	status = image->status;
 	goto error;
@@ -726,50 +852,17 @@ cairo_surface_unmap_image (cairo_surface_t *surface,
 	goto error;
     }
 
-    /* If the image is untouched just skip the update */
-    if (image->serial == 0) {
-	status = CAIRO_STATUS_SUCCESS;
-	goto error;
-    }
+    status = _cairo_surface_unmap_image (surface,
+					 (cairo_image_surface_t *) image);
+    if (unlikely (status))
+	_cairo_surface_set_error (surface, status);
 
-    status = CAIRO_INT_STATUS_UNSUPPORTED;
-    if (surface->backend->unmap_image)
-	status = surface->backend->unmap_image (surface, (cairo_image_surface_t *) image);
-    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
-	cairo_image_surface_t *img = (cairo_image_surface_t *) image;
-	cairo_surface_pattern_t pattern;
-	cairo_clip_t *clip;
-	cairo_rectangle_int_t extents;
-
-	_cairo_pattern_init_for_surface (&pattern, image);
-	pattern.base.filter = CAIRO_FILTER_NEAREST;
-
-	/* We have to apply the translate from map_to_image's extents.x and .y */
-	cairo_matrix_init_translate (&pattern.base.matrix,
-				     image->device_transform.x0,
-				     image->device_transform.y0);
-
-	/* And we also have to clip the operation to the image's extents */
-	extents.x = image->device_transform_inverse.x0;
-	extents.y = image->device_transform_inverse.y0;
-	extents.width  = img->width;
-	extents.height = img->height;
-	clip = _cairo_clip_intersect_rectangle (NULL, &extents);
-
-	status = _cairo_surface_paint (surface,
-				       CAIRO_OPERATOR_SOURCE,
-				       &pattern.base,
-				       clip);
-
-	_cairo_pattern_fini (&pattern.base);
-	_cairo_clip_destroy (clip);
-    }
+    return;
 
 error:
+    _cairo_surface_set_error (surface, status);
     cairo_surface_finish (image);
     cairo_surface_destroy (image);
-    if (status)
-	_cairo_surface_set_error (surface, status);
 }
 slim_hidden_def (cairo_surface_unmap_image);
 

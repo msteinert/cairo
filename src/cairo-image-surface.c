@@ -1202,3 +1202,44 @@ _cairo_image_analyze_color (cairo_image_surface_t      *image)
 
     return image->color = CAIRO_IMAGE_IS_COLOR;
 }
+
+static const cairo_user_data_key_t clone_key;
+
+cairo_image_surface_t *
+_cairo_image_surface_clone_subimage (cairo_surface_t             *surface,
+				     const cairo_rectangle_int_t *extents)
+{
+    cairo_surface_t *image;
+    cairo_surface_pattern_t pattern;
+    cairo_status_t ignored;
+
+    image = cairo_surface_create_similar_image (surface,
+						_cairo_format_from_content (surface->content),
+						extents->width,
+						extents->height);
+    /* TODO: check me with non-identity device_transform. Should we
+     * clone the scaling, too? */
+    cairo_surface_set_device_offset (image,
+				     -extents->x,
+				     -extents->y);
+
+    _cairo_pattern_init_for_surface (&pattern, surface);
+    pattern.base.filter = CAIRO_FILTER_NEAREST;
+
+    ignored = _cairo_surface_paint (image,
+				    CAIRO_OPERATOR_SOURCE,
+				    &pattern.base,
+				    NULL);
+
+    _cairo_pattern_fini (&pattern.base);
+
+    cairo_surface_set_user_data (image, &clone_key, surface, NULL);
+
+    return (cairo_image_surface_t *) image;
+}
+
+cairo_bool_t
+_cairo_image_surface_is_clone (cairo_image_surface_t *image)
+{
+    return cairo_surface_get_user_data (&image->base, &clone_key) != NULL;
+}
