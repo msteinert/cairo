@@ -12,6 +12,7 @@ test_sources = \
 	a8-mask.c					\
 	aliasing.c					\
 	alpha-similar.c					\
+	arc-direction.c					\
 	arc-infinite-loop.c				\
 	arc-looping-dash.c				\
 	api-special-cases.c				\
