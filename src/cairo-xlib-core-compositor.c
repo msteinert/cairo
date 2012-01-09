@@ -268,6 +268,19 @@ static cairo_bool_t image_upload_box (cairo_box_t *box, void *closure)
 					   x, y) == CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_bool_t
+surface_matches_image_format (cairo_xlib_surface_t *surface,
+			      cairo_image_surface_t *image)
+{
+    cairo_format_masks_t format;
+
+    return (_pixman_format_to_masks (image->pixman_format, &format) &&
+	    (format.alpha_mask == surface->a_mask || surface->a_mask == 0) &&
+	    (format.red_mask   == surface->r_mask || surface->r_mask == 0) &&
+	    (format.green_mask == surface->g_mask || surface->g_mask == 0) &&
+	    (format.blue_mask  == surface->b_mask || surface->b_mask == 0))
+}
+
 static cairo_status_t
 upload_image_inplace (cairo_xlib_surface_t *dst,
 		      const cairo_pattern_t *source,
@@ -289,6 +302,9 @@ upload_image_inplace (cairo_xlib_surface_t *dst,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (image->depth != dst->depth)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (! surface_matches_image_format (dst, image))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* XXX subsurface */
