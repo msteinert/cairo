@@ -61,6 +61,10 @@ _cairo_surface_subsurface_create_similar (void *other,
 					  int width, int height)
 {
     cairo_surface_subsurface_t *surface = other;
+
+    if (surface->target->backend->create_similar == NULL)
+	return NULL;
+
     return surface->target->backend->create_similar (surface->target, content, width, height);
 }
 
@@ -70,6 +74,10 @@ _cairo_surface_subsurface_create_similar_image (void *other,
 						int width, int height)
 {
     cairo_surface_subsurface_t *surface = other;
+
+    if (surface->target->backend->create_similar_image == NULL)
+	return NULL;
+
     return surface->target->backend->create_similar_image (surface->target,
 							   format,
 							   width, height);
