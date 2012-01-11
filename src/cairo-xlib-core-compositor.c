@@ -278,7 +278,7 @@ surface_matches_image_format (cairo_xlib_surface_t *surface,
 	    (format.alpha_mask == surface->a_mask || surface->a_mask == 0) &&
 	    (format.red_mask   == surface->r_mask || surface->r_mask == 0) &&
 	    (format.green_mask == surface->g_mask || surface->g_mask == 0) &&
-	    (format.blue_mask  == surface->b_mask || surface->b_mask == 0))
+	    (format.blue_mask  == surface->b_mask || surface->b_mask == 0));
 }
 
 static cairo_status_t
