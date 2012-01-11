@@ -172,6 +172,12 @@ _cairo_xcb_surface_create_similar_image (void			*abstract_other,
     cairo_status_t status;
     pixman_format_code_t pixman_format;
 
+    if (unlikely(width  > XLIB_COORD_MAX ||
+		 height > XLIB_COORD_MAX ||
+		 width  <= 0 ||
+		 height <= 0))
+	return NULL;
+
     pixman_format = _cairo_format_to_pixman_format_code (format);
 
     status = _cairo_xcb_shm_image_create (connection, pixman_format,
@@ -179,6 +185,7 @@ _cairo_xcb_surface_create_similar_image (void			*abstract_other,
 					  &shm_info);
     if (unlikely (status))
 	return _cairo_surface_create_in_error (status);
+
     return &image->base;
 }
 
