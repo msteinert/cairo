@@ -294,6 +294,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_operand_t *operand,
     cairo_gl_context_t *ctx;
     cairo_surface_t *image;
     cairo_bool_t src_is_gl_surface = FALSE;
+    cairo_rectangle_int_t map_extents;
 
     if (_src->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	cairo_surface_t* src_surface = ((cairo_surface_pattern_t *) _src)->surface;
@@ -308,7 +309,9 @@ _cairo_gl_pattern_texture_setup (cairo_gl_operand_t *operand,
 	_cairo_gl_surface_create_scratch (ctx,
 					  CAIRO_CONTENT_COLOR_ALPHA,
 					  extents->width, extents->height);
-    image = cairo_surface_map_to_image (&surface->base, NULL);
+    map_extents = *extents;
+    map_extents.x = map_extents.y = 0;
+    image = cairo_surface_map_to_image (&surface->base, &map_extents);
 
     /* If the pattern is a GL surface, it belongs to some other GL context,
        so we need to release this device while we paint it to the image. */

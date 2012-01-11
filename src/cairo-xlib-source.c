@@ -261,6 +261,7 @@ render_pattern (cairo_xlib_surface_t *dst,
     cairo_xlib_surface_t *src;
     cairo_surface_t *image;
     cairo_status_t status;
+    cairo_rectangle_int_t map_extents;
 
     src = (cairo_xlib_surface_t *)
 	_cairo_surface_create_similar_scratch (&dst->base,
@@ -272,7 +273,10 @@ render_pattern (cairo_xlib_surface_t *dst,
 	return None;
     }
 
-    image = cairo_surface_map_to_image (&src->base, NULL);
+    map_extents = *extents;
+    map_extents.x = map_extents.y = 0;
+
+    image = cairo_surface_map_to_image (&src->base, &map_extents);
     status = _cairo_surface_offset_paint (image, extents->x, extents->y,
 					  CAIRO_OPERATOR_SOURCE, pattern,
 					  NULL);
@@ -912,7 +916,7 @@ surface_source (cairo_xlib_surface_t *dst,
     cairo_surface_t *image;
     cairo_surface_pattern_t local_pattern;
     cairo_status_t status;
-    cairo_rectangle_int_t upload, limit;
+    cairo_rectangle_int_t upload, limit, map_extents;
     cairo_matrix_t m;
 
     upload = *sample;
@@ -939,7 +943,10 @@ surface_source (cairo_xlib_surface_t *dst,
     cairo_matrix_init_translate (&local_pattern.base.matrix,
 				 upload.x, upload.y);
 
-    image = cairo_surface_map_to_image (&src->base, NULL);
+    map_extents = upload;
+    map_extents.x = map_extents.y = 0;
+
+    image = cairo_surface_map_to_image (&src->base, &map_extents);
     status = _cairo_surface_paint (image,
 				   CAIRO_OPERATOR_SOURCE,
 				   &local_pattern.base,
