@@ -808,7 +808,6 @@ cairo_surface_map_to_image (cairo_surface_t  *surface,
 
     return imagesurf;
 }
-slim_hidden_def (cairo_surface_map_to_image);
 
 /**
  * cairo_surface_unmap_image:
@@ -864,7 +863,6 @@ error:
     cairo_surface_finish (image);
     cairo_surface_destroy (image);
 }
-slim_hidden_def (cairo_surface_unmap_image);
 
 cairo_surface_t *
 _cairo_surface_create_similar_solid (cairo_surface_t	 *other,

@@ -259,7 +259,7 @@ render_pattern (cairo_xlib_surface_t *dst,
 {
     Display *dpy = dst->display->display;
     cairo_xlib_surface_t *src;
-    cairo_surface_t *image;
+    cairo_image_surface_t *image;
     cairo_status_t status;
     cairo_rectangle_int_t map_extents;
 
@@ -276,11 +276,11 @@ render_pattern (cairo_xlib_surface_t *dst,
     map_extents = *extents;
     map_extents.x = map_extents.y = 0;
 
-    image = cairo_surface_map_to_image (&src->base, &map_extents);
-    status = _cairo_surface_offset_paint (image, extents->x, extents->y,
+    image = _cairo_surface_map_to_image (&src->base, &map_extents);
+    status = _cairo_surface_offset_paint (&image->base, extents->x, extents->y,
 					  CAIRO_OPERATOR_SOURCE, pattern,
 					  NULL);
-    cairo_surface_unmap_image (&src->base, image);
+    status = _cairo_surface_unmap_image (&src->base, image);
     if (unlikely (status)) {
 	cairo_surface_destroy (&src->base);
 	return _cairo_surface_create_in_error (status);
@@ -913,7 +913,7 @@ surface_source (cairo_xlib_surface_t *dst,
 		int *src_x, int *src_y)
 {
     cairo_xlib_surface_t *src;
-    cairo_surface_t *image;
+    cairo_image_surface_t *image;
     cairo_surface_pattern_t local_pattern;
     cairo_status_t status;
     cairo_rectangle_int_t upload, limit, map_extents;
@@ -946,12 +946,12 @@ surface_source (cairo_xlib_surface_t *dst,
     map_extents = upload;
     map_extents.x = map_extents.y = 0;
 
-    image = cairo_surface_map_to_image (&src->base, &map_extents);
-    status = _cairo_surface_paint (image,
+    image = _cairo_surface_map_to_image (&src->base, &map_extents);
+    status = _cairo_surface_paint (&image->base,
 				   CAIRO_OPERATOR_SOURCE,
 				   &local_pattern.base,
 				   NULL);
-    cairo_surface_unmap_image (&src->base, image);
+    status = _cairo_surface_unmap_image (&src->base, image);
     _cairo_pattern_fini (&local_pattern.base);
 
     if (unlikely (status)) {

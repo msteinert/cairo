@@ -662,9 +662,9 @@ sync (cairo_surface_t *target, int x, int y)
     extents.width  = 1;
     extents.height = 1;
 
-    cairo_surface_unmap_image (target,
-			       cairo_surface_map_to_image (target,
-							   &extents));
+    _cairo_surface_unmap_image (target,
+				_cairo_surface_map_to_image (target,
+							     &extents));
 }
 
 static void

@@ -292,7 +292,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_operand_t *operand,
     cairo_status_t status;
     cairo_gl_surface_t *surface;
     cairo_gl_context_t *ctx;
-    cairo_surface_t *image;
+    cairo_image_surface_t *image;
     cairo_bool_t src_is_gl_surface = FALSE;
     cairo_rectangle_int_t map_extents;
 
@@ -311,7 +311,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_operand_t *operand,
 					  extents->width, extents->height);
     map_extents = *extents;
     map_extents.x = map_extents.y = 0;
-    image = cairo_surface_map_to_image (&surface->base, &map_extents);
+    image = _cairo_surface_map_to_image (&surface->base, &map_extents);
 
     /* If the pattern is a GL surface, it belongs to some other GL context,
        so we need to release this device while we paint it to the image. */
@@ -321,7 +321,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_operand_t *operand,
 	    goto fail;
     }
 
-    status = _cairo_surface_offset_paint (image, extents->x, extents->y,
+    status = _cairo_surface_offset_paint (&image->base, extents->x, extents->y,
 					  CAIRO_OPERATOR_SOURCE, _src, NULL);
 
     if (src_is_gl_surface) {
@@ -330,7 +330,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_operand_t *operand,
 	    goto fail;
     }
 
-    cairo_surface_unmap_image (&surface->base, image);
+    status = _cairo_surface_unmap_image (&surface->base, image);
     status = _cairo_gl_context_release (ctx, status);
     if (unlikely (status))
 	goto fail;
