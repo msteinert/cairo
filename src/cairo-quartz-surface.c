@@ -1567,6 +1567,7 @@ _cairo_quartz_surface_map_to_image (void *abstract_surface,
 	return _cairo_surface_create_in_error (status);
 
     /* Is this legitimate? shouldn't it return an image surface? */
+    /* XXX: BROKEN! */
 
     subsurface = _cairo_surface_create_for_rectangle_int (&image->base, extents);
     cairo_surface_destroy (&image->base);

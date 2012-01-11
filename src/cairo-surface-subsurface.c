@@ -91,16 +91,12 @@ _cairo_surface_subsurface_map_to_image (void *abstract_surface,
     cairo_surface_subsurface_t *surface = abstract_surface;
     cairo_rectangle_int_t target_extents;
 
-    if (surface->target->backend->map_to_image == NULL)
-	return NULL;
-
     target_extents.x = extents->x + surface->extents.x;
     target_extents.y = extents->y + surface->extents.y;
     target_extents.width  = extents->width;
     target_extents.height = extents->height;
 
-    return surface->target->backend->map_to_image (surface->target,
-						   &target_extents);
+    return _cairo_surface_map_to_image (surface->target, &target_extents);
 }
 
 static cairo_int_status_t
@@ -108,11 +104,7 @@ _cairo_surface_subsurface_unmap_image (void *abstract_surface,
 				       cairo_image_surface_t *image)
 {
     cairo_surface_subsurface_t *surface = abstract_surface;
-
-    if (surface->target->backend->unmap_image == NULL)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    return surface->target->backend->unmap_image (surface->target, image);
+    return _cairo_surface_unmap_image (surface->target, image);
 }
 
 static cairo_int_status_t

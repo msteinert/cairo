@@ -694,7 +694,7 @@ _cairo_surface_unmap_image (cairo_surface_t       *surface,
     {
 	status = surface->backend->unmap_image (surface, image);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    goto destroy;
+	    return status;
     }
 
     _cairo_pattern_init_for_surface (&pattern, &image->base);

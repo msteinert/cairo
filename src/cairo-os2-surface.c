@@ -596,6 +596,7 @@ _cairo_os2_surface_map_to_image (void *abstract_surface,
     surface->pixel_array_lend_count++;
     DosReleaseMutexSem (local_os2_surface->hmtx_use_private_fields);
 
+    /* XXX: BROKEN! */
     *image_out = _cairo_surface_create_for_rectangle_int (surface->image_surface,
 							  extents);
 

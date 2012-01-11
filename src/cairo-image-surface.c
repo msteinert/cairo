@@ -821,6 +821,9 @@ cairo_int_status_t
 _cairo_image_surface_unmap_image (void *abstract_surface,
 				  cairo_image_surface_t *image)
 {
+    cairo_surface_finish (&image->base);
+    cairo_surface_destroy (&image->base);
+
     return CAIRO_INT_STATUS_SUCCESS;
 }
 

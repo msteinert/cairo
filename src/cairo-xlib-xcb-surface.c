@@ -121,7 +121,7 @@ _cairo_xlib_xcb_surface_map_to_image (void *abstract_surface,
 				      const cairo_rectangle_int_t *extents)
 {
     cairo_xlib_xcb_surface_t *surface = abstract_surface;
-    return cairo_surface_map_to_image (&surface->xcb->base, extents);
+    return _cairo_surface_map_to_image (&surface->xcb->base, extents);
 }
 
 static cairo_int_status_t
@@ -129,13 +129,7 @@ _cairo_xlib_xcb_surface_unmap (void *abstract_surface,
 			       cairo_image_surface_t *image)
 {
     cairo_xlib_xcb_surface_t *surface = abstract_surface;
-
-    /* cairo_surface_unmap_image destroys the surface, so get a new reference
-     * for it to destroy.
-     */
-    cairo_surface_reference (&image->base);
-    cairo_surface_unmap_image (&surface->xcb->base, &image->base);
-    return cairo_surface_status (&surface->xcb->base);
+    return _cairo_surface_unmap_image (&surface->xcb->base, image);
 }
 
 static cairo_surface_t *

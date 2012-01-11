@@ -1294,11 +1294,18 @@ static cairo_int_status_t
 _cairo_xlib_surface_unmap_image (void *abstract_surface,
 				 cairo_image_surface_t *image)
 {
-    return _cairo_xlib_surface_draw_image (abstract_surface, image,
-					   0, 0,
-					   image->width, image->height,
-					   image->base.device_transform_inverse.x0,
-					   image->base.device_transform_inverse.y0);
+    cairo_int_status_t status;
+
+    status = _cairo_xlib_surface_draw_image (abstract_surface, image,
+					     0, 0,
+					     image->width, image->height,
+					     image->base.device_transform_inverse.x0,
+					     image->base.device_transform_inverse.y0);
+
+    cairo_surface_finish (&image->base);
+    cairo_surface_destroy (&image->base);
+
+    return status;
 }
 
 static cairo_bool_t
