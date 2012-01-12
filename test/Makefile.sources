@@ -302,6 +302,7 @@ test_sources = \
 	source-clip-scale.c				\
 	source-surface-scale-paint.c			\
 	spline-decomposition.c				\
+	stride-12-image.c				\
 	stroke-pattern.c                                \
 	subsurface.c                                    \
 	subsurface-image-repeat.c                       \
