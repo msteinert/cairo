@@ -27,16 +27,16 @@
 #include "cairo-test.h"
 
 #define SIZE 40
-#define WIDTH (4*SIZE)
-#define HEIGHT WIDTH
+#define WIDTH (7*SIZE)
+#define HEIGHT (5*SIZE)
 
 #define FALLBACK_RES_X 300
 #define FALLBACK_RES_Y 150
 
-static cairo_test_status_t
-draw (cairo_t *cr, int width, int height)
+static void
+rectangles (cairo_t *cr)
 {
-    cairo_surface_set_fallback_resolution (cairo_get_target (cr), FALLBACK_RES_X, FALLBACK_RES_Y);
+    cairo_save (cr);
 
     cairo_rotate (cr, M_PI/8);
     cairo_translate (cr, 2*SIZE, SIZE/16);
@@ -52,6 +52,21 @@ draw (cairo_t *cr, int width, int height)
     cairo_rectangle (cr, SIZE/2, SIZE/2, SIZE, SIZE);
     cairo_set_source_rgba (cr, 0, 1, 0, 0.5);
     cairo_fill (cr);
+
+    cairo_restore (cr);
+}
+
+static cairo_test_status_t
+draw (cairo_t *cr, int width, int height)
+{
+    cairo_surface_set_fallback_resolution (cairo_get_target (cr), FALLBACK_RES_X, FALLBACK_RES_Y);
+
+    rectangles (cr);
+    cairo_translate (cr, 3*SIZE, 0);
+    cairo_push_group (cr);
+    rectangles (cr);
+    cairo_pop_group_to_source (cr);
+    cairo_paint (cr);
 
     return CAIRO_TEST_SUCCESS;
 }
