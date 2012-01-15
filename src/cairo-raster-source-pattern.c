@@ -89,8 +89,7 @@ _cairo_raster_source_pattern_release (const cairo_pattern_t *abstract_pattern,
     if (pattern->release == NULL)
 	return;
 
-    return pattern->release (&pattern->base, pattern->user_data,
-			     surface);
+    pattern->release (&pattern->base, pattern->user_data, surface);
 }
 
 cairo_status_t
