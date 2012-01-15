@@ -3048,15 +3048,27 @@ _cairo_ps_surface_paint_surface (cairo_ps_surface_t      *surface,
     cairo_p2d = pattern->base.matrix;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_FALLBACK) {
-	double scale = cairo_p2d.xx;
+	double x_scale = cairo_p2d.xx;
+	double y_scale = cairo_p2d.yy;
 
 	_cairo_output_stream_printf (surface->stream,
-				     "%% Fallback Image: x=%f y=%f w=%d h=%d res=%fppi size=%ld\n",
-				     -cairo_p2d.x0/scale,
-				     -cairo_p2d.y0/scale,
-				     (int)(width/scale),
-				     (int)(height/scale),
-				     scale*72,
+				     "%% Fallback Image: x=%f y=%f w=%d h=%d ",
+				     -cairo_p2d.x0/x_scale,
+				     -cairo_p2d.y0/y_scale,
+				     (int)(width/x_scale),
+				     (int)(height/y_scale));
+	if (x_scale == y_scale) {
+	    _cairo_output_stream_printf (surface->stream,
+					 "res=%fppi ",
+					 x_scale*72);
+	} else {
+	    _cairo_output_stream_printf (surface->stream,
+					 "res=%fx%fppi ",
+					 x_scale*72,
+					 y_scale*72);
+	}
+	_cairo_output_stream_printf (surface->stream,
+				     "size=%ld\n",
 				     (long)width*height*3);
     } else {
 	if (op == CAIRO_OPERATOR_SOURCE) {
