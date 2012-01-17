@@ -665,6 +665,18 @@ static const int8_t dither_pattern[4][4] = {
 };
 #undef X
 
+static int bits_per_pixel(cairo_xlib_surface_t *surface)
+{
+    if (surface->depth > 16)
+	return 32;
+    else if (surface->depth > 8)
+	return 16;
+    else if (surface->depth > 1)
+	return 8;
+    else
+	return 1;
+}
+
 static cairo_surface_t *
 _get_image_surface (cairo_xlib_surface_t    *surface,
 		    const cairo_rectangle_int_t *extents)
@@ -682,7 +694,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
     assert (extents->y + extents->height <= surface->height);
 
     if (surface->base.serial == 0) {
-	xlib_masks.bpp = (surface->depth + 7) & ~7;
+	xlib_masks.bpp = bits_per_pixel (surface);
 	xlib_masks.alpha_mask = surface->a_mask;
 	xlib_masks.red_mask = surface->r_mask;
 	xlib_masks.green_mask = surface->g_mask;
@@ -1034,7 +1046,7 @@ _cairo_xlib_surface_draw_image (cairo_xlib_surface_t   *surface,
         image_masks.red_mask   = surface->r_mask;
         image_masks.green_mask = surface->g_mask;
         image_masks.blue_mask  = surface->b_mask;
-        image_masks.bpp        = surface->depth;
+        image_masks.bpp        = bits_per_pixel (surface);
         ret = _pixman_format_from_masks (&image_masks, &intermediate_format);
         assert (ret);
 
@@ -1079,14 +1091,7 @@ _cairo_xlib_surface_draw_image (cairo_xlib_surface_t   *surface,
 	cairo_bool_t true_color;
 	int ret;
 
-	if (surface->depth > 16)
-	    ximage.bits_per_pixel = 32;
-	else if (surface->depth > 8)
-	    ximage.bits_per_pixel = 16;
-	else if (surface->depth > 1)
-	    ximage.bits_per_pixel = 8;
-	else
-	    ximage.bits_per_pixel = 1;
+	ximage.bits_per_pixel = bits_per_pixel(surface);
 	stride = CAIRO_STRIDE_FOR_WIDTH_BPP (ximage.width,
 					     ximage.bits_per_pixel);
 	ximage.bytes_per_line = stride;
