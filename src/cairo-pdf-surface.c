@@ -157,6 +157,14 @@ static const char * _cairo_pdf_version_strings[CAIRO_PDF_VERSION_LAST] =
     "PDF 1.5"
 };
 
+static const char *_cairo_pdf_supported_mime_types[] =
+{
+    CAIRO_MIME_TYPE_JPEG,
+    CAIRO_MIME_TYPE_JP2,
+    CAIRO_MIME_TYPE_UNIQUE_ID,
+    NULL
+};
+
 typedef struct _cairo_pdf_object {
     long offset;
 } cairo_pdf_object_t;
@@ -7240,6 +7248,11 @@ cleanup:
     return status;
 }
 
+static const char **
+_cairo_pdf_surface_get_supported_mime_types (void		 *abstract_surface)
+{
+    return _cairo_pdf_supported_mime_types;
+}
 
 static void
 _cairo_pdf_surface_set_paginated_mode (void			*abstract_surface,
@@ -7283,6 +7296,7 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     NULL, /* show_glyphs */
     _cairo_pdf_surface_has_show_text_glyphs,
     _cairo_pdf_surface_show_text_glyphs,
+    _cairo_pdf_surface_get_supported_mime_types,
 };
 
 static const cairo_paginated_surface_backend_t

@@ -2370,6 +2370,10 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
 			     cairo_destroy_func_t	 destroy,
 			     void			*closure);
 
+cairo_public cairo_bool_t
+cairo_surface_supports_mime_type (cairo_surface_t		*surface,
+				  const char		        *mime_type);
+
 cairo_public void
 cairo_surface_get_font_options (cairo_surface_t      *surface,
 				cairo_font_options_t *options);

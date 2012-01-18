@@ -1193,6 +1193,36 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
 }
 slim_hidden_def (cairo_surface_set_mime_data);
 
+/**
+ * cairo_surface_supports_mime_type:
+ * @surface: a #cairo_surface_t
+ * @mime_type: the mime type
+ *
+ * Return whether @surface supports @mime_type.
+ *
+ * Since: 1.12
+ **/
+cairo_bool_t
+cairo_surface_supports_mime_type (cairo_surface_t		*surface,
+				  const char			*mime_type)
+{
+    const char **types;
+
+    if (surface->backend->get_supported_mime_types) {
+	types = surface->backend->get_supported_mime_types (surface);
+	if (types) {
+	    while (*types) {
+		if (strcmp (*types, mime_type) == 0)
+		    return TRUE;
+		types++;
+	    }
+	}
+    }
+
+    return FALSE;
+}
+slim_hidden_def (cairo_surface_supports_mime_type);
+
 static void
 _cairo_mime_data_reference (const void *key, void *elt, void *closure)
 {

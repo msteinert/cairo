@@ -192,6 +192,9 @@ struct _cairo_surface_backend {
 				 cairo_text_cluster_flags_t  cluster_flags,
 				 cairo_scaled_font_t	    *scaled_font,
 				 const cairo_clip_t               *clip);
+
+    const char **
+    (*get_supported_mime_types)	(void			    *surface);
 };
 
 CAIRO_END_DECLS

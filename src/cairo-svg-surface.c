@@ -87,6 +87,14 @@ static const cairo_svg_version_t _cairo_svg_versions[] =
 
 #define CAIRO_SVG_VERSION_LAST ARRAY_LENGTH (_cairo_svg_versions)
 
+static const char *_cairo_svg_supported_mime_types[] =
+{
+    CAIRO_MIME_TYPE_JPEG,
+    CAIRO_MIME_TYPE_PNG,
+    CAIRO_MIME_TYPE_URI,
+    NULL
+};
+
 static void
 _cairo_svg_surface_emit_path (cairo_output_stream_t	*output,
 			      const cairo_path_fixed_t	*path,
@@ -2577,6 +2585,13 @@ _cairo_svg_surface_get_font_options (void                  *abstract_surface,
     _cairo_font_options_set_round_glyph_positions (options, CAIRO_ROUND_GLYPH_POS_OFF);
 }
 
+
+static const char **
+_cairo_svg_surface_get_supported_mime_types (void	   *abstract_surface)
+{
+    return _cairo_svg_supported_mime_types;
+}
+
 static const cairo_surface_backend_t cairo_svg_surface_backend = {
 	CAIRO_SURFACE_TYPE_SVG,
 	_cairo_svg_surface_finish,
@@ -2607,6 +2622,9 @@ static const cairo_surface_backend_t cairo_svg_surface_backend = {
 	_cairo_svg_surface_fill,
 	_cairo_svg_surface_fill_stroke,
 	_cairo_svg_surface_show_glyphs,
+	NULL, /* has_show_text_glyphs */
+	NULL, /* show_text_glyphs */
+	_cairo_svg_surface_get_supported_mime_types,
 };
 
 static cairo_status_t

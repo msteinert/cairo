@@ -1898,6 +1898,7 @@ slim_hidden_proto (cairo_surface_set_fallback_resolution);
 slim_hidden_proto (cairo_surface_set_mime_data);
 slim_hidden_proto (cairo_surface_show_page);
 slim_hidden_proto (cairo_surface_status);
+slim_hidden_proto (cairo_surface_supports_mime_type);
 slim_hidden_proto (cairo_surface_unmap_image);
 slim_hidden_proto (cairo_text_cluster_allocate);
 slim_hidden_proto (cairo_text_cluster_free);

@@ -144,6 +144,12 @@ static const char * _cairo_ps_level_strings[CAIRO_PS_LEVEL_LAST] =
     "PS Level 3"
 };
 
+static const char *_cairo_ps_supported_mime_types[] =
+{
+    CAIRO_MIME_TYPE_JPEG,
+    NULL
+};
+
 typedef struct _cairo_page_standard_media {
     const char *name;
     int width;
@@ -4155,6 +4161,12 @@ cleanup_composite:
     return status;
 }
 
+static const char **
+_cairo_ps_surface_get_supported_mime_types (void		 *abstract_surface)
+{
+    return _cairo_ps_supported_mime_types;
+}
+
 static void
 _cairo_ps_surface_set_paginated_mode (void			*abstract_surface,
 				      cairo_paginated_mode_t	 paginated_mode)
@@ -4304,6 +4316,7 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     NULL, /* show_glyphs */
     _cairo_ps_surface_has_show_text_glyphs,
     _cairo_ps_surface_show_text_glyphs,
+    _cairo_ps_surface_get_supported_mime_types,
 };
 
 static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backend = {

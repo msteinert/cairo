@@ -91,6 +91,13 @@
 
 #define PELS_72DPI  ((LONG)(72. / 0.0254))
 
+static const char *_cairo_win32_printing_supported_mime_types[] =
+{
+    CAIRO_MIME_TYPE_JPEG,
+    CAIRO_MIME_TYPE_PNG,
+    NULL
+};
+
 static const cairo_surface_backend_t cairo_win32_printing_surface_backend;
 static const cairo_paginated_surface_backend_t cairo_win32_surface_paginated_backend;
 
@@ -1655,6 +1662,12 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
     return status;
 }
 
+static const char **
+_cairo_win32_printing_surface_get_supported_mime_types (void	  *abstract_surface)
+{
+    return _cairo_win32_printing_supported_mime_types;
+}
+
 static cairo_surface_t *
 _cairo_win32_printing_surface_create_similar (void		*abstract_surface,
 					      cairo_content_t	 content,
@@ -1887,6 +1900,9 @@ static const cairo_surface_backend_t cairo_win32_printing_surface_backend = {
     _cairo_win32_printing_surface_fill,
     NULL, /* fill/stroke */
     _cairo_win32_printing_surface_show_glyphs,
+    NULL, /* has_show_text_glyphs */
+    NULL, /* show_text_glyphs */
+    _cairo_win32_printing_surface_get_supported_mime_types,
 };
 
 static const cairo_paginated_surface_backend_t cairo_win32_surface_paginated_backend = {
