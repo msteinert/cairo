@@ -55,6 +55,9 @@ static cairo_bool_t
 should_fall_back (cairo_gl_surface_t *surface,
 		  cairo_antialias_t antialias);
 
+static void
+query_surface_capabilities (cairo_gl_surface_t *surface);
+
 struct _tristrip_composite_info {
     cairo_gl_composite_t	setup;
     cairo_gl_context_t		*ctx;
@@ -343,6 +346,10 @@ static cairo_bool_t
 should_fall_back (cairo_gl_surface_t *surface,
 		  cairo_antialias_t antialias)
 {
+    query_surface_capabilities (surface);
+    if (! surface->supports_stencil)
+	return TRUE;
+
     /* Multisampling OpenGL ES surfaces only maintain one multisampling
        framebuffer and thus must use the spans compositor to do non-antialiased
        rendering. */
@@ -531,6 +538,39 @@ _prevent_overlapping_drawing (cairo_gl_context_t *ctx,
        is disabled. */
     glStencilOp (GL_ZERO, GL_ZERO, GL_ZERO);
     return CAIRO_INT_STATUS_SUCCESS;
+}
+
+static void
+query_surface_capabilities (cairo_gl_surface_t *surface)
+{
+    GLint samples, stencil_bits;
+    cairo_gl_context_t *ctx;
+    cairo_int_status_t status;
+
+    /* Texture surfaces are create in such a way that they always
+       have stencil and multisample bits if possible, so we don't
+       need to query their capabilities lazily. */
+    if (_cairo_gl_surface_is_texture (surface))
+	return;
+    if (surface->stencil_and_msaa_caps_initialized)
+	return;
+
+    surface->stencil_and_msaa_caps_initialized = TRUE;
+    surface->supports_stencil = FALSE;
+    surface->supports_msaa = FALSE;
+
+    status = _cairo_gl_context_acquire (surface->base.device, &ctx);
+    if (unlikely (status))
+	return;
+
+    _cairo_gl_context_set_destination (ctx, surface, FALSE);
+
+    glGetIntegerv(GL_SAMPLES, &samples);
+    glGetIntegerv(GL_STENCIL_BITS, &stencil_bits);
+    surface->supports_stencil = stencil_bits > 0;
+    surface->supports_msaa = samples > 1;
+
+    status = _cairo_gl_context_release (ctx, status);
 }
 
 static cairo_int_status_t

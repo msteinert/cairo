@@ -170,6 +170,8 @@ struct _cairo_gl_surface {
 #endif
     GLuint msaa_depth_stencil;
 
+    cairo_bool_t stencil_and_msaa_caps_initialized;
+    cairo_bool_t supports_stencil; /* Stencil support for for non-texture surfaces. */
     cairo_bool_t supports_msaa;
     cairo_bool_t msaa_active; /* Whether the multisampling
 			         framebuffer is active or not. */

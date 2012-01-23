@@ -392,10 +392,6 @@ _cairo_gl_surface_init (cairo_device_t *device,
     surface->height = height;
     surface->needs_update = FALSE;
 
-    /* Support for multisampling in non-texture surfaces is still spotty. */
-    surface->supports_msaa = FALSE;
-    surface->msaa_active = FALSE;
-
     _cairo_gl_surface_embedded_operand_init (surface);
 }
 
@@ -417,6 +413,7 @@ _cairo_gl_surface_create_scratch_for_texture (cairo_gl_context_t   *ctx,
     _cairo_gl_surface_init (&ctx->base, surface, content, width, height);
 
     surface->supports_msaa = ctx->supports_msaa;
+    surface->supports_stencil = TRUE;
 
     /* Create the texture used to store the surface's data. */
     _cairo_gl_context_activate (ctx, CAIRO_GL_TEX_TEMP);

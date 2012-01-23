@@ -679,6 +679,14 @@ _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
 	}
     } else {
         ctx->make_current (ctx, surface);
+
+#if CAIRO_HAS_GL_SURFACE
+	if (multisampling)
+	    glEnable(GL_MULTISAMPLE);
+	else
+	    glDisable(GL_MULTISAMPLE);
+#endif
+
         ctx->dispatch.BindFramebuffer (GL_FRAMEBUFFER, 0);
 
 #if CAIRO_HAS_GL_SURFACE
