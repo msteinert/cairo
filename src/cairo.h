@@ -2192,14 +2192,14 @@ cairo_surface_observer_add_finish_callback (cairo_surface_t *abstract_surface,
 					    cairo_surface_observer_callback_t func,
 					    void *data);
 
-cairo_public void
+cairo_public cairo_status_t
 cairo_surface_observer_print (cairo_surface_t *surface,
 			      cairo_write_func_t write_func,
 			      void *closure);
 cairo_public double
 cairo_surface_observer_elapsed (cairo_surface_t *surface);
 
-cairo_public void
+cairo_public cairo_status_t
 cairo_device_observer_print (cairo_device_t *device,
 			     cairo_write_func_t write_func,
 			     void *closure);

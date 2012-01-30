@@ -1957,7 +1957,7 @@ _cairo_observation_print (cairo_output_stream_t *stream,
     cairo_device_destroy (script);
 }
 
-void
+cairo_status_t
 cairo_surface_observer_print (cairo_surface_t *abstract_surface,
 			      cairo_write_func_t write_func,
 			      void *closure)
@@ -1965,17 +1965,17 @@ cairo_surface_observer_print (cairo_surface_t *abstract_surface,
     cairo_output_stream_t *stream;
     cairo_surface_observer_t *surface;
 
-    if (unlikely (CAIRO_REFERENCE_COUNT_IS_INVALID (&abstract_surface->ref_count)))
-	return;
+    if (unlikely (abstract_surface->status))
+	return abstract_surface->status;
 
-    if (! _cairo_surface_is_observer (abstract_surface))
-	return;
+    if (unlikely (! _cairo_surface_is_observer (abstract_surface)))
+	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 
     surface = (cairo_surface_observer_t *) abstract_surface;
 
     stream = _cairo_output_stream_create (write_func, NULL, closure);
     _cairo_observation_print (stream, &surface->log);
-    _cairo_output_stream_destroy (stream);
+    return _cairo_output_stream_destroy (stream);
 }
 
 double
@@ -1993,7 +1993,7 @@ cairo_surface_observer_elapsed (cairo_surface_t *abstract_surface)
     return _cairo_time_to_ns (_cairo_observation_total_elapsed (&surface->log));
 }
 
-void
+cairo_status_t
 cairo_device_observer_print (cairo_device_t *abstract_device,
 			     cairo_write_func_t write_func,
 			     void *closure)
@@ -2001,17 +2001,17 @@ cairo_device_observer_print (cairo_device_t *abstract_device,
     cairo_output_stream_t *stream;
     cairo_device_observer_t *device;
 
-    if (unlikely (CAIRO_REFERENCE_COUNT_IS_INVALID (&abstract_device->ref_count)))
-	return;
+    if (unlikely (abstract_device->status))
+	return abstract_device->status;
 
-    if (! _cairo_device_is_observer (abstract_device))
-	return;
+    if (unlikely (! _cairo_device_is_observer (abstract_device)))
+	return _cairo_error (CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
 
     device = (cairo_device_observer_t *) abstract_device;
 
     stream = _cairo_output_stream_create (write_func, NULL, closure);
     _cairo_observation_print (stream, &device->log);
-    _cairo_output_stream_destroy (stream);
+    return _cairo_output_stream_destroy (stream);
 }
 
 double
