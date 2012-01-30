@@ -286,7 +286,11 @@ static void
 _cairo_device_observer_lock (void *_device)
 {
     cairo_device_observer_t *device = (cairo_device_observer_t *) _device;
-    cairo_device_acquire (device->target);
+    cairo_status_t ignored;
+
+    /* cairo_device_acquire() can fail for nil and finished
+     * devices. We don't care about observing them. */
+    ignored = cairo_device_acquire (device->target);
 }
 
 static void
