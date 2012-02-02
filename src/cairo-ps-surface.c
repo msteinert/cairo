@@ -1625,34 +1625,21 @@ _cairo_ps_surface_start_page (void *abstract_surface)
 }
 
 static cairo_int_status_t
-_cairo_ps_surface_end_page (cairo_ps_surface_t *surface)
-{
-    cairo_int_status_t status;
-
-    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
-    if (unlikely (status))
-	return status;
-
-    if (surface->clipper.clip != NULL) {
-	_cairo_output_stream_printf (surface->stream, "Q Q\n");
-	_cairo_surface_clipper_reset (&surface->clipper);
-    } else
-	_cairo_output_stream_printf (surface->stream, "Q\n");
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
 _cairo_ps_surface_show_page (void *abstract_surface)
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_int_status_t status;
 
-    status = _cairo_ps_surface_end_page (surface);
+    if (surface->clipper.clip != NULL)
+	_cairo_surface_clipper_reset (&surface->clipper);
+
+    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
     if (unlikely (status))
 	return status;
 
-    _cairo_output_stream_printf (surface->stream, "showpage\n");
+    _cairo_output_stream_printf (surface->stream,
+				 "Q Q\n"
+				 "showpage\n");
 
     return CAIRO_STATUS_SUCCESS;
 }
