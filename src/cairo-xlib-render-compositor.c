@@ -164,6 +164,18 @@ copy_boxes (void *_dst,
     GC gc;
     int i, j;
 
+    /* We can only have a single control for subwindow_mode on the
+     * GC. If we have a Window destination, we need to set ClipByChildren,
+     * but if we have a Window source, we need IncludeInferiors. If we have
+     * both a Window destination and source, we must fallback. There is
+     * no convenient way to detect if a drawable is a Pixmap or Window,
+     * therefore we can only rely on those surfaces that we created
+     * ourselves to be Pixmaps, and treat everything else as a potential
+     * Window.
+     */
+    if (! src->owns_pixmap && ! dst->owns_pixmap)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     if (! _cairo_xlib_surface_same_screen  (dst, src))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -178,6 +190,13 @@ copy_boxes (void *_dst,
     if (unlikely (status)) {
 	release (dst);
 	return status;
+    }
+
+    if (! src->owns_pixmap) {
+	XGCValues gcv;
+
+	gcv.subwindow_mode = IncludeInferiors;
+	XChangeGC (dst->display->display, gc, GCSubwindowMode, &gcv);
     }
 
     if (boxes->num_boxes == 1) {
@@ -228,6 +247,13 @@ copy_boxes (void *_dst,
 
 	if (rects != stack_rects)
 	    free (rects);
+    }
+
+    if (! src->owns_pixmap) {
+	XGCValues gcv;
+
+	gcv.subwindow_mode = ClipByChildren;
+	XChangeGC (dst->display->display, gc, GCSubwindowMode, &gcv);
     }
 
     _cairo_xlib_surface_put_gc (dst->display, dst, gc);

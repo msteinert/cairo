@@ -359,18 +359,30 @@ copy_boxes (cairo_xlib_surface_t *dst,
     if (source->type != CAIRO_PATTERN_TYPE_SURFACE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    /* XXX subsurface */
+
     pattern = (const cairo_surface_pattern_t *) source;
-    if (pattern->surface->type != CAIRO_SURFACE_TYPE_XLIB)
+    if (pattern->surface->backend->type != CAIRO_SURFACE_TYPE_XLIB)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     src = (cairo_xlib_surface_t *) pattern->surface;
     if (src->depth != dst->depth)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (! _cairo_xlib_surface_same_screen (dst, src))
+    /* We can only have a single control for subwindow_mode on the
+     * GC. If we have a Window destination, we need to set ClipByChildren,
+     * but if we have a Window source, we need IncludeInferiors. If we have
+     * both a Window destination and source, we must fallback. There is
+     * no convenient way to detect if a drawable is a Pixmap or Window,
+     * therefore we can only rely on those surfaces that we created
+     * ourselves to be Pixmaps, and treat everything else as a potential
+     * Window.
+     */
+    if (! src->owns_pixmap && ! dst->owns_pixmap)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    /* XXX subsurface */
+    if (! _cairo_xlib_surface_same_screen (dst, src))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (! _cairo_matrix_is_integer_translation (&source->matrix,
 						&cb.tx, &cb.ty))
@@ -390,12 +402,27 @@ copy_boxes (cairo_xlib_surface_t *dst,
     if (unlikely (status))
 	return status;
 
+    if (! src->owns_pixmap) {
+	XGCValues gcv;
+
+	gcv.subwindow_mode = IncludeInferiors;
+	XChangeGC (dst->display->display, cb.gc, GCSubwindowMode, &gcv);
+    }
+
+    status = CAIRO_STATUS_SUCCESS;
     if (! _cairo_boxes_for_each_box (boxes, copy_box, &cb))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (! src->owns_pixmap) {
+	XGCValues gcv;
+
+	gcv.subwindow_mode = ClipByChildren;
+	XChangeGC (dst->display->display, cb.gc, GCSubwindowMode, &gcv);
+    }
 
     _cairo_xlib_surface_put_gc (dst->display, dst, cb.gc);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_status_t
