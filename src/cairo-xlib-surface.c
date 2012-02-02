@@ -693,7 +693,9 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
     assert (extents->x + extents->width <= surface->width);
     assert (extents->y + extents->height <= surface->height);
 
-    if (surface->base.serial == 0) {
+    if (surface->base.is_clear ||
+	(surface->base.serial == 0 && surface->owns_pixmap))
+    {
 	xlib_masks.bpp = bits_per_pixel (surface);
 	xlib_masks.alpha_mask = surface->a_mask;
 	xlib_masks.red_mask = surface->r_mask;
