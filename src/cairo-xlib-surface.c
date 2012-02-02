@@ -758,10 +758,18 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 				extents->width, extents->height,
 				surface->depth);
 	if (pixmap) {
+	    XGCValues gcv;
+
+	    gcv.subwindow_mode = IncludeInferiors;
+	    XChangeGC (display->display, gc, GCSubwindowMode, &gcv);
+
 	    XCopyArea (display->display, surface->drawable, pixmap, gc,
 		       extents->x, extents->y,
 		       extents->width, extents->height,
 		       0, 0);
+
+	    gcv.subwindow_mode = ClipByChildren;
+	    XChangeGC (display->display, gc, GCSubwindowMode, &gcv);
 
 	    ximage = XGetImage (display->display,
 				pixmap,
