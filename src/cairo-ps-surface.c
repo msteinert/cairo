@@ -3722,10 +3722,6 @@ _cairo_ps_surface_emit_gradient (cairo_ps_surface_t       *surface,
 				     MAX (end.radius, 0));
     }
 
-    _cairo_output_stream_printf (surface->stream,
-				 "      /Domain [ %f %f ]\n",
-				 domain[0], domain[1]);
-
     if (pattern->base.extend != CAIRO_EXTEND_NONE) {
 	_cairo_output_stream_printf (surface->stream,
                                      "      /Extend [ true true ]\n");
@@ -3734,8 +3730,22 @@ _cairo_ps_surface_emit_gradient (cairo_ps_surface_t       *surface,
                                      "      /Extend [ false false ]\n");
     }
 
+    if (domain[0] == 0.0 && domain[1] == 1.0) {
+	_cairo_output_stream_printf (surface->stream,
+				     "      /Function CairoFunction\n");
+    } else {
+	_cairo_output_stream_printf (surface->stream,
+				     "      /Function <<\n"
+				     "         /FunctionType 3\n"
+				     "         /Domain [ 0 1 ]\n"
+				     "         /Bounds [ ]\n"
+				     "         /Encode [ %f %f ]\n"
+				     "         /Functions [ CairoFunction ]\n"
+				     "      >>\n",
+				     domain[0], domain[1]);
+    }
+
     _cairo_output_stream_printf (surface->stream,
-				 "      /Function CairoFunction\n"
 				 "   >>\n");
 
     if (is_ps_pattern) {
