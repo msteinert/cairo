@@ -391,6 +391,7 @@ ft_font_test_sources = \
 	ft-text-antialias-none.c
 
 gl_surface_test_sources = \
+	gl-device-release.c \
 	gl-surface-source.c
 
 quartz_surface_test_sources = quartz-surface-source.c

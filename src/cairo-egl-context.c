@@ -49,6 +49,10 @@ typedef struct _cairo_egl_context {
     EGLContext context;
 
     EGLSurface dummy_surface;
+
+    EGLDisplay previous_display;
+    EGLContext previous_context;
+    EGLSurface previous_surface;
 } cairo_egl_context_t;
 
 typedef struct _cairo_egl_surface {
@@ -58,19 +62,54 @@ typedef struct _cairo_egl_surface {
 } cairo_egl_surface_t;
 
 
+static cairo_bool_t
+_context_acquisition_changed_egl_state (cairo_egl_context_t *ctx,
+					EGLSurface current_surface)
+{
+    return !(ctx->previous_display == ctx->display &&
+	     ctx->previous_surface == current_surface &&
+	     ctx->previous_context == ctx->context);
+}
+
+static EGLSurface
+_egl_get_current_surface (cairo_egl_context_t *ctx)
+{
+    if (ctx->base.current_target == NULL ||
+        _cairo_gl_surface_is_texture (ctx->base.current_target)) {
+	return  ctx->dummy_surface;
+    }
+
+    return ((cairo_egl_surface_t *) ctx->base.current_target)->egl;
+}
+
+static void
+_egl_query_current_state (cairo_egl_context_t *ctx)
+{
+    ctx->previous_display = eglGetCurrentDisplay ();
+    ctx->previous_surface = eglGetCurrentSurface (EGL_DRAW);
+    ctx->previous_context = eglGetCurrentContext ();
+
+    /* If any of the values were none, assume they are all none. Not all
+       drivers seem well behaved when it comes to using these values across
+       multiple threads. */
+    if (ctx->previous_surface == EGL_NO_SURFACE
+	|| ctx->previous_display == EGL_NO_DISPLAY
+	|| ctx->previous_context == EGL_NO_CONTEXT) {
+	ctx->previous_surface = EGL_NO_SURFACE;
+	ctx->previous_display = EGL_NO_DISPLAY;
+	ctx->previous_context = EGL_NO_CONTEXT;
+    }
+}
+
 static void
 _egl_acquire (void *abstract_ctx)
 {
     cairo_egl_context_t *ctx = abstract_ctx;
-    EGLSurface current_surface;
+    EGLSurface current_surface = _egl_get_current_surface (ctx);
 
-    if (ctx->base.current_target == NULL ||
-        _cairo_gl_surface_is_texture (ctx->base.current_target)) {
-        current_surface = ctx->dummy_surface;
-    } else {
-        cairo_egl_surface_t *surface = (cairo_egl_surface_t *) ctx->base.current_target;
-        current_surface = surface->egl ;
-    }
+    _egl_query_current_state (ctx);
+    if (!_context_acquisition_changed_egl_state (ctx, current_surface))
+	return;
 
     eglMakeCurrent (ctx->display,
 		    current_surface, current_surface, ctx->context);
@@ -80,8 +119,11 @@ static void
 _egl_release (void *abstract_ctx)
 {
     cairo_egl_context_t *ctx = abstract_ctx;
-    if (!ctx->base.thread_aware)
+    if (!ctx->base.thread_aware ||
+	!_context_acquisition_changed_egl_state (ctx,
+						 _egl_get_current_surface (ctx))) {
 	return;
+    }
 
     eglMakeCurrent (ctx->display,
 		    EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
@@ -160,6 +202,10 @@ cairo_egl_device_create (EGLDisplay dpy, EGLContext egl)
     ctx->base.make_current = _egl_make_current;
     ctx->base.swap_buffers = _egl_swap_buffers;
     ctx->base.destroy = _egl_destroy;
+
+    /* We are about the change the current state of EGL, so we should
+     * query the pre-existing surface now instead of later. */
+    _egl_query_current_state (ctx);
 
     if (!_egl_make_current_surfaceless (ctx)) {
 	/* Fall back to dummy surface, meh. */
