@@ -1791,7 +1791,7 @@ _cairo_ps_surface_release_source_surface_from_pattern (cairo_ps_surface_t       
  * @height: returns height of padded image
  * @x_offset: returns x offset of padded image
  * @y_offset: returns y offset of padded image
- * @image: returns the padded image
+ * @image: returns the padded image or NULL if padding not required to fill @extents
  */
 static cairo_status_t
 _cairo_ps_surface_create_padded_image_from_image (cairo_ps_surface_t           *surface,
@@ -1840,12 +1840,15 @@ _cairo_ps_surface_create_padded_image_from_image (cairo_ps_surface_t           *
 				       &pad_pattern.base,
 				       NULL);
 	_cairo_pattern_fini (&pad_pattern.base);
+	*image = (cairo_image_surface_t *) pad_image;
+	*width = rect.width;
+	*height = rect.height;
+	*x_offset = rect.x;
+	*y_offset = rect.y;
+    } else {
+	*image = NULL;
+	status = CAIRO_STATUS_SUCCESS;
     }
-    *image = (cairo_image_surface_t *) pad_image;
-    *width = rect.width;
-    *height = rect.height;
-    *x_offset = rect.x;
-    *y_offset = rect.y;
 
     return status;
 }
