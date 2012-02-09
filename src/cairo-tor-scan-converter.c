@@ -115,10 +115,8 @@ typedef cairo_status_t glitter_status_t;
 
 /* The input coordinate scale and the rasterisation grid scales. */
 #define GLITTER_INPUT_BITS CAIRO_FIXED_FRAC_BITS
-//#define GRID_X_BITS CAIRO_FIXED_FRAC_BITS
-//#define GRID_Y 15
-#define GRID_X_BITS 2
-#define GRID_Y_BITS 2
+#define GRID_X_BITS CAIRO_FIXED_FRAC_BITS
+#define GRID_Y 15
 
 /* Set glitter up to use a cairo span renderer to do the coverage
  * blitting. */
