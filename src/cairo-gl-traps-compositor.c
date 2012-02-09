@@ -310,10 +310,8 @@ traps_to_operand (void *_dst,
 					   extents->width, extents->height,
 					   0, 0);
     cairo_surface_destroy (image);
-    if (unlikely (status)) {
-	cairo_surface_destroy (mask);
-	return status;
-    }
+    if (unlikely (status))
+	goto error;
 
     _cairo_pattern_init_for_surface (&pattern, mask);
     cairo_matrix_init_translate (&pattern.base.matrix,
@@ -324,8 +322,15 @@ traps_to_operand (void *_dst,
 				     &_cairo_unbounded_rectangle,
 				     &_cairo_unbounded_rectangle);
     _cairo_pattern_fini (&pattern.base);
-    cairo_surface_destroy (mask);
 
+    if (unlikely (status))
+	goto error;
+
+    operand->texture.owns_surface = mask;
+    return CAIRO_STATUS_SUCCESS;
+
+error:
+    cairo_surface_destroy (mask);
     return status;
 }
 
