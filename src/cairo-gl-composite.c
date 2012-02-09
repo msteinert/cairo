@@ -269,7 +269,9 @@ _cairo_gl_context_destroy_operand (cairo_gl_context_t *ctx,
                                    cairo_gl_tex_t tex_unit)
 {
     cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
-    assert (_cairo_gl_context_is_flushed (ctx));
+
+    if  (!_cairo_gl_context_is_flushed (ctx))
+	_cairo_gl_composite_flush (ctx);
 
     switch (ctx->operands[tex_unit].type) {
     default:
