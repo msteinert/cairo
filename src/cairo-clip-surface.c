@@ -54,8 +54,8 @@ _cairo_clip_combine_with_surface (const cairo_clip_t *clip,
 				  cairo_surface_t *dst,
 				  int dst_x, int dst_y)
 {
-    cairo_clip_path_t *clip_path;
     cairo_clip_path_t *copy_path;
+    cairo_clip_path_t *clip_path;
     cairo_clip_t *copy;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
@@ -63,14 +63,16 @@ _cairo_clip_combine_with_surface (const cairo_clip_t *clip,
     copy_path = copy->path;
     copy->path = NULL;
 
-    if (copy_path == NULL) {
-	assert (copy->num_boxes);
+    if (copy->boxes) {
 	status = _cairo_surface_paint (dst,
 				       CAIRO_OPERATOR_IN,
 				       &_cairo_pattern_white.base,
 				       copy);
     }
 
+    clip = NULL;
+    if (_cairo_clip_is_region (copy))
+	clip = copy;
     clip_path = copy_path;
     while (status == CAIRO_STATUS_SUCCESS && clip_path) {
 	status = _cairo_surface_fill (dst,
@@ -80,7 +82,7 @@ _cairo_clip_combine_with_surface (const cairo_clip_t *clip,
 				      clip_path->fill_rule,
 				      clip_path->tolerance,
 				      clip_path->antialias,
-				      copy);
+				      clip);
 	clip_path = clip_path->prev;
     }
 
