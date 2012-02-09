@@ -1179,8 +1179,17 @@ edges_start_or_continue (cairo_bo_edge_t	*left,
 
     if (left->deferred.other != NULL) {
 	if (right != NULL && edges_colinear (left->deferred.other, right)) {
-	    /* continuation on right, so just swap edges */
-	    assert (left->deferred.other->deferred.other == NULL);
+	    cairo_bo_edge_t *old = left->deferred.other;
+
+	    /* continuation on right, extend right to cover both */
+	    assert (old->deferred.other == NULL);
+	    assert (old->edge.dir == right->edge.dir);
+	    assert (old->edge.line.p2.y > old->edge.line.p1.y);
+
+	    if (old->edge.line.p1.y < right->edge.line.p1.y)
+		right->edge.line.p1 = old->edge.line.p1;
+	    if (old->edge.line.p2.y > right->edge.line.p2.y)
+		right->edge.line.p2 = old->edge.line.p2;
 	    left->deferred.other = right;
 	    return;
 	}
