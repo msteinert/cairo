@@ -85,6 +85,9 @@ _cairo_clip_contains_rectangle_box (const cairo_clip_t *clip,
     if (! _cairo_rectangle_contains_rectangle (&clip->extents, rect))
 	return FALSE;
 
+    if (clip->num_boxes == 0)
+	return TRUE;
+
     /* Check for a clip-box that wholly contains the rectangle */
     for (i = 0; i < clip->num_boxes; i++) {
 	if (box->p1.x >= clip->boxes[i].p1.x &&
