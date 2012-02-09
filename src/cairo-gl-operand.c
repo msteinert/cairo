@@ -99,10 +99,12 @@ _cairo_gl_subsurface_clone_operand_init (cairo_gl_operand_t *operand,
 	if (unlikely (status))
 	    return status;
 
+	/* XXX Trim surface to the sample area within the subsurface? */
 	surface = (cairo_gl_surface_t *)
 	    _cairo_gl_surface_create_scratch (ctx,
 					      sub->target->content,
-					      extents->width, extents->height);
+					      sub->extents.width,
+					      sub->extents.height);
 	if (surface->base.status)
 	    return _cairo_gl_context_release (ctx, surface->base.status);
 
