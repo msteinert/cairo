@@ -865,7 +865,7 @@ _cairo_image_surface_get_extents (void			  *abstract_surface,
     return TRUE;
 }
 
-static cairo_int_status_t
+cairo_int_status_t
 _cairo_image_surface_paint (void			*abstract_surface,
 			    cairo_operator_t		 op,
 			    const cairo_pattern_t	*source,
@@ -876,7 +876,7 @@ _cairo_image_surface_paint (void			*abstract_surface,
 				    &surface->base, op, source, clip);
 }
 
-static cairo_int_status_t
+cairo_int_status_t
 _cairo_image_surface_mask (void				*abstract_surface,
 			   cairo_operator_t		 op,
 			   const cairo_pattern_t	*source,
@@ -888,7 +888,7 @@ _cairo_image_surface_mask (void				*abstract_surface,
 				   &surface->base, op, source, mask, clip);
 }
 
-static cairo_int_status_t
+cairo_int_status_t
 _cairo_image_surface_stroke (void			*abstract_surface,
 			     cairo_operator_t		 op,
 			     const cairo_pattern_t	*source,
@@ -907,7 +907,7 @@ _cairo_image_surface_stroke (void			*abstract_surface,
 				     tolerance, antialias, clip);
 }
 
-static cairo_int_status_t
+cairo_int_status_t
 _cairo_image_surface_fill (void				*abstract_surface,
 			   cairo_operator_t		 op,
 			   const cairo_pattern_t	*source,
@@ -924,7 +924,7 @@ _cairo_image_surface_fill (void				*abstract_surface,
 				   clip);
 }
 
-static cairo_int_status_t
+cairo_int_status_t
 _cairo_image_surface_glyphs (void			*abstract_surface,
 			     cairo_operator_t		 op,
 			     const cairo_pattern_t	*source,
