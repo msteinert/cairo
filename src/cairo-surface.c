@@ -1714,6 +1714,22 @@ _cairo_surface_release_source_image (cairo_surface_t        *surface,
 	surface->backend->release_source_image (surface, image, image_extra);
 }
 
+cairo_surface_t *
+_cairo_surface_get_source (cairo_surface_t *surface,
+			   cairo_rectangle_int_t *extents)
+{
+    assert (surface->backend->source);
+    return surface->backend->source (surface, extents);
+}
+
+cairo_surface_t *
+_cairo_surface_default_source (void *surface,
+			       cairo_rectangle_int_t *extents)
+{
+    _cairo_surface_get_extents(surface, extents);
+    return surface;
+}
+
 static cairo_status_t
 _pattern_has_error (const cairo_pattern_t *pattern)
 {

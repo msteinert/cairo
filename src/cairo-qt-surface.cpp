@@ -1561,6 +1561,7 @@ static const cairo_surface_backend_t cairo_qt_surface_backend = {
     NULL, /* map to image */
     NULL, /* unmap image */
 
+    _cairo_surface_default_source,
     _cairo_qt_surface_acquire_source_image,
     _cairo_qt_surface_release_source_image,
     _cairo_qt_surface_acquire_dest_image,

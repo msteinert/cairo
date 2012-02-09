@@ -59,17 +59,10 @@
 #define PIXMAN_MAX_INT ((pixman_fixed_1 >> 1) - pixman_fixed_e) /* need to ensure deltas also fit */
 
 static cairo_xlib_surface_t *
-unwrap_surface (cairo_surface_t *surface)
+unwrap_source (const cairo_surface_pattern_t *pattern)
 {
-    if (_cairo_surface_is_paginated (surface))
-	surface = _cairo_paginated_surface_get_recording (surface);
-    if (_cairo_surface_is_snapshot (surface))
-	surface = _cairo_surface_snapshot_get_target (surface);
-    if (_cairo_surface_is_subsurface (surface))
-	surface = _cairo_surface_subsurface_get_target (surface);
-    if (_cairo_surface_is_observer (surface))
-	surface = _cairo_surface_observer_get_target (surface);
-    return (cairo_xlib_surface_t *)surface;
+    cairo_rectangle_int_t limits;
+    return (cairo_xlib_surface_t *)_cairo_pattern_get_source (pattern, &limits);
 }
 
 static cairo_status_t
@@ -760,7 +753,7 @@ native_source (cairo_xlib_surface_t *dst,
 				  extents, sample,
 				  src_x, src_y);
 
-    src = unwrap_surface (pattern->surface);
+    src = unwrap_source (pattern);
 
     if (pattern->base.filter == CAIRO_FILTER_NEAREST &&
 	sample->x >= 0 && sample->y >= 0 &&
@@ -1037,7 +1030,7 @@ _cairo_xlib_source_create_for_pattern (cairo_surface_t *_dst,
 	    cairo_surface_pattern_t *spattern = (cairo_surface_pattern_t *)pattern;
 	    if (spattern->surface->type == CAIRO_SURFACE_TYPE_XLIB &&
 		_cairo_xlib_surface_same_screen (dst,
-						 unwrap_surface (spattern->surface)))
+						 unwrap_source (spattern)))
 		return native_source (dst, spattern, is_mask,
 				      extents, sample,
 				      src_x, src_y);

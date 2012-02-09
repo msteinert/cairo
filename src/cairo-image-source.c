@@ -609,15 +609,9 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
 
     *ix = *iy = 0;
 
-    source = pattern->surface;
-    if (_cairo_surface_is_subsurface (source))
-	source = _cairo_surface_subsurface_get_target_with_offset (source, &tx, &ty);
-    if (_cairo_surface_is_snapshot (source))
-	source = _cairo_surface_snapshot_get_target (source);
-    if (_cairo_surface_is_observer (source))
-	source = _cairo_surface_observer_get_target (source);
-    if (_cairo_surface_is_paginated (source))
-	source = _cairo_paginated_surface_get_target (source);
+    source = _cairo_pattern_get_source (pattern, &limit);
+    tx = limit.x;
+    ty = limit.y;
 
     extend = pattern->base.extend;
     if (_cairo_surface_get_extents (source, &limit)) {

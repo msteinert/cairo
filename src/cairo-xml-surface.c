@@ -1002,6 +1002,7 @@ _cairo_xml_surface_backend = {
     NULL, /* map_to_image */
     NULL, /* unmap_image */
 
+    _cairo_surface_default_source,
     NULL, /* acquire source image */
     NULL, /* release source image */
     NULL, /* snapshot */

@@ -242,6 +242,14 @@ _cairo_paginated_surface_create_image_surface (void	       *abstract_surface,
     return image;
 }
 
+static cairo_surface_t *
+_cairo_paginated_surface_source (void	       *abstract_surface,
+				 cairo_rectangle_int_t *extents)
+{
+    cairo_paginated_surface_t *surface = abstract_surface;
+    return _cairo_surface_get_source (surface->target, extents);
+}
+
 static cairo_status_t
 _cairo_paginated_surface_acquire_source_image (void	       *abstract_surface,
 					       cairo_image_surface_t **image_out,
@@ -682,6 +690,7 @@ static const cairo_surface_backend_t cairo_paginated_surface_backend = {
     NULL, /* map to image */
     NULL, /* unmap image */
 
+    _cairo_paginated_surface_source,
     _cairo_paginated_surface_acquire_source_image,
     _cairo_paginated_surface_release_source_image,
     _cairo_paginated_surface_snapshot,

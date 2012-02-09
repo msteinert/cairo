@@ -70,6 +70,10 @@ struct _cairo_surface_backend {
     (*unmap_image)		(void			*surface,
 				 cairo_image_surface_t	*image);
 
+    cairo_surface_t *
+    (*source)			(void                    *abstract_surface,
+				 cairo_rectangle_int_t  *extents);
+
     cairo_warn cairo_status_t
     (*acquire_source_image)	(void                    *abstract_surface,
 				 cairo_image_surface_t  **image_out,
@@ -196,6 +200,10 @@ struct _cairo_surface_backend {
     const char **
     (*get_supported_mime_types)	(void			    *surface);
 };
+
+cairo_private cairo_surface_t *
+_cairo_surface_default_source (void *surface,
+			       cairo_rectangle_int_t *extents);
 
 CAIRO_END_DECLS
 

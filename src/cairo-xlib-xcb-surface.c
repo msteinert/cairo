@@ -137,6 +137,14 @@ _cairo_xlib_xcb_surface_unmap (void *abstract_surface,
     return cairo_surface_status (&surface->xcb->base);
 }
 
+static cairo_surface_t *
+_cairo_xlib_xcb_surface_source (void *abstract_surface,
+				cairo_rectangle_int_t *extents)
+{
+    cairo_xlib_xcb_surface_t *surface = abstract_surface;
+    return _cairo_surface_get_source (&surface->cb->base, extents);
+}
+
 static cairo_status_t
 _cairo_xlib_xcb_surface_acquire_source_image (void *abstract_surface,
 					      cairo_image_surface_t **image_out,
@@ -275,6 +283,7 @@ static const cairo_surface_backend_t _cairo_xlib_xcb_surface_backend = {
     _cairo_xlib_xcb_surface_map_to_image,
     _cairo_xlib_xcb_surface_unmap,
 
+    _cairo_xlib_xcb_surface_source,
     _cairo_xlib_xcb_surface_acquire_source_image,
     _cairo_xlib_xcb_surface_release_source_image,
     NULL, /* snapshot */

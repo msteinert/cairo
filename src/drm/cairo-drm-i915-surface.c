@@ -2343,6 +2343,8 @@ static const cairo_surface_backend_t i915_surface_backend = {
 
     i915_surface_create_similar,
     i915_surface_finish,
+
+    NULL,
     intel_surface_acquire_source_image,
     intel_surface_release_source_image,
 

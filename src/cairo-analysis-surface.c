@@ -702,6 +702,7 @@ static const cairo_surface_backend_t cairo_analysis_surface_backend = {
     NULL, /* map_to_image */
     NULL, /* unmap */
 
+    NULL, /* source */
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
     NULL, /* snapshot */
@@ -895,6 +896,7 @@ static const cairo_surface_backend_t cairo_null_surface_backend = {
     NULL, /* map to image */
     NULL, /* unmap image*/
 
+    NULL, /* source */
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
     NULL, /* snapshot */

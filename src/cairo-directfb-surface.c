@@ -1835,6 +1835,7 @@ _cairo_directfb_surface_backend = {
 	NULL, /* map to image */
 	NULL, /* unmap image */
 
+	_cairo_surface_default_source,
         _cairo_directfb_surface_acquire_source_image,/*acquire_source_image*/
         _cairo_directfb_surface_release_source_image,/*release_source_image*/
         _cairo_directfb_surface_acquire_dest_image,/*acquire_dest_image*/

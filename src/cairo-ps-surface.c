@@ -4538,6 +4538,7 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     NULL, /* map to image */
     NULL, /* unmap image */
 
+    _cairo_surface_default_source,
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
     NULL, /* snapshot */

@@ -293,6 +293,19 @@ _cairo_surface_subsurface_get_font_options (void *abstract_surface,
 	surface->target->backend->get_font_options (surface->target, options);
 }
 
+static cairo_surface_t *
+_cairo_surface_subsurface_source (void *abstract_surface,
+				  cairo_rectangle_int_t *extents)
+{
+    cairo_surface_subsurface_t *surface = abstract_surface;
+    cairo_surface_t *source;
+
+    source = _cairo_surface_get_source (surface->target, extents);
+    *extents = surface->extents;
+
+    return source;
+}
+
 static cairo_status_t
 _cairo_surface_subsurface_acquire_source_image (void                    *abstract_surface,
 						cairo_image_surface_t  **image_out,
@@ -386,6 +399,7 @@ static const cairo_surface_backend_t _cairo_surface_subsurface_backend = {
     _cairo_surface_subsurface_map_to_image,
     _cairo_surface_subsurface_unmap_image,
 
+    _cairo_surface_subsurface_source,
     _cairo_surface_subsurface_acquire_source_image,
     _cairo_surface_subsurface_release_source_image,
     _cairo_surface_subsurface_snapshot,

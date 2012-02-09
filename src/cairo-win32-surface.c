@@ -1937,6 +1937,7 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     _cairo_win32_surface_map_to_image,
     _cairo_win32_surface_unmap_image,
 
+    _cairo_surface_default_source,
     _cairo_win32_surface_acquire_source_image,
     _cairo_win32_surface_release_source_image,
     NULL,  /* snapshot */

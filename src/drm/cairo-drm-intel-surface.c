@@ -253,8 +253,11 @@ static const cairo_surface_backend_t intel_surface_backend = {
 
     intel_surface_create_similar,
     intel_surface_finish,
+
+    NULL,
     intel_surface_acquire_source_image,
     intel_surface_release_source_image,
+
     NULL, NULL, NULL,
     NULL, /* composite */
     NULL, /* fill */

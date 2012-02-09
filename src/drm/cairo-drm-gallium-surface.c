@@ -468,6 +468,7 @@ static const cairo_surface_backend_t gallium_surface_backend = {
     gallium_surface_create_similar,
     gallium_surface_finish,
 
+    NULL,
     gallium_surface_acquire_source_image,
     gallium_surface_release_source_image,
 

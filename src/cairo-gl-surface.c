@@ -1078,6 +1078,19 @@ _cairo_gl_surface_map_to_image (void      *abstract_surface,
     return &image->base;
 }
 
+static cairo_surface_t *
+_cairo_gl_surface_source (void		       *abstract_surface,
+			  cairo_rectangle_int_t *extents)
+{
+    cairo_gl_surface_t *surface = abstract_surface;
+
+    extents->x = extents->y = 0;
+    extents->width  = surface->width;
+    extents->height = surface->height;
+
+    return &surface->base;
+}
+
 static cairo_status_t
 _cairo_gl_surface_acquire_source_image (void		       *abstract_surface,
 					cairo_image_surface_t **image_out,
@@ -1249,6 +1262,7 @@ static const cairo_surface_backend_t _cairo_gl_surface_backend = {
     _cairo_gl_surface_map_to_image,
     _cairo_gl_surface_unmap_image,
 
+    _cairo_gl_surface_source,
     _cairo_gl_surface_acquire_source_image,
     _cairo_gl_surface_release_source_image,
     NULL, /* snapshot */

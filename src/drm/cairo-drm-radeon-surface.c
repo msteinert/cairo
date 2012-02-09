@@ -257,8 +257,11 @@ static const cairo_surface_backend_t radeon_surface_backend = {
 
     radeon_surface_create_similar,
     radeon_surface_finish,
+
+    NULL,
     radeon_surface_acquire_source_image,
     radeon_surface_release_source_image,
+
     NULL, NULL, NULL,
     NULL, /* composite */
     NULL, /* fill */

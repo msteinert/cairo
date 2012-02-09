@@ -331,6 +331,7 @@ static const cairo_surface_backend_t cairo_type3_glyph_surface_backend = {
     NULL, /* map to image */
     NULL, /* unmap image */
 
+    NULL, /* source */
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
     NULL, /* snapshot */

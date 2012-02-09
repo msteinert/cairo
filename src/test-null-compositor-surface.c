@@ -198,6 +198,7 @@ static const cairo_surface_backend_t test_compositor_surface_backend = {
     _cairo_image_surface_map_to_image,
     _cairo_image_surface_unmap_image,
 
+    _cairo_image_surface_source,
     _cairo_image_surface_acquire_source_image,
     _cairo_image_surface_release_source_image,
     NULL, /* snapshot */

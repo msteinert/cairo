@@ -119,6 +119,14 @@ _cairo_tee_surface_finish (void *abstract_surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_surface_t *
+_cairo_tee_surface_source (void	     *abstract_surface,
+			   cairo_rectangle_int_t *extents)
+{
+    cairo_tee_surface_t *surface = abstract_surface;
+    return _cairo_surface_get_source (surface->master.target, extents);
+}
+
 static cairo_status_t
 _cairo_tee_surface_acquire_source_image (void	     *abstract_surface,
 					 cairo_image_surface_t **image_out,
@@ -389,6 +397,7 @@ static const cairo_surface_backend_t cairo_tee_surface_backend = {
     NULL, /* map to image */
     NULL, /* unmap image */
 
+    _cairo_tee_surface_source,
     _cairo_tee_surface_acquire_source_image,
     _cairo_tee_surface_release_source_image,
     _cairo_tee_surface_snapshot,

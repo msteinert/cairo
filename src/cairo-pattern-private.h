@@ -39,6 +39,7 @@
 #include "cairo-error-private.h"
 #include "cairo-types-private.h"
 #include "cairo-list-private.h"
+#include "cairo-surface-private.h"
 
 #include <stdio.h> /* FILE* */
 
@@ -369,6 +370,13 @@ _cairo_raster_source_pattern_finish (cairo_pattern_t *abstract_pattern);
 
 cairo_private void
 _cairo_debug_print_pattern (FILE *file, const cairo_pattern_t *pattern);
+
+static inline cairo_surface_t *
+_cairo_pattern_get_source (const cairo_surface_pattern_t *pattern,
+			   cairo_rectangle_int_t *extents)
+{
+    return _cairo_surface_get_source (pattern->surface, extents);
+}
 
 CAIRO_END_DECLS
 

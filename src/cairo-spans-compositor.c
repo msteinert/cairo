@@ -379,18 +379,12 @@ error:
 }
 
 static cairo_surface_t *
-unwrap_surface (const cairo_pattern_t *pattern)
+unwrap_source (const cairo_pattern_t *pattern)
 {
-    cairo_surface_t *surface;
+    cairo_rectangle_int_t limit;
 
-    surface = ((const cairo_surface_pattern_t *) pattern)->surface;
-    if (_cairo_surface_is_paginated (surface))
-	surface = _cairo_paginated_surface_get_recording (surface);
-    if (_cairo_surface_is_snapshot (surface))
-	surface = _cairo_surface_snapshot_get_target (surface);
-    if (_cairo_surface_is_observer (surface))
-	surface = _cairo_surface_observer_get_target (surface);
-    return surface;
+    return _cairo_pattern_get_source ((cairo_surface_pattern_t *)pattern,
+				      &limit);
 }
 
 static cairo_bool_t
@@ -417,7 +411,7 @@ recording_pattern_contains_sample (const cairo_pattern_t *pattern,
     if (pattern->extend == CAIRO_EXTEND_NONE)
 	return TRUE;
 
-    surface = (cairo_recording_surface_t *) unwrap_surface (pattern);
+    surface = (cairo_recording_surface_t *) unwrap_source (pattern);
     if (surface->unbounded)
 	return TRUE;
 
@@ -482,7 +476,7 @@ composite_aligned_boxes (const cairo_spans_compositor_t		*compositor,
 					     boxes);
 
 	recording_clip = _cairo_clip_from_boxes (boxes);
-	status = _cairo_recording_surface_replay_with_clip (unwrap_surface (source),
+	status = _cairo_recording_surface_replay_with_clip (unwrap_source (source),
 							    &source->matrix,
 							    dst, recording_clip);
 	_cairo_clip_destroy (recording_clip);

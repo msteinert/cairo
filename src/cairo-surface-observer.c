@@ -1276,6 +1276,14 @@ _cairo_surface_observer_get_font_options (void *abstract_surface,
 	surface->target->backend->get_font_options (surface->target, options);
 }
 
+static cairo_surface_t *
+_cairo_surface_observer_source (void                    *abstract_surface,
+				cairo_rectangle_int_t	*extents)
+{
+    cairo_surface_observer_t *surface = abstract_surface;
+    return _cairo_surface_get_source (surface->target, extents);
+}
+
 static cairo_status_t
 _cairo_surface_observer_acquire_source_image (void                    *abstract_surface,
 						cairo_image_surface_t  **image_out,
@@ -1339,6 +1347,7 @@ static const cairo_surface_backend_t _cairo_surface_observer_backend = {
     _cairo_surface_observer_map_to_image,
     _cairo_surface_observer_unmap_image,
 
+    _cairo_surface_observer_source,
     _cairo_surface_observer_acquire_source_image,
     _cairo_surface_observer_release_source_image,
     _cairo_surface_observer_snapshot,

@@ -97,6 +97,11 @@ _cairo_image_surface_map_to_image (void *abstract_other,
 cairo_private cairo_int_status_t
 _cairo_image_surface_unmap_image (void *abstract_surface,
 				  cairo_image_surface_t *image);
+
+cairo_private cairo_surface_t *
+_cairo_image_surface_source (void			*abstract_surface,
+			     cairo_rectangle_int_t	*extents);
+
 cairo_private cairo_status_t
 _cairo_image_surface_acquire_source_image (void                    *abstract_surface,
 					   cairo_image_surface_t  **image_out,

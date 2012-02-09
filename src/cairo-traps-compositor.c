@@ -1102,39 +1102,31 @@ upload_boxes (const cairo_traps_compositor_t *compositor,
 {
     cairo_surface_t *dst = extents->surface;
     const cairo_pattern_t *source = &extents->source_pattern.base;
-    const cairo_surface_pattern_t *pattern;
     cairo_surface_t *src;
     cairo_rectangle_int_t limit;
     cairo_int_status_t status;
     int tx, ty;
 
-    pattern = (const cairo_surface_pattern_t *) source;
-    src = pattern->surface;
+    src = _cairo_pattern_get_source((cairo_surface_pattern_t *)source,
+				    &limit);
     if (!(src->type == CAIRO_SURFACE_TYPE_IMAGE || src->type == dst->type))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (! _cairo_matrix_is_integer_translation (&source->matrix, &tx, &ty))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (_cairo_surface_is_snapshot (src))
-	src = _cairo_surface_snapshot_get_target (src);
-    if (_cairo_surface_is_observer (src))
-	src = _cairo_surface_observer_get_target (src);
-    if (_cairo_surface_is_subsurface (src)) {
-	_cairo_surface_subsurface_offset (src, &tx, &ty);
-	src = _cairo_surface_subsurface_get_target (src);
-    }
-
     /* Check that the data is entirely within the image */
-    if (extents->bounded.x + tx < 0 || extents->bounded.y + ty < 0)
+    if (extents->bounded.x + tx < limit.x || extents->bounded.y + ty < limit.y)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    _cairo_surface_get_extents (pattern->surface, &limit);
-    if (extents->bounded.x + extents->bounded.width  + tx > limit.width ||
-	extents->bounded.y + extents->bounded.height + ty > limit.height)
+    if (extents->bounded.x + extents->bounded.width  + tx > limit.x + limit.width ||
+	extents->bounded.y + extents->bounded.height + ty > limit.y + limit.height)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (pattern->surface->type == CAIRO_SURFACE_TYPE_IMAGE)
+    tx += limit.x;
+    ty += limit.y;
+
+    if (src->type == CAIRO_SURFACE_TYPE_IMAGE)
 	status = compositor->draw_image_boxes (dst,
 					       (cairo_image_surface_t *)src,
 					       boxes, tx, ty);

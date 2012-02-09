@@ -535,6 +535,7 @@ static const cairo_surface_backend_t proxy_backend  = {
     NULL, /* map to image */
     NULL, /* unmap image */
 
+    _cairo_surface_default_source,
     proxy_acquire_source_image,
     proxy_release_source_image,
 };
@@ -1135,6 +1136,7 @@ static const cairo_surface_backend_t cairo_recording_surface_backend = {
     NULL, /* map to image */
     NULL, /* unmap image */
 
+    _cairo_surface_default_source,
     _cairo_recording_surface_acquire_source_image,
     _cairo_recording_surface_release_source_image,
     _cairo_recording_surface_snapshot,
