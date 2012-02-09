@@ -1538,7 +1538,7 @@ clip_and_composite_boxes (const cairo_traps_compositor_t *compositor,
     }
 
     return clip_and_composite (compositor, extents,
-			       composite_boxes, composite_boxes, boxes,
+			       composite_boxes, NULL, boxes,
 			       need_unbounded_clip (extents));
 }
 
