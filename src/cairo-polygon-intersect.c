@@ -1183,7 +1183,6 @@ edges_start_or_continue (cairo_bo_edge_t	*left,
 
 	    /* continuation on right, extend right to cover both */
 	    assert (old->deferred.other == NULL);
-	    assert (old->edge.dir == right->edge.dir);
 	    assert (old->edge.line.p2.y > old->edge.line.p1.y);
 
 	    if (old->edge.line.p1.y < right->edge.line.p1.y)
