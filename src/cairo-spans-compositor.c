@@ -565,16 +565,10 @@ composite_aligned_boxes (const cairo_spans_compositor_t		*compositor,
 }
 
 static cairo_bool_t
-composite_needs_clip (const cairo_composite_rectangles_t *composit,
+composite_needs_clip (const cairo_composite_rectangles_t *composite,
 		      const cairo_box_t *extents)
 {
-    cairo_bool_t needs_clip;
-
-    needs_clip = ! composit->is_bounded;
-    if (needs_clip)
-	needs_clip = ! _cairo_clip_contains_box (composit->clip, extents);
-
-    return needs_clip;
+    return !_cairo_clip_contains_box (composite->clip, extents);
 }
 
 static cairo_int_status_t
@@ -588,11 +582,11 @@ composite_boxes (const cairo_spans_compositor_t *compositor,
     cairo_int_status_t status;
     cairo_box_t box;
 
-    _cairo_box_from_rectangle (&box, &extents->bounded);
+    _cairo_box_from_rectangle (&box, &extents->unbounded);
     if (composite_needs_clip (extents, &box))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    _cairo_rectangular_scan_converter_init (&converter, &extents->bounded);
+    _cairo_rectangular_scan_converter_init (&converter, &extents->unbounded);
     for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
 	const cairo_box_t *box = chunk->base;
 	int i;
@@ -633,7 +627,7 @@ composite_polygon (const cairo_spans_compositor_t	*compositor,
 							   polygon,
 							   fill_rule, antialias);
     } else {
-	const cairo_rectangle_int_t *r = &extents->bounded;
+	const cairo_rectangle_int_t *r = &extents->unbounded;
 
 	if (antialias == CAIRO_ANTIALIAS_FAST) {
 	    converter = _cairo_tor22_scan_converter_create (r->x, r->y,
