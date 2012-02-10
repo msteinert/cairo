@@ -37,6 +37,7 @@
 #include "cairoint.h"
 
 #include "cairo-analysis-surface-private.h"
+#include "cairo-box-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-paginated-private.h"
@@ -247,16 +248,8 @@ _add_operation (cairo_analysis_surface_t *surface,
     if (surface->first_op) {
 	surface->first_op = FALSE;
 	surface->page_bbox = bbox;
-    } else {
-	if (bbox.p1.x < surface->page_bbox.p1.x)
-	    surface->page_bbox.p1.x = bbox.p1.x;
-	if (bbox.p1.y < surface->page_bbox.p1.y)
-	    surface->page_bbox.p1.y = bbox.p1.y;
-	if (bbox.p2.x > surface->page_bbox.p2.x)
-	    surface->page_bbox.p2.x = bbox.p2.x;
-	if (bbox.p2.y > surface->page_bbox.p2.y)
-	    surface->page_bbox.p2.y = bbox.p2.y;
-    }
+    } else
+	_cairo_box_add_box(&surface->page_bbox, &bbox);
 
     /* If the operation is completely enclosed within the fallback
      * region there is no benefit in emitting a native operation as
