@@ -142,7 +142,7 @@ _cairo_xlib_xcb_surface_source (void *abstract_surface,
 				cairo_rectangle_int_t *extents)
 {
     cairo_xlib_xcb_surface_t *surface = abstract_surface;
-    return _cairo_surface_get_source (&surface->cb->base, extents);
+    return _cairo_surface_get_source (&surface->xcb->base, extents);
 }
 
 static cairo_status_t
