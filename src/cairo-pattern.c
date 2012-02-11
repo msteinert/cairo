@@ -939,10 +939,10 @@ static const int mesh_control_point_j[4] = { 1, 2, 2, 1 };
  * cairo_mesh_pattern_begin_patch()/cairo_mesh_pattern_end_patch().
  *
  * <informalexample><programlisting>
- * cairo_pattern_t *mesh = cairo_mesh_pattern_create_mesh ();
+ * cairo_pattern_t *pattern = cairo_mesh_pattern_create_mesh ();
  *
  * /&ast; Add a Coons patch &ast;/
- * cairo_mesh_pattern_begin_patch (mesh);
+ * cairo_mesh_pattern_begin_patch (pattern);
  * cairo_mesh_pattern_move_to (pattern, 0, 0);
  * cairo_mesh_pattern_curve_to (pattern, 30, -30,  60,  30, 100, 0);
  * cairo_mesh_pattern_curve_to (pattern, 60,  30, 130,  60, 100, 100);
@@ -952,17 +952,17 @@ static const int mesh_control_point_j[4] = { 1, 2, 2, 1 };
  * cairo_mesh_pattern_set_corner_color_rgb (pattern, 1, 0, 1, 0);
  * cairo_mesh_pattern_set_corner_color_rgb (pattern, 2, 0, 0, 1);
  * cairo_mesh_pattern_set_corner_color_rgb (pattern, 3, 1, 1, 0);
- * cairo_mesh_pattern_end_patch (mesh);
+ * cairo_mesh_pattern_end_patch (pattern);
  *
  * /&ast; Add a Gouraud-shaded triangle &ast;/
- * cairo_mesh_pattern_begin_patch (mesh)
+ * cairo_mesh_pattern_begin_patch (pattern)
  * cairo_mesh_pattern_move_to (pattern, 100, 100);
  * cairo_mesh_pattern_line_to (pattern, 130, 130);
  * cairo_mesh_pattern_line_to (pattern, 130,  70);
  * cairo_mesh_pattern_set_corner_color_rgb (pattern, 0, 1, 0, 0);
  * cairo_mesh_pattern_set_corner_color_rgb (pattern, 1, 0, 1, 0);
  * cairo_mesh_pattern_set_corner_color_rgb (pattern, 2, 0, 0, 1);
- * cairo_mesh_pattern_end_patch (mesh)
+ * cairo_mesh_pattern_end_patch (pattern)
  * </programlisting></informalexample>
  *
  * When two patches overlap, the last one that has been added is drawn
