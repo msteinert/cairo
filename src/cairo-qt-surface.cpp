@@ -45,6 +45,9 @@
 #include "cairo-region-private.h"
 #include "cairo-surface-clipper-private.h"
 #include "cairo-types-private.h"
+#include "cairo-image-surface-private.h"
+#include "cairo-pattern-private.h"
+#include "cairo-surface-backend-private.h"
 
 #include "cairo-ft.h"
 #include "cairo-qt.h"
@@ -58,8 +61,7 @@
 #include <QtGui/QPixmap>
 #include <QtGui/QBrush>
 #include <QtGui/QPen>
-#include <QtGui/QWidget>
-#include <QtGui/QX11Info>
+#include <QWidget>
 #include <QtCore/QVarLengthArray>
 
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 7, 0)) || defined(QT_GLYPHS_API_BACKPORT)
@@ -381,7 +383,7 @@ _cairo_path_to_qpainterpath_close_path (void *closure)
 }
 
 static inline QPainterPath
-path_to_qt (cairo_path_fixed_t *path,
+path_to_qt (const cairo_path_fixed_t *path,
 	    const cairo_matrix_t *ctm_inverse = NULL)
 {
     qpainter_path_data data;
@@ -403,7 +405,7 @@ path_to_qt (cairo_path_fixed_t *path,
 }
 
 static inline QPainterPath
-path_to_qt (cairo_path_fixed_t *path,
+path_to_qt (const cairo_path_fixed_t *path,
 	    cairo_fill_rule_t fill_rule,
 	    cairo_matrix_t *ctm_inverse = NULL)
 {
@@ -649,29 +651,6 @@ _cairo_qt_surface_release_dest_image (void *abstract_surface,
     }
 }
 
-static cairo_status_t
-_cairo_qt_surface_clone_similar (void *abstract_surface,
-				 cairo_surface_t *src,
-				 int              src_x,
-				 int              src_y,
-				 int              width,
-				 int              height,
-				 int              *clone_offset_x,
-				 int              *clone_offset_y,
-				 cairo_surface_t **clone_out)
-{
-    cairo_qt_surface_t *qs = (cairo_qt_surface_t *) abstract_surface;
-
-    if (src->backend == qs->base.backend) {
-	*clone_offset_x = 0;
-	*clone_offset_y = 0;
-	*clone_out = cairo_surface_reference (src);
-	return CAIRO_STATUS_SUCCESS;
-    }
-
-    return (cairo_status_t) CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
 static cairo_bool_t
 _cairo_qt_surface_get_extents (void *abstract_surface,
 			       cairo_rectangle_int_t *extents)
@@ -715,7 +694,7 @@ _cairo_qt_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clipper,
 
 static void
 _cairo_qt_surface_set_clip_region (cairo_qt_surface_t *qs,
-				   cairo_region_t *clip_region)
+				   const cairo_region_t *clip_region)
 {
     _cairo_surface_clipper_reset (&qs->clipper);
 
@@ -746,7 +725,7 @@ _cairo_qt_surface_set_clip_region (cairo_qt_surface_t *qs,
 
 static cairo_int_status_t
 _cairo_qt_surface_set_clip (cairo_qt_surface_t *qs,
-			    cairo_clip_t *clip)
+			    const cairo_clip_t *clip)
 {
     cairo_int_status_t status;
 
@@ -1110,7 +1089,7 @@ struct PatternToPenConverter {
 static bool
 _cairo_qt_fast_fill (cairo_qt_surface_t *qs,
 		     const cairo_pattern_t *source,
-		     cairo_path_fixed_t *path = NULL,
+		     const cairo_path_fixed_t *path = NULL,
 		     cairo_fill_rule_t fill_rule = CAIRO_FILL_RULE_WINDING,
 		     double tolerance = 0.0,
 		     cairo_antialias_t antialias = CAIRO_ANTIALIAS_NONE)
@@ -1226,7 +1205,7 @@ static cairo_int_status_t
 _cairo_qt_surface_paint (void *abstract_surface,
 			 cairo_operator_t op,
 			 const cairo_pattern_t *source,
-			 cairo_clip_t	       *clip)
+			 const cairo_clip_t	       *clip)
 {
     cairo_qt_surface_t *qs = (cairo_qt_surface_t *) abstract_surface;
     cairo_int_status_t status;
@@ -1261,11 +1240,11 @@ static cairo_int_status_t
 _cairo_qt_surface_fill (void *abstract_surface,
 			cairo_operator_t op,
 			const cairo_pattern_t *source,
-			cairo_path_fixed_t *path,
+			const cairo_path_fixed_t *path,
 			cairo_fill_rule_t fill_rule,
 			double tolerance,
 			cairo_antialias_t antialias,
-			cairo_clip_t *clip)
+			const cairo_clip_t *clip)
 {
     cairo_qt_surface_t *qs = (cairo_qt_surface_t *) abstract_surface;
 
@@ -1306,13 +1285,13 @@ static cairo_int_status_t
 _cairo_qt_surface_stroke (void *abstract_surface,
 			  cairo_operator_t op,
 			  const cairo_pattern_t *source,
-			  cairo_path_fixed_t *path,
+			  const cairo_path_fixed_t *path,
 			  const cairo_stroke_style_t *style,
 			  const cairo_matrix_t *ctm,
 			  const cairo_matrix_t *ctm_inverse,
 			  double tolerance,
 			  cairo_antialias_t antialias,
-			  cairo_clip_t *clip)
+			  const cairo_clip_t *clip)
 {
     cairo_qt_surface_t *qs = (cairo_qt_surface_t *) abstract_surface;
 
@@ -1361,8 +1340,7 @@ _cairo_qt_surface_show_glyphs (void *abstract_surface,
 			       cairo_glyph_t *glyphs,
 			       int num_glyphs,
 			       cairo_scaled_font_t *scaled_font,
-			       cairo_clip_t *clip,
-			       int *remaining_glyphs)
+			       const cairo_clip_t *clip)
 {
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 7, 0)) || defined(QT_GLYPHS_API_BACKPORT)
     cairo_qt_surface_t *qs = (cairo_qt_surface_t *) abstract_surface;
@@ -1405,7 +1383,7 @@ _cairo_qt_surface_mask (void *abstract_surface,
 			cairo_operator_t op,
 			const cairo_pattern_t *source,
 			const cairo_pattern_t *mask,
-			cairo_clip_t	    *clip)
+			const cairo_clip_t	    *clip)
 {
     cairo_qt_surface_t *qs = (cairo_qt_surface_t *) abstract_surface;
 
@@ -1431,108 +1409,6 @@ _cairo_qt_surface_mask (void *abstract_surface,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
-static cairo_int_status_t
-_cairo_qt_surface_composite (cairo_operator_t op,
-			     const cairo_pattern_t *pattern,
-			     const cairo_pattern_t *mask_pattern,
-			     void *abstract_surface,
-			     int src_x,
-			     int src_y,
-			     int mask_x,
-			     int mask_y,
-			     int dst_x,
-			     int dst_y,
-			     unsigned int width,
-			     unsigned int height,
-			     cairo_region_t *clip_region)
-{
-    cairo_qt_surface_t *qs = (cairo_qt_surface_t *) abstract_surface;
-
-    if (mask_pattern)
-        return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    if (! _op_is_supported (qs, op))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    _cairo_qt_surface_set_clip_region (qs, clip_region);
-
-    D(fprintf(stderr, "q[%p] composite op:%s src:%p [%d %d] dst [%d %d] dim [%d %d]\n",
-              abstract_surface, _opstr(op), (void*)pattern,
-              src_x, src_y, dst_x, dst_y, width, height));
-
-    if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
-        cairo_solid_pattern_t *solid = (cairo_solid_pattern_t*) pattern;
-
-        QColor color;
-        color.setRgbF(solid->color.red,
-                      solid->color.green,
-                      solid->color.blue,
-                      solid->color.alpha);
-
-        if (qs->supports_porter_duff)
-            qs->p->setCompositionMode (_qpainter_compositionmode_from_cairo_op (op));
-
-        qs->p->fillRect (dst_x, dst_y, width, height, color);
-
-        if (qs->supports_porter_duff)
-            qs->p->setCompositionMode (QPainter::CompositionMode_SourceOver);
-    } else if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
-        cairo_surface_pattern_t *spattern = (cairo_surface_pattern_t*) pattern;
-        cairo_surface_t *surface = spattern->surface;
-
-        QImage *qimg = NULL;
-        QPixmap *qpixmap = NULL;
-        std::auto_ptr<QImage> qimg_d;
-
-        if (surface->type == CAIRO_SURFACE_TYPE_IMAGE) {
-            cairo_image_surface_t *isurf = (cairo_image_surface_t*) surface;
-            qimg = new QImage ((const uchar *) isurf->data,
-                               isurf->width,
-                               isurf->height,
-                               isurf->stride,
-                               _qimage_format_from_cairo_format (isurf->format));
-            qimg_d.reset(qimg);
-        }
-
-        if (surface->type == CAIRO_SURFACE_TYPE_QT) {
-            cairo_qt_surface_t *qsrc = (cairo_qt_surface_t*) surface;
-
-            if (qsrc->image)
-                qimg = qsrc->image;
-            else if (qsrc->pixmap)
-                qpixmap = qsrc->pixmap;
-        }
-
-        if (!qimg && !qpixmap)
-            return CAIRO_INT_STATUS_UNSUPPORTED;
-
-        QMatrix savedMatrix = qs->p->worldMatrix();
-        if (! _cairo_matrix_is_identity (&pattern->matrix)) {
-            cairo_matrix_t pm = pattern->matrix;
-	    cairo_status_t status;
-
-            status = cairo_matrix_invert (&pm);
-	    assert (status == CAIRO_STATUS_SUCCESS);
-	    qs->p->setWorldMatrix(_qmatrix_from_cairo_matrix (pm), true);
-        }
-
-        if (qs->supports_porter_duff)
-            qs->p->setCompositionMode (_qpainter_compositionmode_from_cairo_op (op));
-
-        if (qimg)
-            qs->p->drawImage (dst_x, dst_y, *qimg, src_x, src_y, width, height);
-        else if (qpixmap)
-            qs->p->drawPixmap (dst_x, dst_y, *qpixmap, src_x, src_y, width, height);
-
-        if (qs->supports_porter_duff)
-            qs->p->setCompositionMode (QPainter::CompositionMode_SourceOver);
-    } else {
-        return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
-
-    return CAIRO_INT_STATUS_SUCCESS;
-}
-
 static cairo_status_t
 _cairo_qt_surface_mark_dirty (void *abstract_surface,
 			      int x, int y,
@@ -1553,49 +1429,27 @@ _cairo_qt_surface_mark_dirty (void *abstract_surface,
 static const cairo_surface_backend_t cairo_qt_surface_backend = {
     CAIRO_SURFACE_TYPE_QT,
     _cairo_qt_surface_finish,
-
-    _cairo_default_context_create,
-
+    _cairo_default_context_create, /* XXX */
     _cairo_qt_surface_create_similar,
     NULL, /* similar image */
     NULL, /* map to image */
     NULL, /* unmap image */
-
     _cairo_surface_default_source,
     _cairo_qt_surface_acquire_source_image,
     _cairo_qt_surface_release_source_image,
-    _cairo_qt_surface_acquire_dest_image,
-    _cairo_qt_surface_release_dest_image,
-    _cairo_qt_surface_clone_similar,
-
-    _cairo_qt_surface_composite,
-    NULL, /* fill_rectangles */
-    NULL, /* composite_trapezoids */
-    NULL, /* create_span_renderer */
-    NULL, /* check_span_renderer */
+    NULL, /* snapshot */
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_qt_surface_get_extents,
-    NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
     NULL, /* flush */
     _cairo_qt_surface_mark_dirty,
-    NULL, /* scaled_font_fini */
-    NULL, /* scaled_glyph_fini */
-
     _cairo_qt_surface_paint,
     _cairo_qt_surface_mask,
     _cairo_qt_surface_stroke,
     _cairo_qt_surface_fill,
-    _cairo_qt_surface_show_glyphs,
-
-    NULL, /* snapshot */
-    NULL, /* is_similar */
     NULL, /* fill_stroke */
-    NULL, /* create_solid_pattern_surface */
-    NULL, /* can_repaint_solid_pattern_surface */
-    NULL, /* has_show_text_glyphs */
-    NULL, /* show_text_glyphs */
+    _cairo_qt_surface_show_glyphs
 };
 
 cairo_surface_t *
