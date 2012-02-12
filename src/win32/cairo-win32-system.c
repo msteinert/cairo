@@ -47,8 +47,6 @@
 
 #include "cairoint.h"
 
-
-
 #if CAIRO_MUTEX_IMPL_WIN32
 #if !CAIRO_WIN32_STATIC_BUILD
 
@@ -60,11 +58,6 @@
 #if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
 # define _WIN32_WINNT 0x0500
 #endif
-
-#include "cairo-clip-private.h"
-#include "cairo-paginated-private.h"
-#include "cairo-win32-private.h"
-#include "cairo-scaled-font-subsets-private.h"
 
 #include <windows.h>
 
@@ -94,4 +87,3 @@ DllMain (HINSTANCE hinstDLL,
 
 #endif
 #endif
-

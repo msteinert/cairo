@@ -1984,4 +1984,10 @@ _cairo_debug_print_traps (FILE *file, const cairo_traps_t *traps);
 cairo_private void
 _cairo_debug_print_clip (FILE *stream, const cairo_clip_t *clip);
 
+#if 0
+#define TRACE(x) fprintf x
+#else
+#define TRACE(x)
+#endif
+
 #endif

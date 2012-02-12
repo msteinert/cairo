@@ -236,13 +236,15 @@ _compute_transform (cairo_win32_scaled_font_t *scaled_font,
 	if (status)
 	    return status;
 
-	scaled_font->logical_size = _cairo_lround (WIN32_FONT_LOGICAL_SCALE *
-                                                   scaled_font->y_scale);
-	scaled_font->logical_scale = WIN32_FONT_LOGICAL_SCALE * scaled_font->y_scale;
+	scaled_font->logical_size =
+	    _cairo_lround (WIN32_FONT_LOGICAL_SCALE * scaled_font->y_scale);
+	scaled_font->logical_scale =
+	    WIN32_FONT_LOGICAL_SCALE * scaled_font->y_scale;
     }
 
     cairo_matrix_scale (&scaled_font->logical_to_device,
-			1.0 / scaled_font->logical_scale, 1.0 / scaled_font->logical_scale);
+			1.0 / scaled_font->logical_scale,
+			1.0 / scaled_font->logical_scale);
 
     scaled_font->device_to_logical = scaled_font->logical_to_device;
 
@@ -1049,7 +1051,6 @@ _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_f
 	    extents.y_bearing = (- extents.y_bearing - extents.height);
 	    extents.y_advance = - extents.y_advance;
 	}
-
     } else {
 	/* For all other transformations, we use the design metrics
 	 * of the font.
@@ -1295,6 +1296,7 @@ _draw_glyphs_on_surface (cairo_win32_surface_t     *surface,
     return status;
 }
 
+#if 0
 /* Duplicate the green channel of a 4-channel mask in the alpha channel, then
  * invert the whole mask.
  */
@@ -1360,6 +1362,7 @@ _compute_a8_mask (cairo_win32_surface_t *mask_surface)
 
     return &image8->base;
 }
+#endif
 
 static cairo_int_status_t
 _cairo_win32_scaled_font_glyph_init (void		       *abstract_font,
@@ -1656,9 +1659,9 @@ _cairo_win32_scaled_font_is_synthetic (void	       *abstract_font)
 }
 
 static cairo_int_status_t
-_cairo_win32_scaled_font_index_to_glyph_name (void	      	*abstract_font,
+_cairo_win32_scaled_font_index_to_glyph_name (void		*abstract_font,
 					      char             **glyph_names,
-					      int              	 num_glyph_names,
+					      int		 num_glyph_names,
 					      unsigned long      glyph_index,
 					      unsigned long     *glyph_array_index)
 {
@@ -1688,7 +1691,7 @@ _cairo_win32_scaled_font_index_to_glyph_name (void	      	*abstract_font,
 	*glyph_array_index = scaled_font->type1_notdef_index;
     else if (glyph_index <= scaled_font->type1_notdef_index)
 	*glyph_array_index = glyph_index - 1;
-    else if (glyph_index < num_glyph_names)
+    else if (glyph_index < (unsigned long)num_glyph_names)
 	*glyph_array_index = glyph_index;
     else
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1756,8 +1759,12 @@ _cairo_win32_scaled_font_init_glyph_surface (cairo_win32_scaled_font_t *scaled_f
 
     GdiFlush();
 
+#if 0
     image = _compute_a8_mask (surface);
     status = image->status;
+#else
+    status = CAIRO_STATUS_NO_MEMORY;
+#endif
     if (status)
 	goto FAIL;
 

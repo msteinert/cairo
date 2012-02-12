@@ -71,6 +71,8 @@ _pixman_transparent_image (void)
 {
     pixman_image_t *image;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     image = __pixman_transparent_image;
     if (unlikely (image == NULL)) {
 	pixman_color_t color;
@@ -101,6 +103,8 @@ _pixman_black_image (void)
 {
     pixman_image_t *image;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     image = __pixman_black_image;
     if (unlikely (image == NULL)) {
 	pixman_color_t color;
@@ -130,6 +134,8 @@ static pixman_image_t *
 _pixman_white_image (void)
 {
     pixman_image_t *image;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
 
     image = __pixman_white_image;
     if (unlikely (image == NULL)) {
@@ -175,18 +181,21 @@ static int n_cached;
 static pixman_image_t *
 _pixman_transparent_image (void)
 {
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     return _pixman_image_for_color (CAIRO_COLOR_TRANSPARENT);
 }
 
 static pixman_image_t *
 _pixman_black_image (void)
 {
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     return _pixman_image_for_color (CAIRO_COLOR_BLACK);
 }
 
 static pixman_image_t *
 _pixman_white_image (void)
 {
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     return _pixman_image_for_color (CAIRO_COLOR_WHITE);
 }
 #endif /* !PIXMAN_HAS_ATOMIC_OPS */
@@ -294,6 +303,8 @@ _pixman_image_for_gradient (const cairo_gradient_pattern_t *pattern,
     unsigned int i;
     cairo_int_status_t status;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     if (pattern->n_stops > ARRAY_LENGTH(pixman_stops_static)) {
 	pixman_stops = _cairo_malloc_ab (pattern->n_stops,
 					 sizeof(pixman_gradient_stop_t));
@@ -384,6 +395,8 @@ _pixman_image_for_mesh (const cairo_mesh_pattern_t *pattern,
     pixman_image_t *image;
     int width, height;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     *tx = -extents->x;
     *ty = -extents->y;
     width = extents->width;
@@ -436,6 +449,8 @@ _pixel_to_solid (cairo_image_surface_t *image, int x, int y)
 {
     uint32_t pixel;
     pixman_color_t color;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
 
     switch (image->format) {
     default:
@@ -607,6 +622,8 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
     cairo_matrix_t *m, matrix;
     int tx = 0, ty = 0;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     *ix = *iy = 0;
 
     source = _cairo_pattern_get_source (pattern, &limit);
@@ -706,6 +723,8 @@ _pixman_image_for_surface (cairo_image_surface_t *dst,
 {
     cairo_extend_t extend = pattern->base.extend;
     pixman_image_t *pixman_image;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
 
     *ix = *iy = 0;
     pixman_image = NULL;
@@ -915,6 +934,8 @@ _pixman_image_for_raster (cairo_image_surface_t *dst,
     cairo_status_t status;
     cairo_surface_t *surface;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     *ix = *iy = 0;
 
     surface = _cairo_raster_source_pattern_acquire (&pattern->base,
@@ -977,6 +998,8 @@ _pixman_image_for_pattern (cairo_image_surface_t *dst,
 {
     *tx = *ty = 0;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     if (pattern == NULL)
 	return _pixman_white_image ();
 
@@ -1033,6 +1056,8 @@ _cairo_image_source_create_for_pattern (cairo_surface_t *dst,
 					 int *src_x, int *src_y)
 {
     cairo_image_source_t *source;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
 
     source = malloc (sizeof (cairo_image_source_t));
     if (unlikely (source == NULL))

@@ -2047,6 +2047,7 @@ cairo_device_reference (cairo_device_t *device);
  * @CAIRO_DEVICE_TYPE_XLIB: The device is of type xlib
  * @CAIRO_DEVICE_TYPE_XML: The device is of type XML
  * @CAIRO_DEVICE_TYPE_COGL: The device is of type cogl, since 1.12
+ * @CAIRO_DEVICE_TYPE_WIN32: The device is of type cogl, since 1.12
  * @CAIRO_DEVICE_TYPE_INVALID: The device is invalid
  *
  * #cairo_device_type_t is used to describe the type of a given
@@ -2076,6 +2077,7 @@ typedef enum _cairo_device_type {
     CAIRO_DEVICE_TYPE_XLIB,
     CAIRO_DEVICE_TYPE_XML,
     CAIRO_DEVICE_TYPE_COGL,
+    CAIRO_DEVICE_TYPE_WIN32,
 
     CAIRO_DEVICE_TYPE_INVALID = -1
 } cairo_device_type_t;

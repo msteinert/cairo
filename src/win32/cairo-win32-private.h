@@ -37,8 +37,12 @@
 #define CAIRO_WIN32_PRIVATE_H
 
 #include "cairo-win32.h"
+
 #include "cairoint.h"
+
+#include "cairo-device-private.h"
 #include "cairo-surface-clipper-private.h"
+#include "cairo-surface-private.h"
 
 #ifndef SHADEBLENDCAPS
 #define SHADEBLENDCAPS 120
@@ -48,68 +52,6 @@
 #endif
 
 #define WIN32_FONT_LOGICAL_SCALE 32
-
-typedef struct _cairo_win32_surface {
-    cairo_surface_t base;
-
-    cairo_format_t format;
-
-    HDC dc;
-
-    /* We create off-screen surfaces as DIBs or DDBs, based on what we created
-     * originally*/
-    HBITMAP bitmap;
-    cairo_bool_t is_dib;
-
-    /* Used to save the initial 1x1 monochrome bitmap for the DC to
-     * select back into the DC before deleting the DC and our
-     * bitmap. For Windows XP, this doesn't seem to be necessary
-     * ... we can just delete the DC and that automatically unselects
-     * out bitmap. But it's standard practice so apparently is needed
-     * on some versions of Windows.
-     */
-    HBITMAP saved_dc_bitmap;
-
-    cairo_surface_t *image;
-
-    /* We use the x and y parts of extents for situations where
-     * we're not supposed to draw to the entire surface.
-     * For example, during a paint event a program will get
-     * a DC that has been clipped to the dirty region.
-     * A cairo surface constructed for that DC will have extents
-     * that match bounds of the clipped region.
-     *
-     * jrmuizel: I'm not sure if storing these extents instead
-     * of just using the size is better... */
-    cairo_rectangle_int_t extents;
-
-    /* Initial clip bits
-     * We need these kept around so that we maintain
-     * whatever clip was set on the original DC at creation
-     * time when cairo is asked to reset the surface clip.
-     */
-    cairo_rectangle_int_t clip_rect;
-    HRGN initial_clip_rgn;
-    cairo_bool_t had_simple_clip;
-    cairo_region_t *clip_region;
-
-    /* For path clipping to the printing-surface */
-    cairo_surface_clipper_t clipper;
-
-    /* Surface DC flags */
-    uint32_t flags;
-
-    /* printing surface bits */
-    cairo_paginated_mode_t paginated_mode;
-    cairo_content_t content;
-    cairo_bool_t path_empty;
-    cairo_bool_t has_ctm;
-    cairo_matrix_t ctm;
-    cairo_bool_t has_gdi_ctm;
-    cairo_matrix_t gdi_ctm;
-    HBRUSH brush, old_brush;
-    cairo_scaled_font_subsets_t *font_subsets;
-} cairo_win32_surface_t;
 
 /* Surface DC flag values */
 enum {
@@ -141,17 +83,102 @@ enum {
     CAIRO_WIN32_SURFACE_CAN_CHECK_PNG = (1<<8),
 };
 
+typedef struct _cairo_win32_surface {
+    cairo_surface_t base;
+
+    cairo_format_t format;
+    HDC dc;
+
+    /* Surface DC flags */
+    unsigned flags;
+
+    /* We use the x and y parts of extents for situations where
+     * we're not supposed to draw to the entire surface.
+     * For example, during a paint event a program will get
+     * a DC that has been clipped to the dirty region.
+     * A cairo surface constructed for that DC will have extents
+     * that match bounds of the clipped region.
+     */
+    cairo_rectangle_int_t extents;
+} cairo_win32_surface_t;
+#define to_win32_surface(S) ((cairo_win32_surface_t *)(S))
+
+typedef struct _cairo_win32_display_surface {
+    cairo_win32_surface_t win32;
+
+    /* We create off-screen surfaces as DIBs or DDBs, based on what we created
+     * originally*/
+    HBITMAP bitmap;
+    cairo_bool_t is_dib;
+
+    /* Used to save the initial 1x1 monochrome bitmap for the DC to
+     * select back into the DC before deleting the DC and our
+     * bitmap. For Windows XP, this doesn't seem to be necessary
+     * ... we can just delete the DC and that automatically unselects
+     * out bitmap. But it's standard practice so apparently is needed
+     * on some versions of Windows.
+     */
+    HBITMAP saved_dc_bitmap;
+    cairo_surface_t *image;
+    cairo_surface_t *fallback;
+
+    HRGN initial_clip_rgn;
+    cairo_bool_t had_simple_clip;
+} cairo_win32_display_surface_t;
+#define to_win32_display_surface(S) ((cairo_win32_display_surface_t *)(S))
+
+typedef struct _cairo_win32_printing_surface {
+    cairo_win32_surface_t win32;
+
+    cairo_surface_clipper_t clipper;
+
+    cairo_paginated_mode_t paginated_mode;
+    cairo_content_t content;
+    cairo_bool_t path_empty;
+    cairo_bool_t has_ctm;
+    cairo_matrix_t ctm;
+    cairo_bool_t has_gdi_ctm;
+    cairo_matrix_t gdi_ctm;
+    HBRUSH brush, old_brush;
+    cairo_scaled_font_subsets_t *font_subsets;
+} cairo_win32_printing_surface_t;
+#define to_win32_printing_surface(S) ((cairo_win32_printing_surface_t *)(S))
+
+typedef BOOL (WINAPI *cairo_win32_alpha_blend_func_t) (HDC hdcDest,
+						       int nXOriginDest,
+						       int nYOriginDest,
+						       int nWidthDest,
+						       int hHeightDest,
+						       HDC hdcSrc,
+						       int nXOriginSrc,
+						       int nYOriginSrc,
+						       int nWidthSrc,
+						       int nHeightSrc,
+						       BLENDFUNCTION blendFunction);
+
+typedef struct _cairo_win32_device {
+    cairo_device_t base;
+
+    HMODULE msimg32_dll;
+
+    const cairo_compositor_t *compositor;
+
+    cairo_win32_alpha_blend_func_t alpha_blend;
+} cairo_win32_device_t;
+#define to_win32_device(D) ((cairo_win32_device_t *)(D))
+#define to_win32_device_from_surface(S) to_win32_device(((cairo_surface_t *)(S))->device)
+
+cairo_private cairo_device_t *
+_cairo_win32_device_get (void);
+
+const cairo_compositor_t *
+_cairo_win32_gdi_compositor_get (void);
+
 cairo_status_t
 _cairo_win32_print_gdi_error (const char *context);
 
-cairo_bool_t
-_cairo_surface_is_win32 (cairo_surface_t *surface);
-
-cairo_bool_t
-_cairo_surface_is_win32_printing (cairo_surface_t *surface);
-
-cairo_status_t
-_cairo_win32_surface_finish (void *abstract_surface);
+cairo_private void
+_cairo_win32_display_surface_discard_fallback (cairo_win32_display_surface_t *surface);
 
 cairo_bool_t
 _cairo_win32_surface_get_extents (void		          *abstract_surface,
@@ -160,34 +187,13 @@ _cairo_win32_surface_get_extents (void		          *abstract_surface,
 uint32_t
 _cairo_win32_flags_for_dc (HDC dc);
 
-cairo_status_t
-_cairo_win32_surface_set_clip_region (void           *abstract_surface,
-				      cairo_region_t *region);
-
 cairo_int_status_t
-_cairo_win32_surface_show_glyphs_internal (void			 *surface,
-					   cairo_operator_t	  op,
-					   const cairo_pattern_t *source,
-					   cairo_glyph_t	 *glyphs,
-					   int			  num_glyphs,
-					   cairo_scaled_font_t	 *scaled_font,
-					   const cairo_clip_t	 *clip,
-					   cairo_bool_t		  glyph_indices);
-
-cairo_int_status_t
-_cairo_win32_surface_show_glyphs (void			*surface,
-				  cairo_operator_t	 op,
-				  const cairo_pattern_t	*source,
-				  cairo_glyph_t		*glyphs,
-				  int			 num_glyphs,
-				  cairo_scaled_font_t	*scaled_font,
-				  const cairo_clip_t	*clip);
-
-cairo_surface_t *
-_cairo_win32_surface_create_similar (void	    *abstract_src,
-				     cairo_content_t content,
-				     int	     width,
-				     int	     height);
+_cairo_win32_surface_emit_glyphs (cairo_win32_surface_t *dst,
+				  const cairo_pattern_t *source,
+				  cairo_glyph_t	 *glyphs,
+				  int			  num_glyphs,
+				  cairo_scaled_font_t	 *scaled_font,
+				  cairo_bool_t		  glyph_indexing);
 
 static inline void
 _cairo_matrix_to_win32_xform (const cairo_matrix_t *m,
@@ -201,11 +207,12 @@ _cairo_matrix_to_win32_xform (const cairo_matrix_t *m,
     xform->eDy = (FLOAT) m->y0;
 }
 
-cairo_int_status_t
-_cairo_win32_save_initial_clip (HDC dc, cairo_win32_surface_t *surface);
+cairo_status_t
+_cairo_win32_display_surface_set_clip (cairo_win32_display_surface_t *surface,
+				       cairo_clip_t *clip);
 
-cairo_int_status_t
-_cairo_win32_restore_initial_clip (cairo_win32_surface_t *surface);
+void
+_cairo_win32_display_surface_unset_clip (cairo_win32_display_surface_t *surface);
 
 void
 _cairo_win32_debug_dump_hrgn (HRGN rgn, char *header);

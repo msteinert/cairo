@@ -93,6 +93,8 @@ draw_image_boxes (void *_dst,
     struct _cairo_boxes_chunk *chunk;
     int i;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     for (chunk = &boxes->chunks; chunk; chunk = chunk->next) {
 	for (i = 0; i < chunk->count; i++) {
 	    cairo_box_t *b = &chunk->base[i];
@@ -279,6 +281,8 @@ fill_rectangles (void			*_dst,
     uint32_t pixel;
     int i;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     if (fill_reduces_to_source (op, color, dst) &&
 	color_to_pixel (color, dst->pixman_format, &pixel))
     {
@@ -320,6 +324,8 @@ fill_boxes (void		*_dst,
     struct _cairo_boxes_chunk *chunk;
     uint32_t pixel;
     int i;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
 
     if (fill_reduces_to_source (op, color, dst) &&
 	color_to_pixel (color, dst->pixman_format, &pixel))
@@ -379,6 +385,9 @@ composite (void			*_dst,
 {
     cairo_image_source_t *src = (cairo_image_source_t *)abstract_src;
     cairo_image_source_t *mask = (cairo_image_source_t *)abstract_mask;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     if (mask) {
 	pixman_image_composite32 (_pixman_operator (op),
 				  src->pixman_image, mask->pixman_image, to_pixman_image (_dst),
@@ -415,6 +424,8 @@ lerp (void			*_dst,
     cairo_image_source_t *src = (cairo_image_source_t *)abstract_src;
     cairo_image_source_t *mask = (cairo_image_source_t *)abstract_mask;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
 #if PIXMAN_HAS_OP_LERP
     pixman_image_composite32 (PIXMAN_OP_LERP_SRC,
 			      src->pixman_image, mask->pixman_image, dst->pixman_image,
@@ -424,6 +435,10 @@ lerp (void			*_dst,
 			      width,  height);
 #else
     /* Punch the clip out of the destination */
+    TRACE ((stderr, "%s - OUT_REVERSE (mask=%d/%p, dst=%d/%p)\n",
+	    __FUNCTION__,
+	    mask->base.unique_id, mask->pixman_image,
+	    dst->base.unique_id, dst->pixman_image));
     pixman_image_composite32 (PIXMAN_OP_OUT_REVERSE,
 			      mask->pixman_image, NULL, dst->pixman_image,
 			      mask_x, mask_y,
@@ -432,6 +447,11 @@ lerp (void			*_dst,
 			      width,  height);
 
     /* Now add the two results together */
+    TRACE ((stderr, "%s - ADD (src=%d/%p, mask=%d/%p, dst=%d/%p)\n",
+	    __FUNCTION__,
+	    src->base.unique_id, src->pixman_image,
+	    mask->base.unique_id, mask->pixman_image,
+	    dst->base.unique_id, dst->pixman_image));
     pixman_image_composite32 (PIXMAN_OP_ADD,
 			      src->pixman_image, mask->pixman_image, dst->pixman_image,
 			      src_x,  src_y,
@@ -464,6 +484,7 @@ composite_boxes (void			*_dst,
     int i;
 
     /* XXX consider using a region? saves multiple prepare-composite */
+    TRACE ((stderr, "%s\n", __FUNCTION__));
 
     if (((cairo_surface_t *)_dst)->is_clear &&
 	(op == CAIRO_OPERATOR_SOURCE ||
@@ -612,6 +633,8 @@ composite_traps (void			*_dst,
     pixman_image_t *mask;
     pixman_format_code_t format;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     /* Special case adding trapezoids onto a mask surface; we want to avoid
      * creating an intermediate temporary mask unnecessarily.
      *
@@ -690,6 +713,8 @@ composite_tristrip (void			*_dst,
     pixman_image_t *mask;
     pixman_format_code_t format;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     if (strip->num_points < 3)
 	return CAIRO_STATUS_SUCCESS;
 
@@ -745,6 +770,8 @@ composite_one_glyph (void				*_dst,
     cairo_status_t status;
     int x, y;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     status = _cairo_scaled_glyph_lookup (info->font,
 					 info->glyphs[0].index,
 					 CAIRO_SCALED_GLYPH_INFO_SURFACE,
@@ -793,6 +820,8 @@ composite_glyphs_via_mask (void				*_dst,
     pixman_image_t *mask;
     cairo_status_t status;
     int i;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
 
     /* XXX convert the glyphs to common formats a8/a8r8g8b8 to hit
      * optimised paths through pixman. Should we increase the bit
@@ -915,6 +944,8 @@ composite_glyphs (void				*_dst,
     pixman_image_t *dst, *src;
     cairo_status_t status;
     int i;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
 
     if (info->num_glyphs == 1)
 	return composite_one_glyph(_dst, op, _src, src_x, src_y, dst_x, dst_y, info);
@@ -1196,6 +1227,8 @@ span_renderer_init (cairo_abstract_span_renderer_t	*_r,
     int src_x, src_y;
     int mask_x, mask_y;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     if (op == CAIRO_OPERATOR_CLEAR) {
 	op = PIXMAN_OP_LERP_CLEAR;
     } else if (dst->base.is_clear &&
@@ -1280,6 +1313,8 @@ span_renderer_fini (cairo_abstract_span_renderer_t *_r,
 		    cairo_int_status_t status)
 {
     cairo_image_span_renderer_t *r = (cairo_image_span_renderer_t *) _r;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
 
     if (status == CAIRO_INT_STATUS_SUCCESS && r->base.finish)
 	r->base.finish (r);
@@ -1426,6 +1461,8 @@ span_renderer_init (cairo_abstract_span_renderer_t	*_r,
     const cairo_pattern_t *source = &composite->source_pattern.base;
     cairo_operator_t op = composite->op;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     r->composite = composite;
     r->mask = NULL;
     r->src = NULL;
@@ -1530,6 +1567,8 @@ span_renderer_fini (cairo_abstract_span_renderer_t *_r,
 		    cairo_int_status_t status)
 {
     cairo_image_span_renderer_t *r = (cairo_image_span_renderer_t *) _r;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
 
     if (likely (status == CAIRO_INT_STATUS_SUCCESS)) {
 	const cairo_composite_rectangles_t *composite = r->composite;

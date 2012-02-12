@@ -1713,6 +1713,17 @@ _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+cairo_status_t
+_cairo_surface_default_acquire_source_image (void                    *surface,
+					     cairo_image_surface_t  **image_out,
+					     void                   **image_extra)
+{
+    *image_out = (cairo_image_surface_t *)
+	cairo_surface_map_to_image (surface, NULL);
+    *image_extra = NULL;
+    return (*image_out)->base.status;
+}
+
 /**
  * _cairo_surface_release_source_image:
  * @surface: a #cairo_surface_t
@@ -1730,6 +1741,15 @@ _cairo_surface_release_source_image (cairo_surface_t        *surface,
     if (surface->backend->release_source_image)
 	surface->backend->release_source_image (surface, image, image_extra);
 }
+
+void
+_cairo_surface_default_release_source_image (void                   *surface,
+					     cairo_image_surface_t  *image,
+					     void                   *image_extra)
+{
+    cairo_surface_unmap_image (surface, &image->base);
+}
+
 
 cairo_surface_t *
 _cairo_surface_get_source (cairo_surface_t *surface,

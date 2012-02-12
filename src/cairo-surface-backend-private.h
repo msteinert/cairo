@@ -201,6 +201,16 @@ struct _cairo_surface_backend {
     (*get_supported_mime_types)	(void			    *surface);
 };
 
+cairo_private cairo_status_t
+_cairo_surface_default_acquire_source_image (void                    *surface,
+					     cairo_image_surface_t  **image_out,
+					     void                   **image_extra);
+
+cairo_private void
+_cairo_surface_default_release_source_image (void                   *surface,
+					     cairo_image_surface_t  *image,
+					     void                   *image_extra);
+
 cairo_private cairo_surface_t *
 _cairo_surface_default_source (void *surface,
 			       cairo_rectangle_int_t *extents);

@@ -147,6 +147,7 @@ _cairo_image_surface_init (cairo_image_surface_t *surface,
 			   pixman_image_t	*pixman_image,
 			   pixman_format_code_t	 pixman_format)
 {
+    surface->parent = NULL;
     surface->pixman_image = pixman_image;
 
     surface->pixman_format = pixman_format;
@@ -714,13 +715,15 @@ _cairo_format_bits_per_pixel (cairo_format_t format)
     }
 }
 
-    static cairo_surface_t *
+static cairo_surface_t *
 _cairo_image_surface_create_similar (void	       *abstract_other,
 				     cairo_content_t	content,
 				     int		width,
 				     int		height)
 {
     cairo_image_surface_t *other = abstract_other;
+
+    TRACE ((stderr, "%s (other=%u)\n", __FUNCTION__, other->base.unique_id));
 
     if (! _cairo_image_surface_is_size_valid (width, height))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
@@ -872,6 +875,10 @@ _cairo_image_surface_paint (void			*abstract_surface,
 			    const cairo_clip_t		*clip)
 {
     cairo_image_surface_t *surface = abstract_surface;
+
+    TRACE ((stderr, "%s (surface=%d)\n",
+	    __FUNCTION__, surface->base.unique_id));
+
     return _cairo_compositor_paint (surface->compositor,
 				    &surface->base, op, source, clip);
 }
@@ -884,6 +891,10 @@ _cairo_image_surface_mask (void				*abstract_surface,
 			   const cairo_clip_t		*clip)
 {
     cairo_image_surface_t *surface = abstract_surface;
+
+    TRACE ((stderr, "%s (surface=%d)\n",
+	    __FUNCTION__, surface->base.unique_id));
+
     return _cairo_compositor_mask (surface->compositor,
 				   &surface->base, op, source, mask, clip);
 }
@@ -901,6 +912,10 @@ _cairo_image_surface_stroke (void			*abstract_surface,
 			     const cairo_clip_t		*clip)
 {
     cairo_image_surface_t *surface = abstract_surface;
+
+    TRACE ((stderr, "%s (surface=%d)\n",
+	    __FUNCTION__, surface->base.unique_id));
+
     return _cairo_compositor_stroke (surface->compositor, &surface->base,
 				     op, source, path,
 				     style, ctm, ctm_inverse,
@@ -918,6 +933,10 @@ _cairo_image_surface_fill (void				*abstract_surface,
 			   const cairo_clip_t		*clip)
 {
     cairo_image_surface_t *surface = abstract_surface;
+
+    TRACE ((stderr, "%s (surface=%d)\n",
+	    __FUNCTION__, surface->base.unique_id));
+
     return _cairo_compositor_fill (surface->compositor, &surface->base,
 				   op, source, path,
 				   fill_rule, tolerance, antialias,
@@ -934,6 +953,10 @@ _cairo_image_surface_glyphs (void			*abstract_surface,
 			     const cairo_clip_t		*clip)
 {
     cairo_image_surface_t *surface = abstract_surface;
+
+    TRACE ((stderr, "%s (surface=%d)\n",
+	    __FUNCTION__, surface->base.unique_id));
+
     return _cairo_compositor_glyphs (surface->compositor, &surface->base,
 				     op, source,
 				     glyphs, num_glyphs, scaled_font,

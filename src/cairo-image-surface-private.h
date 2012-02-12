@@ -50,6 +50,7 @@ struct _cairo_image_surface {
 
     pixman_image_t *pixman_image;
     const cairo_compositor_t *compositor;
+    cairo_surface_t *parent;
 
     pixman_format_code_t pixman_format;
     cairo_format_t format;
@@ -64,6 +65,7 @@ struct _cairo_image_surface {
     unsigned transparency : 2;
     unsigned color : 2;
 };
+#define to_image_surface(S) ((cairo_image_surface_t *)(S))
 
 /* A wrapper for holding pixman images returned by create_for_pattern */
 typedef struct _cairo_image_source {
@@ -200,6 +202,13 @@ cairo_private void
 _pixman_image_add_tristrip (pixman_image_t *image,
 			    int dst_x, int dst_y,
 			    cairo_tristrip_t *strip);
+
+static inline void
+_cairo_image_surface_set_parent (cairo_image_surface_t *image,
+				 cairo_surface_t *parent)
+{
+    image->parent = parent;
+}
 
 /**
  * _cairo_surface_is_image:
