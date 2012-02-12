@@ -939,7 +939,7 @@ static const int mesh_control_point_j[4] = { 1, 2, 2, 1 };
  * cairo_mesh_pattern_begin_patch()/cairo_mesh_pattern_end_patch().
  *
  * <informalexample><programlisting>
- * cairo_pattern_t *pattern = cairo_mesh_pattern_create_mesh ();
+ * cairo_pattern_t *pattern = cairo_pattern_create_mesh ();
  *
  * /&ast; Add a Coons patch &ast;/
  * cairo_mesh_pattern_begin_patch (pattern);
