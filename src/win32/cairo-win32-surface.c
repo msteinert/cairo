@@ -1747,7 +1747,7 @@ cairo_win32_surface_create (HDC hdc)
 			 NULL, /* device */
 			 _cairo_content_from_format (format));
 
-    return (cairo_surface_t *)surface;
+    return &surface->base;
 }
 
 /**
@@ -1881,24 +1881,13 @@ _cairo_surface_is_win32 (cairo_surface_t *surface)
 HDC
 cairo_win32_surface_get_dc (cairo_surface_t *surface)
 {
-    cairo_win32_surface_t *winsurf;
-
-    if (_cairo_surface_is_win32 (surface)){
-	winsurf = (cairo_win32_surface_t *) surface;
-
-	return winsurf->dc;
-    }
+    if (_cairo_surface_is_win32 (surface))
+	return ((cairo_win32_surface_t *) target)->dc;
 
     if (_cairo_surface_is_paginated (surface)) {
-	cairo_surface_t *target;
-
-	target = _cairo_paginated_surface_get_target (surface);
-
-	if (_cairo_surface_is_win32_printing (target)) {
-	    winsurf = (cairo_win32_surface_t *) target;
-
-	    return winsurf->dc;
-	}
+	cairo_surface_t *target = _cairo_paginated_surface_get_target (surface);
+	if (_cairo_surface_is_win32_printing (target))
+	    return ((cairo_win32_surface_t *) target)->dc;
     }
 
     return NULL;

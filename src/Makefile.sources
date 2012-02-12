@@ -334,10 +334,14 @@ cairo_quartz_image_sources = cairo-quartz-image-surface.c
 cairo_quartz_font_sources = cairo-quartz-font.c
 
 cairo_win32_headers = cairo-win32.h
-cairo_win32_private = cairo-win32-private.h
-cairo_win32_sources = cairo-win32-surface.c cairo-win32-printing-surface.c
-
-cairo_win32_font_sources = cairo-win32-font.c
+cairo_win32_private = win32/cairo-win32-private.h
+cairo_win32_sources = \
+	win32/cairo-win32-surface.c \
+	win32/cairo-win32-printing-surface.c \
+	$(NULL)
+cairo_win32_font_sources = \
+	win32/cairo-win32-font.c \
+	$(NULL)
 
 cairo_skia_headers = cairo-skia.h
 cairo_skia_cxx_sources = \
