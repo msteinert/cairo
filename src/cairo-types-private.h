@@ -66,6 +66,7 @@ typedef struct _cairo_color_stop cairo_color_stop_t;
 typedef struct _cairo_contour cairo_contour_t;
 typedef struct _cairo_contour_chain cairo_contour_chain_t;
 typedef struct _cairo_contour_iter cairo_contour_iter_t;
+typedef struct _cairo_damage cairo_damage_t;
 typedef struct _cairo_device_backend cairo_device_backend_t;
 typedef struct _cairo_font_face_backend     cairo_font_face_backend_t;
 typedef struct _cairo_gstate cairo_gstate_t;

@@ -62,6 +62,7 @@ struct _cairo_surface {
     cairo_status_t status;
     unsigned int unique_id;
     unsigned int serial;
+    cairo_damage_t *damage;
 
     unsigned finished : 1;
     unsigned is_clear : 1;

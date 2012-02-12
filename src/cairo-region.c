@@ -276,6 +276,38 @@ cairo_region_create_rectangles (const cairo_rectangle_int_t *rects,
 }
 slim_hidden_def (cairo_region_create_rectangles);
 
+cairo_region_t *
+_cairo_region_create_from_boxes (const cairo_box_t *boxes, int count)
+{
+    cairo_region_t *region;
+
+    region = _cairo_malloc (sizeof (cairo_region_t));
+    if (unlikely (region == NULL))
+	return _cairo_region_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+
+    CAIRO_REFERENCE_COUNT_INIT (&region->ref_count, 1);
+    region->status = CAIRO_STATUS_SUCCESS;
+
+    if (! pixman_region32_init_rects (&region->rgn,
+				      (pixman_box32_t *)boxes, count)) {
+	free (region);
+	return _cairo_region_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+    }
+
+    return region;
+}
+
+cairo_box_t *
+_cairo_region_get_boxes (const cairo_region_t *region, int *nbox)
+{
+    if (region->status) {
+	nbox = 0;
+	return NULL;
+    }
+
+    return (cairo_box_t *) pixman_region32_rectangles (CONST_CAST &region->rgn, nbox);
+}
+
 /**
  * cairo_region_create_rectangle:
  * @rectangle: a #cairo_rectangle_int_t

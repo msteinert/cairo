@@ -66,6 +66,7 @@ cairo_private = \
 	cairo-compositor-private.h \
 	cairo-contour-private.h \
 	cairo-composite-rectangles-private.h \
+	cairo-damage-private.h \
 	cairo-default-context-private.h \
 	cairo-device-private.h \
 	cairo-error-private.h \
@@ -142,6 +143,7 @@ cairo_sources = \
 	cairo-composite-rectangles.c \
 	cairo-compositor.c \
 	cairo-contour.c \
+	cairo-damage.c \
 	cairo-debug.c \
 	cairo-default-context.c \
 	cairo-device.c \

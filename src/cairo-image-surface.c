@@ -544,7 +544,7 @@ slim_hidden_def (cairo_image_surface_create_for_data);
  *
  * Since: 1.2
  **/
-    unsigned char *
+unsigned char *
 cairo_image_surface_get_data (cairo_surface_t *surface)
 {
     cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
@@ -970,10 +970,10 @@ const cairo_surface_backend_t _cairo_image_surface_backend = {
     NULL, /* show_page */
 
     _cairo_image_surface_get_extents,
-    _cairo_image_surface_get_font_options,
+    NULL,
 
     NULL, /* flush */
-    NULL, /* mark dirty */
+    NULL,
 
     _cairo_image_surface_paint,
     _cairo_image_surface_mask,

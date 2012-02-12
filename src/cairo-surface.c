@@ -40,6 +40,7 @@
 
 #include "cairo-array-private.h"
 #include "cairo-clip-private.h"
+#include "cairo-damage-private.h"
 #include "cairo-device-private.h"
 #include "cairo-error-private.h"
 #include "cairo-image-surface-private.h"
@@ -104,6 +105,7 @@ const cairo_surface_t name = {					\
     status,				/* status */		\
     0,					/* unique id */		\
     0,					/* serial */		\
+    NULL,				/* damage */		\
     FALSE,				/* finished */		\
     TRUE,				/* is_clear */		\
     FALSE,				/* has_font_options */	\
@@ -410,6 +412,7 @@ _cairo_surface_init (cairo_surface_t			*surface,
     surface->finished = FALSE;
     surface->is_clear = FALSE;
     surface->serial = 0;
+    surface->damage = NULL;
     surface->owns_device = (device != NULL);
 
     _cairo_user_data_array_init (&surface->user_data);
@@ -844,6 +847,9 @@ cairo_surface_destroy (cairo_surface_t *surface)
 
     /* paranoid check that nobody took a reference whilst finishing */
     assert (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&surface->ref_count));
+
+    if (surface->damage)
+	_cairo_damage_destroy (surface->damage);
 
     _cairo_user_data_array_fini (&surface->user_data);
     _cairo_user_data_array_fini (&surface->mime_data);
@@ -1423,6 +1429,17 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 
     surface->is_clear = FALSE;
     surface->serial++;
+
+    if (surface->damage) {
+	cairo_box_t box;
+
+	box.p1.x = x;
+	box.p1.y = y;
+	box.p2.x = x + width;
+	box.p2.y = y + height;
+
+	surface->damage = _cairo_damage_add_box (surface->damage, &box);
+    }
 
     if (surface->backend->mark_dirty_rectangle != NULL) {
 	/* XXX: FRAGILE: We're ignoring the scaling component of

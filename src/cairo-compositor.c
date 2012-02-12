@@ -38,6 +38,7 @@
 #include "cairoint.h"
 
 #include "cairo-compositor-private.h"
+#include "cairo-damage-private.h"
 #include "cairo-error-private.h"
 
 cairo_int_status_t
@@ -64,6 +65,10 @@ _cairo_compositor_paint (const cairo_compositor_t	*compositor,
 
 	compositor = compositor->delegate;
     } while (status == CAIRO_INT_STATUS_UNSUPPORTED);
+
+    if (status == CAIRO_INT_STATUS_SUCCESS && surface->damage)
+	surface->damage = _cairo_damage_add_rectangle (surface->damage,
+						       &extents.unbounded);
 
     _cairo_composite_rectangles_fini (&extents);
 
@@ -95,6 +100,10 @@ _cairo_compositor_mask (const cairo_compositor_t	*compositor,
 
 	compositor = compositor->delegate;
     } while (status == CAIRO_INT_STATUS_UNSUPPORTED);
+
+    if (status == CAIRO_INT_STATUS_SUCCESS && surface->damage)
+	surface->damage = _cairo_damage_add_rectangle (surface->damage,
+						       &extents.unbounded);
 
     _cairo_composite_rectangles_fini (&extents);
 
@@ -135,6 +144,10 @@ _cairo_compositor_stroke (const cairo_compositor_t	*compositor,
 	compositor = compositor->delegate;
     } while (status == CAIRO_INT_STATUS_UNSUPPORTED);
 
+    if (status == CAIRO_INT_STATUS_SUCCESS && surface->damage)
+	surface->damage = _cairo_damage_add_rectangle (surface->damage,
+						       &extents.unbounded);
+
     _cairo_composite_rectangles_fini (&extents);
 
     return status;
@@ -169,6 +182,10 @@ _cairo_compositor_fill (const cairo_compositor_t	*compositor,
 
 	compositor = compositor->delegate;
     } while (status == CAIRO_INT_STATUS_UNSUPPORTED);
+
+    if (status == CAIRO_INT_STATUS_SUCCESS && surface->damage)
+	surface->damage = _cairo_damage_add_rectangle (surface->damage,
+						       &extents.unbounded);
 
     _cairo_composite_rectangles_fini (&extents);
 
@@ -206,6 +223,10 @@ _cairo_compositor_glyphs (const cairo_compositor_t		*compositor,
 
 	compositor = compositor->delegate;
     } while (status == CAIRO_INT_STATUS_UNSUPPORTED);
+
+    if (status == CAIRO_INT_STATUS_SUCCESS && surface->damage)
+	surface->damage = _cairo_damage_add_rectangle (surface->damage,
+						       &extents.unbounded);
 
     _cairo_composite_rectangles_fini (&extents);
 

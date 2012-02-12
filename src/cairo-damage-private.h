@@ -1,7 +1,6 @@
-/* -*- Mode: c; tab-width: 8; c-basic-offset: 4; indent-tabs-mode: t; -*- */
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2005 Red Hat, Inc.
+ * Copyright © 2012 Intel Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -13,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -28,50 +27,56 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is Red Hat, Inc.
+ * The Initial Developer of the Original Code is Chris Wilson
  *
  * Contributor(s):
- *	Owen Taylor <otaylor@redhat.com>
- *      Vladimir Vukicevic <vladimir@pobox.com>
- *      Søren Sandmann <sandmann@daimi.au.dk>
+ *	Chris Wilson <chris@chris-wilson.co.uk>
  */
 
-#ifndef CAIRO_REGION_PRIVATE_H
-#define CAIRO_REGION_PRIVATE_H
+#ifndef CAIRO_DAMAGE_PRIVATE_H
+#define CAIRO_DAMAGE_PRIVATE_H
 
 #include "cairo-types-private.h"
-#include "cairo-reference-count-private.h"
 
 #include <pixman.h>
 
 CAIRO_BEGIN_DECLS
 
-struct _cairo_region {
-    cairo_reference_count_t ref_count;
+struct _cairo_damage {
     cairo_status_t status;
+    cairo_region_t *region;
 
-    pixman_region32_t rgn;
+    int dirty, remain;
+    struct _cairo_damage_chunk {
+	struct _cairo_damage_chunk *next;
+	cairo_box_t *base;
+	int count;
+	int size;
+    } chunks, *tail;
+    cairo_box_t boxes[32];
 };
 
-cairo_private cairo_region_t *
-_cairo_region_create_in_error (cairo_status_t status);
+cairo_private cairo_damage_t *
+_cairo_damage_create (void);
+
+cairo_private cairo_damage_t *
+_cairo_damage_add_box (cairo_damage_t *damage,
+		       const cairo_box_t *box);
+
+cairo_private cairo_damage_t *
+_cairo_damage_add_rectangle (cairo_damage_t *damage,
+			     const cairo_rectangle_int_t *rect);
+
+cairo_private cairo_damage_t *
+_cairo_damage_add_region (cairo_damage_t *damage,
+			  const cairo_region_t *region);
+
+cairo_private cairo_damage_t *
+_cairo_damage_reduce (cairo_damage_t *damage);
 
 cairo_private void
-_cairo_region_init (cairo_region_t *region);
-
-cairo_private void
-_cairo_region_init_rectangle (cairo_region_t *region,
-			      const cairo_rectangle_int_t *rectangle);
-
-cairo_private void
-_cairo_region_fini (cairo_region_t *region);
-
-cairo_private cairo_region_t *
-_cairo_region_create_from_boxes (const cairo_box_t *boxes, int count);
-
-cairo_private cairo_box_t *
-_cairo_region_get_boxes (const cairo_region_t *region, int *nbox);
+_cairo_damage_destroy (cairo_damage_t *damage);
 
 CAIRO_END_DECLS
 
-#endif /* CAIRO_REGION_PRIVATE_H */
+#endif /* CAIRO_DAMAGE_PRIVATE_H */
