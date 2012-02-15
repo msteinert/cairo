@@ -813,6 +813,11 @@ _cairo_image_surface_finish (void *abstract_surface)
 	surface->data = NULL;
     }
 
+    if (surface->parent) {
+	cairo_surface_destroy (surface->parent);
+	surface->parent = NULL;
+    }
+
     return CAIRO_STATUS_SUCCESS;
 }
 

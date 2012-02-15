@@ -50,6 +50,19 @@ struct _cairo_image_surface {
 
     pixman_image_t *pixman_image;
     const cairo_compositor_t *compositor;
+
+    /* Parenting is tricky wrt lifetime tracking...
+     *
+     * One use for tracking the parent of an image surface is for
+     * create_similar_image() where we wish to create a device specific
+     * surface but return an image surface to the user. In such a case,
+     * the image may be owned by the device specific surface, its parent,
+     * but the user lifetime tracking is then performed on the image. So
+     * when the image is then finalized we call cairo_surface_destroy()
+     * on the parent. However, for normal usage where the lifetime tracking
+     * is done on the parent surface, we need to be careful to unhook
+     * the image->parent pointer before finalizing the image.
+     */
     cairo_surface_t *parent;
 
     pixman_format_code_t pixman_format;
