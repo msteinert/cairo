@@ -65,7 +65,7 @@ slim_hidden_proto (cairo_xcb_surface_create_with_xrender_format);
  *
  * Note that the XCB surface automatically takes advantage of the X render
  * extension if it is available.
- */
+ **/
 
 /**
  * CAIRO_HAS_XCB_SURFACE:
@@ -74,7 +74,7 @@ slim_hidden_proto (cairo_xcb_surface_create_with_xrender_format);
  * This macro can be used to conditionally compile backend-specific code.
  *
  * Since: 1.12
- */
+ **/
 
 cairo_surface_t *
 _cairo_xcb_surface_create_similar (void			*abstract_other,

@@ -52,7 +52,7 @@ CAIRO_BEGIN_DECLS
  * specification that a generated PDF file will conform to.
  *
  * Since 1.10
- */
+ **/
 typedef enum _cairo_pdf_version {
     CAIRO_PDF_VERSION_1_4,
     CAIRO_PDF_VERSION_1_5

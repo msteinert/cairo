@@ -48,7 +48,7 @@
  *
  * Paths are the most basic drawing tools and are primarily used to implicitly
  * generate simple masks.
- */
+ **/
 
 static const cairo_path_t _cairo_path_nil = { CAIRO_STATUS_NO_MEMORY, NULL, 0 };
 

@@ -65,7 +65,7 @@
  * #cairo_t<!-- -->'s can be pushed to a stack via cairo_save().
  * They may then safely be changed, without losing the current state.
  * Use cairo_restore() to restore to the saved state.
- */
+ **/
 
 /**
  * SECTION:cairo-text
@@ -92,7 +92,7 @@
  * the pangocairo that is part of the Pango text layout and rendering library.
  * Pango is available from <ulink
  * url="http://www.pango.org/">http://www.pango.org/</ulink>.
- */
+ **/
 
 /**
  * SECTION:cairo-transforms
@@ -105,7 +105,7 @@
  * drawing instruments from the <firstterm>user space</firstterm> into the
  * surface's canonical coordinate system, also known as the <firstterm>device
  * space</firstterm>.
- */
+ **/
 
 #define DEFINE_NIL_CONTEXT(status)					\
     {									\
@@ -468,7 +468,7 @@ slim_hidden_def(cairo_restore);
  * </programlisting></informalexample>
  *
  * Since: 1.2
- */
+ **/
 void
 cairo_push_group (cairo_t *cr)
 {
@@ -493,7 +493,7 @@ cairo_push_group (cairo_t *cr)
  * detailed description of group rendering.
  *
  * Since: 1.2
- */
+ **/
 void
 cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
 {
@@ -1052,7 +1052,7 @@ cairo_set_dash (cairo_t	     *cr,
  * Return value: the length of the dash array, or 0 if no dash array set.
  *
  * Since: 1.4
- */
+ **/
 int
 cairo_get_dash_count (cairo_t *cr)
 {
@@ -1951,7 +1951,7 @@ cairo_paint_with_alpha (cairo_t *cr,
  * using the alpha channel of @pattern as a mask. (Opaque
  * areas of @pattern are painted with the source, transparent
  * areas are not painted.)
- */
+ **/
 void
 cairo_mask (cairo_t         *cr,
 	    cairo_pattern_t *pattern)
@@ -1988,7 +1988,7 @@ slim_hidden_def (cairo_mask);
  * using the alpha channel of @surface as a mask. (Opaque
  * areas of @surface are painted with the source, transparent
  * areas are not painted.)
- */
+ **/
 void
 cairo_mask_surface (cairo_t         *cr,
 		    cairo_surface_t *surface,

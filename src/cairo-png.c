@@ -62,7 +62,7 @@
  * cairo_image_surface_get_data() or a backend-specific access
  * function, and process it with another library, e.g. gdk-pixbuf or
  * libpng.
- */
+ **/
 
 /**
  * CAIRO_HAS_PNG_FUNCTIONS:
@@ -70,7 +70,7 @@
  * Defined if the PNG functions are available.
  * This macro can be used to conditionally compile code using the cairo
  * PNG functions.
- */
+ **/
 
 struct png_read_closure_t {
     cairo_read_func_t		 read_func;

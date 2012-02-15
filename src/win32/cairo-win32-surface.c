@@ -80,14 +80,14 @@
  *
  * The surface returned by the other win32 constructors is of surface type
  * %CAIRO_SURFACE_TYPE_WIN32 and is a raster surface type.
- */
+ **/
 
 /**
  * CAIRO_HAS_WIN32_SURFACE:
  *
  * Defined if the Microsoft Windows surface backend is available.
  * This macro can be used to conditionally compile backend-specific code.
- */
+ **/
 
 /**
  * _cairo_win32_print_gdi_error:
@@ -181,7 +181,7 @@ cairo_win32_surface_get_dc (cairo_surface_t *surface)
  * or %NULL if the win32 surface is not a DIB.
  *
  * Since: 1.4
- */
+ **/
 cairo_surface_t *
 cairo_win32_surface_get_image (cairo_surface_t *surface)
 {

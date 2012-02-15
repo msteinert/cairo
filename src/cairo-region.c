@@ -52,7 +52,7 @@
  * Regions are a simple graphical data type representing an area of 
  * integer-aligned rectangles. They are often used on raster surfaces 
  * to track areas of interest, such as change or clip areas.
- */
+ **/
 
 static const cairo_region_t _cairo_region_nil = {
     CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
@@ -848,7 +848,7 @@ slim_hidden_def (cairo_region_translate);
  *     partially outside the region.
  * 
  * Used as the return value for cairo_region_contains_rectangle().
- */
+ **/
 
 /**
  * cairo_region_contains_rectangle:

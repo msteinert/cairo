@@ -59,7 +59,7 @@
  * or implicitly through
  * <function>cairo_set_source_<emphasis>type</emphasis>()</function>
  * functions.
- */
+ **/
 
 static freed_pool_t freed_pattern_pool[5];
 
@@ -1910,7 +1910,7 @@ cairo_pattern_add_color_stop_rgb (cairo_pattern_t *pattern,
  * Note: If the pattern is not a gradient pattern, (eg. a linear or
  * radial pattern), then the pattern will be put into an error status
  * with a status of %CAIRO_STATUS_PATTERN_TYPE_MISMATCH.
- */
+ **/
 void
 cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern,
 				   double	   offset,
@@ -3307,7 +3307,7 @@ _cairo_pattern_is_clear (const cairo_pattern_t *abstract_pattern)
  * XXX: We don't actually have any way of querying the backend for
  *      the filter radius, so we just guess base on what we know that
  *      backends do currently (see bug #10508)
- */
+ **/
 cairo_filter_t
 _cairo_pattern_analyze_filter (const cairo_pattern_t	*pattern,
 			       double			*pad_out)
@@ -4082,7 +4082,7 @@ cairo_pattern_get_color_stop_rgba (cairo_pattern_t *pattern,
  * pattern.
  *
  * Since: 1.4
- */
+ **/
 cairo_status_t
 cairo_pattern_get_color_stop_count (cairo_pattern_t *pattern,
 				    int *count)
@@ -4207,7 +4207,7 @@ cairo_pattern_get_radial_circles (cairo_pattern_t *pattern,
  * pattern.
  *
  * Since: 1.12
- */
+ **/
 cairo_status_t
 cairo_mesh_pattern_get_patch_count (cairo_pattern_t *pattern,
 				    unsigned int *count)
@@ -4247,7 +4247,7 @@ slim_hidden_def (cairo_mesh_pattern_get_patch_count);
  * status %CAIRO_STATUS_PATTERN_TYPE_MISMATCH is returned.
  *
  * Since: 1.12
- */
+ **/
 cairo_path_t *
 cairo_mesh_pattern_get_path (cairo_pattern_t *pattern,
 			     unsigned int patch_num)

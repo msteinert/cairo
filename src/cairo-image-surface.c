@@ -68,7 +68,7 @@
  * Image surfaces provide the ability to render to memory buffers
  * either allocated by cairo or by the calling code.  The supported
  * image formats are those defined in #cairo_format_t.
- */
+ **/
 
 /**
  * CAIRO_HAS_IMAGE_SURFACE:
@@ -78,7 +78,7 @@
  * This macro was added for completeness in cairo 1.8.
  *
  * @Since: 1.8
- */
+ **/
 
 static cairo_bool_t
 _cairo_image_surface_is_size_valid (int width, int height)

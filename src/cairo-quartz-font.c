@@ -53,14 +53,14 @@
  * The Quartz font backend is primarily used to render text on Apple
  * MacOS X systems.  The CGFont API is used for the internal
  * implementation of the font backend methods.
- */
+ **/
 
 /**
  * CAIRO_HAS_QUARTZ_FONT:
  *
  * Defined if the Quartz font backend is available.
  * This macro can be used to conditionally compile backend-specific code.
- */
+ **/
 
 static CFDataRef (*CGFontCopyTableForTagPtr) (CGFontRef font, uint32_t tag) = NULL;
 
@@ -351,7 +351,7 @@ const cairo_font_face_backend_t _cairo_quartz_font_face_backend = {
  *  cairo_font_face_destroy() when you are done using it.
  *
  * Since: 1.6
- */
+ **/
 cairo_font_face_t *
 cairo_quartz_font_face_create_for_cgfont (CGFontRef font)
 {

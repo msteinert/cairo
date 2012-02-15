@@ -137,39 +137,39 @@
  * </programlisting></informalexample>
  * </para>
  * </refsect2>
- */
+ **/
 
 /**
  * CAIRO_VERSION:
  *
  * The version of cairo available at compile-time, encoded using
  * CAIRO_VERSION_ENCODE().
- */
+ **/
 
 /**
  * CAIRO_VERSION_MAJOR:
  *
  * The major component of the version of cairo available at compile-time.
- */
+ **/
 
 /**
  * CAIRO_VERSION_MINOR:
  *
  * The minor component of the version of cairo available at compile-time.
- */
+ **/
 
 /**
  * CAIRO_VERSION_MICRO:
  *
  * The micro component of the version of cairo available at compile-time.
- */
+ **/
 
 /**
  * CAIRO_VERSION_STRING:
  *
  * A human-readable string literal containing the version of cairo available
  * at compile-time, in the form of "X.Y.Z".
- */
+ **/
 
 /**
  * CAIRO_VERSION_ENCODE:
@@ -183,7 +183,7 @@
  * that later versions compare greater than earlier versions.
  *
  * @Returns: the encoded version.
- */
+ **/
 
 /**
  * CAIRO_VERSION_STRINGIZE:
@@ -198,7 +198,7 @@
  * @Returns: a string literal containing the version.
  *
  * @Since: 1.8
- */
+ **/
 
 /**
  * cairo_version:

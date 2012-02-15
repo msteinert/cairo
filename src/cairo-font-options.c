@@ -47,7 +47,7 @@
  * time the font options implied by a surface are just right and do not 
  * need any changes, but for pixel-based targets tweaking font options 
  * may result in superior output on a particular display.
- */
+ **/
 
 static const cairo_font_options_t _cairo_font_options_nil = {
     CAIRO_ANTIALIAS_DEFAULT,

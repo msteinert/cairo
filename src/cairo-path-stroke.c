@@ -184,7 +184,7 @@ _cairo_stroker_join_is_clockwise (const cairo_stroke_face_t *in,
  *
  * Return -1, 0 or 1 depending on the relative slopes of
  * two lines.
- */
+ **/
 static int
 _cairo_slope_compare_sgn (double dx1, double dy1, double dx2, double dy2)
 {

@@ -56,7 +56,7 @@
  * or implicitly using the <firstterm>toy</firstterm> text API by way of
  * cairo_select_font_face().  The resulting face can be accessed using
  * cairo_get_font_face().
- */
+ **/
 
 /* #cairo_font_face_t */
 

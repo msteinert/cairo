@@ -58,7 +58,7 @@
  *
  * Note that the XCB surface automatically takes advantage of the X Render
  * extension if it is available.
- */
+ **/
 
 static cairo_status_t
 _clip_and_composite_boxes (cairo_xcb_surface_t *dst,

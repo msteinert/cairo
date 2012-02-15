@@ -125,14 +125,14 @@ _x_bread_crumb (Display *dpy,
  *
  * Note that the XLib surface automatically takes advantage of X render extension
  * if it is available.
- */
+ **/
 
 /**
  * CAIRO_HAS_XLIB_SURFACE:
  *
  * Defined if the Xlib surface backend is available.
  * This macro can be used to conditionally compile backend-specific code.
- */
+ **/
 
 /**
  * SECTION:cairo-xlib-xrender
@@ -145,14 +145,14 @@ _x_bread_crumb (Display *dpy,
  *
  * Note that the XLib surface automatically takes advantage of X Render extension
  * if it is available.
- */
+ **/
 
 /**
  * CAIRO_HAS_XLIB_XRENDER_SURFACE:
  *
  * Defined if the XLib/XRender surface functions are available.
  * This macro can be used to conditionally compile backend-specific code.
- */
+ **/
 
 /* Xlib doesn't define a typedef, so define one ourselves */
 typedef int (*cairo_xlib_error_func_t) (Display     *display,

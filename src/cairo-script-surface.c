@@ -52,7 +52,7 @@
  * script that matches the cairo drawing model. The scripts can
  * be replayed using tools under the util/cairo-script directoriy,
  * or with cairo-perf-trace.
- */
+ **/
 
 /**
  * CAIRO_HAS_SCRIPT_SURFACE:
@@ -61,7 +61,7 @@
  * The script surface backend is always built in since 1.12.
  *
  * @Since: 1.10
- */
+ **/
 
 
 #include "cairoint.h"

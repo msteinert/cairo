@@ -93,7 +93,7 @@
  * Note that for other surface types it might be necessary to acquire the
  * surface's device first. See cairo_device_acquire() for a discussion of
  * devices.
- */
+ **/
 
 #define DEFINE_NIL_SURFACE(status, name)			\
 const cairo_surface_t name = {					\
@@ -1085,7 +1085,7 @@ _cairo_mime_data_destroy (void *ptr)
  * The Joint Photographic Experts Group (JPEG) 2000 image coding standard (ISO/IEC 15444-1).
  *
  * @Since: 1.10
- */
+ **/
 
 /**
  * CAIRO_MIME_TYPE_JPEG:
@@ -1093,7 +1093,7 @@ _cairo_mime_data_destroy (void *ptr)
  * The Joint Photographic Experts Group (JPEG) image coding standard (ISO/IEC 10918-1).
  *
  * @Since: 1.10
- */
+ **/
 
 /**
  * CAIRO_MIME_TYPE_PNG:
@@ -1101,7 +1101,7 @@ _cairo_mime_data_destroy (void *ptr)
  * The Portable Network Graphics image file format (ISO/IEC 15948).
  *
  * @Since: 1.10
- */
+ **/
 
 /**
  * CAIRO_MIME_TYPE_URI:
@@ -1109,7 +1109,7 @@ _cairo_mime_data_destroy (void *ptr)
  * URI for an image file (unofficial MIME type).
  *
  * @Since: 1.10
- */
+ **/
 
 /**
  * CAIRO_MIME_TYPE_UNIQUE_ID:
@@ -1117,7 +1117,7 @@ _cairo_mime_data_destroy (void *ptr)
  * Unique identifier for a surface (cairo specific MIME type).
  *
  * @Since: 1.12
- */
+ **/
 
 /**
  * cairo_surface_set_mime_data:
@@ -1380,7 +1380,7 @@ slim_hidden_def (cairo_surface_flush);
  * Tells cairo that drawing has been done to surface using means other
  * than cairo, and that cairo should reread any cached areas. Note
  * that you must call cairo_surface_flush() before doing such drawing.
- */
+ **/
 void
 cairo_surface_mark_dirty (cairo_surface_t *surface)
 {
@@ -1403,7 +1403,7 @@ slim_hidden_def (cairo_surface_mark_dirty);
  * Any cached clip set on the surface will be reset by this function,
  * to make sure that future cairo calls have the clip set that they
  * expect.
- */
+ **/
 void
 cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 				    int              x,
@@ -2069,7 +2069,7 @@ _cairo_surface_fill (cairo_surface_t		*surface,
  * namely cairo_copy_page().
  *
  * Since: 1.6
- */
+ **/
 void
 cairo_surface_copy_page (cairo_surface_t *surface)
 {
@@ -2147,7 +2147,7 @@ slim_hidden_def (cairo_surface_show_page);
  *
  * This behavior would have to be changed is we ever exported a public
  * variant of this function.
- */
+ **/
 cairo_bool_t
 _cairo_surface_get_extents (cairo_surface_t         *surface,
 			    cairo_rectangle_int_t   *extents)
@@ -2345,7 +2345,7 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
  * Set the actual surface resolution of @surface to the given x and y DPI.
  * Mainly used for correctly computing the scale factor when fallback
  * rendering needs to take place in the paginated surface.
- */
+ **/
 void
 _cairo_surface_set_resolution (cairo_surface_t *surface,
 			       double x_res,

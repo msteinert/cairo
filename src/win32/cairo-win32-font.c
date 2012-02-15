@@ -77,14 +77,14 @@
  *
  * The Microsoft Windows font backend is primarily used to render text on
  * Microsoft Windows systems.
- */
+ **/
 
 /**
  * CAIRO_HAS_WIN32_FONT:
  *
  * Defined if the Microsoft Windows font backend is available.
  * This macro can be used to conditionally compile backend-specific code.
- */
+ **/
 
 const cairo_scaled_font_backend_t _cairo_win32_scaled_font_backend;
 

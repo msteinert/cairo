@@ -55,7 +55,7 @@
  * call which interacts with a cairo-gl surface or the cairo-gl
  * device.  As a result, the user must make their own context current
  * between any cairo calls and their own OpenGL rendering.
- */
+ **/
 
 #ifndef CAIRO_GL_H
 #define CAIRO_GL_H

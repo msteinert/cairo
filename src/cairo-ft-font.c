@@ -101,14 +101,14 @@
  *
  * The FreeType font backend is primarily used to render text on GNU/Linux
  * systems, but can be used on other platforms too.
- */
+ **/
 
 /**
  * CAIRO_HAS_FT_FONT:
  *
  * Defined if the FreeType font backend is available.
  * This macro can be used to conditionally compile backend-specific code.
- */
+ **/
 
 /**
  * CAIRO_HAS_FC_FONT:
@@ -116,7 +116,7 @@
  * Defined if the Fontconfig-specific functions of the FreeType font backend
  * are available.
  * This macro can be used to conditionally compile backend-specific code.
- */
+ **/
 
 /*
  * The simple 2x2 matrix is converted into separate scale and shape

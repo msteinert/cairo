@@ -57,7 +57,7 @@
  *
  * Return value: A pointer to the newly allocated memory, or %NULL in
  * case of malloc() failure or size is 0.
- */
+ **/
 
 #define _cairo_malloc(size) \
    ((size) ? malloc((unsigned) (size)) : NULL)
@@ -77,7 +77,7 @@
  *
  * Return value: A pointer to the newly allocated memory, or %NULL in
  * case of malloc() failure or overflow.
- */
+ **/
 
 #define _cairo_malloc_ab(a, size) \
   ((size) && (unsigned) (a) >= INT32_MAX / (unsigned) (size) ? NULL : \
@@ -99,7 +99,7 @@
  * Return value: A pointer to the newly allocated memory, or %NULL in
  * case of realloc() failure or overflow (whereupon the original block
  * of memory * is left untouched).
- */
+ **/
 
 #define _cairo_realloc_ab(ptr, a, size) \
   ((size) && (unsigned) (a) >= INT32_MAX / (unsigned) (size) ? NULL : \
@@ -120,7 +120,7 @@
  *
  * Return value: A pointer to the newly allocated memory, or %NULL in
  * case of malloc() failure or overflow.
- */
+ **/
 
 #define _cairo_malloc_abc(a, b, size) \
   ((b) && (unsigned) (a) >= INT32_MAX / (unsigned) (b) ? NULL : \
@@ -139,7 +139,7 @@
  *
  * Return value: A pointer to the newly allocated memory, or %NULL in
  * case of malloc() failure or overflow.
- */
+ **/
 
 #define _cairo_malloc_ab_plus_c(a, size, c) \
   ((size) && (unsigned) (a) >= INT32_MAX / (unsigned) (size) ? NULL : \

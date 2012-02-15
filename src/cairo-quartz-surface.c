@@ -74,14 +74,14 @@
  *
  * The Quartz surface is used to render cairo graphics targeting the
  * Apple OS X Quartz rendering system.
- */
+ **/
 
 /**
  * CAIRO_HAS_QUARTZ_SURFACE:
  *
  * Defined if the Quartz surface backend is available.
  * This macro can be used to conditionally compile backend-specific code.
- */
+ **/
 
 #if __MAC_OS_X_VERSION_MIN_REQUIRED < 1050
 /* This method is private, but it exists.  Its params are are exposed

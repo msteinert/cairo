@@ -61,7 +61,7 @@
  *
  * The BeOS surface is used to render cairo graphics to BeOS views 
  * and bitmaps.
- */
+ **/
 
 #define CAIRO_INT_STATUS_SUCCESS (cairo_int_status_t)(CAIRO_STATUS_SUCCESS)
 

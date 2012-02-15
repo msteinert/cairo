@@ -74,7 +74,7 @@
  * improved by improving the implementation of snapshot for the
  * various objects. For example, it would be nice to have a
  * copy-on-write implementation for _cairo_surface_snapshot.
- */
+ **/
 
 #include "cairoint.h"
 
@@ -105,7 +105,7 @@ static const cairo_surface_backend_t cairo_recording_surface_backend;
  * This macro was added for completeness in cairo 1.10.
  *
  * Since: 1.10
- */
+ **/
 
 /* Currently all recording surfaces do have a size which should be passed
  * in as the maximum size of any target surface against which the

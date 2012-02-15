@@ -296,7 +296,7 @@ static const cairo_surface_backend_t cairo_quartz_image_surface_backend = {
  * Return value: the newly created surface.
  *
  * Since: 1.6
- */
+ **/
 cairo_surface_t *
 cairo_quartz_image_surface_create (cairo_surface_t *surface)
 {

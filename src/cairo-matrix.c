@@ -67,7 +67,7 @@
  * #cairo_matrix_t, defines the transformation from user-space
  * coordinates to device-space coordinates. See cairo_get_matrix() and
  * cairo_set_matrix().
- */
+ **/
 
 static void
 _cairo_matrix_scalar_multiply (cairo_matrix_t *matrix, double scalar);

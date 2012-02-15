@@ -55,7 +55,7 @@ CAIRO_BEGIN_DECLS
  * #cairo_ps_level_t is used to describe the language level of the
  * PostScript Language Reference that a generated PostScript file will
  * conform to.
- */
+ **/
 typedef enum _cairo_ps_level {
     CAIRO_PS_LEVEL_2,
     CAIRO_PS_LEVEL_3

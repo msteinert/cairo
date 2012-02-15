@@ -2824,7 +2824,7 @@ cairo_pattern_get_extend (cairo_pattern_t *pattern);
  * applied when reading pixel values from patterns. See
  * cairo_pattern_set_filter() for indicating the desired filter to be
  * used with a particular pattern.
- */
+ **/
 typedef enum _cairo_filter {
     CAIRO_FILTER_FAST,
     CAIRO_FILTER_GOOD,

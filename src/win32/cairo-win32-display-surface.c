@@ -86,14 +86,14 @@
  *
  * The surface returned by the other win32 constructors is of surface type
  * %CAIRO_SURFACE_TYPE_WIN32 and is a raster surface type.
- */
+ **/
 
 /**
  * CAIRO_HAS_WIN32_SURFACE:
  *
  * Defined if the Microsoft Windows surface backend is available.
  * This macro can be used to conditionally compile backend-specific code.
- */
+ **/
 
 static const cairo_surface_backend_t cairo_win32_display_surface_backend;
 

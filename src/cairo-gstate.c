@@ -382,7 +382,7 @@ _cairo_gstate_get_original_target (cairo_gstate_t *gstate)
  * This space left intentionally blank.
  *
  * Return value: a pointer to the gstate's #cairo_clip_t structure.
- */
+ **/
 cairo_clip_t *
 _cairo_gstate_get_clip (cairo_gstate_t *gstate)
 {

@@ -130,7 +130,7 @@
  *
  * The PDF surface is used to render cairo graphics to Adobe
  * PDF files and is a multi-page vector surface backend.
- */
+ **/
 
 static cairo_bool_t
 _cairo_pdf_surface_get_extents (void		        *abstract_surface,
@@ -141,7 +141,7 @@ _cairo_pdf_surface_get_extents (void		        *abstract_surface,
  *
  * Defined if the PDF surface backend is available.
  * This macro can be used to conditionally compile backend-specific code.
- */
+ **/
 
 static const cairo_pdf_version_t _cairo_pdf_versions[] =
 {
@@ -461,7 +461,7 @@ BAIL0:
  * occurs. You can use cairo_surface_status() to check for this.
  *
  * Since: 1.2
- */
+ **/
 cairo_surface_t *
 cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write_func,
 				     void			*closure,
@@ -1295,7 +1295,7 @@ _get_source_surface_size (cairo_surface_t         *source,
  *
  * Only one of @source_pattern or @source_surface is to be
  * specified. Set the other to NULL.
- */
+ **/
 static cairo_status_t
 _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	    *surface,
 				       cairo_surface_t	            *source_surface,

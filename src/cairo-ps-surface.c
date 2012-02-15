@@ -104,14 +104,14 @@
  *
  * The PostScript surface is used to render cairo graphics to Adobe
  * PostScript files and is a multi-page vector surface backend.
- */
+ **/
 
 /**
  * CAIRO_HAS_PS_SURFACE:
  * 
  * Defined if the PostScript surface backend is available.
  * This macro can be used to conditionally compile backend-specific code.
- */
+ **/
 
 typedef enum {
     CAIRO_PS_COMPRESS_NONE,
@@ -1121,7 +1121,7 @@ cairo_ps_surface_create (const char		*filename,
  * occurs. You can use cairo_surface_status() to check for this.
  *
  * Since: 1.2
- */
+ **/
 cairo_surface_t *
 cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
 				    void	       *closure,
