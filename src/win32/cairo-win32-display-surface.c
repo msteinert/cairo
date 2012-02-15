@@ -407,7 +407,7 @@ _cairo_win32_display_surface_finish (void *abstract_surface)
 
     if (surface->image) {
 	/* Unhook ourselves first to avoid the double-unref from the image */
-	surface->image->parent = NULL;
+	to_image_surface(surface->image)->parent = NULL;
 	cairo_surface_finish (surface->image);
 	cairo_surface_destroy (surface->image);
     }
