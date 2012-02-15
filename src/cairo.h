@@ -2039,7 +2039,6 @@ cairo_device_reference (cairo_device_t *device);
 
 /**
  * cairo_device_type_t:
- * @CAIRO_DEVICE_TYPE_INVALID: The device is not valid
  * @CAIRO_DEVICE_TYPE_DRM: The device is of type Direct Render Manager
  * @CAIRO_DEVICE_TYPE_GL: The device is of type OpenGL
  * @CAIRO_DEVICE_TYPE_SCRIPT: The device is of type script
@@ -2047,7 +2046,7 @@ cairo_device_reference (cairo_device_t *device);
  * @CAIRO_DEVICE_TYPE_XLIB: The device is of type xlib
  * @CAIRO_DEVICE_TYPE_XML: The device is of type XML
  * @CAIRO_DEVICE_TYPE_COGL: The device is of type cogl, since 1.12
- * @CAIRO_DEVICE_TYPE_WIN32: The device is of type cogl, since 1.12
+ * @CAIRO_DEVICE_TYPE_WIN32: The device is of type win32, since 1.12
  * @CAIRO_DEVICE_TYPE_INVALID: The device is invalid
  *
  * #cairo_device_type_t is used to describe the type of a given
