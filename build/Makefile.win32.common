@@ -65,11 +65,11 @@ endif
 # Some generic rules
 
 $(CFG)/%.obj: %.c $(top_srcdir)/src/cairo-features.h
-	@mkdir -p $(CFG)
+	@mkdir -p $(CFG)/`dirname $<`
 	@$(CC) $(CAIRO_CFLAGS) -c -Fo"$@" $<
 
 $(CFG)/%-static.obj: %.c $(top_srcdir)/src/cairo-features.h
-	@mkdir -p $(CFG)
+	@mkdir -p $(CFG)/`dirname $<`
 	@$(CC) $(CAIRO_CFLAGS) -c -DCAIRO_WIN32_STATIC_BUILD=1 -Fo"$@" $<
 
 clean:
