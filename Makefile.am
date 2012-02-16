@@ -5,6 +5,7 @@ EXTRA_DIST += \
 	README.win32 \
 	Makefile.win32 \
 	build/Makefile.win32.common \
+	build/Makefile.win32.inform \
 	build/Makefile.win32.features \
 	build/Makefile.win32.features-h \
 	$(NULL)

@@ -2,7 +2,7 @@
 # Edit build/Makefile.win32.common for customization
 
 top_srcdir = .
-include $(top_srcdir)/build/Makefile.win32.common
+include $(top_srcdir)/build/Makefile.win32.inform
 
 all: cairo
 
@@ -14,3 +14,9 @@ perf: inform
 
 test: inform
 	@$(MAKE) -C test -f Makefile.win32 test
+
+clean:
+	@$(MAKE) -C boilerplate -f Makefile.win32 clean
+	@$(MAKE) -C perf -f Makefile.win32 clean
+	@$(MAKE) -C src -f Makefile.win32 clean
+	@$(MAKE) -C test -f Makefile.win32 clean
