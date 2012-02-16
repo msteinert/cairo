@@ -60,7 +60,7 @@
  * Defined if the script surface backend is available.
  * The script surface backend is always built in since 1.12.
  *
- * @Since: 1.10
+ * Since: 1.10
  **/
 
 

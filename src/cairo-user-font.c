@@ -59,7 +59,7 @@
  * The user font backend is always built in versions of cairo that support
  * this feature (1.8 and later).
  *
- * @Since: 1.8
+ * Since: 1.8
  **/
 
 typedef struct _cairo_user_scaled_font_methods {

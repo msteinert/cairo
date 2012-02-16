@@ -77,7 +77,7 @@
  * The image surface backend is always built in.
  * This macro was added for completeness in cairo 1.8.
  *
- * @Since: 1.8
+ * Since: 1.8
  **/
 
 static cairo_bool_t

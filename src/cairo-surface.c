@@ -1084,7 +1084,7 @@ _cairo_mime_data_destroy (void *ptr)
  *
  * The Joint Photographic Experts Group (JPEG) 2000 image coding standard (ISO/IEC 15444-1).
  *
- * @Since: 1.10
+ * Since: 1.10
  **/
 
 /**
@@ -1092,7 +1092,7 @@ _cairo_mime_data_destroy (void *ptr)
  *
  * The Joint Photographic Experts Group (JPEG) image coding standard (ISO/IEC 10918-1).
  *
- * @Since: 1.10
+ * Since: 1.10
  **/
 
 /**
@@ -1100,7 +1100,7 @@ _cairo_mime_data_destroy (void *ptr)
  *
  * The Portable Network Graphics image file format (ISO/IEC 15948).
  *
- * @Since: 1.10
+ * Since: 1.10
  **/
 
 /**
@@ -1108,7 +1108,7 @@ _cairo_mime_data_destroy (void *ptr)
  *
  * URI for an image file (unofficial MIME type).
  *
- * @Since: 1.10
+ * Since: 1.10
  **/
 
 /**
@@ -1116,7 +1116,7 @@ _cairo_mime_data_destroy (void *ptr)
  *
  * Unique identifier for a surface (cairo specific MIME type).
  *
- * @Since: 1.12
+ * Since: 1.12
  **/
 
 /**
