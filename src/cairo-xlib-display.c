@@ -158,7 +158,7 @@ static void _cairo_xlib_display_select_compositor (cairo_xlib_display_t *display
 }
 
 /**
- * cairo_xlib_device_create:
+ * _cairo_xlib_device_create:
  * @dpy: the display to create the device for
  *
  * Gets the device belonging to @dpy, or creates it if it doesn't exist yet.
