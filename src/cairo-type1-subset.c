@@ -98,6 +98,8 @@ typedef struct _cairo_type1_font_subset {
     struct {
 	const char *subr_string;
 	int subr_length;
+	const char *np;
+	int np_length;
 	cairo_bool_t used;
     } *subrs;
 
@@ -847,11 +849,14 @@ cairo_type1_font_subset_parse_charstring (cairo_type1_font_subset_t *font,
 static cairo_status_t
 cairo_type1_font_subset_build_subr_list (cairo_type1_font_subset_t *font,
 					 int subr_number,
-					 const char *encrypted_charstring, int encrypted_charstring_length)
+					 const char *encrypted_charstring, int encrypted_charstring_length,
+					 const char *np, int np_length)
 {
 
     font->subrs[subr_number].subr_string = encrypted_charstring;
     font->subrs[subr_number].subr_length = encrypted_charstring_length;
+    font->subrs[subr_number].np = np;
+    font->subrs[subr_number].np_length = np_length;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -859,7 +864,8 @@ cairo_type1_font_subset_build_subr_list (cairo_type1_font_subset_t *font,
 static cairo_status_t
 write_used_subrs (cairo_type1_font_subset_t *font,
 		  int subr_number,
-		  const char *subr_string, int subr_string_length)
+		  const char *subr_string, int subr_string_length,
+		  const char *np, int np_length)
 {
     cairo_status_t status;
     char buffer[256];
@@ -881,8 +887,12 @@ write_used_subrs (cairo_type1_font_subset_t *font,
     if (unlikely (status))
 	return status;
 
-    length = snprintf (buffer, sizeof buffer, "%s\n", font->np);
-    status = cairo_type1_font_subset_write_encrypted (font, buffer, length);
+    if (np) {
+	status = cairo_type1_font_subset_write_encrypted (font, np, np_length);
+    } else {
+	length = snprintf (buffer, sizeof buffer, "%s\n", font->np);
+	status = cairo_type1_font_subset_write_encrypted (font, buffer, length);
+    }
     if (unlikely (status))
 	return status;
 
@@ -890,8 +900,9 @@ write_used_subrs (cairo_type1_font_subset_t *font,
 }
 
 typedef cairo_status_t (*subr_func_t) (cairo_type1_font_subset_t *font,
-					int subr_number,
-			                const char *subr_string, int subr_string_length);
+				       int subr_number,
+				       const char *subr_string, int subr_string_length,
+				       const char *np, int np_length);
 
 static cairo_status_t
 cairo_type1_font_for_each_subr (cairo_type1_font_subset_t  *font,
@@ -903,6 +914,8 @@ cairo_type1_font_for_each_subr (cairo_type1_font_subset_t  *font,
     const char *p, *subr_string;
     char *end;
     int subr_num, subr_length;
+    const char *np;
+    int np_length;
     cairo_status_t status;
 
     /* We're looking at "dup" at the start of the first subroutine. The subroutines
@@ -936,15 +949,29 @@ cairo_type1_font_for_each_subr (cairo_type1_font_subset_t  *font,
 	 * between the -| or RD token and the encrypted data, thus '+ 1'. */
 	subr_string = skip_token (end, cleartext_end) + 1;
 
-	status = func (font, subr_num,
-		       subr_string, subr_length);
-	if (unlikely (status))
-	    return status;
+	np = NULL;
+	np_length = 0;
 
 	/* Skip binary data and | or NP token. */
 	p = skip_token (subr_string + subr_length, cleartext_end);
 	while (p < cleartext_end && _cairo_isspace(*p))
 	    p++;
+
+	/* Some fonts have "noaccess put" instead of "NP" */
+	if (p + 3 < cleartext_end && strncmp (p, "put", 3) == 0) {
+	    p = skip_token (p, cleartext_end);
+	    while (p < cleartext_end && _cairo_isspace(*p))
+		p++;
+
+	    np = subr_string + subr_length;
+	    np_length = p - np;
+	}
+
+	status = func (font, subr_num,
+		       subr_string, subr_length, np, np_length);
+	if (unlikely (status))
+	    return status;
+
     }
 
     *array_end = (char *) p;
