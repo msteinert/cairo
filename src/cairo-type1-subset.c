@@ -1124,6 +1124,7 @@ cairo_type1_font_subset_write_private_dict (cairo_type1_font_subset_t *font,
     int length;
     const cairo_scaled_font_backend_t *backend;
     unsigned int i;
+    int glyph, j;
 
     /* The private dict holds hint information, common subroutines and
      * the actual glyph definitions (charstrings).
@@ -1241,18 +1242,18 @@ skip_subrs:
 
     /* Go through the charstring of each glyph in use, get the glyph
      * width and figure out which extra glyphs may be required by the
-     * seac operator. Also subset the Subrs. */
-    for (i = 0; i < font->base.num_glyphs; i++) {
-	if (font->glyphs[i].subset_index >= 0) {
-	    font->build_stack.sp = 0;
-	    font->ps_stack.num_other_subr_args = 0;
-	    status = cairo_type1_font_subset_parse_charstring (font,
-							       i,
-							       font->glyphs[i].encrypted_charstring,
-							       font->glyphs[i].encrypted_charstring_length);
-	    if (unlikely (status))
-		return status;
-	}
+     * seac operator (which may cause font->num_glyphs to increase
+     * while this loop is executing). Also subset the Subrs. */
+    for (j = 0; j < font->num_glyphs; j++) {
+	glyph = font->subset_index_to_glyphs[j];
+	font->build_stack.sp = 0;
+	font->ps_stack.num_other_subr_args = 0;
+	status = cairo_type1_font_subset_parse_charstring (font,
+							   glyph,
+							   font->glyphs[glyph].encrypted_charstring,
+							   font->glyphs[glyph].encrypted_charstring_length);
+	if (unlikely (status))
+	    return status;
     }
 
     closefile_token = find_token (dict_end, font->cleartext_end, "closefile");
