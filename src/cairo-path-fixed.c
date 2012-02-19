@@ -369,7 +369,7 @@ _cairo_path_fixed_destroy (cairo_path_fixed_t *path)
     free (path);
 }
 
-static inline cairo_path_op_t
+static cairo_path_op_t
 _cairo_path_fixed_last_op (cairo_path_fixed_t *path)
 {
     cairo_path_buf_t *buf;
