@@ -196,7 +196,7 @@ _cairo_stroke_style_dash_stroked (const cairo_stroke_style_t *style)
     } else {
         /* Even (0, 2, ...) dashes are on and simply counted for the coverage, odd dashes are off, thus
 	 * their coverage is approximated based on the area covered by the caps of adjacent on dases. */
-	for (i = 0; i < style->num_dashes; i+=2)
+	for (i = 0; i + 1 < style->num_dashes; i += 2)
 	    stroked += style->dash[i] + cap_scale * MIN (style->dash[i+1], style->line_width);
     }
 
