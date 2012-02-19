@@ -169,7 +169,7 @@ cairo_perf_run (cairo_perf_t	   *perf,
 		cairo_count_func_t  count_func)
 {
     static cairo_bool_t first_run = TRUE;
-    unsigned int i, similar, has_similar;
+    unsigned int i, similar, similar_iters;
     cairo_time_t *times;
     cairo_stats_t stats = {0.0, 0.0};
     int low_std_dev_count;
@@ -217,8 +217,12 @@ cairo_perf_run (cairo_perf_t	   *perf,
 	free (filename);
     }
 
-    has_similar = cairo_perf_has_similar (perf);
-    for (similar = 0; similar <= has_similar; similar++) {
+    if (cairo_perf_has_similar (perf))
+	similar_iters = 2;
+    else
+	similar_iters = 1;
+
+    for (similar = 0; similar < similar_iters; similar++) {
 	unsigned loops;
 
 	if (perf->summary) {
