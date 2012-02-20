@@ -998,7 +998,7 @@ const cairo_surface_backend_t _cairo_image_surface_backend = {
     NULL, /* show_page */
 
     _cairo_image_surface_get_extents,
-    NULL,
+    _cairo_image_surface_get_font_options,
 
     NULL, /* flush */
     NULL,
