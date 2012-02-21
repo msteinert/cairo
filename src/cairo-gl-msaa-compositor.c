@@ -157,10 +157,10 @@ _draw_triangle_fan (cairo_gl_context_t		*ctx,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_int_status_t
-_draw_clip (cairo_gl_context_t		*ctx,
-	    cairo_gl_composite_t	*setup,
-	    cairo_clip_t		*clip)
+cairo_int_status_t
+_cairo_gl_msaa_compositor_draw_clip (cairo_gl_context_t *ctx,
+				     cairo_gl_composite_t *setup,
+				     cairo_clip_t *clip)
 {
     cairo_int_status_t status;
     cairo_traps_t traps;
@@ -196,93 +196,6 @@ _draw_clip (cairo_gl_context_t		*ctx,
 
     _cairo_traps_fini (&traps);
     return status;
-}
-
-static void
-_disable_stencil_buffer (void)
-{
-    glDisable (GL_STENCIL_TEST);
-    glDepthMask (GL_FALSE);
-}
-
-static cairo_int_status_t
-_draw_clip_to_stencil_buffer (cairo_gl_context_t	*ctx,
-			      cairo_gl_composite_t	*setup,
-			      cairo_clip_t		*clip)
-{
-    cairo_int_status_t status;
-
-    assert (! _cairo_clip_is_all_clipped (clip));
-
-    if (! _cairo_gl_ensure_stencil (ctx, setup->dst))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    glDepthMask (GL_TRUE);
-    glEnable (GL_STENCIL_TEST);
-    glClearStencil (0);
-    glClear (GL_STENCIL_BUFFER_BIT);
-    glStencilOp (GL_REPLACE, GL_REPLACE, GL_REPLACE);
-    glStencilFunc (GL_EQUAL, 1, 0xffffffff);
-    glColorMask (0, 0, 0, 0);
-
-    status = _draw_clip (ctx, setup, clip);
-    if (unlikely (status)) {
-	glColorMask (1, 1, 1, 1);
-	_disable_stencil_buffer ();
-	return status;
-    }
-
-    /* We want to only render to the stencil buffer, so draw everything now. */
-    _cairo_gl_composite_flush (ctx);
-
-    glColorMask (1, 1, 1, 1);
-    glStencilOp (GL_KEEP, GL_KEEP, GL_KEEP);
-    glStencilFunc (GL_EQUAL, 1, 0xffffffff);
-
-    return status;;
-}
-
-static void
-_scissor_to_rectangle (cairo_gl_surface_t *surface,
-		       const cairo_rectangle_int_t *r)
-{
-    int y = r->y;
-    if (_cairo_gl_surface_is_texture (surface) == FALSE)
-	y = surface->height - (r->y + r->height);
-    glScissor (r->x, y, r->width, r->height);
-    glEnable (GL_SCISSOR_TEST);
-}
-
-static cairo_int_status_t
-_scissor_and_clip (cairo_gl_context_t		*ctx,
-		   cairo_gl_composite_t		*setup,
-		   cairo_composite_rectangles_t	*composite,
-		   cairo_bool_t			*used_stencil_buffer)
-{
-    cairo_gl_surface_t *dst = (cairo_gl_surface_t *) composite->surface;
-    cairo_rectangle_int_t *bounds = &composite->unbounded;
-    cairo_clip_t *clip = composite->clip;
-    cairo_rectangle_int_t r;
-
-    *used_stencil_buffer = FALSE;
-
-    if (_cairo_composite_rectangles_can_reduce_clip (composite, clip)) {
-	_scissor_to_rectangle (dst, bounds);
-	return CAIRO_INT_STATUS_SUCCESS;
-    }
-
-    /* If we cannot reduce the clip to a rectangular region,
-       we scissor and clip using the stencil buffer */
-    if (clip->num_boxes > 1 || clip->path != NULL) {
-	*used_stencil_buffer = TRUE;
-	_scissor_to_rectangle (dst, bounds);
-	return _draw_clip_to_stencil_buffer (ctx, setup, clip);
-    }
-
-    /* Always interpret the clip path as ANTIALIAS_NONE */
-    _cairo_box_round_to_rectangle (clip->boxes, &r);
-    _scissor_to_rectangle (dst, &r);
-    return CAIRO_INT_STATUS_SUCCESS;
 }
 
 static cairo_bool_t
@@ -365,6 +278,15 @@ should_fall_back (cairo_gl_surface_t *surface,
     return ! surface->supports_msaa;
 }
 
+static void
+_cairo_gl_msaa_compositor_set_clip (cairo_composite_rectangles_t *composite,
+				    cairo_gl_composite_t *setup)
+{
+    if (_cairo_composite_rectangles_can_reduce_clip (composite, composite->clip))
+	return;
+    _cairo_gl_composite_set_clip (setup, composite->clip);
+}
+
 static cairo_int_status_t
 _cairo_gl_msaa_compositor_mask (const cairo_compositor_t	*compositor,
 				cairo_composite_rectangles_t	*composite)
@@ -372,7 +294,6 @@ _cairo_gl_msaa_compositor_mask (const cairo_compositor_t	*compositor,
     cairo_gl_composite_t setup;
     cairo_gl_surface_t *dst = (cairo_gl_surface_t *) composite->surface;
     cairo_gl_context_t *ctx = NULL;
-    cairo_bool_t used_stencil_buffer;
     cairo_int_status_t status;
     cairo_operator_t op = composite->op;
 
@@ -447,13 +368,11 @@ _cairo_gl_msaa_compositor_mask (const cairo_compositor_t	*compositor,
     if (unlikely (status))
 	goto finish;
 
+    _cairo_gl_msaa_compositor_set_clip (composite, &setup);
+
     /* We always use multisampling here, because we do not yet have the smarts
        to calculate when the clip or the source requires it. */
     status = _cairo_gl_composite_begin_multisample (&setup, &ctx, TRUE);
-    if (unlikely (status))
-	goto finish;
-
-    status = _scissor_and_clip (ctx, &setup, composite, &used_stencil_buffer);
     if (unlikely (status))
 	goto finish;
 
@@ -463,11 +382,8 @@ _cairo_gl_msaa_compositor_mask (const cairo_compositor_t	*compositor,
 finish:
     _cairo_gl_composite_fini (&setup);
 
-    if (ctx) {
-	glDisable (GL_SCISSOR_TEST);
-	_disable_stencil_buffer ();
+    if (ctx)
 	status = _cairo_gl_context_release (ctx, status);
-    }
 
     return status;
 }
@@ -512,8 +428,7 @@ _stroke_shaper_add_quad (void			*closure,
 static cairo_int_status_t
 _prevent_overlapping_drawing (cairo_gl_context_t *ctx,
 			      cairo_gl_composite_t *setup,
-			      cairo_composite_rectangles_t *composite,
-			      cairo_bool_t used_stencil_buffer_for_clip)
+			      cairo_composite_rectangles_t *composite)
 {
     if (! _cairo_gl_ensure_stencil (ctx, setup->dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -522,9 +437,9 @@ _prevent_overlapping_drawing (cairo_gl_context_t *ctx,
 				  &composite->source_sample_area))
 	return CAIRO_INT_STATUS_SUCCESS;
 
-   if (used_stencil_buffer_for_clip == FALSE) {
-	/* Enable the stencil buffer, even if we have no clip so that
-	   we can use it below to prevent overlapping shapes. We initialize
+   if (glIsEnabled (GL_STENCIL_TEST) == FALSE) {
+	/* Enable the stencil buffer, even if we are not using it for clipping,
+	   so we can use it below to prevent overlapping shapes. We initialize
 	   it all to one here which represents infinite clip. */
 	glDepthMask (GL_TRUE);
 	glEnable (GL_STENCIL_TEST);
@@ -586,7 +501,6 @@ _cairo_gl_msaa_compositor_stroke (const cairo_compositor_t	*compositor,
     cairo_int_status_t status;
     cairo_gl_surface_t *dst = (cairo_gl_surface_t *) composite->surface;
     struct _tristrip_composite_info info;
-    cairo_bool_t used_stencil_buffer_for_clip;
 
     if (should_fall_back (dst, antialias))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -626,18 +540,14 @@ _cairo_gl_msaa_compositor_stroke (const cairo_compositor_t	*compositor,
     if (unlikely (status))
 	goto finish;
 
+    _cairo_gl_msaa_compositor_set_clip (composite, &info.setup);
+
     status = _cairo_gl_composite_begin_multisample (&info.setup, &info.ctx,
 	antialias != CAIRO_ANTIALIAS_NONE);
     if (unlikely (status))
 	goto finish;
 
-    status = _scissor_and_clip (info.ctx, &info.setup, composite,
-				&used_stencil_buffer_for_clip);
-    if (unlikely (status))
-	goto finish;
-
-    status = _prevent_overlapping_drawing (info.ctx, &info.setup, composite,
-					   used_stencil_buffer_for_clip);
+    status = _prevent_overlapping_drawing (info.ctx, &info.setup, composite);
     if (unlikely (status))
 	goto finish;
 
@@ -658,11 +568,8 @@ _cairo_gl_msaa_compositor_stroke (const cairo_compositor_t	*compositor,
 finish:
     _cairo_gl_composite_fini (&info.setup);
 
-    if (info.ctx) {
-	glDisable (GL_SCISSOR_TEST);
-	_disable_stencil_buffer ();
+    if (info.ctx)
 	status = _cairo_gl_context_release (info.ctx, status);
-    }
 
     return status;
 }
@@ -680,7 +587,6 @@ _cairo_gl_msaa_compositor_fill (const cairo_compositor_t	*compositor,
     cairo_gl_context_t *ctx = NULL;
     cairo_int_status_t status;
     cairo_traps_t traps;
-    cairo_bool_t used_stencil_buffer;
 
     if (should_fall_back (dst, antialias))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -725,13 +631,10 @@ _cairo_gl_msaa_compositor_fill (const cairo_compositor_t	*compositor,
     if (unlikely (status))
 	goto cleanup_setup;
 
+    _cairo_gl_msaa_compositor_set_clip (composite, &setup);
+
     status = _cairo_gl_composite_begin_multisample (&setup, &ctx,
 	antialias != CAIRO_ANTIALIAS_NONE);
-    if (unlikely (status))
-	goto cleanup_setup;
-
-    status = _scissor_and_clip (ctx, &setup, composite,
-				&used_stencil_buffer);
     if (unlikely (status))
 	goto cleanup_setup;
 
@@ -743,11 +646,9 @@ _cairo_gl_msaa_compositor_fill (const cairo_compositor_t	*compositor,
 cleanup_setup:
     _cairo_gl_composite_fini (&setup);
 
-    if (ctx) {
-	glDisable (GL_SCISSOR_TEST);
-	_disable_stencil_buffer ();
+    if (ctx)
 	status = _cairo_gl_context_release (ctx, status);
-    }
+
 cleanup_traps:
     _cairo_traps_fini (&traps);
 

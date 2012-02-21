@@ -335,6 +335,7 @@ struct _cairo_gl_context {
     unsigned int vb_offset;
     unsigned int vertex_size;
     cairo_region_t *clip_region;
+    cairo_clip_t *clip;
     cairo_array_t tristrip_indices;
 
     cairo_bool_t has_mesa_pack_invert;
@@ -361,6 +362,8 @@ typedef struct _cairo_gl_composite {
     cairo_gl_operand_t src;
     cairo_gl_operand_t mask;
     cairo_bool_t spans;
+
+    cairo_clip_t *clip;
 } cairo_gl_composite_t;
 
 typedef struct _cairo_gl_font {
@@ -488,6 +491,10 @@ _cairo_gl_composite_fini (cairo_gl_composite_t *setup);
 cairo_private void
 _cairo_gl_composite_set_clip_region (cairo_gl_composite_t *setup,
                                      cairo_region_t *clip_region);
+
+cairo_private void
+_cairo_gl_composite_set_clip(cairo_gl_composite_t *setup,
+			     cairo_clip_t *clip);
 
 cairo_private cairo_int_status_t
 _cairo_gl_composite_set_source (cairo_gl_composite_t *setup,
@@ -746,6 +753,11 @@ _cairo_gl_pattern_to_source (cairo_surface_t *dst,
 			     const cairo_rectangle_int_t *extents,
 			     const cairo_rectangle_int_t *sample,
 			     int *src_x, int *src_y);
+
+cairo_private cairo_int_status_t
+_cairo_gl_msaa_compositor_draw_clip (cairo_gl_context_t *ctx,
+				     cairo_gl_composite_t *setup,
+				     cairo_clip_t *clip);
 
 cairo_private cairo_surface_t *
 _cairo_gl_white_source (void);

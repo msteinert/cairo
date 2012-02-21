@@ -137,6 +137,7 @@ _gl_destroy (void *device)
     _cairo_array_fini (&ctx->tristrip_indices);
 
     cairo_region_destroy (ctx->clip_region);
+    _cairo_clip_destroy (ctx->clip);
 
     free (ctx->vb_mem);
 
