@@ -1281,7 +1281,7 @@ _cairo_xlib_surface_map_to_image (void                    *abstract_surface,
     cairo_surface_t *image;
 
     image = _get_image_surface (abstract_surface, extents);
-    cairo_surface_set_device_offset (image, -extents->y, -extents->y);
+    cairo_surface_set_device_offset (image, -extents->x, -extents->y);
 
     return image;
 }

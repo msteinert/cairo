@@ -651,7 +651,7 @@ cairo_surface_map_to_image (cairo_surface_t  *surface,
 						    _cairo_format_from_content (surface->content),
 						    extents->width,
 						    extents->height);
-	cairo_surface_set_device_offset (image, -extents->y, -extents->y);
+	cairo_surface_set_device_offset (image, -extents->x, -extents->y);
 
 	_cairo_pattern_init_for_surface (&pattern, surface);
 	pattern.base.filter = CAIRO_FILTER_NEAREST;
