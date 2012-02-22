@@ -790,16 +790,23 @@ cairo_boilerplate_open_any2ppm (const char   *filename,
 				int        (**close_cb) (FILE *))
 {
     char command[4096];
+    const char *any2ppm;
 #if HAS_DAEMON
     int sk;
     struct sockaddr_un addr;
     int len;
+#endif
 
+    any2ppm = getenv ("ANY2PPM");
+    if (any2ppm == NULL)
+	any2ppm = "./any2ppm";
+
+#if HAS_DAEMON
     if (flags & CAIRO_BOILERPLATE_OPEN_NO_DAEMON)
 	goto POPEN;
 
     if (! any2ppm_daemon_exists ()) {
-	if (system ("./any2ppm") != 0)
+	if (system (any2ppm) != 0)
 	    goto POPEN;
     }
 
@@ -829,7 +836,7 @@ POPEN:
 #endif
 
     *close_cb = pclose;
-    sprintf (command, "./any2ppm %s %d", filename, page);
+    sprintf (command, "%s %s %d", any2ppm, filename, page);
     return popen (command, "r");
 }
 

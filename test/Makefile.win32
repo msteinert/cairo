@@ -50,6 +50,6 @@ $(top_builddir)/util/cairo-script/$(CFG)/libcairo-script-interpreter.lib:
 .PHONY: check test
 
 check: inform $(CFG)/any2ppm.exe $(CFG)/cairo-test-suite.exe
-	./$(CFG)/cairo-test-suite.exe
+	@ANY2PPM=$(CFG)\\any2ppm.exe $(CFG)/cairo-test-suite.exe
 
 test: inform check
