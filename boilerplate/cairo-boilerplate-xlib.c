@@ -274,7 +274,7 @@ _cairo_boilerplate_xlib_create_similar (cairo_surface_t		*other,
 
 static cairo_surface_t *
 _cairo_boilerplate_xlib_create_surface (const char		  *name,
-					cairo_content_t 	   content,
+					cairo_content_t		   content,
 					double			   width,
 					double			   height,
 					double			   max_width,
@@ -307,6 +307,63 @@ _cairo_boilerplate_xlib_create_surface (const char		  *name,
 	surface = _cairo_boilerplate_xlib_test_create_surface (dpy, content, width, height, xtc);
     else /* mode == CAIRO_BOILERPLATE_MODE_PERF */
 	surface = _cairo_boilerplate_xlib_perf_create_surface (dpy, content, width, height, xtc);
+
+    if (surface == NULL || cairo_surface_status (surface))
+	_cairo_boilerplate_xlib_cleanup (xtc);
+
+    return surface;
+}
+
+static cairo_surface_t *
+_cairo_boilerplate_xlib_render_0_0_create_surface (const char		  *name,
+						   cairo_content_t		   content,
+						   double			   width,
+						   double			   height,
+						   double			   max_width,
+						   double			   max_height,
+						   cairo_boilerplate_mode_t   mode,
+						   void			 **closure)
+{
+    xlib_target_closure_t *xtc;
+    Display *dpy;
+    int screen;
+    Pixmap pixmap;
+    cairo_surface_t *surface, *dummy;
+
+    *closure = xtc = xcalloc (1, sizeof (xlib_target_closure_t));
+
+    width = ceil (width);
+    if (width < 1)
+	width = 1;
+
+    height = ceil (height);
+    if (height < 1)
+	height = 1;
+
+    xtc->dpy = dpy = XOpenDisplay (NULL);
+    if (xtc->dpy == NULL) {
+	free (xtc);
+	CAIRO_BOILERPLATE_DEBUG (("Failed to open display: %s\n", XDisplayName(0)));
+	return NULL;
+    }
+
+
+    screen = DefaultScreen (dpy);
+    pixmap = XCreatePixmap (dpy, DefaultRootWindow (dpy), 1, 1,
+			    DefaultDepth (dpy, screen));
+    dummy = cairo_xlib_surface_create (dpy, pixmap,
+				       DefaultVisual (dpy, screen),
+				       1, 1);
+    cairo_xlib_device_debug_cap_xrender_version (cairo_surface_get_device (dummy),
+						 0, 0);
+
+    if (mode == CAIRO_BOILERPLATE_MODE_TEST)
+	surface = _cairo_boilerplate_xlib_test_create_surface (dpy, content, width, height, xtc);
+    else /* mode == CAIRO_BOILERPLATE_MODE_PERF */
+	surface = _cairo_boilerplate_xlib_perf_create_surface (dpy, content, width, height, xtc);
+
+    cairo_surface_destroy (dummy);
+    XFreePixmap (dpy, pixmap);
 
     if (surface == NULL || cairo_surface_status (surface))
 	_cairo_boilerplate_xlib_cleanup (xtc);
@@ -529,6 +586,20 @@ static const cairo_boilerplate_target_t targets[] = {
 	CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR, 1,
 	"cairo_xlib_surface_create",
 	_cairo_boilerplate_xlib_window_create_surface,
+	cairo_surface_create_similar,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	_cairo_boilerplate_xlib_cleanup,
+	_cairo_boilerplate_xlib_synchronize,
+        NULL,
+	FALSE, FALSE, FALSE
+    },
+    {
+	"xlib-render-0_0", "mask", NULL, NULL,
+	CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR, 1,
+	"cairo_xlib_surface_create",
+	_cairo_boilerplate_xlib_render_0_0_create_surface,
 	cairo_surface_create_similar,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
