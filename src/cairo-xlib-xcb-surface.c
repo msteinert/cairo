@@ -795,6 +795,22 @@ cairo_xlib_surface_get_height (cairo_surface_t *abstract_surface)
 }
 
 void
+cairo_xlib_device_debug_cap_xrender_version (cairo_device_t *device,
+					     int major, int minor)
+{
+    cairo_xlib_xcb_display_t *display = (cairo_xlib_xcb_display_t *) device;
+
+    if (device == NULL || device->status)
+	return;
+
+    if (device->backend->type != CAIRO_DEVICE_TYPE_XLIB)
+	return;
+
+    cairo_xcb_device_debug_cap_xrender_version (display->xcb_device,
+						major, minor);
+}
+
+void
 cairo_xlib_device_debug_set_precision (cairo_device_t *device,
 				       int precision)
 {
