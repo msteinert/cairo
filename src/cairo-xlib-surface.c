@@ -1078,6 +1078,8 @@ _cairo_xlib_surface_draw_image (cairo_xlib_surface_t   *surface,
                                   0, 0,
                                   width, height);
 
+	ximage.width = width;
+	ximage.height = height;
 	ximage.bits_per_pixel = image_masks.bpp;
 	ximage.data = (char *) pixman_image_get_data (pixman_image);
 	ximage.bytes_per_line = pixman_image_get_stride (pixman_image);
