@@ -96,6 +96,36 @@ static cairo_bool_t fill_box (cairo_box_t *box, void *closure)
     return TRUE;
 }
 
+static void
+_characterize_field (uint32_t mask, int *width, int *shift)
+{
+    *width = _cairo_popcount (mask);
+    /* The final '& 31' is to force a 0 mask to result in 0 shift. */
+    *shift = _cairo_popcount ((mask - 1) & ~mask) & 31;
+}
+
+static uint32_t
+color_to_pixel (cairo_xlib_surface_t    *dst,
+		const cairo_color_t     *color)
+{
+    uint32_t rgba = 0;
+    int width, shift;
+
+    _characterize_field (dst->a_mask, &width, &shift);
+    rgba |= color->alpha_short >> (16 - width) << shift;
+
+    _characterize_field (dst->r_mask, &width, &shift);
+    rgba |= color->red_short >> (16 - width) << shift;
+
+    _characterize_field (dst->g_mask, &width, &shift);
+    rgba |= color->green_short >> (16 - width) << shift;
+
+    _characterize_field (dst->b_mask, &width, &shift);
+    rgba |= color->blue_short >> (16 - width) << shift;
+
+    return rgba;
+}
+
 static cairo_int_status_t
 fill_boxes (cairo_xlib_surface_t    *dst,
 	    const cairo_color_t     *color,
@@ -112,7 +142,7 @@ fill_boxes (cairo_xlib_surface_t    *dst,
     fb.dpy = dst->display->display;
     fb.drawable = dst->drawable;
 
-    if (dst->visual && dst->visual->class != TrueColor) {
+    if (dst->visual && dst->visual->class != TrueColor && 0) {
 	cairo_solid_pattern_t solid;
 	cairo_surface_attributes_t attrs;
 
@@ -136,10 +166,16 @@ fill_boxes (cairo_xlib_surface_t    *dst,
 		      - (dst->base.device_transform.y0 + attrs.y_offset));
 	XSetTile (fb.dpy, fb.gc, ((cairo_xlib_surface_t *) dither)->drawable);
     } else {
-	//XChangeGC (fb.dpy, fb.gc, GCForeground, color_to_pixel (&color));
+	XGCValues gcv;
+
+	gcv.foreground = color_to_pixel (dst, color);
+	gcv.fill_style = FillSolid;
+
+	XChangeGC (fb.dpy, fb.gc, GCFillStyle | GCForeground, &gcv);
     }
 
     _cairo_boxes_for_each_box (boxes, fill_box, &fb);
+
     _cairo_xlib_surface_put_gc (dst->display, dst, fb.gc);
 
     cairo_surface_destroy (dither);
@@ -443,7 +479,8 @@ draw_boxes (cairo_composite_rectangles_t *extents,
     if (op == CAIRO_OPERATOR_CLEAR)
 	op = CAIRO_OPERATOR_SOURCE;
 
-    if (_cairo_pattern_is_opaque (src, &extents->bounded))
+    if (op == CAIRO_OPERATOR_OVER &&
+	_cairo_pattern_is_opaque (src, &extents->bounded))
 	op = CAIRO_OPERATOR_SOURCE;
 
     if (dst->base.is_clear && op == CAIRO_OPERATOR_OVER)
@@ -506,7 +543,8 @@ _cairo_xlib_core_compositor_stroke (const cairo_compositor_t	*compositor,
     cairo_int_status_t status;
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
-    if (_cairo_path_fixed_stroke_is_rectilinear (path)) {
+    if (extents->clip->path == NULL &&
+	_cairo_path_fixed_stroke_is_rectilinear (path)) {
 	cairo_boxes_t boxes;
 
 	_cairo_boxes_init_with_clip (&boxes, extents->clip);
@@ -534,7 +572,8 @@ _cairo_xlib_core_compositor_fill (const cairo_compositor_t	*compositor,
     cairo_int_status_t status;
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
-    if (_cairo_path_fixed_fill_is_rectilinear (path)) {
+    if (extents->clip->path == NULL &&
+	_cairo_path_fixed_fill_is_rectilinear (path)) {
 	cairo_boxes_t boxes;
 
 	_cairo_boxes_init_with_clip (&boxes, extents->clip);
