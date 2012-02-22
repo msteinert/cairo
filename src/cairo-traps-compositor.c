@@ -202,37 +202,113 @@ combine_clip_as_traps (const cairo_traps_compositor_t *compositor,
     return status;
 }
 
-static cairo_surface_t *
-traps_get_clip_surface (const cairo_traps_compositor_t *compositor,
-			cairo_surface_t *target,
-			const cairo_clip_t *clip,
-			const cairo_rectangle_int_t *extents)
+static cairo_status_t
+__clip_to_surface (const cairo_traps_compositor_t *compositor,
+		   const cairo_composite_rectangles_t *composite,
+		   const cairo_rectangle_int_t *extents,
+		   cairo_surface_t **surface)
 {
-    cairo_surface_t *surface;
+    cairo_surface_t *mask;
+    cairo_polygon_t polygon;
+    cairo_fill_rule_t fill_rule;
+    cairo_antialias_t antialias;
+    cairo_traps_t traps;
+    cairo_boxes_t clear;
+    cairo_surface_t *src;
+    int src_x, src_y;
     cairo_int_status_t status;
 
     TRACE ((stderr, "%s\n", __FUNCTION__));
 
-    surface = _cairo_surface_create_similar_solid (target,
-						   CAIRO_CONTENT_ALPHA,
-						   extents->width,
-						   extents->height,
-						   CAIRO_COLOR_WHITE);
-    if (unlikely (surface->status))
-	return surface;
+    status = _cairo_clip_get_polygon (composite->clip, &polygon,
+				      &fill_rule, &antialias);
+    if (status)
+	return status;
 
-    status = compositor->acquire (surface);
-    if (unlikely (status)) {
-	cairo_surface_destroy (surface);
-	return _cairo_surface_create_in_error (status);
+    _cairo_traps_init (&traps);
+    status = _cairo_bentley_ottmann_tessellate_polygon (&traps,
+							&polygon,
+							fill_rule);
+    _cairo_polygon_fini (&polygon);
+    if (unlikely (status))
+	return status;
+
+    mask = _cairo_surface_create_similar_scratch (composite->surface,
+						  CAIRO_CONTENT_ALPHA,
+						  extents->width,
+						  extents->height);
+    if (unlikely (mask->status)) {
+	_cairo_traps_fini (&traps);
+	return status;
     }
 
-    status = combine_clip_as_traps (compositor, surface, clip, extents);
+    src = compositor->pattern_to_surface (mask, NULL, FALSE,
+					  extents, NULL,
+					  &src_x, &src_y);
+    if (unlikely (status = src->status))
+	goto error;
+
+    status = compositor->acquire (mask);
+    if (unlikely (status))
+	goto error;
+
+    _cairo_boxes_init_from_rectangle (&clear,
+				      0, 0,
+				      extents->width,
+				      extents->height);
+    status = compositor->fill_boxes (mask,
+				     CAIRO_OPERATOR_CLEAR,
+				     CAIRO_COLOR_TRANSPARENT,
+				     &clear);
+    if (unlikely (status))
+	goto error;
+
+    status = compositor->composite_traps (mask, CAIRO_OPERATOR_ADD, src,
+					  src_x, src_y,
+					  extents->x, extents->y,
+					  extents,
+					  antialias, &traps);
+    if (unlikely (status))
+	goto error;
+
+    *surface = mask;
+out:
+    cairo_surface_destroy (src);
+    _cairo_traps_fini (&traps);
+    return status;
+
+error:
+    cairo_surface_destroy (mask);
+    goto out;
+}
+
+static cairo_surface_t *
+traps_get_clip_surface (const cairo_traps_compositor_t *compositor,
+			const cairo_composite_rectangles_t *composite,
+			const cairo_rectangle_int_t *extents)
+{
+    cairo_surface_t *surface = NULL;
+    cairo_int_status_t status;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
+    status = __clip_to_surface (compositor, composite, extents, &surface);
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
-	status = _cairo_clip_combine_with_surface (clip, surface,
+	surface = _cairo_surface_create_similar_solid (composite->surface,
+						       CAIRO_CONTENT_ALPHA,
+						       extents->width,
+						       extents->height,
+						       CAIRO_COLOR_WHITE);
+	if (unlikely (surface->status))
+	    return surface;
+
+	status = _cairo_clip_combine_with_surface (composite->clip, surface,
 						   extents->x, extents->y);
     }
-    compositor->release (surface);
+    if (unlikely (status)) {
+	cairo_surface_destroy (surface);
+	surface = _cairo_surface_create_in_error (status);
+    }
 
     return surface;
 }
@@ -449,8 +525,7 @@ clip_and_composite_combine (const cairo_traps_compositor_t *compositor,
     if (unlikely (status))
 	goto cleanup;
 
-    clip = traps_get_clip_surface (compositor, dst, extents->clip,
-				   &extents->bounded);
+    clip = traps_get_clip_surface (compositor, extents, &extents->bounded);
     if (unlikely ((status = clip->status)))
 	goto cleanup;
 
@@ -555,13 +630,12 @@ fixup_unbounded_with_mask (const cairo_traps_compositor_t *compositor,
 			   const cairo_composite_rectangles_t *extents)
 {
     cairo_surface_t *dst = extents->surface;
-    cairo_clip_t *clip = extents->clip;
     cairo_surface_t *mask;
 
     TRACE ((stderr, "%s\n", __FUNCTION__));
 
     /* XXX can we avoid querying the clip surface again? */
-    mask = traps_get_clip_surface (compositor, dst, clip, &extents->unbounded);
+    mask = traps_get_clip_surface (compositor, extents, &extents->unbounded);
     if (unlikely (mask->status))
 	return mask->status;
 
@@ -1094,8 +1168,8 @@ composite_aligned_boxes (const cairo_traps_compositor_t *compositor,
 	int mask_x = 0, mask_y = 0;
 
 	if (need_clip_mask) {
-	    mask = traps_get_clip_surface (compositor, dst, extents->clip,
-					   &extents->bounded);
+	    mask = traps_get_clip_surface (compositor,
+					   extents, &extents->bounded);
 	    if (unlikely (mask->status))
 		return mask->status;
 
