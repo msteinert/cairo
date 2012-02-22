@@ -631,19 +631,8 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
     ty = limit.y;
 
     extend = pattern->base.extend;
-    if (_cairo_surface_get_extents (source, &limit)) {
-	if (_cairo_rectangle_contains_rectangle (&limit, sample))
-	{
-	    extend = CAIRO_EXTEND_NONE;
-	}
-	else if (extend == CAIRO_EXTEND_NONE &&
-		 ! _cairo_rectangle_intersects (&limit, sample))
-	{
-	    return _pixman_transparent_image ();
-	}
-    } else
+    if (_cairo_rectangle_contains_rectangle (&limit, sample))
 	extend = CAIRO_EXTEND_NONE;
-
     if (extend == CAIRO_EXTEND_NONE) {
 	if (! _cairo_rectangle_intersect (&limit, sample))
 	    return _pixman_transparent_image ();
