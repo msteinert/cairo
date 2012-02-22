@@ -96,10 +96,10 @@ Here are some of the relevant details:
 
   * Your system must have a copy of the DejaVu font, the sha1sum of
     the version used are listed in [...].  These are
-      "DejaVu Sans" (DejaVuSans.ttf) [682718dd37c3f6a4767386d3b2b27fba9b219818];
-      "DejaVu Sans Mono" (DejaVuSansMono.ttf) [1cc58255d6f9df2b08e760ca38937a2957153484];
-      "DejaVu Serif" (DejaVuSerif.ttf) [020e72e92cb2f66107dc18c70ac4214df4f13014];
-      [the DejaVu fonts can be installed from the ttf-dejavu Debian package]
+      "DejaVu Sans" (DejaVuSans.ttf) [1cd336329f45f241002ded61893d91e3acd04436];
+      "DejaVu Sans Mono" (DejaVuSansMono.ttf) [0458c0f0fb57f3eb8ced62f26fe7c5ed4e6a9a68];
+      "DejaVu Serif" (DejaVuSerif.ttf) [93502d0d0445d1fe1c9f51e51b3e0169266346ce];
+      [the DejaVu fonts can be installed from the ttf-dejavu 2.33-2 Debian package]
     and also
       "Nimbus Sans L" (n019003l.pfb)
       [which can be found in the gsfonts Debian package].
