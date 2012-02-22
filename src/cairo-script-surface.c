@@ -1008,7 +1008,7 @@ _emit_mesh_pattern (cairo_script_surface_t *surface,
 	cairo_path_data_t *data;
 	int j;
 
-	_cairo_output_stream_printf (ctx->stream, "\n  mesh-begin-patch");
+	_cairo_output_stream_printf (ctx->stream, "\n  begin-patch");
 
 	path = cairo_mesh_pattern_get_path (mesh, i);
 	if (unlikely (path->status))
@@ -1019,17 +1019,17 @@ _emit_mesh_pattern (cairo_script_surface_t *surface,
 	    switch (data->header.type) {
 	    case CAIRO_PATH_MOVE_TO:
 		_cairo_output_stream_printf (ctx->stream,
-					     "\n  %f %f mesh-move-to",
+					     "\n  %f %f m",
 					     data[1].point.x, data[1].point.y);
 		break;
 	    case CAIRO_PATH_LINE_TO:
 		_cairo_output_stream_printf (ctx->stream,
-					     "\n  %f %f mesh-line-to",
+					     "\n  %f %f l",
 					     data[1].point.x, data[1].point.y);
 		break;
 	    case CAIRO_PATH_CURVE_TO:
 		_cairo_output_stream_printf (ctx->stream,
-					     "\n  %f %f %f %f %f %f mesh-curve-to",
+					     "\n  %f %f %f %f %f %f c",
 					     data[1].point.x, data[1].point.y,
 					     data[2].point.x, data[2].point.y,
 					     data[3].point.x, data[3].point.y);
@@ -1047,7 +1047,7 @@ _emit_mesh_pattern (cairo_script_surface_t *surface,
 	    if (unlikely (status))
 		return status;
 	    _cairo_output_stream_printf (ctx->stream,
-					 "\n  %d %f %f mesh-set-control-point",
+					 "\n  %d %f %f set-control-point",
 					 j, x, y);
 	}
 
@@ -1059,11 +1059,11 @@ _emit_mesh_pattern (cairo_script_surface_t *surface,
 		return status;
 
 	    _cairo_output_stream_printf (ctx->stream,
-					 "\n  %d %f %f %f %f mesh-set-corner-color",
+					 "\n  %d %f %f %f %f set-corner-color",
 					 j, r, g, b, a);
 	}
 
-	_cairo_output_stream_printf (ctx->stream, "\n  mesh-end-patch");
+	_cairo_output_stream_printf (ctx->stream, "\n  end-patch");
     }
 
     return CAIRO_STATUS_SUCCESS;
