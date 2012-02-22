@@ -261,7 +261,7 @@ __clip_to_surface (const cairo_traps_compositor_t *compositor,
 				     CAIRO_COLOR_TRANSPARENT,
 				     &clear);
     if (unlikely (status))
-	goto error;
+	goto error_release;
 
     status = compositor->composite_traps (mask, CAIRO_OPERATOR_ADD, src,
 					  src_x, src_y,
@@ -269,14 +269,17 @@ __clip_to_surface (const cairo_traps_compositor_t *compositor,
 					  extents,
 					  antialias, &traps);
     if (unlikely (status))
-	goto error;
+	goto error_release;
 
+    compositor->release (mask);
     *surface = mask;
 out:
     cairo_surface_destroy (src);
     _cairo_traps_fini (&traps);
     return status;
 
+error_release:
+    compositor->release (mask);
 error:
     cairo_surface_destroy (mask);
     goto out;
