@@ -253,11 +253,9 @@ create_composite_mask (const cairo_traps_compositor_t *compositor,
 
     TRACE ((stderr, "%s\n", __FUNCTION__));
 
-    surface = _cairo_surface_create_similar_solid (dst,
-						   CAIRO_CONTENT_ALPHA,
-						   extents->bounded.width,
-						   extents->bounded.height,
-						   CAIRO_COLOR_TRANSPARENT);
+    surface = _cairo_surface_create_similar_scratch (dst, CAIRO_CONTENT_ALPHA,
+						     extents->bounded.width,
+						     extents->bounded.height);
     if (unlikely (surface->status))
 	return surface;
 
@@ -267,8 +265,10 @@ create_composite_mask (const cairo_traps_compositor_t *compositor,
 					  &extents->bounded,
 					  &extents->bounded,
 					  &src_x, &src_y);
-    if (unlikely (src->status))
+    if (unlikely (src->status)) {
+	cairo_surface_destroy (surface);
 	return src;
+    }
 
     status = compositor->acquire (surface);
     if (unlikely (status)) {
@@ -277,15 +277,30 @@ create_composite_mask (const cairo_traps_compositor_t *compositor,
 	return _cairo_surface_create_in_error (status);
     }
 
+    {
+	cairo_boxes_t clear;
+
+	_cairo_boxes_init_from_rectangle (&clear,
+					  0, 0,
+					  extents->bounded.width,
+					  extents->bounded.height);
+	status = compositor->fill_boxes (surface,
+					 CAIRO_OPERATOR_CLEAR,
+					 CAIRO_COLOR_TRANSPARENT,
+					 &clear);
+	if (unlikely (status))
+	    goto error;
+    }
+
     if (mask_func) {
 	status = mask_func (compositor, surface, draw_closure,
 			    CAIRO_OPERATOR_SOURCE, src, src_x, src_y,
 			    extents->bounded.x, extents->bounded.y,
 			    &extents->bounded, extents->clip);
-	if (likely (status != CAIRO_INT_STATUS_UNSUPPORTED)) {
-	    cairo_surface_destroy (src);
+	if (likely (status == CAIRO_INT_STATUS_SUCCESS))
 	    goto out;
-	}
+	if (unlikely (status != CAIRO_INT_STATUS_UNSUPPORTED))
+	    goto error;
     }
 
     /* Is it worth setting the clip region here? */
@@ -293,7 +308,6 @@ create_composite_mask (const cairo_traps_compositor_t *compositor,
 			CAIRO_OPERATOR_ADD, src, src_x, src_y,
 			extents->bounded.x, extents->bounded.y,
 			&extents->bounded, NULL);
-    cairo_surface_destroy (src);
     if (unlikely (status))
 	goto error;
 
@@ -329,15 +343,16 @@ create_composite_mask (const cairo_traps_compositor_t *compositor,
 
 out:
     compositor->release (surface);
-    surface->is_clear = FALSE;
+    cairo_surface_destroy (src);
     return surface;
 
 error:
+    compositor->release (surface);
     if (status != CAIRO_INT_STATUS_NOTHING_TO_DO) {
 	cairo_surface_destroy (surface);
 	surface = _cairo_surface_create_in_error (status);
     }
-    compositor->release (surface);
+    cairo_surface_destroy (src);
     return surface;
 }
 
