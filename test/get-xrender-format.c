@@ -101,16 +101,6 @@ preamble (cairo_test_context_t *ctx)
 	goto CLEANUP_PIXMAP;
     }
 
-    cairo_test_log (ctx, "Testing without the X Render extension.\n");
-
-    cairo_boilerplate_xlib_surface_disable_render (surface);
-
-    format = cairo_xlib_surface_get_xrender_format (surface);
-    if (format != NULL) {
-	cairo_test_log (ctx, "Error: did not receive a NULL format as expected\n");
-	goto CLEANUP_PIXMAP;
-    }
-
     result = CAIRO_TEST_SUCCESS;
 
   CLEANUP_PIXMAP:

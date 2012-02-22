@@ -136,7 +136,6 @@ do_test (const cairo_test_context_t *ctx,
 	 unsigned char  *reference_data,
 	 unsigned char  *test_data,
 	 unsigned char  *diff_data,
-	 cairo_bool_t    use_render,
 	 cairo_bool_t    use_pixmap,
 	 cairo_bool_t    set_size,
 	 cairo_bool_t    offscreen)
@@ -183,9 +182,6 @@ do_test (const cairo_test_context_t *ctx,
 
     if (! surface_compare_visual_and_format (surface))
 	return CAIRO_TEST_FAILURE;
-
-    if (!use_render)
-	cairo_boilerplate_xlib_surface_disable_render (surface);
 
     if (set_size) {
 	cairo_xlib_surface_set_size (surface, SIZE, SIZE);
@@ -243,13 +239,10 @@ do_test (const cairo_test_context_t *ctx,
 			     &result);
     }
 
-    cairo_test_log (ctx, "xlib-surface: %s, %s, %s%s: %s\n",
-		    use_render ? "   render" : "no-render",
+    cairo_test_log (ctx, "xlib-surface: %s, %s, %s: %s\n",
 		    set_size ? "   size" : "no-size",
 		    use_pixmap ? "pixmap" : "window",
-		    use_pixmap ?
-		    "           " :
-		    (offscreen ? ", offscreen" : ",  onscreen"),
+		    use_pixmap ?  "           " : (offscreen ? ", offscreen" : ",  onscreen"),
 		    image_diff_is_failure (&result, 0) ? "FAIL" : "PASS");
 
     if (image_diff_is_failure (&result, 0))
@@ -335,17 +328,7 @@ preamble (cairo_test_context_t *ctx)
 	    for (offscreen = 0; offscreen <= 1; offscreen++) {
 		status = do_test (ctx, dpy,
 				  reference_data, test_data, diff_data,
-				  1, use_pixmap, set_size, offscreen);
-		if (status)
-		    result = status;
-	    }
-
-    for (set_size = 0; set_size <= 1; set_size++)
-	for (use_pixmap = 0; use_pixmap <= 1; use_pixmap++)
-	    for (offscreen = 0; offscreen <= 1; offscreen++) {
-		status = do_test (ctx, dpy,
-				  reference_data, test_data, diff_data,
-				  0, use_pixmap, set_size, offscreen);
+				  use_pixmap, set_size, offscreen);
 		if (status)
 		    result = status;
 	    }

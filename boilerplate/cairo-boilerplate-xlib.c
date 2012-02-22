@@ -392,49 +392,6 @@ _cairo_boilerplate_xlib_window_create_surface (const char		 *name,
 
     return surface;
 }
-
-cairo_status_t
-cairo_boilerplate_xlib_surface_disable_render (cairo_surface_t *abstract_surface)
-{
-#if 0
-    /* The following stunt doesn't work with xlib-xcb because it doesn't use
-     * cairo_xlib_surface_t for its surfaces. Sadly, there is no sane
-     * alternative, so we can't disable render with xlib-xcb.
-     * FIXME: Find an alternative. */
-#if !CAIRO_HAS_XLIB_XCB_FUNCTIONS
-    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t*) abstract_surface;
-
-    if (cairo_surface_get_type (abstract_surface) != CAIRO_SURFACE_TYPE_XLIB)
-	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
-
-    surface->render_major = surface->render_minor = -1;
-    surface->xrender_format = NULL;
-
-    /* The content type is forced by _xrender_format_to_content() during
-     * non-Render surface creation, so repeat the procedure here. */
-    surface->base.content = CAIRO_CONTENT_COLOR;
-
-    /* These flags are set based on known bugs and lack of RENDER support */
-#if CAIRO_XLIB_SURFACE_HAS_BUGGY_GRADIENTS
-    surface->buggy_gradients = TRUE;
-#endif
-#if CAIRO_XLIB_SURFACE_HAS_BUGGY_PAD_REFLECT
-    surface->buggy_pad_reflect = TRUE;
-#endif
-#if CAIRO_XLIB_SURFACE_HAS_BUGGY_REPEAT
-    surface->buggy_repeat = TRUE;
-#endif
-#endif
-#endif
-
-    return CAIRO_STATUS_SUCCESS;
-}
-#else
-cairo_status_t
-cairo_boilerplate_xlib_surface_disable_render (cairo_surface_t *abstract_surface)
-{
-    return CAIRO_STATUS_SUCCESS;
-}
 #endif
 
 
@@ -462,7 +419,7 @@ _cairo_boilerplate_xlib_fallback_create_surface (const char		   *name,
     Display *dpy;
     int screen;
     XSetWindowAttributes attr;
-    cairo_surface_t *surface;
+    cairo_surface_t *surface, *dummy;
 
     /* We're not yet bothering to support perf mode for the
      * xlib-fallback surface. */
@@ -516,13 +473,18 @@ _cairo_boilerplate_xlib_fallback_create_surface (const char		   *name,
     XMapWindow (dpy, xtc->drawable);
     xtc->drawable_is_pixmap = FALSE;
 
+    dummy = cairo_xlib_surface_create (dpy, xtc->drawable,
+				       DefaultVisual (dpy, screen),
+				       width, height);
+    cairo_xlib_device_debug_cap_xrender_version (cairo_surface_get_device (dummy),
+						 -1, -1);
+
     surface = cairo_xlib_surface_create (dpy, xtc->drawable,
 					 DefaultVisual (dpy, screen),
 					 width, height);
+    cairo_surface_destroy (dummy);
     if (cairo_surface_status (surface))
 	_cairo_boilerplate_xlib_cleanup (xtc);
-    else
-	cairo_boilerplate_xlib_surface_disable_render (surface);
 
     _cairo_boilerplate_xlib_setup_test_surface(surface);
 
