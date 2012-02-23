@@ -237,26 +237,22 @@ _visual_for_xrender_format(Screen *screen,
 static cairo_content_t
 _xrender_format_to_content (XRenderPictFormat *xrender_format)
 {
-    cairo_bool_t xrender_format_has_alpha;
-    cairo_bool_t xrender_format_has_color;
+    cairo_content_t content;
 
     /* This only happens when using a non-Render server. Let's punt
      * and say there's no alpha here. */
     if (xrender_format == NULL)
 	return CAIRO_CONTENT_COLOR;
 
-    xrender_format_has_alpha = (xrender_format->direct.alphaMask != 0);
-    xrender_format_has_color = (xrender_format->direct.redMask   != 0 ||
-				xrender_format->direct.greenMask != 0 ||
-				xrender_format->direct.blueMask  != 0);
+    content = 0;
+    if (xrender_format->direct.alphaMask)
+	    content |= CAIRO_CONTENT_ALPHA;
+    if (xrender_format->direct.redMask |
+	xrender_format->direct.greenMask |
+	xrender_format->direct.blueMask)
+	    content |= CAIRO_CONTENT_COLOR;
 
-    if (xrender_format_has_alpha)
-	if (xrender_format_has_color)
-	    return CAIRO_CONTENT_COLOR_ALPHA;
-	else
-	    return CAIRO_CONTENT_ALPHA;
-    else
-	return CAIRO_CONTENT_COLOR;
+    return content;
 }
 
 static cairo_surface_t *
