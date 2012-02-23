@@ -164,18 +164,6 @@ copy_boxes (void *_dst,
     GC gc;
     int i, j;
 
-    /* We can only have a single control for subwindow_mode on the
-     * GC. If we have a Window destination, we need to set ClipByChildren,
-     * but if we have a Window source, we need IncludeInferiors. If we have
-     * both a Window destination and source, we must fallback. There is
-     * no convenient way to detect if a drawable is a Pixmap or Window,
-     * therefore we can only rely on those surfaces that we created
-     * ourselves to be Pixmaps, and treat everything else as a potential
-     * Window.
-     */
-    if (! src->owns_pixmap && ! dst->owns_pixmap)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
     if (! _cairo_xlib_surface_same_screen  (dst, src))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -210,43 +198,67 @@ copy_boxes (void *_dst,
 		   x2 - x1, y2 - y1,
 		   x1,      y1);
     } else {
-	XRectangle stack_rects[CAIRO_STACK_ARRAY_LENGTH (XRectangle)];
-	XRectangle *rects = stack_rects;
-
-	if (boxes->num_boxes > ARRAY_LENGTH (stack_rects)) {
-	    rects = _cairo_malloc_ab (boxes->num_boxes, sizeof (XRectangle));
-	    if (unlikely (rects == NULL))
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	}
-
-	j = 0;
-	for (chunk = &boxes->chunks; chunk; chunk = chunk->next) {
-	    for (i = 0; i < chunk->count; i++) {
-		int x1 = _cairo_fixed_integer_part (chunk->base[i].p1.x);
-		int y1 = _cairo_fixed_integer_part (chunk->base[i].p1.y);
-		int x2 = _cairo_fixed_integer_part (chunk->base[i].p2.x);
-		int y2 = _cairo_fixed_integer_part (chunk->base[i].p2.y);
-
-		rects[j].x = x1;
-		rects[j].y = y1;
-		rects[j].width  = x2 - x1;
-		rects[j].height = y2 - y1;
-		j++;
+	/* We can only have a single control for subwindow_mode on the
+	 * GC. If we have a Window destination, we need to set ClipByChildren,
+	 * but if we have a Window source, we need IncludeInferiors. If we have
+	 * both a Window destination and source, we must fallback. There is
+	 * no convenient way to detect if a drawable is a Pixmap or Window,
+	 * therefore we can only rely on those surfaces that we created
+	 * ourselves to be Pixmaps, and treat everything else as a potential
+	 * Window.
+	 */
+	if (src == dst || (!src->owns_pixmap && !dst->owns_pixmap)) {
+	    for (chunk = &boxes->chunks; chunk; chunk = chunk->next) {
+		for (i = 0; i < chunk->count; i++) {
+		    int x1 = _cairo_fixed_integer_part (chunk->base[i].p1.x);
+		    int y1 = _cairo_fixed_integer_part (chunk->base[i].p1.y);
+		    int x2 = _cairo_fixed_integer_part (chunk->base[i].p2.x);
+		    int y2 = _cairo_fixed_integer_part (chunk->base[i].p2.y);
+		    XCopyArea (dst->dpy, src->drawable, dst->drawable, gc,
+			       x1 + dx, y1 + dy,
+			       x2 - x1, y2 - y1,
+			       x1,      y1);
+		}
 	    }
+	} else {
+	    XRectangle stack_rects[CAIRO_STACK_ARRAY_LENGTH (XRectangle)];
+	    XRectangle *rects = stack_rects;
+
+	    if (boxes->num_boxes > ARRAY_LENGTH (stack_rects)) {
+		rects = _cairo_malloc_ab (boxes->num_boxes, sizeof (XRectangle));
+		if (unlikely (rects == NULL))
+		    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    }
+
+	    j = 0;
+	    for (chunk = &boxes->chunks; chunk; chunk = chunk->next) {
+		for (i = 0; i < chunk->count; i++) {
+		    int x1 = _cairo_fixed_integer_part (chunk->base[i].p1.x);
+		    int y1 = _cairo_fixed_integer_part (chunk->base[i].p1.y);
+		    int x2 = _cairo_fixed_integer_part (chunk->base[i].p2.x);
+		    int y2 = _cairo_fixed_integer_part (chunk->base[i].p2.y);
+
+		    rects[j].x = x1;
+		    rects[j].y = y1;
+		    rects[j].width  = x2 - x1;
+		    rects[j].height = y2 - y1;
+		    j++;
+		}
+	    }
+	    assert (j == boxes->num_boxes);
+
+	    XSetClipRectangles (dst->dpy, gc, 0, 0, rects, j, Unsorted);
+
+	    XCopyArea (dst->dpy, src->drawable, dst->drawable, gc,
+		       extents->x + dx, extents->y + dy,
+		       extents->width,  extents->height,
+		       extents->x,      extents->y);
+
+	    XSetClipMask (dst->dpy, gc, None);
+
+	    if (rects != stack_rects)
+		free (rects);
 	}
-	assert (j == boxes->num_boxes);
-
-	XSetClipRectangles (dst->dpy, gc, 0, 0, rects, j, Unsorted);
-
-	XCopyArea (dst->dpy, src->drawable, dst->drawable, gc,
-		   extents->x + dx, extents->y + dy,
-		   extents->width,  extents->height,
-		   extents->x,      extents->y);
-
-	XSetClipMask (dst->dpy, gc, None);
-
-	if (rects != stack_rects)
-	    free (rects);
     }
 
     if (! src->owns_pixmap) {
