@@ -606,6 +606,82 @@ _pixman_image_set_properties (pixman_image_t *pixman_image,
     return TRUE;
 }
 
+struct proxy {
+    cairo_surface_t base;
+    cairo_surface_t *image;
+};
+
+static cairo_status_t
+proxy_acquire_source_image (void			 *abstract_surface,
+			    cairo_image_surface_t	**image_out,
+			    void			**image_extra)
+{
+    struct proxy *proxy = abstract_surface;
+    return _cairo_surface_acquire_source_image (proxy->image, image_out, image_extra);
+}
+
+static void
+proxy_release_source_image (void			*abstract_surface,
+			    cairo_image_surface_t	*image,
+			    void			*image_extra)
+{
+    struct proxy *proxy = abstract_surface;
+    _cairo_surface_release_source_image (proxy->image, image, image_extra);
+}
+
+static cairo_status_t
+proxy_finish (void *abstract_surface)
+{
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static const cairo_surface_backend_t proxy_backend  = {
+    CAIRO_INTERNAL_SURFACE_TYPE_NULL,
+    proxy_finish,
+    NULL,
+
+    NULL, /* create similar */
+    NULL, /* create similar image */
+    NULL, /* map to image */
+    NULL, /* unmap image */
+
+    _cairo_surface_default_source,
+    proxy_acquire_source_image,
+    proxy_release_source_image,
+};
+
+static cairo_surface_t *
+attach_proxy (cairo_surface_t *source,
+	      cairo_surface_t *image)
+{
+    struct proxy *proxy;
+
+    proxy = malloc (sizeof (*proxy));
+    if (unlikely (proxy == NULL))
+	return _cairo_surface_create_in_error (CAIRO_STATUS_NO_MEMORY);
+
+    _cairo_surface_init (&proxy->base, &proxy_backend, NULL, image->content);
+
+    proxy->image = image;
+    _cairo_surface_attach_snapshot (source, &proxy->base, NULL);
+
+    return &proxy->base;
+}
+
+static void
+detach_proxy (cairo_surface_t *source,
+	      cairo_surface_t *proxy)
+{
+    cairo_surface_finish (proxy);
+    cairo_surface_destroy (proxy);
+}
+
+static cairo_surface_t *
+get_proxy (cairo_surface_t *proxy)
+{
+    return ((struct proxy *)proxy)->image;
+}
+
 static pixman_image_t *
 _pixman_image_for_recording (cairo_image_surface_t *dst,
 			     const cairo_surface_pattern_t *pattern,
@@ -614,7 +690,7 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
 			     const cairo_rectangle_int_t *sample,
 			     int *ix, int *iy)
 {
-    cairo_surface_t *source, *clone;
+    cairo_surface_t *source, *clone, *proxy;
     cairo_rectangle_int_t limit;
     pixman_image_t *pixman_image;
     cairo_status_t status;
@@ -659,6 +735,13 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
 	}
     }
 
+    /* XXX transformations! */
+    proxy = _cairo_surface_has_snapshot (source, &proxy_backend);
+    if (proxy != NULL) {
+	clone = cairo_surface_reference (get_proxy (proxy));
+	goto done;
+    }
+
     if (dst->base.content == source->content)
 	clone = cairo_image_surface_create (dst->format,
 					    limit.width, limit.height);
@@ -678,12 +761,16 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
 	/* XXX extract scale factor for repeating patterns */
     }
 
+    /* Handle recursion by returning future reads from the current image */
+    proxy = attach_proxy (source, clone);
     status = _cairo_recording_surface_replay_with_clip (source, m, clone, NULL);
+    detach_proxy (source, proxy);
     if (unlikely (status)) {
 	cairo_surface_destroy (clone);
 	return NULL;
     }
 
+done:
     pixman_image = pixman_image_ref (((cairo_image_surface_t *)clone)->pixman_image);
     cairo_surface_destroy (clone);
 
