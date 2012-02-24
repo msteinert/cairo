@@ -720,7 +720,6 @@ _cairo_recording_surface_paint (void			  *abstract_surface,
 	_cairo_recording_surface_reset (surface);
 	if (is_identity_recording_pattern (source)) {
 	    cairo_surface_t *src = ((cairo_surface_pattern_t *)source)->surface;
-	    _cairo_recording_surface_reset (surface);
 	    return _cairo_recording_surface_replay (src, &surface->base);
 	}
     }
