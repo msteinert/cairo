@@ -1681,6 +1681,7 @@ _cairo_ps_surface_acquire_source_surface_from_pattern (cairo_ps_surface_t       
     cairo_status_t          status;
     cairo_image_surface_t  *image;
 
+    *x_offset = *y_offset = 0;
     switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SURFACE: {
 	cairo_surface_t *surf = ((cairo_surface_pattern_t *) pattern)->surface;
@@ -1709,7 +1710,6 @@ _cairo_ps_surface_acquire_source_surface_from_pattern (cairo_ps_surface_t       
 		*width  = extents.width;
 		*height = extents.height;
 	    }
-	    cairo_surface_get_device_offset (surf, x_offset, y_offset);
 	    *source_surface = surf;
 
 	    return CAIRO_STATUS_SUCCESS;
@@ -1747,7 +1747,6 @@ _cairo_ps_surface_acquire_source_surface_from_pattern (cairo_ps_surface_t       
 
     *width = image->width;
     *height = image->height;
-    cairo_surface_get_device_offset (&image->base, x_offset, y_offset);
     *source_surface = &image->base;
     return CAIRO_STATUS_SUCCESS;
 }

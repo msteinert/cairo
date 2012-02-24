@@ -1355,8 +1355,6 @@ _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	    *surface,
 	    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) source_pattern;
 	    source_surface = surface_pattern->surface;
 	}
-    } else {
-	cairo_surface_get_device_offset (source_surface, x_offset, y_offset);
     }
 
     surface_key.id  = source_surface->unique_id;
