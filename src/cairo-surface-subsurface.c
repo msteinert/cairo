@@ -368,7 +368,7 @@ _cairo_surface_subsurface_snapshot (void *abstract_surface)
 
     _cairo_pattern_init_for_surface (&pattern, surface->target);
     cairo_matrix_init_translate (&pattern.base.matrix,
-				 -surface->extents.x, -surface->extents.y);
+				 surface->extents.x, surface->extents.y);
     pattern.base.filter = CAIRO_FILTER_NEAREST;
     status = _cairo_surface_paint (clone,
 				   CAIRO_OPERATOR_SOURCE,
