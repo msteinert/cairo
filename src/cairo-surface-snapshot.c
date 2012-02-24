@@ -49,6 +49,8 @@ _cairo_surface_snapshot_finish (void *abstract_surface)
     cairo_surface_snapshot_t *surface = abstract_surface;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     if (surface->clone != NULL) {
 	cairo_surface_finish (surface->clone);
 	status = surface->clone->status;
@@ -138,6 +140,9 @@ _cairo_surface_snapshot_copy_on_write (cairo_surface_t *surface)
     void *extra;
     cairo_status_t status;
 
+    TRACE ((stderr, "%s: target=%d\n",
+	    __FUNCTION__, snapshot->target->unique_id));
+
     /* We need to make an image copy of the original surface since the
      * snapshot may exceed the lifetime of the original device, i.e.
      * when we later need to use the snapshot the data may have already
@@ -195,6 +200,8 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
 {
     cairo_surface_snapshot_t *snapshot;
     cairo_status_t status;
+
+    TRACE ((stderr, "%s: target=%d\n", __FUNCTION__, surface->unique_id));
 
     if (unlikely (surface->status))
 	return _cairo_surface_create_in_error (surface->status);

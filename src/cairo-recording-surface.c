@@ -688,6 +688,8 @@ _cairo_recording_surface_paint (void			  *abstract_surface,
     cairo_command_paint_t *command;
     cairo_composite_rectangles_t composite;
 
+    TRACE ((stderr, "%s: surface=%d\n", __FUNCTION__, surface->base.unique_id));
+
     if (op == CAIRO_OPERATOR_CLEAR && clip == NULL) {
 	if (surface->optimize_clears) {
 	    _cairo_recording_surface_reset (surface);
@@ -758,6 +760,8 @@ _cairo_recording_surface_mask (void			*abstract_surface,
     cairo_command_mask_t *command;
     cairo_composite_rectangles_t composite;
 
+    TRACE ((stderr, "%s: surface=%d\n", __FUNCTION__, surface->base.unique_id));
+
     status = _cairo_composite_rectangles_init_for_mask (&composite,
 							&surface->base,
 							op, source, mask,
@@ -822,6 +826,8 @@ _cairo_recording_surface_stroke (void			*abstract_surface,
     cairo_recording_surface_t *surface = abstract_surface;
     cairo_command_stroke_t *command;
     cairo_composite_rectangles_t composite;
+
+    TRACE ((stderr, "%s: surface=%d\n", __FUNCTION__, surface->base.unique_id));
 
     status = _cairo_composite_rectangles_init_for_stroke (&composite,
 							  &surface->base,
@@ -897,6 +903,8 @@ _cairo_recording_surface_fill (void			*abstract_surface,
     cairo_recording_surface_t *surface = abstract_surface;
     cairo_command_fill_t *command;
     cairo_composite_rectangles_t composite;
+
+    TRACE ((stderr, "%s: surface=%d\n", __FUNCTION__, surface->base.unique_id));
 
     status = _cairo_composite_rectangles_init_for_fill (&composite,
 							&surface->base,
@@ -974,6 +982,8 @@ _cairo_recording_surface_show_text_glyphs (void				*abstract_surface,
     cairo_recording_surface_t *surface = abstract_surface;
     cairo_command_show_text_glyphs_t *command;
     cairo_composite_rectangles_t composite;
+
+    TRACE ((stderr, "%s: surface=%d\n", __FUNCTION__, surface->base.unique_id));
 
     status = _cairo_composite_rectangles_init_for_glyphs (&composite,
 							  &surface->base,

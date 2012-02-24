@@ -357,6 +357,8 @@ _cairo_surface_subsurface_snapshot (void *abstract_surface)
     cairo_surface_t *clone;
     cairo_status_t status;
 
+    TRACE ((stderr, "%s: target=%d\n", __FUNCTION__, surface->target->unique_id));
+
     clone = _cairo_surface_create_similar_scratch (surface->target,
 						   surface->target->content,
 						   surface->extents.width,
@@ -541,6 +543,8 @@ _cairo_surface_subsurface_detach_snapshot (cairo_surface_t *surface)
 {
     cairo_surface_subsurface_t *ss = (cairo_surface_subsurface_t *) surface;
 
+    TRACE ((stderr, "%s: target=%d\n", __FUNCTION__, ss->target->unique_id));
+
     cairo_surface_destroy (ss->snapshot);
     ss->snapshot = NULL;
 }
@@ -550,6 +554,9 @@ _cairo_surface_subsurface_set_snapshot (cairo_surface_t *surface,
 					cairo_surface_t *snapshot)
 {
     cairo_surface_subsurface_t *ss = (cairo_surface_subsurface_t *) surface;
+
+    TRACE ((stderr, "%s: target=%d, snapshot=%d\n", __FUNCTION__,
+	    ss->target->unique_id, snapshot->unique_id));
 
     if (ss->snapshot)
 	_cairo_surface_detach_snapshot (ss->snapshot);
