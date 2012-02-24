@@ -174,7 +174,7 @@ create_composite_mask (const cairo_mask_compositor_t *compositor,
 	return _cairo_surface_create_in_error (status);
     }
 
-    {
+    if (!surface->is_clear) {
 	cairo_rectangle_int_t rect;
 
 	rect.x = rect.y = 0;
@@ -231,6 +231,7 @@ create_composite_mask (const cairo_mask_compositor_t *compositor,
 
 out:
     compositor->release (surface);
+    surface->is_clear = FALSE;
     return surface;
 
 error:

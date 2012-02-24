@@ -356,7 +356,7 @@ create_composite_mask (const cairo_traps_compositor_t *compositor,
 	return _cairo_surface_create_in_error (status);
     }
 
-    {
+    if (!surface->is_clear) {
 	cairo_boxes_t clear;
 
 	_cairo_boxes_init_from_rectangle (&clear,
@@ -423,6 +423,7 @@ create_composite_mask (const cairo_traps_compositor_t *compositor,
 out:
     compositor->release (surface);
     cairo_surface_destroy (src);
+    surface->is_clear = FALSE;
     return surface;
 
 error:
