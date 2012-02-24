@@ -39,7 +39,6 @@
 #if CAIRO_CAN_TEST_WIN32_PRINTING_SURFACE
 
 #include <cairo-win32.h>
-#include <cairo-win32-private.h>
 #include <cairo-paginated-surface-private.h>
 
 #include <windows.h>
@@ -59,6 +58,9 @@
 #if !defined(FEATURESETTING_PSLEVEL)
 # define FEATURESETTING_PSLEVEL 0x0002
 #endif
+
+cairo_status_t
+_cairo_win32_print_gdi_error (const char *context);
 
 static cairo_user_data_key_t win32_closure_key;
 
