@@ -72,6 +72,6 @@ CAIRO_TEST (line_width,
 CAIRO_TEST (a1_line_width,
 	    "Tests cairo_set_line_width",
 	    "stroke", /* keywords */
-	    NULL, /* requirements */
+	    "target=raster", /* requirements */
 	    IMAGE_WIDTH, IMAGE_HEIGHT,
 	    NULL, draw_a1)
