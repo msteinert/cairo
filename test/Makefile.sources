@@ -238,6 +238,7 @@ test_sources = \
 	path-precision.c				\
 	pattern-get-type.c				\
 	pattern-getters.c				\
+	pdf-isolated-group.c				\
 	pixman-rotate.c					\
 	png.c						\
 	push-group.c					\
