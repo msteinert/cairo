@@ -1724,6 +1724,7 @@ _cairo_pdf_surface_write_memory_stream (cairo_pdf_surface_t         *surface,
 				 "   /Group <<\n"
 				 "      /Type /Group\n"
 				 "      /S /Transparency\n"
+				 "      /I true\n"
 				 "      /CS /DeviceRGB\n",
 				 bbox->p1.x, bbox->p1.y, bbox->p2.x, bbox->p2.y);
 
@@ -1872,6 +1873,7 @@ _cairo_pdf_surface_open_content_stream (cairo_pdf_surface_t       *surface,
 					    "   /Group <<\n"
 					    "      /Type /Group\n"
 					    "      /S /Transparency\n"
+					    "      /I true\n"
 					    "      /CS /DeviceRGB\n"
 					    "   >>\n"
 					    "   /Resources %d 0 R\n",
@@ -3440,6 +3442,7 @@ cairo_pdf_surface_emit_transparency_group (cairo_pdf_surface_t  *surface,
 					     "   /Group\n"
 					     "      << /Type /Group\n"
 					     "         /S /Transparency\n"
+					     "         /I true\n"
 					     "         /CS /DeviceGray\n"
 					     "      >>\n",
 					     surface->width,
@@ -6044,6 +6047,7 @@ _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface)
 				 "   /Group <<\n"
 				 "      /Type /Group\n"
 				 "      /S /Transparency\n"
+				 "      /I true\n"
 				 "      /CS /DeviceRGB\n"
 				 "   >>\n"
 				 "   /Resources %d 0 R\n"
