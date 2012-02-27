@@ -313,7 +313,7 @@ text_transform (cairo_t *cr)
 
     draw_text_transform (cr);
 
-    cairo_translate (cr, SIZE, SIZE);
+    cairo_translate (cr, TT_SIZE, TT_SIZE);
     cairo_rotate (cr, M_PI);
 
     pattern = cairo_test_create_pattern_from_png (ctx, png_filename);
