@@ -416,6 +416,7 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
     cairo_clip_t *dev_clip;
     cairo_glyph_t stack_glyphs [CAIRO_STACK_ARRAY_LENGTH(cairo_glyph_t)];
     cairo_glyph_t *dev_glyphs = stack_glyphs;
+    cairo_scaled_font_t *dev_scaled_font = scaled_font;
     cairo_pattern_union_t source_copy;
 
     if (unlikely (wrapper->target->status))
@@ -430,6 +431,13 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 	int i;
 
 	_cairo_surface_wrapper_get_transform (wrapper, &m);
+
+	if (! _cairo_matrix_is_translation (&m)) {
+	    dev_scaled_font = cairo_scaled_font_create (scaled_font->font_face,
+							&scaled_font->font_matrix,
+							&m,
+							&scaled_font->options);
+	}
 
 	if (num_glyphs > ARRAY_LENGTH (stack_glyphs)) {
 	    dev_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
@@ -472,12 +480,14 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 					      dev_glyphs, num_glyphs,
 					      clusters, num_clusters,
 					      cluster_flags,
-					      scaled_font,
+					      dev_scaled_font,
 					      dev_clip);
  FINISH:
     _cairo_clip_destroy (dev_clip);
     if (dev_glyphs != stack_glyphs)
 	free (dev_glyphs);
+    if (dev_scaled_font != scaled_font)
+	cairo_scaled_font_destroy (dev_scaled_font);
     return status;
 }
 
