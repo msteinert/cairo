@@ -254,6 +254,8 @@ test_sources = \
 	random-intersections-curves-nz.c		\
 	raster-source.c					\
 	record.c					\
+	record1414x.c					\
+	record2x.c					\
 	record-extend.c					\
 	record-mesh.c					\
 	recording-surface-pattern.c			\
