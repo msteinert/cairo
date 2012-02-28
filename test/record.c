@@ -36,6 +36,8 @@
 #define TT_PAD 5
 #define TT_FONT_SIZE 32.0
 
+#define GENERATE_REF 0
+
 static uint32_t data[16] = {
     0xffffffff, 0xffffffff,		0xffff0000, 0xffff0000,
     0xffffffff, 0xffffffff,		0xffff0000, 0xffff0000,
@@ -356,6 +358,9 @@ record_replay (cairo_t *cr, cairo_t *(*func)(cairo_t *), int width, int height)
     cairo_surface_t *surface;
     int x, y;
 
+#if GENERATE_REF
+    func(cr);
+#else
     surface = record_get (func (record_create (cr)));
 
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
@@ -371,6 +376,7 @@ record_replay (cairo_t *cr, cairo_t *(*func)(cairo_t *), int width, int height)
 	    cairo_reset_clip (cr);
 	}
     }
+#endif
 
     return CAIRO_TEST_SUCCESS;
 }
