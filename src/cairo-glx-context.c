@@ -94,9 +94,10 @@ _glx_release (void *abstract_ctx)
 {
     cairo_glx_context_t *ctx = abstract_ctx;
 
-    if (!ctx->has_multithread_makecurrent) {
-	glXMakeCurrent (ctx->display, None, None);
-    }
+    if (ctx->has_multithread_makecurrent || !ctx->base.thread_aware)
+	return;
+
+    glXMakeCurrent (ctx->display, None, None);
 }
 
 static void

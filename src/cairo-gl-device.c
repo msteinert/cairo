@@ -185,6 +185,8 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 	ctx->compositor = _cairo_gl_span_compositor_get ();
 
 
+    ctx->thread_aware = TRUE;
+
     memset (ctx->glyph_cache, 0, sizeof (ctx->glyph_cache));
     cairo_list_init (&ctx->fonts);
 
@@ -702,4 +704,15 @@ _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
     else
 	_gl_identity_ortho (ctx->modelviewprojection_matrix,
 			    0, surface->width, surface->height, 0);
+}
+
+void
+cairo_gl_device_set_thread_aware (cairo_device_t	*device,
+				  cairo_bool_t		 thread_aware)
+{
+    if (device->backend->type != CAIRO_DEVICE_TYPE_GL) {
+	_cairo_error_throw (CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
+	return;
+    }
+    ((cairo_gl_context_t *) device)->thread_aware = thread_aware;
 }
