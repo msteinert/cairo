@@ -1771,6 +1771,11 @@ _cairo_utf8_to_utf16 (const char *str,
 		      int	 *items_written);
 #endif
 
+cairo_private void
+_cairo_matrix_multiply (cairo_matrix_t *r,
+			const cairo_matrix_t *a,
+			const cairo_matrix_t *b);
+
 /* cairo-observer.c */
 
 cairo_private void

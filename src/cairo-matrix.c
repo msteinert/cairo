@@ -333,6 +333,21 @@ cairo_matrix_multiply (cairo_matrix_t *result, const cairo_matrix_t *a, const ca
 }
 slim_hidden_def(cairo_matrix_multiply);
 
+void
+_cairo_matrix_multiply (cairo_matrix_t *r,
+			const cairo_matrix_t *a,
+			const cairo_matrix_t *b)
+{
+    r->xx = a->xx * b->xx + a->yx * b->xy;
+    r->yx = a->xx * b->yx + a->yx * b->yy;
+
+    r->xy = a->xy * b->xx + a->yy * b->xy;
+    r->yy = a->xy * b->yx + a->yy * b->yy;
+
+    r->x0 = a->x0 * b->xx + a->y0 * b->xy + b->x0;
+    r->y0 = a->x0 * b->yx + a->y0 * b->yy + b->y0;
+}
+
 /**
  * cairo_matrix_transform_distance:
  * @matrix: a #cairo_matrix_t
