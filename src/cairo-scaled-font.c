@@ -61,6 +61,9 @@
  * size and transformation and a certain set of font options.
  */
 
+static uint32_t
+_cairo_scaled_font_compute_hash (cairo_scaled_font_t *scaled_font);
+
 /* Global Glyph Cache
  *
  * We maintain a global pool of glyphs split between all active fonts. This
@@ -506,6 +509,8 @@ _cairo_scaled_font_register_placeholder_and_unlock_font_map (cairo_scaled_font_t
 
     placeholder_scaled_font->placeholder = TRUE;
 
+    placeholder_scaled_font->hash_entry.hash
+	= _cairo_scaled_font_compute_hash (placeholder_scaled_font);
     status = _cairo_hash_table_insert (cairo_scaled_font_map->hash_table,
 				       &placeholder_scaled_font->hash_entry);
     if (unlikely (status))
@@ -531,6 +536,9 @@ _cairo_scaled_font_unregister_placeholder_and_lock_font_map (cairo_scaled_font_t
 
     CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
 
+    /* temporary hash value to match the placeholder */
+    scaled_font->hash_entry.hash
+	= _cairo_scaled_font_compute_hash (scaled_font);
     placeholder_scaled_font =
 	_cairo_hash_table_lookup (cairo_scaled_font_map->hash_table,
 				  &scaled_font->hash_entry);
