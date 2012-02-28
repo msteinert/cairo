@@ -602,6 +602,26 @@ _hash_mix_bits (uint32_t hash)
     return hash;
 }
 
+static uint32_t
+_cairo_scaled_font_compute_hash (cairo_scaled_font_t *scaled_font)
+{
+    uint32_t hash = FNV1_32_INIT;
+
+    /* We do a bytewise hash on the font matrices */
+    hash = _hash_matrix_fnv (&scaled_font->font_matrix, hash);
+    hash = _hash_matrix_fnv (&scaled_font->ctm, hash);
+    hash = _hash_mix_bits (hash);
+
+    hash ^= (unsigned long) scaled_font->original_font_face;
+    hash ^= cairo_font_options_hash (&scaled_font->options);
+
+    /* final mixing of bits */
+    hash = _hash_mix_bits (hash);
+    assert (hash != ZOMBIE);
+
+    return hash;
+}
+
 static void
 _cairo_scaled_font_init_key (cairo_scaled_font_t        *scaled_font,
 			     cairo_font_face_t	        *font_face,
@@ -609,8 +629,6 @@ _cairo_scaled_font_init_key (cairo_scaled_font_t        *scaled_font,
 			     const cairo_matrix_t       *ctm,
 			     const cairo_font_options_t *options)
 {
-    uint32_t hash = FNV1_32_INIT;
-
     scaled_font->status = CAIRO_STATUS_SUCCESS;
     scaled_font->placeholder = FALSE;
     scaled_font->font_face = font_face;
@@ -622,19 +640,8 @@ _cairo_scaled_font_init_key (cairo_scaled_font_t        *scaled_font,
     scaled_font->ctm.y0 = 0.;
     _cairo_font_options_init_copy (&scaled_font->options, options);
 
-    /* We do a bytewise hash on the font matrices */
-    hash = _hash_matrix_fnv (&scaled_font->font_matrix, hash);
-    hash = _hash_matrix_fnv (&scaled_font->ctm, hash);
-    hash = _hash_mix_bits (hash);
-
-    hash ^= (unsigned long) scaled_font->font_face;
-    hash ^= cairo_font_options_hash (&scaled_font->options);
-
-    /* final mixing of bits */
-    hash = _hash_mix_bits (hash);
-
-    assert (hash != ZOMBIE);
-    scaled_font->hash_entry.hash = hash;
+    scaled_font->hash_entry.hash =
+	_cairo_scaled_font_compute_hash (scaled_font);
 }
 
 static cairo_bool_t
@@ -1121,22 +1128,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     scaled_font->original_font_face =
 	cairo_font_face_reference (original_font_face);
 
-    {
-	uint32_t hash = FNV1_32_INIT;
-
-	/* We do a bytewise hash on the font matrices */
-	hash = _hash_matrix_fnv (&scaled_font->font_matrix, hash);
-	hash = _hash_matrix_fnv (&scaled_font->ctm, hash);
-	hash = _hash_mix_bits (hash);
-
-	hash ^= (unsigned long) scaled_font->original_font_face;
-	hash ^= cairo_font_options_hash (&scaled_font->options);
-
-	/* final mixing of bits */
-	hash = _hash_mix_bits (hash);
-	assert (hash != ZOMBIE);
-	scaled_font->hash_entry.hash = hash;
-    }
+    scaled_font->hash_entry.hash = _cairo_scaled_font_compute_hash(scaled_font);
 
     status = _cairo_hash_table_insert (font_map->hash_table,
 				       &scaled_font->hash_entry);
