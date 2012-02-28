@@ -195,6 +195,7 @@ cairo_sources = \
 	cairo-region.c \
 	cairo-rtree.c \
 	cairo-scaled-font.c \
+	cairo-shape-mask-compositor.c \
 	cairo-slope.c \
 	cairo-spans.c \
 	cairo-spans-compositor.c \

@@ -301,6 +301,10 @@ _cairo_mask_compositor_init (cairo_mask_compositor_t *compositor,
 			     const cairo_compositor_t *delegate);
 
 cairo_private void
+_cairo_shape_mask_compositor_init (cairo_compositor_t *compositor,
+				   const cairo_compositor_t  *delegate);
+
+cairo_private void
 _cairo_traps_compositor_init (cairo_traps_compositor_t *compositor,
 			      const cairo_compositor_t *delegate);
 

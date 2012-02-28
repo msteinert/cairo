@@ -1597,27 +1597,31 @@ span_renderer_fini (cairo_abstract_span_renderer_t *_r,
 const cairo_compositor_t *
 _cairo_image_spans_compositor_get (void)
 {
-    static cairo_spans_compositor_t compositor;
+    static cairo_spans_compositor_t spans;
+    static cairo_compositor_t shape;
 
-    if (compositor.base.delegate == NULL) {
-	_cairo_spans_compositor_init (&compositor,
-				      _cairo_image_traps_compositor_get());
+    if (spans.base.delegate == NULL) {
+	_cairo_shape_mask_compositor_init (&shape,
+					   _cairo_image_traps_compositor_get());
+	shape.glyphs = NULL;
 
-	compositor.flags = 0;
+	_cairo_spans_compositor_init (&spans, &shape);
+
+	spans.flags = 0;
 #if PIXMAN_HAS_OP_LERP
-	compositor.flags |= CAIRO_SPANS_COMPOSITOR_HAS_LERP;
+	spans.flags |= CAIRO_SPANS_COMPOSITOR_HAS_LERP;
 #endif
 
-	//compositor.acquire = acquire;
-	//compositor.release = release;
-	compositor.fill_boxes = fill_boxes;
-	compositor.pattern_to_surface = _cairo_image_source_create_for_pattern;
-	//compositor.check_composite_boxes = check_composite_boxes;
-	compositor.composite_boxes = composite_boxes;
-	//compositor.check_span_renderer = check_span_renderer;
-	compositor.renderer_init = span_renderer_init;
-	compositor.renderer_fini = span_renderer_fini;
+	//spans.acquire = acquire;
+	//spans.release = release;
+	spans.fill_boxes = fill_boxes;
+	spans.pattern_to_surface = _cairo_image_source_create_for_pattern;
+	//spans.check_composite_boxes = check_composite_boxes;
+	spans.composite_boxes = composite_boxes;
+	//spans.check_span_renderer = check_span_renderer;
+	spans.renderer_init = span_renderer_init;
+	spans.renderer_fini = span_renderer_fini;
     }
 
-    return &compositor.base;
+    return &spans.base;
 }

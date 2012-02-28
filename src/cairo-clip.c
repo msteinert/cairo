@@ -174,6 +174,24 @@ _cairo_clip_copy (const cairo_clip_t *clip)
 }
 
 cairo_clip_t *
+_cairo_clip_copy_path (const cairo_clip_t *clip)
+{
+    cairo_clip_t *copy;
+
+    if (clip == NULL || _cairo_clip_is_all_clipped (clip))
+	return (cairo_clip_t *) clip;
+
+    assert (clip->num_boxes);
+
+    copy = _cairo_clip_create ();
+    copy->extents = clip->extents;
+    if (clip->path)
+	copy->path = _cairo_clip_path_reference (clip->path);
+
+    return copy;
+}
+
+cairo_clip_t *
 _cairo_clip_copy_region (const cairo_clip_t *clip)
 {
     cairo_clip_t *copy;
