@@ -169,15 +169,14 @@ _cairo_ft_unscaled_font_keys_equal (const void *key_a,
 static void
 _cairo_ft_unscaled_font_fini (cairo_ft_unscaled_font_t *unscaled);
 
-typedef enum _cairo_ft_extra_flags {
-    CAIRO_FT_OPTIONS_HINT_METRICS = (1 << 0),
-    CAIRO_FT_OPTIONS_EMBOLDEN = (1 << 1)
-} cairo_ft_extra_flags_t;
+enum _cairo_ft_extra_flags {
+    CAIRO_FT_OPTIONS_EMBOLDEN = 1 << 0
+};
 
 typedef struct _cairo_ft_options {
-    cairo_font_options_t    base;
-    int			    load_flags;	 /* flags for FT_Load_Glyph */
-    cairo_ft_extra_flags_t  extra_flags; /* other flags that affect results */
+    cairo_font_options_t base;
+    unsigned int load_flags; /* flags for FT_Load_Glyph */
+    unsigned int extra_flags; /* other flags that affect results */
 } cairo_ft_options_t;
 
 struct _cairo_ft_font_face {
@@ -1813,8 +1812,6 @@ _cairo_ft_options_merge (cairo_ft_options_t *options,
 
     options->load_flags = load_flags | load_target;
     options->extra_flags = other->extra_flags;
-    if (options->base.hint_metrics != CAIRO_HINT_METRICS_OFF)
-	options->extra_flags |= CAIRO_FT_OPTIONS_HINT_METRICS;
 }
 
 static cairo_status_t
