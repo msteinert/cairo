@@ -494,7 +494,7 @@ if test "x$use_ft" = "xyes"; then
   AC_DEFINE_UNQUOTED(HAVE_FT_BITMAP_SIZE_Y_PPEM,$HAVE_FT_BITMAP_SIZE_Y_PPEM,
                      [FT_Bitmap_Size structure includes y_ppem field])
 
-  AC_CHECK_FUNCS(FT_GlyphSlot_Embolden FT_Load_Sfnt_Table FT_Library_SetLcdFilter)
+  AC_CHECK_FUNCS(FT_GlyphSlot_Embolden FT_GlyphSlot_Oblique FT_Load_Sfnt_Table FT_Library_SetLcdFilter)
 
   LIBS="$_save_libs"
   CFLAGS="$_save_cflags"

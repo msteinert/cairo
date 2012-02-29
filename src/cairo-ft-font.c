@@ -169,14 +169,10 @@ _cairo_ft_unscaled_font_keys_equal (const void *key_a,
 static void
 _cairo_ft_unscaled_font_fini (cairo_ft_unscaled_font_t *unscaled);
 
-enum _cairo_ft_extra_flags {
-    CAIRO_FT_OPTIONS_EMBOLDEN = 1 << 0
-};
-
 typedef struct _cairo_ft_options {
     cairo_font_options_t base;
     unsigned int load_flags; /* flags for FT_Load_Glyph */
-    unsigned int extra_flags; /* other flags that affect results */
+    unsigned int synth_flags;
 } cairo_ft_options_t;
 
 struct _cairo_ft_font_face {
@@ -1595,7 +1591,7 @@ _get_pattern_ft_options (FcPattern *pattern, cairo_ft_options_t *ret)
 
     _cairo_font_options_init_default (&ft_options.base);
     ft_options.load_flags = FT_LOAD_DEFAULT;
-    ft_options.extra_flags = 0;
+    ft_options.synth_flags = 0;
 
 #ifndef FC_EMBEDDED_BITMAP
 #define FC_EMBEDDED_BITMAP "embeddedbitmap"
@@ -1731,7 +1727,7 @@ _get_pattern_ft_options (FcPattern *pattern, cairo_ft_options_t *ret)
 	embolden = FcFalse;
 
     if (embolden)
-	ft_options.extra_flags |= CAIRO_FT_OPTIONS_EMBOLDEN;
+	ft_options.synth_flags |= CAIRO_FT_SYNTHESIZE_BOLD;
 
     *ret = ft_options;
 }
@@ -1811,7 +1807,7 @@ _cairo_ft_options_merge (cairo_ft_options_t *options,
     }
 
     options->load_flags = load_flags | load_target;
-    options->extra_flags = other->extra_flags;
+    options->synth_flags = other->synth_flags;
 }
 
 static cairo_status_t
@@ -2166,12 +2162,17 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 
     glyph = face->glyph;
 
-#if HAVE_FT_GLYPHSLOT_EMBOLDEN
     /*
-     * embolden glyphs if requested
+     * synthesize glyphs if requested
      */
-    if (scaled_font->ft_options.extra_flags & CAIRO_FT_OPTIONS_EMBOLDEN)
+#if HAVE_FT_GLYPHSLOT_EMBOLDEN
+    if (scaled_font->ft_options.synth_flags & CAIRO_FT_SYNTHESIZE_BOLD)
 	FT_GlyphSlot_Embolden (glyph);
+#endif
+
+#if HAVE_FT_GLYPHSLOT_OBLIQUE
+    if (scaled_font->ft_options.synth_flags & CAIRO_FT_SYNTHESIZE_OBLIQUE)
+	FT_GlyphSlot_Oblique (glyph);
 #endif
 
     if (vertical_layout)
@@ -2318,11 +2319,12 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 		goto FAIL;
 	    }
 #if HAVE_FT_GLYPHSLOT_EMBOLDEN
-	    /*
-	     * embolden glyphs if requested
-	     */
-	    if (scaled_font->ft_options.extra_flags & CAIRO_FT_OPTIONS_EMBOLDEN)
+	    if (scaled_font->ft_options.synth_flags & CAIRO_FT_SYNTHESIZE_BOLD)
 		FT_GlyphSlot_Embolden (glyph);
+#endif
+#if HAVE_FT_GLYPHSLOT_OBLIQUE
+	    if (scaled_font->ft_options.synth_flags & CAIRO_FT_SYNTHESIZE_OBLIQUE)
+		FT_GlyphSlot_Oblique (glyph);
 #endif
 	    if (vertical_layout)
 		_cairo_ft_scaled_glyph_vertical_layout_bearing_fix (scaled_font, glyph);
@@ -2443,11 +2445,7 @@ static cairo_bool_t
 _cairo_ft_is_synthetic (void	        *abstract_font)
 {
     cairo_ft_scaled_font_t *scaled_font = abstract_font;
-
-    if (scaled_font->ft_options.extra_flags & CAIRO_FT_OPTIONS_EMBOLDEN)
-	return TRUE;
-    else
-	return FALSE;
+    return scaled_font->ft_options.synth_flags != 0;
 }
 
 static cairo_int_status_t
@@ -2841,7 +2839,7 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
 	 prev_font_face = &font_face->next, font_face = font_face->next)
     {
 	if (font_face->ft_options.load_flags == ft_options->load_flags &&
-	    font_face->ft_options.extra_flags == ft_options->extra_flags &&
+	    font_face->ft_options.synth_flags == ft_options->synth_flags &&
 	    cairo_font_options_equal (&font_face->ft_options.base, &ft_options->base))
 	{
 	    if (font_face->base.status) {
@@ -3251,13 +3249,79 @@ cairo_ft_font_face_create_for_ft_face (FT_Face         face,
 	return (cairo_font_face_t *)&_cairo_font_face_nil;
 
     ft_options.load_flags = load_flags;
-    ft_options.extra_flags = 0;
+    ft_options.synth_flags = 0;
     _cairo_font_options_init_default (&ft_options.base);
 
     font_face = _cairo_ft_font_face_create (unscaled, &ft_options);
     _cairo_unscaled_font_destroy (&unscaled->base);
 
     return font_face;
+}
+
+/**
+ * cairo_ft_font_set_synthesize:
+ * @font_face: The #cairo_ft_font_face_t object to modify
+ * @synth_flags: the set of synthesis options to enable
+ *
+ * FreeType provides the ability to synthesize different glyphs from a base
+ * font, which is useful if you lack those glyphs from a true bold or oblique
+ * font.
+ *
+ * Since 1.12.
+ */
+void
+cairo_ft_font_face_set_synthesize (cairo_font_face_t *font_face,
+				   unsigned int synth_flags)
+{
+    cairo_ft_font_face_t *ft;
+
+    if (font_face->backend->type != CAIRO_FONT_TYPE_FT)
+	return;
+
+    ft = (cairo_ft_font_face_t *) font_face;
+    ft->ft_options.synth_flags |= synth_flags;
+}
+
+/**
+ * cairo_ft_font_unset_synthesize:
+ * @font_face: The #cairo_ft_font_face_t object to modify
+ * @synth_flags: the set of synthesis options to disable
+ *
+ * See cairo_ft_font_face_set_synthesize().
+ *
+ * Since 1.12.
+ */
+void
+cairo_ft_font_face_unset_synthesize (cairo_font_face_t *font_face,
+				     unsigned int synth_flags)
+{
+    cairo_ft_font_face_t *ft;
+
+    if (font_face->backend->type != CAIRO_FONT_TYPE_FT)
+	return;
+
+    ft = (cairo_ft_font_face_t *) font_face;
+    ft->ft_options.synth_flags &= ~synth_flags;
+}
+
+/**
+ * cairo_ft_font_get_synthesize:
+ * @font_face: The #cairo_ft_font_face_t object to query
+ *
+ * Returns the current set of synthesis options.
+ *
+ * Since 1.12.
+ */
+unsigned int
+cairo_ft_font_face_get_synthesize (cairo_font_face_t *font_face)
+{
+    cairo_ft_font_face_t *ft;
+
+    if (font_face->backend->type != CAIRO_FONT_TYPE_FT)
+	return 0;
+
+    ft = (cairo_ft_font_face_t *) font_face;
+    return ft->ft_options.synth_flags;
 }
 
 /**
