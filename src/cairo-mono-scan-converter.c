@@ -390,13 +390,15 @@ _mono_scan_converter_init(struct mono_scan_converter *c,
 			  int xmax, int ymax)
 {
     cairo_status_t status;
+    int max_num_spans;
 
     status = polygon_init (c->polygon, ymin, ymax);
     if  (unlikely (status))
 	return status;
 
-    if (xmax - xmin > ARRAY_LENGTH(c->spans_embedded)) {
-	c->spans = _cairo_malloc_ab (xmax - xmin,
+    max_num_spans = xmax - xmin + 1;
+    if (max_num_spans > ARRAY_LENGTH(c->spans_embedded)) {
+	c->spans = _cairo_malloc_ab (max_num_spans,
 				     sizeof (cairo_half_open_span_t));
 	if (unlikely (c->spans == NULL)) {
 	    polygon_fini (c->polygon);
