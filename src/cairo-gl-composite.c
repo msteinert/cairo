@@ -768,8 +768,7 @@ cairo_status_t
 _cairo_gl_composite_init (cairo_gl_composite_t *setup,
                           cairo_operator_t op,
                           cairo_gl_surface_t *dst,
-                          cairo_bool_t assume_component_alpha,
-                          const cairo_rectangle_int_t *rect)
+                          cairo_bool_t assume_component_alpha)
 {
     memset (setup, 0, sizeof (cairo_gl_composite_t));
 

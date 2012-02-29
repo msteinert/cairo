@@ -318,8 +318,7 @@ _cairo_gl_msaa_compositor_stroke (const cairo_compositor_t	*compositor,
     status = _cairo_gl_composite_init (&info.setup,
 				       composite->op,
 				       dst,
-				       FALSE, /* assume_component_alpha */
-				       &composite->bounded);
+				       FALSE /* assume_component_alpha */);
     if (unlikely (status))
 	return status;
 
@@ -393,8 +392,7 @@ _cairo_gl_msaa_compositor_fill (const cairo_compositor_t	*compositor,
     status = _cairo_gl_composite_init (&setup,
 				       composite->op,
 				       dst,
-				       FALSE, /* assume_component_alpha */
-				       &composite->bounded);
+				       FALSE /* assume_component_alpha */);
     if (unlikely (status))
 	goto cleanup_traps;
 

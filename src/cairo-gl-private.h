@@ -449,8 +449,7 @@ cairo_private cairo_status_t
 _cairo_gl_composite_init (cairo_gl_composite_t *setup,
                           cairo_operator_t op,
                           cairo_gl_surface_t *dst,
-                          cairo_bool_t has_component_alpha,
-                          const cairo_rectangle_int_t *rect);
+                          cairo_bool_t has_component_alpha);
 
 cairo_private void
 _cairo_gl_composite_fini (cairo_gl_composite_t *setup);
@@ -669,6 +668,10 @@ _cairo_gl_operand_emit (cairo_gl_operand_t *operand,
 cairo_private void
 _cairo_gl_operand_copy (cairo_gl_operand_t *dst,
 			const cairo_gl_operand_t *src);
+
+cairo_private void
+_cairo_gl_operand_translate (cairo_gl_operand_t *operand,
+			     double tx, double ty);
 
 cairo_private void
 _cairo_gl_operand_destroy (cairo_gl_operand_t *operand);

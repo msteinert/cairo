@@ -174,7 +174,7 @@ _cairo_gl_subsurface_operand_init (cairo_gl_operand_t *operand,
     }
 
     surface = (cairo_gl_surface_t *) sub->target;
-    if (surface->base.device != dst->base.device)
+    if (surface->base.device && surface->base.device != dst->base.device)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* Translate the matrix from
@@ -220,7 +220,7 @@ _cairo_gl_surface_operand_init (cairo_gl_operand_t *operand,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    if (surface->base.device != dst->base.device)
+    if (surface->base.device && surface->base.device != dst->base.device)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     *operand = surface->operand;
@@ -305,6 +305,14 @@ _cairo_gl_solid_operand_init (cairo_gl_operand_t *operand,
     operand->constant.color[1] = color->green * color->alpha;
     operand->constant.color[2] = color->blue  * color->alpha;
     operand->constant.color[3] = color->alpha;
+}
+
+void
+_cairo_gl_operand_translate (cairo_gl_operand_t *operand,
+			     double tx, double ty)
+{
+    operand->texture.attributes.matrix.x0 -= tx * operand->texture.attributes.matrix.xx;
+    operand->texture.attributes.matrix.y0 -= ty * operand->texture.attributes.matrix.yy;
 }
 
 static cairo_status_t
@@ -456,6 +464,7 @@ _cairo_gl_operand_init (cairo_gl_operand_t *operand,
 {
     cairo_int_status_t status;
 
+    TRACE ((stderr, "%s: type=%d\n", __FUNCTION__, pattern->type));
     switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
 	_cairo_gl_solid_operand_init (operand,

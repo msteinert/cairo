@@ -1818,6 +1818,7 @@ _cairo_surface_paint (cairo_surface_t		*surface,
 {
     cairo_int_status_t status;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     if (unlikely (surface->status))
 	return surface->status;
 
@@ -1851,6 +1852,7 @@ _cairo_surface_mask (cairo_surface_t		*surface,
 {
     cairo_int_status_t status;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     if (unlikely (surface->status))
 	return surface->status;
 
@@ -1905,6 +1907,7 @@ _cairo_surface_fill_stroke (cairo_surface_t	    *surface,
 {
     cairo_int_status_t status;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     if (unlikely (surface->status))
 	return surface->status;
 
@@ -1982,6 +1985,7 @@ _cairo_surface_stroke (cairo_surface_t			*surface,
 {
     cairo_int_status_t status;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     if (unlikely (surface->status))
 	return surface->status;
 
@@ -2022,6 +2026,7 @@ _cairo_surface_fill (cairo_surface_t		*surface,
 {
     cairo_int_status_t status;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     if (unlikely (surface->status))
 	return surface->status;
 
@@ -2228,6 +2233,7 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
     cairo_int_status_t status;
     cairo_scaled_font_t *dev_scaled_font = scaled_font;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     if (unlikely (surface->status))
 	return surface->status;
 

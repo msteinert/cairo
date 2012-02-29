@@ -314,6 +314,7 @@ fixup_unbounded_boxes (const cairo_spans_compositor_t *compositor,
 
     assert (boxes->is_pixel_aligned);
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     if (extents->bounded.width  == extents->unbounded.width &&
 	extents->bounded.height == extents->unbounded.height)
     {
@@ -444,6 +445,8 @@ composite_aligned_boxes (const cairo_spans_compositor_t		*compositor,
     cairo_bool_t no_mask;
     cairo_bool_t inplace;
 
+    TRACE ((stderr, "%s: need_clip_mask=%d, is-bounded=%d\n",
+	    __FUNCTION__, need_clip_mask, extents->is_bounded));
     if (need_clip_mask && ! extents->is_bounded)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -451,6 +454,9 @@ composite_aligned_boxes (const cairo_spans_compositor_t		*compositor,
     no_mask = extents->mask_pattern.base.type == CAIRO_PATTERN_TYPE_SOLID &&
 	CAIRO_ALPHA_IS_OPAQUE (extents->mask_pattern.solid.color.alpha);
     inplace = ! need_clip_mask && op_is_source && no_mask;
+
+    TRACE ((stderr, "%s: op-is-source=%d [op=%d], no-mask=%d, inplace=%d\n",
+	    __FUNCTION__, op_is_source, op, no_mask, inplace));
 
     if (op == CAIRO_OPERATOR_SOURCE && (need_clip_mask || ! no_mask)) {
 	/* SOURCE with a mask is actually a LERP in cairo semantics */
@@ -582,6 +588,7 @@ composite_boxes (const cairo_spans_compositor_t *compositor,
     cairo_int_status_t status;
     cairo_box_t box;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     _cairo_box_from_rectangle (&box, &extents->unbounded);
     if (composite_needs_clip (extents, &box))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -620,6 +627,7 @@ composite_polygon (const cairo_spans_compositor_t	*compositor,
     cairo_bool_t needs_clip;
     cairo_int_status_t status;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     needs_clip = extents->clip->path != NULL || extents->clip->num_boxes > 1;
     if (needs_clip) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -688,6 +696,7 @@ clip_and_composite_boxes (const cairo_spans_compositor_t	*compositor,
     cairo_int_status_t status;
     cairo_polygon_t polygon;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     status = trim_extents_to_boxes (extents, boxes);
     if (unlikely (status))
 	return status;
@@ -761,6 +770,8 @@ clip_and_composite_polygon (const cairo_spans_compositor_t	*compositor,
 {
     cairo_int_status_t status;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     /* XXX simply uses polygon limits.point extemities, tessellation? */
     status = trim_extents_to_polygon (extents, polygon);
     if (unlikely (status))
@@ -822,6 +833,7 @@ _cairo_spans_compositor_paint (const cairo_compositor_t		*_compositor,
     cairo_boxes_t boxes;
     cairo_int_status_t status;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     _cairo_clip_steal_boxes (extents->clip, &boxes);
     status = clip_and_composite_boxes (compositor, extents, &boxes);
     _cairo_clip_unsteal_boxes (extents->clip, &boxes);
@@ -837,6 +849,7 @@ _cairo_spans_compositor_mask (const cairo_compositor_t		*_compositor,
     cairo_int_status_t status;
     cairo_boxes_t boxes;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     _cairo_clip_steal_boxes (extents->clip, &boxes);
     status = clip_and_composite_boxes (compositor, extents, &boxes);
     _cairo_clip_unsteal_boxes (extents->clip, &boxes);

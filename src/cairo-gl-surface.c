@@ -758,8 +758,8 @@ _cairo_gl_surface_fill_alpha_channel (cairo_gl_surface_t *dst,
     _cairo_gl_composite_flush (ctx);
     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
 
-    status = _cairo_gl_composite_init (&setup, CAIRO_OPERATOR_SOURCE, dst,
-                                       FALSE, NULL);
+    status = _cairo_gl_composite_init (&setup, CAIRO_OPERATOR_SOURCE,
+				       dst, FALSE);
     if (unlikely (status))
         goto CLEANUP;
 

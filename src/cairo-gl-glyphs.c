@@ -234,13 +234,17 @@ render_glyphs (cairo_gl_surface_t	*dst,
     cairo_int_status_t status;
     int i = 0;
 
+    TRACE ((stderr, "%s (%d, %d)x(%d, %d)\n", __FUNCTION__,
+	    info->extents.x, info->extents.y,
+	    info->extents.width, info->extents.height));
+
     *has_component_alpha = FALSE;
 
     status = _cairo_gl_context_acquire (dst->base.device, &ctx);
     if (unlikely (status))
 	return status;
 
-    status = _cairo_gl_composite_init (&setup, op, dst, TRUE, &info->extents);
+    status = _cairo_gl_composite_init (&setup, op, dst, TRUE);
     if (unlikely (status))
 	goto FINISH;
 
@@ -281,11 +285,8 @@ render_glyphs (cairo_gl_surface_t	*dst,
 	    _cairo_gl_composite_set_mask_operand (&setup, &cache->surface->operand);
 	    *has_component_alpha |= cache->surface->operand.texture.attributes.has_component_alpha;
 
-            /* XXX: _cairo_gl_composite_begin() acquires the context a
-             * second time. Need to refactor this loop so this doesn't happen.
-             */
+	    /* XXX Shoot me. */
             status = _cairo_gl_composite_begin (&setup, &ctx);
-
             status = _cairo_gl_context_release (ctx, status);
 	    if (unlikely (status))
 		goto FINISH;
@@ -318,8 +319,8 @@ render_glyphs (cairo_gl_surface_t	*dst,
 	x_offset = scaled_glyph->surface->base.device_transform.x0;
 	y_offset = scaled_glyph->surface->base.device_transform.y0;
 
-	x1 = _cairo_lround (info->glyphs[i].x - x_offset);
-	y1 = _cairo_lround (info->glyphs[i].y - y_offset);
+	x1 = _cairo_lround (info->glyphs[i].x - x_offset - dst_x);
+	y1 = _cairo_lround (info->glyphs[i].y - y_offset - dst_y);
 	x2 = x1 + scaled_glyph->surface->width;
 	y2 = y1 + scaled_glyph->surface->height;
 
@@ -340,6 +341,7 @@ render_glyphs (cairo_gl_surface_t	*dst,
 
 static cairo_int_status_t
 render_glyphs_via_mask (cairo_gl_surface_t *dst,
+			int dst_x, int dst_y,
 			cairo_operator_t  op,
 			cairo_surface_t *source,
 			cairo_composite_glyphs_info_t *info)
@@ -347,7 +349,8 @@ render_glyphs_via_mask (cairo_gl_surface_t *dst,
     cairo_surface_t *mask;
     cairo_status_t status;
     cairo_bool_t has_component_alpha;
-    int i;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
 
     /* XXX: For non-CA, this should be CAIRO_CONTENT_ALPHA to save memory */
     mask = cairo_gl_surface_create (dst->base.device,
@@ -357,12 +360,8 @@ render_glyphs_via_mask (cairo_gl_surface_t *dst,
     if (unlikely (mask->status))
         return mask->status;
 
-    for (i = 0; i < info->num_glyphs; i++) {
-	info->glyphs[i].x -= info->extents.x;
-	info->glyphs[i].y -= info->extents.y;
-    }
-
-    status = render_glyphs ((cairo_gl_surface_t *) mask, 0, 0,
+    status = render_glyphs ((cairo_gl_surface_t *) mask,
+			    info->extents.x, info->extents.y,
 			    CAIRO_OPERATOR_ADD, NULL,
 			    info, &has_component_alpha);
     if (likely (status == CAIRO_STATUS_SUCCESS)) {
@@ -372,22 +371,23 @@ render_glyphs_via_mask (cairo_gl_surface_t *dst,
 	mask->is_clear = FALSE;
 	_cairo_pattern_init_for_surface (&mask_pattern, mask);
 	mask_pattern.base.has_component_alpha = has_component_alpha;
+	mask_pattern.base.filter = CAIRO_FILTER_NEAREST;
+	mask_pattern.base.extend = CAIRO_EXTEND_NONE;
 
 	cairo_matrix_init_translate (&mask_pattern.base.matrix,
-		                     -info->extents.x, -info->extents.y);
+		                     dst_x-info->extents.x, dst_y-info->extents.y);
 
 	_cairo_pattern_init_for_surface (&source_pattern, source);
+	cairo_matrix_init_translate (&source_pattern.base.matrix,
+		                     dst_x-info->extents.x, dst_y-info->extents.y);
+
 	status = _cairo_surface_mask (&dst->base, op,
-		                      &source_pattern.base, &mask_pattern.base,
+		                      &source_pattern.base,
+				      &mask_pattern.base,
 				      NULL);
 
 	_cairo_pattern_fini (&mask_pattern.base);
 	_cairo_pattern_fini (&source_pattern.base);
-    } else {
-	for (i = 0; i < info->num_glyphs; i++) {
-	    info->glyphs[i].x += info->extents.x;
-	    info->glyphs[i].y += info->extents.y;
-	}
     }
 
     cairo_surface_destroy (mask);
@@ -425,6 +425,8 @@ _cairo_gl_composite_glyphs (void			*_dst,
     cairo_bool_t has_component_alpha;
     int i;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     /* If any of the glyphs are component alpha, we have to go through a mask,
      * since only _cairo_gl_surface_composite() currently supports component
      * alpha.
@@ -445,7 +447,8 @@ _cairo_gl_composite_glyphs (void			*_dst,
     }
 
     if (info->use_mask) {
-	return render_glyphs_via_mask (dst, op, _src, info);
+	return render_glyphs_via_mask (dst, dst_x, dst_y,
+				       op, _src, info);
     } else {
 	return render_glyphs (dst, dst_x, dst_y,
 			      op, _src, info,

@@ -65,6 +65,7 @@ _cairo_gl_pattern_to_source (cairo_surface_t *dst,
     cairo_gl_source_t *source;
     cairo_int_status_t status;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     if (pattern == NULL)
 	return _cairo_gl_white_source ();
 

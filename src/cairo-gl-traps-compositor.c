@@ -132,7 +132,7 @@ fill_boxes (void		*_dst,
     cairo_gl_context_t *ctx;
     cairo_int_status_t status;
 
-    status = _cairo_gl_composite_init (&setup, op, _dst, FALSE, NULL);
+    status = _cairo_gl_composite_init (&setup, op, _dst, FALSE);
     if (unlikely (status))
         goto FAIL;
 
@@ -168,7 +168,7 @@ composite_boxes (void			*_dst,
     cairo_gl_context_t *ctx;
     cairo_int_status_t status;
 
-    status = _cairo_gl_composite_init (&setup, op, _dst, FALSE, extents);
+    status = _cairo_gl_composite_init (&setup, op, _dst, FALSE);
     if (unlikely (status))
         goto FAIL;
 
@@ -208,7 +208,7 @@ composite (void			*_dst,
     cairo_gl_context_t *ctx;
     cairo_int_status_t status;
 
-    status = _cairo_gl_composite_init (&setup, op, _dst, FALSE, NULL);
+    status = _cairo_gl_composite_init (&setup, op, _dst, FALSE);
     if (unlikely (status))
         goto FAIL;
 
@@ -279,7 +279,7 @@ traps_to_operand (void *_dst,
     cairo_surface_pattern_t pattern;
     cairo_status_t status;
 
-    pixman_format = antialias != CAIRO_ANTIALIAS_NONE ? PIXMAN_a8 : PIXMAN_a1,
+    pixman_format = antialias != CAIRO_ANTIALIAS_NONE ? PIXMAN_a8 : PIXMAN_a1;
     pixman_image = pixman_image_create_bits (pixman_format,
 					     extents->width,
 					     extents->height,
@@ -350,7 +350,7 @@ composite_traps (void			*_dst,
     cairo_gl_context_t *ctx;
     cairo_int_status_t status;
 
-    status = _cairo_gl_composite_init (&setup, op, _dst, FALSE, NULL);
+    status = _cairo_gl_composite_init (&setup, op, _dst, FALSE);
     if (unlikely (status))
         goto FAIL;
 
@@ -447,7 +447,7 @@ composite_tristrip (void		*_dst,
     if (unlikely (mask->base.status))
 	return mask->base.status;
 
-    status = _cairo_gl_composite_init (&setup, op, _dst, FALSE, NULL);
+    status = _cairo_gl_composite_init (&setup, op, _dst, FALSE);
     if (unlikely (status))
         goto FAIL;
 
