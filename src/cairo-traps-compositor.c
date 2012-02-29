@@ -1635,6 +1635,9 @@ clip_and_composite_boxes (const cairo_traps_compositor_t *compositor,
 
 	clip = _cairo_clip_copy (extents->clip);
 	clip = _cairo_clip_intersect_boxes (clip, boxes);
+	if (_cairo_clip_is_all_clipped (clip))
+	    return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
 	status = _cairo_clip_get_polygon (clip, &polygon,
 					  &fill_rule, &antialias);
 	_cairo_clip_path_destroy (clip->path);
