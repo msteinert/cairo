@@ -200,8 +200,8 @@ polygon_add_edge (struct polygon *polygon,
 	e->x = floored_muldivrem (ytop * CAIRO_FIXED_ONE + CAIRO_FIXED_FRAC_MASK/2 - edge->line.p1.y,
 				  dx, dy);
 	e->x.quo += edge->line.p1.x;
-	e->x.rem -= dy;
     }
+    e->x.rem -= dy;
 
     _polygon_insert_edge_into_its_y_bucket (polygon, e, ytop);
 }
