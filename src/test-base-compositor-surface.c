@@ -137,103 +137,6 @@ _pixman_operator (cairo_operator_t op)
     }
 }
 
-static void
-_pixman_image_add_boxes (pixman_image_t *image,
-			 int dst_x, int dst_y,
-			 cairo_box_t *box,
-			 int count)
-{
-    while (count--) {
-	pixman_trapezoid_t trap;
-
-	trap.top = _cairo_fixed_to_16_16 (box->p1.y);
-	trap.bottom = _cairo_fixed_to_16_16 (box->p2.y);
-
-	trap.left.p1.x = _cairo_fixed_to_16_16 (box->p1.x);
-	trap.left.p1.y = _cairo_fixed_to_16_16 (box->p1.y);
-	trap.left.p2.x = _cairo_fixed_to_16_16 (box->p1.x);
-	trap.left.p2.y = _cairo_fixed_to_16_16 (box->p2.y);
-
-	trap.right.p1.x = _cairo_fixed_to_16_16 (box->p2.x);
-	trap.right.p1.y = _cairo_fixed_to_16_16 (box->p1.y);
-	trap.right.p2.x = _cairo_fixed_to_16_16 (box->p2.x);
-	trap.right.p2.y = _cairo_fixed_to_16_16 (box->p2.y);
-
-	pixman_rasterize_trapezoid (image, &trap, -dst_x, -dst_y);
-	box++;
-    }
-}
-
-static cairo_status_t
-combine_in_boxes (cairo_image_surface_t *dst,
-		  cairo_box_t *box, int count,
-		  const cairo_rectangle_int_t *extents)
-{
-    pixman_image_t *mask;
-
-    mask = pixman_image_create_bits (PIXMAN_a8,
-				     extents->width, extents->height,
-				     NULL, 0);
-    if (unlikely (mask == NULL))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    _pixman_image_add_boxes (mask, extents->x, extents->y, box, count);
-    pixman_image_composite32 (PIXMAN_OP_IN,
-                              mask, NULL, dst->pixman_image,
-			      0, 0,
-                              0, 0,
-                              0, 0,
-                              extents->width, extents->height);
-    pixman_image_unref (mask);
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_image_surface_t *
-get_clip_surface (cairo_image_surface_t	*dst,
-		  const cairo_composite_rectangles_t *extents,
-		  int *clip_x,
-		  int *clip_y)
-{
-    cairo_image_surface_t *surface;
-    cairo_int_status_t status;
-
-    surface = (cairo_image_surface_t *)
-	_cairo_surface_create_similar_solid (&dst->base,
-					     CAIRO_CONTENT_ALPHA,
-					     extents->unbounded.width,
-					     extents->unbounded.height,
-					     CAIRO_COLOR_WHITE);
-    if (unlikely (surface->base.status))
-	return surface;
-
-    if (extents->clip->boxes) {
-	status = combine_in_boxes (surface,
-				   extents->clip->boxes,
-				   extents->clip->num_boxes,
-				   &extents->unbounded);
-	if (unlikely (status))
-	    goto error;
-    }
-
-    if (extents->clip->path) {
-	status = _cairo_clip_combine_with_surface (extents->clip,
-						   &surface->base,
-						   extents->unbounded.x,
-						   extents->unbounded.y);
-	if (unlikely (status))
-	    goto error;
-    }
-
-    *clip_x = extents->unbounded.x;
-    *clip_y = extents->unbounded.y;
-    return surface;
-
-error:
-    cairo_surface_destroy (&surface->base);
-    return (cairo_image_surface_t *)_cairo_surface_create_in_error (status);
-}
-
 static cairo_image_surface_t *
 create_composite_mask (cairo_image_surface_t	*dst,
 		       void			*draw_closure,
@@ -243,12 +146,13 @@ create_composite_mask (cairo_image_surface_t	*dst,
     cairo_image_surface_t *surface;
     cairo_int_status_t status;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     surface = (cairo_image_surface_t *)
-	_cairo_surface_create_similar_solid (&dst->base,
-					     CAIRO_CONTENT_ALPHA,
-					     extents->bounded.width,
-					     extents->bounded.height,
-					     CAIRO_COLOR_TRANSPARENT);
+	_cairo_image_surface_create_with_pixman_format (NULL, PIXMAN_a8,
+							extents->bounded.width,
+							extents->bounded.height,
+							0);
     if (unlikely (surface->base.status))
 	return surface;
 
@@ -259,23 +163,12 @@ create_composite_mask (cairo_image_surface_t	*dst,
     if (unlikely (status))
 	goto error;
 
-    if (extents->clip->boxes) {
-	status = combine_in_boxes (surface,
-				   extents->clip->boxes,
-				   extents->clip->num_boxes,
-				   &extents->bounded);
-	if (unlikely (status))
-	    goto error;
-    }
-
-    if (extents->clip->path) {
-	status = _cairo_clip_combine_with_surface (extents->clip,
-						   &surface->base,
-						   extents->bounded.x,
-						   extents->bounded.y);
-	if (unlikely (status))
-	    goto error;
-    }
+    status = _cairo_clip_combine_with_surface (extents->clip,
+					       &surface->base,
+					       extents->bounded.x,
+					       extents->bounded.y);
+    if (unlikely (status))
+	goto error;
 
     return surface;
 
@@ -297,6 +190,8 @@ clip_and_composite_with_mask (const cairo_composite_rectangles_t*extents,
     pixman_image_t *src;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     int src_x, src_y;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
 
     mask = create_composite_mask (dst, draw_closure, draw_func, extents);
     if (unlikely (mask->base.status))
@@ -339,11 +234,14 @@ clip_and_composite_combine (const cairo_composite_rectangles_t*extents,
     int clip_x, clip_y;
     cairo_status_t status;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     tmp = (cairo_image_surface_t *)
-	_cairo_surface_create_similar_solid (&dst->base, dst->base.content,
-					     extents->bounded.width,
-					     extents->bounded.height,
-					     CAIRO_COLOR_TRANSPARENT);
+	_cairo_image_surface_create_with_pixman_format (NULL,
+							dst->pixman_format,
+							extents->bounded.width,
+							extents->bounded.height,
+							0);
     if (unlikely (tmp->base.status))
 	return tmp->base.status;
 
@@ -362,7 +260,7 @@ clip_and_composite_combine (const cairo_composite_rectangles_t*extents,
 	goto error;
 
     clip = (cairo_image_surface_t *)
-	get_clip_surface (dst, extents, &clip_x, &clip_y);
+	_cairo_clip_get_surface (extents->clip, &dst->base, &clip_x, &clip_y);
     if (unlikely (clip->base.status))
 	goto error;
 
@@ -400,6 +298,8 @@ clip_and_composite_source (const cairo_composite_rectangles_t	*extents,
     pixman_image_t *src;
     int src_x, src_y;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
 
     mask = create_composite_mask (dst, draw_closure, draw_func, extents);
     if (unlikely (mask->base.status))
@@ -443,10 +343,14 @@ fixup_unbounded (const cairo_composite_rectangles_t *extents)
     pixman_image_t *mask;
     int mask_x, mask_y;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     if (! _cairo_clip_is_region (extents->clip)) {
 	cairo_image_surface_t *clip;
 
-	clip = get_clip_surface (dst, extents, &mask_x, &mask_y);
+	clip = (cairo_image_surface_t *)
+	    _cairo_clip_get_surface (extents->clip, &dst->base,
+				     &mask_x, &mask_y);
 	if (unlikely (clip->base.status))
 	    return clip->base.status;
 
@@ -590,6 +494,8 @@ composite_paint (cairo_image_surface_t		*dst,
     pixman_image_t *src;
     int src_x, src_y;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     _cairo_pattern_sampled_area (pattern, extents, &sample);
     src = _pixman_image_for_pattern (dst,
 				     pattern, FALSE,
@@ -597,6 +503,11 @@ composite_paint (cairo_image_surface_t		*dst,
 				     &src_x, &src_y);
     if (unlikely (src == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    TRACE ((stderr, "%s: src=(%d, %d), dst=(%d, %d) size=%dx%d\n", __FUNCTION__,
+	    extents->x + src_x, extents->y + src_y,
+	    extents->x - dst_x, extents->y - dst_y,
+	    extents->width, extents->height));
 
     pixman_image_composite32 (_pixman_operator (op),
 			      src, NULL, dst->pixman_image,
@@ -614,6 +525,7 @@ static cairo_int_status_t
 base_compositor_paint (const cairo_compositor_t *_compositor,
 		       cairo_composite_rectangles_t *extents)
 {
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     return clip_and_composite (extents, composite_paint, NULL);
 }
 
@@ -630,6 +542,8 @@ composite_mask (cairo_image_surface_t		*dst,
     pixman_image_t *src, *mask;
     int src_x, src_y;
     int mask_x, mask_y;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
 
     _cairo_pattern_sampled_area (pattern, extents, &sample);
     src = _pixman_image_for_pattern (dst, pattern, FALSE,
@@ -664,6 +578,7 @@ static cairo_int_status_t
 base_compositor_mask (const cairo_compositor_t *_compositor,
 		      cairo_composite_rectangles_t *extents)
 {
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     return clip_and_composite (extents, composite_mask, &extents->mask_pattern.base);
 }
 
@@ -685,6 +600,8 @@ composite_traps (cairo_image_surface_t	*dst,
     cairo_rectangle_int_t sample;
     pixman_image_t *src, *mask;
     int src_x, src_y;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
 
     _cairo_pattern_sampled_area (pattern, extents, &sample);
     src = _pixman_image_for_pattern (dst, pattern, FALSE,
@@ -741,6 +658,8 @@ base_compositor_stroke (const cairo_compositor_t *_compositor,
     composite_traps_info_t info;
     cairo_int_status_t status;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     info.antialias = antialias;
     _cairo_traps_init_with_clip (&info.traps, extents->clip);
     status = _cairo_path_fixed_stroke_to_traps (path, style,
@@ -766,6 +685,8 @@ base_compositor_fill (const cairo_compositor_t *_compositor,
 {
     composite_traps_info_t info;
     cairo_int_status_t status;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
 
     info.antialias = antialias;
     _cairo_traps_init_with_clip (&info.traps, extents->clip);
@@ -794,6 +715,8 @@ composite_glyphs (cairo_image_surface_t	*dst,
     pixman_image_t *mask;
     cairo_status_t status;
     int i;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
 
     mask = pixman_image_create_bits (PIXMAN_a8,
 				     extents->width, extents->height,
@@ -877,6 +800,7 @@ base_compositor_glyphs (const cairo_compositor_t	*_compositor,
     info.glyphs = glyphs;
     info.num_glyphs = num_glyphs;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     return clip_and_composite (extents, composite_glyphs, &info);
 }
 
