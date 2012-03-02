@@ -374,6 +374,7 @@ record_replay (cairo_t *cr, cairo_t *(*func)(cairo_t *), int width, int height)
     cairo_surface_destroy (surface);
     cairo_pattern_set_extend (cairo_get_source (cr), CAIRO_EXTEND_NONE);
 
+    cairo_identity_matrix (cr); /* make sure the clip is pixel-aligned */
     for (y = 0; y < height; y += 2) {
 	for (x = 0; x < width; x += 2) {
 	    cairo_rectangle (cr, x, y, 2, 2);
