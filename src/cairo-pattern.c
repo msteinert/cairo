@@ -878,7 +878,7 @@ static const int mesh_control_point_j[4] = { 1, 2, 2, 1 };
  * Degenerate sides are permitted so straight lines may be used. A
  * zero length line on one side may be used to create 3 sided patches.
  *
- * <informalexample><programlisting>
+ * <informalexample><screen>
  *       C1     Side 1       C2
  *        +---------------+
  *        |               |
@@ -891,7 +891,7 @@ static const int mesh_control_point_j[4] = { 1, 2, 2, 1 };
  *        |               |
  *        +---------------+
  *      C0     Side 3        C3
- * </programlisting></informalexample>
+ * </screen></informalexample>
  *
  * Each patch is constructed by first calling
  * cairo_mesh_pattern_begin_patch(), then cairo_mesh_pattern_move_to()
