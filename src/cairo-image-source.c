@@ -703,8 +703,6 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
     *ix = *iy = 0;
 
     source = _cairo_pattern_get_source (pattern, &limit);
-    tx = limit.x;
-    ty = limit.y;
 
     extend = pattern->base.extend;
     if (_cairo_rectangle_contains_rectangle (&limit, sample))
@@ -734,6 +732,8 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
 	    limit.height = ceil (y2) - limit.y;
 	}
     }
+    tx = limit.x;
+    ty = limit.y;
 
     /* XXX transformations! */
     proxy = _cairo_surface_has_snapshot (source, &proxy_backend);
@@ -742,14 +742,18 @@ _pixman_image_for_recording (cairo_image_surface_t *dst,
 	goto done;
     }
 
-    if (dst->base.content == source->content)
-	clone = cairo_image_surface_create (dst->format,
-					    limit.width, limit.height);
-    else
-	clone = _cairo_image_surface_create_with_content (source->content,
-							  limit.width,
-							  limit.height);
-    cairo_surface_set_device_offset (clone, -limit.x, -limit.y);
+    if (is_mask) {
+	    clone = cairo_image_surface_create (CAIRO_FORMAT_A8,
+						limit.width, limit.height);
+    } else {
+	if (dst->base.content == source->content)
+	    clone = cairo_image_surface_create (dst->format,
+						limit.width, limit.height);
+	else
+	    clone = _cairo_image_surface_create_with_content (source->content,
+							      limit.width,
+							      limit.height);
+    }
 
     m = NULL;
     if (extend == CAIRO_EXTEND_NONE) {
@@ -774,6 +778,8 @@ done:
     pixman_image = pixman_image_ref (((cairo_image_surface_t *)clone)->pixman_image);
     cairo_surface_destroy (clone);
 
+    *ix = -limit.x;
+    *iy = -limit.y;
     if (extend != CAIRO_EXTEND_NONE) {
 	if (! _pixman_image_set_properties (pixman_image,
 					    &pattern->base, extents,
@@ -781,9 +787,6 @@ done:
 	    pixman_image_unref (pixman_image);
 	    pixman_image= NULL;
 	}
-    } else {
-	*ix = -limit.x;
-	*iy = -limit.y;
     }
 
     return pixman_image;
