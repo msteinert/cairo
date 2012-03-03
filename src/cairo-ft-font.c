@@ -3308,7 +3308,7 @@ cairo_ft_font_face_unset_synthesize (cairo_font_face_t *font_face,
  * cairo_ft_font_face_get_synthesize:
  * @font_face: The #cairo_ft_font_face_t object to query
  *
- * Returns the current set of synthesis options.
+ * Returns: the current set of synthesis options.
  *
  * Since: 1.12
  **/
