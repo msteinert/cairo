@@ -74,7 +74,7 @@ cairo_ft_font_face_create_for_ft_face (FT_Face         face,
  * @CAIRO_FT_SYNTHESIZE_OBLIQUE: Slant the glyph outline by 12 degrees to the
  * right.
  *
- * Since 1.12.
+ * Since: 1.12
  **/
 typedef enum {
     CAIRO_FT_SYNTHESIZE_BOLD = 1 << 0,

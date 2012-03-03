@@ -3267,8 +3267,8 @@ cairo_ft_font_face_create_for_ft_face (FT_Face         face,
  * font, which is useful if you lack those glyphs from a true bold or oblique
  * font.
  *
- * Since 1.12.
- */
+ * Since: 1.12
+ **/
 void
 cairo_ft_font_face_set_synthesize (cairo_font_face_t *font_face,
 				   unsigned int synth_flags)
@@ -3289,8 +3289,8 @@ cairo_ft_font_face_set_synthesize (cairo_font_face_t *font_face,
  *
  * See cairo_ft_font_face_set_synthesize().
  *
- * Since 1.12.
- */
+ * Since: 1.12
+ **/
 void
 cairo_ft_font_face_unset_synthesize (cairo_font_face_t *font_face,
 				     unsigned int synth_flags)
@@ -3310,8 +3310,8 @@ cairo_ft_font_face_unset_synthesize (cairo_font_face_t *font_face,
  *
  * Returns the current set of synthesis options.
  *
- * Since 1.12.
- */
+ * Since: 1.12
+ **/
 unsigned int
 cairo_ft_font_face_get_synthesize (cairo_font_face_t *font_face)
 {
