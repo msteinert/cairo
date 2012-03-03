@@ -283,8 +283,8 @@ static const cairo_surface_backend_t cairo_quartz_image_surface_backend = {
 };
 
 /**
- * cairo_quartz_image_surface_create
- * @surface: a cairo image surface to wrap with a quartz image surface
+ * cairo_quartz_image_surface_create:
+ * @image_surface: a cairo image surface to wrap with a quartz image surface
  *
  * Creates a Quartz surface backed by a CGImageRef that references the
  * given image surface. The resulting surface can be rendered quickly

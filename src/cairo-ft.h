@@ -83,11 +83,11 @@ typedef enum {
 
 cairo_public void
 cairo_ft_font_face_set_synthesize (cairo_font_face_t *font_face,
-				   unsigned int flags);
+				   unsigned int synth_flags);
 
 cairo_public void
 cairo_ft_font_face_unset_synthesize (cairo_font_face_t *font_face,
-				     unsigned int flags);
+				     unsigned int synth_flags);
 
 cairo_public unsigned int
 cairo_ft_font_face_get_synthesize (cairo_font_face_t *font_face);
