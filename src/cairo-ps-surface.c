@@ -1782,7 +1782,7 @@ _cairo_ps_surface_release_source_surface_from_pattern (cairo_ps_surface_t       
 }
 
 /**
- * _cairo_ps_surface_create_padded_image_from_image
+ * _cairo_ps_surface_create_padded_image_from_image:
  * @surface: the ps surface
  * @source: The source image
  * @extents: extents of the operation that is using this source
