@@ -318,7 +318,7 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
 	Screen *screen = src->screen->screen;
 	int depth;
 
-	/* No compatabile XRenderFormat, see if we can make an ordinary pixmap,
+	/* No compatible XRenderFormat, see if we can make an ordinary pixmap,
 	 * so that we can still accelerate blits with XCopyArea(). */
 	if (content != CAIRO_CONTENT_COLOR) {
             cairo_device_release (&display->base);

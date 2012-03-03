@@ -39,19 +39,19 @@
 
 #define CAIRO_COGL_LINEAR_GRADIENT_CACHE_SIZE (1024 * 1024)
 
-typedef enum _cairo_cogl_gradient_compatability {
+typedef enum _cairo_cogl_gradient_compatibility {
     CAIRO_COGL_GRADIENT_CAN_EXTEND_PAD	    = 1<<0,
     CAIRO_COGL_GRADIENT_CAN_EXTEND_REPEAT   = 1<<1,
     CAIRO_COGL_GRADIENT_CAN_EXTEND_REFLECT  = 1<<2,
     CAIRO_COGL_GRADIENT_CAN_EXTEND_NONE	    = 1<<3
-} cairo_cogl_gradient_compatability_t;
+} cairo_cogl_gradient_compatibility_t;
 #define CAIRO_COGL_GRADIENT_CAN_EXTEND_ALL (CAIRO_COGL_GRADIENT_CAN_EXTEND_PAD |\
 					    CAIRO_COGL_GRADIENT_CAN_EXTEND_REPEAT|\
 					    CAIRO_COGL_GRADIENT_CAN_EXTEND_REFLECT|\
 					    CAIRO_COGL_GRADIENT_CAN_EXTEND_NONE)
 
 typedef struct _cairo_cogl_linear_texture_entry {
-    cairo_cogl_gradient_compatability_t compatability;
+    cairo_cogl_gradient_compatibility_t compatibility;
     CoglTexture	*texture;
     float translate_x;
     float scale_x;

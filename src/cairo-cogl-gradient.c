@@ -217,8 +217,8 @@ _cairo_cogl_linear_gradient_format_for_stops (cairo_extend_t		   extend,
     return COGL_PIXEL_FORMAT_BGR_888;
 }
 
-static cairo_cogl_gradient_compatability_t
-_cairo_cogl_compatability_from_extend_mode (cairo_extend_t extend_mode)
+static cairo_cogl_gradient_compatibility_t
+_cairo_cogl_compatibility_from_extend_mode (cairo_extend_t extend_mode)
 {
     switch (extend_mode)
     {
@@ -241,11 +241,11 @@ _cairo_cogl_linear_gradient_texture_for_extend (cairo_cogl_linear_gradient_t *gr
 						cairo_extend_t extend_mode)
 {
     GList *l;
-    cairo_cogl_gradient_compatability_t compatability =
-	_cairo_cogl_compatability_from_extend_mode (extend_mode);
+    cairo_cogl_gradient_compatibility_t compatibility =
+	_cairo_cogl_compatibility_from_extend_mode (extend_mode);
     for (l = gradient->textures; l; l = l->next) {
 	cairo_cogl_linear_texture_entry_t *entry = l->data;
-	if (entry->compatability & compatability)
+	if (entry->compatibility & compatibility)
 	    return entry;
     }
     return NULL;
@@ -364,7 +364,7 @@ _cairo_cogl_get_linear_gradient (cairo_cogl_device_t *device,
     int stop_offset;
     int n_internal_stops;
     int n;
-    cairo_cogl_gradient_compatability_t compatabilities;
+    cairo_cogl_gradient_compatibility_t compatibilities;
     int width;
     int left_padding = 0;
     cairo_color_stop_t left_padding_color;
@@ -419,7 +419,7 @@ _cairo_cogl_get_linear_gradient (cairo_cogl_device_t *device,
 	goto BAIL;
     }
 
-    compatabilities = _cairo_cogl_compatability_from_extend_mode (extend_mode);
+    compatibilities = _cairo_cogl_compatibility_from_extend_mode (extend_mode);
 
     n_internal_stops = n_stops;
     stop_offset = 0;
@@ -431,7 +431,7 @@ _cairo_cogl_get_linear_gradient (cairo_cogl_device_t *device,
     {
 	/* If we don't need any extra stops then actually the texture
 	 * will be shareable for repeat and reflect... */
-	compatabilities = (CAIRO_COGL_GRADIENT_CAN_EXTEND_REPEAT |
+	compatibilities = (CAIRO_COGL_GRADIENT_CAN_EXTEND_REPEAT |
 			   CAIRO_COGL_GRADIENT_CAN_EXTEND_REFLECT);
 
 	if (stops[0].offset != 0) {
@@ -464,7 +464,7 @@ _cairo_cogl_get_linear_gradient (cairo_cogl_device_t *device,
     if (n_internal_stops != n_stops)
     {
 	if (extend_mode == CAIRO_EXTEND_REPEAT) {
-	    compatabilities &= ~CAIRO_COGL_GRADIENT_CAN_EXTEND_REFLECT;
+	    compatibilities &= ~CAIRO_COGL_GRADIENT_CAN_EXTEND_REFLECT;
 	    if (stops[0].offset != 0) {
 		/* what's the wrap-around distance between the user's end-stops? */
 		double dx = (1.0 - stops[n_stops - 1].offset) + stops[0].offset;
@@ -479,7 +479,7 @@ _cairo_cogl_get_linear_gradient (cairo_cogl_device_t *device,
 		internal_stops[n_internal_stops - 1].color = internal_stops[0].color;
 	    }
 	} else if (extend_mode == CAIRO_EXTEND_REFLECT) {
-	    compatabilities &= ~CAIRO_COGL_GRADIENT_CAN_EXTEND_REPEAT;
+	    compatibilities &= ~CAIRO_COGL_GRADIENT_CAN_EXTEND_REPEAT;
 	    if (stops[0].offset != 0) {
 		internal_stops[0].offset = 0;
 		internal_stops[0].color = stops[n_stops - 1].color;
@@ -571,7 +571,7 @@ _cairo_cogl_get_linear_gradient (cairo_cogl_device_t *device,
     }
 
     entry->texture = COGL_TEXTURE (tex);
-    entry->compatability = compatabilities;
+    entry->compatibility = compatibilities;
 
     un_padded_width = width - left_padding - right_padding;
 
