@@ -1117,7 +1117,7 @@ _cairo_cogl_surface_clear (cairo_cogl_surface_t *surface,
      *
      * The main concern is that we want to avoid re-loading an external z
      * buffer at the start of each frame, but also many gpu architectures have
-     * optmizations for how they handle the depth/stencil buffers and can get
+     * optimizations for how they handle the depth/stencil buffers and can get
      * upset if they aren't cleared together at the start of the frame.
      *
      * FIXME: we need a way to assert that the clip stack currently isn't
@@ -2425,7 +2425,7 @@ _cairo_cogl_surface_fill_rectangle (void		     *abstract_surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* TODO:
-     * We need to aquire the textures here, look at the corresponding
+     * We need to acquire the textures here, look at the corresponding
      * attributes and see if this can be trivially handled by logging
      * a textured rectangle only needing simple scaling or translation
      * of texture coordinates.

@@ -92,7 +92,7 @@ cairo-perf-diff:
 
 As a convenience, this common desire to measure a single commit is
 supported by passing a single revision to cairo-perf-diff, in which
-case it will compare it to the immediately preceeding commit. So for
+case it will compare it to the immediately preceding commit. So for
 example:
 
     # Measure the impact of the latest commit
@@ -117,7 +117,7 @@ what has been cached:
 
 And finally, the -f mode is most useful in conjunction with the --
 option to cairo-perf-diff which allows you to pass options to the
-underlying cairo-perf runs. This allows you to restrict the additonal
+underlying cairo-perf runs. This allows you to restrict the additional
 test runs to a limited subset of the tests.
 
 For example, a frequently used trick is to first generate a chart with

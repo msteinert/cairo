@@ -318,7 +318,7 @@ _cairo_beos_surface_set_clip_region (cairo_beos_surface_t *surface,
 	cairo_rectangle_int_t rect;
 
 	cairo_region_get_rectangle (region, i, &rect);
-	// Have to substract one, because for pixman, the second coordinate
+	// Have to subtract one, because for pixman, the second coordinate
 	// lies outside the rectangle.
 	bregion.Include (_cairo_rectangle_to_brect (&rect));
     }

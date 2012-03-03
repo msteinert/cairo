@@ -333,7 +333,7 @@ fd_fixed_fwd (int32_t f[4])
  *
  *  max(|B'(t)|) <= 3 max (|p1-p0|, |p2-p0|/2, |p3-p1|/2, |p3-p2|)
  *
- * So, to guarantee a maximum step lenght of 1/sqrt(2) we must do:
+ * So, to guarantee a maximum step length of 1/sqrt(2) we must do:
  *
  *   3 max (|p1-p0|, |p2-p0|/2, |p3-p1|/2, |p3-p2|) sqrt(2) steps
  */

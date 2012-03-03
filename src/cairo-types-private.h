@@ -131,7 +131,7 @@ struct _cairo_observer {
  *
  *	_cairo_hash_table_insert (hash_table, &my_entry->base);
  *
- * IMPORTANT: The caller is reponsible for initializing
+ * IMPORTANT: The caller is responsible for initializing
  * my_entry->base.hash with a hash code derived from the key. The
  * essential property of the hash code is that keys_equal must never
  * return %TRUE for two keys that have different hashes. The best hash

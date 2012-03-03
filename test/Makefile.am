@@ -164,7 +164,7 @@ reference
 #                         convert degenerate segments into circles/rectangles
 #                         as expected by cairo
 # device-offset-scale   - complication of pre-multiplying device_offset
-#                         into the pattern_matrix and then requiring futher
+#                         into the pattern_matrix and then requiring further
 #                         manipulation for SVG
 # extend-pad            - lacks implementation in pixman and consequently used
 #                         as an excuse for lack of support in other backends

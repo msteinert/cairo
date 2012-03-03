@@ -38,7 +38,7 @@
  *	https://bugs.freedesktop.org/show_bug.cgi?id=6955
  *
  *   We replicate this bug by using the cairo_scaled_font_set_max_glyphs_per_font
- *   function to artifically induce cache pressure. (This function was added
+ *   function to artificially induce cache pressure. (This function was added
  *   for this very purpose.)
  *
  * 2006-06-22  Carl Worth  <cworth@cworth.org>

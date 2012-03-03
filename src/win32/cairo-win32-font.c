@@ -1647,7 +1647,7 @@ _cairo_win32_scaled_font_is_synthetic (void	       *abstract_font)
 					&bold,
 					&italic);
     /* If this doesn't work assume it is not synthetic to avoid
-     * unneccessary subsetting fallbacks. */
+     * unnecessary subsetting fallbacks. */
     if (status != CAIRO_STATUS_SUCCESS)
 	return FALSE;
 

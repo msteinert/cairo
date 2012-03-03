@@ -57,7 +57,7 @@ this is interfering with the results, you can clear the cached results using:
 
   make clean-caches
 
-Running tests under modified enviroments or tools
+Running tests under modified environments or tools
 -------------------------------------------------
 To run tests under a tool like gdb, one can use the run target and
 the TOOL variable.  For example:

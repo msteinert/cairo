@@ -37,7 +37,7 @@ static const double frac_offset[] = { 0, 2, 4, 6 };
  * This corresponds to the non-inverted part only if
  * the dash pattern has odd length, so the expected result
  * is the same for every int_offset if the pattern has
- * even lenght, and inverted each time (or shifted by half
+ * even length, and inverted each time (or shifted by half
  * period, which is the same) if the pattern has odd length. */
 static const double int_offset[] = { -2, -1, 0, 1, 2 };
 

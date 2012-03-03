@@ -25,7 +25,7 @@ Whatever else happens is driven by its argument:
   --compress      - Compress the output with LZMA
   --profile       - Combine --no-callers and --no-mark-dirty and --compress
 
-Enviroment variables understood by cairo-trace:
+Environment variables understood by cairo-trace:
   CAIRO_TRACE_FLUSH - flush the output after every function call.
   CAIRO_TRACE_LINE_INFO - emit line information for most function calls.
 EOF

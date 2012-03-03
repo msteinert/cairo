@@ -99,7 +99,7 @@ _cairo_cogl_context_rectangle_real (cairo_cogl_context_t *cr,
  * before continuing to append their operations.
  *
  * In addition to the speculative store cairo-cogl also has a fast-path
- * fill_rectangle drawing operation that futher aims to minimize the cost
+ * fill_rectangle drawing operation that further aims to minimize the cost
  * of drawing rectangles.
  */
 static cairo_status_t

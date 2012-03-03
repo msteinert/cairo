@@ -3158,7 +3158,7 @@ FREE_PATTERN:
  * If the FC_FT_FACE element of @pattern is set, the user is responsible
  * for making sure that the referenced FT_Face remains valid for the life
  * time of the returned #cairo_font_face_t.  See
- * cairo_ft_font_face_create_for_ft_face() for an exmaple of how to couple
+ * cairo_ft_font_face_create_for_ft_face() for an example of how to couple
  * the life time of the FT_Face to that of the cairo font-face.
  *
  * Return value: a newly created #cairo_font_face_t. Free with

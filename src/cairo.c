@@ -63,7 +63,7 @@
  * draw shapes with cairo_stroke() or cairo_fill().
  *
  * #cairo_t<!-- -->'s can be pushed to a stack via cairo_save().
- * They may then safely be changed, without loosing the current state.
+ * They may then safely be changed, without losing the current state.
  * Use cairo_restore() to restore to the saved state.
  */
 
