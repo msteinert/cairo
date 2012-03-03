@@ -809,6 +809,7 @@ slim_hidden_proto (cairo_xcb_surface_set_size);
 slim_hidden_proto (cairo_xcb_surface_set_drawable);
 slim_hidden_proto (cairo_xcb_device_debug_get_precision);
 slim_hidden_proto_no_warn (cairo_xcb_device_debug_set_precision);
+slim_hidden_proto_no_warn (cairo_xcb_device_debug_cap_xrender_version);
 #endif
 
 #endif /* CAIRO_XCB_PRIVATE_H */

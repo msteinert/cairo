@@ -899,6 +899,9 @@ cairo_xcb_device_debug_cap_xrender_version (cairo_device_t *device,
 	    connection->flags &= ~CAIRO_XCB_RENDER_HAS_GRADIENTS;
     }
 }
+#if CAIRO_HAS_XLIB_XCB_FUNCTIONS
+slim_hidden_def (cairo_xcb_device_debug_cap_xrender_version);
+#endif
 
 
 void
