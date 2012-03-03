@@ -3259,7 +3259,7 @@ cairo_ft_font_face_create_for_ft_face (FT_Face         face,
 }
 
 /**
- * cairo_ft_font_set_synthesize:
+ * cairo_ft_font_face_set_synthesize:
  * @font_face: The #cairo_ft_font_face_t object to modify
  * @synth_flags: the set of synthesis options to enable
  *
@@ -3283,7 +3283,7 @@ cairo_ft_font_face_set_synthesize (cairo_font_face_t *font_face,
 }
 
 /**
- * cairo_ft_font_unset_synthesize:
+ * cairo_ft_font_face_unset_synthesize:
  * @font_face: The #cairo_ft_font_face_t object to modify
  * @synth_flags: the set of synthesis options to disable
  *
@@ -3305,7 +3305,7 @@ cairo_ft_font_face_unset_synthesize (cairo_font_face_t *font_face,
 }
 
 /**
- * cairo_ft_font_get_synthesize:
+ * cairo_ft_font_face_get_synthesize:
  * @font_face: The #cairo_ft_font_face_t object to query
  *
  * Returns the current set of synthesis options.
