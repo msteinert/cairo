@@ -1544,7 +1544,7 @@ slim_hidden_def (cairo_mesh_pattern_line_to);
  * Note: If @pattern is not a mesh pattern then @pattern will be put
  * into an error status with a status of
  * %CAIRO_STATUS_PATTERN_TYPE_MISMATCH. If @pattern has no current
- * patch or the current patch already has at leas one side, @pattern
+ * patch or the current patch already has at least one side, @pattern
  * will be put into an error status with a status of
  * %CAIRO_STATUS_INVALID_MESH_CONSTRUCTION.
  *
