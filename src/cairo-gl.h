@@ -31,8 +31,8 @@
  * The Initial Developer of the Original Code is Eric Anholt.
  */
 
-/**
- * @file cairo-gl.h
+/*
+ * cairo-gl.h:
  *
  * The cairo-gl backend provides an implementation of possibly
  * hardware-accelerated cairo rendering by targeting the OpenGL API.
