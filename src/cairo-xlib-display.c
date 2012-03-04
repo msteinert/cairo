@@ -595,6 +595,16 @@ cairo_xlib_device_debug_cap_xrender_version (cairo_device_t *device,
     _cairo_xlib_display_select_compositor (display);
 }
 
+/**
+ * cairo_xlib_device_debug_set_precision:
+ * @device: a #cairo_device_t for the Xlib backend
+ * @precision: the precision to use
+ *
+ * Render supports two modes of precision when rendering trapezoids. Set
+ * the precision to the desired mode.
+ *
+ * Since: 1.12
+ **/
 void
 cairo_xlib_device_debug_set_precision (cairo_device_t *device,
 				       int precision)
@@ -612,6 +622,16 @@ cairo_xlib_device_debug_set_precision (cairo_device_t *device,
     ((cairo_xlib_display_t *) device)->force_precision = precision;
 }
 
+/**
+ * cairo_xlib_device_debug_get_precision:
+ * @device: a #cairo_device_t for the Xlib backend
+ *
+ * Get the Xrender precision mode.
+ *
+ * Returns: the render precision mode
+ *
+ * Since: 1.12
+ **/
 int
 cairo_xlib_device_debug_get_precision (cairo_device_t *device)
 {
