@@ -939,7 +939,7 @@ i965_shader_setup_constants (i965_shader_t *shader)
     assert (shader->constants_size < ARRAY_LENGTH (shader->constants));
 }
 
-/**
+/*
  * Highest-valued BLENDFACTOR used in i965_blend_op.
  *
  * This leaves out BRW_BLENDFACTOR_INV_DST_COLOR,
@@ -1630,7 +1630,7 @@ i965_sf_state_equal (const void *A, const void *B)
     return a->hash == b->hash;
 }
 
-/**
+/*
  * Sets up the SF state pointing at an SF kernel.
  *
  * The SF kernel does coord interp: for each attribute,
