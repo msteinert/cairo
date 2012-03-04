@@ -1665,8 +1665,8 @@ color_is_gray (double red, double green, double blue)
  * @surface: returns surface of type image surface or recording surface
  * @image_extra: returns image extra for image type surface
  *
- * Acquire source surface surface or raster source pattern.
- */
+ * Acquire source surface or raster source pattern.
+ **/
 static cairo_status_t
 _cairo_ps_surface_acquire_source_surface_from_pattern (cairo_ps_surface_t           *surface,
 						       const cairo_pattern_t        *pattern,
@@ -1791,7 +1791,9 @@ _cairo_ps_surface_release_source_surface_from_pattern (cairo_ps_surface_t       
  * @x_offset: returns x offset of padded image
  * @y_offset: returns y offset of padded image
  * @image: returns the padded image or NULL if padding not required to fill @extents
- */
+ *
+ * Creates a padded image if the source image does not fill the extents.
+ **/
 static cairo_status_t
 _cairo_ps_surface_create_padded_image_from_image (cairo_ps_surface_t           *surface,
 						  cairo_image_surface_t        *source,
