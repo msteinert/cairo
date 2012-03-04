@@ -2291,7 +2291,7 @@ _cairo_scaled_font_is_win32 (cairo_scaled_font_t *scaled_font)
 /**
  * cairo_win32_scaled_font_select_font:
  * @scaled_font: A #cairo_scaled_font_t from the Win32 font backend. Such an
- *   object can be created with cairo_win32_scaled_font_create_for_logfontw().
+ *   object can be created with cairo_win32_font_face_create_for_logfontw().
  * @hdc: a device context
  *
  * Selects the font into the given device context and changes the
