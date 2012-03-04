@@ -776,6 +776,16 @@ _cairo_xcb_connection_get_xid (cairo_xcb_connection_t *connection)
     return xid;
 }
 
+/**
+ * cairo_xcb_device_get_connection:
+ * @device: a #cairo_device_t for the XCB backend
+ *
+ * Get the connection for the XCB device.
+ *
+ * Returns: the #xcb_connection_t for the connection
+ *
+ * Since: 1.12
+ **/
 xcb_connection_t *
 cairo_xcb_device_get_connection (cairo_device_t *device)
 {
