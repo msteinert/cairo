@@ -47,7 +47,9 @@ CAIRO_BEGIN_DECLS
  * @CAIRO_SCRIPT_MODE_ASCII: the output will be in readable text (default)
  * @CAIRO_SCRIPT_MODE_BINARY: the output will use byte codes
  *
- * Since 1.10
+ * A set of script output variants.
+ *
+ * Since: 1.10
  **/
 typedef enum {
     CAIRO_SCRIPT_MODE_ASCII,
