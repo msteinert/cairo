@@ -436,6 +436,49 @@ op_reduces_to_source (const cairo_composite_rectangles_t *extents,
     return FALSE;
 }
 
+static cairo_status_t
+upload_boxes (const cairo_spans_compositor_t *compositor,
+	      const cairo_composite_rectangles_t *extents,
+	      cairo_boxes_t *boxes)
+{
+    cairo_surface_t *dst = extents->surface;
+    const cairo_surface_pattern_t *source = &extents->source_pattern.surface;
+    cairo_surface_t *src;
+    cairo_rectangle_int_t limit;
+    cairo_int_status_t status;
+    int tx, ty;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
+    src = _cairo_pattern_get_source(source, &limit);
+    if (!(src->type == CAIRO_SURFACE_TYPE_IMAGE || src->type == dst->type))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (! _cairo_matrix_is_integer_translation (&source->base.matrix, &tx, &ty))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* Check that the data is entirely within the image */
+    if (extents->bounded.x + tx < limit.x || extents->bounded.y + ty < limit.y)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (extents->bounded.x + extents->bounded.width  + tx > limit.x + limit.width ||
+	extents->bounded.y + extents->bounded.height + ty > limit.y + limit.height)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    tx += limit.x;
+    ty += limit.y;
+
+    if (src->type == CAIRO_SURFACE_TYPE_IMAGE)
+	status = compositor->draw_image_boxes (dst,
+					       (cairo_image_surface_t *)src,
+					       boxes, tx, ty);
+    else
+	status = compositor->copy_boxes (dst, src, boxes, &extents->bounded,
+					 tx, ty);
+
+    return status;
+}
+
 static cairo_int_status_t
 composite_aligned_boxes (const cairo_spans_compositor_t		*compositor,
 			 const cairo_composite_rectangles_t	*extents,
@@ -502,10 +545,8 @@ composite_aligned_boxes (const cairo_spans_compositor_t		*compositor,
 	if (op_is_source)
 	    op = CAIRO_OPERATOR_SOURCE;
 	status = compositor->fill_boxes (dst, op, color, boxes);
-#if 0
     } else if (inplace && source->type == CAIRO_PATTERN_TYPE_SURFACE) {
-	status = upload_inplace (compositor, extents, boxes);
-#endif
+	status = upload_boxes (compositor, extents, boxes);
     } else {
 	cairo_surface_t *src;
 	cairo_surface_t *mask = NULL;

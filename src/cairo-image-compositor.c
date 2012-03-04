@@ -1976,6 +1976,8 @@ _cairo_image_spans_compositor_get (void)
 	//spans.acquire = acquire;
 	//spans.release = release;
 	spans.fill_boxes = fill_boxes;
+	spans.draw_image_boxes = draw_image_boxes;
+	//spans.copy_boxes = copy_boxes;
 	spans.pattern_to_surface = _cairo_image_source_create_for_pattern;
 	//spans.check_composite_boxes = check_composite_boxes;
 	spans.composite_boxes = composite_boxes;

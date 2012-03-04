@@ -282,6 +282,67 @@ FAIL:
 }
 
 static cairo_int_status_t
+draw_image_boxes (void *_dst,
+		  cairo_image_surface_t *image,
+		  cairo_boxes_t *boxes,
+		  int dx, int dy)
+{
+    cairo_gl_surface_t *dst = _dst;
+    struct _cairo_boxes_chunk *chunk;
+    int i;
+
+    for (chunk = &boxes->chunks; chunk; chunk = chunk->next) {
+	for (i = 0; i < chunk->count; i++) {
+	    cairo_box_t *b = &chunk->base[i];
+	    int x = _cairo_fixed_integer_part (b->p1.x);
+	    int y = _cairo_fixed_integer_part (b->p1.y);
+	    int w = _cairo_fixed_integer_part (b->p2.x) - x;
+	    int h = _cairo_fixed_integer_part (b->p2.y) - y;
+	    cairo_status_t status;
+
+	    status = _cairo_gl_surface_draw_image (dst, image,
+						   x + dx, y + dy,
+						   w, h,
+						   x, y);
+	    if (unlikely (status))
+		return status;
+	}
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t copy_boxes (void *_dst,
+				      cairo_surface_t *src,
+				      cairo_boxes_t *boxes,
+				      const cairo_rectangle_int_t *extents,
+				      int dx, int dy)
+{
+    cairo_gl_composite_t setup;
+    cairo_gl_context_t *ctx;
+    cairo_int_status_t status;
+
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+    status = _cairo_gl_composite_init (&setup, CAIRO_OPERATOR_SOURCE, _dst, FALSE);
+    if (unlikely (status))
+        goto FAIL;
+
+    _cairo_gl_composite_set_source_operand (&setup, source_to_operand (src));
+    _cairo_gl_operand_translate (&setup.src, dx, dy);
+
+    status = _cairo_gl_composite_begin (&setup, &ctx);
+    if (unlikely (status))
+        goto FAIL;
+
+    emit_aligned_boxes (ctx, boxes);
+    status = _cairo_gl_context_release (ctx, CAIRO_STATUS_SUCCESS);
+
+FAIL:
+    _cairo_gl_composite_fini (&setup);
+    return status;
+}
+
+static cairo_int_status_t
 composite_boxes (void			*_dst,
 		 cairo_operator_t	op,
 		 cairo_surface_t	*abstract_src,
@@ -307,7 +368,7 @@ composite_boxes (void			*_dst,
 
     _cairo_gl_composite_set_source_operand (&setup,
 					    source_to_operand (abstract_src));
-    _cairo_gl_operand_translate (&setup.mask, -src_x, -src_y);
+    _cairo_gl_operand_translate (&setup.src, -src_x, -src_y);
 
     _cairo_gl_composite_set_mask_operand (&setup,
 					  source_to_operand (abstract_mask));
@@ -434,6 +495,8 @@ _cairo_gl_span_compositor_get (void)
 
 	_cairo_spans_compositor_init (&spans, &shape);
 	spans.fill_boxes = fill_boxes;
+	spans.draw_image_boxes = draw_image_boxes;
+	spans.copy_boxes = copy_boxes;
 	//spans.check_composite_boxes = check_composite_boxes;
 	spans.pattern_to_surface = _cairo_gl_pattern_to_source;
 	spans.composite_boxes = composite_boxes;
