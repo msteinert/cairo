@@ -3265,7 +3265,7 @@ cairo_ft_font_face_create_for_ft_face (FT_Face         face,
  *
  * FreeType provides the ability to synthesize different glyphs from a base
  * font, which is useful if you lack those glyphs from a true bold or oblique
- * font.
+ * font. See also #cairo_ft_synthesize_t.
  *
  * Since: 1.12
  **/
@@ -3307,6 +3307,8 @@ cairo_ft_font_face_unset_synthesize (cairo_font_face_t *font_face,
 /**
  * cairo_ft_font_face_get_synthesize:
  * @font_face: The #cairo_ft_font_face_t object to query
+ *
+ * See #cairo_ft_synthesize_t.
  *
  * Returns: the current set of synthesis options.
  *
