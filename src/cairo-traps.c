@@ -44,6 +44,7 @@
 #include "cairo-region-private.h"
 #include "cairo-slope-private.h"
 #include "cairo-traps-private.h"
+#include "cairo-spans-private.h"
 
 /* private functions */
 
@@ -749,4 +750,65 @@ _cairo_debug_print_traps (FILE *file, const cairo_traps_t *traps)
 		 traps->traps[n].right.p2.x,
 		 traps->traps[n].right.p2.y);
     }
+}
+
+struct cairo_trap_renderer {
+    cairo_span_renderer_t base;
+    cairo_traps_t *traps;
+};
+
+static cairo_status_t
+span_to_traps (void *abstract_renderer, int y, int h,
+	       const cairo_half_open_span_t *spans, unsigned num_spans)
+{
+    struct cairo_trap_renderer *r = abstract_renderer;
+    cairo_fixed_t top, bot;
+
+    if (num_spans == 0)
+	return CAIRO_STATUS_SUCCESS;
+
+    top = _cairo_fixed_from_int (y);
+    bot = _cairo_fixed_from_int (y + h);
+    do {
+	if (spans[0].coverage) {
+	    cairo_fixed_t x0 = _cairo_fixed_from_int(spans[0].x);
+	    cairo_fixed_t x1 = _cairo_fixed_from_int(spans[1].x);
+	    cairo_line_t left = { { x0, top }, { x0, bot } },
+			 right = { { x1, top }, { x1, bot } };
+	    _cairo_traps_add_trap (r->traps, top, bot, &left, &right);
+	}
+	spans++;
+    } while (--num_spans > 1);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_int_status_t
+_cairo_rasterise_polygon_to_traps (cairo_polygon_t			*polygon,
+				   cairo_fill_rule_t			 fill_rule,
+				   cairo_antialias_t			 antialias,
+				   cairo_traps_t *traps)
+{
+    struct cairo_trap_renderer renderer;
+    cairo_scan_converter_t *converter;
+    cairo_int_status_t status;
+    cairo_rectangle_int_t r;
+
+    TRACE ((stderr, "%s: fill_rule=%d, antialias=%d\n",
+	    __FUNCTION__, fill_rule, antialias));
+    assert(antialias == CAIRO_ANTIALIAS_NONE);
+
+    renderer.traps = traps;
+    renderer.base.render_rows = span_to_traps;
+
+    _cairo_box_round_to_rectangle (&polygon->extents, &r);
+    converter = _cairo_mono_scan_converter_create (r.x, r.y,
+						   r.x + r.width,
+						   r.y + r.height,
+						   fill_rule);
+    status = _cairo_mono_scan_converter_add_polygon (converter, polygon);
+    if (likely (status == CAIRO_INT_STATUS_SUCCESS))
+	status = converter->generate (converter, &renderer.base);
+    converter->destroy (converter);
+    return status;
 }

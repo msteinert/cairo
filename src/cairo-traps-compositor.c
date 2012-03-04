@@ -1370,7 +1370,8 @@ clip_and_composite_polygon (const cairo_traps_compositor_t *compositor,
 			    cairo_composite_rectangles_t *extents,
 			    cairo_polygon_t *polygon,
 			    cairo_antialias_t antialias,
-			    cairo_fill_rule_t fill_rule)
+			    cairo_fill_rule_t fill_rule,
+			    cairo_bool_t curvy)
 {
     composite_traps_info_t traps;
     cairo_surface_t *dst = extents->surface;
@@ -1435,7 +1436,11 @@ clip_and_composite_polygon (const cairo_traps_compositor_t *compositor,
 
     _cairo_traps_init (&traps.traps);
 
-    status = _cairo_bentley_ottmann_tessellate_polygon (&traps.traps, polygon, fill_rule);
+    if (antialias == CAIRO_ANTIALIAS_NONE && curvy) {
+	status = _cairo_rasterise_polygon_to_traps (polygon, fill_rule, antialias, &traps.traps);
+    } else {
+	status = _cairo_bentley_ottmann_tessellate_polygon (&traps.traps, polygon, fill_rule);
+    }
     if (unlikely (status))
 	goto CLEANUP_TRAPS;
 
@@ -1647,7 +1652,7 @@ clip_and_composite_boxes (const cairo_traps_compositor_t *compositor,
 	    extents->clip = clip;
 
 	    status = clip_and_composite_polygon (compositor, extents, &polygon,
-						 antialias, fill_rule);
+						 antialias, fill_rule, FALSE);
 
 	    clip = extents->clip;
 	    extents->clip = saved_clip;
@@ -2032,6 +2037,24 @@ _cairo_traps_compositor_stroke (const cairo_compositor_t *_compositor,
 	_cairo_tristrip_fini (&info.strip);
     }
 
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED &&
+	path->has_curve_to && antialias == CAIRO_ANTIALIAS_NONE) {
+	cairo_polygon_t polygon;
+
+	_cairo_polygon_init_with_clip (&polygon, extents->clip);
+	status = _cairo_path_fixed_stroke_to_polygon (path, style,
+						      ctm, ctm_inverse,
+						      tolerance,
+						      &polygon);
+	if (likely (status == CAIRO_INT_STATUS_SUCCESS))
+	    status = clip_and_composite_polygon (compositor,
+						 extents, &polygon,
+						 CAIRO_ANTIALIAS_NONE,
+						 CAIRO_FILL_RULE_WINDING,
+						 TRUE);
+	_cairo_polygon_fini (&polygon);
+    }
+
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	composite_traps_info_t info;
 
@@ -2108,7 +2131,7 @@ _cairo_traps_compositor_fill (const cairo_compositor_t *_compositor,
 #endif
 	if (likely (status == CAIRO_INT_STATUS_SUCCESS)) {
 	    status = clip_and_composite_polygon (compositor, extents, &polygon,
-						 antialias, fill_rule);
+						 antialias, fill_rule, path->has_curve_to);
 	}
 	_cairo_polygon_fini (&polygon);
     }

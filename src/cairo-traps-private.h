@@ -121,6 +121,12 @@ cairo_private cairo_status_t
 _cairo_traps_path (const cairo_traps_t *traps,
 		   cairo_path_fixed_t  *path);
 
+cairo_private cairo_int_status_t
+_cairo_rasterise_polygon_to_traps (cairo_polygon_t			*polygon,
+				   cairo_fill_rule_t			 fill_rule,
+				   cairo_antialias_t			 antialias,
+				   cairo_traps_t *traps);
+
 CAIRO_END_DECLS
 
 #endif /* CAIRO_TRAPS_PRIVATE_H */
