@@ -420,13 +420,18 @@ recording_pattern_contains_sample (const cairo_pattern_t *pattern,
 }
 
 static cairo_bool_t
-op_reduces_to_source (const cairo_composite_rectangles_t *extents)
+op_reduces_to_source (const cairo_composite_rectangles_t *extents,
+		      cairo_bool_t no_mask)
 {
     if (extents->op == CAIRO_OPERATOR_SOURCE)
 	return TRUE;
 
     if (extents->surface->is_clear)
 	return extents->op == CAIRO_OPERATOR_OVER || extents->op == CAIRO_OPERATOR_ADD;
+
+    if (no_mask && extents->op == CAIRO_OPERATOR_OVER)
+	return _cairo_pattern_is_opaque (&extents->source_pattern.base,
+					 &extents->source_sample_area);
 
     return FALSE;
 }
@@ -450,9 +455,9 @@ composite_aligned_boxes (const cairo_spans_compositor_t		*compositor,
     if (need_clip_mask && ! extents->is_bounded)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    op_is_source = op_reduces_to_source (extents);
     no_mask = extents->mask_pattern.base.type == CAIRO_PATTERN_TYPE_SOLID &&
-	CAIRO_ALPHA_IS_OPAQUE (extents->mask_pattern.solid.color.alpha);
+	CAIRO_COLOR_IS_OPAQUE (&extents->mask_pattern.solid.color);
+    op_is_source = op_reduces_to_source (extents, no_mask);
     inplace = ! need_clip_mask && op_is_source && no_mask;
 
     TRACE ((stderr, "%s: op-is-source=%d [op=%d], no-mask=%d, inplace=%d\n",
