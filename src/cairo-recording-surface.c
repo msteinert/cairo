@@ -1724,6 +1724,18 @@ _cairo_recording_surface_get_ink_bbox (cairo_recording_surface_t *surface,
     return _recording_surface_get_ink_bbox (surface, bbox, transform);
 }
 
+/**
+ * cairo_recording_surface_get_extents:
+ * @surface: a #cairo_recording_surface_t
+ * @extents: the #cairo_rectangle_t to be assigned the extents
+ *
+ * Get the extents of the recording-surface.
+ *
+ * Return value: %TRUE if the surface is bounded, of recording type, and
+ * not in an error state, otherwise %FALSE
+ *
+ * Since: 1.12
+ **/
 cairo_bool_t
 cairo_recording_surface_get_extents (cairo_surface_t *surface,
 				     cairo_rectangle_t *extents)
