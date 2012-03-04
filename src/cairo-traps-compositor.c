@@ -1434,6 +1434,20 @@ clip_and_composite_polygon (const cairo_traps_compositor_t *compositor,
 	}
     }
 
+    if (antialias == CAIRO_ANTIALIAS_NONE && curvy) {
+	cairo_boxes_t boxes;
+
+	_cairo_boxes_init (&boxes);
+	status = _cairo_rasterise_polygon_to_boxes (polygon, fill_rule, &boxes);
+	if (likely (status == CAIRO_INT_STATUS_SUCCESS)) {
+	    assert (boxes.is_pixel_aligned);
+	    status = clip_and_composite_boxes (compositor, extents, &boxes);
+	}
+	_cairo_boxes_fini (&boxes);
+	if ((status != CAIRO_INT_STATUS_UNSUPPORTED))
+	    return status;
+    }
+
     _cairo_traps_init (&traps.traps);
 
     if (antialias == CAIRO_ANTIALIAS_NONE && curvy) {

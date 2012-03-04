@@ -373,6 +373,65 @@ _cairo_boxes_for_each_box (cairo_boxes_t *boxes,
     return TRUE;
 }
 
+struct cairo_box_renderer {
+    cairo_span_renderer_t base;
+    cairo_boxes_t *boxes;
+};
+
+static cairo_status_t
+span_to_boxes (void *abstract_renderer, int y, int h,
+	       const cairo_half_open_span_t *spans, unsigned num_spans)
+{
+    struct cairo_box_renderer *r = abstract_renderer;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_box_t box;
+
+    if (num_spans == 0)
+	return CAIRO_STATUS_SUCCESS;
+
+    box.p1.y = _cairo_fixed_from_int (y);
+    box.p2.y = _cairo_fixed_from_int (y + h);
+    do {
+	if (spans[0].coverage) {
+	    box.p1.x = _cairo_fixed_from_int(spans[0].x);
+	    box.p2.x = _cairo_fixed_from_int(spans[1].x);
+	    status = _cairo_boxes_add (r->boxes, CAIRO_ANTIALIAS_DEFAULT, &box);
+	}
+	spans++;
+    } while (--num_spans > 1 && status == CAIRO_STATUS_SUCCESS);
+
+    return status;
+}
+
+cairo_status_t
+_cairo_rasterise_polygon_to_boxes (cairo_polygon_t			*polygon,
+				   cairo_fill_rule_t			 fill_rule,
+				   cairo_boxes_t *boxes)
+{
+    struct cairo_box_renderer renderer;
+    cairo_scan_converter_t *converter;
+    cairo_int_status_t status;
+    cairo_rectangle_int_t r;
+
+    TRACE ((stderr, "%s: fill_rule=%d\n", __FUNCTION__, fill_rule));
+
+    _cairo_box_round_to_rectangle (&polygon->extents, &r);
+    converter = _cairo_mono_scan_converter_create (r.x, r.y,
+						   r.x + r.width,
+						   r.y + r.height,
+						   fill_rule);
+    status = _cairo_mono_scan_converter_add_polygon (converter, polygon);
+    if (unlikely (status))
+	goto cleanup_converter;
+
+    renderer.boxes = boxes;
+    renderer.base.render_rows = span_to_boxes;
+
+    status = converter->generate (converter, &renderer.base);
+cleanup_converter:
+    converter->destroy (converter);
+    return status;
+}
 
 void
 _cairo_debug_print_boxes (FILE *stream, const cairo_boxes_t *boxes)
