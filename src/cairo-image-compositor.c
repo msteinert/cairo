@@ -1339,8 +1339,9 @@ typedef struct _cairo_image_span_renderer {
     uint8_t *data;
 
     const cairo_composite_rectangles_t *composite;
-    pixman_image_t *src, *mask;
+    pixman_image_t *src, *mask, *dst;
     int src_x, src_y;
+    int mask_x, mask_y;
     uint32_t pixel;
 
     uint8_t op;
@@ -1602,6 +1603,29 @@ _fill_spans (void *abstract_renderer, int y, int h,
 }
 #endif
 
+static cairo_status_t
+_mono_spans (void *abstract_renderer, int y, int h,
+	     const cairo_half_open_span_t *spans, unsigned num_spans)
+{
+    cairo_image_span_renderer_t *r = abstract_renderer;
+
+    if (num_spans == 0)
+	return CAIRO_STATUS_SUCCESS;
+
+    do {
+	if (spans[0].coverage) {
+	    pixman_image_composite32 (r->op, r->src, NULL, (pixman_image_t*)r->dst,
+				      spans[0].x + r->src_x,  y + r->src_y,
+				      0, 0,
+				      spans[0].x, y,
+				      spans[1].x - spans[0].x, h);
+	}
+	spans++;
+    } while (--num_spans > 1);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_int_status_t
 mono_renderer_init (cairo_image_span_renderer_t	*r,
 		    const cairo_composite_rectangles_t *composite,
@@ -1609,38 +1633,80 @@ mono_renderer_init (cairo_image_span_renderer_t	*r,
 		    cairo_bool_t			 needs_clip)
 {
     cairo_image_surface_t *dst = (cairo_image_surface_t *)composite->surface;
-    const cairo_color_t	*color;
 
     if (antialias != CAIRO_ANTIALIAS_NONE)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    if (composite->source_pattern.base.type != CAIRO_PATTERN_TYPE_SOLID)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (!_cairo_pattern_is_opaque_solid (&composite->mask_pattern.base))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    color = &composite->source_pattern.solid.color;
-    if (!fill_reduces_to_source (composite->op, color, dst))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    r->base.render_rows = NULL;
+    if (composite->source_pattern.base.type == CAIRO_PATTERN_TYPE_SOLID) {
+	const cairo_color_t *color;
 
-    if (!color_to_pixel (color, dst->pixman_format, &r->pixel))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	color = &composite->source_pattern.solid.color;
+	if (fill_reduces_to_source (composite->op, color, dst) &&
+	    color_to_pixel (color, dst->pixman_format, &r->pixel)) {
+	    /* Use plain C for the fill operations as the span length is
+	     * typically small, too small to payback the startup overheads of
+	     * using SSE2 etc.
+	     */
+	    switch (r->bpp) {
+	    case 8: r->base.render_rows = _fill8_spans; break;
+	    case 16: r->base.render_rows = _fill16_spans; break;
+	    case 32: r->base.render_rows = _fill32_spans; break;
+	    default: break;
+	    }
+	    r->u.fill.data = dst->data;
+	    r->u.fill.stride = dst->stride;
+	}
+    } else if ((composite->op == CAIRO_OPERATOR_SOURCE ||
+		(composite->op == CAIRO_OPERATOR_OVER &&
+		 (dst->base.is_clear || (dst->base.content & CAIRO_CONTENT_ALPHA) == 0))) &&
+	       composite->source_pattern.base.type == CAIRO_PATTERN_TYPE_SURFACE &&
+	       composite->source_pattern.surface.surface->backend->type == CAIRO_SURFACE_TYPE_IMAGE &&
+	       to_image_surface(composite->source_pattern.surface.surface)->format == dst->format)
+    {
+       cairo_image_surface_t *src =
+	   to_image_surface(composite->source_pattern.surface.surface);
+       int tx, ty;
+
+	if (_cairo_matrix_is_integer_translation(&composite->source_pattern.base.matrix,
+						 &tx, &ty) &&
+	    composite->bounded.x + tx >= 0 &&
+	    composite->bounded.y + ty >= 0 &&
+	    composite->bounded.x + composite->bounded.width + tx <= src->width &&
+	    composite->bounded.y + composite->bounded.height + ty <= src->height) {
+
+	    r->u.blit.stride = dst->stride;
+	    r->u.blit.data = dst->data;
+	    r->u.blit.src_stride = src->stride;
+	    r->u.blit.src_data = src->data + src->stride * ty + tx * PIXMAN_FORMAT_BPP(src->format)/8;
+	    r->base.render_rows = _blit_spans;
+	}
+    }
+
+    if (r->base.render_rows == NULL) {
+	if (1) { /* XXX calling pixman_image_composite per span is too slow */
+	    r->src = _pixman_image_for_pattern (dst, &composite->source_pattern.base, FALSE,
+						&composite->unbounded,
+						&composite->source_sample_area,
+						&r->src_x, &r->src_y);
+	    if (unlikely (r->src == NULL))
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+	    r->dst = to_pixman_image (composite->surface);
+	    r->op = _pixman_operator (composite->op);
+	    r->base.render_rows = _mono_spans;
+	} else{
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+    }
+    r->base.finish = NULL;
 
     r->data = dst->data;
     r->stride = dst->stride;
     r->bpp = PIXMAN_FORMAT_BPP(dst->pixman_format);
-
-    /* Use plain C for the fill operations as the span length is typically
-     * small, too small to payback the startup overheads of using SSE2 etc.
-     */
-    switch (r->bpp) {
-    case 8: r->base.render_rows = _fill8_spans; break;
-    case 16: r->base.render_rows = _fill16_spans; break;
-    case 32: r->base.render_rows = _fill32_spans; break;
-    default: return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
-    r->base.finish = NULL;
 
     return CAIRO_INT_STATUS_SUCCESS;
 }
@@ -1662,13 +1728,14 @@ span_renderer_init (cairo_abstract_span_renderer_t	*_r,
     if (needs_clip)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    r->composite = composite;
+    r->mask = NULL;
+    r->src = NULL;
+
     status = mono_renderer_init (r, composite, antialias, needs_clip);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
-    r->composite = composite;
-    r->mask = NULL;
-    r->src = NULL;
     r->bpp = 0;
 
     if (op == CAIRO_OPERATOR_CLEAR) {
@@ -1771,10 +1838,7 @@ span_renderer_fini (cairo_abstract_span_renderer_t *_r,
 
     TRACE ((stderr, "%s\n", __FUNCTION__));
 
-    if (r->bpp)
-	return;
-
-    if (likely (status == CAIRO_INT_STATUS_SUCCESS)) {
+    if (likely (status == CAIRO_INT_STATUS_SUCCESS && r->bpp == 0)) {
 	const cairo_composite_rectangles_t *composite = r->composite;
 
 	if (r->base.finish)
