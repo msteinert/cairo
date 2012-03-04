@@ -818,6 +818,10 @@ clip_and_composite_polygon (const cairo_spans_compositor_t	*compositor,
 		old_clip = extents->clip;
 		extents->clip = _cairo_clip_copy_region (extents->clip);
 		_cairo_clip_destroy (old_clip);
+
+		status = trim_extents_to_polygon (extents, polygon);
+		if (unlikely (status))
+		    return status;
 	    } else {
 		_cairo_polygon_fini (&clipper);
 	    }
