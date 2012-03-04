@@ -605,7 +605,8 @@ composite_boxes (const cairo_spans_compositor_t *compositor,
 	}
     }
 
-    status = compositor->renderer_init (&renderer, extents, FALSE);
+    status = compositor->renderer_init (&renderer, extents,
+					CAIRO_ANTIALIAS_DEFAULT, FALSE);
     if (likely (status == CAIRO_INT_STATUS_SUCCESS))
 	status = converter.base.generate (&converter.base, &renderer.base);
     compositor->renderer_fini (&renderer, status);
@@ -660,7 +661,8 @@ composite_polygon (const cairo_spans_compositor_t	*compositor,
     if (unlikely (status))
 	goto cleanup_converter;
 
-    status = compositor->renderer_init (&renderer, extents, needs_clip);
+    status = compositor->renderer_init (&renderer, extents,
+					antialias, needs_clip);
     if (likely (status == CAIRO_INT_STATUS_SUCCESS))
 	status = converter->generate (converter, &renderer.base);
     compositor->renderer_fini (&renderer, status);

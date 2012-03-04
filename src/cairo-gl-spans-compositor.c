@@ -328,6 +328,7 @@ FAIL:
 static cairo_int_status_t
 _cairo_gl_span_renderer_init (cairo_abstract_span_renderer_t	*_r,
 			      const cairo_composite_rectangles_t *composite,
+			      cairo_antialias_t			 antialias,
 			      cairo_bool_t			 needs_clip)
 {
     cairo_gl_span_renderer_t *r = (cairo_gl_span_renderer_t *)_r;
