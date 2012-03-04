@@ -58,6 +58,9 @@ cairo_ft_font_face_create_for_ft_face (FT_Face         face,
 
 /**
  * cairo_ft_synthesize_t:
+ * @CAIRO_FT_SYNTHESIZE_BOLD: Embolden the glyphs (redraw with a pixel offset)
+ * @CAIRO_FT_SYNTHESIZE_OBLIQUE: Slant the glyph outline by 12 degrees to the
+ * right.
  *
  * A set of synthesis options to control how FreeType renders the glyphs
  * for a particular font face.
@@ -69,10 +72,6 @@ cairo_ft_font_face_create_for_ft_face (FT_Face         face,
  *
  * Note: that when synthesizing glyphs, the font metrics returned will only
  * be estimates.
- *
- * @CAIRO_FT_SYNTHESIZE_BOLD: Embolden the glyphs (redraw with a pixel offset)
- * @CAIRO_FT_SYNTHESIZE_OBLIQUE: Slant the glyph outline by 12 degrees to the
- * right.
  *
  * Since: 1.12
  **/
