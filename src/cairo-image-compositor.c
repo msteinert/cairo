@@ -1332,7 +1332,6 @@ typedef struct _cairo_image_span_renderer {
     cairo_span_renderer_t base;
 
     const cairo_composite_rectangles_t *composite;
-    cairo_rectangle_int_t extents;
 
     float opacity;
     uint8_t op;
@@ -1357,6 +1356,7 @@ typedef struct _cairo_image_span_renderer {
 	    int mask_x, mask_y;
 	} composite;
 	struct finish {
+	    cairo_rectangle_int_t extents;
 	    int src_x, src_y;
 	    int stride;
 	    uint8_t *data;
@@ -1379,8 +1379,8 @@ _cairo_image_spans (void *abstract_renderer,
     if (num_spans == 0)
 	return CAIRO_STATUS_SUCCESS;
 
-    mask = r->u.mask.data + (y - r->extents.y) * r->u.mask.stride;
-    mask += spans[0].x - r->extents.x;
+    mask = r->u.mask.data + (y - r->u.mask.extents.y) * r->u.mask.stride;
+    mask += spans[0].x - r->u.mask.extents.x;
     row = mask;
 
     do {
@@ -1415,21 +1415,21 @@ _cairo_image_spans_and_zero (void *abstract_renderer,
     int len;
 
     mask = r->u.mask.data;
-    if (y > r->extents.y) {
-	len = (y - r->extents.y) * r->u.mask.stride;
+    if (y > r->u.mask.extents.y) {
+	len = (y - r->u.mask.extents.y) * r->u.mask.stride;
 	memset (mask, 0, len);
 	mask += len;
     }
 
-    r->extents.y = y + height;
+    r->u.mask.extents.y = y + height;
     r->u.mask.data = mask + height * r->u.mask.stride;
     if (num_spans == 0) {
 	memset (mask, 0, height * r->u.mask.stride);
     } else {
 	uint8_t *row = mask;
 
-	if (spans[0].x != r->extents.x) {
-	    len = spans[0].x - r->extents.x;
+	if (spans[0].x != r->u.mask.extents.x) {
+	    len = spans[0].x - r->u.mask.extents.x;
 	    memset (row, 0, len);
 	    row += len;
 	}
@@ -1444,15 +1444,15 @@ _cairo_image_spans_and_zero (void *abstract_renderer,
 	    spans++;
 	} while (--num_spans > 1);
 
-	if (spans[0].x != r->extents.x + r->extents.width) {
-	    len = r->extents.x + r->extents.width - spans[0].x;
+	if (spans[0].x != r->u.mask.extents.x + r->u.mask.extents.width) {
+	    len = r->u.mask.extents.x + r->u.mask.extents.width - spans[0].x;
 	    memset (row, 0, len);
 	}
 
 	row = mask;
 	while (--height) {
 	    mask += r->u.mask.stride;
-	    memcpy (mask, row, r->extents.width);
+	    memcpy (mask, row, r->u.mask.extents.width);
 	}
     }
 
@@ -1464,8 +1464,8 @@ _cairo_image_finish_spans_and_zero (void *abstract_renderer)
 {
     cairo_image_span_renderer_t *r = abstract_renderer;
 
-    if (r->extents.y < r->extents.height)
-	memset (r->u.mask.data, 0, (r->extents.height - r->extents.y) * r->u.mask.stride);
+    if (r->u.mask.extents.y < r->u.mask.extents.height)
+	memset (r->u.mask.data, 0, (r->u.mask.extents.height - r->u.mask.extents.y) * r->u.mask.stride);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -2134,6 +2134,52 @@ _blit_xrgb32_lerp_spans (void *abstract_renderer, int y, int h,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_status_t
+_inplace_spans (void *abstract_renderer,
+		int y, int h,
+		const cairo_half_open_span_t *spans,
+		unsigned num_spans)
+{
+    cairo_image_span_renderer_t *r = abstract_renderer;
+    uint8_t *mask;
+    int x0, x1;
+
+    if (num_spans == 0)
+	return CAIRO_STATUS_SUCCESS;
+
+    if (num_spans == 2 && spans[0].coverage == 0xff) {
+	pixman_image_composite32 (r->op, r->src, NULL, r->u.composite.dst,
+				  spans[0].x + r->u.composite.src_x,
+				  y + r->u.composite.src_y,
+				  0, 0,
+				  spans[0].x, y,
+				  spans[1].x - spans[0].x, h);
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    mask = (uint8_t *)pixman_image_get_data (r->mask);
+    x0 = spans[0].x;
+    do {
+	int len = spans[1].x - spans[0].x;
+	*mask++ = spans[0].coverage;
+	if (len > 1) {
+	    memset (mask, spans[0].coverage, --len);
+	    mask += len;
+	}
+	x1 = spans[1].x;
+	spans++;
+    } while (--num_spans > 1);
+
+    pixman_image_composite32 (r->op, r->src, r->mask, r->u.composite.dst,
+			      x0 + r->u.composite.src_x,
+			      y + r->u.composite.src_y,
+			      0, 0,
+			      x0, y,
+			      x1 - x0, h);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_int_status_t
 inplace_renderer_init (cairo_image_span_renderer_t	*r,
 		       const cairo_composite_rectangles_t *composite,
@@ -2222,8 +2268,53 @@ inplace_renderer_init (cairo_image_span_renderer_t	*r,
 	    r->base.render_rows = _blit_xrgb32_lerp_spans;
 	}
     }
-    if (r->base.render_rows == NULL)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    if (r->base.render_rows == NULL) {
+	unsigned int width;
+
+	if (r->op != 0xff)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	if (composite->is_bounded == 0)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	if (dst->base.is_clear &&
+	    (composite->op == CAIRO_OPERATOR_SOURCE ||
+	     composite->op == CAIRO_OPERATOR_OVER ||
+	     composite->op == CAIRO_OPERATOR_ADD)) {
+	    r->op = PIXMAN_OP_SRC;
+	} else {
+	    if (composite->op == CAIRO_OPERATOR_SOURCE ||
+		composite->op == CAIRO_OPERATOR_CLEAR)
+		return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	    r->op = _pixman_operator (composite->op);
+	}
+
+	width = (composite->bounded.width + 3) & ~3;
+	if (width > sizeof (r->buf))
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	r->src = _pixman_image_for_pattern (dst,
+					    &composite->source_pattern.base, FALSE,
+					    &composite->bounded,
+					    &composite->source_sample_area,
+					    &r->u.composite.src_x, &r->u.composite.src_y);
+	if (unlikely (r->src == NULL))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+	/* Create an effectively unbounded mask by repeating the single line */
+	r->mask = pixman_image_create_bits (PIXMAN_a8,
+					    composite->bounded.width,
+					    composite->bounded.height,
+					    (uint32_t *)r->buf, 0);
+	if (unlikely (r->mask == NULL)) {
+	    pixman_image_unref (r->src);
+	    return _cairo_error(CAIRO_STATUS_NO_MEMORY);
+	}
+
+	r->u.composite.dst = dst->pixman_image;
+	r->base.render_rows = _inplace_spans;
+    }
 
     r->base.finish = NULL;
     r->bpp = PIXMAN_FORMAT_BPP(dst->pixman_format);
@@ -2325,20 +2416,20 @@ span_renderer_init (cairo_abstract_span_renderer_t	*_r,
 	}
     }
 
-    r->extents = composite->unbounded;
-    r->u.mask.stride = (r->extents.width + 3) & ~3;
-    if (r->extents.height * r->u.mask.stride > (int)sizeof (r->buf)) {
+    r->u.mask.extents = composite->unbounded;
+    r->u.mask.stride = (r->u.mask.extents.width + 3) & ~3;
+    if (r->u.mask.extents.height * r->u.mask.stride > (int)sizeof (r->buf)) {
 	r->mask = pixman_image_create_bits (PIXMAN_a8,
-					    r->extents.width,
-					    r->extents.height,
+					    r->u.mask.extents.width,
+					    r->u.mask.extents.height,
 					    NULL, 0);
 
 	r->base.render_rows = _cairo_image_spans;
 	r->base.finish = NULL;
     } else {
 	r->mask = pixman_image_create_bits (PIXMAN_a8,
-					    r->extents.width,
-					    r->extents.height,
+					    r->u.mask.extents.width,
+					    r->u.mask.extents.height,
 					    (uint32_t *)r->buf, r->u.mask.stride);
 
 	r->base.render_rows = _cairo_image_spans_and_zero;
@@ -2350,7 +2441,7 @@ span_renderer_init (cairo_abstract_span_renderer_t	*_r,
     r->u.mask.data = (uint8_t *) pixman_image_get_data (r->mask);
     r->u.mask.stride = pixman_image_get_stride (r->mask);
 
-    r->extents.height += r->extents.y;
+    r->u.mask.extents.height += r->u.mask.extents.y;
     return CAIRO_STATUS_SUCCESS;
 }
 
