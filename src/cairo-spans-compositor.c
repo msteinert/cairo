@@ -538,6 +538,7 @@ composite_aligned_boxes (const cairo_spans_compositor_t		*compositor,
 	return status;
     }
 
+    status = CAIRO_INT_STATUS_UNSUPPORTED;
     if (! need_clip_mask && no_mask && source->type == CAIRO_PATTERN_TYPE_SOLID) {
 	const cairo_color_t *color;
 
@@ -547,7 +548,8 @@ composite_aligned_boxes (const cairo_spans_compositor_t		*compositor,
 	status = compositor->fill_boxes (dst, op, color, boxes);
     } else if (inplace && source->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	status = upload_boxes (compositor, extents, boxes);
-    } else {
+    }
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	cairo_surface_t *src;
 	cairo_surface_t *mask = NULL;
 	int src_x, src_y;
