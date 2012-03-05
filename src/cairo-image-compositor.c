@@ -1773,13 +1773,13 @@ mono_renderer_init (cairo_image_span_renderer_t	*r,
 						 &tx, &ty) &&
 	    composite->bounded.x + tx >= 0 &&
 	    composite->bounded.y + ty >= 0 &&
-	    composite->bounded.x + composite->bounded.width + tx <= src->width &&
+	    composite->bounded.x + composite->bounded.width +  tx <= src->width &&
 	    composite->bounded.y + composite->bounded.height + ty <= src->height) {
 
 	    r->u.blit.stride = dst->stride;
 	    r->u.blit.data = dst->data;
 	    r->u.blit.src_stride = src->stride;
-	    r->u.blit.src_data = src->data + src->stride * ty + tx * PIXMAN_FORMAT_BPP(src->format)/8;
+	    r->u.blit.src_data = src->data + src->stride * ty + tx * 4;
 	    r->base.render_rows = _blit_spans;
 	}
     }
@@ -1812,42 +1812,38 @@ mono_renderer_init (cairo_image_span_renderer_t	*r,
 #define RB_ONE_HALF 0x007f007f
 #define RB_MASK_PLUS_ONE 0x01000100
 #define G_SHIFT 8
-#define UNc_rb_MUL_UNc(x, a, t)						\
-    do {								\
-	t  = ((x) & RB_MASK) * (a);					\
-	t += RB_ONE_HALF;						\
-	x = (t + ((t >> G_SHIFT) & RB_MASK)) >> G_SHIFT;		\
-	x &= RB_MASK;							\
-    } while (0)
-#define UNc_rb_ADD_UNc_rb(x, y, t)					\
-    do {								\
-	t = ((x) + (y));						\
-	t |= RB_MASK_PLUS_ONE - ((t >> G_SHIFT) & RB_MASK);		\
-	x = (t & RB_MASK);						\
-    } while (0)
+static inline uint32_t
+mul8x2_8 (uint32_t a, uint8_t b)
+{
+    uint32_t t = (a & RB_MASK) * b + RB_ONE_HALF;
+    return ((t + ((t >> G_SHIFT) & RB_MASK)) >> G_SHIFT) & RB_MASK;
+}
+
+static inline uint32_t
+add8x2_8x2 (uint32_t a, uint32_t b)
+{
+    uint32_t t = a + b;
+    t |= RB_MASK_PLUS_ONE - ((t >> G_SHIFT) & RB_MASK);
+    return t & RB_MASK;
+}
+
 static inline uint8_t
-mul8 (uint8_t a, uint8_t b)
+mul8_8 (uint8_t a, uint8_t b)
 {
     uint16_t t = a * (uint16_t)b + ONE_HALF;
     return ((t >> G_SHIFT) + t) >> G_SHIFT;
 }
+
 static inline uint32_t
 lerp8x4 (uint32_t src, uint8_t a, uint32_t dst)
 {
     uint8_t ia = ~a;
-    uint32_t r1, r2, r3, t;
+    uint32_t r1, r2;
 
-    r1 = src;
-    r2 = dst;
-    UNc_rb_MUL_UNc (r1, a, t);
-    UNc_rb_MUL_UNc (r2, ia, t);
-    UNc_rb_ADD_UNc_rb (r1, r2, t);
-
-    r2 = src >> G_SHIFT;
-    r3 = dst >> G_SHIFT;
-    UNc_rb_MUL_UNc (r2, a, t);
-    UNc_rb_MUL_UNc (r3, ia, t);
-    UNc_rb_ADD_UNc_rb (r2, r3, t);
+    r1 = add8x2_8x2 (mul8x2_8 (src, a),
+		     mul8x2_8 (dst, ia));
+    r2 = add8x2_8x2 (mul8x2_8 (src >> G_SHIFT, a),
+		     mul8x2_8 (dst >> G_SHIFT, ia));
 
     return r1 | (r2 << G_SHIFT);
 }
@@ -1995,7 +1991,7 @@ _fill_a8_lerp_spans (void *abstract_renderer, int y, int h,
 
     if (likely(h == 1)) {
 	do {
-	    uint8_t a = mul8 (spans[0].coverage, r->op);
+	    uint8_t a = mul8_8 (spans[0].coverage, r->op);
 	    if (a) {
 		int len = spans[1].x - spans[0].x;
 		uint8_t *d = r->u.fill.data + r->u.fill.stride*y + spans[0].x;
@@ -2010,7 +2006,7 @@ _fill_a8_lerp_spans (void *abstract_renderer, int y, int h,
 	} while (--num_spans > 1);
     } else {
 	do {
-	    uint8_t a = mul8 (spans[0].coverage, r->op);
+	    uint8_t a = mul8_8 (spans[0].coverage, r->op);
 	    if (a) {
 		int yy = y, hh = h;
 		uint16_t p = (uint16_t)a * r->u.fill.pixel + 0x7f;
@@ -2043,7 +2039,7 @@ _fill_xrgb32_lerp_spans (void *abstract_renderer, int y, int h,
 
     if (likely(h == 1)) {
 	do {
-	    uint8_t a = mul8 (spans[0].coverage, r->op);
+	    uint8_t a = mul8_8 (spans[0].coverage, r->op);
 	    if (a) {
 		int len = spans[1].x - spans[0].x;
 		uint32_t *d = (uint32_t*)(r->u.fill.data + r->u.fill.stride*y + spans[0].x*4);
@@ -2056,7 +2052,7 @@ _fill_xrgb32_lerp_spans (void *abstract_renderer, int y, int h,
 	} while (--num_spans > 1);
     } else {
 	do {
-	    uint8_t a = mul8 (spans[0].coverage, r->op);
+	    uint8_t a = mul8_8 (spans[0].coverage, r->op);
 	    if (a) {
 		int yy = y, hh = h;
 		do {
@@ -2065,6 +2061,68 @@ _fill_xrgb32_lerp_spans (void *abstract_renderer, int y, int h,
 		    while (len--) {
 			*d = lerp8x4 (r->u.fill.pixel, a, *d);
 			d++;
+		    }
+		    yy++;
+		} while (--hh);
+	    }
+	    spans++;
+	} while (--num_spans > 1);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_blit_xrgb32_lerp_spans (void *abstract_renderer, int y, int h,
+			 const cairo_half_open_span_t *spans, unsigned num_spans)
+{
+    cairo_image_span_renderer_t *r = abstract_renderer;
+
+    if (num_spans == 0)
+	return CAIRO_STATUS_SUCCESS;
+
+    if (likely(h == 1)) {
+	uint8_t *src = r->u.blit.src_data + y*r->u.blit.src_stride;
+	uint8_t *dst = r->u.blit.data + y*r->u.blit.stride;
+	do {
+	    uint8_t a = mul8_8 (spans[0].coverage, r->op);
+	    if (a) {
+		uint32_t *s = (uint32_t*)src + spans[0].x;
+		uint32_t *d = (uint32_t*)dst + spans[0].x;
+		int len = spans[1].x - spans[0].x;
+		if (a == 0xff) {
+		    if (len == 1)
+			*d = *s;
+		    else
+			memcpy(d, s, len*4);
+		} else {
+		    while (len--) {
+			*d = lerp8x4 (*s, a, *d);
+			s++, d++;
+		    }
+		}
+	    }
+	    spans++;
+	} while (--num_spans > 1);
+    } else {
+	do {
+	    uint8_t a = mul8_8 (spans[0].coverage, r->op);
+	    if (a) {
+		int yy = y, hh = h;
+		do {
+		    uint32_t *s = (uint32_t *)(r->u.blit.src_data + yy*r->u.blit.src_stride + spans[0].x * 4);
+		    uint32_t *d = (uint32_t *)(r->u.blit.data + yy*r->u.blit.stride + spans[0].x * 4);
+		    int len = spans[1].x - spans[0].x;
+		    if (a == 0xff) {
+			if (len == 1)
+			    *d = *s;
+			else
+			    memcpy(d, s, len * 4);
+		    } else {
+			while (len--) {
+			    *d = lerp8x4 (*s, a, *d);
+			    s++, d++;
+			}
 		    }
 		    yy++;
 		} while (--hh);
@@ -2136,6 +2194,32 @@ inplace_renderer_init (cairo_image_span_renderer_t	*r,
 	    }
 	    r->u.fill.data = dst->data;
 	    r->u.fill.stride = dst->stride;
+	}
+    } else if ((dst->format == CAIRO_FORMAT_ARGB32 || dst->format == CAIRO_FORMAT_RGB24) &&
+	       (composite->op == CAIRO_OPERATOR_SOURCE ||
+		(composite->op == CAIRO_OPERATOR_OVER &&
+		 (dst->base.is_clear || (dst->base.content & CAIRO_CONTENT_ALPHA) == 0))) &&
+	       composite->source_pattern.base.type == CAIRO_PATTERN_TYPE_SURFACE &&
+	       composite->source_pattern.surface.surface->backend->type == CAIRO_SURFACE_TYPE_IMAGE &&
+	       to_image_surface(composite->source_pattern.surface.surface)->format == dst->format)
+    {
+       cairo_image_surface_t *src =
+	   to_image_surface(composite->source_pattern.surface.surface);
+       int tx, ty;
+
+	if (_cairo_matrix_is_integer_translation(&composite->source_pattern.base.matrix,
+						 &tx, &ty) &&
+	    composite->bounded.x + tx >= 0 &&
+	    composite->bounded.y + ty >= 0 &&
+	    composite->bounded.x + composite->bounded.width + tx <= src->width &&
+	    composite->bounded.y + composite->bounded.height + ty <= src->height) {
+
+	    assert(PIXMAN_FORMAT_BPP(dst->pixman_format) == 32);
+	    r->u.blit.stride = dst->stride;
+	    r->u.blit.data = dst->data;
+	    r->u.blit.src_stride = src->stride;
+	    r->u.blit.src_data = src->data + src->stride * ty + tx * 4;
+	    r->base.render_rows = _blit_xrgb32_lerp_spans;
 	}
     }
     if (r->base.render_rows == NULL)
