@@ -1217,8 +1217,8 @@ _emit_glyphs_chunk (cairo_xlib_display_t *display,
 	  }
 	  elts[nelt].chars = char8 + size * j;
 	  elts[nelt].glyphset = info->glyphset;
-	  elts[nelt].xOff = glyphs[i].i.x;
-	  elts[nelt].yOff = glyphs[i].i.y;
+	  elts[nelt].xOff = glyphs[i].i.x - dst_x;
+	  elts[nelt].yOff = glyphs[i].i.y - dst_y;
       }
 
       switch (width) {
@@ -1245,9 +1245,9 @@ _emit_glyphs_chunk (cairo_xlib_display_t *display,
 			 src->picture,
 			 dst->picture,
 			 use_mask ? info->xrender_format : NULL,
-			 src_x + elts[0].xOff,
-			 src_y + elts[0].yOff,
-			 elts[0].xOff - dst_x, elts[0].yOff - dst_y,
+			 src_x + elts[0].xOff + dst_x,
+			 src_y + elts[0].yOff + dst_y,
+			 elts[0].xOff, elts[0].yOff,
 			 (XGlyphElt8 *) elts, nelt);
 
     if (elts != stack_elts)
