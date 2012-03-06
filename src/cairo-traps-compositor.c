@@ -153,6 +153,21 @@ static void blt_in(void *closure,
 				  &info->boxes);
 }
 
+static void
+add_rect_with_offset (cairo_boxes_t *boxes, int x1, int y1, int x2, int y2, int dx, int dy)
+{
+    cairo_box_t box;
+    cairo_int_status_t status;
+
+    box.p1.x = _cairo_fixed_from_int (x1 - dx);
+    box.p1.y = _cairo_fixed_from_int (y1 - dy);
+    box.p2.x = _cairo_fixed_from_int (x2 - dx);
+    box.p2.y = _cairo_fixed_from_int (y2 - dy);
+
+    status = _cairo_boxes_add (boxes, CAIRO_ANTIALIAS_DEFAULT, &box);
+    assert (status == CAIRO_INT_STATUS_SUCCESS);
+}
+
 static cairo_int_status_t
 combine_clip_as_traps (const cairo_traps_compositor_t *compositor,
 		       cairo_surface_t *mask,
@@ -164,6 +179,8 @@ combine_clip_as_traps (const cairo_traps_compositor_t *compositor,
     cairo_antialias_t antialias;
     cairo_traps_t traps;
     cairo_surface_t *src;
+    cairo_box_t box;
+    cairo_rectangle_int_t fixup;
     int src_x, src_y;
     cairo_int_status_t status;
 
@@ -196,8 +213,59 @@ combine_clip_as_traps (const cairo_traps_compositor_t *compositor,
 					  extents,
 					  antialias, &traps);
 
-    cairo_surface_destroy (src);
+    _cairo_traps_extents (&traps, &box);
+    _cairo_box_round_to_rectangle (&box, &fixup);
     _cairo_traps_fini (&traps);
+    cairo_surface_destroy (src);
+
+    if (status == CAIRO_INT_STATUS_SUCCESS &&
+	(fixup.width < extents->width || fixup.height < extents->height)) {
+	cairo_boxes_t clear;
+
+	_cairo_boxes_init (&clear);
+
+	/* top */
+	if (fixup.y != extents->y) {
+	    add_rect_with_offset (&clear,
+				  extents->x, extents->y,
+				  extents->x + extents->width,
+				  fixup.y,
+				  extents->x, extents->y);
+	}
+	/* left */
+	if (fixup.x != extents->x) {
+	    add_rect_with_offset (&clear,
+				  extents->x, fixup.y,
+				  fixup.x,
+				  fixup.y + fixup.height,
+				  extents->x, extents->y);
+	}
+	/* right */
+	if (fixup.x + fixup.width != extents->x + extents->width) {
+	    add_rect_with_offset (&clear,
+				  fixup.x + fixup.width,
+				  fixup.y,
+				  extents->x + extents->width,
+				  fixup.y + fixup.height,
+				  extents->x, extents->y);
+	}
+	/* bottom */
+	if (fixup.y + fixup.height != extents->y + extents->height) {
+	    add_rect_with_offset (&clear,
+				  extents->x,
+				  fixup.y + fixup.height,
+				  extents->x + extents->width,
+				  extents->y + extents->height,
+				  extents->x, extents->y);
+	}
+
+	status = compositor->fill_boxes (mask,
+					 CAIRO_OPERATOR_CLEAR,
+					 CAIRO_COLOR_TRANSPARENT,
+					 &clear);
+
+	_cairo_boxes_fini (&clear);
+    }
 
     return status;
 }
