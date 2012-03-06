@@ -336,6 +336,9 @@ _cairo_gl_ensure_stencil (cairo_gl_context_t *ctx,
 	GLenum internal_format = GL_DEPTH24_STENCIL8_OES;
 #endif
 
+	if (! _cairo_gl_surface_is_texture (surface))
+		return TRUE; /* best guess for now, will check later */
+
 	if (surface->depth_stencil)
 		return TRUE;
 
