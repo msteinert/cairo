@@ -301,6 +301,13 @@ typedef struct _cairo_gl_dispatch {
 					     GLint level, GLsizei samples);
 } cairo_gl_dispatch_t;
 
+typedef struct _cairo_gl_shared_depth_stencil_info {
+    GLuint id;
+    int width;
+    int height;
+    unsigned surfaces_with_same_size;
+} cairo_gl_shared_depth_stencil_info_t;
+
 struct _cairo_gl_context {
     cairo_device_t base;
 
@@ -352,6 +359,12 @@ struct _cairo_gl_context {
     cairo_bool_t has_npot_repeat;
 
     cairo_bool_t thread_aware;
+
+    /* GL stencil and depth buffers are shared among all surfaces
+       to preserve memory. In the future this could be a pool of renderbuffers
+       with an eviction policy. */
+    cairo_gl_shared_depth_stencil_info_t depth_stencil_info;
+    cairo_gl_shared_depth_stencil_info_t msaa_depth_stencil_info;
 
     void (*acquire) (void *ctx);
     void (*release) (void *ctx);

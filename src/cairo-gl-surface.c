@@ -946,6 +946,23 @@ static int _cairo_gl_surface_flavor (cairo_gl_surface_t *surface)
     return ctx->gl_flavor;
 }
 
+static void
+_cairo_gl_shrink_shared_renderbuffer (cairo_gl_context_t *ctx,
+				      cairo_gl_shared_depth_stencil_info_t *info,
+				      int surface_width,
+				      int surface_height)
+{
+    if (info->width != surface_width || info->height != surface_height)
+	return;
+
+    /* Force the creation of a new shared renderbuffer if we are the
+     * last surface that has the same size as our old shared buffer. */
+    ctx->dispatch.DeleteRenderbuffers (1, &info->id);
+    info->height = 0;
+    info->width = 0;
+    info->id = 0;
+}
+
 static cairo_status_t
 _cairo_gl_surface_finish (void *abstract_surface)
 {
@@ -968,18 +985,24 @@ _cairo_gl_surface_finish (void *abstract_surface)
 
     if (surface->fb)
         ctx->dispatch.DeleteFramebuffers (1, &surface->fb);
-    if (surface->depth_stencil)
-        ctx->dispatch.DeleteRenderbuffers (1, &surface->depth_stencil);
     if (surface->owns_tex)
 	glDeleteTextures (1, &surface->tex);
 
+    if (surface->depth_stencil) {
+	_cairo_gl_shrink_shared_renderbuffer (ctx, &ctx->depth_stencil_info,
+					      surface->width, surface->height);
+    }
+
 #if CAIRO_HAS_GL_SURFACE
-    if (surface->msaa_depth_stencil)
-	ctx->dispatch.DeleteRenderbuffers (1, &surface->msaa_depth_stencil);
     if (surface->msaa_fb)
 	ctx->dispatch.DeleteFramebuffers (1, &surface->msaa_fb);
     if (surface->msaa_rb)
 	ctx->dispatch.DeleteRenderbuffers (1, &surface->msaa_rb);
+
+    if (surface->msaa_depth_stencil) {
+	_cairo_gl_shrink_shared_renderbuffer (ctx, &ctx->msaa_depth_stencil_info,
+					      surface->width, surface->height);
+    }
 #endif
 
     return _cairo_gl_context_release (ctx, status);
