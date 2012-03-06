@@ -316,6 +316,32 @@ traps_get_clip_surface (const cairo_traps_compositor_t *compositor,
     return surface;
 }
 
+static void blt_unaligned_boxes(const cairo_traps_compositor_t *compositor,
+				cairo_surface_t *surface,
+				int dx, int dy,
+				cairo_box_t *boxes,
+				int num_boxes)
+{
+    struct blt_in info;
+    int i;
+
+    info.compositor = compositor;
+    info.dst = surface;
+    _cairo_boxes_init (&info.boxes);
+    info.boxes.num_boxes = 1;
+    for (i = 0; i < num_boxes; i++) {
+	cairo_box_t *b = &boxes[i];
+
+	if (! _cairo_fixed_is_integer (b->p1.x) ||
+	    ! _cairo_fixed_is_integer (b->p1.y) ||
+	    ! _cairo_fixed_is_integer (b->p2.x) ||
+	    ! _cairo_fixed_is_integer (b->p2.y))
+	{
+	    do_unaligned_box(blt_in, &info, b, dx, dy);
+	}
+    }
+}
+
 static cairo_surface_t *
 create_composite_mask (const cairo_traps_compositor_t *compositor,
 		       cairo_surface_t		*dst,
@@ -326,9 +352,7 @@ create_composite_mask (const cairo_traps_compositor_t *compositor,
 {
     cairo_surface_t *surface, *src;
     cairo_int_status_t status;
-    struct blt_in info;
     int src_x, src_y;
-    int i;
 
     TRACE ((stderr, "%s\n", __FUNCTION__));
 
@@ -369,6 +393,8 @@ create_composite_mask (const cairo_traps_compositor_t *compositor,
 					 &clear);
 	if (unlikely (status))
 	    goto error;
+
+	surface->is_clear = TRUE;
     }
 
     if (mask_func) {
@@ -376,8 +402,10 @@ create_composite_mask (const cairo_traps_compositor_t *compositor,
 			    CAIRO_OPERATOR_SOURCE, src, src_x, src_y,
 			    extents->bounded.x, extents->bounded.y,
 			    &extents->bounded, extents->clip);
-	if (likely (status == CAIRO_INT_STATUS_SUCCESS))
+	if (likely (status == CAIRO_INT_STATUS_SUCCESS)) {
+	    surface->is_clear = FALSE;
 	    goto out;
+	}
 	if (unlikely (status != CAIRO_INT_STATUS_UNSUPPORTED))
 	    goto error;
     }
@@ -390,24 +418,7 @@ create_composite_mask (const cairo_traps_compositor_t *compositor,
     if (unlikely (status))
 	goto error;
 
-    info.compositor = compositor;
-    info.dst = surface;
-    _cairo_boxes_init (&info.boxes);
-    info.boxes.num_boxes = 1;
-    for (i = 0; i < extents->clip->num_boxes; i++) {
-	cairo_box_t *b = &extents->clip->boxes[i];
-
-	if (! _cairo_fixed_is_integer (b->p1.x) ||
-	    ! _cairo_fixed_is_integer (b->p1.y) ||
-	    ! _cairo_fixed_is_integer (b->p2.x) ||
-	    ! _cairo_fixed_is_integer (b->p2.y))
-	{
-	    do_unaligned_box(blt_in, &info, b,
-			     extents->bounded.x,
-			     extents->bounded.y);
-	}
-    }
-
+    surface->is_clear = FALSE;
     if (extents->clip->path != NULL) {
 	status = combine_clip_as_traps (compositor, surface,
 					extents->clip, &extents->bounded);
@@ -418,12 +429,16 @@ create_composite_mask (const cairo_traps_compositor_t *compositor,
 	}
 	if (unlikely (status))
 	    goto error;
+    } else if (extents->clip->boxes) {
+	blt_unaligned_boxes(compositor, surface,
+			    extents->bounded.x, extents->bounded.y,
+			    extents->clip->boxes, extents->clip->num_boxes);
+
     }
 
 out:
     compositor->release (surface);
     cairo_surface_destroy (src);
-    surface->is_clear = FALSE;
     return surface;
 
 error:
