@@ -153,17 +153,22 @@ _draw_triangle_fan (cairo_gl_context_t		*ctx,
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_int_status_t
-_cairo_gl_msaa_compositor_draw_clip (cairo_gl_context_t *ctx,
-				     cairo_gl_composite_t *setup,
-				     cairo_clip_t *clip)
+static cairo_int_status_t
+_clip_to_traps (cairo_clip_t *clip,
+		cairo_traps_t *traps)
 {
     cairo_int_status_t status;
-    cairo_traps_t traps;
-
     cairo_polygon_t polygon;
     cairo_antialias_t antialias;
     cairo_fill_rule_t fill_rule;
+
+    _cairo_traps_init (traps);
+
+    if (clip->num_boxes == 1 && clip->path == NULL) {
+	cairo_boxes_t boxes;
+	_cairo_boxes_init_for_array (&boxes, clip->boxes, clip->num_boxes);
+	return _cairo_traps_init_boxes (traps, &boxes);
+    }
 
     status = _cairo_clip_get_polygon (clip, &polygon, &fill_rule, &antialias);
     if (unlikely (status))
@@ -180,14 +185,24 @@ _cairo_gl_msaa_compositor_draw_clip (cairo_gl_context_t *ctx,
      * option.
      */
 
-    _cairo_traps_init (&traps);
-    status = _cairo_bentley_ottmann_tessellate_polygon (&traps,
+    _cairo_traps_init (traps);
+    status = _cairo_bentley_ottmann_tessellate_polygon (traps,
 							&polygon,
 							fill_rule);
-    _cairo_polygon_fini (&polygon);
+    return status;
+}
+
+cairo_int_status_t
+_cairo_gl_msaa_compositor_draw_clip (cairo_gl_context_t *ctx,
+				     cairo_gl_composite_t *setup,
+				     cairo_clip_t *clip)
+{
+    cairo_int_status_t status;
+    cairo_traps_t traps;
+
+    status = _clip_to_traps (clip, &traps);
     if (unlikely (status))
 	return status;
-
     status = _draw_traps (ctx, setup, &traps);
 
     _cairo_traps_fini (&traps);
@@ -303,6 +318,19 @@ _cairo_gl_msaa_compositor_mask_source_operator (const cairo_compositor_t *compos
     cairo_gl_context_t *ctx = NULL;
     cairo_int_status_t status;
 
+    cairo_clip_t *clip = composite->clip;
+    cairo_traps_t traps;
+
+    /* If we have a non-rectangular clip, we can avoid using the stencil buffer
+     * for clipping and just draw the clip polygon. */
+    if (clip) {
+	status = _clip_to_traps (clip, &traps);
+	if (unlikely (status)) {
+	    _cairo_traps_fini (&traps);
+	    return status;
+	}
+    }
+
     status = _cairo_gl_composite_init (&setup,
 				       CAIRO_OPERATOR_DEST_OUT,
 				       dst,
@@ -321,7 +349,10 @@ _cairo_gl_msaa_compositor_mask_source_operator (const cairo_compositor_t *compos
     if (unlikely (status))
 	goto finish;
 
-    _draw_int_rect (ctx, &setup, &composite->bounded);
+    if (! clip)
+	status = _draw_int_rect (ctx, &setup, &composite->bounded);
+    else
+	status = _draw_traps (ctx, &setup, &traps);
 
     /* Now draw the second pass. */
     _cairo_gl_composite_set_operator (&setup, CAIRO_OPERATOR_ADD,
@@ -344,12 +375,17 @@ _cairo_gl_msaa_compositor_mask_source_operator (const cairo_compositor_t *compos
     if (unlikely (status))
 	goto finish;
 
-    _draw_int_rect (ctx, &setup, &composite->bounded);
+    if (! clip)
+	status = _draw_int_rect (ctx, &setup, &composite->bounded);
+    else
+	status = _draw_traps (ctx, &setup, &traps);
 
 finish:
     _cairo_gl_composite_fini (&setup);
     if (ctx)
 	status = _cairo_gl_context_release (ctx, status);
+    if (clip)
+	_cairo_traps_fini (&traps);
 
     return status;
 }
@@ -363,6 +399,7 @@ _cairo_gl_msaa_compositor_mask (const cairo_compositor_t	*compositor,
     cairo_gl_context_t *ctx = NULL;
     cairo_int_status_t status;
     cairo_operator_t op = composite->op;
+    cairo_clip_t *clip = composite->clip;
 
     if (! can_use_msaa_compositor (dst, CAIRO_ANTIALIAS_DEFAULT))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -436,8 +473,6 @@ _cairo_gl_msaa_compositor_mask (const cairo_compositor_t	*compositor,
     if (unlikely (status))
 	goto finish;
 
-    _cairo_gl_msaa_compositor_set_clip (composite, &setup);
-
     /* We always use multisampling here, because we do not yet have the smarts
        to calculate when the clip or the source requires it. */
      _cairo_gl_composite_set_multisample (&setup);
@@ -446,7 +481,10 @@ _cairo_gl_msaa_compositor_mask (const cairo_compositor_t	*compositor,
     if (unlikely (status))
 	goto finish;
 
-    _draw_int_rect (ctx, &setup, &composite->bounded);
+    if (! clip)
+	status = _draw_int_rect (ctx, &setup, &composite->bounded);
+    else
+	status = _cairo_gl_msaa_compositor_draw_clip (ctx, &setup, clip);
 
 finish:
     _cairo_gl_composite_fini (&setup);
