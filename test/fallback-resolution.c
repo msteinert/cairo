@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cairo.h>
+#include <cairo-pdf.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -270,6 +271,23 @@ generate_reference (double ppi_x, double ppi_y, const char *filename)
     cr = cairo_create (surface);
     cairo_surface_destroy (surface);
 
+    /* As we wish to mimic a PDF surface, copy across the default font options
+     * from the PDF backend.
+     */
+    {
+	cairo_surface_t *pdf;
+	cairo_font_options_t *options;
+
+	options = cairo_font_options_create ();
+
+	pdf = cairo_pdf_surface_create ("tmp.pdf", 1, 1);
+	cairo_surface_get_font_options (pdf, options);
+	cairo_surface_destroy (pdf);
+
+	cairo_set_font_options (cr, options);
+	cairo_font_options_destroy (options);
+    }
+
 #if SET_TOLERANCE
     cairo_set_tolerance (cr, 3.0);
 #endif
@@ -351,7 +369,7 @@ preamble (cairo_test_context_t *ctx)
 #if GENERATE_REFERENCE
     for (n = 0; n < num_ppi; n++) {
 	char *ref_name;
-	xasprintf (&ref_name, "fallback-resolution.ppi%gx%g.ref.png",
+	xasprintf (&ref_name, "reference/fallback-resolution.ppi%gx%g.ref.png",
 		   ppi[n].x, ppi[n].y);
 	generate_reference (ppi[n].x, ppi[n].y, ref_name);
 	free (ref_name);
