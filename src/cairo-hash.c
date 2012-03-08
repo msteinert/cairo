@@ -111,6 +111,8 @@ static const unsigned long hash_table_sizes[] = {
 struct _cairo_hash_table {
     cairo_hash_keys_equal_func_t keys_equal;
 
+    cairo_hash_entry_t *cache[32];
+
     const unsigned long *table_size;
     cairo_hash_entry_t **entries;
 
@@ -173,6 +175,7 @@ _cairo_hash_table_create (cairo_hash_keys_equal_func_t keys_equal)
     else
 	hash_table->keys_equal = keys_equal;
 
+    memset (&hash_table->cache, 0, sizeof (hash_table->cache));
     hash_table->table_size = &hash_table_sizes[0];
 
     hash_table->entries = calloc (*hash_table->table_size,
@@ -337,19 +340,24 @@ _cairo_hash_table_lookup (cairo_hash_table_t *hash_table,
 {
     cairo_hash_entry_t *entry;
     unsigned long table_size, i, idx, step;
+    unsigned long hash = key->hash;
+
+    entry = hash_table->cache[hash & 31];
+    if (entry && entry->hash == hash && hash_table->keys_equal (key, entry))
+	return entry;
 
     table_size = *hash_table->table_size;
-    idx = key->hash % table_size;
+    idx = hash % table_size;
 
     entry = hash_table->entries[idx];
     if (ENTRY_IS_LIVE (entry)) {
-	if (entry->hash == key->hash && hash_table->keys_equal (key, entry))
-	    return entry;
+	if (entry->hash == hash && hash_table->keys_equal (key, entry))
+		goto insert_cache;
     } else if (ENTRY_IS_FREE (entry))
 	return NULL;
 
     i = 1;
-    step = 1 + key->hash % (table_size - 2);
+    step = 1 + hash % (table_size - 2);
     do {
 	idx += step;
 	if (idx >= table_size)
@@ -357,14 +365,18 @@ _cairo_hash_table_lookup (cairo_hash_table_t *hash_table,
 
 	entry = hash_table->entries[idx];
 	if (ENTRY_IS_LIVE (entry)) {
-	    if (entry->hash == key->hash && hash_table->keys_equal (key, entry))
-		return entry;
+	    if (entry->hash == hash && hash_table->keys_equal (key, entry))
+		    goto insert_cache;
 	} else if (ENTRY_IS_FREE (entry))
 	    return NULL;
     } while (++i < table_size);
 
     ASSERT_NOT_REACHED;
     return NULL;
+
+insert_cache:
+    hash_table->cache[hash & 31] = entry;
+    return entry;
 }
 
 /**
@@ -459,6 +471,7 @@ _cairo_hash_table_insert (cairo_hash_table_t *hash_table,
 	hash_table->free_entries--;
 
     *entry = key_and_value;
+    hash_table->cache[key_and_value->hash & 31] = key_and_value;
     hash_table->live_entries++;
 
     return CAIRO_STATUS_SUCCESS;
@@ -509,6 +522,7 @@ _cairo_hash_table_remove (cairo_hash_table_t *hash_table,
 {
     *_cairo_hash_table_lookup_exact_key (hash_table, key) = DEAD_ENTRY;
     hash_table->live_entries--;
+    hash_table->cache[key->hash & 31] = NULL;
 
     /* Check for table resize. Don't do this when iterating as this will
      * reorder elements of the table and cause the iteration to potentially
