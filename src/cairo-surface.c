@@ -387,9 +387,11 @@ _cairo_surface_begin_modification (cairo_surface_t *surface)
 {
     assert (surface->status == CAIRO_STATUS_SUCCESS);
     assert (! surface->finished);
-    assert (surface->snapshot_of == NULL);
 
     _cairo_surface_detach_snapshots (surface);
+    if (surface->snapshot_of != NULL)
+	_cairo_surface_detach_snapshot (surface);
+
     _cairo_surface_detach_mime_data (surface);
 }
 
