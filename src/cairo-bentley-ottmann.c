@@ -1078,6 +1078,10 @@ _cairo_bo_event_queue_insert_if_intersect_below_current_y (cairo_bo_event_queue_
 {
     cairo_bo_point32_t intersection;
 
+    if (MAX (left->edge.line.p1.x, left->edge.line.p2.x) <=
+	MIN (right->edge.line.p1.x, right->edge.line.p2.x))
+	return CAIRO_STATUS_SUCCESS;
+
     if (_line_equal (&left->edge.line, &right->edge.line))
 	return CAIRO_STATUS_SUCCESS;
 
