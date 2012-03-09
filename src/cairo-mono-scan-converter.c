@@ -337,11 +337,13 @@ row (struct mono_scan_converter *c, unsigned int mask)
 	int xend = I(edge->x.quo);
 
 	if (--edge->height_left) {
-	    edge->x.quo += edge->dxdy.quo;
-	    edge->x.rem += edge->dxdy.rem;
-	    if (edge->x.rem >= 0) {
-		++edge->x.quo;
-		edge->x.rem -= edge->dy;
+	    if (!edge->vertical) {
+		edge->x.quo += edge->dxdy.quo;
+		edge->x.rem += edge->dxdy.rem;
+		if (edge->x.rem >= 0) {
+		    ++edge->x.quo;
+		    edge->x.rem -= edge->dy;
+		}
 	    }
 
 	    if (edge->x.quo < prev_x) {
