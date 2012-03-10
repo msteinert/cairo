@@ -1258,12 +1258,16 @@ _cairo_skia_context_paint_with_alpha (void *abstract_cr,
 				      double alpha)
 {
     cairo_skia_context_t *cr = (cairo_skia_context_t *) abstract_cr;
+    cairo_status_t status;
 
     if (CAIRO_ALPHA_IS_OPAQUE (alpha))
 	return _cairo_skia_context_paint (cr);
 
-    /*XXX */
-    return _cairo_skia_context_paint (cr);
+    cr->paint->setAlpha(SkScalarRound(255*alpha));
+    status = _cairo_skia_context_paint (cr);
+    cr->paint->setAlpha(255);
+
+    return status;
 }
 
 static cairo_status_t
