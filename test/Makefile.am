@@ -460,6 +460,8 @@ results.tar:
 results.tar.gz: results.tar
 	gzip -c $< > $@
 
-.PHONY: check-valgrind test recheck retest check-ref-dups
+release-verify-sane-tests:
+
+.PHONY: check-valgrind test recheck retest check-ref-dups release-verify-sane-tests
 
 EXTRA_DIST += Makefile.win32
