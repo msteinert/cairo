@@ -94,6 +94,9 @@ _cairo_clip_get_polygon (const cairo_clip_t *clip,
 	_cairo_polygon_init_with_clip (polygon, NULL);
 
     clip_path = clip->path;
+    *fill_rule = clip_path->fill_rule;
+    *antialias = clip_path->antialias;
+
     status = _cairo_path_fixed_fill_to_polygon (&clip_path->path,
 						clip_path->tolerance,
 						polygon);
@@ -110,8 +113,6 @@ _cairo_clip_get_polygon (const cairo_clip_t *clip,
     polygon->limits = NULL;
     polygon->num_limits = 0;
 
-    *fill_rule = clip_path->fill_rule;
-    *antialias = clip_path->antialias;
     while ((clip_path = clip_path->prev) != NULL) {
 	cairo_polygon_t next;
 
