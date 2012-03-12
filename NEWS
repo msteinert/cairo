@@ -1,3 +1,91 @@
+Snapshot 1.11.4 (2012-13-12)
+============================
+The cairo community is pleased to finally announce the long aniticpated
+release candidate for 1.12, 1.11.4, of the cairo graphics library. This
+is the first major update to cairo in over a year and brings a large
+number of new features; undoubtably a few bugs as well.
+
+While many people have contributed and have helped to test the release,
+providing feedback on 1.10 and suggesting improvements, this release
+is the result of a few persevering souls who deserve recognition for their
+outstanding contributions: Andrea Canciani (all round bug fixing,
+performance tuning and master of the gradients), Adrian Johnson (PDF
+supremo) and Uli Schlachter (who stepped forward as maintainer for the
+XCB backend).
+
+Major additions since 1.11.2:
+
+ * cairo_surface_map_to_image API for pixel level access to any surface
+
+ * New antialias hints to control the trade-off between speed and quality
+
+ * A callback pattern, cairo_pattern_create_raster_source, for lazy
+   decoding of image data.
+
+ * cairo_surface_observer_t, a new type of surface to gather performance
+   statistics
+
+ * XCB as a supported backend
+
+ * A rewritten compositor pipeline for performance improvements for, but not
+   limited to, the xlib and image backends.
+   From ION and PineView through to SandyBridge, every machine I have shows
+   across the board performance improvement on the cairo-traces:
+
+   i5-2520m	gnome-system-monitor:	5.97x speedup
+   pnv		gnome-system-monitor:	4.86x speedup
+   i5-2520m	firefox-asteroids:	4.66x speedup
+   pnv		firefox-asteroids:	4.43x speedup
+   image	firefox-canvas:		3.82x speedup
+   i5-2520m	firefox-canvas-alpha:	3.49x speedup
+   image	firefox-asteroids:	2.87x speedup
+   pnv		firefox-talos-svg:	2.83x speedup
+   ion		grads-heat-map:		2.75x speedup
+   pnv		firefox-canvas-alpha:	2.66x speedup
+   image	gnome-system-monitor:	2.66x speedup
+   image	swfdec-giant-steps:	2.46x speedup
+   image	firefox-canvas-alpha:	2.14x speedup
+   i5-2520m	firefox-talos-svg:	2.03x speedup
+   image	grads-heat-map:		2.02x speedup
+   ion		gnome-system-monitor:	2.00x speedup
+   pnv		firefox-particles:	1.99x speedup
+   i5-2520m	grads-heat-map:		1.96x speedup
+   pnv		firefox-canvas:		1.92x speedup
+   ion		firefox-particles:	1.80x speedup
+   image	poppler-reseau:		1.77x speedup
+   pnv		xfce4-terminal-a1:	1.72x speedup
+   image	firefox-talos-svg:	1.65x speedup
+   pnv		grads-heat-map:		1.63x speedup
+   i5-2520m	firefox-canvas:		1.63x speedup
+   pnv		swfdec-youtube:		1.62x speedup
+   image	ocitysmap:		1.59x speedup
+   i5-2520m	firefox-fishbowl:	1.56x speedup
+   i5-2520m	poppler-reseau:		1.50x speedup
+   i5-2520m	evolution:		1.50x speedup
+   i5-2520m	midori-zoomed:		1.43x speedup
+   pnv		firefox-planet-gnome:	1.42x speedup
+   i5-2520m	firefox-talos-gfx:	1.41x speedup
+   i5-2520m	gvim:			1.41x speedup
+   pnv		ocitysmap:		1.37x speedup
+   image	poppler:		1.31x speedup
+   ion		firefox-canvas-alpha:	1.35x speedup
+   ion          firefox-talos-svg:	1.34x speedup
+   i5-2520m	ocitysmap:		1.32x speedup
+   pnv		poppler-reseau:		1.31x speedup
+   i5-2520m	firefox-planet-gnome:	1.31x speedup
+   pnv		firefox-fishbowl:	1.30x speedup
+   pnv		evolution:		1.28x speedup
+   image	gvim:			1.27x speedup
+   i5-2520m	swfdec-youtube:		1.25x speedup
+   pnv		gnome-terminal-vim:	1.27x speedup
+   pnv		gvim:			1.25x speedup
+   image	firefox-planet-gnome:	1.25x speedup
+   image	swfdec-youtube:		1.25x speedup
+   ...
+
+And a plethora of minor improvements everywhere!
+-Chris
+
 Snapshot 1.11.2 (2011-01-23)
 ===========================
 
