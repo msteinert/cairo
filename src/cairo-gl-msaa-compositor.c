@@ -47,10 +47,6 @@
 #include "cairo-gl-private.h"
 #include "cairo-traps-private.h"
 
-static void
-_scissor_to_rectangle (cairo_gl_surface_t	*surface,
-		       const cairo_rectangle_int_t	*rect);
-
 static cairo_bool_t
 should_fall_back (cairo_gl_surface_t *surface,
 		  cairo_antialias_t antialias);
@@ -655,6 +651,83 @@ cleanup_traps:
     return status;
 }
 
+static cairo_int_status_t
+_cairo_gl_msaa_compositor_glyphs (const cairo_compositor_t	*compositor,
+				  cairo_composite_rectangles_t	*composite,
+				  cairo_scaled_font_t		*scaled_font,
+				  cairo_glyph_t			*glyphs,
+				  int				 num_glyphs,
+				  cairo_bool_t			 overlap)
+{
+    cairo_int_status_t status;
+    cairo_surface_t *src = NULL;
+    int src_x, src_y;
+    cairo_composite_glyphs_info_t info;
+
+    cairo_gl_surface_t *dst = (cairo_gl_surface_t *) composite->surface;
+
+    query_surface_capabilities (dst);
+    if (! dst->supports_stencil)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (composite->is_bounded == FALSE) {
+	cairo_surface_t* surface = _prepare_unbounded_surface (dst);
+
+	if (unlikely (surface == NULL))
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	status = _cairo_compositor_glyphs (compositor, surface,
+					   CAIRO_OPERATOR_SOURCE,
+					   &composite->source_pattern.base,
+					   glyphs, num_glyphs,
+					   scaled_font, composite->clip);
+
+	if (unlikely (status)) {
+	    cairo_surface_destroy (surface);
+	    return status;
+	}
+
+	return _paint_back_unbounded_surface (compositor, composite, surface);
+    }
+
+    src = _cairo_gl_pattern_to_source (&dst->base,
+				       &composite->source_pattern.base,
+				       FALSE,
+				       &composite->bounded,
+				       &composite->source_sample_area,
+				       &src_x, &src_y);
+    if (unlikely (src->status)) {
+	status = src->status;
+	goto finish;
+    }
+
+    status = _cairo_gl_check_composite_glyphs (composite,
+					       scaled_font, glyphs,
+					       &num_glyphs);
+    if (unlikely (status != CAIRO_INT_STATUS_SUCCESS))
+	goto finish;
+
+    info.font = scaled_font;
+    info.glyphs = glyphs;
+    info.num_glyphs = num_glyphs;
+    info.use_mask = overlap || ! composite->is_bounded;
+    info.extents = composite->bounded;
+
+    _cairo_scaled_font_freeze_cache (scaled_font);
+    status = _cairo_gl_composite_glyphs_with_clip (dst, composite->op,
+						   src, src_x, src_y,
+						   0, 0, &info,
+						   composite->clip);
+
+    _cairo_scaled_font_thaw_cache (scaled_font);
+
+finish:
+    if (src)
+	cairo_surface_destroy (src);
+
+    return status;
+}
+
 static void
 _cairo_gl_msaa_compositor_init (cairo_compositor_t	 *compositor,
 				const cairo_compositor_t *delegate)
@@ -665,7 +738,7 @@ _cairo_gl_msaa_compositor_init (cairo_compositor_t	 *compositor,
     compositor->mask = _cairo_gl_msaa_compositor_mask;
     compositor->fill = _cairo_gl_msaa_compositor_fill;
     compositor->stroke = _cairo_gl_msaa_compositor_stroke;
-    /* always fallback to common glyph cache implmentation */
+    compositor->glyphs = _cairo_gl_msaa_compositor_glyphs;
 }
 
 const cairo_compositor_t *
