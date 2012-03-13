@@ -461,6 +461,9 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
 {
     cairo_surface_subsurface_t *surface;
 
+    if (unlikely (width < 0 || height < 0))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+
     if (unlikely (target->status))
 	return _cairo_surface_create_in_error (target->status);
     if (unlikely (target->finished))
@@ -484,6 +487,8 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
     surface->extents.y = ceil (y);
     surface->extents.width = floor (x + width) - surface->extents.x;
     surface->extents.height = floor (y + height) - surface->extents.y;
+    if ((surface->extents.width | surface->extents.height) < 0)
+	surface->extents.width = surface->extents.height = 0;
 
     if (target->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	/* Maintain subsurfaces as 1-depth */
