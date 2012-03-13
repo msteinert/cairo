@@ -2102,6 +2102,9 @@ _range_contains_glyph (const cairo_box_t *extents,
 		       cairo_fixed_t right,
 		       cairo_fixed_t bottom)
 {
+    if (left == right || top == bottom)
+	return FALSE;
+
     return right > extents->p1.x &&
 	   left < extents->p2.x &&
 	   bottom > extents->p1.y &&
