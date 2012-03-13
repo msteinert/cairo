@@ -629,24 +629,13 @@ _cairo_gl_composite_setup_clipping (cairo_gl_composite_t *setup,
 }
 
 cairo_status_t
-_cairo_gl_composite_begin (cairo_gl_composite_t *setup,
-			   cairo_gl_context_t **ctx_out)
+_cairo_gl_set_operands_and_operator (cairo_gl_composite_t *setup,
+				     cairo_gl_context_t *ctx)
 {
     unsigned int dst_size, src_size, mask_size, vertex_size;
-    cairo_gl_context_t *ctx;
     cairo_status_t status;
-    cairo_bool_t component_alpha;
     cairo_gl_shader_t *shader;
-
-    assert (setup->dst);
-
-    status = _cairo_gl_context_acquire (setup->dst->base.device, &ctx);
-    if (unlikely (status))
-	return status;
-
-    _cairo_gl_context_set_destination (ctx, setup->dst, setup->multisample);
-
-    glEnable (GL_BLEND);
+    cairo_bool_t component_alpha;
 
     component_alpha =
 	setup->mask.type == CAIRO_GL_OPERAND_TEXTURE &&
@@ -654,40 +643,40 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
 
     /* Do various magic for component alpha */
     if (component_alpha) {
-        status = _cairo_gl_composite_begin_component_alpha (ctx, setup);
-        if (unlikely (status))
-            goto FAIL;
-    } else {
-        if (ctx->pre_shader) {
-            _cairo_gl_composite_flush (ctx);
-            ctx->pre_shader = NULL;
-        }
+	status = _cairo_gl_composite_begin_component_alpha (ctx, setup);
+	if (unlikely (status))
+	    return status;
+     } else {
+	if (ctx->pre_shader) {
+	    _cairo_gl_composite_flush (ctx);
+	    ctx->pre_shader = NULL;
+	}
     }
 
     status = _cairo_gl_get_shader_by_type (ctx,
 					   &setup->src,
 					   &setup->mask,
 					   setup->spans,
-                                           component_alpha ?
+					   component_alpha ?
 					   CAIRO_GL_SHADER_IN_CA_SOURCE :
 					   CAIRO_GL_SHADER_IN_NORMAL,
                                            &shader);
     if (unlikely (status)) {
-        ctx->pre_shader = NULL;
-        goto FAIL;
+	ctx->pre_shader = NULL;
+	return status;
     }
     if (ctx->current_shader != shader)
         _cairo_gl_composite_flush (ctx);
 
     status = CAIRO_STATUS_SUCCESS;
 
-    dst_size  = 2 * sizeof (GLfloat);
-    src_size  = _cairo_gl_operand_get_vertex_size (setup->src.type);
+    dst_size = 2 * sizeof (GLfloat);
+    src_size = _cairo_gl_operand_get_vertex_size (setup->src.type);
     mask_size = _cairo_gl_operand_get_vertex_size (setup->mask.type);
     vertex_size = dst_size + src_size + mask_size;
 
     if (setup->spans)
-	    vertex_size += sizeof (GLfloat);
+	vertex_size += sizeof (GLfloat);
 
     _cairo_gl_composite_setup_vbo (ctx, vertex_size);
 
@@ -700,15 +689,35 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
     _cairo_gl_set_operator (ctx, setup->op, component_alpha);
 
     if (_cairo_gl_context_is_flushed (ctx)) {
-        if (ctx->pre_shader) {
-            _cairo_gl_set_shader (ctx, ctx->pre_shader);
-            _cairo_gl_composite_bind_to_shader (ctx, setup);
-        }
-        _cairo_gl_set_shader (ctx, shader);
-        _cairo_gl_composite_bind_to_shader (ctx, setup);
+	if (ctx->pre_shader) {
+	    _cairo_gl_set_shader (ctx, ctx->pre_shader);
+	    _cairo_gl_composite_bind_to_shader (ctx, setup);
+	}
+	_cairo_gl_set_shader (ctx, shader);
+	_cairo_gl_composite_bind_to_shader (ctx, setup);
     }
 
-    status = _cairo_gl_composite_setup_clipping (setup, ctx, vertex_size);
+    return status;
+}
+
+cairo_status_t
+_cairo_gl_composite_begin (cairo_gl_composite_t *setup,
+			   cairo_gl_context_t **ctx_out)
+{
+    cairo_gl_context_t *ctx;
+    cairo_status_t status;
+
+    assert (setup->dst);
+
+    status = _cairo_gl_context_acquire (setup->dst->base.device, &ctx);
+    if (unlikely (status))
+	return status;
+
+    _cairo_gl_context_set_destination (ctx, setup->dst, setup->multisample);
+    glEnable (GL_BLEND);
+    _cairo_gl_set_operands_and_operator (setup, ctx);
+
+    status = _cairo_gl_composite_setup_clipping (setup, ctx, ctx->vertex_size);
     if (unlikely (status))
 	goto FAIL;
 
@@ -1072,13 +1081,10 @@ _cairo_gl_composite_fini (cairo_gl_composite_t *setup)
 }
 
 cairo_status_t
-_cairo_gl_composite_init (cairo_gl_composite_t *setup,
-                          cairo_operator_t op,
-                          cairo_gl_surface_t *dst,
-                          cairo_bool_t assume_component_alpha)
+_cairo_gl_composite_set_operator (cairo_gl_composite_t *setup,
+				  cairo_operator_t op,
+				  cairo_bool_t assume_component_alpha)
 {
-    memset (setup, 0, sizeof (cairo_gl_composite_t));
-
     if (assume_component_alpha) {
         if (op != CAIRO_OPERATOR_CLEAR &&
             op != CAIRO_OPERATOR_OVER &&
@@ -1089,8 +1095,26 @@ _cairo_gl_composite_init (cairo_gl_composite_t *setup,
             return UNSUPPORTED ("unsupported operator");
     }
 
-    setup->dst = dst;
     setup->op = op;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gl_composite_init (cairo_gl_composite_t *setup,
+                          cairo_operator_t op,
+                          cairo_gl_surface_t *dst,
+                          cairo_bool_t assume_component_alpha)
+{
+    cairo_status_t status;
+
+    memset (setup, 0, sizeof (cairo_gl_composite_t));
+
+    status = _cairo_gl_composite_set_operator (setup, op,
+					       assume_component_alpha);
+    if (status)
+	return status;
+
+    setup->dst = dst;
     setup->clip_region = dst->clip_region;
 
     return CAIRO_STATUS_SUCCESS;
