@@ -984,7 +984,7 @@ _cairo_spans_compositor_stroke (const cairo_compositor_t	*_compositor,
 	    status = clip_and_composite_polygon (compositor, extents, &polygon,
 						 fill_rule, antialias);
 
-	    if (extents->clip != saved_clip) {
+	    if (extents->is_bounded) {
 		_cairo_clip_destroy (extents->clip);
 		extents->clip = saved_clip;
 	    }
@@ -1056,7 +1056,7 @@ _cairo_spans_compositor_fill (const cairo_compositor_t		*_compositor,
 	    status = clip_and_composite_polygon (compositor, extents, &polygon,
 						 fill_rule, antialias);
 
-	    if (extents->clip != saved_clip) {
+	    if (extents->is_bounded) {
 		_cairo_clip_destroy (extents->clip);
 		extents->clip = saved_clip;
 	    }
