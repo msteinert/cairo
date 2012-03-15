@@ -3510,6 +3510,24 @@ cairo_image_surface_create_for_data (unsigned char *data, cairo_format_t format,
     return ret;
 }
 
+unsigned char *
+cairo_image_surface_get_data (cairo_surface_t *surface)
+{
+    unsigned char *ptr;
+
+    /* Just leave some breadcrumbs */
+    _enter_trace ();
+    _emit_line_info ();
+    if (surface != NULL && _write_lock ()) {
+	_trace_printf ("%% s%ld get-data\n", _get_surface_id (surface));
+	_write_unlock ();
+    }
+    ptr = DLCALL (cairo_image_surface_get_data, surface);
+    _exit_trace ();
+
+    return ptr;
+}
+
 cairo_pattern_t *
 cairo_pattern_create_raster_source (void *data, cairo_content_t content, int width, int height)
 {
@@ -3746,6 +3764,10 @@ cairo_surface_flush (cairo_surface_t *surface)
 {
     _enter_trace ();
     _emit_line_info ();
+    if (surface != NULL && _write_lock ()) {
+	_trace_printf ("%% s%ld flush\n", _get_surface_id (surface));
+	_write_unlock ();
+    }
     DLCALL (cairo_surface_flush, surface);
     _exit_trace ();
 }
