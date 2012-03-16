@@ -5187,3 +5187,186 @@ cairo_vg_surface_create_for_image (cairo_vg_context_t *context,
     return ret;
 }
 #endif
+
+#if CAIRO_HAS_GL_SURFACE || CAIRO_HAS_GLESV2_SURFACE
+#include <cairo-gl.h>
+cairo_surface_t *
+cairo_gl_surface_create (cairo_device_t		*abstract_device,
+			 cairo_content_t	 content,
+			 int			 width,
+			 int			 height)
+{
+    cairo_surface_t *ret;
+
+    _enter_trace ();
+
+    ret = DLCALL (cairo_gl_surface_create, abstract_device, content, width, height);
+
+    _emit_line_info ();
+    if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
+	_trace_printf ("dict\n"
+		       "  /type /gl set\n"
+		       "  /content //%s set\n"
+		       "  /width %d set\n"
+		       "  /height %d set\n"
+		       "  surface dup /s%ld exch def\n",
+		       _content_to_string (content),
+		       width, height,
+		       obj->token);
+	obj->width = width;
+	obj->height = height;
+	obj->defined = TRUE;
+	_push_object (obj);
+	_write_unlock ();
+    }
+
+    _exit_trace ();
+    return ret;
+}
+
+cairo_surface_t *
+cairo_gl_surface_create_for_texture (cairo_device_t	*abstract_device,
+				     cairo_content_t	 content,
+				     unsigned int	 tex,
+				     int		 width,
+				     int		 height)
+{
+    cairo_surface_t *ret;
+
+    _enter_trace ();
+
+    ret = DLCALL (cairo_gl_surface_create_for_texture, abstract_device, content, tex, width, height);
+
+    _emit_line_info ();
+    if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
+	_trace_printf ("dict\n"
+		       "  /type /gl set\n"
+		       "  /content //%s set\n"
+		       "  /width %d set\n"
+		       "  /height %d set\n"
+		       "  surface dup /s%ld exch def\n",
+		       _content_to_string (content),
+		       width, height,
+		       obj->token);
+	obj->width = width;
+	obj->height = height;
+	obj->defined = TRUE;
+	_push_object (obj);
+	_write_unlock ();
+    }
+
+    _exit_trace ();
+    return ret;
+}
+
+#if CAIRO_HAS_GLX_FUNCTIONS
+cairo_surface_t *
+cairo_gl_surface_create_for_window (cairo_device_t *device,
+				    Window win,
+				    int width, int height)
+{
+    cairo_surface_t *ret;
+
+    _enter_trace ();
+
+    ret = DLCALL (cairo_gl_surface_create_for_window, device, win, width, height);
+
+    _emit_line_info ();
+    if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
+	_trace_printf ("dict\n"
+		       "  /type /gl set\n"
+		       "  /width %d set\n"
+		       "  /height %d set\n"
+		       "  surface dup /s%ld exch def\n",
+		       width, height,
+		       obj->token);
+	obj->width = width;
+	obj->height = height;
+	obj->defined = TRUE;
+	_push_object (obj);
+	_write_unlock ();
+    }
+
+    _exit_trace ();
+    return ret;
+}
+#endif
+
+#if CAIRO_HAS_WGL_FUNCTIONS
+cairo_surface_t *
+cairo_gl_surface_create_for_dc (cairo_device_t		*device,
+				HDC			 dc,
+				int			 width,
+				int			 height)
+{
+    cairo_surface_t *ret;
+
+    _enter_trace ();
+
+    ret = DLCALL (cairo_gl_surface_create_for_dc, device, dc, width, height);
+
+    _emit_line_info ();
+    if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
+	_trace_printf ("dict\n"
+		       "  /type /gl set\n"
+		       "  /width %d set\n"
+		       "  /height %d set\n"
+		       "  surface dup /s%ld exch def\n",
+		       width, height,
+		       obj->token);
+	obj->width = width;
+	obj->height = height;
+	obj->defined = TRUE;
+	_push_object (obj);
+	_write_unlock ();
+    }
+
+    _exit_trace ();
+    return ret;
+}
+#endif
+
+#if CAIRO_HAS_EGL_FUNCTIONS
+cairo_surface_t *
+cairo_gl_surface_create_for_egl (cairo_device_t	*device,
+				 EGLSurface	 egl,
+				 int		 width,
+				 int		 height)
+{
+    cairo_surface_t *ret;
+
+    _enter_trace ();
+
+    ret = DLCALL (cairo_gl_surface_create_for_egl, device, egl, width, height);
+
+    _emit_line_info ();
+    if (_write_lock ()) {
+	Object *obj = _create_surface (ret);
+
+	_trace_printf ("dict\n"
+		       "  /type /gl set\n"
+		       "  /width %d set\n"
+		       "  /height %d set\n"
+		       "  surface dup /s%ld exch def\n",
+		       width, height,
+		       obj->token);
+	obj->width = width;
+	obj->height = height;
+	obj->defined = TRUE;
+	_push_object (obj);
+	_write_unlock ();
+    }
+
+    _exit_trace ();
+    return ret;
+}
+#endif
+#endif
