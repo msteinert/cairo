@@ -1071,8 +1071,33 @@ _cairo_gl_surface_map_to_image (void      *abstract_surface,
     status = _cairo_gl_context_release (ctx, status);
     if (unlikely (status)) {
 	cairo_surface_destroy (&image->base);
-	image = (cairo_image_surface_t *)
-	    _cairo_surface_create_in_error (status);
+	return _cairo_surface_create_in_error (status);
+    }
+
+    /* We must invert the image manualy if we lack GL_MESA_pack_invert */
+    if (! ctx->has_mesa_pack_invert && ! _cairo_gl_surface_is_texture (surface)) {
+	uint8_t stack[1024], *row = stack;
+	uint8_t *top = image->data;
+	uint8_t *bot = image->data + (image->height-1)*image->stride;
+
+	if (image->stride > sizeof(stack)) {
+	    row = malloc (image->stride);
+	    if (unlikely (row == NULL)) {
+		cairo_surface_destroy (&image->base);
+		return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+	    }
+	}
+
+	while (top < bot) {
+	    memcpy (row, top, image->stride);
+	    memcpy (top, bot, image->stride);
+	    memcpy (bot, row, image->stride);
+	    top += image->stride;
+	    bot -= image->stride;
+	}
+
+	if (row != stack)
+	    free(row);
     }
 
     return &image->base;
