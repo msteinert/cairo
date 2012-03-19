@@ -349,6 +349,7 @@ cairo_win32_font_sources = \
 	$(NULL)
 
 cairo_skia_headers = cairo-skia.h
+cairo_skia_private = skia/cairo-skia-private.h
 cairo_skia_cxx_sources = \
 	skia/cairo-skia-context.cpp \
 	skia/cairo-skia-surface.cpp \
