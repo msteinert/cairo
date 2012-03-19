@@ -701,21 +701,6 @@ _cairo_matrix_compute_basis_scale_factors (const cairo_matrix_t *matrix,
 }
 
 cairo_bool_t
-_cairo_matrix_is_identity (const cairo_matrix_t *matrix)
-{
-    return (matrix->xx == 1.0 && matrix->yx == 0.0 &&
-	    matrix->xy == 0.0 && matrix->yy == 1.0 &&
-	    matrix->x0 == 0.0 && matrix->y0 == 0.0);
-}
-
-cairo_bool_t
-_cairo_matrix_is_translation (const cairo_matrix_t *matrix)
-{
-    return (matrix->xx == 1.0 && matrix->yx == 0.0 &&
-	    matrix->xy == 0.0 && matrix->yy == 1.0);
-}
-
-cairo_bool_t
 _cairo_matrix_is_integer_translation (const cairo_matrix_t *matrix,
 				      int *itx, int *ity)
 {

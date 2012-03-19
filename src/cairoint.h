@@ -1657,11 +1657,26 @@ cairo_private cairo_status_t
 _cairo_matrix_compute_basis_scale_factors (const cairo_matrix_t *matrix,
 					   double *sx, double *sy, int x_major);
 
-cairo_private cairo_bool_t
-_cairo_matrix_is_identity (const cairo_matrix_t *matrix) cairo_pure;
+static inline cairo_bool_t
+_cairo_matrix_is_identity (const cairo_matrix_t *matrix)
+{
+    return (matrix->xx == 1.0 && matrix->yx == 0.0 &&
+	    matrix->xy == 0.0 && matrix->yy == 1.0 &&
+	    matrix->x0 == 0.0 && matrix->y0 == 0.0);
+}
 
-cairo_private cairo_bool_t
-_cairo_matrix_is_translation (const cairo_matrix_t *matrix) cairo_pure;
+static inline cairo_bool_t
+_cairo_matrix_is_translation (const cairo_matrix_t *matrix)
+{
+    return (matrix->xx == 1.0 && matrix->yx == 0.0 &&
+	    matrix->xy == 0.0 && matrix->yy == 1.0);
+}
+
+static inline cairo_bool_t
+_cairo_matrix_is_scale (const cairo_matrix_t *matrix)
+{
+    return matrix->yx == 0.0 && matrix->xy == 0.0;
+}
 
 cairo_private cairo_bool_t
 _cairo_matrix_is_integer_translation(const cairo_matrix_t *matrix,
