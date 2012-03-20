@@ -210,19 +210,19 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
     cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
 
     if ((unsigned int) ctx->max_texture_size / 2 <= n_stops)
-        return CAIRO_INT_STATUS_UNSUPPORTED;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     hash = _cairo_gl_gradient_hash (n_stops, stops);
 
     gradient = _cairo_gl_gradient_lookup (ctx, hash, n_stops, stops);
     if (gradient) {
-        *gradient_out = _cairo_gl_gradient_reference (gradient);
-        return CAIRO_STATUS_SUCCESS;
+	*gradient_out = _cairo_gl_gradient_reference (gradient);
+	return CAIRO_STATUS_SUCCESS;
     }
 
     gradient = malloc (sizeof (cairo_gl_gradient_t) + sizeof (cairo_gradient_stop_t) * (n_stops - 1));
     if (gradient == NULL)
-        return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     tex_width = _cairo_gl_gradient_sample_width (n_stops, stops);
 
@@ -238,38 +238,20 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
     _cairo_gl_context_activate (ctx, CAIRO_GL_TEX_TEMP);
     glBindTexture (ctx->tex_target, gradient->tex);
 
-    /* GL_PIXEL_UNPACK_BUFFER is only available in Desktop GL */
-    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP) {
-	dispatch->BindBuffer (GL_PIXEL_UNPACK_BUFFER, ctx->texture_load_pbo);
-	dispatch->BufferData (GL_PIXEL_UNPACK_BUFFER,
-			      tex_width * sizeof (uint32_t), 0, GL_STREAM_DRAW);
-	data = dispatch->MapBuffer (GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
-
-	status = _cairo_gl_gradient_render (ctx, n_stops, stops, data, tex_width);
-
-	dispatch->UnmapBuffer (GL_PIXEL_UNPACK_BUFFER);
-
-	if (unlikely (status)) {
-	    dispatch->BindBuffer (GL_PIXEL_UNPACK_BUFFER, 0);
-	    free (gradient);
-	    return status;
-	}
-
-	glTexImage2D (ctx->tex_target, 0, GL_RGBA8, tex_width, 1, 0,
-		      GL_BGRA, GL_UNSIGNED_BYTE, 0);
-
-	dispatch->BindBuffer (GL_PIXEL_UNPACK_BUFFER, 0);
+    data = _cairo_malloc_ab (tex_width, sizeof (uint32_t));
+    if (unlikely (data == NULL)) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto cleanup_gradient;
     }
-    else {
-	data = _cairo_malloc_ab (tex_width, sizeof (uint32_t));
 
-	status = _cairo_gl_gradient_render (ctx, n_stops, stops, data, tex_width);
+    status = _cairo_gl_gradient_render (ctx, n_stops, stops, data, tex_width);
+    if (unlikely (status))
+	goto cleanup_data;
 
-	glTexImage2D (ctx->tex_target, 0, GL_BGRA, tex_width, 1, 0,
-		      GL_BGRA, GL_UNSIGNED_BYTE, data);
+    glTexImage2D (ctx->tex_target, 0, GL_RGBA, tex_width, 1, 0,
+		  GL_BGRA, GL_UNSIGNED_BYTE, data);
 
-	free (data);
-    }
+    free (data);
 
     /* we ignore errors here and just return an uncached gradient */
     if (unlikely (_cairo_cache_insert (&ctx->gradients, &gradient->cache_entry)))
@@ -277,6 +259,12 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
 
     *gradient_out = gradient;
     return CAIRO_STATUS_SUCCESS;
+
+cleanup_data:
+    free (data);
+cleanup_gradient:
+    free (gradient);
+    return status;
 }
 
 cairo_gl_gradient_t *
