@@ -516,7 +516,7 @@ _cairo_win32_display_surface_flush (void *abstract_surface)
 			 0, 0,
 			 SRCCOPY))
 		status = _cairo_win32_print_gdi_error (__FUNCTION__);
-	} else {
+	} else if (damage->region) {
 	    int n = cairo_region_num_rectangles (damage->region), i;
 	    for (i = 0; i < n; i++) {
 		cairo_rectangle_int_t rect;
