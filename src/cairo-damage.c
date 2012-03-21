@@ -85,6 +85,8 @@ _cairo_damage_add_boxes(cairo_damage_t *damage,
     struct _cairo_damage_chunk *chunk;
     int n, size;
 
+    TRACE ((stderr, "%s x%d\n", __FUNCTION__, count));
+
     if (damage == NULL)
 	damage = _cairo_damage_create ();
 
@@ -94,7 +96,8 @@ _cairo_damage_add_boxes(cairo_damage_t *damage,
     if (n > damage->remain)
 	n = damage->remain;
 
-    memcpy (damage->tail->base + damage->tail->count, boxes, n);
+    memcpy (damage->tail->base + damage->tail->count, boxes,
+	    n * sizeof (cairo_box_t));
 
     count -= n;
     damage->tail->count += n;
@@ -121,7 +124,8 @@ _cairo_damage_add_boxes(cairo_damage_t *damage,
     damage->tail->next = chunk;
     damage->remain = size - count;
 
-    memcpy (damage->tail->base, boxes + n, count);
+    memcpy (damage->tail->base, boxes + n,
+	    count * sizeof (cairo_box_t));
 
     return damage;
 }
@@ -130,6 +134,9 @@ cairo_damage_t *
 _cairo_damage_add_box(cairo_damage_t *damage,
 		      const cairo_box_t *box)
 {
+    TRACE ((stderr, "%s: (%d, %d),(%d, %d)\n", __FUNCTION__,
+	    box->p1.x, box->p1.y, box->p2.x, box->p2.y));
+
     return _cairo_damage_add_boxes(damage, box, 1);
 }
 
@@ -138,6 +145,9 @@ _cairo_damage_add_rectangle(cairo_damage_t *damage,
 			    const cairo_rectangle_int_t *r)
 {
     cairo_box_t box;
+
+    TRACE ((stderr, "%s: (%d, %d)x(%d, %d)\n", __FUNCTION__,
+	    r->x, r->y, r->width, r->height));
 
     box.p1.x = r->x;
     box.p1.y = r->y;
@@ -154,6 +164,8 @@ _cairo_damage_add_region (cairo_damage_t *damage,
     cairo_box_t *boxes;
     int nbox;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     boxes = _cairo_region_get_boxes (region, &nbox);
     return _cairo_damage_add_boxes(damage, boxes, nbox);
 }
@@ -165,6 +177,8 @@ _cairo_damage_reduce (cairo_damage_t *damage)
     cairo_box_t *boxes, *b;
     struct _cairo_damage_chunk *chunk, *last;
 
+    TRACE ((stderr, "%s: dirty=%d\n", __FUNCTION__,
+	    damage ? damage->dirty : -1));
     if (damage == NULL || !damage->dirty)
 	return damage;
 
