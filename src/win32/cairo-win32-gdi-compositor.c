@@ -343,7 +343,7 @@ alpha_blend_boxes (cairo_win32_display_surface_t *dst,
 	if (surface == NULL)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
     }
-    if (pattern->surface->type != CAIRO_SURFACE_TYPE_WIN32)
+    if (surface->type != CAIRO_SURFACE_TYPE_WIN32)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (! _cairo_matrix_is_integer_translation (&source->matrix,
@@ -410,7 +410,8 @@ draw_boxes (cairo_composite_rectangles_t *composite,
 	_cairo_pattern_is_opaque (src, &composite->bounded))
 	op = CAIRO_OPERATOR_SOURCE;
 
-    if (dst->win32.base.is_clear && op == CAIRO_OPERATOR_OVER)
+    if (dst->win32.base.is_clear &&
+	(op == CAIRO_OPERATOR_OVER || op == CAIRO_OPERATOR_ADD))
 	op = CAIRO_OPERATOR_SOURCE;
 
     if (op == CAIRO_OPERATOR_SOURCE) {

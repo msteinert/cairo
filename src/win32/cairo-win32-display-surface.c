@@ -460,9 +460,6 @@ _cairo_win32_display_surface_map_to_image (void                    *abstract_sur
     }
 
     surface = to_win32_display_surface (surface->fallback);
-    if (surface->image->damage == NULL)
-	surface->image->damage = _cairo_damage_create ();
-
 done:
     GdiFlush();
     return _cairo_image_surface_map_to_image (surface->image, extents);
@@ -475,14 +472,31 @@ err:
 }
 
 static cairo_int_status_t
-_cairo_win32_display_surface_unmap_image (void                    *surface,
+_cairo_win32_display_surface_unmap_image (void                    *abstract_surface,
 					  cairo_image_surface_t   *image)
 {
+    cairo_win32_display_surface_t *surface = abstract_surface;
+
     /* Delay the download until the next flush, which means we also need
      * to make sure our sources rare flushed.
      */
     TRACE ((stderr, "%s (surface=%d)\n",
 	    __FUNCTION__, to_win32_surface(surface)->base.unique_id));
+
+    if (surface->fallback) {
+	cairo_rectangle_int_t r;
+
+	r.x = image->base.device_transform_inverse.x0;
+	r.y = image->base.device_transform_inverse.y0;
+	r.width  = image->width;
+	r.height = image->height;
+
+	TRACE ((stderr, "%s: adding damage (%d,%d)x(%d,%d)\n",
+		__FUNCTION__, r.x, r.y, r.width, r.height));
+	surface->fallback->damage =
+	    _cairo_damage_add_rectangle (surface->fallback->damage, &r);
+    }
+
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
@@ -490,7 +504,6 @@ static cairo_status_t
 _cairo_win32_display_surface_flush (void *abstract_surface)
 {
     cairo_win32_display_surface_t *surface = abstract_surface;
-    cairo_win32_display_surface_t *fallback;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     TRACE ((stderr, "%s (surface=%d)\n",
@@ -498,14 +511,18 @@ _cairo_win32_display_surface_flush (void *abstract_surface)
     if (surface->fallback == NULL)
 	return CAIRO_STATUS_SUCCESS;
 
-    fallback = to_win32_display_surface (surface->fallback);
-    assert (fallback->image);
-
-    if (fallback->image->damage) {
+    if (surface->fallback->damage) {
+	cairo_win32_display_surface_t *fallback;
 	cairo_damage_t *damage;
 
-	damage = _cairo_damage_reduce (fallback->image->damage);
-	fallback->image->damage = NULL;
+	damage = _cairo_damage_reduce (surface->fallback->damage);
+	surface->fallback->damage = NULL;
+
+	fallback = to_win32_display_surface (surface->fallback);
+	assert (fallback->image);
+
+	TRACE ((stderr, "%s: flushing damage x %d\n", __FUNCTION__,
+		damage->region ? cairo_region_num_rectangles (damage->region) : 0));
 
 	if (damage->status) {
 	    if (!BitBlt (surface->win32.dc,
@@ -522,6 +539,9 @@ _cairo_win32_display_surface_flush (void *abstract_surface)
 		cairo_rectangle_int_t rect;
 
 		cairo_region_get_rectangle (damage->region, i, &rect);
+		TRACE ((stderr, "%s: damage (%d,%d)x(%d,%d)\n", __FUNCTION__,
+			rect.x, rect.y,
+			rect.width, rect.height));
 		if (!BitBlt (surface->win32.dc,
 			     rect.x, rect.y,
 			     rect.width, rect.height,
