@@ -1719,14 +1719,65 @@ _cairo_win32_scaled_font_load_type1_data (void	            *abstract_font,
 							 length);
 }
 
+static cairo_surface_t *
+_compute_mask (cairo_surface_t *surface,
+	       int quality)
+{
+    cairo_image_surface_t *glyph;
+    cairo_image_surface_t *mask;
+    int i, j;
+
+    glyph = (cairo_image_surface_t *)cairo_surface_map_to_image (surface, NULL);
+    if (unlikely (glyph->base.status))
+	return &glyph->base;
+
+    if (quality == CLEARTYPE_QUALITY) {
+	/* Duplicate the green channel of a 4-channel mask into the
+	 * alpha channel, then invert the whole mask.
+	 */
+	mask = (cairo_image_surface_t *)
+	    cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+					glyph->width, glyph->height);
+	if (likely (mask->base.status == CAIRO_STATUS_SUCCESS)) {
+	    for (i = 0; i < glyph->height; i++) {
+		uint32_t *p = (uint32_t *) (glyph->data + i * glyph->stride);
+		uint32_t *q = (uint32_t *) (mask->data + i * mask->stride);
+
+		for (j = 0; j < glyph->width; j++) {
+		    *q++ = 0xffffffff ^ (*p | ((*p & 0x0000ff00) << 16));
+		    p++;
+		}
+	    }
+	}
+    } else {
+	/* Compute an alpha-mask from a using the green channel of a
+	 * (presumed monochrome) RGB24 image.
+	 */
+	mask = (cairo_image_surface_t *)
+	    cairo_image_surface_create (CAIRO_FORMAT_A8,
+					glyph->width, glyph->height);
+	if (likely (mask->base.status == CAIRO_STATUS_SUCCESS)) {
+	    for (i = 0; i < glyph->height; i++) {
+		uint32_t *p = (uint32_t *) (glyph->data + i * glyph->stride);
+		uint8_t *q = (uint8_t *) (mask->data + i * mask->stride);
+
+		for (j = 0; j < glyph->width; j++)
+		    *q++ = 255 - ((*p++ & 0x0000ff00) >> 8);
+	    }
+	}
+    }
+
+    cairo_surface_unmap_image (surface, &glyph->base);
+    return &mask->base;
+}
+
 static cairo_status_t
 _cairo_win32_scaled_font_init_glyph_surface (cairo_win32_scaled_font_t *scaled_font,
                                              cairo_scaled_glyph_t      *scaled_glyph)
 {
     cairo_status_t status;
     cairo_glyph_t glyph;
-    cairo_win32_surface_t *surface;
-    cairo_t *cr;
+    cairo_surface_t *surface;
     cairo_surface_t *image;
     int width, height;
     int x1, y1, x2, y2;
@@ -1738,33 +1789,24 @@ _cairo_win32_scaled_font_init_glyph_surface (cairo_win32_scaled_font_t *scaled_f
     width = x2 - x1;
     height = y2 - y1;
 
-    surface = (cairo_win32_surface_t *)
-	cairo_win32_surface_create_with_dib (CAIRO_FORMAT_RGB24, width, height);
-
-    cr = cairo_create (&surface->base);
-    cairo_set_source_rgb (cr, 1, 1, 1);
-    cairo_paint (cr);
-    status = cairo_status (cr);
-    cairo_destroy(cr);
+    surface = cairo_win32_surface_create_with_dib (CAIRO_FORMAT_RGB24,
+						   width, height);
+    status = _cairo_surface_paint (surface, CAIRO_OPERATOR_SOURCE,
+				   &_cairo_pattern_white.base, NULL);
     if (status)
 	goto FAIL;
 
     glyph.index = _cairo_scaled_glyph_index (scaled_glyph);
     glyph.x = -x1;
     glyph.y = -y1;
-    status = _draw_glyphs_on_surface (surface, scaled_font, RGB(0,0,0),
+    status = _draw_glyphs_on_surface (to_win32_surface (surface),
+				      scaled_font, RGB(0,0,0),
                                       0, 0, &glyph, 1);
     if (status)
 	goto FAIL;
 
-    GdiFlush();
-
-#if 0
-    image = _compute_a8_mask (surface);
+    image = _compute_mask (surface, scaled_font->quality);
     status = image->status;
-#else
-    status = CAIRO_STATUS_NO_MEMORY;
-#endif
     if (status)
 	goto FAIL;
 
@@ -1774,7 +1816,7 @@ _cairo_win32_scaled_font_init_glyph_surface (cairo_win32_scaled_font_t *scaled_f
                                      (cairo_image_surface_t *) image);
 
   FAIL:
-    cairo_surface_destroy (&surface->base);
+    cairo_surface_destroy (surface);
 
     return status;
 }
