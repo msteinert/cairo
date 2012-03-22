@@ -43,6 +43,7 @@
 #include "cairo-image-surface-private.h"
 #include "cairo-pattern-private.h"
 #include "cairo-surface-backend-private.h"
+#include "cairo-surface-fallback-private.h"
 
 #include <pixman.h>
 
@@ -178,23 +179,22 @@ _cairo_dfb_surface_map_to_image (void *abstract_surface,
 
     if (surface->image.pixman_image == NULL) {
 	IDirectFBSurface *buffer = surface->dfb_surface;
+	pixman_image_t *image;
 	void *data;
 	int pitch;
 
 	if (buffer->Lock (buffer, DSLF_READ | DSLF_WRITE, &data, &pitch))
 	    return _cairo_surface_create_in_error(_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-	surface->image.pixman_image =
-	    pixman_image_create_bits (surface->image.pixman_format,
-				      surface->image.width,
-				      surface->image.height,
-				      data, pitch);
-	if (surface->image.pixman_image == NULL) {
+	image = pixman_image_create_bits (surface->image.pixman_format,
+					  surface->image.width,
+					  surface->image.height,
+					  data, pitch);
+	if (image == NULL) {
 	    buffer->Unlock (buffer);
 	    return _cairo_surface_create_in_error(_cairo_error (CAIRO_STATUS_NO_MEMORY));
 	}
-
-	surface->image.data = data;
+	_cairo_image_surface_init (&surface->image, image, surface->image.pixman_format);
     }
 
     return _cairo_image_surface_map_to_image (&surface->image, extents);
@@ -212,7 +212,7 @@ _cairo_dfb_surface_flush (void *abstract_surface)
 {
     cairo_dfb_surface_t *surface = abstract_surface;
 
-    if (surface->image.pixman_image == NULL) {
+    if (surface->image.pixman_image) {
 	surface->dfb_surface->Unlock (surface->dfb_surface);
 
 	pixman_image_unref (surface->image.pixman_image);
@@ -221,31 +221,6 @@ _cairo_dfb_surface_flush (void *abstract_surface)
     }
 
     return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_dfb_surface_acquire_source_image (void                   *abstract_surface,
-					 cairo_image_surface_t **image_out,
-					 void                  **image_extra)
-{
-    cairo_dfb_surface_t *surface = abstract_surface;
-    cairo_rectangle_int_t extents;
-
-    extents.x = extents.y = 0;
-    extents.width  = surface->image.width;
-    extents.height = surface->image.height;
-
-    *image_out = (cairo_image_surface_t *)
-	_cairo_dfb_surface_map_to_image (abstract_surface, &extents);
-    *image_extra = NULL;
-    return (*image_out)->base.status;
-}
-
-static void
-_cairo_dfb_surface_release_source_image (void                  *abstract_surface,
-					 cairo_image_surface_t *image,
-					 void                  *image_extra)
-{
 }
 
 #if 0
@@ -494,8 +469,8 @@ _cairo_dfb_surface_backend = {
     _cairo_dfb_surface_unmap_image,
 
     _cairo_surface_default_source,
-    _cairo_dfb_surface_acquire_source_image,
-    _cairo_dfb_surface_release_source_image,
+    _cairo_surface_default_acquire_source_image,
+    _cairo_surface_default_release_source_image,
     NULL,
 
     NULL, /* copy_page */
@@ -507,43 +482,13 @@ _cairo_dfb_surface_backend = {
     _cairo_dfb_surface_flush,
     NULL, /* mark_dirty_rectangle */
 
-    _cairo_image_surface_paint,
-    _cairo_image_surface_mask,
-    _cairo_image_surface_stroke,
-    _cairo_image_surface_fill,
+    _cairo_surface_fallback_paint,
+    _cairo_surface_fallback_mask,
+    _cairo_surface_fallback_stroke,
+    _cairo_surface_fallback_fill,
     NULL, /* fill-stroke */
-    _cairo_image_surface_glyphs,
+    _cairo_surface_fallback_glyphs,
 };
-
-#if 0
-static cairo_int_status_t
-_cairo_dfb_compositor_paint (const cairo_compositor_t	*compositor,
-			     cairo_composite_rectangles_t *extents)
-{
-    cairo_dfb_surface_t *surface = (cairo_dfb_surface_t *)extents->surface;
-    cairo_int_status_t status;
-
-    if (surface->image.pixman_image)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    status = CAIRO_INT_STATUS_UNSUPPORTED;
-    if (_cairo_clip_is_region (extents->clip)) {
-	cairo_boxes_t boxes;
-
-	 _cairo_clip_steal_boxes (extents->clip, &boxes);
-	 status = draw_boxes (extents, &boxes);
-	 _cairo_clip_unsteal_boxes (extents->clip, &boxes);
-    }
-
-    return status;
-}
-#endif
-
-static const cairo_compositor_t *
-_cairo_dfb_compositor_get (void)
-{
-    return &_cairo_fallback_compositor;
-}
 
 cairo_surface_t *
 cairo_directfb_surface_create (IDirectFB *dfb, IDirectFBSurface *dfbsurface)
@@ -574,7 +519,6 @@ cairo_directfb_surface_create (IDirectFB *dfb, IDirectFBSurface *dfbsurface)
 			 NULL, /* device */
 			 _directfb_format_to_content (format));
 
-    surface->image.compositor = _cairo_dfb_compositor_get ();
     surface->image.pixman_format = pixman_format;
     surface->image.format = _cairo_format_from_pixman_format (pixman_format);
 
