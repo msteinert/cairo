@@ -480,6 +480,7 @@ composite_boxes (void			*_dst,
     pixman_image_t *dst = to_pixman_image (_dst);
     pixman_image_t *src = ((cairo_image_source_t *)abstract_src)->pixman_image;
     pixman_image_t *mask = abstract_mask ? ((cairo_image_source_t *)abstract_mask)->pixman_image : NULL;
+    pixman_image_t *free_src = NULL;
     struct _cairo_boxes_chunk *chunk;
     int i;
 
@@ -496,7 +497,7 @@ composite_boxes (void			*_dst,
 #if PIXMAN_HAS_OP_LERP
 	    op = PIXMAN_OP_LERP_CLEAR;
 #else
-	    src = _pixman_image_for_color (CAIRO_COLOR_WHITE);
+	    free_src = src = _pixman_image_for_color (CAIRO_COLOR_WHITE);
 	    op = PIXMAN_OP_OUT_REVERSE;
 #endif
 	} else if (op == CAIRO_OPERATOR_SOURCE) {
@@ -526,6 +527,9 @@ composite_boxes (void			*_dst,
 				      x2 - x1, y2 - y1);
 	}
     }
+
+    if (free_src)
+	pixman_image_unref (free_src);
 
     return CAIRO_STATUS_SUCCESS;
 }
