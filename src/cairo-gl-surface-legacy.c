@@ -141,7 +141,7 @@ _cairo_gl_surface_clone_similar (void		     *abstract_surface,
     return UNSUPPORTED ("unknown src surface type in clone_similar");
 }
 
-/** Creates a cairo-gl pattern surface for the given trapezoids */
+/* Creates a cairo-gl pattern surface for the given trapezoids */
 static cairo_status_t
 _cairo_gl_get_traps_pattern (cairo_gl_surface_t *dst,
 			     int dst_x, int dst_y,

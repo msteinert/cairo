@@ -313,7 +313,7 @@ _qmatrix_from_cairo_matrix (const cairo_matrix_t& m)
     return QMatrix(m.xx, m.yx, m.xy, m.yy, m.x0, m.y0);
 }
 
-/** Path conversion **/
+/* Path conversion */
 typedef struct _qpainter_path_transform {
     QPainterPath path;
     const cairo_matrix_t *ctm_inverse;
