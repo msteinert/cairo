@@ -566,8 +566,7 @@ static cairo_status_t
 _cairo_win32_display_surface_mark_dirty (void *abstract_surface,
 					 int x, int y, int width, int height)
 {
-    cairo_win32_display_surface_t *surface = abstract_surface;
-    assert (surface->fallback == NULL);
+    _cairo_win32_display_surface_discard_fallback (abstract_surface);
     return CAIRO_STATUS_SUCCESS;
 }
 
