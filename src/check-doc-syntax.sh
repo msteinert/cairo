@@ -70,4 +70,8 @@ if echo $FILES | xargs grep "$note_regexp" /dev/null; then
 	echo Be civil and replace it by 'Note' please.
 fi >&2
 
+if echo $FILES | xargs ./check-doc-syntax.awk ; then
+	stat=1
+fi >&2
+
 exit $stat
