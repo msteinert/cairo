@@ -546,7 +546,7 @@ _cairo_win32_display_surface_flush (void *abstract_surface)
 			     rect.x, rect.y,
 			     rect.width, rect.height,
 			     fallback->win32.dc,
-			     0, 0,
+			     rect.x, rect.y,
 			     SRCCOPY)) {
 		    status = _cairo_win32_print_gdi_error (__FUNCTION__);
 		    break;
@@ -566,7 +566,8 @@ static cairo_status_t
 _cairo_win32_display_surface_mark_dirty (void *abstract_surface,
 					 int x, int y, int width, int height)
 {
-    _cairo_win32_display_surface_discard_fallback (abstract_surface);
+    cairo_win32_display_surface_t *surface = abstract_surface;
+    assert (surface->fallback == NULL);
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -740,10 +741,10 @@ _cairo_win32_display_surface_unset_clip (cairo_win32_display_surface_t *surface)
 void
 _cairo_win32_display_surface_discard_fallback (cairo_win32_display_surface_t *surface)
 {
-    TRACE ((stderr, "%s (surface=%d)\n",
-	    __FUNCTION__, surface->win32.base.unique_id));
-
     if (surface->fallback) {
+	TRACE ((stderr, "%s (surface=%d)\n",
+		__FUNCTION__, surface->win32.base.unique_id));
+
 	cairo_surface_destroy (surface->fallback);
 	surface->fallback = NULL;
     }
