@@ -845,9 +845,10 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	 * b. the row stride cannot be handled by GL itself using a 4 byte
 	 *     alignment constraint
 	 */
-	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES &&
-	    (src->width * cpp < src->stride - 3 ||
-	     width != src->width))
+	if (src->stride < 0 ||
+	    (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES &&
+	     (src->width * cpp < src->stride - 3 ||
+	      width != src->width)))
 	{
 	    glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
 	    status = _cairo_gl_surface_extract_image_data (src, src_x, src_y,
