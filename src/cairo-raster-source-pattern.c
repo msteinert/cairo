@@ -218,6 +218,8 @@ cairo_raster_source_pattern_set_callback_data (cairo_pattern_t *abstract_pattern
  *
  * Queries the current user data.
  *
+ * Return value: the current user-data passed to each callback
+ *
  * Since: 1.12
  **/
 void *

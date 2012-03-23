@@ -2543,6 +2543,9 @@ typedef void
  * is expected to provide the pixel data that was current at the time
  * of snapshotting.
  *
+ * Return value: CAIRO_STATUS_SUCCESS on success, or one of the
+ * #cairo_status_t error codes for failure.
+ *
  * Since: 1.12
  **/
 typedef cairo_status_t
@@ -2551,11 +2554,15 @@ typedef cairo_status_t
 
 /**
  * cairo_raster_source_copy_func_t:
- * @pattern: the pattern being rendered from
+ * @pattern: the #cairo_pattern_t that was copied to
  * @callback_data: the user data supplied during creation
+ * @other: the #cairo_pattern_t being used as the source for the copy
  *
  * #cairo_raster_source_copy_func_t is the type of function which is
  * called when the pattern gets copied as a normal part of rendering.
+ *
+ * Return value: CAIRO_STATUS_SUCCESS on success, or one of the
+ * #cairo_status_t error codes for failure.
  *
  * Since: 1.12
  **/
