@@ -231,21 +231,22 @@ user-data
 # A target to summarise the failures
 check-summary:
 	@FAILED_TESTS=""; \
-	for t in $(test_sources:.c=.log); do \
+	for t in output/*.log; do \
 	    if grep -e '\<FAIL\>' $$t >/dev/null 2>&1; then \
-		FAILED_TESTS="$$FAILED_TESTS $${t%.log}"; \
+		FAILED_TESTS="$$FAILED_TESTS $$t"; \
 	    fi; \
 	done; \
 	if test -n "$$FAILED_TESTS"; then \
 	    echo "Failed tests:"; \
 	    surfaces=""; \
 	    for t in $$FAILED_TESTS; do \
-		echo -n "     $$t: "; \
-		grep -e '\<FAIL\>' $$t.log | sed -e 's/.*TARGET: \([^ ]*\).*/\1/' | sort | uniq | tr '\n' ' '; \
+	    	name="$${t##output/}"; name="$${name%.log}"; \
+		echo -n "     $$name: "; \
+		grep -e '\<FAIL\>' $$t | sed -e 's/.*TARGET: \([^ ]*\).*/\1/' | sort | uniq | tr '\n' ' '; \
 		echo; \
-		for s in `grep -e '\<FAIL\>' $$t.log | sed -e 's/.*TARGET: \([^ ]*\).*/\1/' | sort | uniq`; do \
+		for s in `grep -e '\<FAIL\>' $$t | sed -e 's/.*TARGET: \([^ ]*\).*/\1/' | sort | uniq`; do \
 		    ss=`echo $$s | tr '-' '_'`; \
-		    tt=`echo $$t | tr '-' '_'`; \
+		    tt=`echo $$name | tr '-' '_'`; \
 		    eval $$ss=\""$${!ss} $$tt"\"; \
 		    echo $$surfaces | grep $$ss >/dev/null || surfaces="$$surfaces $$ss"; \
 		done; \
@@ -454,7 +455,8 @@ results.tar:
 	for i in output/*.fail.png ; do \
 		testname=$${i#output/} ; \
 		testname=$${testname%%.*} ; \
-		tar uf $@ $${testname}*.ref.png $${i%fail.png}out.png $${i%fail.png}diff.png ; \
+		echo tar uf $@ reference/$${testname}*.ref.png $${i%fail.png}out.png $${i%fail.png}diff.png ; \
+		tar uf $@ reference/$${testname}*.ref.png $${i%fail.png}out.png $${i%fail.png}diff.png ; \
 	done
 
 results.tar.gz: results.tar
