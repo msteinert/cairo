@@ -340,7 +340,7 @@ const cairo_font_face_backend_t _cairo_quartz_font_face_backend = {
 };
 
 /**
- * cairo_quartz_font_face_create_for_cgfont
+ * cairo_quartz_font_face_create_for_cgfont:
  * @font: a #CGFontRef obtained through a method external to cairo.
  *
  * Creates a new font for the Quartz font backend based on a
@@ -815,7 +815,7 @@ _cairo_quartz_scaled_font_get_cg_font_ref (cairo_scaled_font_t *abstract_font)
  */
 
 /**
- * cairo_quartz_font_face_create_for_atsu_font_id
+ * cairo_quartz_font_face_create_for_atsu_font_id:
  * @font_id: an ATSUFontID for the font.
  *
  * Creates a new font for the Quartz font backend based on an

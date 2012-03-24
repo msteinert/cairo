@@ -138,7 +138,7 @@ _cairo_win32_surface_get_extents (void		          *abstract_surface,
 }
 
 /**
- * cairo_win32_surface_get_dc
+ * cairo_win32_surface_get_dc:
  * @surface: a #cairo_surface_t
  *
  * Returns the HDC associated with this surface, or %NULL if none.
@@ -170,7 +170,7 @@ cairo_win32_surface_get_dc (cairo_surface_t *surface)
 }
 
 /**
- * cairo_win32_surface_get_image
+ * cairo_win32_surface_get_image:
  * @surface: a #cairo_surface_t
  *
  * Returns a #cairo_surface_t image surface that refers to the same bits

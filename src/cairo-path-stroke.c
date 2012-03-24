@@ -180,7 +180,7 @@ _cairo_stroker_join_is_clockwise (const cairo_stroke_face_t *in,
 }
 
 /**
- * _cairo_slope_compare_sgn
+ * _cairo_slope_compare_sgn:
  *
  * Return -1, 0 or 1 depending on the relative slopes of
  * two lines.

@@ -635,7 +635,7 @@ cairo_set_opacity (cairo_t *cr, double opacity)
 #endif
 
 /**
- * cairo_set_source_rgb
+ * cairo_set_source_rgb:
  * @cr: a cairo context
  * @red: red component of color
  * @green: green component of color
@@ -746,7 +746,7 @@ cairo_set_source_surface (cairo_t	  *cr,
 slim_hidden_def (cairo_set_source_surface);
 
 /**
- * cairo_set_source
+ * cairo_set_source:
  * @cr: a cairo context
  * @source: a #cairo_pattern_t to be used as the source for
  * subsequent drawing operations.
@@ -2727,7 +2727,7 @@ cairo_set_font_size (cairo_t *cr, double size)
 slim_hidden_def (cairo_set_font_size);
 
 /**
- * cairo_set_font_matrix
+ * cairo_set_font_matrix:
  * @cr: a #cairo_t
  * @matrix: a #cairo_matrix_t describing a transform to be applied to
  * the current font.
@@ -2755,7 +2755,7 @@ cairo_set_font_matrix (cairo_t		    *cr,
 slim_hidden_def (cairo_set_font_matrix);
 
 /**
- * cairo_get_font_matrix
+ * cairo_get_font_matrix:
  * @cr: a #cairo_t
  * @matrix: return value for the matrix
  *

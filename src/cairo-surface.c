@@ -2337,7 +2337,7 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 }
 
 /**
- * _cairo_surface_set_resolution
+ * _cairo_surface_set_resolution:
  * @surface: the surface
  * @x_res: x resolution, in dpi
  * @y_res: y resolution, in dpi

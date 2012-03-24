@@ -2289,7 +2289,7 @@ _cairo_quartz_surface_create_internal (CGContextRef cgContext,
 }
 
 /**
- * cairo_quartz_surface_create_for_cg_context
+ * cairo_quartz_surface_create_for_cg_context:
  * @cgContext: the existing CGContext for which to create the surface
  * @width: width of the surface, in pixels
  * @height: height of the surface, in pixels
@@ -2331,7 +2331,7 @@ cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
 }
 
 /**
- * cairo_quartz_surface_create
+ * cairo_quartz_surface_create:
  * @format: format of pixels in the surface to create
  * @width: width of the surface, in pixels
  * @height: height of the surface, in pixels
@@ -2441,7 +2441,7 @@ cairo_quartz_surface_create (cairo_format_t format,
 }
 
 /**
- * cairo_quartz_surface_get_cg_context
+ * cairo_quartz_surface_get_cg_context:
  * @surface: the Cairo Quartz surface
  *
  * Returns the CGContextRef that the given Quartz surface is backed

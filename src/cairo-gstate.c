@@ -328,7 +328,7 @@ _cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child)
 }
 
 /**
- * _cairo_gstate_is_group
+ * _cairo_gstate_is_group:
  * @gstate: a #cairo_gstate_t
  *
  * Check if _cairo_gstate_redirect_target has been called on the head

@@ -177,7 +177,7 @@ done:
 }
 
 /**
- * _cairo_surface_snapshot
+ * _cairo_surface_snapshot:
  * @surface: a #cairo_surface_t
  *
  * Make an immutable reference to @surface. It is an error to call a

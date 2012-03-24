@@ -246,7 +246,7 @@ _cairo_arc_in_direction (cairo_t	  *cr,
 }
 
 /**
- * _cairo_arc_path
+ * _cairo_arc_path:
  * @cr: a cairo context
  * @xc: X position of the center of the arc
  * @yc: Y position of the center of the arc

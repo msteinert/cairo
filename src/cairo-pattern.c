@@ -2582,7 +2582,7 @@ _cairo_radial_pattern_box_to_parameter (const cairo_radial_pattern_t *radial,
 }
 
 /**
- * _cairo_gradient_pattern_box_to_parameter
+ * _cairo_gradient_pattern_box_to_parameter:
  *
  * Compute a interpolation range sufficient to draw (within the given
  * tolerance) the gradient in the given box getting the same result as
@@ -2614,7 +2614,7 @@ _cairo_gradient_pattern_box_to_parameter (const cairo_gradient_pattern_t *gradie
 }
 
 /**
- * _cairo_gradient_pattern_interpolate
+ * _cairo_gradient_pattern_interpolate:
  *
  * Interpolate between the start and end objects of linear or radial
  * gradients.  The interpolated object is stored in out_circle, with
@@ -2647,7 +2647,7 @@ _cairo_gradient_pattern_interpolate (const cairo_gradient_pattern_t *gradient,
 
 
 /**
- * _cairo_gradient_pattern_fit_to_range
+ * _cairo_gradient_pattern_fit_to_range:
  *
  * Scale the extremes of a gradient to guarantee that the coordinates
  * and their deltas are within the range (-max_value, max_value). The
@@ -2886,7 +2886,7 @@ _gradient_color_average (const cairo_gradient_pattern_t *gradient,
 }
 
 /**
- * _cairo_pattern_alpha_range
+ * _cairo_pattern_alpha_range:
  *
  * Convenience function to determine the minimum and maximum alpha in
  * the drawn part of a pattern (i.e. ignoring clear parts caused by
@@ -2965,7 +2965,7 @@ _cairo_pattern_alpha_range (const cairo_pattern_t *pattern,
 }
 
 /**
- * _cairo_mesh_pattern_coord_box
+ * _cairo_mesh_pattern_coord_box:
  *
  * Convenience function to determine the range of the coordinates of
  * the points used to define the patches of the mesh.
@@ -3022,7 +3022,7 @@ _cairo_mesh_pattern_coord_box (const cairo_mesh_pattern_t *mesh,
 }
 
 /**
- * _cairo_gradient_pattern_is_solid
+ * _cairo_gradient_pattern_is_solid:
  *
  * Convenience function to determine whether a gradient pattern is
  * a solid color within the given extents. In this case the color
@@ -3105,7 +3105,7 @@ _mesh_is_clear (const cairo_mesh_pattern_t *mesh)
 }
 
 /**
- * _cairo_pattern_is_opaque_solid
+ * _cairo_pattern_is_opaque_solid:
  *
  * Convenience function to determine whether a pattern is an opaque
  * (alpha==1.0) solid color pattern. This is done by testing whether
@@ -3231,7 +3231,7 @@ _gradient_is_opaque (const cairo_gradient_pattern_t *gradient,
 }
 
 /**
- * _cairo_pattern_is_opaque
+ * _cairo_pattern_is_opaque:
  *
  * Convenience function to determine whether a pattern is an opaque
  * pattern (of any type). The same caveats that apply to
@@ -3940,7 +3940,7 @@ _cairo_pattern_equal (const cairo_pattern_t *a, const cairo_pattern_t *b)
 }
 
 /**
- * cairo_pattern_get_rgba
+ * cairo_pattern_get_rgba:
  * @pattern: a #cairo_pattern_t
  * @red: return value for red component of color, or %NULL
  * @green: return value for green component of color, or %NULL
@@ -3984,7 +3984,7 @@ cairo_pattern_get_rgba (cairo_pattern_t *pattern,
 }
 
 /**
- * cairo_pattern_get_surface
+ * cairo_pattern_get_surface:
  * @pattern: a #cairo_pattern_t
  * @surface: return value for surface of pattern, or %NULL
  * 
@@ -4017,7 +4017,7 @@ cairo_pattern_get_surface (cairo_pattern_t *pattern,
 }
 
 /**
- * cairo_pattern_get_color_stop_rgba
+ * cairo_pattern_get_color_stop_rgba:
  * @pattern: a #cairo_pattern_t
  * @index: index of the stop to return data for
  * @offset: return value for the offset of the stop, or %NULL
@@ -4070,7 +4070,7 @@ cairo_pattern_get_color_stop_rgba (cairo_pattern_t *pattern,
 }
 
 /**
- * cairo_pattern_get_color_stop_count
+ * cairo_pattern_get_color_stop_count:
  * @pattern: a #cairo_pattern_t
  * @count: return value for the number of color stops, or %NULL
  *
@@ -4103,7 +4103,7 @@ cairo_pattern_get_color_stop_count (cairo_pattern_t *pattern,
 }
 
 /**
- * cairo_pattern_get_linear_points
+ * cairo_pattern_get_linear_points:
  * @pattern: a #cairo_pattern_t
  * @x0: return value for the x coordinate of the first point, or %NULL
  * @y0: return value for the y coordinate of the first point, or %NULL
@@ -4144,7 +4144,7 @@ cairo_pattern_get_linear_points (cairo_pattern_t *pattern,
 }
 
 /**
- * cairo_pattern_get_radial_circles
+ * cairo_pattern_get_radial_circles:
  * @pattern: a #cairo_pattern_t
  * @x0: return value for the x coordinate of the center of the first circle, or %NULL
  * @y0: return value for the y coordinate of the center of the first circle, or %NULL
@@ -4192,7 +4192,7 @@ cairo_pattern_get_radial_circles (cairo_pattern_t *pattern,
 }
 
 /**
- * cairo_mesh_pattern_get_patch_count
+ * cairo_mesh_pattern_get_patch_count:
  * @pattern: a #cairo_pattern_t
  * @count: return value for the number patches, or %NULL
  *
@@ -4231,7 +4231,7 @@ cairo_mesh_pattern_get_patch_count (cairo_pattern_t *pattern,
 slim_hidden_def (cairo_mesh_pattern_get_patch_count);
 
 /**
- * cairo_mesh_pattern_get_path
+ * cairo_mesh_pattern_get_path:
  * @pattern: a #cairo_pattern_t
  * @patch_num: the patch number to return data for
  *
@@ -4319,7 +4319,7 @@ cairo_mesh_pattern_get_path (cairo_pattern_t *pattern,
 slim_hidden_def (cairo_mesh_pattern_get_path);
 
 /**
- * cairo_mesh_pattern_get_corner_color_rgba
+ * cairo_mesh_pattern_get_corner_color_rgba:
  * @pattern: a #cairo_pattern_t
  * @patch_num: the patch number to return data for
  * @corner_num: the corner number to return data for
@@ -4387,7 +4387,7 @@ cairo_mesh_pattern_get_corner_color_rgba (cairo_pattern_t *pattern,
 slim_hidden_def (cairo_mesh_pattern_get_corner_color_rgba);
 
 /**
- * cairo_mesh_pattern_get_control_point
+ * cairo_mesh_pattern_get_control_point:
  * @pattern: a #cairo_pattern_t
  * @patch_num: the patch number to return data for
  * @point_num: the control point number to return data for

@@ -1089,7 +1089,7 @@ CLEANUP_COMPOSITE:
 }
 
 /**
- * _cairo_recording_surface_snapshot
+ * _cairo_recording_surface_snapshot:
  * @surface: a #cairo_surface_t which must be a recording surface
  *
  * Make an immutable copy of @surface. It is an error to call a
