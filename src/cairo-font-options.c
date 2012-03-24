@@ -384,8 +384,6 @@ cairo_font_options_get_subpixel_order (const cairo_font_options_t *options)
  * specifies how pixels are filtered when rendered with an antialiasing
  * mode of %CAIRO_ANTIALIAS_SUBPIXEL. See the documentation for
  * #cairo_lcd_filter_t for full details.
- *
- * Since: 1.8
  **/
 void
 _cairo_font_options_set_lcd_filter (cairo_font_options_t *options,
@@ -405,8 +403,6 @@ _cairo_font_options_set_lcd_filter (cairo_font_options_t *options,
  * See the documentation for #cairo_lcd_filter_t for full details.
  *
  * Return value: the LCD filter for the font options object
- *
- * Since: 1.8
  **/
 cairo_lcd_filter_t
 _cairo_font_options_get_lcd_filter (const cairo_font_options_t *options)
@@ -424,8 +420,6 @@ _cairo_font_options_get_lcd_filter (const cairo_font_options_t *options)
  *
  * Sets the rounding options for the font options object. If rounding is set, a
  * glyph's position will be rounded to integer values.
- *
- * Since: 1.12
  **/
 void
 _cairo_font_options_set_round_glyph_positions (cairo_font_options_t *options,
@@ -444,8 +438,6 @@ _cairo_font_options_set_round_glyph_positions (cairo_font_options_t *options,
  * Gets the glyph position rounding option for the font options object.
  *
  * Return value: The round glyph posistions flag for the font options object.
- *
- * Since: 1.12
  **/
 cairo_round_glyph_positions_t
 _cairo_font_options_get_round_glyph_positions (const cairo_font_options_t *options)
