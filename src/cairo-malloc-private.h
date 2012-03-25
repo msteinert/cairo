@@ -64,7 +64,7 @@
 
 /**
  * _cairo_malloc_ab:
- * @n: number of elements to allocate
+ * @a: number of elements to allocate
  * @size: size of each element
  *
  * Allocates @n*@size memory using _cairo_malloc(), taking care to not
@@ -86,7 +86,7 @@
 /**
  * _cairo_realloc_ab:
  * @ptr: original pointer to block of memory to be resized
- * @n: number of elements to allocate
+ * @a: number of elements to allocate
  * @size: size of each element
  *
  * Reallocates @ptr a block of @n*@size memory using realloc(), taking
@@ -107,7 +107,7 @@
 
 /**
  * _cairo_malloc_abc:
- * @n: first factor of number of elements to allocate
+ * @a: first factor of number of elements to allocate
  * @b: second factor of number of elements to allocate
  * @size: size of each element
  *
