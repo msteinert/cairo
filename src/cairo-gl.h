@@ -43,7 +43,7 @@
  *
  * Cairo-gl allows interoperability with other GL rendering through GL
  * context sharing.  Cairo-gl surfaces are created in reference to a
- * #cairo_device_t, which represents an GL context created by the user.
+ * #cairo_device_t, which represents a GL context created by the user.
  * When that GL context is created with its sharePtr set to another
  * context (or vice versa), its objects (textures backing cairo-gl
  * surfaces) can be accessed in the other OpenGL context.  This allows
