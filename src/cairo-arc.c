@@ -139,7 +139,7 @@ _arc_segments_needed (double	      angle,
 
    From that paper, a very practical value of h is:
 
-	h = 4/3 * tan(angle/4)
+	h = 4/3 * R * tan(angle/4)
 
    This value does not give the spline with minimal error, but it does
    provide a very good approximation, (6th-order convergence), and the
