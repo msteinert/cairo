@@ -72,6 +72,8 @@ slim_hidden_proto (cairo_xcb_surface_create_with_xrender_format);
  *
  * Defined if the xcb surface backend is available.
  * This macro can be used to conditionally compile backend-specific code.
+ *
+ * Since: 1.12
  */
 
 cairo_surface_t *
@@ -1198,6 +1200,8 @@ _cairo_xcb_screen_from_visual (xcb_connection_t *connection,
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if an error such as out of memory
  * occurs. You can use cairo_surface_status() to check for this.
+ *
+ * Since: 1.12
  **/
 cairo_surface_t *
 cairo_xcb_surface_create (xcb_connection_t  *connection,
@@ -1279,6 +1283,8 @@ slim_hidden_def (cairo_xcb_surface_create);
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if an error such as out of memory
  * occurs. You can use cairo_surface_status() to check for this.
+ *
+ * Since: 1.12
  **/
 cairo_surface_t *
 cairo_xcb_surface_create_for_bitmap (xcb_connection_t	*connection,
@@ -1340,6 +1346,8 @@ slim_hidden_def (cairo_xcb_surface_create_for_bitmap);
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if an error such as out of memory
  * occurs. You can use cairo_surface_status() to check for this.
+ *
+ * Since: 1.12
  **/
 cairo_surface_t *
 cairo_xcb_surface_create_with_xrender_format (xcb_connection_t	    *connection,
@@ -1430,6 +1438,8 @@ _drawable_changed (cairo_xcb_surface_t *surface)
  *
  * If cairo_surface_flush() wasn't called, some pending operations
  * might be discarded.
+ *
+ * Since: 1.12
  **/
 void
 cairo_xcb_surface_set_size (cairo_surface_t *abstract_surface,
@@ -1481,6 +1491,8 @@ slim_hidden_def (cairo_xcb_surface_set_size);
  *
  * If cairo_surface_flush() wasn't called, some pending operations
  * might be discarded.
+ *
+ * Since: 1.12
  **/
 void
 cairo_xcb_surface_set_drawable (cairo_surface_t *abstract_surface,
