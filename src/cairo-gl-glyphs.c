@@ -427,23 +427,15 @@ _cairo_gl_composite_glyphs (void			*_dst,
 
     TRACE ((stderr, "%s\n", __FUNCTION__));
 
-    /* If any of the glyphs are component alpha, we have to go through a mask,
-     * since only _cairo_gl_surface_composite() currently supports component
-     * alpha.
+    /* If any of the glyphs require component alpha, we have to go through
+     * a mask, since only _cairo_gl_surface_composite() currently supports
+     * component alpha.
      */
-    if (!dst->base.is_clear && ! info->use_mask && op != CAIRO_OPERATOR_OVER) {
-	for (i = 0; i < info->num_glyphs; i++) {
-	    cairo_scaled_glyph_t *scaled_glyph;
-
-	    if (_cairo_scaled_glyph_lookup (info->font, info->glyphs[i].index,
-					    CAIRO_SCALED_GLYPH_INFO_SURFACE,
-					    &scaled_glyph) == CAIRO_INT_STATUS_SUCCESS &&
-		scaled_glyph->surface->format == CAIRO_FORMAT_ARGB32)
-	    {
-		info->use_mask = TRUE;
-		break;
-	    }
-	}
+    if (!dst->base.is_clear && ! info->use_mask && op != CAIRO_OPERATOR_OVER &&
+	(info->font->options.antialias == CAIRO_ANTIALIAS_SUBPIXEL ||
+	 info->font->options.antialias == CAIRO_ANTIALIAS_BEST))
+    {
+	info->use_mask = TRUE;
     }
 
     if (info->use_mask) {
