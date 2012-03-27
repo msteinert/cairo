@@ -947,6 +947,8 @@ _cairo_beos_surface_create_internal (BView*   view,
  * The caller must ensure that the view does not get deleted before the surface.
  * If the view is attached to a bitmap rather than an on-screen window, use
  * cairo_beos_surface_create_for_bitmap() instead of this function.
+ *
+ * Since: TBD
  **/
 cairo_surface_t *
 cairo_beos_surface_create (BView* view)
@@ -970,6 +972,8 @@ cairo_beos_surface_create (BView* view)
  *
  * For now, only views that draw to the entire area of bmp are supported.
  * The view must already be attached to the bitmap.
+ *
+ * Since: TBD
  **/
 cairo_surface_t *
 cairo_beos_surface_create_for_bitmap (BView*   view,

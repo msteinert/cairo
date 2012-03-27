@@ -579,6 +579,8 @@ slim_hidden_def (cairo_gl_surface_create);
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if an error such as out of memory
  * occurs. You can use cairo_surface_status() to check for this.
+ *
+ * Since: TBD
  **/
 cairo_surface_t *
 cairo_gl_surface_create_for_texture (cairo_device_t	*abstract_device,
