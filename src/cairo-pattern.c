@@ -649,6 +649,8 @@ _cairo_pattern_create_in_error (cairo_status_t status)
  * This function will always return a valid pointer, but if an error
  * occurred the pattern status will be set to an error.  To inspect
  * the status of a pattern use cairo_pattern_status().
+ *
+ * Since: 1.0
  **/
 cairo_pattern_t *
 cairo_pattern_create_rgb (double red, double green, double blue)
@@ -677,6 +679,8 @@ slim_hidden_def (cairo_pattern_create_rgb);
  * This function will always return a valid pointer, but if an error
  * occurred the pattern status will be set to an error.  To inspect
  * the status of a pattern use cairo_pattern_status().
+ *
+ * Since: 1.0
  **/
 cairo_pattern_t *
 cairo_pattern_create_rgba (double red, double green, double blue,
@@ -711,6 +715,8 @@ slim_hidden_def (cairo_pattern_create_rgba);
  * This function will always return a valid pointer, but if an error
  * occurred the pattern status will be set to an error.  To inspect
  * the status of a pattern use cairo_pattern_status().
+ *
+ * Since: 1.0
  **/
 cairo_pattern_t *
 cairo_pattern_create_for_surface (cairo_surface_t *surface)
@@ -769,6 +775,8 @@ slim_hidden_def (cairo_pattern_create_for_surface);
  * This function will always return a valid pointer, but if an error
  * occurred the pattern status will be set to an error.  To inspect
  * the status of a pattern use cairo_pattern_status().
+ *
+ * Since: 1.0
  **/
 cairo_pattern_t *
 cairo_pattern_create_linear (double x0, double y0, double x1, double y1)
@@ -820,6 +828,8 @@ cairo_pattern_create_linear (double x0, double y0, double x1, double y1)
  * This function will always return a valid pointer, but if an error
  * occurred the pattern status will be set to an error.  To inspect
  * the status of a pattern use cairo_pattern_status().
+ *
+ * Since: 1.0
  **/
 cairo_pattern_t *
 cairo_pattern_create_radial (double cx0, double cy0, double radius0,
@@ -1037,6 +1047,8 @@ cairo_pattern_create_mesh (void)
  * cairo_pattern_get_reference_count().
  *
  * Return value: the referenced #cairo_pattern_t.
+ *
+ * Since: 1.0
  **/
 cairo_pattern_t *
 cairo_pattern_reference (cairo_pattern_t *pattern)
@@ -1080,6 +1092,8 @@ cairo_pattern_get_type (cairo_pattern_t *pattern)
  * Return value: %CAIRO_STATUS_SUCCESS, %CAIRO_STATUS_NO_MEMORY,
  * %CAIRO_STATUS_INVALID_MATRIX, %CAIRO_STATUS_PATTERN_TYPE_MISMATCH,
  * or %CAIRO_STATUS_INVALID_MESH_CONSTRUCTION.
+ *
+ * Since: 1.0
  **/
 cairo_status_t
 cairo_pattern_status (cairo_pattern_t *pattern)
@@ -1094,6 +1108,8 @@ cairo_pattern_status (cairo_pattern_t *pattern)
  * Decreases the reference count on @pattern by one. If the result is
  * zero, then @pattern and all associated resources are freed.  See
  * cairo_pattern_reference().
+ *
+ * Since: 1.0
  **/
 void
 cairo_pattern_destroy (cairo_pattern_t *pattern)
@@ -1873,6 +1889,8 @@ _cairo_pattern_add_color_stop (cairo_gradient_pattern_t	*pattern,
  * Note: If the pattern is not a gradient pattern, (eg. a linear or
  * radial pattern), then the pattern will be put into an error status
  * with a status of %CAIRO_STATUS_PATTERN_TYPE_MISMATCH.
+ *
+ * Since: 1.0
  **/
 void
 cairo_pattern_add_color_stop_rgb (cairo_pattern_t *pattern,
@@ -1910,6 +1928,8 @@ cairo_pattern_add_color_stop_rgb (cairo_pattern_t *pattern,
  * Note: If the pattern is not a gradient pattern, (eg. a linear or
  * radial pattern), then the pattern will be put into an error status
  * with a status of %CAIRO_STATUS_PATTERN_TYPE_MISMATCH.
+ *
+ * Since: 1.0
  **/
 void
 cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern,
@@ -1971,6 +1991,8 @@ slim_hidden_def (cairo_pattern_add_color_stop_rgba);
  *
  * Also, please note the discussion of the user-space locking
  * semantics of cairo_set_source().
+ *
+ * Since: 1.0
  **/
 void
 cairo_pattern_set_matrix (cairo_pattern_t      *pattern,
@@ -2001,6 +2023,8 @@ slim_hidden_def (cairo_pattern_set_matrix);
  * @matrix: return value for the matrix
  *
  * Stores the pattern's transformation matrix into @matrix.
+ *
+ * Since: 1.0
  **/
 void
 cairo_pattern_get_matrix (cairo_pattern_t *pattern, cairo_matrix_t *matrix)
@@ -2027,6 +2051,8 @@ cairo_pattern_get_matrix (cairo_pattern_t *pattern, cairo_matrix_t *matrix)
  * cairo_set_source_surface (cr, image, x, y);
  * cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_NEAREST);
  * </programlisting></informalexample>
+ *
+ * Since: 1.0
  **/
 void
 cairo_pattern_set_filter (cairo_pattern_t *pattern, cairo_filter_t filter)
@@ -2046,6 +2072,8 @@ cairo_pattern_set_filter (cairo_pattern_t *pattern, cairo_filter_t filter)
  * for details on each filter.
  *
  * Return value: the current filter used for resizing the pattern.
+ *
+ * Since: 1.0
  **/
 cairo_filter_t
 cairo_pattern_get_filter (cairo_pattern_t *pattern)
@@ -2065,6 +2093,8 @@ cairo_pattern_get_filter (cairo_pattern_t *pattern)
  *
  * The default extend mode is %CAIRO_EXTEND_NONE for surface patterns
  * and %CAIRO_EXTEND_PAD for gradient patterns.
+ *
+ * Since: 1.0
  **/
 void
 cairo_pattern_set_extend (cairo_pattern_t *pattern, cairo_extend_t extend)
@@ -2085,6 +2115,8 @@ cairo_pattern_set_extend (cairo_pattern_t *pattern, cairo_extend_t extend)
  *
  * Return value: the current extend strategy used for drawing the
  * pattern.
+ *
+ * Since: 1.0
  **/
 cairo_extend_t
 cairo_pattern_get_extend (cairo_pattern_t *pattern)

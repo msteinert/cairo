@@ -81,6 +81,8 @@
  *
  * Defined if the Quartz surface backend is available.
  * This macro can be used to conditionally compile backend-specific code.
+ *
+ * Since: 1.6
  **/
 
 #if __MAC_OS_X_VERSION_MIN_REQUIRED < 1050

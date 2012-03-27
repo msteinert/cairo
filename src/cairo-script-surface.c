@@ -3744,6 +3744,8 @@ _cairo_script_context_create (cairo_output_stream_t *stream)
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" device if an error such as out of memory
  * occurs. You can use cairo_device_status() to check for this.
+ *
+ * Since: 1.12
  **/
 cairo_device_t *
 cairo_script_create (const char *filename)
@@ -3773,6 +3775,8 @@ cairo_script_create (const char *filename)
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" device if an error such as out of memory
  * occurs. You can use cairo_device_status() to check for this.
+ *
+ * Since: 1.12
  **/
 cairo_device_t *
 cairo_script_create_for_stream (cairo_write_func_t	 write_func,
@@ -3795,6 +3799,8 @@ cairo_script_create_for_stream (cairo_write_func_t	 write_func,
  * @len:the length of the sting to write, or -1 to use strlen()
  *
  * Emit a string verbatim into the script.
+ *
+ * Since: 1.12
  **/
 void
 cairo_script_write_comment (cairo_device_t *script,
@@ -3817,6 +3823,8 @@ cairo_script_write_comment (cairo_device_t *script,
  * @mode: the new mode
  *
  * Change the output mode of the script
+ *
+ * Since: 1.12
  **/
 void
 cairo_script_set_mode (cairo_device_t *script,
@@ -3834,6 +3842,8 @@ cairo_script_set_mode (cairo_device_t *script,
  * Queries the script for its current output mode.
  *
  * Return value: the current output mode of the script
+ *
+ * Since: 1.12
  **/
 cairo_script_mode_t
 cairo_script_get_mode (cairo_device_t *script)
@@ -3859,6 +3869,8 @@ cairo_script_get_mode (cairo_device_t *script)
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if an error such as out of memory
  * occurs. You can use cairo_surface_status() to check for this.
+ *
+ * Since: 1.12
  **/
 cairo_surface_t *
 cairo_script_surface_create (cairo_device_t *script,
@@ -3902,6 +3914,8 @@ slim_hidden_def (cairo_script_surface_create);
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if an error such as out of memory
  * occurs. You can use cairo_surface_status() to check for this.
+ *
+ * Since: 1.12
  **/
 cairo_surface_t *
 cairo_script_surface_create_for_target (cairo_device_t *script,
@@ -3939,6 +3953,8 @@ cairo_script_surface_create_for_target (cairo_device_t *script,
  * Converts the record operations in @recording_surface into a script.
  *
  * Return value: #CAIRO_STATUS_SUCCESS on successful completion or an error code.
+ *
+ * Since: 1.12
  **/
 cairo_status_t
 cairo_script_from_recording_surface (cairo_device_t *script,

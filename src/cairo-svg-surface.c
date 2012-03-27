@@ -73,6 +73,8 @@
  *
  * Defined if the SVG surface backend is available.
  * This macro can be used to conditionally compile backend-specific code.
+ *
+ * Since: 1.2
  **/
 
 typedef struct cairo_svg_page cairo_svg_page_t;

@@ -93,6 +93,8 @@
  *
  * Defined if the Microsoft Windows surface backend is available.
  * This macro can be used to conditionally compile backend-specific code.
+ *
+ * Since: 1.0
  **/
 
 static const cairo_surface_backend_t cairo_win32_display_surface_backend;
@@ -910,6 +912,8 @@ static const cairo_surface_backend_t cairo_win32_display_surface_backend = {
  * cairo_win32_surface_create_with_dib().
  *
  * Return value: the newly created surface
+ *
+ * Since: 1.0
  **/
 cairo_surface_t *
 cairo_win32_surface_create (HDC hdc)

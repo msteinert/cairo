@@ -101,6 +101,8 @@ cairo_version_string (void);
  *      /<!-- -->* do something *<!-- -->/
  *  }
  * </programlisting></informalexample>
+ *
+ * Since: 1.0
  **/
 typedef int cairo_bool_t;
 
@@ -116,6 +118,8 @@ typedef int cairo_bool_t;
  *
  * Memory management of #cairo_t is done with
  * cairo_reference() and cairo_destroy().
+ *
+ * Since: 1.0
  **/
 typedef struct _cairo cairo_t;
 
@@ -143,6 +147,8 @@ typedef struct _cairo cairo_t;
  *
  * Memory management of #cairo_surface_t is done with
  * cairo_surface_reference() and cairo_surface_destroy().
+ *
+ * Since: 1.0
  **/
 typedef struct _cairo_surface cairo_surface_t;
 
@@ -180,6 +186,8 @@ typedef struct _cairo_device cairo_device_t;
  *     x_new = xx * x + xy * y + x0;
  *     y_new = yx * x + yy * y + y0;
  * </programlisting>
+ *
+ * Since: 1.0
  **/
 typedef struct _cairo_matrix {
     double xx; double yx;
@@ -206,6 +214,8 @@ typedef struct _cairo_matrix {
  *
  * Memory management of #cairo_pattern_t is done with
  * cairo_pattern_reference() and cairo_pattern_destroy().
+ *
+ * Since: 1.0
  **/
 typedef struct _cairo_pattern cairo_pattern_t;
 
@@ -216,6 +226,8 @@ typedef struct _cairo_pattern cairo_pattern_t;
  * #cairo_destroy_func_t the type of function which is called when a
  * data element is destroyed. It is passed the pointer to the data
  * element and should free any memory and resources allocated for it.
+ *
+ * Since: 1.0
  **/
 typedef void (*cairo_destroy_func_t) (void *data);
 
@@ -228,6 +240,8 @@ typedef void (*cairo_destroy_func_t) (void *data);
  * and there is no need to initialize the object; only the unique
  * address of a #cairo_data_key_t object is used.  Typically, you
  * would just use the address of a static #cairo_data_key_t object.
+ *
+ * Since: 1.0
  **/
 typedef struct _cairo_user_data_key {
     int unused;
@@ -288,6 +302,8 @@ typedef struct _cairo_user_data_key {
  *
  * New entries may be added in future versions.  Use cairo_status_to_string()
  * to get a human-readable representation of an error message.
+ *
+ * Since: 1.0
  **/
 typedef enum _cairo_status {
     CAIRO_STATUS_SUCCESS = 0,
@@ -346,6 +362,8 @@ typedef enum _cairo_status {
  * Note: The large values here are designed to keep #cairo_content_t
  * values distinct from #cairo_format_t values so that the
  * implementation can detect the error if users confuse the two types.
+ *
+ * Since: 1.0
  **/
 typedef enum _cairo_content {
     CAIRO_CONTENT_COLOR		= 0x1000,
@@ -381,6 +399,8 @@ typedef enum _cairo_content {
  * image data.
  *
  * New entries may be added in future versions.
+ *
+ * Since: 1.0
  **/
 typedef enum _cairo_format {
     CAIRO_FORMAT_INVALID   = -1,
@@ -408,6 +428,8 @@ typedef enum _cairo_format {
  * %CAIRO_STATUS_WRITE_ERROR otherwise.
  *
  * Returns: the status code of the write operation
+ *
+ * Since: 1.0
  **/
 typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
 					      const unsigned char *data,
@@ -428,6 +450,8 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
  * %CAIRO_STATUS_READ_ERROR otherwise.
  *
  * Returns: the status code of the read operation
+ *
+ * Since: 1.0
  **/
 typedef cairo_status_t (*cairo_read_func_t) (void		*closure,
 					     unsigned char	*data,
@@ -572,6 +596,8 @@ cairo_pop_group_to_source (cairo_t *cr);
  * For a more detailed explanation of the effects of each operator, including
  * the mathematical definitions, see
  * <ulink url="http://cairographics.org/operators/">http://cairographics.org/operators/</ulink>.
+ *
+ * Since: 1.0
  **/
 typedef enum _cairo_operator {
     CAIRO_OPERATOR_CLEAR,
@@ -666,6 +692,8 @@ cairo_set_tolerance (cairo_t *cr, double tolerance);
  *
  * The interpretation of @CAIRO_ANTIALIAS_DEFAULT is left entirely up to
  * the backend, typically this will be similar to @CAIRO_ANTIALIAS_GOOD.
+ *
+ * Since: 1.0
  **/
 typedef enum _cairo_antialias {
     CAIRO_ANTIALIAS_DEFAULT,
@@ -708,6 +736,8 @@ cairo_set_antialias (cairo_t *cr, cairo_antialias_t antialias);
  * The default fill rule is %CAIRO_FILL_RULE_WINDING.
  *
  * New entries may be added in future versions.
+ *
+ * Since: 1.0
  **/
 typedef enum _cairo_fill_rule {
     CAIRO_FILL_RULE_WINDING,
@@ -729,6 +759,8 @@ cairo_set_line_width (cairo_t *cr, double width);
  * Specifies how to render the endpoints of the path when stroking.
  *
  * The default line cap style is %CAIRO_LINE_CAP_BUTT.
+ *
+ * Since: 1.0
  **/
 typedef enum _cairo_line_cap {
     CAIRO_LINE_CAP_BUTT,
@@ -751,6 +783,8 @@ cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap);
  * Specifies how to render the junction of two lines when stroking.
  *
  * The default line join style is %CAIRO_LINE_JOIN_MITER.
+ *
+ * Since: 1.0
  **/
 typedef enum _cairo_line_join {
     CAIRO_LINE_JOIN_MITER,
@@ -997,6 +1031,8 @@ cairo_rectangle_list_destroy (cairo_rectangle_list_t *rectangle_list);
  *
  * Memory management of #cairo_scaled_font_t is done with
  * cairo_scaled_font_reference() and cairo_scaled_font_destroy().
+ *
+ * Since: 1.0
  **/
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
 
@@ -1016,6 +1052,8 @@ typedef struct _cairo_scaled_font cairo_scaled_font_t;
  *
  * Memory management of #cairo_font_face_t is done with
  * cairo_font_face_reference() and cairo_font_face_destroy().
+ *
+ * Since: 1.0
  **/
 typedef struct _cairo_font_face cairo_font_face_t;
 
@@ -1042,6 +1080,8 @@ typedef struct _cairo_font_face cairo_font_face_t;
  * Note that the offsets given by @x and @y are not cumulative. When
  * drawing or measuring text, each glyph is individually positioned
  * with respect to the overall origin
+ *
+ * Since: 1.0
  **/
 typedef struct {
     unsigned long        index;
@@ -1125,6 +1165,8 @@ typedef enum _cairo_text_cluster_flags {
  * doubled. They will change slightly due to hinting (so you can't
  * assume that metrics are independent of the transformation matrix),
  * but otherwise will remain unchanged.
+ *
+ * Since: 1.0
  **/
 typedef struct {
     double x_bearing;
@@ -1175,6 +1217,8 @@ typedef struct {
  * not be doubled. They will change slightly due to hinting (so you
  * can't assume that metrics are independent of the transformation
  * matrix), but otherwise will remain unchanged.
+ *
+ * Since: 1.0
  **/
 typedef struct {
     double ascent;
@@ -1191,6 +1235,8 @@ typedef struct {
  * @CAIRO_FONT_SLANT_OBLIQUE: Oblique font style
  *
  * Specifies variants of a font face based on their slant.
+ *
+ * Since: 1.0
  **/
 typedef enum _cairo_font_slant {
     CAIRO_FONT_SLANT_NORMAL,
@@ -1204,6 +1250,8 @@ typedef enum _cairo_font_slant {
  * @CAIRO_FONT_WEIGHT_BOLD: Bold font weight
  *
  * Specifies variants of a font face based on their weight.
+ *
+ * Since: 1.0
  **/
 typedef enum _cairo_font_weight {
     CAIRO_FONT_WEIGHT_NORMAL,
@@ -1226,6 +1274,8 @@ typedef enum _cairo_font_weight {
  * The subpixel order specifies the order of color elements within
  * each pixel on the display device when rendering with an
  * antialiasing mode of %CAIRO_ANTIALIAS_SUBPIXEL.
+ *
+ * Since: 1.0
  **/
 typedef enum _cairo_subpixel_order {
     CAIRO_SUBPIXEL_ORDER_DEFAULT,
@@ -1256,6 +1306,8 @@ typedef enum _cairo_subpixel_order {
  * styles are supported by all font backends.
  *
  * New entries may be added in future versions.
+ *
+ * Since: 1.0
  **/
 typedef enum _cairo_hint_style {
     CAIRO_HINT_STYLE_DEFAULT,
@@ -1277,6 +1329,8 @@ typedef enum _cairo_hint_style {
  * device space. Doing this improves the consistency of
  * letter and line spacing, however it also means that text
  * will be laid out differently at different zoom factors.
+ *
+ * Since: 1.0
  **/
 typedef enum _cairo_hint_metrics {
     CAIRO_HINT_METRICS_DEFAULT,
@@ -1303,6 +1357,8 @@ typedef enum _cairo_hint_metrics {
  * cairo_font_options_hash() should be used to copy, check
  * for equality, merge, or compute a hash value of
  * #cairo_font_options_t objects.
+ *
+ * Since: 1.0
  **/
 typedef struct _cairo_font_options cairo_font_options_t;
 
@@ -1901,6 +1957,8 @@ cairo_get_group_target (cairo_t *cr);
  * #cairo_path_data_t is used to describe the type of one portion
  * of a path when represented as a #cairo_path_t.
  * See #cairo_path_data_t for details.
+ *
+ * Since: 1.0
  **/
 typedef enum _cairo_path_data_type {
     CAIRO_PATH_MOVE_TO,
@@ -1974,6 +2032,8 @@ typedef enum _cairo_path_data_type {
  * always use <literal>data->header.length</literal> to
  * iterate over the path data, instead of hardcoding the number of
  * elements for each element type.
+ *
+ * Since: 1.0
  **/
 typedef union _cairo_path_data_t cairo_path_data_t;
 union _cairo_path_data_t {
@@ -2004,6 +2064,8 @@ union _cairo_path_data_t {
  * array. This number is larger than the number of independent path
  * portions (defined in #cairo_path_data_type_t), since the data
  * includes both headers and coordinates for each portion.
+ *
+ * Since: 1.0
  **/
 typedef struct cairo_path {
     cairo_status_t status;
@@ -2793,6 +2855,8 @@ cairo_pattern_get_matrix (cairo_pattern_t *pattern,
  * and %CAIRO_EXTEND_PAD for gradient patterns.
  *
  * New entries may be added in future versions.
+ *
+ * Since: 1.0
  **/
 typedef enum _cairo_extend {
     CAIRO_EXTEND_NONE,
@@ -2824,6 +2888,8 @@ cairo_pattern_get_extend (cairo_pattern_t *pattern);
  * applied when reading pixel values from patterns. See
  * cairo_pattern_set_filter() for indicating the desired filter to be
  * used with a particular pattern.
+ *
+ * Since: 1.0
  **/
 typedef enum _cairo_filter {
     CAIRO_FILTER_FAST,

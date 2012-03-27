@@ -144,24 +144,32 @@
  *
  * The version of cairo available at compile-time, encoded using
  * CAIRO_VERSION_ENCODE().
+ *
+ * Since: 1.0
  **/
 
 /**
  * CAIRO_VERSION_MAJOR:
  *
  * The major component of the version of cairo available at compile-time.
+ *
+ * Since: 1.0
  **/
 
 /**
  * CAIRO_VERSION_MINOR:
  *
  * The minor component of the version of cairo available at compile-time.
+ *
+ * Since: 1.0
  **/
 
 /**
  * CAIRO_VERSION_MICRO:
  *
  * The micro component of the version of cairo available at compile-time.
+ *
+ * Since: 1.0
  **/
 
 /**
@@ -169,6 +177,8 @@
  *
  * A human-readable string literal containing the version of cairo available
  * at compile-time, in the form of "X.Y.Z".
+ *
+ * Since: 1.8
  **/
 
 /**
@@ -183,6 +193,8 @@
  * that later versions compare greater than earlier versions.
  *
  * Returns: the encoded version.
+ *
+ * Since: 1.0
  **/
 
 /**
@@ -218,6 +230,8 @@
  * equivalents %CAIRO_VERSION and %CAIRO_VERSION_STRING.
  *
  * Return value: the encoded version.
+ *
+ * Since: 1.0
  **/
 int
 cairo_version (void)
@@ -235,6 +249,8 @@ cairo_version (void)
  * %CAIRO_VERSION_STRING and %CAIRO_VERSION.
  *
  * Return value: a string containing the version.
+ *
+ * Since: 1.0
  **/
 const char*
 cairo_version_string (void)

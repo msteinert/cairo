@@ -358,6 +358,8 @@ _cairo_path_create_internal (cairo_path_fixed_t *path_fixed,
  * pointer to a #cairo_path_t returned by a cairo function. Any path
  * that is created manually (ie. outside of cairo) should be destroyed
  * manually as well.
+ *
+ * Since: 1.0
  **/
 void
 cairo_path_destroy (cairo_path_t *path)

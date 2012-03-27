@@ -373,6 +373,8 @@ _cairo_image_surface_create_with_pixman_format (unsigned char		*data,
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if an error such as out of memory
  * occurs. You can use cairo_surface_status() to check for this.
+ *
+ * Since: 1.0
  **/
 cairo_surface_t *
 cairo_image_surface_create (cairo_format_t	format,
@@ -488,6 +490,8 @@ slim_hidden_def (cairo_format_stride_for_width);
  *
  * See cairo_surface_set_user_data() for a means of attaching a
  * destroy-notification fallback to the surface if necessary.
+ *
+ * Since: 1.0
  **/
     cairo_surface_t *
 cairo_image_surface_create_for_data (unsigned char     *data,
@@ -590,6 +594,8 @@ slim_hidden_def (cairo_image_surface_get_format);
  * Get the width of the image surface in pixels.
  *
  * Return value: the width of the surface in pixels.
+ *
+ * Since: 1.0
  **/
     int
 cairo_image_surface_get_width (cairo_surface_t *surface)
@@ -612,6 +618,8 @@ slim_hidden_def (cairo_image_surface_get_width);
  * Get the height of the image surface in pixels.
  *
  * Return value: the height of the surface in pixels.
+ *
+ * Since: 1.0
  **/
     int
 cairo_image_surface_get_height (cairo_surface_t *surface)

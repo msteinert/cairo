@@ -141,6 +141,8 @@ _cairo_pdf_surface_get_extents (void		        *abstract_surface,
  *
  * Defined if the PDF surface backend is available.
  * This macro can be used to conditionally compile backend-specific code.
+ *
+ * Since: 1.2
  **/
 
 static const cairo_pdf_version_t _cairo_pdf_versions[] =

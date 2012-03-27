@@ -247,6 +247,8 @@ slim_hidden_def(cairo_surface_get_content);
  * %CAIRO_STATUS_NO_MEMORY, %CAIRO_STATUS_READ_ERROR,
  * %CAIRO_STATUS_INVALID_CONTENT, %CAIRO_STATUS_INVALID_FORMAT, or
  * %CAIRO_STATUS_INVALID_VISUAL.
+ *
+ * Since: 1.0
  **/
 cairo_status_t
 cairo_surface_status (cairo_surface_t *surface)
@@ -506,6 +508,8 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface if @other is already in an error state
  * or any other error occurs.
+ *
+ * Since: 1.0
  **/
 cairo_surface_t *
 cairo_surface_create_similar (cairo_surface_t  *other,
@@ -806,6 +810,8 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
  * cairo_surface_get_reference_count().
  *
  * Return value: the referenced #cairo_surface_t.
+ *
+ * Since: 1.0
  **/
 cairo_surface_t *
 cairo_surface_reference (cairo_surface_t *surface)
@@ -829,6 +835,8 @@ slim_hidden_def (cairo_surface_reference);
  * Decreases the reference count on @surface by one. If the result is
  * zero, then @surface and all associated resources are freed.  See
  * cairo_surface_reference().
+ *
+ * Since: 1.0
  **/
 void
 cairo_surface_destroy (cairo_surface_t *surface)
@@ -930,6 +938,8 @@ _cairo_surface_finish (cairo_surface_t *surface)
  * reference count to zero, cairo will call cairo_surface_finish() if
  * it hasn't been called already, before freeing the resources
  * associated with the surface.
+ *
+ * Since: 1.0
  **/
 void
 cairo_surface_finish (cairo_surface_t *surface)
@@ -982,6 +992,8 @@ _cairo_surface_release_device_reference (cairo_surface_t *surface)
  * function returns %NULL.
  *
  * Return value: the user data previously attached or %NULL.
+ *
+ * Since: 1.0
  **/
 void *
 cairo_surface_get_user_data (cairo_surface_t		 *surface,
@@ -1005,6 +1017,8 @@ cairo_surface_get_user_data (cairo_surface_t		 *surface,
  *
  * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY if a
  * slot could not be allocated for the user data.
+ *
+ * Since: 1.0
  **/
 cairo_status_t
 cairo_surface_set_user_data (cairo_surface_t		 *surface,
@@ -1152,6 +1166,8 @@ _cairo_mime_data_destroy (void *ptr)
  *
  * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY if a
  * slot could not be allocated for the user data.
+ *
+ * Since: 1.10
  **/
 cairo_status_t
 cairo_surface_set_mime_data (cairo_surface_t		*surface,
@@ -1312,6 +1328,8 @@ _cairo_surface_set_font_options (cairo_surface_t       *surface,
  * for rendering on them, print surfaces to disable hinting of
  * metrics and so forth. The result can then be used with
  * cairo_scaled_font_create().
+ *
+ * Since: 1.0
  **/
 void
 cairo_surface_get_font_options (cairo_surface_t       *surface,
@@ -1349,6 +1367,8 @@ slim_hidden_def (cairo_surface_get_font_options);
  * drawing on the surface with cairo to drawing on it directly
  * with native APIs. If the surface doesn't support direct access,
  * then this function does nothing.
+ *
+ * Since: 1.0
  **/
 void
 cairo_surface_flush (cairo_surface_t *surface)
@@ -1380,6 +1400,8 @@ slim_hidden_def (cairo_surface_flush);
  * Tells cairo that drawing has been done to surface using means other
  * than cairo, and that cairo should reread any cached areas. Note
  * that you must call cairo_surface_flush() before doing such drawing.
+ *
+ * Since: 1.0
  **/
 void
 cairo_surface_mark_dirty (cairo_surface_t *surface)
@@ -1403,6 +1425,8 @@ slim_hidden_def (cairo_surface_mark_dirty);
  * Any cached clip set on the surface will be reset by this function,
  * to make sure that future cairo calls have the clip set that they
  * expect.
+ *
+ * Since: 1.0
  **/
 void
 cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
@@ -1526,6 +1550,8 @@ _cairo_surface_set_device_scale (cairo_surface_t *surface,
  *
  * Note that the offset affects drawing to the surface as well as
  * using the surface in a source pattern.
+ *
+ * Since: 1.0
  **/
 void
 cairo_surface_set_device_offset (cairo_surface_t *surface,

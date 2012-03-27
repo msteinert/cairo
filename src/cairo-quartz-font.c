@@ -60,6 +60,8 @@
  *
  * Defined if the Quartz font backend is available.
  * This macro can be used to conditionally compile backend-specific code.
+ *
+ * Since: 1.6
  **/
 
 static CFDataRef (*CGFontCopyTableForTagPtr) (CGFontRef font, uint32_t tag) = NULL;

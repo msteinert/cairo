@@ -132,6 +132,8 @@ _x_bread_crumb (Display *dpy,
  *
  * Defined if the Xlib surface backend is available.
  * This macro can be used to conditionally compile backend-specific code.
+ *
+ * Since: 1.0
  **/
 
 /**
@@ -152,6 +154,8 @@ _x_bread_crumb (Display *dpy,
  *
  * Defined if the XLib/XRender surface functions are available.
  * This macro can be used to conditionally compile backend-specific code.
+ *
+ * Since: 1.6
  **/
 
 /* Xlib doesn't define a typedef, so define one ourselves */
@@ -1635,6 +1639,8 @@ static cairo_bool_t valid_size (int width, int height)
  * children will be included.
  *
  * Return value: the newly created surface
+ *
+ * Since: 1.0
  **/
 cairo_surface_t *
 cairo_xlib_surface_create (Display     *dpy,
@@ -1679,6 +1685,8 @@ cairo_xlib_surface_create (Display     *dpy,
  * This will be drawn to as a %CAIRO_FORMAT_A1 object.
  *
  * Return value: the newly created surface
+ *
+ * Since: 1.0
  **/
 cairo_surface_t *
 cairo_xlib_surface_create_for_bitmap (Display  *dpy,
@@ -1724,6 +1732,8 @@ cairo_xlib_surface_create_for_bitmap (Display  *dpy,
  * window changes.
  *
  * Return value: the newly created surface
+ *
+ * Since: 1.0
  **/
 cairo_surface_t *
 cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
@@ -1795,6 +1805,8 @@ cairo_xlib_surface_get_xrender_format (cairo_surface_t *surface)
  *
  * A Pixmap can never change size, so it is never necessary to call
  * this function on a surface created for a Pixmap.
+ *
+ * Since: 1.0
  **/
 void
 cairo_xlib_surface_set_size (cairo_surface_t *abstract_surface,
@@ -1839,6 +1851,8 @@ cairo_xlib_surface_set_size (cairo_surface_t *abstract_surface,
  * will get X protocol errors and will probably terminate.
  * No checks are done by this function to ensure this
  * compatibility.
+ *
+ * Since: 1.0
  **/
 void
 cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,

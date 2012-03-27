@@ -45,6 +45,8 @@ CAIRO_BEGIN_DECLS
  *
  * #cairo_svg_version_t is used to describe the version number of the SVG
  * specification that a generated SVG file will conform to.
+ *
+ * Since: 1.2
  **/
 typedef enum _cairo_svg_version {
     CAIRO_SVG_VERSION_1_1,

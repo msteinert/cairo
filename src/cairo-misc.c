@@ -73,6 +73,8 @@ COMPILE_TIME_ASSERT (CAIRO_INT_STATUS_LAST_STATUS <= 127);
  * Provides a human-readable description of a #cairo_status_t.
  *
  * Returns: a string representation of the status
+ *
+ * Since: 1.0
  **/
 const char *
 cairo_status_to_string (cairo_status_t status)

@@ -108,6 +108,8 @@
  *
  * Defined if the FreeType font backend is available.
  * This macro can be used to conditionally compile backend-specific code.
+ *
+ * Since: 1.0
  **/
 
 /**
@@ -116,6 +118,8 @@
  * Defined if the Fontconfig-specific functions of the FreeType font backend
  * are available.
  * This macro can be used to conditionally compile backend-specific code.
+ *
+ * Since: 1.10
  **/
 
 /*
@@ -3029,6 +3033,8 @@ _cairo_ft_font_options_substitute (const cairo_font_options_t *options,
  * so you should call this function after calling FcConfigSubstitute() (the
  * user's settings should override options based on the surface type), but
  * before calling FcDefaultSubstitute().
+ *
+ * Since: 1.0
  **/
 void
 cairo_ft_font_options_substitute (const cairo_font_options_t *options,
@@ -3163,6 +3169,8 @@ FREE_PATTERN:
  *
  * Return value: a newly created #cairo_font_face_t. Free with
  *  cairo_font_face_destroy() when you are done using it.
+ *
+ * Since: 1.0
  **/
 cairo_font_face_t *
 cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
@@ -3234,6 +3242,8 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
  *
  * Return value: a newly created #cairo_font_face_t. Free with
  *  cairo_font_face_destroy() when you are done using it.
+ *
+ * Since: 1.0
  **/
 cairo_font_face_t *
 cairo_ft_font_face_create_for_ft_face (FT_Face         face,
@@ -3355,6 +3365,8 @@ cairo_ft_font_face_get_synthesize (cairo_font_face_t *font_face)
  * Return value: The #FT_Face object for @font, scaled appropriately,
  * or %NULL if @scaled_font is in an error state (see
  * cairo_scaled_font_status()) or there is insufficient memory.
+ *
+ * Since: 1.0
  **/
 FT_Face
 cairo_ft_scaled_font_lock_face (cairo_scaled_font_t *abstract_font)
@@ -3404,6 +3416,8 @@ cairo_ft_scaled_font_lock_face (cairo_scaled_font_t *abstract_font)
  *   cairo_ft_font_face_create_for_ft_face()).
  *
  * Releases a face obtained with cairo_ft_scaled_font_lock_face().
+ *
+ * Since: 1.0
  **/
 void
 cairo_ft_scaled_font_unlock_face (cairo_scaled_font_t *abstract_font)

@@ -848,6 +848,8 @@ slim_hidden_def (cairo_region_translate);
  *     partially outside the region.
  * 
  * Used as the return value for cairo_region_contains_rectangle().
+ *
+ * Since: 1.10
  **/
 
 /**
