@@ -49,7 +49,7 @@ CAIRO_BEGIN_DECLS
  *
  * A set of script output variants.
  *
- * Since: 1.10
+ * Since: 1.12
  **/
 typedef enum {
     CAIRO_SCRIPT_MODE_ASCII,

@@ -2314,7 +2314,7 @@ _cairo_quartz_surface_create_internal (CGContextRef cgContext,
  *
  * Return value: the newly created Cairo surface.
  *
- * Since: 1.4
+ * Since: 1.6
  **/
 
 cairo_surface_t *
@@ -2345,7 +2345,7 @@ cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
  *
  * Return value: the newly created surface.
  *
- * Since: 1.4
+ * Since: 1.6
  **/
 cairo_surface_t *
 cairo_quartz_surface_create (cairo_format_t format,
@@ -2458,7 +2458,7 @@ cairo_quartz_surface_create (cairo_format_t format,
  *
  * Return value: the CGContextRef for the given surface.
  *
- * Since: 1.4
+ * Since: 1.6
  **/
 CGContextRef
 cairo_quartz_surface_get_cg_context (cairo_surface_t *surface)
