@@ -147,8 +147,12 @@ _cairo_composite_rectangles_intersect (cairo_composite_rectangles_t *extents,
     if (! ret && extents->is_bounded & CAIRO_OPERATOR_BOUND_BY_MASK)
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
-    if (extents->is_bounded == (CAIRO_OPERATOR_BOUND_BY_MASK | CAIRO_OPERATOR_BOUND_BY_SOURCE))
+    if (extents->is_bounded == (CAIRO_OPERATOR_BOUND_BY_MASK | CAIRO_OPERATOR_BOUND_BY_SOURCE)) {
 	extents->unbounded = extents->bounded;
+    } else if (extents->is_bounded & CAIRO_OPERATOR_BOUND_BY_MASK) {
+	if (!_cairo_rectangle_intersect (&extents->unbounded, &extents->mask))
+	    return CAIRO_INT_STATUS_NOTHING_TO_DO;
+    }
 
     extents->clip = _cairo_clip_reduce_for_composite (clip, extents);
     if (_cairo_clip_is_all_clipped (extents->clip))
@@ -199,8 +203,12 @@ _cairo_composite_rectangles_intersect_source_extents (cairo_composite_rectangles
 	rect.height == extents->bounded.height)
 	return CAIRO_INT_STATUS_SUCCESS;
 
-    if (extents->is_bounded == (CAIRO_OPERATOR_BOUND_BY_MASK | CAIRO_OPERATOR_BOUND_BY_SOURCE))
+    if (extents->is_bounded == (CAIRO_OPERATOR_BOUND_BY_MASK | CAIRO_OPERATOR_BOUND_BY_SOURCE)) {
 	extents->unbounded = extents->bounded;
+    } else if (extents->is_bounded & CAIRO_OPERATOR_BOUND_BY_MASK) {
+	if (!_cairo_rectangle_intersect (&extents->unbounded, &extents->mask))
+	    return CAIRO_INT_STATUS_NOTHING_TO_DO;
+    }
 
     clip = extents->clip;
     extents->clip = _cairo_clip_reduce_for_composite (clip, extents);
@@ -253,8 +261,12 @@ _cairo_composite_rectangles_intersect_mask_extents (cairo_composite_rectangles_t
 	mask.height == extents->bounded.height)
 	return CAIRO_INT_STATUS_SUCCESS;
 
-    if (extents->is_bounded == (CAIRO_OPERATOR_BOUND_BY_MASK | CAIRO_OPERATOR_BOUND_BY_SOURCE))
+    if (extents->is_bounded == (CAIRO_OPERATOR_BOUND_BY_MASK | CAIRO_OPERATOR_BOUND_BY_SOURCE)) {
 	extents->unbounded = extents->bounded;
+    } else if (extents->is_bounded & CAIRO_OPERATOR_BOUND_BY_MASK) {
+	if (!_cairo_rectangle_intersect (&extents->unbounded, &extents->mask))
+	    return CAIRO_INT_STATUS_NOTHING_TO_DO;
+    }
 
     clip = extents->clip;
     extents->clip = _cairo_clip_reduce_for_composite (clip, extents);
