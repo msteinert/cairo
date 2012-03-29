@@ -985,6 +985,7 @@ _cairo_gl_surface_map_to_image (void      *abstract_surface,
     unsigned int cpp;
     cairo_bool_t invert;
     cairo_status_t status;
+    int y;
 
     /* Want to use a switch statement here but the compiler gets whiny. */
     if (surface->base.content == CAIRO_CONTENT_COLOR_ALPHA) {
@@ -1065,7 +1066,12 @@ _cairo_gl_surface_map_to_image (void      *abstract_surface,
 	glPixelStorei (GL_PACK_ROW_LENGTH, image->stride / cpp);
     if (invert)
 	glPixelStorei (GL_PACK_INVERT_MESA, 1);
-    glReadPixels (extents->x, extents->y,
+
+    y = extents->y;
+    if (! _cairo_gl_surface_is_texture (surface))
+	y = surface->height - extents->y - extents->height;
+
+    glReadPixels (extents->x, y,
 		  extents->width, extents->height,
 		  format, type, image->data);
     if (invert)
