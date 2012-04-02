@@ -207,7 +207,6 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
     cairo_status_t status;
     int tex_width;
     void *data;
-    cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
 
     if ((unsigned int) ctx->max_texture_size / 2 <= n_stops)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
