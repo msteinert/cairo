@@ -367,7 +367,7 @@ _get_image (cairo_xcb_surface_t		 *surface,
     if (use_shm) {
 	image = _get_shm_image (surface, x, y, width, height);
 	if (image) {
-	    if (image->status) {
+	    if (image->status == CAIRO_STATUS_SUCCESS) {
 		_cairo_xcb_connection_release (connection);
 		return image;
 	    }
