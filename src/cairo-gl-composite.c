@@ -789,11 +789,26 @@ _cairo_gl_composite_flush (cairo_gl_context_t *ctx)
 	_cairo_gl_glyph_cache_unlock (&ctx->glyph_cache[i]);
 }
 
+typedef enum cairo_gl_geometry {
+    CAIRO_GL_GEOMETRY_TYPE_TRIANGLES,
+    CAIRO_GL_GEOMETRY_TYPE_TRISTRIPS
+} cairo_gl_geometry_t;
+
 static void
 _cairo_gl_composite_prepare_buffer (cairo_gl_context_t *ctx,
-                                    unsigned int n_vertices)
+				    unsigned int n_vertices,
+				    cairo_gl_geometry_t geometry_type)
 {
     cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
+
+    size_t tristrip_indices =_cairo_array_num_elements (&ctx->tristrip_indices);
+    if (geometry_type == CAIRO_GL_GEOMETRY_TYPE_TRIANGLES &&
+	tristrip_indices != 0) {
+	_cairo_gl_composite_flush (ctx);
+    } else if (geometry_type == CAIRO_GL_GEOMETRY_TYPE_TRISTRIPS &&
+	     ! _cairo_gl_context_is_flushed (ctx) && tristrip_indices == 0) {
+	_cairo_gl_composite_flush (ctx);
+    }
 
     if (ctx->vb_offset + n_vertices * ctx->vertex_size > CAIRO_GL_VBO_SIZE)
 	_cairo_gl_composite_flush (ctx);
@@ -859,7 +874,8 @@ _cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
                                GLfloat y2,
                                uint8_t alpha)
 {
-    _cairo_gl_composite_prepare_buffer (ctx, 6);
+    _cairo_gl_composite_prepare_buffer (ctx, 6,
+					CAIRO_GL_GEOMETRY_TYPE_TRIANGLES);
 
     _cairo_gl_composite_emit_vertex (ctx, x1, y1, alpha);
     _cairo_gl_composite_emit_vertex (ctx, x2, y1, alpha);
@@ -901,7 +917,8 @@ _cairo_gl_composite_emit_glyph (cairo_gl_context_t *ctx,
                                 GLfloat glyph_x2,
                                 GLfloat glyph_y2)
 {
-    _cairo_gl_composite_prepare_buffer (ctx, 6);
+    _cairo_gl_composite_prepare_buffer (ctx, 6,
+					CAIRO_GL_GEOMETRY_TYPE_TRIANGLES);
 
     _cairo_gl_composite_emit_glyph_vertex (ctx, x1, y1, glyph_x1, glyph_y1);
     _cairo_gl_composite_emit_glyph_vertex (ctx, x2, y1, glyph_x2, glyph_y1);
@@ -988,11 +1005,8 @@ _cairo_gl_composite_emit_quad_as_tristrip (cairo_gl_context_t	*ctx,
 					   cairo_gl_composite_t	*setup,
 					   const cairo_point_t	quad[4])
 {
-    if (_cairo_array_num_elements (&ctx->tristrip_indices) == 0 &&
-	! _cairo_gl_context_is_flushed (ctx))
-	_cairo_gl_composite_flush (ctx);
-
-    _cairo_gl_composite_prepare_buffer (ctx, 4);
+    _cairo_gl_composite_prepare_buffer (ctx, 4,
+					CAIRO_GL_GEOMETRY_TYPE_TRISTRIPS);
 
     _cairo_gl_composite_emit_point (ctx, &quad[0], 0);
     _cairo_gl_composite_emit_point (ctx, &quad[1], 0);
@@ -1011,11 +1025,8 @@ _cairo_gl_composite_emit_triangle_as_tristrip (cairo_gl_context_t	*ctx,
 					       cairo_gl_composite_t	*setup,
 					       const cairo_point_t	 triangle[3])
 {
-    if (_cairo_array_num_elements (&ctx->tristrip_indices) == 0 &&
-	! _cairo_gl_context_is_flushed (ctx))
-	_cairo_gl_composite_flush (ctx);
-
-    _cairo_gl_composite_prepare_buffer (ctx, 3);
+    _cairo_gl_composite_prepare_buffer (ctx, 3,
+					CAIRO_GL_GEOMETRY_TYPE_TRISTRIPS);
 
     _cairo_gl_composite_emit_point (ctx, &triangle[0], 0);
     _cairo_gl_composite_emit_point (ctx, &triangle[1], 0);
