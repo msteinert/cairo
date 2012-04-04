@@ -1130,8 +1130,11 @@ _cairo_image_analyze_color (cairo_image_surface_t      *image)
     if (image->color != CAIRO_IMAGE_UNKNOWN_COLOR)
 	return image->color;
 
-    if (image->format == CAIRO_FORMAT_A1 || image->format == CAIRO_FORMAT_A8)
+    if (image->format == CAIRO_FORMAT_A1)
 	return image->color = CAIRO_IMAGE_IS_MONOCHROME;
+
+    if (image->format == CAIRO_FORMAT_A8)
+	return image->color = CAIRO_IMAGE_IS_GRAYSCALE;
 
     if (image->format == CAIRO_FORMAT_ARGB32) {
 	image->color = CAIRO_IMAGE_IS_MONOCHROME;
