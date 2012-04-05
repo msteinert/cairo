@@ -751,6 +751,9 @@ cairo_type1_font_subset_parse_charstring (cairo_type1_font_subset_t *font,
 	    command = *p++;
 	    switch (command) {
 		case TYPE1_CHARSTRING_COMMAND_HSBW:
+		     if (! last_op_was_integer)
+			  return CAIRO_INT_STATUS_UNSUPPORTED;
+
 		    font->glyphs[glyph].width = font->build_stack.stack[1]/font->base.units_per_em;
 		    font->build_stack.sp = 0;
 		    last_op_was_integer = FALSE;
@@ -797,6 +800,9 @@ cairo_type1_font_subset_parse_charstring (cairo_type1_font_subset_t *font,
 			    break;
 
 			case TYPE1_CHARSTRING_COMMAND_SBW:
+			     if (! last_op_was_integer)
+				  return CAIRO_INT_STATUS_UNSUPPORTED;
+
 			    font->glyphs[glyph].width = font->build_stack.stack[2]/font->base.units_per_em;
 			    font->build_stack.sp = 0;
 			    last_op_was_integer = FALSE;
