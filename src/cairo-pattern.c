@@ -37,6 +37,7 @@
 #include "cairo-path-private.h"
 #include "cairo-pattern-private.h"
 #include "cairo-recording-surface-private.h"
+#include "cairo-surface-snapshot-private.h"
 
 #include <float.h>
 
@@ -3665,6 +3666,9 @@ _cairo_pattern_get_ink_extents (const cairo_pattern_t         *pattern,
 	const cairo_surface_pattern_t *surface_pattern =
 	    (const cairo_surface_pattern_t *) pattern;
 	cairo_surface_t *surface = surface_pattern->surface;
+
+	if (_cairo_surface_is_snapshot (surface))
+	    surface = _cairo_surface_snapshot_get_target (surface);
 
 	if (_cairo_surface_is_recording (surface)) {
 	    cairo_matrix_t imatrix;
