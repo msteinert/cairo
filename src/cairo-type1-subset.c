@@ -381,6 +381,7 @@ cairo_type1_font_subset_get_fontname (cairo_type1_font_subset_t *font)
 {
     const char *start, *end, *segment_end;
     char *s;
+    int i;
 
     segment_end = font->header_segment + font->header_segment_size;
     start = find_token (font->header_segment, segment_end, "/FontName");
@@ -404,6 +405,16 @@ cairo_type1_font_subset_get_fontname (cairo_type1_font_subset_t *font)
     if (!start++ || !start) {
 	free (s);
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    /* If font name is prefixed with a subset tag, strip it off. */
+    if (strlen(start) > 7 && start[6] == '+') {
+	for (i = 0; i < 6; i++) {
+	    if (start[i] < 'A' || start[i] > 'Z')
+		break;
+	}
+	if (i == 6)
+	    start += 7;
     }
 
     font->base.base_font = strdup (start);
