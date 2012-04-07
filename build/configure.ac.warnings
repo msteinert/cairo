@@ -89,7 +89,7 @@ AC_DEFINE_UNQUOTED([WARN_UNUSED_RESULT], [$cairo_cv_warn_unused_result],
 
 dnl check linker flags
 AC_CACHE_CHECK([how to allow undefined symbols in shared libraries used by test suite], cairo_cv_test_undefined_ldflags,
-	       [CAIRO_CC_TRY_FLAG([-Wl,--allow-shlib-undefined], [],
+	       [CAIRO_CC_TRY_FLAG_SILENT([-Wl,--allow-shlib-undefined], [],
 				  [cairo_cv_test_undefined_ldflags="-Wl,--allow-shlib-undefined]")])
 CAIRO_TEST_UNDEFINED_LDFLAGS="$cairo_cv_test_undefined_ldflags"
 AC_SUBST(CAIRO_TEST_UNDEFINED_LDFLAGS)
