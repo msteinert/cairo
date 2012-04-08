@@ -342,15 +342,15 @@ _cairo_rectilinear_stroker_emit_segments_dashed (cairo_rectilinear_stroker_t *st
 		    box.p1.x = box.p2.x - half_line_x;
 		}
 		if (out_slope.dy >= 0)
-		    box.p1.y -= half_line_x;
+		    box.p1.y -= half_line_y;
 		if (out_slope.dy <= 0)
-		    box.p2.y += half_line_x;
+		    box.p2.y += half_line_y;
 	    } else {
 		if (box.p1.y <= box.p2.y) {
 		    box.p1.y = box.p2.y;
-		    box.p2.y += half_line_x;
+		    box.p2.y += half_line_y;
 		} else {
-		    box.p1.y = box.p2.y - half_line_x;
+		    box.p1.y = box.p2.y - half_line_y;
 		}
 		if (out_slope.dx >= 0)
 		    box.p1.x -= half_line_x;
