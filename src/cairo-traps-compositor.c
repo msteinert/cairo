@@ -218,8 +218,13 @@ combine_clip_as_traps (const cairo_traps_compositor_t *compositor,
     _cairo_traps_fini (&traps);
     cairo_surface_destroy (src);
 
-    if (status == CAIRO_INT_STATUS_SUCCESS &&
-	(fixup.width < extents->width || fixup.height < extents->height)) {
+    if (unlikely (status))
+	return status;
+
+    if (! _cairo_rectangle_intersect (&fixup, extents))
+	return CAIRO_STATUS_SUCCESS;
+
+    if (fixup.width < extents->width || fixup.height < extents->height) {
 	cairo_boxes_t clear;
 
 	_cairo_boxes_init (&clear);
