@@ -70,6 +70,7 @@ typedef struct _cairo_pdf_source_surface_entry {
     unsigned int id;
     unsigned char *unique_id;
     unsigned long unique_id_length;
+    cairo_operator_t operator;
     cairo_bool_t interpolate;
     cairo_bool_t stencil_mask;
     cairo_pdf_resource_t surface_res;
@@ -92,6 +93,7 @@ typedef struct _cairo_pdf_pattern {
     cairo_pattern_t *pattern;
     cairo_pdf_resource_t pattern_res;
     cairo_pdf_resource_t gstate_res;
+    cairo_operator_t operator;
     cairo_bool_t is_shading;
 } cairo_pdf_pattern_t;
 
