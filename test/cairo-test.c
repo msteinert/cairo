@@ -90,7 +90,7 @@
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof (A[0]))
 #endif
 
-#if ! HAVE_ALARM
+#if ! HAVE_ALARM || ! defined(SIGALRM)
 #define alarm(X);
 #endif
 
