@@ -5703,56 +5703,68 @@ _cairo_pdf_surface_write_mask_group (cairo_pdf_surface_t	*surface,
     if (unlikely (status))
 	return status;
 
-    pattern_res.id = 0;
-    gstate_res.id = 0;
-    status = _cairo_pdf_surface_add_pdf_pattern (surface, group->mask, NULL,
-						 &pattern_res, &gstate_res);
-    if (unlikely (status))
-	return status;
-
-    if (gstate_res.id != 0) {
-	smask_group = _cairo_pdf_surface_create_smask_group (surface, &group->extents);
-	if (unlikely (smask_group == NULL))
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-	smask_group->width = group->width;
-	smask_group->height = group->height;
-	smask_group->operation = PDF_PAINT;
-	smask_group->source = cairo_pattern_reference (group->mask);
-	smask_group->source_res = pattern_res;
-	status = _cairo_pdf_surface_add_smask_group (surface, smask_group);
-	if (unlikely (status)) {
-	    _cairo_pdf_smask_group_destroy (smask_group);
-	    return status;
-	}
-
-	status = _cairo_pdf_surface_add_smask (surface, gstate_res);
+    if (_can_paint_pattern (group->mask)) {
+	_cairo_output_stream_printf (surface->output, "q\n");
+	status = _cairo_pdf_surface_paint_pattern (surface,
+						   group->mask,
+						   &group->extents,
+						   FALSE);
 	if (unlikely (status))
 	    return status;
 
-	status = _cairo_pdf_surface_add_xobject (surface, smask_group->group_res);
-	if (unlikely (status))
-	    return status;
-
-	_cairo_output_stream_printf (surface->output,
-				     "q /s%d gs /x%d Do Q\n",
-				     gstate_res.id,
-				     smask_group->group_res.id);
+	_cairo_output_stream_printf (surface->output, "Q\n");
     } else {
-	status = _cairo_pdf_surface_select_pattern (surface, group->mask, pattern_res, FALSE);
+	pattern_res.id = 0;
+	gstate_res.id = 0;
+	status = _cairo_pdf_surface_add_pdf_pattern (surface, group->mask, NULL,
+						     &pattern_res, &gstate_res);
 	if (unlikely (status))
 	    return status;
 
-	_cairo_output_stream_printf (surface->output,
-				     "%f %f %f %f re f\n",
-				     bbox.p1.x,
-				     bbox.p1.y,
-				     bbox.p2.x - bbox.p1.x,
-				     bbox.p2.y - bbox.p1.y);
+	if (gstate_res.id != 0) {
+	    smask_group = _cairo_pdf_surface_create_smask_group (surface, &group->extents);
+	    if (unlikely (smask_group == NULL))
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-	status = _cairo_pdf_surface_unselect_pattern (surface);
-	if (unlikely (status))
-	    return status;
+	    smask_group->width = group->width;
+	    smask_group->height = group->height;
+	    smask_group->operation = PDF_PAINT;
+	    smask_group->source = cairo_pattern_reference (group->mask);
+	    smask_group->source_res = pattern_res;
+	    status = _cairo_pdf_surface_add_smask_group (surface, smask_group);
+	    if (unlikely (status)) {
+		_cairo_pdf_smask_group_destroy (smask_group);
+		return status;
+	    }
+
+	    status = _cairo_pdf_surface_add_smask (surface, gstate_res);
+	    if (unlikely (status))
+		return status;
+
+	    status = _cairo_pdf_surface_add_xobject (surface, smask_group->group_res);
+	    if (unlikely (status))
+		return status;
+
+	    _cairo_output_stream_printf (surface->output,
+					 "q /s%d gs /x%d Do Q\n",
+					 gstate_res.id,
+					 smask_group->group_res.id);
+	} else {
+	    status = _cairo_pdf_surface_select_pattern (surface, group->mask, pattern_res, FALSE);
+	    if (unlikely (status))
+		return status;
+
+	    _cairo_output_stream_printf (surface->output,
+					 "%f %f %f %f re f\n",
+					 bbox.p1.x,
+					 bbox.p1.y,
+					 bbox.p2.x - bbox.p1.x,
+					 bbox.p2.y - bbox.p1.y);
+
+	    status = _cairo_pdf_surface_unselect_pattern (surface);
+	    if (unlikely (status))
+		return status;
+	}
     }
 
     status = _cairo_pdf_surface_close_group (surface, &mask_group);
@@ -5764,54 +5776,66 @@ _cairo_pdf_surface_write_mask_group (cairo_pdf_surface_t	*surface,
     if (unlikely (status))
 	return status;
 
-    pattern_res.id = 0;
-    gstate_res.id = 0;
-    status = _cairo_pdf_surface_add_pdf_pattern (surface, group->source, NULL,
-						 &pattern_res, &gstate_res);
-    if (unlikely (status))
-	return status;
-
-    if (gstate_res.id != 0) {
-	smask_group = _cairo_pdf_surface_create_smask_group (surface, &group->extents);
-	if (unlikely (smask_group == NULL))
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-	smask_group->operation = PDF_PAINT;
-	smask_group->source = cairo_pattern_reference (group->source);
-	smask_group->source_res = pattern_res;
-	status = _cairo_pdf_surface_add_smask_group (surface, smask_group);
-	if (unlikely (status)) {
-	    _cairo_pdf_smask_group_destroy (smask_group);
-	    return status;
-	}
-
-	status = _cairo_pdf_surface_add_smask (surface, gstate_res);
+    if (_can_paint_pattern (group->source)) {
+	_cairo_output_stream_printf (surface->output, "q\n");
+	status = _cairo_pdf_surface_paint_pattern (surface,
+						   group->source,
+						   &group->extents,
+						   FALSE);
 	if (unlikely (status))
 	    return status;
 
-	status = _cairo_pdf_surface_add_xobject (surface, smask_group->group_res);
-	if (unlikely (status))
-	    return status;
-
-	_cairo_output_stream_printf (surface->output,
-				     "q /s%d gs /x%d Do Q\n",
-				     gstate_res.id,
-				     smask_group->group_res.id);
+	_cairo_output_stream_printf (surface->output, "Q\n");
     } else {
-	status = _cairo_pdf_surface_select_pattern (surface, group->source, pattern_res, FALSE);
+	pattern_res.id = 0;
+	gstate_res.id = 0;
+	status = _cairo_pdf_surface_add_pdf_pattern (surface, group->source, NULL,
+						     &pattern_res, &gstate_res);
 	if (unlikely (status))
 	    return status;
 
-	_cairo_output_stream_printf (surface->output,
-				     "%f %f %f %f re f\n",
-				     bbox.p1.x,
-				     bbox.p1.y,
-				     bbox.p2.x - bbox.p1.x,
-				     bbox.p2.y - bbox.p1.y);
+	if (gstate_res.id != 0) {
+	    smask_group = _cairo_pdf_surface_create_smask_group (surface, &group->extents);
+	    if (unlikely (smask_group == NULL))
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-	status = _cairo_pdf_surface_unselect_pattern (surface);
-	if (unlikely (status))
-	    return status;
+	    smask_group->operation = PDF_PAINT;
+	    smask_group->source = cairo_pattern_reference (group->source);
+	    smask_group->source_res = pattern_res;
+	    status = _cairo_pdf_surface_add_smask_group (surface, smask_group);
+	    if (unlikely (status)) {
+		_cairo_pdf_smask_group_destroy (smask_group);
+		return status;
+	    }
+
+	    status = _cairo_pdf_surface_add_smask (surface, gstate_res);
+	    if (unlikely (status))
+		return status;
+
+	    status = _cairo_pdf_surface_add_xobject (surface, smask_group->group_res);
+	    if (unlikely (status))
+		return status;
+
+	    _cairo_output_stream_printf (surface->output,
+					 "q /s%d gs /x%d Do Q\n",
+					 gstate_res.id,
+					 smask_group->group_res.id);
+	} else {
+	    status = _cairo_pdf_surface_select_pattern (surface, group->source, pattern_res, FALSE);
+	    if (unlikely (status))
+		return status;
+
+	    _cairo_output_stream_printf (surface->output,
+					 "%f %f %f %f re f\n",
+					 bbox.p1.x,
+					 bbox.p1.y,
+					 bbox.p2.x - bbox.p1.x,
+					 bbox.p2.y - bbox.p1.y);
+
+	    status = _cairo_pdf_surface_unselect_pattern (surface);
+	    if (unlikely (status))
+		return status;
+	}
     }
 
     status = _cairo_pdf_surface_close_group (surface, NULL);
