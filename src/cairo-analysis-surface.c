@@ -220,6 +220,14 @@ _add_operation (cairo_analysis_surface_t *surface,
 	if (_cairo_matrix_is_integer_translation (&surface->ctm, &tx, &ty)) {
 	    rect->x += tx;
 	    rect->y += ty;
+
+	    tx = _cairo_fixed_from_int (tx);
+	    bbox.p1.x += tx;
+	    bbox.p2.x += tx;
+
+	    ty = _cairo_fixed_from_int (ty);
+	    bbox.p1.y += ty;
+	    bbox.p2.y += ty;
 	} else {
 	    _cairo_matrix_transform_bounding_box_fixed (&surface->ctm,
 							&bbox, NULL);
