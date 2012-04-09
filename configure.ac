@@ -52,6 +52,7 @@ AM_CONDITIONAL(CAIRO_HAS_DL, test "x$have_dl" = "xyes")
 if test "x$have_dlsym" = "xyes"; then
   AC_DEFINE([CAIRO_HAS_DLSYM], 1, [Define to 1 if dlsym is available])
 fi
+AM_CONDITIONAL(CAIRO_HAS_DLSYM, test "x$have_dlsym" = "xyes")
 
 dnl ===========================================================================
 
