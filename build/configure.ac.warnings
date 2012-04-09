@@ -21,6 +21,9 @@ MAYBE_WARN="-Wall -Wextra \
 -Wno-missing-field-initializers -Wno-unused-parameter \
 -Wno-attributes -Wno-long-long -Winline"
 
+# -Wunused-but-set-variable is too noisy at present
+NO_WARN="-Wno-unused-but-set-variable"
+
 dnl Sun Studio 12 likes to rag at us for abusing enums like
 dnl having cairo_status_t variables hold cairo_int_status_t
 dnl values.  It's bad, we know.  Now please be quiet.
@@ -33,6 +36,8 @@ MAYBE_WARN="$MAYBE_WARN -fno-strict-aliasing -fno-common -flto"
 
 dnl Also to turn various gcc/glibc-specific preprocessor checks
 MAYBE_WARN="$MAYBE_WARN -Wp,-D_FORTIFY_SOURCE=2"
+
+MAYBE_WARN="$MAYBE_WARN $NO_WARN"
 
 # invalidate cached value if MAYBE_WARN has changed
 if test "x$cairo_cv_warn_maybe" != "x$MAYBE_WARN"; then
