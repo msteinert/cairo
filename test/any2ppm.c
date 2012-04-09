@@ -96,7 +96,7 @@
 #define ARRAY_LENGTH(A) (sizeof (A) / sizeof (A[0]))
 
 static int
-_writen (int fd, char *buf, int len)
+_cairo_writen (int fd, char *buf, int len)
 {
     while (len) {
 	int ret;
@@ -120,7 +120,7 @@ _writen (int fd, char *buf, int len)
 }
 
 static int
-_write (int fd,
+_cairo_write (int fd,
 	char *buf, int maxlen, int buflen,
 	const unsigned char *src, int srclen)
 {
@@ -141,7 +141,7 @@ _write (int fd,
 	src += len;
 
 	if (buflen == maxlen) {
-	    if (! _writen (fd, buf, buflen))
+	    if (! _cairo_writen (fd, buf, buflen))
 		return -1;
 
 	    buflen = 0;
@@ -204,7 +204,7 @@ write_ppm (cairo_surface_t *surface, int fd)
 
 	switch ((int) format) {
 	case CAIRO_FORMAT_ARGB32:
-	    len = _write (fd,
+	    len = _cairo_write (fd,
 			  buf, sizeof (buf), len,
 			  (unsigned char *) row, 4 * width);
 	    break;
@@ -215,13 +215,13 @@ write_ppm (cairo_surface_t *surface, int fd)
 		rgb[0] = (p & 0xff0000) >> 16;
 		rgb[1] = (p & 0x00ff00) >> 8;
 		rgb[2] = (p & 0x0000ff) >> 0;
-		len = _write (fd,
+		len = _cairo_write (fd,
 			      buf, sizeof (buf), len,
 			      rgb, 3);
 	    }
 	    break;
 	case CAIRO_FORMAT_A8:
-	    len = _write (fd,
+	    len = _cairo_write (fd,
 			  buf, sizeof (buf), len,
 			  (unsigned char *) row, width);
 	    break;
@@ -230,7 +230,7 @@ write_ppm (cairo_surface_t *surface, int fd)
 	    return "write failed";
     }
 
-    if (len && ! _writen (fd, buf, len))
+    if (len && ! _cairo_writen (fd, buf, len))
 	return "write failed";
 
     return NULL;
