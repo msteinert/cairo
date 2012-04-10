@@ -47,19 +47,6 @@
 
 #define PIXMAN_MAX_INT ((pixman_fixed_1 >> 1) - pixman_fixed_e) /* need to ensure deltas also fit */
 
-/**
- * SECTION:cairo-xcb-xrender
- * @Title: XCB Surfaces
- * @Short_Description: X Window System rendering using the XCB library and the X Render extension
- * @See_Also: #cairo_surface_t
- *
- * The XCB surface is used to render cairo graphics to X Window System
- * windows and pixmaps using the XCB library and its X Render extension.
- *
- * Note that the XCB surface automatically takes advantage of the X Render
- * extension if it is available.
- **/
-
 static cairo_status_t
 _clip_and_composite_boxes (cairo_xcb_surface_t *dst,
 			   cairo_operator_t op,
