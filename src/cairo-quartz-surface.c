@@ -203,8 +203,9 @@ CairoQuartzCreateCGImage (cairo_format_t format,
 	    break;
 #endif
 
-        case CAIRO_FORMAT_RGB16_565:
-        case CAIRO_FORMAT_INVALID:
+	case CAIRO_FORMAT_RGB30:
+	case CAIRO_FORMAT_RGB16_565:
+	case CAIRO_FORMAT_INVALID:
 	default:
 	    return NULL;
     }
