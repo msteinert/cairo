@@ -1224,6 +1224,9 @@ slim_hidden_def (cairo_surface_set_mime_data);
  *
  * Return whether @surface supports @mime_type.
  *
+ * Return value: %TRUE if @surface supports
+ *               @mime_type, %FALSE otherwise
+ *
  * Since: 1.12
  **/
 cairo_bool_t
