@@ -638,7 +638,7 @@ _cairo_surface_map_to_image (cairo_surface_t  *surface,
 
     /* TODO: require map_to_image != NULL */
     if (surface->backend->map_to_image)
-	image = (cairo_image_surface_t *) surface->backend->map_to_image (surface, extents);
+	image = surface->backend->map_to_image (surface, extents);
 
     if (image == NULL)
 	image = _cairo_image_surface_clone_subimage (surface, extents);

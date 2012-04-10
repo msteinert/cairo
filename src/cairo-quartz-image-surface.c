@@ -107,7 +107,7 @@ _cairo_quartz_image_surface_acquire_source_image (void *asurface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_surface_t *
+static cairo_image_surface_t *
 _cairo_quartz_image_surface_map_to_image (void *asurface,
 					  const cairo_rectangle_int_t *extents)
 {

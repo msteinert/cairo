@@ -46,7 +46,7 @@
 #include "cairo-compositor-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
-#include "cairo-image-surface-private.h"
+#include "cairo-image-surface-inline.h"
 #include "cairo-surface-backend-private.h"
 
 static const cairo_surface_backend_t _cairo_gl_surface_backend;
@@ -985,7 +985,7 @@ _cairo_gl_surface_finish (void *abstract_surface)
     return _cairo_gl_context_release (ctx, status);
 }
 
-static cairo_surface_t *
+static cairo_image_surface_t *
 _cairo_gl_surface_map_to_image (void      *abstract_surface,
 				const cairo_rectangle_int_t   *extents)
 {
@@ -1050,15 +1050,15 @@ _cairo_gl_surface_map_to_image (void      *abstract_surface,
 							extents->height,
 							-1);
     if (unlikely (image->base.status))
-	return &image->base;
+	return image;
 
     if (surface->base.serial == 0)
-	return &image->base;
+	return image;
 
     status = _cairo_gl_context_acquire (surface->base.device, &ctx);
     if (unlikely (status)) {
 	cairo_surface_destroy (&image->base);
-	return _cairo_surface_create_in_error (status);
+	return _cairo_image_surface_create_in_error (status);
     }
 
     cairo_surface_set_device_offset (&image->base, -extents->x, -extents->y);
@@ -1092,7 +1092,7 @@ _cairo_gl_surface_map_to_image (void      *abstract_surface,
     status = _cairo_gl_context_release (ctx, status);
     if (unlikely (status)) {
 	cairo_surface_destroy (&image->base);
-	return _cairo_surface_create_in_error (status);
+	return _cairo_image_surface_create_in_error (status);
     }
 
     /* We must invert the image manualy if we lack GL_MESA_pack_invert */
@@ -1105,7 +1105,7 @@ _cairo_gl_surface_map_to_image (void      *abstract_surface,
 	    row = malloc (image->stride);
 	    if (unlikely (row == NULL)) {
 		cairo_surface_destroy (&image->base);
-		return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+		return _cairo_image_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 	    }
 	}
 
@@ -1121,7 +1121,7 @@ _cairo_gl_surface_map_to_image (void      *abstract_surface,
 	    free(row);
     }
 
-    return &image->base;
+    return image;
 }
 
 static cairo_surface_t *

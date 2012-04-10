@@ -63,7 +63,7 @@ struct _cairo_surface_backend {
 				 int			 width,
 				 int			 height);
 
-    cairo_surface_t *
+    cairo_image_surface_t *
     (*map_to_image)		(void			*surface,
 				 const cairo_rectangle_int_t  *extents);
     cairo_int_status_t

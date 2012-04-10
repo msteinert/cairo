@@ -474,7 +474,7 @@ _cairo_surface_observer_create_similar_image (void *other,
     return NULL;
 }
 
-static cairo_surface_t *
+static cairo_image_surface_t *
 _cairo_surface_observer_map_to_image (void *abstract_surface,
 				      const cairo_rectangle_int_t *extents)
 {

@@ -1278,7 +1278,7 @@ _cairo_xlib_surface_release_source_image (void                   *abstract_surfa
     cairo_surface_destroy (&image->base);
 }
 
-static cairo_surface_t *
+static cairo_image_surface_t *
 _cairo_xlib_surface_map_to_image (void                    *abstract_surface,
 				  const cairo_rectangle_int_t   *extents)
 {
@@ -1287,7 +1287,7 @@ _cairo_xlib_surface_map_to_image (void                    *abstract_surface,
     image = _get_image_surface (abstract_surface, extents);
     cairo_surface_set_device_offset (image, -extents->x, -extents->y);
 
-    return image;
+    return (cairo_image_surface_t *) image;
 }
 
 static cairo_int_status_t

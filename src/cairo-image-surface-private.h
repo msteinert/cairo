@@ -151,7 +151,7 @@ _cairo_image_surface_init (cairo_image_surface_t *surface,
 			   pixman_image_t	*pixman_image,
 			   pixman_format_code_t	 pixman_format);
 
-cairo_private cairo_surface_t *
+cairo_private cairo_image_surface_t *
 _cairo_image_surface_map_to_image (void *abstract_other,
 				   const cairo_rectangle_int_t *extents);
 

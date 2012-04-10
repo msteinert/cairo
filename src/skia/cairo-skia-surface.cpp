@@ -90,7 +90,7 @@ _cairo_skia_surface_finish (void *asurface)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_surface_t *
+static cairo_image_surface_t *
 _cairo_skia_surface_map_to_image (void *asurface,
 				  const cairo_rectangle_int_t *extents)
 {
@@ -98,6 +98,7 @@ _cairo_skia_surface_map_to_image (void *asurface,
 
     surface->bitmap->lockPixels ();
 
+    /* XXX: Broken! */
     if (extents->width < surface->image.width ||
 	extents->height < surface->image.height)
     {

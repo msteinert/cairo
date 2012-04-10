@@ -116,7 +116,7 @@ _cairo_xlib_xcb_surface_create_similar_image (void			*abstract_other,
     return cairo_surface_create_similar_image (&surface->xcb->base, format, width, height);
 }
 
-static cairo_surface_t *
+static cairo_image_surface_t *
 _cairo_xlib_xcb_surface_map_to_image (void *abstract_surface,
 				      const cairo_rectangle_int_t *extents)
 {

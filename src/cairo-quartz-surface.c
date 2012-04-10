@@ -1553,7 +1553,7 @@ _cairo_quartz_surface_release_source_image (void *abstract_surface,
 }
 
 
-static cairo_surface_t *
+static cairo_image_surface_t *
 _cairo_quartz_surface_map_to_image (void *abstract_surface,
 				    const cairo_rectangle_int_t *extents)
 {
