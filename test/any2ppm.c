@@ -193,6 +193,7 @@ write_ppm (cairo_surface_t *surface, int fd)
 	break;
     case CAIRO_FORMAT_A1:
     case CAIRO_FORMAT_RGB16_565:
+    case CAIRO_FORMAT_RGB30:
     case CAIRO_FORMAT_INVALID:
     default:
 	return "unhandled image format";
