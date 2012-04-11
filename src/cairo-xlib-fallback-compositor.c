@@ -42,6 +42,8 @@
 
 #include "cairoint.h"
 
+#if !CAIRO_HAS_XLIB_XCB_FUNCTIONS
+
 #include "cairo-xlib-private.h"
 
 #include "cairo-compositor-private.h"
@@ -52,3 +54,5 @@ _cairo_xlib_fallback_compositor_get (void)
     /* XXX Do something interesting here to mitigate fallbacks ala xcb */
     return &_cairo_fallback_compositor;
 }
+
+#endif /* !CAIRO_HAS_XLIB_XCB_FUNCTIONS */
