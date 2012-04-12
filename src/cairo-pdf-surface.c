@@ -683,6 +683,27 @@ cairo_pdf_surface_set_size (cairo_surface_t	*surface,
 	status = _cairo_surface_set_error (surface, status);
 }
 
+/**
+ * cairo_pdf_surface_debug_force_fallbacks:
+ * @surface: a PDF #cairo_surface_t
+ *
+ * This is purely a debugging interface, intended only to be used in
+ * conformation testing, to force the surface to contain only rasterised
+ * graphics and no native PDF drawing.
+ *
+ * Since: 1.12.2
+ **/
+void
+cairo_pdf_surface_debug_force_fallbacks (cairo_surface_t *abstract_surface)
+{
+    cairo_pdf_surface_t *surface = NULL;
+
+    if (! _extract_pdf_surface (abstract_surface, &surface))
+	return;
+
+    surface->force_fallbacks = TRUE;
+}
+
 static void
 _cairo_pdf_surface_clear (cairo_pdf_surface_t *surface)
 {

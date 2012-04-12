@@ -85,6 +85,11 @@ cairo_pdf_surface_set_size (cairo_surface_t	*surface,
 			    double		 width_in_points,
 			    double		 height_in_points);
 
+/* debug interface */
+
+cairo_public void
+cairo_pdf_surface_debug_force_fallbacks (cairo_surface_t *abstract_surface);
+
 CAIRO_END_DECLS
 
 #else  /* CAIRO_HAS_PDF_SURFACE */
