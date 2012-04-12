@@ -1359,6 +1359,33 @@ cairo_ps_surface_set_size (cairo_surface_t	*surface,
 }
 
 /**
+ * cairo_ps_surface_debug_set_creation_data:
+ * @surface: a PostScript #cairo_surface_t
+ * @date: A time_t
+ *
+ * Changes the embedded creation date of a PostScript surface.
+ *
+ * This function is only intended to be used by conformance test suites which
+ * require complete control over embedded strings.
+ *
+ * This function can be called at any point before the surface is finished,
+ *
+ * Since: 1.12.2
+ **/
+void
+cairo_ps_surface_debug_set_creation_date (cairo_surface_t *abstract_surface,
+					  time_t	  date)
+{
+    cairo_ps_surface_t *surface = NULL;
+
+    if (! _extract_ps_surface (abstract_surface, TRUE, &surface))
+	return;
+
+    surface->has_creation_date = TRUE;
+    surface->creation_date = date;
+}
+
+/**
  * cairo_ps_surface_dsc_comment:
  * @surface: a PostScript #cairo_surface_t
  * @comment: a comment string to be emitted into the PostScript output

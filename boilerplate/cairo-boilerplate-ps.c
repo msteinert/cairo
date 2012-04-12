@@ -55,24 +55,6 @@ typedef struct _ps_target_closure {
     cairo_ps_level_t	 level;
 } ps_target_closure_t;
 
-static cairo_status_t
-_cairo_boilerplate_ps_surface_set_creation_date (cairo_surface_t *abstract_surface,
-						 time_t 	  date)
-{
-    cairo_paginated_surface_t *paginated = (cairo_paginated_surface_t*) abstract_surface;
-    cairo_ps_surface_t *surface;
-
-    if (cairo_surface_get_type (abstract_surface) != CAIRO_SURFACE_TYPE_PS)
-	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
-
-    surface = (cairo_ps_surface_t*) paginated->target;
-
-    surface->has_creation_date = TRUE;
-    surface->creation_date = date;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static cairo_surface_t *
 _cairo_boilerplate_ps_create_surface (const char		*name,
 				      cairo_content_t		 content,
@@ -106,7 +88,7 @@ _cairo_boilerplate_ps_create_surface (const char		*name,
 	goto CLEANUP_FILENAME;
 
     cairo_ps_surface_restrict_to_level (surface, level);
-    _cairo_boilerplate_ps_surface_set_creation_date (surface, 0);
+    cairo_ps_surface_debug_set_creation_date (surface, 0);
     cairo_surface_set_fallback_resolution (surface, 72., 72.);
 
     if (content == CAIRO_CONTENT_COLOR) {
