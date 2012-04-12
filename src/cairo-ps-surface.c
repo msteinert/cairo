@@ -1386,6 +1386,27 @@ cairo_ps_surface_debug_set_creation_date (cairo_surface_t *abstract_surface,
 }
 
 /**
+ * cairo_ps_surface_debug_force_fallbacks:
+ * @surface: a PostScript #cairo_surface_t
+ *
+ * This is purely a debugging interface, intended only to be used in
+ * conformation testing, to force the surface to contain only rasterised
+ * graphics and no native PostScript drawing.
+ *
+ * Since: 1.12.2
+ **/
+void
+cairo_ps_surface_debug_force_fallbacks (cairo_surface_t *abstract_surface)
+{
+    cairo_ps_surface_t *surface = NULL;
+
+    if (! _extract_ps_surface (abstract_surface, TRUE, &surface))
+	return;
+
+    surface->force_fallbacks = TRUE;
+}
+
+/**
  * cairo_ps_surface_dsc_comment:
  * @surface: a PostScript #cairo_surface_t
  * @comment: a comment string to be emitted into the PostScript output

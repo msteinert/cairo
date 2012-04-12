@@ -114,6 +114,9 @@ cairo_public void
 cairo_ps_surface_debug_set_creation_date (cairo_surface_t *abstract_surface,
 					  time_t	  date);
 
+cairo_public void
+cairo_ps_surface_debug_force_fallbacks (cairo_surface_t *abstract_surface);
+
 CAIRO_END_DECLS
 
 #else  /* CAIRO_HAS_PS_SURFACE */
