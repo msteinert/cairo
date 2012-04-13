@@ -138,7 +138,7 @@ _x_bread_crumb (Display *dpy,
 
 /**
  * SECTION:cairo-xlib-xrender
- * @Title: XLib/XRender Backend
+ * @Title: XLib-XRender Backend
  * @Short_Description: X Window System rendering using XLib and the X Render extension
  * @See_Also: #cairo_surface_t
  *
