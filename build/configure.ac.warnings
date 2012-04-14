@@ -32,7 +32,18 @@ MAYBE_WARN="$MAYBE_WARN -erroff=E_ENUM_TYPE_MISMATCH_ARG \
 
 dnl We also abuse the warning-flag facility to enable other compiler
 dnl options.  Namely, the following:
-MAYBE_WARN="$MAYBE_WARN -fno-strict-aliasing -fno-common -flto"
+
+dnl -flto working really needs a test link, not just a compile
+
+safe_MAYBE_WARN="$MAYBE_WARN"
+MAYBE_WARN="$MAYBE_WARN -flto"
+AC_TRY_LINK([],[
+	int main(int argc, char **argv) { return 0; }
+],[],[
+	MAYBE_WARN="$safe_MAYBE_WARN"
+])
+
+MAYBE_WARN="$MAYBE_WARN -fno-strict-aliasing -fno-common"
 
 dnl Also to turn various gcc/glibc-specific preprocessor checks
 MAYBE_WARN="$MAYBE_WARN -Wp,-D_FORTIFY_SOURCE=2"
