@@ -42,7 +42,6 @@
 #if CAIRO_HAS_PS_SURFACE
 
 #include <stdio.h>
-#include <time.h>
 
 CAIRO_BEGIN_DECLS
 
@@ -107,15 +106,6 @@ cairo_ps_surface_dsc_begin_setup (cairo_surface_t *surface);
 
 cairo_public void
 cairo_ps_surface_dsc_begin_page_setup (cairo_surface_t *surface);
-
-/* debug interface */
-
-cairo_public void
-cairo_ps_surface_debug_set_creation_date (cairo_surface_t *abstract_surface,
-					  time_t	  date);
-
-cairo_public void
-cairo_ps_surface_debug_force_fallbacks (cairo_surface_t *abstract_surface);
 
 CAIRO_END_DECLS
 
