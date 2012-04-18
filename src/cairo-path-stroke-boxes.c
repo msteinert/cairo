@@ -476,7 +476,7 @@ _cairo_rectilinear_stroker_line_to_dashed (void		*closure,
     const cairo_point_t *a = &stroker->current_point;
     const cairo_point_t *b = point;
     cairo_bool_t fully_in_bounds;
-    double sign, remain;
+    double sf, sign, remain;
     cairo_fixed_t mag;
     cairo_status_t status;
     cairo_line_t segment;
@@ -499,10 +499,13 @@ _cairo_rectilinear_stroker_line_to_dashed (void		*closure,
     }
 
     is_horizontal = a->y == b->y;
-    if (is_horizontal)
+    if (is_horizontal) {
 	mag = b->x - a->x;
-    else
+	sf = fabs (stroker->ctm->xx);
+    } else {
 	mag = b->y - a->y;
+	sf = fabs (stroker->ctm->yy);
+    }
     if (mag < 0) {
 	remain = _cairo_fixed_to_double (-mag);
 	sign = 1.;
@@ -515,7 +518,7 @@ _cairo_rectilinear_stroker_line_to_dashed (void		*closure,
     while (remain > 0.) {
 	double step_length;
 
-	step_length = MIN (stroker->dash.dash_remain, remain);
+	step_length = MIN (sf * stroker->dash.dash_remain, remain);
 	remain -= step_length;
 
 	mag = _cairo_fixed_from_double (sign*remain);
