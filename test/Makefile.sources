@@ -267,6 +267,7 @@ test_sources = \
 	rectilinear-grid.c				\
 	rectilinear-miter-limit.c			\
 	rectilinear-dash.c				\
+	rectilinear-dash-scale.c			\
 	rectilinear-stroke.c				\
 	reflected-stroke.c				\
 	rel-path.c					\
