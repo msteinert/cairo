@@ -41,6 +41,7 @@
 #include "cairo-error-private.h"
 #include "cairo-freelist-private.h"
 #include "cairo-combsort-inline.h"
+#include "cairo-contour-inline.h"
 #include "cairo-contour-private.h"
 
 void

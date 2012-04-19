@@ -65,6 +65,7 @@ cairo_private = \
 	cairo-combsort-inline.h \
 	cairo-compiler-private.h \
 	cairo-compositor-private.h \
+	cairo-contour-inline.h \
 	cairo-contour-private.h \
 	cairo-composite-rectangles-private.h \
 	cairo-damage-private.h \
