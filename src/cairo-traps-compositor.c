@@ -43,6 +43,7 @@
 
 #include "cairo-box-inline.h"
 #include "cairo-boxes-private.h"
+#include "cairo-clip-inline.h"
 #include "cairo-clip-private.h"
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-compositor-private.h"

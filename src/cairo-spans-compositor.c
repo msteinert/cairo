@@ -42,6 +42,7 @@
 #include "cairoint.h"
 
 #include "cairo-compositor-private.h"
+#include "cairo-clip-inline.h"
 #include "cairo-clip-private.h"
 #include "cairo-image-surface-private.h"
 #include "cairo-paginated-private.h"

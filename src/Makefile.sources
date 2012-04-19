@@ -60,6 +60,7 @@ cairo_private = \
 	cairo-box-inline.h \
 	cairo-boxes-private.h \
 	cairo-cache-private.h \
+	cairo-clip-inline.h \
 	cairo-clip-private.h \
 	cairo-combsort-private.h \
 	cairo-compiler-private.h \

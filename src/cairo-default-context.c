@@ -43,6 +43,7 @@
 #include "cairo-private.h"
 #include "cairo-arc-private.h"
 #include "cairo-backend-private.h"
+#include "cairo-clip-inline.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-freed-pool-private.h"

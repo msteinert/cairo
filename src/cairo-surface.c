@@ -39,6 +39,7 @@
 #include "cairoint.h"
 
 #include "cairo-array-private.h"
+#include "cairo-clip-inline.h"
 #include "cairo-clip-private.h"
 #include "cairo-damage-private.h"
 #include "cairo-device-private.h"

@@ -34,6 +34,7 @@
 #include "cairo-xcb-private.h"
 
 #include "cairo-boxes-private.h"
+#include "cairo-clip-inline.h"
 #include "cairo-clip-private.h"
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-image-surface-private.h"
