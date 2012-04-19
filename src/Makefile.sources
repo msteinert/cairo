@@ -57,7 +57,7 @@ cairo_private = \
 	cairo-array-private.h \
 	cairo-atomic-private.h \
 	cairo-backend-private.h \
-	cairo-box-private.h \
+	cairo-box-inline.h \
 	cairo-boxes-private.h \
 	cairo-cache-private.h \
 	cairo-clip-private.h \

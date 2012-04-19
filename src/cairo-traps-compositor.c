@@ -41,7 +41,7 @@
 
 #include "cairoint.h"
 
-#include "cairo-box-private.h"
+#include "cairo-box-inline.h"
 #include "cairo-boxes-private.h"
 #include "cairo-clip-private.h"
 #include "cairo-composite-rectangles-private.h"

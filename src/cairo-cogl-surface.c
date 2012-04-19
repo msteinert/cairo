@@ -45,7 +45,7 @@
 #include "cairo-traps-private.h"
 #include "cairo-cogl-context-private.h"
 #include "cairo-cogl-utils-private.h"
-#include "cairo-box-private.h"
+#include "cairo-box-inline.h"
 #include "cairo-surface-subsurface-private.h"
 #include "cairo-surface-fallback-private.h"
 #include "cairo-surface-offset-private.h"

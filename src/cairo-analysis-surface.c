@@ -37,7 +37,7 @@
 #include "cairoint.h"
 
 #include "cairo-analysis-surface-private.h"
-#include "cairo-box-private.h"
+#include "cairo-box-inline.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-paginated-private.h"
