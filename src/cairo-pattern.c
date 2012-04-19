@@ -36,8 +36,8 @@
 #include "cairo-image-surface-private.h"
 #include "cairo-path-private.h"
 #include "cairo-pattern-private.h"
-#include "cairo-recording-surface-private.h"
-#include "cairo-surface-snapshot-private.h"
+#include "cairo-recording-surface-inline.h"
+#include "cairo-surface-snapshot-inline.h"
 
 #include <float.h>
 

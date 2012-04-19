@@ -95,6 +95,7 @@ cairo_private = \
 	cairo-path-private.h \
 	cairo-pattern-private.h \
 	cairo-private.h \
+	cairo-recording-surface-inline.h \
 	cairo-recording-surface-private.h \
 	cairo-reference-count-private.h \
 	cairo-region-private.h \
@@ -113,6 +114,7 @@ cairo_private = \
 	cairo-surface-observer-private.h \
 	cairo-surface-offset-private.h \
 	cairo-surface-subsurface-private.h \
+	cairo-surface-snapshot-inline.h \
 	cairo-surface-snapshot-private.h \
 	cairo-surface-wrapper-private.h \
 	cairo-time-private.h \

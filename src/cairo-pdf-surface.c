@@ -59,7 +59,7 @@
 #include "cairo-paginated-private.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-surface-clipper-private.h"
-#include "cairo-surface-snapshot-private.h"
+#include "cairo-surface-snapshot-inline.h"
 #include "cairo-surface-subsurface-private.h"
 #include "cairo-type3-glyph-surface-private.h"
 

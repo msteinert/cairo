@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2009 Intel Corporation
+ * Copyright © 2005 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,23 +27,42 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is Intel Corporation.
+ * The Initial Developer of the Original Code is Red Hat, Inc.
  *
  * Contributor(s):
- *      Chris Wilson <chris@chris-wilson.co.uk>
+ *	Kristian Høgsberg <krh@redhat.com>
+ *	Adrian Johnson <ajohnson@redneon.com>
  */
 
-#ifndef CAIRO_SURFACE_SNAPSHOT_PRIVATE_H
-#define CAIRO_SURFACE_SNAPSHOT_PRIVATE_H
+#ifndef CAIRO_RECORDING_SURFACE_INLINE_H
+#define CAIRO_RECORDING_SURFACE_INLINE_H
 
-#include "cairo-surface-private.h"
-#include "cairo-surface-backend-private.h"
+#include "cairo-recording-surface-private.h"
 
-struct _cairo_surface_snapshot {
-    cairo_surface_t base;
+static inline cairo_bool_t
+_cairo_recording_surface_get_bounds (cairo_surface_t *surface,
+				     cairo_rectangle_t *extents)
+{
+    cairo_recording_surface_t *recording = (cairo_recording_surface_t *)surface;
+    if (recording->unbounded)
+	return FALSE;
 
-    cairo_surface_t *target;
-    cairo_surface_t *clone;
-};
+    *extents = recording->extents_pixels;
+    return TRUE;
+}
 
-#endif /* CAIRO_SURFACE_SNAPSHOT_PRIVATE_H */
+/**
+ * _cairo_surface_is_recording:
+ * @surface: a #cairo_surface_t
+ *
+ * Checks if a surface is a #cairo_recording_surface_t
+ *
+ * Return value: %TRUE if the surface is a recording surface
+ **/
+static inline cairo_bool_t
+_cairo_surface_is_recording (const cairo_surface_t *surface)
+{
+    return surface->backend->type == CAIRO_SURFACE_TYPE_RECORDING;
+}
+
+#endif /* CAIRO_RECORDING_SURFACE_INLINE_H */

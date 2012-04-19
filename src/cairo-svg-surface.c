@@ -50,7 +50,7 @@
 #include "cairo-error-private.h"
 #include "cairo-image-info-private.h"
 #include "cairo-image-surface-private.h"
-#include "cairo-recording-surface-private.h"
+#include "cairo-recording-surface-inline.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-paginated-private.h"

@@ -48,7 +48,7 @@
 #include "cairo-paginated-private.h"
 #include "cairo-pattern-private.h"
 #include "cairo-region-private.h"
-#include "cairo-recording-surface-private.h"
+#include "cairo-recording-surface-inline.h"
 #include "cairo-spans-compositor-private.h"
 #include "cairo-surface-subsurface-private.h"
 #include "cairo-surface-snapshot-private.h"

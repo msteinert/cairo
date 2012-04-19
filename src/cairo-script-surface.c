@@ -77,10 +77,10 @@
 #include "cairo-image-surface-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-pattern-private.h"
-#include "cairo-recording-surface-private.h"
+#include "cairo-recording-surface-inline.h"
 #include "cairo-scaled-font-private.h"
 #include "cairo-surface-clipper-private.h"
-#include "cairo-surface-snapshot-private.h"
+#include "cairo-surface-snapshot-inline.h"
 #include "cairo-surface-subsurface-private.h"
 #include "cairo-surface-wrapper-private.h"
 

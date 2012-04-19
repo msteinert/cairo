@@ -36,7 +36,7 @@
 #ifndef CAIRO_SURFACE_SNAPSHOT_INLINE_H
 #define CAIRO_SURFACE_SNAPSHOT_INLINE_H
 
-#include "cairo-surface-private.h"
+#include "cairo-surface-snapshot-private.h"
 
 static inline cairo_bool_t
 _cairo_surface_snapshot_is_reused (cairo_surface_t *surface)
