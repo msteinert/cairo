@@ -94,6 +94,7 @@ cairo_private = \
 	cairo-paginated-surface-private.h \
 	cairo-path-fixed-private.h \
 	cairo-path-private.h \
+	cairo-pattern-inline.h \
 	cairo-pattern-private.h \
 	cairo-private.h \
 	cairo-recording-surface-inline.h \

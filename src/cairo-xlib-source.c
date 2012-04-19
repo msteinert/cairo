@@ -48,7 +48,7 @@
 #include "cairo-error-private.h"
 #include "cairo-image-surface-private.h"
 #include "cairo-paginated-private.h"
-#include "cairo-pattern-private.h"
+#include "cairo-pattern-inline.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-surface-backend-private.h"
 #include "cairo-surface-offset-private.h"

@@ -48,7 +48,7 @@
 
 #include "cairo-compositor-private.h"
 #include "cairo-error-private.h"
-#include "cairo-pattern-private.h"
+#include "cairo-pattern-inline.h"
 #include "cairo-paginated-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-surface-observer-private.h"

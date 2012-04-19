@@ -327,17 +327,6 @@ cairo_private cairo_bool_t
 _cairo_pattern_equal (const cairo_pattern_t *a,
 		      const cairo_pattern_t *b);
 
-static inline void
-_cairo_pattern_add_observer (cairo_pattern_t *pattern,
-			     cairo_pattern_observer_t *observer,
-			     void (*func) (cairo_pattern_observer_t *,
-					   cairo_pattern_t *,
-					   unsigned int))
-{
-    observer->notify = func;
-    cairo_list_add (&observer->link, &pattern->observers);
-}
-
 /* cairo-mesh-pattern-rasterizer.c */
 
 cairo_private void
@@ -371,15 +360,6 @@ _cairo_raster_source_pattern_finish (cairo_pattern_t *abstract_pattern);
 cairo_private void
 _cairo_debug_print_pattern (FILE *file, const cairo_pattern_t *pattern);
 
-static inline cairo_surface_t *
-_cairo_pattern_get_source (const cairo_surface_pattern_t *pattern,
-			   cairo_rectangle_int_t *extents)
-{
-    return _cairo_surface_get_source (pattern->surface, extents);
-}
-
 CAIRO_END_DECLS
 
 #endif /* CAIRO_PATTERN_PRIVATE */
-
-
