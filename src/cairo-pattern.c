@@ -34,6 +34,7 @@
 #include "cairo-error-private.h"
 #include "cairo-freed-pool-private.h"
 #include "cairo-image-surface-private.h"
+#include "cairo-list-inline.h"
 #include "cairo-path-private.h"
 #include "cairo-pattern-private.h"
 #include "cairo-recording-surface-inline.h"

@@ -44,6 +44,7 @@
 #include "cairo-damage-private.h"
 #include "cairo-device-private.h"
 #include "cairo-error-private.h"
+#include "cairo-list-inline.h"
 #include "cairo-image-surface-inline.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-region-private.h"

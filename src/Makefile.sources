@@ -84,6 +84,7 @@ cairo_private = \
 	cairo-image-info-private.h \
 	cairo-image-surface-inline.h \
 	cairo-image-surface-private.h \
+	cairo-list-inline.h \
 	cairo-list-private.h \
 	cairo-malloc-private.h \
 	cairo-mutex-impl-private.h \

@@ -38,6 +38,8 @@
 
 #include "cairo-pattern-private.h"
 
+#include "cairo-list-inline.h"
+
 CAIRO_BEGIN_DECLS
 
 static inline void

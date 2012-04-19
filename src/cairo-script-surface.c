@@ -73,7 +73,7 @@
 #include "cairo-default-context-private.h"
 #include "cairo-device-private.h"
 #include "cairo-error-private.h"
-#include "cairo-list-private.h"
+#include "cairo-list-inline.h"
 #include "cairo-image-surface-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-pattern-private.h"

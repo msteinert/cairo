@@ -43,7 +43,7 @@
 #include "cairoint.h"
 
 #include "cairo-error-private.h"
-#include "cairo-list-private.h"
+#include "cairo-list-inline.h"
 #include "cairo-freelist-private.h"
 #include "cairo-combsort-inline.h"
 
