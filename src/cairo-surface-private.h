@@ -111,13 +111,4 @@ cairo_private cairo_surface_t *
 _cairo_surface_get_source (cairo_surface_t *surface,
 			   cairo_rectangle_int_t *extents);
 
-static inline cairo_status_t
-_cairo_surface_flush (cairo_surface_t *surface)
-{
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    if (surface->backend->flush)
-	status = surface->backend->flush (surface);
-    return status;
-}
-
 #endif /* CAIRO_SURFACE_PRIVATE_H */

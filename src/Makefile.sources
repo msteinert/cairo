@@ -104,6 +104,7 @@ cairo_private = \
 	cairo-spans-private.h \
 	cairo-spans-compositor-private.h \
 	cairo-stroke-dash-private.h \
+	cairo-surface-inline.h \
 	cairo-surface-private.h \
 	cairo-surface-backend-private.h \
 	cairo-surface-clipper-private.h \
