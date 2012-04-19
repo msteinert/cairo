@@ -116,6 +116,7 @@ cairo_private = \
 	cairo-surface-observer-inline.h \
 	cairo-surface-observer-private.h \
 	cairo-surface-offset-private.h \
+	cairo-surface-subsurface-inline.h \
 	cairo-surface-subsurface-private.h \
 	cairo-surface-snapshot-inline.h \
 	cairo-surface-snapshot-private.h \

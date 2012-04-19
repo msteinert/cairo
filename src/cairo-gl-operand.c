@@ -50,7 +50,7 @@
 #include "cairo-image-surface-private.h"
 #include "cairo-surface-backend-private.h"
 #include "cairo-surface-offset-private.h"
-#include "cairo-surface-subsurface-private.h"
+#include "cairo-surface-subsurface-inline.h"
 
 static cairo_int_status_t
 _cairo_gl_create_gradient_texture (cairo_gl_surface_t *dst,

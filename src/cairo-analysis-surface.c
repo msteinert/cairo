@@ -43,7 +43,7 @@
 #include "cairo-paginated-private.h"
 #include "cairo-recording-surface-inline.h"
 #include "cairo-surface-snapshot-inline.h"
-#include "cairo-surface-subsurface-private.h"
+#include "cairo-surface-subsurface-inline.h"
 #include "cairo-region-private.h"
 
 typedef struct {

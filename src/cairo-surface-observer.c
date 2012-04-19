@@ -46,7 +46,7 @@
 #include "cairo-pattern-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-recording-surface-private.h"
-#include "cairo-surface-subsurface-private.h"
+#include "cairo-surface-subsurface-inline.h"
 #include "cairo-reference-count-private.h"
 
 #if CAIRO_HAS_SCRIPT_SURFACE
