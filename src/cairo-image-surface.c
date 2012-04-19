@@ -45,7 +45,7 @@
 #include "cairo-compositor-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
-#include "cairo-image-surface-private.h"
+#include "cairo-image-surface-inline.h"
 #include "cairo-paginated-private.h"
 #include "cairo-pattern-private.h"
 #include "cairo-recording-surface-private.h"
@@ -573,7 +573,7 @@ slim_hidden_def (cairo_image_surface_get_data);
  *
  * Since: 1.2
  **/
-    cairo_format_t
+cairo_format_t
 cairo_image_surface_get_format (cairo_surface_t *surface)
 {
     cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
@@ -597,7 +597,7 @@ slim_hidden_def (cairo_image_surface_get_format);
  *
  * Since: 1.0
  **/
-    int
+int
 cairo_image_surface_get_width (cairo_surface_t *surface)
 {
     cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
@@ -621,7 +621,7 @@ slim_hidden_def (cairo_image_surface_get_width);
  *
  * Since: 1.0
  **/
-    int
+int
 cairo_image_surface_get_height (cairo_surface_t *surface)
 {
     cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
@@ -648,7 +648,7 @@ slim_hidden_def (cairo_image_surface_get_height);
  *
  * Since: 1.2
  **/
-    int
+int
 cairo_image_surface_get_stride (cairo_surface_t *surface)
 {
 

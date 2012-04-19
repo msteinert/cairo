@@ -44,6 +44,7 @@
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-gl-private.h"
+#include "cairo-image-surface-inline.h"
 
 cairo_status_t
 _cairo_gl_surface_acquire_dest_image (void		      *abstract_surface,

@@ -38,7 +38,7 @@
 #include "cairo-fixed-private.h"
 #include "cairo-device-private.h"
 #include "cairo-composite-rectangles-private.h"
-#include "cairo-image-surface-private.h"
+#include "cairo-image-surface-inline.h"
 #include "cairo-cogl-private.h"
 #include "cairo-cogl-gradient-private.h"
 #include "cairo-arc-private.h"

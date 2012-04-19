@@ -216,41 +216,6 @@ _pixman_image_add_tristrip (pixman_image_t *image,
 			    int dst_x, int dst_y,
 			    cairo_tristrip_t *strip);
 
-static inline void
-_cairo_image_surface_set_parent (cairo_image_surface_t *image,
-				 cairo_surface_t *parent)
-{
-    image->parent = parent;
-}
-
-/**
- * _cairo_surface_is_image:
- * @surface: a #cairo_surface_t
- *
- * Checks if a surface is an #cairo_image_surface_t
- *
- * Return value: %TRUE if the surface is an image surface
- **/
-static inline cairo_bool_t
-_cairo_surface_is_image (const cairo_surface_t *surface)
-{
-    return surface->backend == &_cairo_image_surface_backend;
-}
-
-/**
- * _cairo_surface_is_image_source:
- * @surface: a #cairo_surface_t
- *
- * Checks if a surface is an #cairo_image_source_t
- *
- * Return value: %TRUE if the surface is an image source
- **/
-static inline cairo_bool_t
-_cairo_surface_is_image_source (const cairo_surface_t *surface)
-{
-    return surface->backend == &_cairo_image_source_backend;
-}
-
 CAIRO_END_DECLS
 
 #endif /* CAIRO_IMAGE_SURFACE_PRIVATE_H */

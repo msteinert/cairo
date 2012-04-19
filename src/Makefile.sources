@@ -81,6 +81,7 @@ cairo_private = \
 	cairo-gstate-private.h \
 	cairo-hash-private.h \
 	cairo-image-info-private.h \
+	cairo-image-surface-inline.h \
 	cairo-image-surface-private.h \
 	cairo-list-private.h \
 	cairo-malloc-private.h \

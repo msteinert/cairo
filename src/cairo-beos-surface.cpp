@@ -41,6 +41,7 @@
 #include "cairo-beos.h"
 
 #include "cairo-error-private.h"
+#include "cairo-image-surface-inline.h"
 
 #include <new>
 

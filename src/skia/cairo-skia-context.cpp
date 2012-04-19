@@ -47,6 +47,7 @@
 #include "cairo-default-context-private.h"
 #include "cairo-freed-pool-private.h"
 #include "cairo-gstate-private.h"
+#include "cairo-image-surface-inline.h"
 #include "cairo-path-private.h"
 #include "cairo-pattern-private.h"
 #include "cairo-skia-private.h"
