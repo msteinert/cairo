@@ -71,7 +71,7 @@ void
 _cairo_stroker_dash_step (cairo_stroker_dash_t *dash, double step)
 {
     dash->dash_remain -= step;
-    if (dash->dash_remain <= 0.) {
+    if (dash->dash_remain < CAIRO_FIXED_ERROR_DOUBLE) {
 	if (++dash->dash_index == dash->num_dashes)
 	    dash->dash_index = 0;
 
