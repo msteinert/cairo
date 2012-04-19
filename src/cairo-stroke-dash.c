@@ -76,7 +76,7 @@ _cairo_stroker_dash_step (cairo_stroker_dash_t *dash, double step)
 	    dash->dash_index = 0;
 
 	dash->dash_on = ! dash->dash_on;
-	dash->dash_remain = dash->dashes[dash->dash_index];
+	dash->dash_remain += dash->dashes[dash->dash_index];
     }
 }
 
