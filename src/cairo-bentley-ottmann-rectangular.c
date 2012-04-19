@@ -40,7 +40,7 @@
 
 #include "cairo-boxes-private.h"
 #include "cairo-error-private.h"
-#include "cairo-combsort-private.h"
+#include "cairo-combsort-inline.h"
 #include "cairo-list-private.h"
 #include "cairo-traps-private.h"
 

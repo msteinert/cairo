@@ -40,7 +40,7 @@
 
 #include "cairo-error-private.h"
 #include "cairo-freelist-private.h"
-#include "cairo-combsort-private.h"
+#include "cairo-combsort-inline.h"
 #include "cairo-traps-private.h"
 
 #define DEBUG_PRINT_STATE 0

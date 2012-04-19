@@ -62,7 +62,7 @@ cairo_private = \
 	cairo-cache-private.h \
 	cairo-clip-inline.h \
 	cairo-clip-private.h \
-	cairo-combsort-private.h \
+	cairo-combsort-inline.h \
 	cairo-compiler-private.h \
 	cairo-compositor-private.h \
 	cairo-contour-private.h \

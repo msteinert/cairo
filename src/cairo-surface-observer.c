@@ -38,7 +38,7 @@
 #include "cairo-surface-observer-private.h"
 
 #include "cairo-array-private.h"
-#include "cairo-combsort-private.h"
+#include "cairo-combsort-inline.h"
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-error-private.h"
 #include "cairo-image-surface-private.h"

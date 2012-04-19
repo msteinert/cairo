@@ -40,7 +40,7 @@
 
 #include "cairo-error-private.h"
 #include "cairo-freelist-private.h"
-#include "cairo-combsort-private.h"
+#include "cairo-combsort-inline.h"
 
 typedef cairo_point_t cairo_bo_point32_t;
 
