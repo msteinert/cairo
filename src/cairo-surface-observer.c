@@ -36,6 +36,7 @@
 #include "cairoint.h"
 
 #include "cairo-surface-observer-private.h"
+#include "cairo-surface-observer-inline.h"
 
 #include "cairo-array-private.h"
 #include "cairo-combsort-inline.h"

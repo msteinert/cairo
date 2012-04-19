@@ -109,6 +109,7 @@ cairo_private = \
 	cairo-surface-backend-private.h \
 	cairo-surface-clipper-private.h \
 	cairo-surface-fallback-private.h \
+	cairo-surface-observer-inline.h \
 	cairo-surface-observer-private.h \
 	cairo-surface-offset-private.h \
 	cairo-surface-subsurface-private.h \
