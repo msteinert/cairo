@@ -71,6 +71,7 @@ cairo_private = \
 	cairo-damage-private.h \
 	cairo-default-context-private.h \
 	cairo-device-private.h \
+	cairo-error-inline.h \
 	cairo-error-private.h \
 	cairo-fixed-private.h \
 	cairo-fixed-type-private.h \
