@@ -1047,8 +1047,7 @@ _cairo_xlib_surface_draw_image (cairo_xlib_surface_t   *surface,
 	ret = XInitImage (&ximage);
 	assert (ret != 0);
     }
-    else if (!is_rgb_image ||
-	     (surface->visual == NULL || surface->visual->class == TrueColor))
+    else if (surface->visual == NULL || surface->visual->class == TrueColor)
     {
         pixman_format_code_t intermediate_format;
         int ret;
