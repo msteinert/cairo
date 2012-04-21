@@ -546,7 +546,7 @@ _cairo_rectilinear_stroker_line_to_dashed (void		*closure,
 	    dash_on = FALSE;
 	}
 
-	_cairo_stroker_dash_step (&stroker->dash, step_length);
+	_cairo_stroker_dash_step (&stroker->dash, step_length / sf);
 	segment.p1 = segment.p2;
     }
 
