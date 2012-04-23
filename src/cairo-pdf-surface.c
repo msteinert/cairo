@@ -2323,7 +2323,7 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
  * can be used to reference the data in image_ret. */
 static cairo_status_t
 _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
-                               cairo_image_surface_t   *image,
+                               cairo_image_surface_t   *image_surf,
                                cairo_pdf_resource_t    *image_res,
 			       cairo_filter_t           filter,
 			       cairo_bool_t             stencil_mask)
@@ -2337,16 +2337,34 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
     cairo_bool_t need_smask;
     const char *interpolate = "true";
     cairo_image_color_t color;
+    cairo_image_surface_t *image;
 
-    /* These are the only image formats we currently support, (which
-     * makes things a lot simpler here). This is enforced through
-     * _cairo_pdf_surface_analyze_operation which only accept source surfaces of
-     * CONTENT_COLOR or CONTENT_COLOR_ALPHA.
-     */
-    assert (image->format == CAIRO_FORMAT_RGB24 ||
-	    image->format == CAIRO_FORMAT_ARGB32 ||
-	    image->format == CAIRO_FORMAT_A8 ||
-	    image->format == CAIRO_FORMAT_A1);
+    image  = image_surf;
+    if (image->format != CAIRO_FORMAT_RGB24 &&
+	image->format != CAIRO_FORMAT_ARGB32 &&
+	image->format != CAIRO_FORMAT_A8 &&
+	image->format != CAIRO_FORMAT_A1)
+    {
+	cairo_surface_t *surf;
+	cairo_surface_pattern_t pattern;
+
+	surf = _cairo_image_surface_create_with_content (cairo_surface_get_content (&image_surf->base),
+							 image_surf->width,
+							 image_surf->height);
+	image = (cairo_image_surface_t *) surf;
+	if (surf->status) {
+	    status = surf->status;
+	    goto CLEANUP;
+	}
+
+	_cairo_pattern_init_for_surface (&pattern, &image_surf->base);
+	status = _cairo_surface_paint (surf,
+				       CAIRO_OPERATOR_SOURCE, &pattern.base,
+				       NULL);
+        _cairo_pattern_fini (&pattern.base);
+        if (unlikely (status))
+            goto CLEANUP;
+    }
 
     switch (filter) {
     case CAIRO_FILTER_GOOD:
@@ -2497,6 +2515,9 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
 CLEANUP_RGB:
     free (data);
 CLEANUP:
+    if (image != image_surf)
+	cairo_surface_destroy (&image->base);
+
     return status;
 }
 
