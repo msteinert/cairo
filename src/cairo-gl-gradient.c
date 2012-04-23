@@ -206,6 +206,7 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
     cairo_gl_gradient_t *gradient;
     cairo_status_t status;
     int tex_width;
+    GLint internal_format;
     void *data;
 
     if ((unsigned int) ctx->max_texture_size / 2 <= n_stops)
@@ -247,7 +248,16 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
     if (unlikely (status))
 	goto cleanup_data;
 
-    glTexImage2D (ctx->tex_target, 0, GL_RGBA, tex_width, 1, 0,
+    /*
+     * In OpenGL ES 2.0 no format conversion is allowed i.e. 'internalFormat'
+     * must match 'format' in glTexImage2D.
+     */
+    if (_cairo_gl_get_flavor () == CAIRO_GL_FLAVOR_ES)
+	internal_format = GL_BGRA;
+    else
+	internal_format = GL_RGBA;
+
+    glTexImage2D (ctx->tex_target, 0, internal_format, tex_width, 1, 0,
 		  GL_BGRA, GL_UNSIGNED_BYTE, data);
 
     free (data);
