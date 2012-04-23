@@ -1381,7 +1381,7 @@ _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	    *surface,
 	    goto release_source;
 
 	if (surface_key.unique_id && surface_key.unique_id_length > 0) {
-	    unique_id = malloc (unique_id_length);
+	    unique_id = _cairo_malloc (surface_key.unique_id_length);
 	    if (unique_id == NULL) {
 		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 		goto release_source;
