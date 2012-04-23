@@ -2353,7 +2353,7 @@ _cairo_ps_surface_emit_base85_string (cairo_ps_surface_t    *surface,
 
 static cairo_status_t
 _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
-			      cairo_image_surface_t *image,
+			      cairo_image_surface_t *image_surf,
 			      cairo_operator_t	     op,
 			      cairo_filter_t         filter,
 			      cairo_bool_t           stencil_mask)
@@ -2361,7 +2361,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
     cairo_status_t status;
     unsigned char *data;
     unsigned long data_size;
-    cairo_image_surface_t *ps_image = image;
+    cairo_image_surface_t *ps_image;
     int x, y, i, a;
     cairo_image_transparency_t transparency;
     cairo_bool_t use_mask;
@@ -2372,9 +2372,38 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
     const char *interpolate;
     cairo_ps_compress_t compress;
     const char *compress_filter;
+    cairo_image_surface_t *image;
 
-    if (image->base.status)
-	return image->base.status;
+    if (image_surf->base.status)
+	return image_surf->base.status;
+
+    image  = image_surf;
+    if (image->format != CAIRO_FORMAT_RGB24 &&
+	image->format != CAIRO_FORMAT_ARGB32 &&
+	image->format != CAIRO_FORMAT_A8 &&
+	image->format != CAIRO_FORMAT_A1)
+    {
+	cairo_surface_t *surf;
+	cairo_surface_pattern_t pattern;
+
+	surf = _cairo_image_surface_create_with_content (cairo_surface_get_content (&image_surf->base),
+							 image_surf->width,
+							 image_surf->height);
+	image = (cairo_image_surface_t *) surf;
+	if (surf->status) {
+	    status = surf->status;
+	    goto bail0;
+	}
+
+	_cairo_pattern_init_for_surface (&pattern, &image_surf->base);
+	status = _cairo_surface_paint (surf,
+				       CAIRO_OPERATOR_SOURCE, &pattern.base,
+				       NULL);
+        _cairo_pattern_fini (&pattern.base);
+        if (unlikely (status))
+            goto bail0;
+    }
+    ps_image = image;
 
     switch (filter) {
     default:
@@ -2696,6 +2725,10 @@ bail2:
 bail1:
     if (!use_mask && ps_image != image)
 	cairo_surface_destroy (&ps_image->base);
+
+bail0:
+    if (image != image_surf)
+	cairo_surface_destroy (&image->base);
 
     return status;
 }
