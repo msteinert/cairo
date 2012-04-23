@@ -54,7 +54,7 @@
 #include "cairo-damage-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
-#include "cairo-image-surface-private.h"
+#include "cairo-image-surface-inline.h"
 #include "cairo-paginated-private.h"
 #include "cairo-pattern-private.h"
 #include "cairo-win32-private.h"
