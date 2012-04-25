@@ -1613,7 +1613,14 @@ _cairo_xlib_screen_from_visual (Display *dpy, Visual *visual)
 
 static cairo_bool_t valid_size (int width, int height)
 {
-    return width > 0 && width <= XLIB_COORD_MAX && height > 0 && height <= XLIB_COORD_MAX;
+    /* Note: the minimum surface size allowed in the X protocol is 1x1.
+     * However, as we historically did not check the minimum size we
+     * allowed applications to lie and set the correct size later (one hopes).
+     * To preserve compatability we must allow applications to use
+     * 0x0 surfaces.
+     */
+    return (width  >= 0 && width  <= XLIB_COORD_MAX &&
+	    height >= 0 && height <= XLIB_COORD_MAX);
 }
 
 /**
