@@ -1671,7 +1671,7 @@ _blit_spans (void *abstract_renderer, int y, int h,
     } else {
 	do {
 	    if (spans[0].coverage) {
-		int yy = y, hh = y;
+		int yy = y, hh = h;
 		do {
 		    void *src = r->u.blit.src_data + yy*r->u.blit.src_stride + spans[0].x*cpp;
 		    void *dst = r->u.blit.data + yy*r->u.blit.stride + spans[0].x*cpp;
