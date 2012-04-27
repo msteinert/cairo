@@ -753,6 +753,24 @@ _cairo_image_surface_snapshot (void *abstract_surface)
     cairo_image_surface_t *image = abstract_surface;
     cairo_image_surface_t *clone;
 
+    /* If we own the image, we can simply steal the memory for the snapshot */
+    if (image->owns_data && image->base._finishing) {
+	clone = (cairo_image_surface_t *)
+	    _cairo_image_surface_create_for_pixman_image (image->pixman_image,
+							  image->pixman_format);
+	if (unlikely (clone->base.status))
+	    return &clone->base;
+
+	image->pixman_image = NULL;
+	image->owns_data = FALSE;
+
+	clone->transparency = image->transparency;
+	clone->color = image->color;
+
+	clone->owns_data = FALSE;
+	return &clone->base;
+    }
+
     clone = (cairo_image_surface_t *)
 	_cairo_image_surface_create_with_pixman_format (NULL,
 							image->pixman_format,

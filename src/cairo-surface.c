@@ -108,6 +108,7 @@ const cairo_surface_t name = {					\
     0,					/* unique id */		\
     0,					/* serial */		\
     NULL,				/* damage */		\
+    FALSE,				/* _finishing */	\
     FALSE,				/* finished */		\
     TRUE,				/* is_clear */		\
     FALSE,				/* has_font_options */	\
@@ -905,6 +906,8 @@ _cairo_surface_finish (cairo_surface_t *surface)
     cairo_surface_flush (surface);
 
     /* update the snapshots *before* we declare the surface as finished */
+    surface->_finishing = TRUE;
+
     _cairo_surface_detach_snapshots (surface);
     if (surface->snapshot_of != NULL)
 	_cairo_surface_detach_snapshot (surface);

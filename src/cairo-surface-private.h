@@ -65,6 +65,7 @@ struct _cairo_surface {
     unsigned int serial;
     cairo_damage_t *damage;
 
+    unsigned _finishing : 1;
     unsigned finished : 1;
     unsigned is_clear : 1;
     unsigned has_font_options : 1;
