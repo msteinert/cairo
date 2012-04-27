@@ -2097,9 +2097,11 @@ _cairo_script_surface_source (void                    *abstract_surface,
 {
     cairo_script_surface_t *surface = abstract_surface;
 
-    extents->x = extents->y = 0;
-    extents->width  = surface->width;
-    extents->height = surface->height;
+    if (extents) {
+	extents->x = extents->y = 0;
+	extents->width  = surface->width;
+	extents->height = surface->height;
+    }
 
     return &surface->base;
 }
