@@ -1549,7 +1549,7 @@ _emit_surface_pattern (cairo_script_surface_t *surface,
 {
     cairo_script_context_t *ctx = to_context (surface);
     cairo_surface_pattern_t *surface_pattern;
-    cairo_surface_t *source, *snapshot;
+    cairo_surface_t *source, *snapshot, *free_me = NULL;
     cairo_surface_t *take_snapshot = NULL;
     cairo_int_status_t status;
 
@@ -1568,7 +1568,7 @@ _emit_surface_pattern (cairo_script_surface_t *surface,
 	if (_cairo_surface_snapshot_is_reused (source))
 	    take_snapshot = source;
 
-	source = _cairo_surface_snapshot_get_target (source);
+	free_me = source = _cairo_surface_snapshot_get_target (source);
     }
 
     switch ((int) source->backend->type) {
@@ -1585,6 +1585,7 @@ _emit_surface_pattern (cairo_script_surface_t *surface,
 	status = _emit_image_surface_pattern (surface, source);
 	break;
     }
+    cairo_surface_destroy (free_me);
     if (unlikely (status))
 	return status;
 

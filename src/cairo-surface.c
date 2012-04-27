@@ -961,6 +961,8 @@ cairo_surface_finish (cairo_surface_t *surface)
     /* We have to becareful when decoupling potential reference cycles */
     cairo_surface_reference (surface);
     _cairo_surface_finish (surface);
+
+    /* XXX need to block and wait for snapshot references */
     cairo_surface_destroy (surface);
 }
 slim_hidden_def (cairo_surface_finish);
@@ -1799,7 +1801,8 @@ cairo_surface_t *
 _cairo_surface_default_source (void *surface,
 			       cairo_rectangle_int_t *extents)
 {
-    _cairo_surface_get_extents(surface, extents);
+    if (extents)
+	_cairo_surface_get_extents(surface, extents);
     return surface;
 }
 

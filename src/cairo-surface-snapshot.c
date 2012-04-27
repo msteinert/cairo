@@ -149,6 +149,8 @@ _cairo_surface_snapshot_copy_on_write (cairo_surface_t *surface)
      * been lost.
      */
 
+    CAIRO_MUTEX_LOCK (snapshot->mutex);
+
     if (snapshot->target->backend->snapshot != NULL) {
 	clone = snapshot->target->backend->snapshot (snapshot->target);
 	if (clone != NULL) {
@@ -165,7 +167,7 @@ _cairo_surface_snapshot_copy_on_write (cairo_surface_t *surface)
     if (unlikely (status)) {
 	snapshot->target = _cairo_surface_create_in_error (status);
 	status = _cairo_surface_set_error (surface, status);
-	return;
+	goto unlock;
     }
     clone = image->base.backend->snapshot (&image->base);
     _cairo_surface_release_source_image (snapshot->target, image, extra);
@@ -174,6 +176,8 @@ done:
     status = _cairo_surface_set_error (surface, clone->status);
     snapshot->target = snapshot->clone = clone;
     snapshot->base.type = clone->type;
+unlock:
+    CAIRO_MUTEX_UNLOCK (snapshot->mutex);
 }
 
 /**
@@ -230,6 +234,7 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
 			 surface->content);
     snapshot->base.type = surface->type;
 
+    CAIRO_MUTEX_INIT (snapshot->mutex);
     snapshot->target = surface;
     snapshot->clone = NULL;
 

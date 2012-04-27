@@ -1127,10 +1127,7 @@ is_recording_pattern (const cairo_pattern_t *pattern)
 	return FALSE;
 
     surface = ((const cairo_surface_pattern_t *) pattern)->surface;
-    if (_cairo_surface_is_paginated (surface))
-	surface = _cairo_paginated_surface_get_recording (surface);
-    if (_cairo_surface_is_snapshot (surface))
-	surface = _cairo_surface_snapshot_get_target (surface);
+    surface = _cairo_surface_get_source (surface, NULL);
     return _cairo_surface_is_recording (surface);
 }
 
@@ -1140,11 +1137,7 @@ recording_pattern_get_surface (const cairo_pattern_t *pattern)
     cairo_surface_t *surface;
 
     surface = ((const cairo_surface_pattern_t *) pattern)->surface;
-    if (_cairo_surface_is_paginated (surface))
-	surface = _cairo_paginated_surface_get_recording (surface);
-    if (_cairo_surface_is_snapshot (surface))
-	surface = _cairo_surface_snapshot_get_target (surface);
-    return surface;
+    return _cairo_surface_get_source (surface, NULL);
 }
 
 static cairo_bool_t

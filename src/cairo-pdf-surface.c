@@ -1221,23 +1221,28 @@ _get_source_surface_size (cairo_surface_t         *source,
 	     *width  = extents->width;
 	     *height = extents->height;
 	} else {
+	    cairo_surface_t *free_me = NULL;
 	    cairo_rectangle_int_t surf_extents;
 	    cairo_box_t box;
 	    cairo_bool_t bounded;
 
 	    if (_cairo_surface_is_snapshot (source))
-		source = _cairo_surface_snapshot_get_target (source);
+		free_me = source = _cairo_surface_snapshot_get_target (source);
 
 	    status = _cairo_recording_surface_get_ink_bbox ((cairo_recording_surface_t *)source,
 							    &box, NULL);
-	    if (unlikely (status))
+	    if (unlikely (status)) {
+		cairo_surface_destroy (free_me);
 		return status;
-
-	    _cairo_box_round_to_rectangle (&box, extents);
+	    }
 
 	    bounded = _cairo_surface_get_extents (source, &surf_extents);
+	    cairo_surface_destroy (free_me);
+
 	    *width = surf_extents.width;
 	    *height = surf_extents.height;
+
+	    _cairo_box_round_to_rectangle (&box, extents);
 	}
 
 	return CAIRO_STATUS_SUCCESS;
@@ -2674,12 +2679,13 @@ _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t        *surface,
     cairo_box_double_t bbox;
     cairo_int_status_t status;
     int alpha = 0;
+    cairo_surface_t *free_me = NULL;
     cairo_surface_t *source;
 
     assert (pdf_source->type == CAIRO_PATTERN_TYPE_SURFACE);
     source = pdf_source->surface;
     if (_cairo_surface_is_snapshot (source))
-	source = _cairo_surface_snapshot_get_target (source);
+	free_me = source = _cairo_surface_snapshot_get_target (source);
 
     old_width = surface->width;
     old_height = surface->height;
@@ -2700,12 +2706,12 @@ _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t        *surface,
     _get_bbox_from_extents (pdf_source->hash_entry->height, &pdf_source->hash_entry->extents, &bbox);
     status = _cairo_pdf_surface_open_content_stream (surface, &bbox, &pdf_source->hash_entry->surface_res, TRUE);
     if (unlikely (status))
-	return status;
+	goto err;
 
     if (cairo_surface_get_content (source) == CAIRO_CONTENT_COLOR) {
 	status = _cairo_pdf_surface_add_alpha (surface, 1.0, &alpha);
 	if (unlikely (status))
-	    return status;
+	    goto err;
 
 	_cairo_output_stream_printf (surface->output,
 				     "q /a%d gs 0 0 0 rg 0 0 %f %f re f Q\n",
@@ -2720,7 +2726,7 @@ _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t        *surface,
 						     CAIRO_RECORDING_REGION_NATIVE);
     assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
     if (unlikely (status))
-	return status;
+	goto err;
 
     status = _cairo_pdf_surface_close_content_stream (surface);
 
@@ -2731,6 +2737,8 @@ _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t        *surface,
 					  old_height);
     surface->paginated_mode = old_paginated_mode;
 
+err:
+    cairo_surface_destroy (free_me);
     return status;
 }
 

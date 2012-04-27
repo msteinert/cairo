@@ -3668,9 +3668,7 @@ _cairo_pattern_get_ink_extents (const cairo_pattern_t         *pattern,
 	    (const cairo_surface_pattern_t *) pattern;
 	cairo_surface_t *surface = surface_pattern->surface;
 
-	if (_cairo_surface_is_snapshot (surface))
-	    surface = _cairo_surface_snapshot_get_target (surface);
-
+	surface = _cairo_surface_get_source (surface, NULL);
 	if (_cairo_surface_is_recording (surface)) {
 	    cairo_matrix_t imatrix;
 	    cairo_box_t box;

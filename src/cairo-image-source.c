@@ -432,6 +432,13 @@ _acquire_source_cleanup (pixman_image_t *pixman_image,
     free (data);
 }
 
+static void
+_defer_free_cleanup (pixman_image_t *pixman_image,
+		     void *closure)
+{
+    cairo_surface_destroy (closure);
+}
+
 static uint16_t
 expand_channel (uint16_t v, uint32_t bits)
 {
@@ -816,11 +823,14 @@ _pixman_image_for_surface (cairo_image_surface_t *dst,
 	(! is_mask || ! pattern->base.has_component_alpha ||
 	 (pattern->surface->content & CAIRO_CONTENT_COLOR) == 0))
     {
+	cairo_surface_t *defer_free = NULL;
 	cairo_image_surface_t *source = (cairo_image_surface_t *) pattern->surface;
 	cairo_surface_type_t type;
 
-	if (_cairo_surface_is_snapshot (&source->base))
-	    source = (cairo_image_surface_t *) _cairo_surface_snapshot_get_target (&source->base);
+	if (_cairo_surface_is_snapshot (&source->base)) {
+	    defer_free = _cairo_surface_snapshot_get_target (&source->base);
+	    source = (cairo_image_surface_t *) defer_free;
+	}
 
 	type = source->base.backend->type;
 	if (type == CAIRO_SURFACE_TYPE_IMAGE) {
@@ -839,15 +849,19 @@ _pixman_image_for_surface (cairo_image_surface_t *dst,
 		    sample->x >= source->width ||
 		    sample->y >= source->height)
 		{
-		    if (extend == CAIRO_EXTEND_NONE)
+		    if (extend == CAIRO_EXTEND_NONE) {
+			cairo_surface_destroy (defer_free);
 			return _pixman_transparent_image ();
+		    }
 		}
 		else
 		{
 		    pixman_image = _pixel_to_solid (source,
 						    sample->x, sample->y);
-                    if (pixman_image)
+                    if (pixman_image) {
+			cairo_surface_destroy (defer_free);
                         return pixman_image;
+		    }
 		}
 	    }
 
@@ -858,6 +872,7 @@ _pixman_image_for_surface (cairo_image_surface_t *dst,
 						     pattern->base.filter,
 						     ix, iy))
 	    {
+		cairo_surface_destroy (defer_free);
 		return pixman_image_ref (source->pixman_image);
 	    }
 #endif
@@ -867,8 +882,16 @@ _pixman_image_for_surface (cairo_image_surface_t *dst,
 						     source->height,
 						     (uint32_t *) source->data,
 						     source->stride);
-	    if (unlikely (pixman_image == NULL))
+	    if (unlikely (pixman_image == NULL)) {
+		cairo_surface_destroy (defer_free);
 		return NULL;
+	    }
+
+	    if (defer_free) {
+		pixman_image_set_destroy_function (pixman_image,
+						   _defer_free_cleanup,
+						   defer_free);
+	    }
 	} else if (type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	    cairo_surface_subsurface_t *sub;
 	    cairo_bool_t is_contained = FALSE;
