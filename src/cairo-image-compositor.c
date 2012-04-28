@@ -1950,12 +1950,12 @@ _fill_a8_lerp_opaque_spans (void *abstract_renderer, int y, int h,
 		if (a == 0xff) {
 		    memset(d + spans[0].x, r->u.fill.pixel, len);
 		} else {
-		    uint16_t p = (uint16_t)a * r->u.fill.pixel + 0x7f;
-		    uint16_t ia = ~a;
+		    uint8_t s = mul8_8(a, r->u.fill.pixel);
 		    uint8_t *dst = d + spans[0].x;
+		    a = ~a;
 		    while (len--) {
-			uint16_t t = *dst*ia + p;
-			*dst++ = (t + (t>>8)) >> 8;
+			uint8_t t = mul8_8(*dst, a);
+			*dst++ = t + s;
 		    }
 		}
 	    }
@@ -1974,14 +1974,14 @@ _fill_a8_lerp_opaque_spans (void *abstract_renderer, int y, int h,
 			yy++;
 		    } while (--hh);
 		} else {
-		    uint16_t p = (uint16_t)a * r->u.fill.pixel + 0x7f;
-		    uint16_t ia = ~a;
+		    uint8_t s = mul8_8(a, r->u.fill.pixel);
+		    a = ~a;
 		    do {
 			int len = spans[1].x - spans[0].x;
 			uint8_t *d = r->u.fill.data + r->u.fill.stride*yy + spans[0].x;
 			while (len--) {
-			    uint16_t t = *d*ia + p;
-			    *d++ = (t + (t>>8)) >> 8;
+			    uint8_t t = mul8_8(*d, a);
+			    *d++ = t + s;
 			}
 			yy++;
 		    } while (--hh);
