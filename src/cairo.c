@@ -631,6 +631,8 @@ slim_hidden_def (cairo_set_operator);
  * using the alpha value.
  *
  * The default opacity is 1.
+ *
+ * Since: TBD
  **/
 void
 cairo_set_opacity (cairo_t *cr, double opacity)
@@ -3575,6 +3577,8 @@ cairo_get_operator (cairo_t *cr)
  * Gets the current compositing opacity for a cairo context.
  *
  * Return value: the current compositing opacity.
+ *
+ * Since: TBD
  **/
 double
 cairo_get_opacity (cairo_t *cr)
