@@ -1,3 +1,43 @@
+Release 1.12.2 (2012-04-29 Chris Wilson <chris@chris-wilson.co.uk>)
+===================================================================
+After such a long gestation period for the release of Cairo 1.12, we
+inevitably accumulated a few bugs that were flushed out by broadening the
+test base. Thanks to everybody who tried the release, apologies to any one
+unfortunate enough to encounter a bug and many thanks for reporting it. As
+a result Adrian Johnson, Alexandros Frantzis, Andrea Canciani, Kalev
+Lember, Maarten Bosman, Marcus Meissner, Nis Martensen and Uli Schlachter
+have squashed many more bugs and improved the documentation. I would
+strongly recommend everyone to upgrade to cairo-1.12.2.
+-Chris
+
+Bug fixes
+---------
+
+ Allow applications to create 0x0 xlib surfaces, such as used by LibreOffice.
+ https://bugs.freedesktop.org/show_bug.cgi?id=49118
+ 
+ Trim composite extents for SOURCE/CLEAR operators to the mask.
+
+ Use fallback fonts in PDF for unhandled computed glyph widths
+ https://bugs.freedesktop.org/show_bug.cgi?id=48349
+
+ Handle snapshots of recording surfaces for analysing pattern extents.
+ Fixes a regression of reporting the PDF bounding box as being the page size.
+
+ Fix allocation size for PDF pattern ids.
+ Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=49089
+
+ Fix emission of rectilinear dashed segments, with and without scaling, and
+ application of degenerate line joins.
+
+ Clamp unbounded fixup polygons to the clip extents.
+
+ Prevent infinite loop due to rounding errors whilst incrementing along dashes.
+
+ Prevent overflow for inline a8 span filling.
+
+ Miscellaneous build fixes for Cygwin on Windows and Solaris.
+
 Release 1.12.0 (2012-03-23 Chris Wilson <chris@chris-wilson.co.uk>)
 ===================================================================
 It's taken over 18 months, but the wait is finally over. A new cairo release!
