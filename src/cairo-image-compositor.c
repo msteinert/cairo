@@ -93,7 +93,7 @@ draw_image_boxes (void *_dst,
     struct _cairo_boxes_chunk *chunk;
     int i;
 
-    TRACE ((stderr, "%s\n", __FUNCTION__));
+    TRACE ((stderr, "%s x %d\n", __FUNCTION__, boxes->num_boxes));
 
     for (chunk = &boxes->chunks; chunk; chunk = chunk->next) {
 	for (i = 0; i < chunk->count; i++) {
@@ -325,7 +325,7 @@ fill_boxes (void		*_dst,
     uint32_t pixel;
     int i;
 
-    TRACE ((stderr, "%s\n", __FUNCTION__));
+    TRACE ((stderr, "%s x %d\n", __FUNCTION__, boxes->num_boxes));
 
     if (fill_reduces_to_source (op, color, dst) &&
 	color_to_pixel (color, dst->pixman_format, &pixel))
@@ -485,7 +485,7 @@ composite_boxes (void			*_dst,
     int i;
 
     /* XXX consider using a region? saves multiple prepare-composite */
-    TRACE ((stderr, "%s\n", __FUNCTION__));
+    TRACE ((stderr, "%s x %d\n", __FUNCTION__, boxes->num_boxes));
 
     if (((cairo_surface_t *)_dst)->is_clear &&
 	(op == CAIRO_OPERATOR_SOURCE ||
