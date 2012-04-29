@@ -71,6 +71,8 @@ if echo $FILES | xargs grep "$note_regexp" /dev/null; then
 fi >&2
 
 if echo $FILES | xargs ./check-doc-syntax.awk ; then
+	:
+else
 	stat=1
 fi >&2
 
