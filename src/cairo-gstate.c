@@ -518,8 +518,8 @@ _cairo_gstate_get_line_join (cairo_gstate_t *gstate)
 cairo_status_t
 _cairo_gstate_set_dash (cairo_gstate_t *gstate, const double *dash, int num_dashes, double offset)
 {
-    unsigned int i;
-    double dash_total;
+    double dash_total, on_total, off_total;
+    int i;
 
     free (gstate->stroke_style.dash);
 
@@ -539,12 +539,26 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, const double *dash, int num_dash
 
     memcpy (gstate->stroke_style.dash, dash, gstate->stroke_style.num_dashes * sizeof (double));
 
-    dash_total = 0.0;
-    for (i = 0; i < gstate->stroke_style.num_dashes; i++) {
+    on_total = off_total = dash_total = 0.0;
+    for (i = 0; i < num_dashes; i++) {
 	if (gstate->stroke_style.dash[i] < 0)
 	    return _cairo_error (CAIRO_STATUS_INVALID_DASH);
 
+	if (gstate->stroke_style.dash[i] == 0) {
+	    if (i > 0 && i < num_dashes - 1) {
+		gstate->stroke_style.dash[i-1] +=
+		    gstate->stroke_style.dash[i+1];
+		gstate->stroke_style.num_dashes -= 2;
+		i++;
+		continue;
+	    }
+	}
+
 	dash_total += gstate->stroke_style.dash[i];
+	if ((i & 1) == 0)
+	    on_total += gstate->stroke_style.dash[i];
+	else
+	    off_total += gstate->stroke_style.dash[i];
     }
 
     if (dash_total == 0.0)
@@ -552,8 +566,19 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, const double *dash, int num_dash
 
     /* An odd dash value indicate symmetric repeating, so the total
      * is twice as long. */
-    if (gstate->stroke_style.num_dashes & 1)
+    if (gstate->stroke_style.num_dashes & 1) {
 	dash_total *= 2;
+	on_total += off_total;
+    }
+
+    if (dash_total - on_total < CAIRO_FIXED_ERROR_DOUBLE) {
+	/* Degenerate dash -> solid line */
+	free (gstate->stroke_style.dash);
+	gstate->stroke_style.dash = NULL;
+	gstate->stroke_style.num_dashes = 0;
+	gstate->stroke_style.dash_offset = 0.0;
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     /* The dashing code doesn't like a negative offset or a big positive
      * offset, so we compute an equivalent offset which is guaranteed to be
