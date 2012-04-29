@@ -103,6 +103,7 @@ test_sources = \
 	degenerate-pen.c				\
 	degenerate-radial-gradient.c			\
 	degenerate-rel-curve-to.c			\
+	degenerate-solid-dash.c				\
 	drunkard-tails.c				\
 	device-offset.c					\
 	device-offset-fractional.c			\
