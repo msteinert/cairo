@@ -48,8 +48,10 @@
 
 typedef struct _segment_t {
     cairo_point_t p1, p2;
-    cairo_bool_t is_horizontal;
-    cairo_bool_t has_join;
+    unsigned flags;
+#define HORIZONTAL 0x1
+#define FORWARDS 0x2
+#define JOIN 0x4
 } segment_t;
 
 typedef struct _cairo_rectilinear_stroker {
@@ -159,8 +161,7 @@ static cairo_status_t
 _cairo_rectilinear_stroker_add_segment (cairo_rectilinear_stroker_t *stroker,
 					const cairo_point_t	*p1,
 					const cairo_point_t	*p2,
-					cairo_bool_t		 is_horizontal,
-					cairo_bool_t		 has_join)
+					unsigned		 flags)
 {
     if (CAIRO_INJECT_FAULT ())
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -189,8 +190,7 @@ _cairo_rectilinear_stroker_add_segment (cairo_rectilinear_stroker_t *stroker,
 
     stroker->segments[stroker->num_segments].p1 = *p1;
     stroker->segments[stroker->num_segments].p2 = *p2;
-    stroker->segments[stroker->num_segments].has_join = has_join;
-    stroker->segments[stroker->num_segments].is_horizontal = is_horizontal;
+    stroker->segments[stroker->num_segments].flags = flags;
     stroker->num_segments++;
 
     return CAIRO_STATUS_SUCCESS;
@@ -317,44 +317,42 @@ _cairo_rectilinear_stroker_emit_segments_dashed (cairo_rectilinear_stroker_t *st
 	a = &stroker->segments[i].p1;
 	b = &stroker->segments[i].p2;
 
-	is_horizontal = stroker->segments[i].is_horizontal;
+	is_horizontal = stroker->segments[i].flags & HORIZONTAL;
 
 	/* Handle the joins for a potentially degenerate segment. */
 	if (line_cap == CAIRO_LINE_CAP_BUTT &&
-	    stroker->segments[i].has_join &&
+	    stroker->segments[i].flags & JOIN &&
 	    (i != stroker->num_segments - 1 ||
 	     (! stroker->open_sub_path && stroker->dash.dash_starts_on)))
 	{
 	    cairo_slope_t out_slope;
 	    int j = (i + 1) % stroker->num_segments;
+	    cairo_bool_t forwards = !!(stroker->segments[i].flags & FORWARDS);
 
-	    box.p1 = stroker->segments[i].p1;
-	    box.p2 = stroker->segments[i].p2;
 	    _cairo_slope_init (&out_slope,
 			       &stroker->segments[j].p1,
 			       &stroker->segments[j].p2);
+	    box.p2 = box.p1 = stroker->segments[i].p2;
 
 	    if (is_horizontal) {
-		if (box.p1.x <= box.p2.x) {
-		    box.p1.x = box.p2.x;
+		if (forwards)
 		    box.p2.x += half_line_x;
-		} else {
-		    box.p1.x = box.p2.x - half_line_x;
-		}
-		if (out_slope.dy >= 0)
+		else
+		    box.p1.x -= half_line_x;
+
+		if (out_slope.dy > 0)
 		    box.p1.y -= half_line_y;
-		if (out_slope.dy <= 0)
+		else
 		    box.p2.y += half_line_y;
 	    } else {
-		if (box.p1.y <= box.p2.y) {
-		    box.p1.y = box.p2.y;
+		if (forwards)
 		    box.p2.y += half_line_y;
-		} else {
-		    box.p1.y = box.p2.y - half_line_y;
-		}
-		if (out_slope.dx >= 0)
+		else
+		    box.p1.y -= half_line_y;
+
+		if (out_slope.dx > 0)
 		    box.p1.x -= half_line_x;
-		if (out_slope.dx <= 0)
+		else
 		    box.p2.x += half_line_x;
 	    }
 
@@ -459,8 +457,7 @@ _cairo_rectilinear_stroker_line_to (void		*closure,
 	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_rectilinear_stroker_add_segment (stroker, a, b,
-						     a->y == b->y,
-						     TRUE);
+						     (a->y == b->y) | JOIN);
 
     stroker->current_point = *b;
     stroker->open_sub_path = TRUE;
@@ -481,7 +478,7 @@ _cairo_rectilinear_stroker_line_to_dashed (void		*closure,
     cairo_status_t status;
     cairo_line_t segment;
     cairo_bool_t dash_on = FALSE;
-    cairo_bool_t is_horizontal;
+    unsigned is_horizontal;
 
     /* We don't draw anything for degenerate paths. */
     if (a->x == b->x && a->y == b->y)
@@ -511,6 +508,7 @@ _cairo_rectilinear_stroker_line_to_dashed (void		*closure,
 	sign = 1.;
     } else {
 	remain = _cairo_fixed_to_double (mag);
+	is_horizontal |= FORWARDS;
 	sign = -1.;
     }
 
@@ -522,7 +520,7 @@ _cairo_rectilinear_stroker_line_to_dashed (void		*closure,
 	remain -= step_length;
 
 	mag = _cairo_fixed_from_double (sign*remain);
-	if (is_horizontal)
+	if (is_horizontal & 0x1)
 	    segment.p2.x = b->x + mag;
 	else
 	    segment.p2.y = b->y + mag;
@@ -534,8 +532,7 @@ _cairo_rectilinear_stroker_line_to_dashed (void		*closure,
 	    status = _cairo_rectilinear_stroker_add_segment (stroker,
 							     &segment.p1,
 							     &segment.p2,
-							     is_horizontal,
-							     remain <= 0.);
+							     is_horizontal | (remain <= 0.) << 2);
 	    if (unlikely (status))
 		return status;
 
@@ -562,8 +559,7 @@ _cairo_rectilinear_stroker_line_to_dashed (void		*closure,
 	status = _cairo_rectilinear_stroker_add_segment (stroker,
 							 &segment.p1,
 							 &segment.p1,
-							 is_horizontal,
-							 TRUE);
+							 is_horizontal | JOIN);
 	if (unlikely (status))
 	    return status;
     }
