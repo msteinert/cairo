@@ -49,12 +49,12 @@ draw (cairo_t *cr, int width, int height)
     cairo_stroke (cr);
 
     cairo_translate (cr, 0, 50);
-    cairo_set_dash (cr, dashes_2, 2, 0);
+    cairo_set_dash (cr, dashes_2, 4, 0);
     cairo_rectangle (cr, 10, 10, 30, 30);
     cairo_stroke (cr);
 
     cairo_translate (cr, -50, 0);
-    cairo_set_dash (cr, dashes_3, 2, 0);
+    cairo_set_dash (cr, dashes_3, 4, 0);
     cairo_rectangle (cr, 10, 10, 30, 30);
     cairo_stroke (cr);
 
