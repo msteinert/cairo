@@ -519,7 +519,7 @@ cairo_status_t
 _cairo_gstate_set_dash (cairo_gstate_t *gstate, const double *dash, int num_dashes, double offset)
 {
     double dash_total, on_total, off_total;
-    int i;
+    int i, j;
 
     free (gstate->stroke_style.dash);
 
@@ -537,28 +537,27 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, const double *dash, int num_dash
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
-    memcpy (gstate->stroke_style.dash, dash, gstate->stroke_style.num_dashes * sizeof (double));
-
     on_total = off_total = dash_total = 0.0;
-    for (i = 0; i < num_dashes; i++) {
-	if (gstate->stroke_style.dash[i] < 0)
+    for (i = j = 0; i < num_dashes; i++) {
+	if (dash[i] < 0)
 	    return _cairo_error (CAIRO_STATUS_INVALID_DASH);
 
-	if (gstate->stroke_style.dash[i] == 0) {
-	    if (i > 0 && i < num_dashes - 1) {
-		gstate->stroke_style.dash[i-1] +=
-		    gstate->stroke_style.dash[i+1];
-		gstate->stroke_style.num_dashes -= 2;
-		i++;
-		continue;
-	    }
-	}
+	if (dash[i] == 0 && i > 0 && i < num_dashes - 1) {
+	    if (dash[++i] < 0)
+		return _cairo_error (CAIRO_STATUS_INVALID_DASH);
 
-	dash_total += gstate->stroke_style.dash[i];
-	if ((i & 1) == 0)
-	    on_total += gstate->stroke_style.dash[i];
-	else
-	    off_total += gstate->stroke_style.dash[i];
+	    gstate->stroke_style.dash[j-1] += dash[i];
+	    gstate->stroke_style.num_dashes -= 2;
+	} else
+	    gstate->stroke_style.dash[j++] = dash[i];
+
+	if (dash[i]) {
+	    dash_total += dash[i];
+	    if ((i & 1) == 0)
+		on_total += dash[i];
+	    else
+		off_total += dash[i];
+	}
     }
 
     if (dash_total == 0.0)
