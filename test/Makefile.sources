@@ -163,6 +163,7 @@ test_sources = \
 	in-fill-trapezoid.c				\
 	invalid-matrix.c				\
 	inverse-text.c					\
+	inverted-clip.c					\
 	joins.c						\
 	joins-loop.c					\
 	joins-star.c					\
