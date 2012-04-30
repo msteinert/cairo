@@ -1484,6 +1484,10 @@ _pixman_format_to_masks (pixman_format_code_t	 pixman_format,
 			 cairo_format_masks_t	*masks);
 
 cairo_private void
+_cairo_image_scaled_glyph_fini (cairo_scaled_font_t *scaled_font,
+				cairo_scaled_glyph_t *scaled_glyph);
+
+cairo_private void
 _cairo_image_reset_static_data (void);
 
 cairo_private cairo_surface_t *
