@@ -212,6 +212,8 @@ _cairo_scaled_glyph_fini (cairo_scaled_font_t *scaled_font,
 	private->destroy (private, scaled_glyph, scaled_font);
     }
 
+    _cairo_image_scaled_glyph_fini (scaled_font, scaled_glyph);
+    
     if (scaled_glyph->surface != NULL)
 	cairo_surface_destroy (&scaled_glyph->surface->base);
 

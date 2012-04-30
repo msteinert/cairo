@@ -750,223 +750,38 @@ composite_tristrip (void			*_dst,
     return  CAIRO_STATUS_SUCCESS;
 }
 
+static pixman_glyph_cache_t *global_glyph_cache;
+
+static inline pixman_glyph_cache_t *
+get_glyph_cache (void)
+{
+    if (!global_glyph_cache)
+	global_glyph_cache = pixman_glyph_cache_create ();
+
+    return global_glyph_cache;
+}
+
+void
+_cairo_image_scaled_glyph_fini (cairo_scaled_font_t *scaled_font,
+				cairo_scaled_glyph_t *scaled_glyph)
+{
+    CAIRO_MUTEX_LOCK (_cairo_glyph_cache_mutex);
+
+    if (global_glyph_cache) {
+	pixman_glyph_cache_remove (
+	    global_glyph_cache, scaled_font,
+	    (void *)_cairo_scaled_glyph_index (scaled_glyph));
+    }
+
+    CAIRO_MUTEX_UNLOCK (_cairo_glyph_cache_mutex);
+}
+
 static cairo_int_status_t
 check_composite_glyphs (const cairo_composite_rectangles_t *extents,
 			cairo_scaled_font_t *scaled_font,
 			cairo_glyph_t *glyphs,
 			int *num_glyphs)
 {
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
-composite_one_glyph (void				*_dst,
-		     cairo_operator_t			 op,
-		     cairo_surface_t			*_src,
-		     int				 src_x,
-		     int				 src_y,
-		     int				 dst_x,
-		     int				 dst_y,
-		     cairo_composite_glyphs_info_t	 *info)
-{
-    cairo_image_surface_t *glyph_surface;
-    cairo_scaled_glyph_t *scaled_glyph;
-    cairo_status_t status;
-    int x, y;
-
-    TRACE ((stderr, "%s\n", __FUNCTION__));
-
-    status = _cairo_scaled_glyph_lookup (info->font,
-					 info->glyphs[0].index,
-					 CAIRO_SCALED_GLYPH_INFO_SURFACE,
-					 &scaled_glyph);
-
-    if (unlikely (status))
-	return status;
-
-    glyph_surface = scaled_glyph->surface;
-    if (glyph_surface->width == 0 || glyph_surface->height == 0)
-	return CAIRO_INT_STATUS_NOTHING_TO_DO;
-
-    /* round glyph locations to the nearest pixel */
-    /* XXX: FRAGILE: We're ignoring device_transform scaling here. A bug? */
-    x = _cairo_lround (info->glyphs[0].x -
-		       glyph_surface->base.device_transform.x0);
-    y = _cairo_lround (info->glyphs[0].y -
-		       glyph_surface->base.device_transform.y0);
-
-    pixman_image_composite32 (_pixman_operator (op),
-			      ((cairo_image_source_t *)_src)->pixman_image,
-			      glyph_surface->pixman_image,
-			      to_pixman_image (_dst),
-			      x + src_x,  y + src_y,
-			      0, 0,
-			      x - dst_x, y - dst_y,
-			      glyph_surface->width,
-			      glyph_surface->height);
-
-    return CAIRO_INT_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
-composite_glyphs_via_mask (void				*_dst,
-			   cairo_operator_t		 op,
-			   cairo_surface_t		*_src,
-			   int				 src_x,
-			   int				 src_y,
-			   int				 dst_x,
-			   int				 dst_y,
-			   cairo_composite_glyphs_info_t *info)
-{
-    cairo_scaled_glyph_t *glyph_cache[64];
-    pixman_image_t *white = _pixman_image_for_color (CAIRO_COLOR_WHITE);
-    cairo_scaled_glyph_t *scaled_glyph;
-    uint8_t buf[2048];
-    pixman_image_t *mask;
-    pixman_format_code_t format;
-    cairo_status_t status;
-    int i;
-
-    TRACE ((stderr, "%s\n", __FUNCTION__));
-
-    if (unlikely (white == NULL))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    /* XXX convert the glyphs to common formats a8/a8r8g8b8 to hit
-     * optimised paths through pixman. Should we increase the bit
-     * depth of the target surface, we should reconsider the appropriate
-     * mask formats.
-     */
-
-    status = _cairo_scaled_glyph_lookup (info->font,
-					 info->glyphs[0].index,
-					 CAIRO_SCALED_GLYPH_INFO_SURFACE,
-					 &scaled_glyph);
-    if (unlikely (status)) {
-	pixman_image_unref (white);
-	return status;
-    }
-
-    memset (glyph_cache, 0, sizeof (glyph_cache));
-    glyph_cache[info->glyphs[0].index % ARRAY_LENGTH (glyph_cache)] = scaled_glyph;
-
-    format = PIXMAN_a8;
-    i = (info->extents.width + 3) & ~3;
-    if (scaled_glyph->surface->base.content & CAIRO_CONTENT_COLOR) {
-	format = PIXMAN_a8r8g8b8;
-	i = info->extents.width * 4;
-    }
-
-    if (i * info->extents.height > (int) sizeof (buf)) {
-	mask = pixman_image_create_bits (format,
-					info->extents.width,
-					info->extents.height,
-					NULL, 0);
-    } else {
-	memset (buf, 0, i * info->extents.height);
-	mask = pixman_image_create_bits (format,
-					info->extents.width,
-					info->extents.height,
-					(uint32_t *)buf, i);
-    }
-    if (unlikely (mask == NULL)) {
-	pixman_image_unref (white);
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    }
-
-    status = CAIRO_STATUS_SUCCESS;
-    for (i = 0; i < info->num_glyphs; i++) {
-	unsigned long glyph_index = info->glyphs[i].index;
-	int cache_index = glyph_index % ARRAY_LENGTH (glyph_cache);
-	cairo_image_surface_t *glyph_surface;
-	int x, y;
-
-	scaled_glyph = glyph_cache[cache_index];
-	if (scaled_glyph == NULL ||
-	    _cairo_scaled_glyph_index (scaled_glyph) != glyph_index)
-	{
-	    status = _cairo_scaled_glyph_lookup (info->font, glyph_index,
-						 CAIRO_SCALED_GLYPH_INFO_SURFACE,
-						 &scaled_glyph);
-
-	    if (unlikely (status)) {
-		pixman_image_unref (mask);
-		pixman_image_unref (white);
-		return status;
-	    }
-
-	    glyph_cache[cache_index] = scaled_glyph;
-	}
-
-	glyph_surface = scaled_glyph->surface;
-	if (glyph_surface->width && glyph_surface->height) {
-	    if (glyph_surface->base.content & CAIRO_CONTENT_COLOR &&
-		format == PIXMAN_a8) {
-		pixman_image_t *ca_mask;
-
-		format = PIXMAN_a8r8g8b8;
-		ca_mask = pixman_image_create_bits (format,
-						    info->extents.width,
-						    info->extents.height,
-						    NULL, 0);
-		if (unlikely (ca_mask == NULL)) {
-		    pixman_image_unref (mask);
-		    pixman_image_unref (white);
-		    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-		}
-
-		pixman_image_composite32 (PIXMAN_OP_SRC,
-					  white, mask, ca_mask,
-					  0, 0,
-					  0, 0,
-					  0, 0,
-					  info->extents.width,
-					  info->extents.height);
-		pixman_image_unref (mask);
-		mask = ca_mask;
-	    }
-
-	    /* round glyph locations to the nearest pixel */
-	    /* XXX: FRAGILE: We're ignoring device_transform scaling here. A bug? */
-	    x = _cairo_lround (info->glyphs[i].x -
-			       glyph_surface->base.device_transform.x0);
-	    y = _cairo_lround (info->glyphs[i].y -
-			       glyph_surface->base.device_transform.y0);
-
-	    if (glyph_surface->pixman_format == format) {
-		pixman_image_composite32 (PIXMAN_OP_ADD,
-					  glyph_surface->pixman_image, NULL, mask,
-					  0, 0,
-					  0, 0,
-					  x - info->extents.x, y - info->extents.y,
-					  glyph_surface->width,
-					  glyph_surface->height);
-	    } else {
-		pixman_image_composite32 (PIXMAN_OP_ADD,
-					  white, glyph_surface->pixman_image, mask,
-					  0, 0,
-					  0, 0,
-					  x - info->extents.x, y - info->extents.y,
-					  glyph_surface->width,
-					  glyph_surface->height);
-	    }
-	}
-    }
-
-    if (format == PIXMAN_a8r8g8b8)
-	pixman_image_set_component_alpha (mask, TRUE);
-
-    pixman_image_composite32 (_pixman_operator (op),
-			      ((cairo_image_source_t *)_src)->pixman_image,
-			      mask,
-			      to_pixman_image (_dst),
-			      info->extents.x + src_x, info->extents.y + src_y,
-			      0, 0,
-			      info->extents.x - dst_x, info->extents.y - dst_y,
-			      info->extents.width, info->extents.height);
-    pixman_image_unref (mask);
-    pixman_image_unref (white);
-
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -980,65 +795,115 @@ composite_glyphs (void				*_dst,
 		  int				 dst_y,
 		  cairo_composite_glyphs_info_t *info)
 {
-    cairo_scaled_glyph_t *glyph_cache[64];
-    pixman_image_t *dst, *src;
     cairo_status_t status;
+    pixman_glyph_cache_t *glyph_cache;
+    pixman_glyph_t pglyphs_stack[CAIRO_STACK_ARRAY_LENGTH (pixman_glyph_t)];
+    pixman_glyph_t *pglyphs = pglyphs_stack;
+    pixman_glyph_t *pg;
     int i;
 
     TRACE ((stderr, "%s\n", __FUNCTION__));
 
-    if (info->num_glyphs == 1)
-	return composite_one_glyph(_dst, op, _src, src_x, src_y, dst_x, dst_y, info);
+    CAIRO_MUTEX_LOCK (_cairo_glyph_cache_mutex);
 
-    if (info->use_mask)
-	return composite_glyphs_via_mask(_dst, op, _src, src_x, src_y, dst_x, dst_y, info);
+    glyph_cache = get_glyph_cache();
 
-    op = _pixman_operator (op);
-    dst = to_pixman_image (_dst);
-    src = ((cairo_image_source_t *)_src)->pixman_image;
-
-    memset (glyph_cache, 0, sizeof (glyph_cache));
-    status = CAIRO_STATUS_SUCCESS;
-
-    for (i = 0; i < info->num_glyphs; i++) {
-	int x, y;
-	cairo_image_surface_t *glyph_surface;
-	cairo_scaled_glyph_t *scaled_glyph;
-	unsigned long glyph_index = info->glyphs[i].index;
-	int cache_index = glyph_index % ARRAY_LENGTH (glyph_cache);
-
-	scaled_glyph = glyph_cache[cache_index];
-	if (scaled_glyph == NULL ||
-	    _cairo_scaled_glyph_index (scaled_glyph) != glyph_index)
-	{
-	    status = _cairo_scaled_glyph_lookup (info->font, glyph_index,
-						 CAIRO_SCALED_GLYPH_INFO_SURFACE,
-						 &scaled_glyph);
-
-	    if (unlikely (status))
-		break;
-
-	    glyph_cache[cache_index] = scaled_glyph;
-	}
-
-	glyph_surface = scaled_glyph->surface;
-	if (glyph_surface->width && glyph_surface->height) {
-	    /* round glyph locations to the nearest pixel */
-	    /* XXX: FRAGILE: We're ignoring device_transform scaling here. A bug? */
-	    x = _cairo_lround (info->glyphs[i].x -
-			       glyph_surface->base.device_transform.x0);
-	    y = _cairo_lround (info->glyphs[i].y -
-			       glyph_surface->base.device_transform.y0);
-
-	    pixman_image_composite32 (op, src, glyph_surface->pixman_image, dst,
-                                      x + src_x,  y + src_y,
-                                      0, 0,
-                                      x - dst_x, y - dst_y,
-				      glyph_surface->width,
-				      glyph_surface->height);
-	}
+    if (unlikely (!glyph_cache)) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto out_no_glyph_cache;
     }
 
+    pixman_glyph_cache_freeze (glyph_cache);
+    
+    if (info->num_glyphs > ARRAY_LENGTH (pglyphs_stack)) {
+	pglyphs = _cairo_malloc_ab (info->num_glyphs, sizeof (pixman_glyph_t));
+
+	if (unlikely (!pglyphs)) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto out;
+	}
+    }
+	
+    if (unlikely (!glyph_cache)) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto out;
+    }
+    
+    pg = pglyphs;
+    for (i = 0; i < info->num_glyphs; i++) {
+	unsigned long index = info->glyphs[i].index;
+	const void *glyph;
+
+	glyph = pixman_glyph_cache_lookup (glyph_cache, info->font, (void *)index);
+	if (!glyph) {
+	    cairo_scaled_glyph_t *scaled_glyph;
+	    cairo_image_surface_t *glyph_surface;
+
+	    /* This call can actually end up recursing, so we have to
+	     * drop the mutex around it.
+	     */
+	    CAIRO_MUTEX_UNLOCK (_cairo_glyph_cache_mutex);
+	    status = _cairo_scaled_glyph_lookup (info->font, index,
+						 CAIRO_SCALED_GLYPH_INFO_SURFACE,
+						 &scaled_glyph);
+	    CAIRO_MUTEX_LOCK (_cairo_glyph_cache_mutex);
+
+	    if (unlikely (status))
+		goto out;
+
+	    glyph_surface = scaled_glyph->surface;
+
+	    if (!glyph) {
+		glyph = pixman_glyph_cache_insert (glyph_cache, info->font, (void *)index,
+						   glyph_surface->base.device_transform.x0,
+						   glyph_surface->base.device_transform.y0,
+						   glyph_surface->pixman_image);
+		if (unlikely (!glyph)) {
+		    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+		    
+		    goto out;
+		}
+	    }
+	}
+		
+	pg->x = _cairo_lround (info->glyphs[i].x);
+	pg->y = _cairo_lround (info->glyphs[i].y);
+	pg->glyph = glyph;
+	pg++;
+    }
+
+    if (info->use_mask)
+    {
+	pixman_format_code_t mask_format;
+
+	mask_format = pixman_glyph_get_mask_format (glyph_cache, pg - pglyphs, pglyphs);
+	
+	pixman_composite_glyphs (_pixman_operator (op),
+				 ((cairo_image_source_t *)_src)->pixman_image,
+				 to_pixman_image (_dst),
+				 mask_format,
+				 info->extents.x + src_x, info->extents.y + src_y,
+				 info->extents.x, info->extents.y,
+				 info->extents.x - dst_x, info->extents.y - dst_y,
+				 info->extents.width, info->extents.height,
+				 glyph_cache, pg - pglyphs, pglyphs);
+    }
+    else
+    {
+	pixman_composite_glyphs_no_mask (_pixman_operator (op),
+					 ((cairo_image_source_t *)_src)->pixman_image,
+					 to_pixman_image (_dst),
+					 src_x, src_y,
+					 - dst_x, - dst_y,
+					 glyph_cache, pg - pglyphs, pglyphs);
+    }
+
+out:
+    pixman_glyph_cache_thaw (glyph_cache);
+
+out_no_glyph_cache:
+    CAIRO_MUTEX_UNLOCK (_cairo_glyph_cache_mutex);
+    
     return status;
 }
 
