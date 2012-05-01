@@ -232,50 +232,6 @@ join_is_clockwise (const cairo_stroke_face_t *in,
     return _cairo_slope_compare (&in->dev_vector, &out->dev_vector) < 0;
 }
 
-static cairo_int64_t
-distance_from_face (const cairo_stroke_face_t *face,
-		    const cairo_point_t *p,
-		    cairo_bool_t negate)
-{
-    int32_t dx = (p->x - face->point.x);
-    int32_t dy = (p->y - face->point.y);
-    cairo_int64_t d;
-
-    d = _cairo_int64_sub (_cairo_int32x32_64_mul (dx, face->dev_vector.dy),
-			  _cairo_int32x32_64_mul (dy, face->dev_vector.dx));
-    if (negate)
-	d = _cairo_int64_negate (d);
-    return d;
-}
-
-static cairo_int64_t
-distance_along_face (const cairo_stroke_face_t *face,
-		    const cairo_point_t *p)
-{
-    int32_t dx = (p->x - face->point.x);
-    int32_t dy = (p->y - face->point.y);
-    return _cairo_int64_add (_cairo_int32x32_64_mul (dx, face->dev_vector.dx),
-			     _cairo_int32x32_64_mul (dy, face->dev_vector.dy));
-}
-
-static void
-compute_inner_joint (cairo_point_t *p1, cairo_int64_t d_p1,
-		     const cairo_point_t *p2, cairo_int64_t d_p2,
-		     cairo_int64_t half_line_width)
-{
-    int32_t dx = p2->x - p1->x;
-    int32_t dy = p2->y - p1->y;
-
-    half_line_width = _cairo_int64_sub (half_line_width, d_p1);
-    d_p2 = _cairo_int64_sub (d_p2, d_p1);
-
-    p1->x += _cairo_int_96by64_32x64_divrem (_cairo_int64x32_128_mul (half_line_width, dx),
-					      d_p2).quo;
-
-    p1->y += _cairo_int_96by64_32x64_divrem (_cairo_int64x32_128_mul (half_line_width, dy),
-					      d_p2).quo;
-}
-
 static void
 inner_join (struct stroker *stroker,
 	    const cairo_stroke_face_t *in,
