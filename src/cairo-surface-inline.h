@@ -49,4 +49,12 @@ _cairo_surface_flush (cairo_surface_t *surface)
     return status;
 }
 
+static inline cairo_surface_t *
+_cairo_surface_reference (cairo_surface_t *surface)
+{
+    if (!CAIRO_REFERENCE_COUNT_IS_INVALID (&surface->ref_count))
+	_cairo_reference_count_inc (&surface->ref_count);
+    return surface;
+}
+
 #endif /* CAIRO_SURFACE_INLINE_H */

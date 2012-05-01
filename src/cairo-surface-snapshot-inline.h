@@ -37,6 +37,7 @@
 #define CAIRO_SURFACE_SNAPSHOT_INLINE_H
 
 #include "cairo-surface-snapshot-private.h"
+#include "cairo-surface-inline.h"
 
 static inline cairo_bool_t
 _cairo_surface_snapshot_is_reused (cairo_surface_t *surface)
@@ -51,7 +52,7 @@ _cairo_surface_snapshot_get_target (cairo_surface_t *surface)
     cairo_surface_t *target;
 
     CAIRO_MUTEX_LOCK (snapshot->mutex);
-    target = cairo_surface_reference (snapshot->target);
+    target = _cairo_surface_reference (snapshot->target);
     CAIRO_MUTEX_UNLOCK (snapshot->mutex);
 
     return target;
