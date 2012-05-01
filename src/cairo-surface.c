@@ -155,6 +155,7 @@ static DEFINE_NIL_SURFACE(CAIRO_STATUS_DEVICE_ERROR, _cairo_surface_nil_device_e
 static DEFINE_NIL_SURFACE(CAIRO_INT_STATUS_UNSUPPORTED, _cairo_surface_nil_unsupported);
 static DEFINE_NIL_SURFACE(CAIRO_INT_STATUS_NOTHING_TO_DO, _cairo_surface_nil_nothing_to_do);
 
+static void _cairo_surface_finish_snapshots (cairo_surface_t *surface);
 static void _cairo_surface_finish (cairo_surface_t *surface);
 
 /**
@@ -855,11 +856,18 @@ cairo_surface_destroy (cairo_surface_t *surface)
 
     assert (surface->snapshot_of == NULL);
 
-    if (! surface->finished)
-	_cairo_surface_finish (surface);
+    if (! surface->finished) {
+	_cairo_surface_finish_snapshots (surface);
+	/* We may have been referenced by a snapshot prior to have
+	 * detaching it with the copy-on-write.
+	 */
+	if (CAIRO_REFERENCE_COUNT_GET_VALUE (&surface->ref_count))
+	    return;
 
-    /* paranoid check that nobody took a reference whilst finishing */
-    assert (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&surface->ref_count));
+	_cairo_surface_finish (surface);
+	/* paranoid check that nobody took a reference whilst finishing */
+	assert (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&surface->ref_count));
+    }
 
     if (surface->damage)
 	_cairo_damage_destroy (surface->damage);
@@ -899,10 +907,8 @@ cairo_surface_get_reference_count (cairo_surface_t *surface)
 }
 
 static void
-_cairo_surface_finish (cairo_surface_t *surface)
+_cairo_surface_finish_snapshots (cairo_surface_t *surface)
 {
-    cairo_status_t status;
-
     cairo_surface_flush (surface);
 
     /* update the snapshots *before* we declare the surface as finished */
@@ -911,6 +917,12 @@ _cairo_surface_finish (cairo_surface_t *surface)
     _cairo_surface_detach_snapshots (surface);
     if (surface->snapshot_of != NULL)
 	_cairo_surface_detach_snapshot (surface);
+}
+
+static void
+_cairo_surface_finish (cairo_surface_t *surface)
+{
+    cairo_status_t status;
 
     surface->finished = TRUE;
 
@@ -958,11 +970,13 @@ cairo_surface_finish (cairo_surface_t *surface)
     if (surface->finished)
 	return;
 
-    /* We have to becareful when decoupling potential reference cycles */
+    /* We have to be careful when decoupling potential reference cycles */
     cairo_surface_reference (surface);
+
+    _cairo_surface_finish_snapshots (surface);
+    /* XXX need to block and wait for snapshot references */
     _cairo_surface_finish (surface);
 
-    /* XXX need to block and wait for snapshot references */
     cairo_surface_destroy (surface);
 }
 slim_hidden_def (cairo_surface_finish);
