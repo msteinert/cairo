@@ -168,10 +168,16 @@ _cairo_gl_texture_set_extend (cairo_gl_context_t *ctx,
 	wrap_mode = GL_CLAMP_TO_EDGE;
 	break;
     case CAIRO_EXTEND_REPEAT:
-	wrap_mode = GL_REPEAT;
+	if (ctx->has_npot_repeat)
+	    wrap_mode = GL_REPEAT;
+	else
+	    wrap_mode = GL_CLAMP_TO_EDGE;
 	break;
     case CAIRO_EXTEND_REFLECT:
-	wrap_mode = GL_MIRRORED_REPEAT;
+	if (ctx->has_npot_repeat)
+	    wrap_mode = GL_MIRRORED_REPEAT;
+	else
+	    wrap_mode = GL_CLAMP_TO_EDGE;
 	break;
     default:
 	wrap_mode = 0;

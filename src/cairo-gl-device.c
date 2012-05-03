@@ -187,18 +187,20 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 
     /* Check for required extensions */
     if (gl_flavor == CAIRO_GL_FLAVOR_DESKTOP) {
-	if (_cairo_gl_has_extension ("GL_ARB_texture_non_power_of_two"))
+	if (_cairo_gl_has_extension ("GL_ARB_texture_non_power_of_two")) {
 	    ctx->tex_target = GL_TEXTURE_2D;
-	else if (_cairo_gl_has_extension ("GL_ARB_texture_rectangle"))
+	    ctx->has_npot_repeat = TRUE;
+	} else if (_cairo_gl_has_extension ("GL_ARB_texture_rectangle")) {
 	    ctx->tex_target = GL_TEXTURE_RECTANGLE;
-	else
+	    ctx->has_npot_repeat = FALSE;
+	} else
 	    return _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
-    }
-    else {
+    } else {
+	ctx->tex_target = GL_TEXTURE_2D;
 	if (_cairo_gl_has_extension ("GL_OES_texture_npot"))
-	    ctx->tex_target = GL_TEXTURE_2D;
+	    ctx->has_npot_repeat = TRUE;
 	else
-	    return _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
+	    ctx->has_npot_repeat = FALSE;
     }
 
     if (gl_flavor == CAIRO_GL_FLAVOR_DESKTOP &&

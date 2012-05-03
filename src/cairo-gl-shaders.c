@@ -319,8 +319,10 @@ typedef struct _cairo_shader_cache_entry {
     cairo_gl_shader_in_t in;
     GLint src_gl_filter;
     cairo_bool_t src_border_fade;
+    cairo_extend_t src_extend;
     GLint mask_gl_filter;
     cairo_bool_t mask_border_fade;
+    cairo_extend_t mask_extend;
 
     cairo_gl_context_t *ctx; /* XXX: needed to destroy the program */
     cairo_gl_shader_t shader;
@@ -331,12 +333,16 @@ _cairo_gl_shader_cache_equal_desktop (const void *key_a, const void *key_b)
 {
     const cairo_shader_cache_entry_t *a = key_a;
     const cairo_shader_cache_entry_t *b = key_b;
+    cairo_bool_t both_have_npot_repeat =
+	a->ctx->has_npot_repeat && b->ctx->has_npot_repeat;
 
     return a->src  == b->src  &&
            a->mask == b->mask &&
            a->dest == b->dest &&
 	   a->use_coverage == b->use_coverage &&
-           a->in   == b->in;
+           a->in   == b->in &&
+	   (both_have_npot_repeat || a->src_extend == b->src_extend) &&
+	   (both_have_npot_repeat || a->mask_extend == b->mask_extend);
 }
 
 /*
@@ -349,6 +355,8 @@ _cairo_gl_shader_cache_equal_gles2 (const void *key_a, const void *key_b)
 {
     const cairo_shader_cache_entry_t *a = key_a;
     const cairo_shader_cache_entry_t *b = key_b;
+    cairo_bool_t both_have_npot_repeat =
+	a->ctx->has_npot_repeat && b->ctx->has_npot_repeat;
 
     return a->src  == b->src  &&
 	   a->mask == b->mask &&
@@ -357,8 +365,10 @@ _cairo_gl_shader_cache_equal_gles2 (const void *key_a, const void *key_b)
 	   a->in   == b->in   &&
 	   a->src_gl_filter == b->src_gl_filter &&
 	   a->src_border_fade == b->src_border_fade &&
+	   (both_have_npot_repeat || a->src_extend == b->src_extend) &&
 	   a->mask_gl_filter == b->mask_gl_filter &&
-	   a->mask_border_fade == b->mask_border_fade;
+	   a->mask_border_fade == b->mask_border_fade &&
+	   (both_have_npot_repeat || a->mask_extend == b->mask_extend);
 }
 
 static unsigned long
@@ -642,9 +652,9 @@ cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
 	else
 	{
 	    _cairo_output_stream_printf (stream,
-	        "    return texture2D%s (%s_sampler, %s_texcoords);\n"
+		"    return texture2D%s (%s_sampler, %s_wrap (%s_texcoords));\n"
 		"}\n",
-		rectstr, namestr, namestr);
+		rectstr, namestr, namestr, namestr);
 	}
         break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
@@ -669,9 +679,9 @@ cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
 	else
 	{
 	    _cairo_output_stream_printf (stream,
-		"    return texture2D%s (%s_sampler, vec2 (%s_texcoords.x, 0.5));\n"
+		"    return texture2D%s (%s_sampler, %s_wrap (vec2 (%s_texcoords.x, 0.5)));\n"
 		"}\n",
-		rectstr, namestr, namestr);
+		rectstr, namestr, namestr, namestr);
 	}
 	break;
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
@@ -706,9 +716,10 @@ cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
 	else
 	{
 	    _cairo_output_stream_printf (stream,
-		"    return mix (vec4 (0.0), texture2D%s (%s_sampler, vec2(t, 0.5)), is_valid);\n"
+		"    vec4 texel = texture2D%s (%s_sampler, %s_wrap (vec2 (t, 0.5)));\n"
+		"    return mix (vec4 (0.0), texel, is_valid);\n"
 		"}\n",
-		rectstr, namestr);
+		rectstr, namestr, namestr);
 	}
 	break;
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
@@ -750,9 +761,10 @@ cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
 	else
 	{
 	    _cairo_output_stream_printf (stream,
-		"    return mix (vec4 (0.0), texture2D%s (%s_sampler, vec2 (upper_t, 0.5)), has_color);\n"
+		"    vec4 texel = texture2D%s (%s_sampler, %s_wrap (vec2(upper_t, 0.5)));\n"
+		"    return mix (vec4 (0.0), texel, has_color);\n"
 		"}\n",
-		rectstr, namestr);
+		rectstr, namestr, namestr);
 	}
 	break;
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
@@ -778,11 +790,12 @@ cairo_gl_shader_emit_color (cairo_output_stream_t *stream,
 	    "    float has_color = step (0., det) * max (is_valid.x, is_valid.y);\n"
 	    "    \n"
 	    "    float upper_t = mix (t.y, t.x, is_valid.x);\n"
-	    "    return mix (vec4 (0.0), texture2D%s (%s_sampler, vec2 (upper_t, 0.5)), has_color);\n"
+	    "    vec4 texel = texture2D%s (%s_sampler, %s_wrap (vec2(upper_t, 0.5)));\n"
+	    "    return mix (vec4 (0.0), texel, has_color);\n"
 	    "}\n",
 	    namestr, rectstr, namestr, namestr, namestr, namestr,
 	    namestr, namestr, namestr, namestr, namestr,
-	    namestr, namestr, namestr, rectstr, namestr);
+	    namestr, namestr, namestr, rectstr, namestr, namestr);
 	break;
     }
 }
@@ -838,6 +851,47 @@ _cairo_gl_shader_emit_border_fade (cairo_output_stream_t *stream,
     _cairo_output_stream_printf (stream, "}\n");
 }
 
+/*
+ * Emits the wrap function used by an operand.
+ *
+ * In OpenGL ES 2.0, repeat wrap modes (GL_REPEAT and GL_MIRRORED REPEAT) are
+ * only available for NPOT textures if the GL_OES_texture_npot is supported.
+ * If GL_OES_texture_npot is not supported, we need to implement the wrapping
+ * functionality in the shader.
+ */
+static void
+_cairo_gl_shader_emit_wrap (cairo_gl_context_t *ctx,
+			    cairo_output_stream_t *stream,
+			    cairo_gl_operand_t *operand,
+			    cairo_gl_tex_t name)
+{
+    const char *namestr = operand_names[name];
+    cairo_extend_t extend = _cairo_gl_operand_get_extend (operand);
+
+    _cairo_output_stream_printf (stream,
+	"vec2 %s_wrap(vec2 coords)\n"
+	"{\n",
+	namestr);
+
+    if (! ctx->has_npot_repeat &&
+	(extend == CAIRO_EXTEND_REPEAT || extend == CAIRO_EXTEND_REFLECT))
+    {
+	if (extend == CAIRO_EXTEND_REPEAT) {
+	    _cairo_output_stream_printf (stream,
+		"    return fract(coords);\n");
+	} else { /* CAIRO_EXTEND_REFLECT */
+	    _cairo_output_stream_printf (stream,
+		"    return mix(fract(coords), 1.0 - fract(coords), floor(mod(coords, 2.0)));\n");
+	}
+    }
+    else
+    {
+	_cairo_output_stream_printf (stream, "    return coords;\n");
+    }
+
+    _cairo_output_stream_printf (stream, "}\n");
+}
+
 static cairo_status_t
 cairo_gl_shader_get_fragment_source (cairo_gl_context_t *ctx,
                                      cairo_gl_shader_in_t in,
@@ -857,6 +911,9 @@ cairo_gl_shader_get_fragment_source (cairo_gl_context_t *ctx,
 	"#ifdef GL_ES\n"
 	"precision mediump float;\n"
 	"#endif\n");
+
+    _cairo_gl_shader_emit_wrap (ctx, stream, src, CAIRO_GL_TEX_SOURCE);
+    _cairo_gl_shader_emit_wrap (ctx, stream, mask, CAIRO_GL_TEX_MASK);
 
     if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES) {
 	if (_cairo_gl_shader_needs_border_fade (src))
@@ -1065,6 +1122,7 @@ _cairo_gl_get_shader_by_type (cairo_gl_context_t *ctx,
     char *fs_source;
     cairo_status_t status;
 
+    lookup.ctx = ctx;
     lookup.src = source->type;
     lookup.mask = mask->type;
     lookup.dest = CAIRO_GL_OPERAND_NONE;
@@ -1072,8 +1130,10 @@ _cairo_gl_get_shader_by_type (cairo_gl_context_t *ctx,
     lookup.in = in;
     lookup.src_gl_filter = _cairo_gl_operand_get_gl_filter (source);
     lookup.src_border_fade = _cairo_gl_shader_needs_border_fade (source);
+    lookup.src_extend = _cairo_gl_operand_get_extend (source);
     lookup.mask_gl_filter = _cairo_gl_operand_get_gl_filter (mask);
     lookup.mask_border_fade = _cairo_gl_shader_needs_border_fade (mask);
+    lookup.mask_extend = _cairo_gl_operand_get_extend (mask);
     lookup.base.hash = _cairo_gl_shader_cache_hash (&lookup);
     lookup.base.size = 1;
 
