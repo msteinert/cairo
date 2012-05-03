@@ -153,32 +153,33 @@ _cairo_gl_texture_set_extend (cairo_gl_context_t *ctx,
                               GLuint              target,
                               cairo_extend_t      extend)
 {
+    GLint wrap_mode;
     assert (! _cairo_gl_device_requires_power_of_two_textures (&ctx->base) ||
             (extend != CAIRO_EXTEND_REPEAT && extend != CAIRO_EXTEND_REFLECT));
 
     switch (extend) {
     case CAIRO_EXTEND_NONE:
-	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES) {
-	    glTexParameteri (target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	    glTexParameteri (target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	}
-	else {
-	    glTexParameteri (target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	    glTexParameteri (target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	}
+	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES)
+	    wrap_mode = GL_CLAMP_TO_EDGE;
+	else
+	    wrap_mode = GL_CLAMP_TO_BORDER;
 	break;
     case CAIRO_EXTEND_PAD:
-	glTexParameteri (target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri (target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	wrap_mode = GL_CLAMP_TO_EDGE;
 	break;
     case CAIRO_EXTEND_REPEAT:
-	glTexParameteri (target, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri (target, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	wrap_mode = GL_REPEAT;
 	break;
     case CAIRO_EXTEND_REFLECT:
-	glTexParameteri (target, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	glTexParameteri (target, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	wrap_mode = GL_MIRRORED_REPEAT;
 	break;
+    default:
+	wrap_mode = 0;
+    }
+
+    if (likely (wrap_mode)) {
+	glTexParameteri (target, GL_TEXTURE_WRAP_S, wrap_mode);
+	glTexParameteri (target, GL_TEXTURE_WRAP_T, wrap_mode);
     }
 }
 
