@@ -328,7 +328,7 @@ static cairo_int_status_t copy_boxes (void *_dst,
         goto FAIL;
 
     _cairo_gl_composite_set_source_operand (&setup, source_to_operand (src));
-    _cairo_gl_operand_translate (&setup.src, dx, dy);
+    _cairo_gl_operand_translate (&setup.src, -dx, -dy);
 
     status = _cairo_gl_composite_begin (&setup, &ctx);
     if (unlikely (status))
