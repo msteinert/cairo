@@ -69,6 +69,9 @@ in_doc {
 }
 
 /^ \* Since: ([0-9]*.[0-9]*|TBD)$/ {
+    if (doc_has_since != 0) {
+	log_error("Duplicate 'Since' field")
+    }
     doc_has_since = doc_line
 }
 
