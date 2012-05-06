@@ -1183,8 +1183,6 @@ _cairo_mime_data_destroy (void *ptr)
  * discarded if you draw on the surface afterwards. Use this function
  * with care.
  *
- * Since: 1.10
- *
  * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY if a
  * slot could not be allocated for the user data.
  *
