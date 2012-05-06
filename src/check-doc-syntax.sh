@@ -71,7 +71,7 @@ if echo $FILES | xargs grep "$note_regexp" /dev/null; then
 fi >&2
 
 # Only run the syntax checker on the source files (not doc/)
-if -e ./check-doc-syntax.awk; then
+if test -e ./check-doc-syntax.awk; then
     if echo $FILES | xargs ./check-doc-syntax.awk ; then
 	    :
     else
