@@ -92,6 +92,9 @@ _cairo_damage_add_boxes(cairo_damage_t *damage,
 
     if (damage == NULL)
 	damage = _cairo_damage_create ();
+    if (damage->status)
+	return damage;
+
 
     damage->dirty += count;
 
