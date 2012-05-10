@@ -185,7 +185,7 @@ _cairo_damage_reduce (cairo_damage_t *damage)
 
     TRACE ((stderr, "%s: dirty=%d\n", __FUNCTION__,
 	    damage ? damage->dirty : -1));
-    if (damage == NULL || !damage->dirty)
+    if (damage == NULL || damage->status || !damage->dirty)
 	return damage;
 
     if (damage->region) {
