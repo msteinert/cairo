@@ -736,7 +736,8 @@ composite_polygon (const cairo_spans_compositor_t	*compositor,
     cairo_bool_t needs_clip;
     cairo_int_status_t status;
 
-    needs_clip = extents->clip->num_boxes > 1 || ! _clip_is_region (extents->clip);
+    needs_clip = ! extents->is_bounded &&
+	(! _clip_is_region (extents->clip) || extents->clip->num_boxes > 1);
     TRACE ((stderr, "%s - needs_clip=%d\n", __FUNCTION__, needs_clip));
     if (needs_clip) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
