@@ -111,11 +111,31 @@ get_clip_surface (const cairo_spans_compositor_t *compositor,
     if (unlikely (status))
 	goto cleanup_polygon;
 
+    antialias = clip_path->antialias;
+    fill_rule = clip_path->fill_rule;
+
+    if (clip->boxes) {
+	cairo_polygon_t intersect;
+	cairo_boxes_t tmp;
+
+	_cairo_boxes_init_for_array (&tmp, clip->boxes, clip->num_boxes);
+	status= _cairo_polygon_init_boxes (&intersect, &tmp);
+	if (unlikely (status))
+	    goto cleanup_polygon;
+
+	status = _cairo_polygon_intersect (&polygon, fill_rule,
+					   &intersect, CAIRO_FILL_RULE_WINDING);
+	_cairo_polygon_fini (&intersect);
+
+	if (unlikely (status))
+	    goto cleanup_polygon;
+
+	fill_rule = CAIRO_FILL_RULE_WINDING;
+    }
+
     polygon.limits = NULL;
     polygon.num_limits = 0;
 
-    antialias = clip_path->antialias;
-    fill_rule = clip_path->fill_rule;
     clip_path = clip_path->prev;
     while (clip_path) {
 	if (clip_path->antialias == antialias) {
@@ -353,26 +373,41 @@ fixup_unbounded_boxes (const cairo_spans_compositor_t *compositor,
 	assert (status == CAIRO_INT_STATUS_SUCCESS);
     }
 
-    /* Now intersect with the clip boxes */
-    if (extents->clip->num_boxes) {
-	_cairo_boxes_init_for_array (&tmp,
-				     extents->clip->boxes,
-				     extents->clip->num_boxes);
-	status = _cairo_boxes_intersect (&clear, &tmp, &clear);
-	if (unlikely (status))
-	    goto error;
-    }
-
     /* If we have a clip polygon, we need to intersect with that as well */
     if (extents->clip->path) {
 	status = fixup_unbounded_polygon (compositor, extents, &clear);
 	if (status == CAIRO_INT_STATUS_UNSUPPORTED)
 	    status = fixup_unbounded_mask (compositor, extents, &clear);
     } else {
-	status = compositor->fill_boxes (extents->surface,
-					 CAIRO_OPERATOR_CLEAR,
-					 CAIRO_COLOR_TRANSPARENT,
-					 &clear);
+	/* Otherwise just intersect with the clip boxes */
+	if (extents->clip->num_boxes) {
+	    _cairo_boxes_init_for_array (&tmp,
+					 extents->clip->boxes,
+					 extents->clip->num_boxes);
+	    status = _cairo_boxes_intersect (&clear, &tmp, &clear);
+	    if (unlikely (status))
+		goto error;
+	}
+
+	if (clear.is_pixel_aligned) {
+	    status = compositor->fill_boxes (extents->surface,
+					     CAIRO_OPERATOR_CLEAR,
+					     CAIRO_COLOR_TRANSPARENT,
+					     &clear);
+	} else {
+	    cairo_composite_rectangles_t composite;
+
+	    status = _cairo_composite_rectangles_init_for_boxes (&composite,
+								 extents->surface,
+								 CAIRO_OPERATOR_CLEAR,
+								 &_cairo_pattern_clear.base,
+								 &clear,
+								 NULL);
+	    if (likely (status == CAIRO_INT_STATUS_SUCCESS)) {
+		status = composite_boxes (compositor, &composite, &clear);
+		_cairo_composite_rectangles_fini (&composite);
+	    }
+	}
     }
 
 error:
