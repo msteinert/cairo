@@ -519,6 +519,26 @@ upload_boxes (const cairo_spans_compositor_t *compositor,
     return status;
 }
 
+static cairo_bool_t
+_clip_is_region (const cairo_clip_t *clip)
+{
+    int i;
+
+    if (clip->is_region)
+	return TRUE;
+
+    if (clip->path)
+	return FALSE;
+
+    for (i = 0; i < clip->num_boxes; i++) {
+	const cairo_box_t *b = &clip->boxes[i];
+	if (!_cairo_fixed_is_integer (b->p1.x | b->p1.y |  b->p2.x | b->p2.y))
+	    return FALSE;
+    }
+
+    return TRUE;
+}
+
 static cairo_int_status_t
 composite_aligned_boxes (const cairo_spans_compositor_t		*compositor,
 			 const cairo_composite_rectangles_t	*extents,
@@ -528,7 +548,7 @@ composite_aligned_boxes (const cairo_spans_compositor_t		*compositor,
     cairo_operator_t op = extents->op;
     const cairo_pattern_t *source = &extents->source_pattern.base;
     cairo_int_status_t status;
-    cairo_bool_t need_clip_mask = extents->clip->path != NULL;
+    cairo_bool_t need_clip_mask = ! _clip_is_region (extents->clip);
     cairo_bool_t op_is_source;
     cairo_bool_t no_mask;
     cairo_bool_t inplace;
@@ -716,7 +736,7 @@ composite_polygon (const cairo_spans_compositor_t	*compositor,
     cairo_bool_t needs_clip;
     cairo_int_status_t status;
 
-    needs_clip = extents->clip->path != NULL || extents->clip->num_boxes > 1;
+    needs_clip = extents->clip->num_boxes > 1 || ! _clip_is_region (extents->clip);
     TRACE ((stderr, "%s - needs_clip=%d\n", __FUNCTION__, needs_clip));
     if (needs_clip) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;

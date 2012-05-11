@@ -1178,7 +1178,7 @@ composite_aligned_boxes (const cairo_traps_compositor_t *compositor,
 {
     cairo_surface_t *dst = extents->surface;
     cairo_operator_t op = extents->op;
-    cairo_bool_t need_clip_mask = extents->clip->path != NULL;
+    cairo_bool_t need_clip_mask = ! _cairo_clip_is_region (extents->clip);
     cairo_bool_t op_is_source;
     cairo_status_t status;
 
