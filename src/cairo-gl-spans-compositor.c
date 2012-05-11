@@ -359,15 +359,25 @@ composite_boxes (void			*_dst,
     cairo_gl_composite_t setup;
     cairo_gl_context_t *ctx;
     cairo_int_status_t status;
+    cairo_gl_operand_t tmp_operand;
+    cairo_gl_operand_t *src_operand;
 
     TRACE ((stderr, "%s mask=(%d,%d), dst=(%d, %d)\n", __FUNCTION__,
 	    mask_x, mask_y, dst_x, dst_y));
+
+    if (abstract_mask && op == CAIRO_OPERATOR_CLEAR) {
+	_cairo_gl_solid_operand_init (&tmp_operand, CAIRO_COLOR_WHITE);
+	src_operand = &tmp_operand;
+	op = CAIRO_OPERATOR_DEST_OUT;
+    } else
+	src_operand = source_to_operand (abstract_src);
+
     status = _cairo_gl_composite_init (&setup, op, _dst, FALSE);
     if (unlikely (status))
         goto FAIL;
 
     _cairo_gl_composite_set_source_operand (&setup,
-					    source_to_operand (abstract_src));
+					    src_operand);
     _cairo_gl_operand_translate (&setup.src, -src_x, -src_y);
 
     _cairo_gl_composite_set_mask_operand (&setup,
@@ -383,6 +393,8 @@ composite_boxes (void			*_dst,
 
 FAIL:
     _cairo_gl_composite_fini (&setup);
+    if (src_operand == &tmp_operand)
+	_cairo_gl_operand_destroy (&tmp_operand);
     return status;
 }
 
