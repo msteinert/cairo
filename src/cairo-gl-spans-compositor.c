@@ -365,10 +365,16 @@ composite_boxes (void			*_dst,
     TRACE ((stderr, "%s mask=(%d,%d), dst=(%d, %d)\n", __FUNCTION__,
 	    mask_x, mask_y, dst_x, dst_y));
 
-    if (abstract_mask && op == CAIRO_OPERATOR_CLEAR) {
-	_cairo_gl_solid_operand_init (&tmp_operand, CAIRO_COLOR_WHITE);
-	src_operand = &tmp_operand;
-	op = CAIRO_OPERATOR_DEST_OUT;
+    if (abstract_mask) {
+	if (op == CAIRO_OPERATOR_CLEAR) {
+	    _cairo_gl_solid_operand_init (&tmp_operand, CAIRO_COLOR_WHITE);
+	    src_operand = &tmp_operand;
+	    op = CAIRO_OPERATOR_DEST_OUT;
+	} else if (op == CAIRO_OPERATOR_SOURCE) {
+	    /* requires a LERP in the shader between dest and source */
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	} else
+	    src_operand = source_to_operand (abstract_src);
     } else
 	src_operand = source_to_operand (abstract_src);
 
