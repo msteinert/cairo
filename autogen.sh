@@ -15,8 +15,9 @@ fi
 
 GTKDOCIZE=`which gtkdocize`
 if test -z $GTKDOCIZE; then
-        echo "*** No GTK-Doc found, please install it ***"
-        exit 1
+        echo "*** No GTK-Doc found, documentation won't be generated ***"
+else
+        gtkdocize || exit $?
 fi
 
 # create dummy */Makefile.am.features and ChangeLog to make automake happy
@@ -24,7 +25,6 @@ fi
 > src/Makefile.am.features
 touch ChangeLog
 
-gtkdocize || exit $?
 autoreconf --force --install --verbose || exit $?
 
 cd $ORIGDIR
