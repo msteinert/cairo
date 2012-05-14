@@ -1052,7 +1052,6 @@ line_to (void *closure,
     cairo_stroke_face_t start;
     cairo_point_t *p1 = &stroker->current_face.point;
     cairo_slope_t dev_slope;
-    int move_last = 0;
 
     stroker->has_initial_sub_path = TRUE;
 
@@ -1069,9 +1068,7 @@ line_to (void *closure,
     if (stroker->has_current_face) {
 	int clockwise = _cairo_slope_compare (&stroker->current_face.dev_vector,
 					      &start.dev_vector);
-	if (clockwise == 0) {
-	    move_last = 1;
-	} else {
+	if (clockwise) {
 	    clockwise = clockwise < 0;
 	    /* Join with final face from previous segment */
 	    if (! within_tolerance (&stroker->current_face.ccw, &start.ccw,
@@ -1102,13 +1099,8 @@ line_to (void *closure,
     stroker->current_face.cw.x += dev_slope.dx;
     stroker->current_face.cw.y += dev_slope.dy;
 
-    if (move_last) {
-	*_cairo_contour_last_point (&stroker->cw.contour) = stroker->current_face.cw;
-	*_cairo_contour_last_point (&stroker->ccw.contour) = stroker->current_face.ccw;
-    } else {
-	contour_add_point (stroker, &stroker->cw, &stroker->current_face.cw);
-	contour_add_point (stroker, &stroker->ccw, &stroker->current_face.ccw);
-    }
+    contour_add_point (stroker, &stroker->cw, &stroker->current_face.cw);
+    contour_add_point (stroker, &stroker->ccw, &stroker->current_face.ccw);
 
     return CAIRO_STATUS_SUCCESS;
 }
