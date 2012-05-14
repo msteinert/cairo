@@ -25,7 +25,7 @@ fi
 > src/Makefile.am.features
 touch ChangeLog
 
-autoreconf --force --install --verbose || exit $?
+autoreconf --install --verbose || exit $?
 
 cd $ORIGDIR
 test -n "$NOCONFIGURE" || "$srcdir/configure" "$@"
