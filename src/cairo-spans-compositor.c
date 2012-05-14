@@ -991,6 +991,8 @@ _cairo_spans_compositor_stroke (const cairo_compositor_t	*_compositor,
     const cairo_spans_compositor_t *compositor = (cairo_spans_compositor_t*)_compositor;
     cairo_int_status_t status;
 
+    TRACE_ (_cairo_debug_print_path (stderr, path));
+
     status = CAIRO_INT_STATUS_UNSUPPORTED;
     if (_cairo_path_fixed_stroke_is_rectilinear (path)) {
 	cairo_boxes_t boxes;
@@ -1031,6 +1033,7 @@ _cairo_spans_compositor_stroke (const cairo_compositor_t	*_compositor,
 						      ctm, ctm_inverse,
 						      tolerance,
 						      &polygon);
+	TRACE_ (_cairo_debug_print_polygon (stderr, &polygon));
 	if (status == CAIRO_INT_STATUS_SUCCESS && extents->clip->num_boxes > 1) {
 	    status = _cairo_polygon_intersect_with_boxes (&polygon, &fill_rule,
 							  extents->clip->boxes,
