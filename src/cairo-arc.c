@@ -217,27 +217,32 @@ _cairo_arc_in_direction (cairo_t	  *cr,
     } else if (angle_max != angle_min) {
 	cairo_matrix_t ctm;
 	int i, segments;
-	double angle, angle_step;
+	double step;
 
 	cairo_get_matrix (cr, &ctm);
 	segments = _arc_segments_needed (angle_max - angle_min,
 					 radius, &ctm,
 					 cairo_get_tolerance (cr));
-	angle_step = (angle_max - angle_min) / (double) segments;
+	step = (angle_max - angle_min) / segments;
+	segments -= 1;
 
-	if (dir == CAIRO_DIRECTION_FORWARD) {
-	    angle = angle_min;
-	} else {
-	    angle = angle_max;
-	    angle_step = - angle_step;
+	if (dir == CAIRO_DIRECTION_REVERSE) {
+	    double t;
+
+	    t = angle_min;
+	    angle_min = angle_max;
+	    angle_max = t;
+
+	    step = -step;
 	}
 
-	for (i = 0; i < segments; i++, angle += angle_step) {
-	    _cairo_arc_segment (cr, xc, yc,
-				radius,
-				angle,
-				angle + angle_step);
+	for (i = 0; i < segments; i++, angle_min += step) {
+	    _cairo_arc_segment (cr, xc, yc, radius,
+				angle_min, angle_min + step);
 	}
+
+	_cairo_arc_segment (cr, xc, yc, radius,
+			    angle_min, angle_max);
     } else {
 	cairo_line_to (cr,
 		       xc + radius * cos (angle_min),
