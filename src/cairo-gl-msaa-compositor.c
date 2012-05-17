@@ -48,8 +48,8 @@
 #include "cairo-traps-private.h"
 
 static cairo_bool_t
-should_fall_back (cairo_gl_surface_t *surface,
-		  cairo_antialias_t antialias);
+can_use_msaa_compositor (cairo_gl_surface_t *surface,
+			 cairo_antialias_t antialias);
 
 static void
 query_surface_capabilities (cairo_gl_surface_t *surface);
@@ -252,12 +252,12 @@ finish:
 }
 
 static cairo_bool_t
-should_fall_back (cairo_gl_surface_t *surface,
-		  cairo_antialias_t antialias)
+can_use_msaa_compositor (cairo_gl_surface_t *surface,
+			 cairo_antialias_t antialias)
 {
     query_surface_capabilities (surface);
     if (! surface->supports_stencil)
-	return TRUE;
+	return FALSE;
 
     /* Multisampling OpenGL ES surfaces only maintain one multisampling
        framebuffer and thus must use the spans compositor to do non-antialiased
@@ -265,13 +265,16 @@ should_fall_back (cairo_gl_surface_t *surface,
     if (((cairo_gl_context_t *) surface->base.device)->gl_flavor == CAIRO_GL_FLAVOR_ES
 	 && surface->supports_msaa
 	 && antialias == CAIRO_ANTIALIAS_NONE)
+	return FALSE;
+
+    /* The MSAA compositor has a single-sample mode, so we can
+       support non-antialiased rendering. */
+    if (antialias == CAIRO_ANTIALIAS_NONE)
 	return TRUE;
 
-    if (antialias == CAIRO_ANTIALIAS_FAST)
-	return TRUE;
-    if (antialias == CAIRO_ANTIALIAS_NONE)
-	return FALSE;
-    return ! surface->supports_msaa;
+    if (antialias == CAIRO_ANTIALIAS_FAST || antialias == CAIRO_ANTIALIAS_DEFAULT)
+	return surface->supports_msaa;
+    return FALSE;
 }
 
 static void
@@ -293,7 +296,7 @@ _cairo_gl_msaa_compositor_mask (const cairo_compositor_t	*compositor,
     cairo_int_status_t status;
     cairo_operator_t op = composite->op;
 
-    if (should_fall_back (dst, CAIRO_ANTIALIAS_GOOD))
+    if (! can_use_msaa_compositor (dst, CAIRO_ANTIALIAS_DEFAULT))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* GL compositing operators cannot properly represent a mask operation
@@ -497,7 +500,7 @@ _cairo_gl_msaa_compositor_stroke (const cairo_compositor_t	*compositor,
     cairo_gl_surface_t *dst = (cairo_gl_surface_t *) composite->surface;
     struct _tristrip_composite_info info;
 
-    if (should_fall_back (dst, antialias))
+    if (! can_use_msaa_compositor (dst, antialias))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (composite->is_bounded == FALSE) {
@@ -581,7 +584,7 @@ _cairo_gl_msaa_compositor_fill (const cairo_compositor_t	*compositor,
     cairo_int_status_t status;
     cairo_traps_t traps;
 
-    if (should_fall_back (dst, antialias))
+    if (! can_use_msaa_compositor (dst, antialias))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (composite->is_bounded == FALSE) {
