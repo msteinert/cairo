@@ -92,7 +92,7 @@
 #define CAIRO_GL_MAX_SHADERS_PER_CONTEXT 64
 
 /* VBO size that we allocate, smaller size means we gotta flush more often */
-#define CAIRO_GL_VBO_SIZE 16384
+#define CAIRO_GL_VBO_SIZE (256*1024)
 
 typedef struct _cairo_gl_surface cairo_gl_surface_t;
 
@@ -302,7 +302,6 @@ struct _cairo_gl_context {
     const cairo_compositor_t *compositor;
 
     GLuint texture_load_pbo;
-    GLuint vbo;
     GLint max_framebuffer_size;
     GLint max_texture_size;
     GLint max_textures;
@@ -310,6 +309,7 @@ struct _cairo_gl_context {
 
     GLint num_samples;
     cairo_bool_t supports_msaa;
+    char *vb;
 
     const cairo_gl_shader_impl_t *shader_impl;
 
@@ -330,8 +330,6 @@ struct _cairo_gl_context {
     cairo_gl_operand_t operands[2];
     cairo_bool_t spans;
 
-    char *vb;
-    char *vb_mem;
     unsigned int vb_offset;
     unsigned int vertex_size;
     cairo_region_t *clip_region;
@@ -601,7 +599,7 @@ _cairo_gl_context_fini_shaders (cairo_gl_context_t *ctx);
 static cairo_always_inline cairo_bool_t
 _cairo_gl_context_is_flushed (cairo_gl_context_t *ctx)
 {
-    return ctx->vb == NULL;
+    return ctx->vb_offset == 0;
 }
 
 cairo_private cairo_status_t

@@ -139,7 +139,7 @@ _gl_destroy (void *device)
     cairo_region_destroy (ctx->clip_region);
     _cairo_clip_destroy (ctx->clip);
 
-    free (ctx->vb_mem);
+    free (ctx->vb);
 
     ctx->destroy (ctx);
 
@@ -267,19 +267,16 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     if (unlikely (status))
         return status;
 
-    if (! ctx->has_map_buffer) {
-	ctx->vb_mem = _cairo_malloc_ab (CAIRO_GL_VBO_SIZE, 1);
-	if (unlikely (ctx->vb_mem == NULL)) {
+    ctx->vb = malloc (CAIRO_GL_VBO_SIZE);
+    if (unlikely (ctx->vb == NULL)) {
 	    _cairo_cache_fini (&ctx->gradients);
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	}
     }
 
     _cairo_array_init (&ctx->tristrip_indices, sizeof (unsigned short));
 
     /* PBO for any sort of texture upload */
     dispatch->GenBuffers (1, &ctx->texture_load_pbo);
-    dispatch->GenBuffers (1, &ctx->vbo);
 
     ctx->max_framebuffer_size = 0;
     glGetIntegerv (GL_MAX_RENDERBUFFER_SIZE, &ctx->max_framebuffer_size);

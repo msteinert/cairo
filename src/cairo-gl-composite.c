@@ -244,7 +244,7 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
 
 	dispatch->VertexAttribPointer (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit, 2,
 					GL_FLOAT, GL_FALSE, vertex_size,
-					(void *) (uintptr_t) vertex_offset);
+					ctx->vb + vertex_offset);
 	dispatch->EnableVertexAttribArray (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit);
         break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
@@ -258,7 +258,7 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
 
 	dispatch->VertexAttribPointer (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit, 2,
 				       GL_FLOAT, GL_FALSE, vertex_size,
-				       (void *) (uintptr_t) vertex_offset);
+				       ctx->vb + vertex_offset);
 	dispatch->EnableVertexAttribArray (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit);
 	break;
     }
@@ -273,7 +273,7 @@ _cairo_gl_context_setup_spans (cairo_gl_context_t *ctx,
 
     dispatch->VertexAttribPointer (CAIRO_GL_COLOR_ATTRIB_INDEX, 4,
 				   GL_UNSIGNED_BYTE, GL_TRUE, vertex_size,
-				   (void *) (uintptr_t) vertex_offset);
+				   ctx->vb + vertex_offset);
     dispatch->EnableVertexAttribArray (CAIRO_GL_COLOR_ATTRIB_INDEX);
     ctx->spans = TRUE;
 }
@@ -496,10 +496,9 @@ _cairo_gl_composite_setup_vbo (cairo_gl_context_t *ctx,
         _cairo_gl_composite_flush (ctx);
 
     if (_cairo_gl_context_is_flushed (ctx)) {
-        ctx->dispatch.BindBuffer (GL_ARRAY_BUFFER, ctx->vbo);
-
 	ctx->dispatch.VertexAttribPointer (CAIRO_GL_VERTEX_ATTRIB_INDEX, 2,
-					   GL_FLOAT, GL_FALSE, size_per_vertex, NULL);
+					   GL_FLOAT, GL_FALSE, size_per_vertex,
+					   ctx->vb);
 	ctx->dispatch.EnableVertexAttribArray (CAIRO_GL_VERTEX_ATTRIB_INDEX);
     }
     ctx->vertex_size = size_per_vertex;
@@ -746,13 +745,6 @@ _cairo_gl_composite_draw (cairo_gl_context_t *ctx,
 static void
 _cairo_gl_composite_unmap_vertex_buffer (cairo_gl_context_t *ctx)
 {
-    if (ctx->has_map_buffer)
-	ctx->dispatch.UnmapBuffer (GL_ARRAY_BUFFER);
-    else
-	ctx->dispatch.BufferData (GL_ARRAY_BUFFER, ctx->vb_offset,
-				  ctx->vb, GL_DYNAMIC_DRAW);
-
-    ctx->vb = NULL;
     ctx->vb_offset = 0;
 }
 
@@ -812,17 +804,6 @@ _cairo_gl_composite_prepare_buffer (cairo_gl_context_t *ctx,
 
     if (ctx->vb_offset + n_vertices * ctx->vertex_size > CAIRO_GL_VBO_SIZE)
 	_cairo_gl_composite_flush (ctx);
-
-    if (ctx->vb == NULL) {
-	if (ctx->has_map_buffer) {
-	    dispatch->BufferData (GL_ARRAY_BUFFER, CAIRO_GL_VBO_SIZE,
-				  NULL, GL_DYNAMIC_DRAW);
-	    ctx->vb = dispatch->MapBuffer (GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-	}
-	else {
-	    ctx->vb = ctx->vb_mem;
-	}
-    }
 }
 
 static inline void
