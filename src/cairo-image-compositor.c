@@ -1921,15 +1921,10 @@ mul8_8 (uint8_t a, uint8_t b)
 static inline uint32_t
 lerp8x4 (uint32_t src, uint8_t a, uint32_t dst)
 {
-    uint8_t ia = ~a;
-    uint32_t r1, r2;
-
-    r1 = add8x2_8x2 (mul8x2_8 (src, a),
-		     mul8x2_8 (dst, ia));
-    r2 = add8x2_8x2 (mul8x2_8 (src >> G_SHIFT, a),
-		     mul8x2_8 (dst >> G_SHIFT, ia));
-
-    return r1 | (r2 << G_SHIFT);
+    return (add8x2_8x2 (mul8x2_8 (src, a),
+			mul8x2_8 (dst, ~a)) |
+	    add8x2_8x2 (mul8x2_8 (src >> G_SHIFT, a),
+			mul8x2_8 (dst >> G_SHIFT, ~a)) << G_SHIFT);
 }
 
 static cairo_status_t
