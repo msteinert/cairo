@@ -487,6 +487,8 @@ active_edges_to_traps (sweep_line_t *sweep)
 	    }
 
 	    if (winding == 0) {
+		if (left->right != NULL)
+		    edge_end_box (sweep, left, top);
 		pos = right;
 		continue;
 	    }
@@ -557,7 +559,7 @@ sweep_line_delete_edge (sweep_line_t *sweep, edge_t *edge)
 }
 
 static inline cairo_bool_t
-sweep_line_delete (sweep_line_t	*sweep, rectangle_t	*rectangle)
+sweep_line_delete (sweep_line_t	*sweep, rectangle_t *rectangle)
 {
     cairo_bool_t update;
 
@@ -651,7 +653,6 @@ _cairo_bentley_ottmann_tessellate_rectangular (rectangle_t	**rectangles,
 		active_edges_to_traps (&sweep_line);
 		update = FALSE;
 	    }
-
 	    sweep_line.current_y = rectangle->bottom;
 	}
 
