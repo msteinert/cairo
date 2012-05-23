@@ -110,7 +110,7 @@ draw (cairo_t *cr, int width, int height)
     int              errors = 0;
 
     surface = cairo_surface_create_similar (cairo_get_group_target (cr),
-                                            CAIRO_CONTENT_COLOR, 100, 100);
+                                            CAIRO_CONTENT_COLOR, 1000, 1000);
     /* don't use cr accidentally */
     cr = NULL;
     cr2 = cairo_create (surface);
