@@ -273,6 +273,7 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
+    ctx->primitive_type = CAIRO_GL_PRIMITIVE_TYPE_TRIANGLES;
     _cairo_array_init (&ctx->tristrip_indices, sizeof (unsigned short));
 
     /* PBO for any sort of texture upload */

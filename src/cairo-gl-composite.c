@@ -707,7 +707,6 @@ _cairo_gl_composite_draw_tristrip (cairo_gl_context_t *ctx)
     cairo_array_t* indices = &ctx->tristrip_indices;
     const unsigned short *indices_array = _cairo_array_index_const (indices, 0);
 
-
     if (ctx->pre_shader) {
 	cairo_gl_shader_t *prev_shader = ctx->current_shader;
 
@@ -724,8 +723,8 @@ _cairo_gl_composite_draw_tristrip (cairo_gl_context_t *ctx)
 }
 
 static inline void
-_cairo_gl_composite_draw (cairo_gl_context_t *ctx,
-			  unsigned int count)
+_cairo_gl_composite_draw_triangles (cairo_gl_context_t *ctx,
+				    unsigned int count)
 {
     if (! ctx->pre_shader) {
         glDrawArrays (GL_TRIANGLES, 0, count);
@@ -739,6 +738,27 @@ _cairo_gl_composite_draw (cairo_gl_context_t *ctx,
         _cairo_gl_set_shader (ctx, prev_shader);
         _cairo_gl_set_operator (ctx, CAIRO_OPERATOR_ADD, TRUE);
         glDrawArrays (GL_TRIANGLES, 0, count);
+    }
+}
+
+static void
+_cairo_gl_composite_draw_triangles_with_clip_region (cairo_gl_context_t *ctx,
+						     unsigned int count)
+{
+    int i, num_rectangles;
+
+    if (!ctx->clip_region)
+	_cairo_gl_composite_draw_triangles (ctx, count)
+	return;
+    }
+
+    num_rectangles = cairo_region_num_rectangles (ctx->clip_region);
+    for (i = 0; i < num_rectangles; i++) {
+	cairo_rectangle_int_t rect;
+	cairo_region_get_rectangle (ctx->clip_region, i, &rect);
+
+	glScissor (rect.x, rect.y, rect.width, rect.height);
+	_cairo_gl_composite_draw_triangles (ctx, count);
     }
 }
 
@@ -760,46 +780,25 @@ _cairo_gl_composite_flush (cairo_gl_context_t *ctx)
     count = ctx->vb_offset / ctx->vertex_size;
     _cairo_gl_composite_unmap_vertex_buffer (ctx);
 
-    if ( _cairo_array_num_elements (&ctx->tristrip_indices) > 0) {
+    if (ctx->primitive_type == CAIRO_GL_PRIMITIVE_TYPE_TRISTRIPS) {
 	_cairo_gl_composite_draw_tristrip (ctx);
-    } else if (ctx->clip_region) {
-	int i, num_rectangles = cairo_region_num_rectangles (ctx->clip_region);
-
-	for (i = 0; i < num_rectangles; i++) {
-	    cairo_rectangle_int_t rect;
-
-	    cairo_region_get_rectangle (ctx->clip_region, i, &rect);
-
-	    glScissor (rect.x, rect.y, rect.width, rect.height);
-            _cairo_gl_composite_draw (ctx, count);
-	}
     } else {
-        _cairo_gl_composite_draw (ctx, count);
+	assert (ctx->primitive_type == CAIRO_GL_PRIMITIVE_TYPE_TRIANGLES);
+	_cairo_gl_composite_draw_triangles_with_clip_region (ctx, count);
     }
 
     for (i = 0; i < ARRAY_LENGTH (&ctx->glyph_cache); i++)
 	_cairo_gl_glyph_cache_unlock (&ctx->glyph_cache[i]);
 }
 
-typedef enum cairo_gl_geometry {
-    CAIRO_GL_GEOMETRY_TYPE_TRIANGLES,
-    CAIRO_GL_GEOMETRY_TYPE_TRISTRIPS
-} cairo_gl_geometry_t;
-
 static void
 _cairo_gl_composite_prepare_buffer (cairo_gl_context_t *ctx,
 				    unsigned int n_vertices,
-				    cairo_gl_geometry_t geometry_type)
+				    cairo_gl_primitive_type_t primitive_type)
 {
-    cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
-
-    size_t tristrip_indices =_cairo_array_num_elements (&ctx->tristrip_indices);
-    if (geometry_type == CAIRO_GL_GEOMETRY_TYPE_TRIANGLES &&
-	tristrip_indices != 0) {
+    if (ctx->primitive_type != primitive_type) {
 	_cairo_gl_composite_flush (ctx);
-    } else if (geometry_type == CAIRO_GL_GEOMETRY_TYPE_TRISTRIPS &&
-	     ! _cairo_gl_context_is_flushed (ctx) && tristrip_indices == 0) {
-	_cairo_gl_composite_flush (ctx);
+	ctx->primitive_type = primitive_type;
     }
 
     if (ctx->vb_offset + n_vertices * ctx->vertex_size > CAIRO_GL_VBO_SIZE)
@@ -856,7 +855,7 @@ _cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
                                uint8_t alpha)
 {
     _cairo_gl_composite_prepare_buffer (ctx, 6,
-					CAIRO_GL_GEOMETRY_TYPE_TRIANGLES);
+					CAIRO_GL_PRIMITIVE_TYPE_TRIANGLES);
 
     _cairo_gl_composite_emit_vertex (ctx, x1, y1, alpha);
     _cairo_gl_composite_emit_vertex (ctx, x2, y1, alpha);
@@ -899,7 +898,7 @@ _cairo_gl_composite_emit_glyph (cairo_gl_context_t *ctx,
                                 GLfloat glyph_y2)
 {
     _cairo_gl_composite_prepare_buffer (ctx, 6,
-					CAIRO_GL_GEOMETRY_TYPE_TRIANGLES);
+					CAIRO_GL_PRIMITIVE_TYPE_TRIANGLES);
 
     _cairo_gl_composite_emit_glyph_vertex (ctx, x1, y1, glyph_x1, glyph_y1);
     _cairo_gl_composite_emit_glyph_vertex (ctx, x2, y1, glyph_x2, glyph_y1);
@@ -987,7 +986,7 @@ _cairo_gl_composite_emit_quad_as_tristrip (cairo_gl_context_t	*ctx,
 					   const cairo_point_t	quad[4])
 {
     _cairo_gl_composite_prepare_buffer (ctx, 4,
-					CAIRO_GL_GEOMETRY_TYPE_TRISTRIPS);
+					CAIRO_GL_PRIMITIVE_TYPE_TRISTRIPS);
 
     _cairo_gl_composite_emit_point (ctx, &quad[0], 0);
     _cairo_gl_composite_emit_point (ctx, &quad[1], 0);
@@ -1007,7 +1006,7 @@ _cairo_gl_composite_emit_triangle_as_tristrip (cairo_gl_context_t	*ctx,
 					       const cairo_point_t	 triangle[3])
 {
     _cairo_gl_composite_prepare_buffer (ctx, 3,
-					CAIRO_GL_GEOMETRY_TYPE_TRISTRIPS);
+					CAIRO_GL_PRIMITIVE_TYPE_TRISTRIPS);
 
     _cairo_gl_composite_emit_point (ctx, &triangle[0], 0);
     _cairo_gl_composite_emit_point (ctx, &triangle[1], 0);

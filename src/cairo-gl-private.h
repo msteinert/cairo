@@ -213,6 +213,11 @@ typedef enum cairo_gl_var_type {
   CAIRO_GL_VAR_TEXCOORDS,
 } cairo_gl_var_type_t;
 
+typedef enum cairo_gl_primitive_type {
+    CAIRO_GL_PRIMITIVE_TYPE_TRIANGLES,
+    CAIRO_GL_PRIMITIVE_TYPE_TRISTRIPS
+} cairo_gl_primitive_type_t;
+
 #define cairo_gl_var_type_hash(src,mask,spans,dest) ((spans) << 3) | ((mask) << 2 | (src << 1) | (dest))
 #define CAIRO_GL_VAR_TYPE_MAX ((CAIRO_GL_VAR_TEXCOORDS << 3) | (CAIRO_GL_VAR_TEXCOORDS << 2) | (CAIRO_GL_VAR_TEXCOORDS << 1) | CAIRO_GL_VAR_TEXCOORDS)
 
@@ -334,6 +339,8 @@ struct _cairo_gl_context {
     unsigned int vertex_size;
     cairo_region_t *clip_region;
     cairo_clip_t *clip;
+
+    cairo_gl_primitive_type_t primitive_type;
     cairo_array_t tristrip_indices;
 
     cairo_bool_t has_mesa_pack_invert;
