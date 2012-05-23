@@ -747,8 +747,8 @@ _cairo_gl_composite_draw_triangles_with_clip_region (cairo_gl_context_t *ctx,
 {
     int i, num_rectangles;
 
-    if (!ctx->clip_region)
-	_cairo_gl_composite_draw_triangles (ctx, count)
+    if (!ctx->clip_region) {
+	_cairo_gl_composite_draw_triangles (ctx, count);
 	return;
     }
 
