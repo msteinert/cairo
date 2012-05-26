@@ -760,7 +760,6 @@ cairo_surface_map_to_image (cairo_surface_t  *surface,
 			    const cairo_rectangle_int_t *extents)
 {
     cairo_rectangle_int_t rect;
-    cairo_surface_t *imagesurf;
     cairo_image_surface_t *image;
     cairo_status_t status;
 
@@ -786,27 +785,19 @@ cairo_surface_map_to_image (cairo_surface_t  *surface,
     }
 
     image = _cairo_surface_map_to_image (surface, extents);
-    imagesurf = &image->base;
 
-    status = cairo_surface_status (imagesurf);
+    status = image->base.status;
     if (unlikely (status)) {
-	cairo_surface_destroy (imagesurf);
+	cairo_surface_destroy (&image->base);
 	return _cairo_surface_create_in_error (status);
     }
 
-    if (cairo_image_surface_get_format (imagesurf) == CAIRO_FORMAT_INVALID) {
-	cairo_surface_destroy (imagesurf);
+    if (image->format == CAIRO_FORMAT_INVALID) {
+	cairo_surface_destroy (&image->base);
 	image = _cairo_image_surface_clone_subimage (surface, extents);
-	imagesurf = &image->base;
     }
 
-    status = cairo_surface_status (imagesurf);
-    if (unlikely (status)) {
-	cairo_surface_destroy (imagesurf);
-	return _cairo_surface_create_in_error (status);
-    }
-
-    return imagesurf;
+    return &image->base;
 }
 
 /**
