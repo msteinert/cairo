@@ -1214,12 +1214,15 @@ _cairo_image_surface_clone_subimage (cairo_surface_t             *surface,
 {
     cairo_surface_t *image;
     cairo_surface_pattern_t pattern;
-    cairo_status_t ignored;
+    cairo_status_t status;
 
     image = cairo_surface_create_similar_image (surface,
 						_cairo_format_from_content (surface->content),
 						extents->width,
 						extents->height);
+    if (image->status)
+	return to_image_surface (image);
+
     /* TODO: check me with non-identity device_transform. Should we
      * clone the scaling, too? */
     cairo_surface_set_device_offset (image,
@@ -1229,16 +1232,25 @@ _cairo_image_surface_clone_subimage (cairo_surface_t             *surface,
     _cairo_pattern_init_for_surface (&pattern, surface);
     pattern.base.filter = CAIRO_FILTER_NEAREST;
 
-    ignored = _cairo_surface_paint (image,
-				    CAIRO_OPERATOR_SOURCE,
-				    &pattern.base,
-				    NULL);
+    status = _cairo_surface_paint (image,
+				   CAIRO_OPERATOR_SOURCE,
+				   &pattern.base,
+				   NULL);
 
     _cairo_pattern_fini (&pattern.base);
 
-    cairo_surface_set_user_data (image, &clone_key, surface, NULL);
+    if (unlikely (status))
+	goto error;
 
-    return (cairo_image_surface_t *) image;
+    status = cairo_surface_set_user_data (image, &clone_key, surface, NULL);
+    if (unlikely (status))
+	goto error;
+
+    return to_image_surface (image);
+
+error:
+    cairo_surface_destroy (image);
+    return to_image_surface (_cairo_surface_create_in_error (status));
 }
 
 cairo_bool_t
