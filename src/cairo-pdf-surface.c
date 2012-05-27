@@ -2681,11 +2681,28 @@ _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t        *surface,
     int alpha = 0;
     cairo_surface_t *free_me = NULL;
     cairo_surface_t *source;
+    const cairo_rectangle_int_t *extents;
+    int width;
+    int height;
+    cairo_bool_t is_subsurface;
 
     assert (pdf_source->type == CAIRO_PATTERN_TYPE_SURFACE);
+    extents = &pdf_source->hash_entry->extents;
+    width = pdf_source->hash_entry->width;
+    height = pdf_source->hash_entry->height;
+    is_subsurface = FALSE;
     source = pdf_source->surface;
-    if (_cairo_surface_is_snapshot (source))
+    if (_cairo_surface_is_snapshot (source)) {
 	free_me = source = _cairo_surface_snapshot_get_target (source);
+    } else if (source->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
+	cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) source;
+
+	source = sub->target;
+	extents = &sub->extents;
+	width = extents->width;
+	height = extents->height;
+	is_subsurface = TRUE;
+    }
 
     old_width = surface->width;
     old_height = surface->height;
@@ -2694,16 +2711,15 @@ _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t        *surface,
     _cairo_surface_clipper_init (&surface->clipper,
 				 _cairo_pdf_surface_clipper_intersect_clip_path);
 
-    _cairo_pdf_surface_set_size_internal (surface,
-					  pdf_source->hash_entry->width,
-					  pdf_source->hash_entry->height);
+    _cairo_pdf_surface_set_size_internal (surface, width, height);
+
     /* Patterns are emitted after fallback images. The paginated mode
      * needs to be set to _RENDER while the recording surface is replayed
      * back to this surface.
      */
     surface->paginated_mode = CAIRO_PAGINATED_MODE_RENDER;
     _cairo_pdf_group_resources_clear (&surface->resources);
-    _get_bbox_from_extents (pdf_source->hash_entry->height, &pdf_source->hash_entry->extents, &bbox);
+    _get_bbox_from_extents (height, extents, &bbox);
     status = _cairo_pdf_surface_open_content_stream (surface, &bbox, &pdf_source->hash_entry->surface_res, TRUE);
     if (unlikely (status))
 	goto err;
@@ -2721,7 +2737,7 @@ _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t        *surface,
     }
 
     status = _cairo_recording_surface_replay_region (source,
-						     NULL,
+						     is_subsurface ? extents : NULL,
 						     &surface->base,
 						     CAIRO_RECORDING_REGION_NATIVE);
     assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
@@ -2743,89 +2759,13 @@ err:
 }
 
 static cairo_status_t
-_cairo_pdf_surface_emit_recording_subsurface (cairo_pdf_surface_t  *surface,
-					      cairo_surface_t      *recording_surface,
-					      const cairo_rectangle_int_t *extents,
-					      cairo_pdf_resource_t  resource)
-{
-    double old_width, old_height;
-    cairo_paginated_mode_t old_paginated_mode;
-    cairo_surface_clipper_t old_clipper;
-    cairo_box_double_t bbox;
-    cairo_int_status_t status;
-    int alpha = 0;
-
-    old_width = surface->width;
-    old_height = surface->height;
-    old_paginated_mode = surface->paginated_mode;
-    old_clipper = surface->clipper;
-    _cairo_surface_clipper_init (&surface->clipper,
-				 _cairo_pdf_surface_clipper_intersect_clip_path);
-
-    _cairo_pdf_surface_set_size_internal (surface,
-					  extents->width,
-					  extents->height);
-    /* Patterns are emitted after fallback images. The paginated mode
-     * needs to be set to _RENDER while the recording surface is replayed
-     * back to this surface.
-     */
-    surface->paginated_mode = CAIRO_PAGINATED_MODE_RENDER;
-    _cairo_pdf_group_resources_clear (&surface->resources);
-    _get_bbox_from_extents (extents->height, extents, &bbox);
-    status = _cairo_pdf_surface_open_content_stream (surface, &bbox, &resource, TRUE);
-    if (unlikely (status))
-	return status;
-
-    if (cairo_surface_get_content (recording_surface) == CAIRO_CONTENT_COLOR) {
-	status = _cairo_pdf_surface_add_alpha (surface, 1.0, &alpha);
-	if (unlikely (status))
-	    return status;
-
-	_cairo_output_stream_printf (surface->output,
-				     "q /a%d gs 0 0 0 rg 0 0 %f %f re f Q\n",
-				     alpha,
-				     surface->width,
-				     surface->height);
-    }
-
-    status = _cairo_recording_surface_replay_region (recording_surface,
-						     extents,
-						     &surface->base,
-						     CAIRO_RECORDING_REGION_NATIVE);
-    assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
-    if (unlikely (status))
-	return status;
-
-    status = _cairo_pdf_surface_close_content_stream (surface);
-
-    _cairo_surface_clipper_reset (&surface->clipper);
-    surface->clipper = old_clipper;
-    _cairo_pdf_surface_set_size_internal (surface,
-					  old_width,
-					  old_height);
-    surface->paginated_mode = old_paginated_mode;
-
-    return status;
-}
-
-static cairo_status_t
 _cairo_pdf_surface_emit_surface (cairo_pdf_surface_t        *surface,
 				 cairo_pdf_source_surface_t *src_surface)
 {
-    if (src_surface->type == CAIRO_PATTERN_TYPE_SURFACE) {
-	if (src_surface->surface->type == CAIRO_SURFACE_TYPE_RECORDING) {
-	    if (src_surface->surface->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
-		cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) src_surface->surface;
-		return _cairo_pdf_surface_emit_recording_subsurface (surface,
-								     sub->target,
-								     &sub->extents,
-								     src_surface->hash_entry->surface_res);
-	    } else {
-		return _cairo_pdf_surface_emit_recording_surface (surface,
-								  src_surface);
-	    }
-	}
-    }
+    if (src_surface->type == CAIRO_PATTERN_TYPE_SURFACE &&
+	src_surface->surface->type == CAIRO_SURFACE_TYPE_RECORDING)
+	return _cairo_pdf_surface_emit_recording_surface (surface, src_surface);
+
     return _cairo_pdf_surface_emit_image_surface (surface, src_surface);
 }
 
