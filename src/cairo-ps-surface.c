@@ -2033,10 +2033,28 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
 	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
 
 	if (surface_pattern->surface->type == CAIRO_SURFACE_TYPE_RECORDING) {
-	    if (pattern->extend == CAIRO_EXTEND_PAD)
-		return CAIRO_INT_STATUS_UNSUPPORTED;
-	    else
-		return CAIRO_INT_STATUS_ANALYZE_RECORDING_SURFACE_PATTERN;
+	    if (pattern->extend == CAIRO_EXTEND_PAD) {
+		cairo_box_t box;
+		cairo_rectangle_int_t rect;
+		cairo_rectangle_int_t rec_extents;
+
+		/* get the operation extents in pattern space */
+		_cairo_box_from_rectangle (&box, extents);
+		_cairo_matrix_transform_bounding_box_fixed (&pattern->matrix, &box, NULL);
+		_cairo_box_round_to_rectangle (&box, &rect);
+
+		/* Check if surface needs padding to fill extents */
+		if (_cairo_surface_get_extents (surface_pattern->surface, &rec_extents)) {
+		    if (_cairo_fixed_integer_ceil(box.p1.x) < rec_extents.x ||
+			_cairo_fixed_integer_ceil(box.p1.y) < rec_extents.y ||
+			_cairo_fixed_integer_floor(box.p2.y) > rec_extents.x + rec_extents.width ||
+			_cairo_fixed_integer_floor(box.p2.y) > rec_extents.y + rec_extents.height)
+		    {
+			return CAIRO_INT_STATUS_UNSUPPORTED;
+		    }
+		}
+	    }
+	    return CAIRO_INT_STATUS_ANALYZE_RECORDING_SURFACE_PATTERN;
 	}
     }
 
@@ -3158,10 +3176,11 @@ _cairo_ps_surface_paint_surface (cairo_ps_surface_t     *surface,
     if (unlikely (status))
 	return status;
 
-    if (pattern->extend == CAIRO_EXTEND_PAD) {
+    if (pattern->extend == CAIRO_EXTEND_PAD &&
+	pattern->type == CAIRO_PATTERN_TYPE_SURFACE &&
+	((cairo_surface_pattern_t *)pattern)->surface->type == CAIRO_SURFACE_TYPE_IMAGE) {
 	cairo_image_surface_t *img;
 
-	assert (source->type == CAIRO_SURFACE_TYPE_IMAGE);
 	img = (cairo_image_surface_t *) source;
 	status = _cairo_ps_surface_create_padded_image_from_image (surface,
 								   img,
