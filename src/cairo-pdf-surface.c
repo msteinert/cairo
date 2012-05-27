@@ -3442,6 +3442,7 @@ cairo_pdf_surface_emit_transparency_group (cairo_pdf_surface_t  *surface,
     cairo_pdf_resource_t smask_resource;
     cairo_status_t status;
     char buf[100];
+    double x1, y1, x2, y2;
 
     if (pdf_pattern->is_shading) {
 	snprintf(buf, sizeof(buf),
@@ -3457,13 +3458,36 @@ cairo_pdf_surface_emit_transparency_group (cairo_pdf_surface_t  *surface,
 		 gradient_mask.id);
     }
 
+    if (pdf_pattern->is_shading) {
+	cairo_box_t box;
+
+	/* When emitting a shading operator we are in cairo pattern
+	 * coordinates. _cairo_pdf_surface_paint_gradient has set the
+	 * ctm to the pattern matrix (including the convertion from
+	 * pdf to cairo coordinates) */
+	_cairo_box_from_rectangle (&box, &pdf_pattern->extents);
+	_cairo_box_to_doubles (&box, &x1, &y1, &x2, &y2);
+	_cairo_matrix_transform_bounding_box (&pdf_pattern->pattern->matrix, &x1, &y1, &x2, &y2, NULL);
+    } else {
+	cairo_box_double_t box;
+
+	/* When emitting a shading pattern we are in pdf page
+	 * coordinates. The color and alpha shading patterns painted
+	 * in the XObject below contain the cairo pattern to pdf page
+	 * matrix in the /Matrix entry of the pattern. */
+	_get_bbox_from_extents (pdf_pattern->height, &pdf_pattern->extents, &box);
+	x1 = box.p1.x;
+	y1 = box.p1.y;
+	x2 = box.p2.x;
+	y2 = box.p2.y;
+    }
     status = _cairo_pdf_surface_open_stream (surface,
 					     NULL,
 					     surface->compress_content,
 					     "   /Type /XObject\n"
 					     "   /Subtype /Form\n"
 					     "   /FormType 1\n"
-					     "   /BBox [ 0 0 %f %f ]\n"
+					     "   /BBox [ %f %f %f %f ]\n"
 					     "   /Resources\n"
 					     "      << /ExtGState\n"
 					     "            << /a0 << /ca 1 /CA 1 >>"
@@ -3476,8 +3500,7 @@ cairo_pdf_surface_emit_transparency_group (cairo_pdf_surface_t  *surface,
 					     "         /I true\n"
 					     "         /CS /DeviceGray\n"
 					     "      >>\n",
-					     surface->width,
-					     surface->height,
+					     x1,y1,x2,y2,
 					     buf);
     if (unlikely (status))
 	return status;
