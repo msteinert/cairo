@@ -223,7 +223,7 @@ _cairo_gl_subsurface_operand_init (cairo_gl_operand_t *operand,
      * (unnormalized src -> unnormalized src) to
      * (unnormalized dst -> unnormalized src)
      */
-    *operand = surface->operand;
+    _cairo_gl_operand_copy(operand, &surface->operand);
 
     attributes = &operand->texture.attributes;
     attributes->matrix = src->base.matrix;
@@ -270,7 +270,7 @@ _cairo_gl_surface_operand_init (cairo_gl_operand_t *operand,
     if (unlikely (status))
 	return status;
 
-    *operand = surface->operand;
+    _cairo_gl_operand_copy(operand, &surface->operand);
 
     attributes = &operand->texture.attributes;
     cairo_matrix_multiply (&attributes->matrix,
