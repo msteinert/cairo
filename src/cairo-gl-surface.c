@@ -995,7 +995,7 @@ _cairo_gl_surface_map_to_image (void      *abstract_surface,
     GLenum format, type;
     pixman_format_code_t pixman_format;
     unsigned int cpp;
-    cairo_bool_t invert;
+    cairo_bool_t flipped, mesa_invert;
     cairo_status_t status;
     int y;
 
@@ -1070,23 +1070,23 @@ _cairo_gl_surface_map_to_image (void      *abstract_surface,
     _cairo_gl_composite_flush (ctx);
     _cairo_gl_context_set_destination (ctx, surface, FALSE);
 
-    invert = ! _cairo_gl_surface_is_texture (surface) &&
-	    ctx->has_mesa_pack_invert;
+    flipped = ! _cairo_gl_surface_is_texture (surface);
+    mesa_invert = flipped && ctx->has_mesa_pack_invert;
 
     glPixelStorei (GL_PACK_ALIGNMENT, 4);
     if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP)
 	glPixelStorei (GL_PACK_ROW_LENGTH, image->stride / cpp);
-    if (invert)
+    if (mesa_invert)
 	glPixelStorei (GL_PACK_INVERT_MESA, 1);
 
     y = extents->y;
-    if (! _cairo_gl_surface_is_texture (surface))
+    if (flipped)
 	y = surface->height - extents->y - extents->height;
 
     glReadPixels (extents->x, y,
 		  extents->width, extents->height,
 		  format, type, image->data);
-    if (invert)
+    if (mesa_invert)
 	glPixelStorei (GL_PACK_INVERT_MESA, 0);
 
     status = _cairo_gl_context_release (ctx, status);
@@ -1096,12 +1096,12 @@ _cairo_gl_surface_map_to_image (void      *abstract_surface,
     }
 
     /* We must invert the image manualy if we lack GL_MESA_pack_invert */
-    if (! ctx->has_mesa_pack_invert && ! _cairo_gl_surface_is_texture (surface)) {
+    if (flipped && ! mesa_invert) {
 	uint8_t stack[1024], *row = stack;
 	uint8_t *top = image->data;
 	uint8_t *bot = image->data + (image->height-1)*image->stride;
 
-	if (image->stride > sizeof(stack)) {
+	if (image->stride > (int)sizeof(stack)) {
 	    row = malloc (image->stride);
 	    if (unlikely (row == NULL)) {
 		cairo_surface_destroy (&image->base);
