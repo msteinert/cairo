@@ -745,7 +745,7 @@ _cairo_gl_composite_glyphs (void			*_dst,
 			    int				 dst_y,
 			    cairo_composite_glyphs_info_t *info);
 
-cairo_int_status_t
+cairo_private cairo_int_status_t
 _cairo_gl_composite_glyphs_with_clip (void			    *_dst,
 				      cairo_operator_t		     op,
 				      cairo_surface_t		    *_src,
