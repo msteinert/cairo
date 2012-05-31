@@ -106,6 +106,9 @@ struct _cairo_surface {
 };
 
 cairo_private cairo_surface_t *
+_cairo_surface_create_in_error (cairo_status_t status);
+
+cairo_private cairo_surface_t *
 _cairo_int_surface_create_in_error (cairo_int_status_t status);
 
 cairo_private cairo_surface_t *
