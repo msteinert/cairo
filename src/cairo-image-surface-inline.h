@@ -56,6 +56,12 @@ _cairo_image_surface_set_parent (cairo_image_surface_t *image,
     image->parent = parent;
 }
 
+static inline cairo_bool_t
+_cairo_image_surface_is_clone (cairo_image_surface_t *image)
+{
+    return image->parent != NULL;
+}
+
 /**
  * _cairo_surface_is_image:
  * @surface: a #cairo_surface_t

@@ -220,9 +220,6 @@ cairo_private cairo_image_surface_t *
 _cairo_image_surface_clone_subimage (cairo_surface_t             *surface,
 				     const cairo_rectangle_int_t *extents);
 
-cairo_private cairo_bool_t
-_cairo_image_surface_is_clone (cairo_image_surface_t *surface);
-
 CAIRO_END_DECLS
 
 #endif /* CAIRO_IMAGE_SURFACE_PRIVATE_H */

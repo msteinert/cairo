@@ -1206,8 +1206,6 @@ _cairo_image_analyze_color (cairo_image_surface_t      *image)
     return image->color = CAIRO_IMAGE_IS_COLOR;
 }
 
-static const cairo_user_data_key_t clone_key;
-
 cairo_image_surface_t *
 _cairo_image_surface_clone_subimage (cairo_surface_t             *surface,
 				     const cairo_rectangle_int_t *extents)
@@ -1242,19 +1240,11 @@ _cairo_image_surface_clone_subimage (cairo_surface_t             *surface,
     if (unlikely (status))
 	goto error;
 
-    status = cairo_surface_set_user_data (image, &clone_key, surface, NULL);
-    if (unlikely (status))
-	goto error;
+    _cairo_image_surface_set_parent (to_image_surface (image), surface);
 
     return to_image_surface (image);
 
 error:
     cairo_surface_destroy (image);
     return to_image_surface (_cairo_surface_create_in_error (status));
-}
-
-cairo_bool_t
-_cairo_image_surface_is_clone (cairo_image_surface_t *image)
-{
-    return cairo_surface_get_user_data (&image->base, &clone_key) != NULL;
 }
