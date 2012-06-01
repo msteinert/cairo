@@ -854,7 +854,7 @@ composite_glyphs_via_mask (void				*_dst,
     i = (info->extents.width + 3) & ~3;
     if (scaled_glyph->surface->base.content & CAIRO_CONTENT_COLOR) {
 	format = PIXMAN_a8r8g8b8;
-	i = info->extents.width * 3;
+	i = info->extents.width * 4;
     }
 
     if (i * info->extents.height > (int) sizeof (buf)) {
@@ -864,7 +864,7 @@ composite_glyphs_via_mask (void				*_dst,
 					NULL, 0);
     } else {
 	memset (buf, 0, i * info->extents.height);
-	mask = pixman_image_create_bits (PIXMAN_a8,
+	mask = pixman_image_create_bits (format,
 					info->extents.width,
 					info->extents.height,
 					(uint32_t *)buf, i);
