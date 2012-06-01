@@ -1916,7 +1916,6 @@ slim_hidden_proto (cairo_surface_flush);
 slim_hidden_proto (cairo_surface_get_device_offset);
 slim_hidden_proto (cairo_surface_get_font_options);
 slim_hidden_proto (cairo_surface_get_mime_data);
-slim_hidden_proto (cairo_surface_get_type);
 slim_hidden_proto (cairo_surface_has_show_text_glyphs);
 slim_hidden_proto (cairo_surface_mark_dirty);
 slim_hidden_proto (cairo_surface_mark_dirty_rectangle);

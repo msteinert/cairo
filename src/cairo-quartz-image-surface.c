@@ -309,7 +309,7 @@ cairo_quartz_image_surface_create (cairo_surface_t *surface)
     if (surface->status)
 	return surface;
 
-    if (cairo_surface_get_type(surface) != CAIRO_SURFACE_TYPE_IMAGE)
+    if (! _cairo_surface_is_image (surface))
 	return SURFACE_ERROR_TYPE_MISMATCH;
 
     image_surface = (cairo_image_surface_t*) surface;
@@ -374,7 +374,7 @@ cairo_quartz_image_surface_get_image (cairo_surface_t *asurface)
 {
     cairo_quartz_image_surface_t *surface = (cairo_quartz_image_surface_t*) asurface;
 
-    if (cairo_surface_get_type(asurface) != CAIRO_SURFACE_TYPE_QUARTZ_IMAGE)
+    if (asurface->type != CAIRO_SURFACE_TYPE_QUARTZ_IMAGE)
 	return NULL;
 
     return (cairo_surface_t*) surface->imageSurface;

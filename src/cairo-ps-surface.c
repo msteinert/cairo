@@ -66,7 +66,7 @@
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
-#include "cairo-image-surface-private.h"
+#include "cairo-image-surface-inline.h"
 #include "cairo-list-inline.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-paginated-private.h"
@@ -1738,7 +1738,7 @@ _cairo_ps_surface_acquire_source_surface_from_pattern (cairo_ps_surface_t       
 	surf = _cairo_raster_source_pattern_acquire (pattern, &surface->base, &rect);
 	if (!surf)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
-	assert (cairo_surface_get_type (surf) == CAIRO_SURFACE_TYPE_IMAGE);
+	assert (_cairo_surface_is_image (surf));
 	image = (cairo_image_surface_t *) surf;
     } break;
 

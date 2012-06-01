@@ -219,7 +219,6 @@ cairo_surface_get_type (cairo_surface_t *surface)
      * surface. */
     return surface->type;
 }
-slim_hidden_def (cairo_surface_get_type);
 
 /**
  * cairo_surface_get_content:
