@@ -2407,7 +2407,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 	cairo_surface_t *surf;
 	cairo_surface_pattern_t pattern;
 
-	surf = _cairo_image_surface_create_with_content (cairo_surface_get_content (&image_surf->base),
+	surf = _cairo_image_surface_create_with_content (image_surf->base.content,
 							 image_surf->width,
 							 image_surf->height);
 	image = (cairo_image_surface_t *) surf;

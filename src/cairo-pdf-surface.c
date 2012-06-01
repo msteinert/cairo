@@ -2134,7 +2134,7 @@ _cairo_pdf_surface_add_padded_image_surface (cairo_pdf_surface_t          *surfa
 	_cairo_fixed_integer_floor(box.p2.y) > w ||
 	_cairo_fixed_integer_floor(box.p2.y) > h)
     {
-	pad_image = _cairo_image_surface_create_with_content (cairo_surface_get_content (&image->base),
+	pad_image = _cairo_image_surface_create_with_content (image->base.content,
 							      rect.width,
 							      rect.height);
 	if (pad_image->status) {
@@ -2345,7 +2345,7 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
 	cairo_surface_t *surf;
 	cairo_surface_pattern_t pattern;
 
-	surf = _cairo_image_surface_create_with_content (cairo_surface_get_content (&image_surf->base),
+	surf = _cairo_image_surface_create_with_content (image_surf->base.content,
 							 image_surf->width,
 							 image_surf->height);
 	image = (cairo_image_surface_t *) surf;
@@ -2715,7 +2715,7 @@ _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t        *surface,
     if (unlikely (status))
 	goto err;
 
-    if (cairo_surface_get_content (source) == CAIRO_CONTENT_COLOR) {
+    if (source->content == CAIRO_CONTENT_COLOR) {
 	status = _cairo_pdf_surface_add_alpha (surface, 1.0, &alpha);
 	if (unlikely (status))
 	    goto err;
@@ -6124,8 +6124,7 @@ _surface_pattern_supported (cairo_surface_pattern_t *pattern)
      * don't think it's worth the extra code to support it. */
 
 /* XXX: Need to write this function here...
-    content = cairo_surface_get_content (pattern->surface);
-    if (content == CAIRO_CONTENT_ALPHA)
+    if (pattern->surface->content == CAIRO_CONTENT_ALPHA)
 	return FALSE;
 */
 

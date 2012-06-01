@@ -2393,7 +2393,7 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
 
     if (mask->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	const cairo_surface_pattern_t *surface_pattern = (const cairo_surface_pattern_t*) mask;
-	cairo_content_t content = cairo_surface_get_content (surface_pattern->surface);
+	cairo_content_t content = surface_pattern->surface->content;
 	if (content == CAIRO_CONTENT_ALPHA)
 	    discard_filter = TRUE;
     }

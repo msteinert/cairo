@@ -238,7 +238,6 @@ cairo_surface_get_content (cairo_surface_t *surface)
 {
     return surface->content;
 }
-slim_hidden_def(cairo_surface_get_content);
 
 /**
  * cairo_surface_status:
