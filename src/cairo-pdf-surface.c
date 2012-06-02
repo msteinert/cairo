@@ -1412,8 +1412,6 @@ release_source:
     surface_entry->unique_id = unique_id;
     surface_entry->width = *width;
     surface_entry->height = *height;
-    surface_entry->x_offset = *x_offset;
-    surface_entry->y_offset = *y_offset;
     surface_entry->extents = *source_extents;
     _cairo_pdf_source_surface_init_key (surface_entry);
 
@@ -2151,8 +2149,6 @@ _cairo_pdf_surface_add_padded_image_surface (cairo_pdf_surface_t          *surfa
         _cairo_pattern_fini (&pad_pattern.base);
         if (unlikely (status))
             goto BAIL;
-
-	cairo_surface_set_device_offset (pad_image, rect.x, rect.y);
     }
 
     status = _cairo_pdf_surface_add_source_surface (surface,
@@ -2169,6 +2165,18 @@ _cairo_pdf_surface_add_padded_image_surface (cairo_pdf_surface_t          *surfa
 						    &extents2);
     if (unlikely (status))
         goto BAIL;
+
+    if (pad_image != &image->base) {
+	/* If using a padded image, replace _add_source_surface
+	 * x/y_offset with padded image offset. Note:
+	 * _add_source_surface only sets a non zero x/y_offset for
+	 * RASTER_SOURCE patterns. _add_source_surface will always set
+	 * x/y_offset to 0 for surfaces so we can ignore the returned
+	 * offset and replace it with the offset required for the
+	 * padded image */
+	*x_offset = rect.x;
+	*y_offset = rect.y;
+    }
 
 BAIL:
     if (pad_image != &image->base)
