@@ -46,6 +46,7 @@
 #include "cairo-traps-private.h"
 #include "cairo-recording-surface-inline.h"
 #include "cairo-paginated-private.h"
+#include "cairo-pattern-inline.h"
 
 #define PIXMAN_MAX_INT ((pixman_fixed_1 >> 1) - pixman_fixed_e) /* need to ensure deltas also fit */
 
@@ -1060,30 +1061,55 @@ record_to_picture (cairo_surface_t *target,
     cairo_status_t status;
     cairo_matrix_t matrix;
     cairo_surface_t *tmp;
-    cairo_surface_t *source = pattern->surface;
+    cairo_surface_t *source;
+    cairo_rectangle_int_t limit;
+    cairo_extend_t extend;
 
-    /* XXX: The following is more or less copied from cairo-xlibs-ource.c,
+    /* XXX: The following was once more or less copied from cairo-xlibs-ource.c,
      * record_source() and recording_pattern_get_surface(), can we share a
      * single version?
      */
 
-    /* First get the 'real' recording surface */
-    if (_cairo_surface_is_paginated (source))
-	source = _cairo_paginated_surface_get_recording (source);
-    if (_cairo_surface_is_snapshot (source))
-	source = _cairo_surface_snapshot_get_target (source);
+    /* First get the 'real' recording surface and figure out the size for tmp */
+    source = _cairo_pattern_get_source (pattern, &limit);
     assert (_cairo_surface_is_recording (source));
+
+    if (! _cairo_matrix_is_identity (&pattern->base.matrix)) {
+	double x1, y1, x2, y2;
+
+	matrix = pattern->base.matrix;
+	status = cairo_matrix_invert (&matrix);
+	assert (status == CAIRO_STATUS_SUCCESS);
+
+	x1 = limit.x;
+	y1 = limit.y;
+	x2 = limit.x + limit.width;
+	y2 = limit.y + limit.height;
+
+	_cairo_matrix_transform_bounding_box (&matrix,
+					      &x1, &y1, &x2, &y2, NULL);
+
+	limit.x = floor (x1);
+	limit.y = floor (y1);
+	limit.width  = ceil (x2) - limit.x;
+	limit.height = ceil (y2) - limit.y;
+    }
+    extend = pattern->base.extend;
+    if (_cairo_rectangle_contains_rectangle (&limit, extents))
+	extend = CAIRO_EXTEND_NONE;
+    if (extend == CAIRO_EXTEND_NONE && ! _cairo_rectangle_intersect (&limit, extents))
+	return _cairo_xcb_transparent_picture ((cairo_xcb_surface_t *) target);
 
     /* Now draw the recording surface to an xcb surface */
     tmp = _cairo_surface_create_similar_scratch (target,
 						 source->content,
-						 extents->width,
-						 extents->height);
+						 limit.width,
+						 limit.height);
     if (tmp->status != CAIRO_STATUS_SUCCESS) {
 	return (cairo_xcb_picture_t *) tmp;
     }
 
-    cairo_matrix_init_translate (&matrix, extents->x, extents->y);
+    cairo_matrix_init_translate (&matrix, limit.x, limit.y);
     cairo_matrix_multiply (&matrix, &matrix, &pattern->base.matrix);
 
     status = _cairo_recording_surface_replay_with_clip (source,
@@ -1097,7 +1123,7 @@ record_to_picture (cairo_surface_t *target,
     /* Now that we have drawn this to an xcb surface, try again with that */
     _cairo_pattern_init_static_copy (&tmp_pattern.base, &pattern->base);
     tmp_pattern.surface = tmp;
-    cairo_matrix_init_translate (&tmp_pattern.base.matrix, -extents->x, -extents->y);
+    cairo_matrix_init_translate (&tmp_pattern.base.matrix, -limit.x, -limit.y);
 
     picture = _copy_to_picture ((cairo_xcb_surface_t *) tmp);
     if (picture->base.status == CAIRO_STATUS_SUCCESS)
