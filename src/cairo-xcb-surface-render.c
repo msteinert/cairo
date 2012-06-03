@@ -1084,6 +1084,8 @@ record_to_picture (cairo_surface_t *target,
     }
 
     cairo_matrix_init_translate (&matrix, extents->x, extents->y);
+    cairo_matrix_multiply (&matrix, &matrix, &pattern->base.matrix);
+
     status = _cairo_recording_surface_replay_with_clip (source,
 							&matrix, tmp,
 							NULL);
@@ -1095,13 +1097,7 @@ record_to_picture (cairo_surface_t *target,
     /* Now that we have drawn this to an xcb surface, try again with that */
     _cairo_pattern_init_static_copy (&tmp_pattern.base, &pattern->base);
     tmp_pattern.surface = tmp;
-
-    if (extents->x | extents->y) {
-	cairo_matrix_t *pmatrix = &tmp_pattern.base.matrix;
-
-	cairo_matrix_init_translate (&matrix, -extents->x, -extents->y);
-	cairo_matrix_multiply (pmatrix, pmatrix, &matrix);
-    }
+    cairo_matrix_init_translate (&tmp_pattern.base.matrix, -extents->x, -extents->y);
 
     picture = _copy_to_picture ((cairo_xcb_surface_t *) tmp);
     if (picture->base.status == CAIRO_STATUS_SUCCESS)
