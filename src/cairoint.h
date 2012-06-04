@@ -1156,7 +1156,7 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 					 cairo_rectangle_int_t   *extents,
 					 cairo_bool_t		 *overlap);
 
-cairo_private void
+cairo_private cairo_bool_t
 _cairo_scaled_font_glyph_approximate_extents (cairo_scaled_font_t	 *scaled_font,
 					      const cairo_glyph_t	 *glyphs,
 					      int                      num_glyphs,

@@ -2252,7 +2252,7 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
-void
+cairo_bool_t
 _cairo_scaled_font_glyph_approximate_extents (cairo_scaled_font_t	 *scaled_font,
 					      const cairo_glyph_t	 *glyphs,
 					      int                      num_glyphs,
@@ -2260,6 +2260,14 @@ _cairo_scaled_font_glyph_approximate_extents (cairo_scaled_font_t	 *scaled_font,
 {
     double x0, x1, y0, y1, pad;
     int i;
+
+    /* If any of the factors are suspect (i.e. the font is broken), bail */
+    if (scaled_font->fs_extents.max_x_advance == 0 ||
+	scaled_font->fs_extents.height == 0 ||
+	scaled_font->max_scale == 0)
+    {
+	return FALSE;
+    }
 
     assert (num_glyphs);
 
@@ -2285,6 +2293,7 @@ _cairo_scaled_font_glyph_approximate_extents (cairo_scaled_font_t	 *scaled_font,
     extents->width = ceil (x1 + pad) - extents->x;
     extents->y = floor (y0 - pad);
     extents->height = ceil (y1 + pad) - extents->y;
+    return TRUE;
 }
 
 #if 0
