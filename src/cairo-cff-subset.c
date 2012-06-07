@@ -1178,14 +1178,16 @@ cairo_cff_font_read_top_dict (cairo_cff_font_t *font)
         goto fail;
     font->num_glyphs = _cairo_array_num_elements (&font->charstrings_index);
 
-    operand = cff_dict_get_operands (font->top_dict, CHARSET_OP, &size);
-    if (font->is_cid && !operand)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    if (font->is_cid) {
+	 operand = cff_dict_get_operands (font->top_dict, CHARSET_OP, &size);
+	 if (!operand)
+	      return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    decode_integer (operand, &offset);
-    font->charset = font->data + offset;
-    if (font->charset >= font->data_end)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	 decode_integer (operand, &offset);
+	 font->charset = font->data + offset;
+	 if (font->charset >= font->data_end)
+	      return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     if (!font->is_opentype)
         cairo_cff_font_read_font_metrics (font, font->top_dict);
