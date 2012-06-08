@@ -934,6 +934,8 @@ clip_and_composite_polygon (const cairo_spans_compositor_t	*compositor,
 		status = trim_extents_to_polygon (extents, polygon);
 		if (unlikely (status))
 		    return status;
+
+		fill_rule = CAIRO_FILL_RULE_WINDING;
 	    } else {
 		_cairo_polygon_fini (&clipper);
 	    }
