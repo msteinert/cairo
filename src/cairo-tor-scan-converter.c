@@ -1300,6 +1300,7 @@ sub_row (struct active_list *active,
 		pos->next = edge;
 	    } else
 		prev_x = edge->x.quo;
+	    active->min_height = -1;
 	} else {
 	    edge->prev->next = next;
 	    next->prev = edge->prev;
@@ -1318,12 +1319,13 @@ sub_row (struct active_list *active,
     }
 }
 
-inline static void dec (struct edge *e, int h)
+inline static void dec (struct active_list *a, struct edge *e, int h)
 {
     e->height_left -= h;
     if (e->height_left == 0) {
 	e->prev->next = e->next;
 	e->next->prev = e->prev;
+	a->min_height = -1;
     }
 }
 
@@ -1350,12 +1352,12 @@ full_row (struct active_list *active,
 	struct edge *right;
 	int winding;
 
-	dec (left, GRID_Y);
+	dec (active, left, GRID_Y);
 
 	winding = left->dir;
 	right = left->next;
 	do {
-	    dec (right, GRID_Y);
+	    dec (active, right, GRID_Y);
 
 	    winding += right->dir;
 	    if ((winding & mask) == 0 && right->next->x.quo != right->x.quo)
@@ -1525,6 +1527,7 @@ step_edges (struct active_list *active, int count)
 	if (! edge->height_left) {
 	    edge->prev->next = edge->next;
 	    edge->next->prev = edge->prev;
+	    active->min_height = -1;
 	}
     }
 }
