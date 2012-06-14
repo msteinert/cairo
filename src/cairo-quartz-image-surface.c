@@ -36,7 +36,7 @@
 
 #include "cairoint.h"
 
-#include "cairo-image-surface-private.h"
+#include "cairo-image-surface-inline.h"
 #include "cairo-quartz-image.h"
 #include "cairo-quartz-private.h"
 #include "cairo-surface-backend-private.h"
