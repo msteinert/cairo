@@ -386,10 +386,15 @@ render_glyphs_via_mask (cairo_gl_surface_t *dst,
 	cairo_matrix_init_translate (&source_pattern.base.matrix,
 		                     dst_x-info->extents.x, dst_y-info->extents.y);
 
+	clip = _cairo_clip_copy (clip);
+	clip = _cairo_clip_intersect_rectangle (clip, &info->extents);
+
 	status = _cairo_surface_mask (&dst->base, op,
 		                      &source_pattern.base,
 				      &mask_pattern.base,
 				      clip);
+
+	_cairo_clip_destroy (clip);
 
 	_cairo_pattern_fini (&mask_pattern.base);
 	_cairo_pattern_fini (&source_pattern.base);
