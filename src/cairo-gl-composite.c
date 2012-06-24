@@ -475,17 +475,33 @@ _cairo_gl_composite_begin_component_alpha  (cairo_gl_context_t *ctx,
 }
 
 static void
-_scissor_to_box (cairo_gl_surface_t	*surface,
-		 const cairo_box_t	*box)
+_scissor_to_doubles (cairo_gl_surface_t	*surface,
+		     double x1, double y1,
+		     double x2, double y2)
 {
-    double x1, y1, x2, y2, height;
-    _cairo_box_to_doubles (box, &x1, &y1, &x2, &y2);
+    double height;
 
     height = y2 - y1;
     if (_cairo_gl_surface_is_texture (surface) == FALSE)
 	y1 = surface->height - (y1 + height);
     glScissor (x1, y1, x2 - x1, height);
     glEnable (GL_SCISSOR_TEST);
+}
+
+static void
+_scissor_to_rectangle (cairo_gl_surface_t *surface,
+		       const cairo_rectangle_int_t *r)
+{
+    _scissor_to_doubles (surface, r->x, r->y, r->x+r->width, r->y+r->height);
+}
+
+static void
+_scissor_to_box (cairo_gl_surface_t	*surface,
+		 const cairo_box_t	*box)
+{
+    double x1, y1, x2, y2;
+    _cairo_box_to_doubles (box, &x1, &y1, &x2, &y2);
+    _scissor_to_doubles (surface, x1, y1, x2, y2);
 }
 
 static void
@@ -755,9 +771,10 @@ _cairo_gl_composite_draw_triangles_with_clip_region (cairo_gl_context_t *ctx,
     num_rectangles = cairo_region_num_rectangles (ctx->clip_region);
     for (i = 0; i < num_rectangles; i++) {
 	cairo_rectangle_int_t rect;
+
 	cairo_region_get_rectangle (ctx->clip_region, i, &rect);
 
-	glScissor (rect.x, rect.y, rect.width, rect.height);
+	_scissor_to_rectangle (ctx->current_target, &rect);
 	_cairo_gl_composite_draw_triangles (ctx, count);
     }
 }
