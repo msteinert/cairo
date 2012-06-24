@@ -21,6 +21,7 @@ test_sources = \
 	big-empty-triangle.c				\
 	big-little-box.c				\
 	big-little-triangle.c				\
+	bug-spline.c					\
 	big-trap.c					\
 	bilevel-image.c					\
 	bug-40410.c					\
