@@ -67,6 +67,7 @@ struct stroker {
     const cairo_matrix_t *ctm;
     const cairo_matrix_t *ctm_inverse;
     double tolerance;
+    double spline_cusp_tolerance;
     cairo_bool_t ctm_det_positive;
 
     cairo_pen_t pen;
@@ -1152,8 +1153,8 @@ spline_to (void *closure,
     } else {
 	compute_face (point, tangent, stroker, &face);
 
-	if (face.dev_slope.x * stroker->current_face.dev_slope.x +
-	    face.dev_slope.y * stroker->current_face.dev_slope.y < 0)
+	if ((face.dev_slope.x * stroker->current_face.dev_slope.x +
+	     face.dev_slope.y * stroker->current_face.dev_slope.y) < stroker->spline_cusp_tolerance)
 	{
 	    const cairo_point_t *inpt, *outpt;
 	    struct stroke_contour *outer;
@@ -1304,7 +1305,17 @@ _cairo_path_fixed_stroke_to_polygon (const cairo_path_fixed_t	*path,
     stroker.ctm = ctm;
     stroker.ctm_inverse = ctm_inverse;
     stroker.tolerance = tolerance;
-
+    /* To test whether we need to join two segments of a spline using
+     * a round-join or a bevel-join, we can inspect the angle between the
+     * two segments. If the difference between the chord distance
+     * (half-line-width times the cosine of the bisection angle) and the
+     * half-line-width itself is greater than tolerance then we need to
+     * inject a point.
+     */
+    stroker.spline_cusp_tolerance = 1 - 2 * tolerance / style->line_width;
+    stroker.spline_cusp_tolerance *= stroker.spline_cusp_tolerance;
+    stroker.spline_cusp_tolerance *= 2;
+    stroker.spline_cusp_tolerance -= 1;
     stroker.ctm_det_positive =
 	_cairo_matrix_compute_determinant (ctm) >= 0.0;
 
