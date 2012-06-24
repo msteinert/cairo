@@ -424,11 +424,15 @@ outer_close (struct stroker *stroker,
     switch (stroker->style.line_join) {
     case CAIRO_LINE_JOIN_ROUND:
 	/* construct a fan around the common midpoint */
-	add_fan (stroker,
-		 &in->dev_vector,
-		 &out->dev_vector,
-		 &in->point, inpt, outpt,
-		 clockwise, outer);
+	if ((in->dev_slope.x * out->dev_slope.x +
+	     in->dev_slope.y * out->dev_slope.y) < stroker->spline_cusp_tolerance)
+	{
+	    add_fan (stroker,
+		     &in->dev_vector,
+		     &out->dev_vector,
+		     &in->point, inpt, outpt,
+		     clockwise, outer);
+	}
 	break;
 
     case CAIRO_LINE_JOIN_MITER:
