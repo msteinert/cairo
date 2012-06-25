@@ -1158,8 +1158,8 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 
 #ifndef WORDS_BIGENDIAN
 	{
-	    uint8_t   *d = data;
-	    int		count = stride * height;
+	    uint8_t *d = data;
+	    int count = stride * height;
 
 	    while (count--) {
 		*d = CAIRO_BITSWAP8 (*d);
@@ -1173,7 +1173,7 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
     case FT_PIXEL_MODE_LCD:
     case FT_PIXEL_MODE_LCD_V:
     case FT_PIXEL_MODE_GRAY:
-        if (font_options->antialias != CAIRO_ANTIALIAS_SUBPIXEL) {
+	if (font_options->antialias != CAIRO_ANTIALIAS_SUBPIXEL) {
 	    stride = bitmap->pitch;
 	    if (own_buffer) {
 		data = bitmap->buffer;
@@ -1185,7 +1185,7 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 		memcpy (data, bitmap->buffer, stride * height);
 	    }
 
-	format = CAIRO_FORMAT_A8;
+	    format = CAIRO_FORMAT_A8;
 	} else {
 	    /* if we get there, the  data from the source bitmap
 	     * really comes from _fill_xrender_bitmap, and is
@@ -1193,9 +1193,9 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 	    assert (own_buffer != 0);
 	    assert (bitmap->pixel_mode != FT_PIXEL_MODE_GRAY);
 
-		data = bitmap->buffer;
-		stride = bitmap->pitch;
-		format = CAIRO_FORMAT_ARGB32;
+	    data = bitmap->buffer;
+	    stride = bitmap->pitch;
+	    format = CAIRO_FORMAT_ARGB32;
 	}
 	break;
     case FT_PIXEL_MODE_GRAY2:
