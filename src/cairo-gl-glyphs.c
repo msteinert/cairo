@@ -372,6 +372,7 @@ render_glyphs_via_mask (cairo_gl_surface_t *dst,
     if (likely (status == CAIRO_STATUS_SUCCESS)) {
 	cairo_surface_pattern_t mask_pattern;
 	cairo_surface_pattern_t source_pattern;
+	cairo_rectangle_int_t clip_extents;
 
 	mask->is_clear = FALSE;
 	_cairo_pattern_init_for_surface (&mask_pattern, mask);
@@ -387,7 +388,11 @@ render_glyphs_via_mask (cairo_gl_surface_t *dst,
 		                     dst_x-info->extents.x, dst_y-info->extents.y);
 
 	clip = _cairo_clip_copy (clip);
-	clip = _cairo_clip_intersect_rectangle (clip, &info->extents);
+	clip_extents.x = info->extents.x - dst_x;
+	clip_extents.y = info->extents.y - dst_y;
+	clip_extents.width = info->extents.width;
+	clip_extents.height = info->extents.height;
+	clip = _cairo_clip_intersect_rectangle (clip, &clip_extents);
 
 	status = _cairo_surface_mask (&dst->base, op,
 		                      &source_pattern.base,
