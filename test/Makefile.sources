@@ -280,6 +280,7 @@ test_sources = \
 	rotated-clip.c					\
 	rounded-rectangle-fill.c			\
 	rounded-rectangle-stroke.c			\
+	sample.c					\
 	scale-down-source-surface-paint.c		\
 	scale-offset-image.c				\
 	scale-offset-similar.c				\
