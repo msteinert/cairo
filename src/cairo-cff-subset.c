@@ -51,6 +51,7 @@
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-truetype-subset-private.h"
 #include <string.h>
+#include <locale.h>
 
 /* CFF Dict Operators. If the high byte is 0 the command is encoded
  * with a single byte. */
@@ -293,10 +294,22 @@ decode_nibble (int n, char *buf)
 static unsigned char *
 decode_real (unsigned char *p, double *real)
 {
+    struct lconv *locale_data;
+    const char *decimal_point;
+    int decimal_point_len;
     int n;
     char buffer[100];
+    char buffer2[200];
+    char *q;
     char *buf = buffer;
     char *buf_end = buffer + sizeof (buf);
+
+    locale_data = localeconv ();
+    decimal_point = locale_data->decimal_point;
+    decimal_point_len = strlen (decimal_point);
+
+    assert (decimal_point_len != 0);
+    assert (sizeof(buffer) + decimal_point_len < sizeof(buffer2));
 
     p++;
     while (buf + 2 < buf_end) {
@@ -312,7 +325,18 @@ decode_real (unsigned char *p, double *real)
     };
     *buf = 0;
 
-    if (sscanf(buffer, "%lf", real) != 1)
+    buf = buffer;
+    if (strchr (buffer, '.')) {
+	 q = strchr (buffer, '.');
+	 strncpy (buffer2, buffer, q - buffer);
+	 buf = buffer2 + (q - buffer);
+	 strncpy (buf, decimal_point, decimal_point_len);
+	 buf += decimal_point_len;
+	 strcpy (buf, q + 1);
+	 buf = buffer2;
+    }
+
+    if (sscanf(buf, "%lf", real) != 1)
         *real = 0.0;
 
     return p;
