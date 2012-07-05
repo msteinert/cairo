@@ -302,7 +302,7 @@ decode_real (unsigned char *p, double *real)
     char buffer2[200];
     char *q;
     char *buf = buffer;
-    char *buf_end = buffer + sizeof (buf);
+    char *buf_end = buffer + sizeof (buffer);
 
     locale_data = localeconv ();
     decimal_point = locale_data->decimal_point;
