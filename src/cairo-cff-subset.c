@@ -3193,6 +3193,7 @@ _cairo_cff_font_fallback_create (cairo_scaled_font_subset_t  *scaled_font_subset
     cff_index_init (&font->strings_subset_index);
     font->global_subs_used = NULL;
     font->local_subs_used = NULL;
+    font->subset_subroutines = FALSE;
     font->fdselect = NULL;
     font->fd_dict = NULL;
     font->fd_private_dict = NULL;
