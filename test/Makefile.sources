@@ -25,6 +25,7 @@ test_sources = \
 	big-trap.c					\
 	bilevel-image.c					\
 	bug-40410.c					\
+	bug-51910.c					\
 	bug-bo-rectangular.c				\
 	bug-bo-collins.c				\
 	bug-bo-ricotz.c					\
