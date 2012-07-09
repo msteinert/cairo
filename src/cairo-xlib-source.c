@@ -920,13 +920,19 @@ surface_source (cairo_xlib_surface_t *dst,
     cairo_matrix_t m;
 
     upload = *sample;
-    if (_cairo_surface_get_extents (pattern->surface, &limit) &&
-	! _cairo_rectangle_intersect (&upload, &limit))
-    {
-	if (pattern->base.extend == CAIRO_EXTEND_NONE)
-	    return alpha_source (dst, 0);
-
-	upload = limit;
+    if (_cairo_surface_get_extents (pattern->surface, &limit)) {
+	if (pattern->base.extend == CAIRO_EXTEND_NONE) {
+	    if (! _cairo_rectangle_intersect (&upload, &limit))
+		return alpha_source (dst, 0);
+	} else {
+	    if (upload.x < limit.x ||
+		upload.x + upload.width > limit.x + limit.width ||
+		upload.y < limit.y ||
+		upload.y + upload.height > limit.y + limit.height)
+	    {
+		upload = limit;
+	    }
+	}
     }
 
     src = (cairo_xlib_surface_t *)
