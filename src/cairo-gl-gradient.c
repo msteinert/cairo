@@ -124,9 +124,9 @@ _cairo_gl_gradient_render (const cairo_gl_context_t    *ctx,
 	pixman_stops[i].color.alpha = stops[i].color.alpha_short;
     }
 
-    p1.x = 0;
+    p1.x = _cairo_fixed_16_16_from_double (0.5);
     p1.y = 0;
-    p2.x = width << 16;
+    p2.x = _cairo_fixed_16_16_from_double (width - 0.5);
     p2.y = 0;
 
     gradient = pixman_image_create_linear_gradient (&p1, &p2,
