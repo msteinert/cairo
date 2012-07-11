@@ -101,6 +101,7 @@ static void
 _gl_finish (void *device)
 {
     cairo_gl_context_t *ctx = device;
+    int n;
 
     _gl_lock (device);
 
@@ -118,7 +119,6 @@ static void
 _gl_destroy (void *device)
 {
     cairo_gl_context_t *ctx = device;
-    int n;
 
     ctx->acquire (ctx);
 
