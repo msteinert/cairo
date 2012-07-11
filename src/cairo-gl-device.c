@@ -108,6 +108,9 @@ _gl_finish (void *device)
 
     _cairo_gl_context_fini_shaders (ctx);
 
+    for (n = 0; n < ARRAY_LENGTH (ctx->glyph_cache); n++)
+	_cairo_gl_glyph_cache_fini (ctx, &ctx->glyph_cache[n]);
+
     _gl_unlock (device);
 }
 
@@ -130,9 +133,6 @@ _gl_destroy (void *device)
 	cairo_list_del (&font->link);
 	free (font);
     }
-
-    for (n = 0; n < ARRAY_LENGTH (ctx->glyph_cache); n++)
-	_cairo_gl_glyph_cache_fini (ctx, &ctx->glyph_cache[n]);
 
     _cairo_array_fini (&ctx->tristrip_indices);
 
