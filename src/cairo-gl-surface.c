@@ -1121,6 +1121,7 @@ _cairo_gl_surface_map_to_image (void      *abstract_surface,
 	    free(row);
     }
 
+    image->base.is_clear = FALSE;
     return image;
 }
 
