@@ -359,21 +359,26 @@ add_chart (struct chart *c,
 	dx = c->width / (double) (c->num_tests * c->num_reports);
 	x = dx * (c->num_reports * test + report - .5);
 
-	set_report_gradient (c, report,
-			     floor (x), c->height / 2.,
-			     floor (x + dx) - floor (x),
-			     ceil (-dy*value - c->height/2.) + c->height/2.);
-
 	cairo_rectangle (c->cr,
 			 floor (x), c->height / 2.,
 			 floor (x + dx) - floor (x),
 			 ceil (-dy*value - c->height/2.) + c->height/2.);
-	cairo_fill_preserve (c->cr);
-	cairo_save (c->cr);
-	cairo_clip_preserve (c->cr);
-	set_report_color (c, report);
-	cairo_stroke (c->cr);
-	cairo_restore (c->cr);
+	if (dx < 5) {
+	    set_report_color (c, report);
+	    cairo_fill (c->cr);
+	} else {
+	    set_report_gradient (c, report,
+				 floor (x), c->height / 2.,
+				 floor (x + dx) - floor (x),
+				 ceil (-dy*value - c->height/2.) + c->height/2.);
+
+	    cairo_fill_preserve (c->cr);
+	    cairo_save (c->cr);
+	    cairo_clip_preserve (c->cr);
+	    set_report_color (c, report);
+	    cairo_stroke (c->cr);
+	    cairo_restore (c->cr);
+	}
 
 	/* Skip the label if the difference between the two is less than 0.1% */
 	if (fabs (value) < 0.1)
@@ -423,21 +428,25 @@ add_chart (struct chart *c,
 	dx = c->width / (double) (c->num_tests * (c->num_reports+1));
 	x = dx * ((c->num_reports+1) * test + report + .5);
 
-	set_report_gradient (c, report,
-			 floor (x), c->height,
-			 floor (x + dx) - floor (x),
-			 floor (c->height - dy*value) - c->height);
-
 	cairo_rectangle (c->cr,
 			 floor (x), c->height,
 			 floor (x + dx) - floor (x),
 			 floor (c->height - dy*value) - c->height);
-	cairo_fill_preserve (c->cr);
-	cairo_save (c->cr);
-	cairo_clip_preserve (c->cr);
-	set_report_color (c, report);
-	cairo_stroke (c->cr);
-	cairo_restore (c->cr);
+	if (dx < 5) {
+	    set_report_color (c, report);
+	    cairo_fill (c->cr);
+	} else {
+	    set_report_gradient (c, report,
+				 floor (x), c->height,
+				 floor (x + dx) - floor (x),
+				 floor (c->height - dy*value) - c->height);
+	    cairo_fill_preserve (c->cr);
+	    cairo_save (c->cr);
+	    cairo_clip_preserve (c->cr);
+	    set_report_color (c, report);
+	    cairo_stroke (c->cr);
+	    cairo_restore (c->cr);
+	}
     }
 }
 
