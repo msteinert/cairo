@@ -323,6 +323,9 @@ static cairo_int_status_t copy_boxes (void *_dst,
     cairo_int_status_t status;
 
     TRACE ((stderr, "%s\n", __FUNCTION__));
+    if (! _cairo_gl_surface_is_texture (src))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     status = _cairo_gl_composite_init (&setup, CAIRO_OPERATOR_SOURCE, _dst, FALSE);
     if (unlikely (status))
         goto FAIL;
