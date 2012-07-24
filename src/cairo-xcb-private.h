@@ -39,6 +39,8 @@
 
 #include "cairo-xcb.h"
 
+#include "cairoint.h"
+
 #include "cairo-cache-private.h"
 #include "cairo-compiler-private.h"
 #include "cairo-device-private.h"
