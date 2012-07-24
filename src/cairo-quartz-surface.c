@@ -786,6 +786,7 @@ static cairo_status_t
 _cairo_surface_to_cgimage (cairo_surface_t       *source,
 			   cairo_rectangle_int_t *extents,
 			   cairo_format_t         format,
+			   cairo_matrix_t        *matrix,
 			   const cairo_clip_t    *clip,
 			   CGImageRef            *image_out)
 {
@@ -830,7 +831,7 @@ _cairo_surface_to_cgimage (cairo_surface_t       *source,
 	}
 
 	status = _cairo_recording_surface_replay_with_clip (source,
-							    NULL,
+							    matrix,
 							    &image_surface->base,
 							    NULL);
 	if (unlikely (status)) {
@@ -841,6 +842,8 @@ _cairo_surface_to_cgimage (cairo_surface_t       *source,
 
 	source_img->image_out = image_surface;
 	source_img->image_extra = NULL;
+
+	cairo_matrix_init_identity (matrix);
     }
     else {
 	status = _cairo_surface_acquire_source_image (source_img->surface,
@@ -963,8 +966,9 @@ _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (cairo_quartz_surface_t 
     else
 	_cairo_surface_get_extents (&dest->base, &extents);
 
+    m = spattern->base.matrix;
     status = _cairo_surface_to_cgimage (pat_surf, &extents, format,
-					clip, &image);
+					&m, clip, &image);
     if (unlikely (status))
 	return status;
 
@@ -999,7 +1003,6 @@ _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (cairo_quartz_surface_t 
     rw = pbounds.size.width;
     rh = pbounds.size.height;
 
-    m = spattern->base.matrix;
     cairo_matrix_invert (&m);
     _cairo_quartz_cairo_matrix_to_quartz (&m, &stransform);
 
@@ -1247,7 +1250,7 @@ _cairo_quartz_setup_state (cairo_quartz_drawing_state_t *state,
 
 	_cairo_surface_get_extents (composite->surface, &extents);
 	status = _cairo_surface_to_cgimage (pat_surf, &extents, format,
-					    clip, &img);
+					    &m, clip, &img);
 	if (unlikely (status))
 	    return status;
 
@@ -1650,10 +1653,11 @@ _cairo_quartz_cg_mask_with_surface (cairo_composite_rectangles_t *extents,
     cairo_quartz_drawing_state_t state;
     cairo_format_t format = _cairo_format_from_content (extents->surface->content);
     cairo_rectangle_int_t dest_extents;
+    cairo_matrix_t m = *mask_mat;
 
     _cairo_surface_get_extents (extents->surface, &dest_extents);
     status = _cairo_surface_to_cgimage (mask_surf, &dest_extents, format,
-					extents->clip, &img);
+					&m, extents->clip, &img);
     if (unlikely (status))
 	return status;
 
@@ -1662,7 +1666,7 @@ _cairo_quartz_cg_mask_with_surface (cairo_composite_rectangles_t *extents,
 	goto BAIL;
 
     rect = CGRectMake (0.0, 0.0, CGImageGetWidth (img), CGImageGetHeight (img));
-    _cairo_quartz_cairo_matrix_to_quartz (mask_mat, &mask_matrix);
+    _cairo_quartz_cairo_matrix_to_quartz (&m, &mask_matrix);
 
     /* ClipToMask is essentially drawing an image, so we need to flip the CTM
      * to get the image to appear oriented the right way */
