@@ -536,6 +536,8 @@ _cairo_clip_intersect_clip_path_transformed (cairo_clip_t *clip,
     if (_cairo_path_fixed_init_copy (&path, &clip_path->path))
 	return _cairo_clip_set_all_clipped (clip);
 
+    _cairo_path_fixed_transform (&path, m);
+
     clip =  _cairo_clip_intersect_path (clip,
 				       &path,
 				       clip_path->fill_rule,
