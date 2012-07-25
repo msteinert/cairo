@@ -313,11 +313,13 @@ draw_image_boxes (void *_dst,
 }
 
 static cairo_int_status_t copy_boxes (void *_dst,
-				      cairo_surface_t *src,
+				      cairo_surface_t *_src,
 				      cairo_boxes_t *boxes,
 				      const cairo_rectangle_int_t *extents,
 				      int dx, int dy)
 {
+    cairo_gl_surface_t *dst = _dst;
+    cairo_gl_surface_t *src = (cairo_gl_surface_t *)_src;
     cairo_gl_composite_t setup;
     cairo_gl_context_t *ctx;
     cairo_int_status_t status;
@@ -326,11 +328,14 @@ static cairo_int_status_t copy_boxes (void *_dst,
     if (! _cairo_gl_surface_is_texture (src))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    if (src->base.device != dst->base.device)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     status = _cairo_gl_composite_init (&setup, CAIRO_OPERATOR_SOURCE, _dst, FALSE);
     if (unlikely (status))
         goto FAIL;
 
-    _cairo_gl_composite_set_source_operand (&setup, source_to_operand (src));
+    _cairo_gl_composite_set_source_operand (&setup, &src->operand);
     _cairo_gl_operand_translate (&setup.src, -dx, -dy);
 
     status = _cairo_gl_composite_begin (&setup, &ctx);
