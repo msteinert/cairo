@@ -364,8 +364,26 @@ void
 _cairo_gl_operand_translate (cairo_gl_operand_t *operand,
 			     double tx, double ty)
 {
-    operand->texture.attributes.matrix.x0 -= tx * operand->texture.attributes.matrix.xx;
-    operand->texture.attributes.matrix.y0 -= ty * operand->texture.attributes.matrix.yy;
+    switch (operand->type) {
+    case CAIRO_GL_OPERAND_TEXTURE:
+	operand->texture.attributes.matrix.x0 -= tx * operand->texture.attributes.matrix.xx;
+	operand->texture.attributes.matrix.y0 -= ty * operand->texture.attributes.matrix.yy;
+	break;
+
+    case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
+	operand->gradient.m.x0 -= tx * operand->gradient.m.xx;
+	operand->gradient.m.y0 -= ty * operand->gradient.m.yy;
+	break;
+
+    case CAIRO_GL_OPERAND_NONE:
+    case CAIRO_GL_OPERAND_CONSTANT:
+    case CAIRO_GL_OPERAND_COUNT:
+    default:
+	break;
+    }
 }
 
 static cairo_status_t
