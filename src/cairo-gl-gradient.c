@@ -61,17 +61,17 @@ _cairo_gl_gradient_sample_width (unsigned int                 n_stops,
 	if (dx == 0)
 	    continue;
 
-	max = stops[n].color.red - stops[n-1].color.red;
+	max = fabs (stops[n].color.red - stops[n-1].color.red);
 
-	delta = stops[n].color.green - stops[n-1].color.green;
+	delta = fabs (stops[n].color.green - stops[n-1].color.green);
 	if (delta > max)
 	    max = delta;
 
-	delta = stops[n].color.blue - stops[n-1].color.blue;
+	delta = fabs (stops[n].color.blue - stops[n-1].color.blue);
 	if (delta > max)
 	    max = delta;
 
-	delta = stops[n].color.alpha - stops[n-1].color.alpha;
+	delta = fabs (stops[n].color.alpha - stops[n-1].color.alpha);
 	if (delta > max)
 	    max = delta;
 
