@@ -1,3 +1,4 @@
+/* -*- Mode: c; tab-width: 8; c-basic-offset: 4; indent-tabs-mode: t; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2006 Adrian Johnson
@@ -152,8 +153,8 @@ typedef struct _cairo_cff_font {
     int  		 units_per_em;
     int 		 global_sub_bias;
     int			 local_sub_bias;
-    int                  default_width;
-    int                  nominal_width;
+    double               default_width;
+    double               nominal_width;
 
     /* CID Font Data */
     int                 *fdselect;
@@ -162,8 +163,8 @@ typedef struct _cairo_cff_font {
     cairo_hash_table_t **fd_private_dict;
     cairo_array_t       *fd_local_sub_index;
     int			*fd_local_sub_bias;
-    int                 *fd_default_width;
-    int                 *fd_nominal_width;
+    double              *fd_default_width;
+    double              *fd_nominal_width;
 
     /* Subsetted Font Data */
     char                *subset_font_name;
@@ -910,8 +911,8 @@ cairo_cff_font_read_private_dict (cairo_cff_font_t   *font,
                                   cairo_array_t      *local_sub_index,
                                   int                *local_sub_bias,
                                   cairo_bool_t      **local_subs_used,
-                                  int                *default_width,
-                                  int                *nominal_width,
+                                  double             *default_width,
+                                  double             *nominal_width,
                                   unsigned char      *ptr,
                                   int                 size)
 {
@@ -946,12 +947,12 @@ cairo_cff_font_read_private_dict (cairo_cff_font_t   *font,
     *default_width = 0;
     operand = cff_dict_get_operands (private_dict, DEFAULTWIDTH_OP, &i);
     if (operand)
-        decode_integer (operand, default_width);
+        decode_number (operand, default_width);
 
     *nominal_width = 0;
     operand = cff_dict_get_operands (private_dict, NOMINALWIDTH_OP, &i);
     if (operand)
-        decode_integer (operand, nominal_width);
+	 decode_number (operand, nominal_width);
 
     num_subs = _cairo_array_num_elements (local_sub_index);
     *local_subs_used = calloc (num_subs, sizeof (cairo_bool_t));
@@ -1468,9 +1469,8 @@ type2_decode_integer (unsigned char *p, int *integer)
         *integer = -(p[0] - 251) * 256 - p[1] - 108;
         p += 2;
     } else { /* *p == 255 */
-    /* This actually a 16.16 fixed-point number however we are not interested in
-     * the value of fixed-point numbers. */
-        *integer = (p[1] << 24) | (p[2] << 16) | (p[3] << 8) | p[4];
+	 /* 16.16 fixed-point number. The fraction is ignored. */
+	 *integer = (int16_t)((p[1] << 8) | p[2]);
         p += 5;
     }
     return p;
