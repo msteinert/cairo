@@ -518,8 +518,8 @@ cairo_type1_font_subset_write_header (cairo_type1_font_subset_t *font,
 	    }
 	}
     } else {
-	for (i = 1; i < font->base.num_glyphs; i++) {
-	    if (font->glyphs[i].subset_index < 0)
+	for (i = 0; i < font->base.num_glyphs; i++) {
+	    if (font->glyphs[i].subset_index <= 0)
 		continue;
 	    _cairo_output_stream_printf (font->output,
 					 "dup %d /%s put\n",
