@@ -59,7 +59,7 @@ _cairo_gl_gradient_sample_width (unsigned int                 n_stops,
 	int ramp;
 
 	if (dx == 0)
-	    continue;
+	    return 1024; /* we need to emulate an infinitely sharp step */
 
 	max = fabs (stops[n].color.red - stops[n-1].color.red);
 
@@ -80,8 +80,7 @@ _cairo_gl_gradient_sample_width (unsigned int                 n_stops,
 	    width = ramp;
     }
 
-    width = (width + 7) & -8;
-    return MIN (width, 1024);
+    return (width + 7) & -8;
 }
 
 static cairo_status_t
@@ -225,6 +224,8 @@ _cairo_gl_gradient_create (cairo_gl_context_t           *ctx,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     tex_width = _cairo_gl_gradient_sample_width (n_stops, stops);
+    if (tex_width > ctx->max_texture_size)
+	tex_width = ctx->max_texture_size;
 
     CAIRO_REFERENCE_COUNT_INIT (&gradient->ref_count, 2);
     gradient->cache_entry.hash = hash;
