@@ -122,8 +122,10 @@ _egl_make_current_surfaceless(cairo_egl_context_t *ctx)
     const char *extensions;
 
     extensions = eglQueryString(ctx->display, EGL_EXTENSIONS);
-    if (!strstr(extensions, "EGL_KHR_surfaceless_opengl"))
+    if (strstr(extensions, "EGL_KHR_surfaceless_context") == NULL &&
+	strstr(extensions, "EGL_KHR_surfaceless_opengl") == NULL)
 	return FALSE;
+
     if (!eglMakeCurrent(ctx->display,
 			EGL_NO_SURFACE, EGL_NO_SURFACE, ctx->context))
 	return FALSE;
@@ -174,7 +176,6 @@ cairo_egl_device_create (EGLDisplay dpy, EGLContext egl)
 	eglChooseConfig (dpy, config_attribs, &config, 1, &numConfigs);
 
 	ctx->dummy_surface = eglCreatePbufferSurface (dpy, config, attribs);
-
 	if (ctx->dummy_surface == NULL) {
 	    free (ctx);
 	    return _cairo_gl_context_create_in_error (CAIRO_STATUS_NO_MEMORY);
