@@ -128,10 +128,11 @@ _cairo_damage_add_boxes(cairo_damage_t *damage,
     chunk->count = count;
 
     damage->tail->next = chunk;
-    damage->remain = size - count;
+    damage->tail = chunk;
 
     memcpy (damage->tail->base, boxes + n,
 	    count * sizeof (cairo_box_t));
+    damage->remain = size - count;
 
     return damage;
 }
