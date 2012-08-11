@@ -83,6 +83,27 @@ _cairo_gl_gradient_sample_width (unsigned int                 n_stops,
     return (width + 7) & -8;
 }
 
+static uint8_t premultiply(double c, double a)
+{
+    int v = c * a * 256;
+    return v - (v >> 8);
+}
+
+static uint32_t color_stop_to_pixel(const cairo_gradient_stop_t *stop)
+{
+    uint8_t a, r, g, b;
+
+    a = stop->color.alpha_short >> 8;
+    r = premultiply(stop->color.red,   stop->color.alpha);
+    g = premultiply(stop->color.green, stop->color.alpha);
+    b = premultiply(stop->color.blue,  stop->color.alpha);
+
+    if (_cairo_is_little_endian ())
+	return a << 24 | r << 16 | g << 8 | b << 0;
+    else
+	return a << 0 | r << 8 | g << 16 | b << 24;
+}
+
 static cairo_status_t
 _cairo_gl_gradient_render (const cairo_gl_context_t    *ctx,
                            unsigned int                 n_stops,
@@ -156,6 +177,14 @@ _cairo_gl_gradient_render (const cairo_gl_context_t    *ctx,
 
     pixman_image_unref (gradient);
     pixman_image_unref (image);
+
+    /* We need to fudge pixel 0 to hold the left-most color stop and not
+     * the neareset stop to the zeroth pixel centre in order to correctly
+     * populate the border color. For completeness, do both edges.
+     */
+    ((uint32_t*)bytes)[0] = color_stop_to_pixel(&stops[0]);
+    ((uint32_t*)bytes)[width-1] = color_stop_to_pixel(&stops[n_stops-1]);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
