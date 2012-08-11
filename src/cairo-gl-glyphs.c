@@ -439,7 +439,6 @@ _cairo_gl_composite_glyphs_with_clip (void			    *_dst,
 {
     cairo_gl_surface_t *dst = _dst;
     cairo_bool_t has_component_alpha;
-    int i;
 
     TRACE ((stderr, "%s\n", __FUNCTION__));
 
