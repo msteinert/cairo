@@ -832,7 +832,7 @@ _init_logfile (void)
 		filename, name, getpid());
 
 	filename = buf;
-
+    } else {
 	setenv ("CAIRO_TRACE_FD", "-1", 1);
     }
 
