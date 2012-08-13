@@ -723,7 +723,7 @@ _cairo_format_bits_per_pixel (cairo_format_t format)
     }
 }
 
-static cairo_surface_t *
+cairo_surface_t *
 _cairo_image_surface_create_similar (void	       *abstract_other,
 				     cairo_content_t	content,
 				     int		width,

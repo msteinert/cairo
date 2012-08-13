@@ -1202,14 +1202,12 @@ _cairo_surface_observer_glyphs (void			*abstract_surface,
 }
 
 static cairo_status_t
-_cairo_surface_observer_flush (void *abstract_surface)
+_cairo_surface_observer_flush (void *abstract_surface, unsigned flags)
 {
     cairo_surface_observer_t *surface = abstract_surface;
 
     do_callbacks (surface, &surface->flush_callbacks);
-
-    cairo_surface_flush (surface->target);
-    return surface->target->status;
+    return _cairo_surface_flush (surface->target, flags);
 }
 
 static cairo_status_t

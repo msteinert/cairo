@@ -750,6 +750,16 @@ composite_tristrip (void			*_dst,
     return  CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_int_status_t
+check_composite_glyphs (const cairo_composite_rectangles_t *extents,
+			cairo_scaled_font_t *scaled_font,
+			cairo_glyph_t *glyphs,
+			int *num_glyphs)
+{
+    return CAIRO_STATUS_SUCCESS;
+}
+
+#if HAS_PIXMAN_GLYPHS
 static pixman_glyph_cache_t *global_glyph_cache;
 
 static inline pixman_glyph_cache_t *
@@ -776,16 +786,6 @@ _cairo_image_scaled_glyph_fini (cairo_scaled_font_t *scaled_font,
     CAIRO_MUTEX_UNLOCK (_cairo_glyph_cache_mutex);
 }
 
-static cairo_int_status_t
-check_composite_glyphs (const cairo_composite_rectangles_t *extents,
-			cairo_scaled_font_t *scaled_font,
-			cairo_glyph_t *glyphs,
-			int *num_glyphs)
-{
-    return CAIRO_STATUS_SUCCESS;
-}
-
-#if HAS_PIXMAN_GLYPHS
 static cairo_int_status_t
 composite_glyphs (void				*_dst,
 		  cairo_operator_t		 op,
@@ -896,6 +896,12 @@ out_unlock:
     return status;
 }
 #else
+void
+_cairo_image_scaled_glyph_fini (cairo_scaled_font_t *scaled_font,
+				cairo_scaled_glyph_t *scaled_glyph)
+{
+}
+
 static cairo_int_status_t
 composite_one_glyph (void				*_dst,
 		     cairo_operator_t			 op,

@@ -714,10 +714,14 @@ _put_image_boxes (cairo_xcb_surface_t    *surface,
 }
 
 static cairo_status_t
-_cairo_xcb_surface_flush (void *abstract_surface)
+_cairo_xcb_surface_flush (void *abstract_surface,
+			  unsigned flags)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
     cairo_status_t status;
+
+    if (flags)
+	return CAIRO_STATUS_SUCCESS;
 
     if (likely (surface->fallback == NULL)) {
 	status = CAIRO_STATUS_SUCCESS;

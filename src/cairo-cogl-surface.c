@@ -929,9 +929,13 @@ _cairo_cogl_journal_flush (cairo_cogl_surface_t *surface)
 }
 
 static cairo_status_t
-_cairo_cogl_surface_flush (void *abstract_surface)
+_cairo_cogl_surface_flush (void *abstract_surface,
+			   unsigned flags)
 {
     cairo_cogl_surface_t *surface = (cairo_cogl_surface_t *)abstract_surface;
+
+    if (flags)
+	return CAIRO_STATUS_SUCCESS;
 
     _cairo_cogl_journal_flush (surface);
 
@@ -1331,7 +1335,7 @@ _cairo_cogl_acquire_surface_texture (cairo_cogl_surface_t  *reference_surface,
 
     if (abstract_surface->device == reference_surface->base.device) {
 	cairo_cogl_surface_t *surface = (cairo_cogl_surface_t *)abstract_surface;
-	_cairo_cogl_surface_flush (surface);
+	_cairo_cogl_surface_flush (surface, 0);
 	return surface->texture ? cogl_object_ref (surface->texture) : NULL;
     }
 

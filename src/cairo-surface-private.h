@@ -115,4 +115,7 @@ cairo_private cairo_surface_t *
 _cairo_surface_get_source (cairo_surface_t *surface,
 			   cairo_rectangle_int_t *extents);
 
+cairo_private cairo_status_t
+_cairo_surface_flush (cairo_surface_t *surface, unsigned flags);
+
 #endif /* CAIRO_SURFACE_PRIVATE_H */

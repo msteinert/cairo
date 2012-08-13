@@ -236,7 +236,7 @@ copy_boxes (cairo_win32_display_surface_t *dst,
     if (! _cairo_boxes_for_each_box (boxes, source_contains_box, &cb))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = _cairo_surface_flush (surface);
+    status = __cairo_surface_flush (surface, 0);
     if (status)
 	return status;
 
@@ -360,7 +360,7 @@ alpha_blend_boxes (cairo_win32_display_surface_t *dst,
     if (! _cairo_boxes_for_each_box (boxes, source_contains_box, &cb))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = _cairo_surface_flush (&src->win32.base);
+    status = __cairo_surface_flush (&src->win32.base, 0);
     if (status)
 	return status;
 

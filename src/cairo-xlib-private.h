@@ -52,8 +52,10 @@
 #include <pixman.h>
 
 typedef struct _cairo_xlib_display cairo_xlib_display_t;
+typedef struct _cairo_xlib_shm_display cairo_xlib_shm_display_t;
 typedef struct _cairo_xlib_screen cairo_xlib_screen_t;
 typedef struct _cairo_xlib_source cairo_xlib_source_t;
+typedef struct _cairo_xlib_proxy cairo_xlib_proxy_t;
 typedef struct _cairo_xlib_surface cairo_xlib_surface_t;
 
 /* size of color cube */
@@ -71,6 +73,8 @@ struct _cairo_xlib_display {
     Display *display;
     cairo_list_t screens;
     cairo_list_t fonts;
+
+    cairo_xlib_shm_display_t *shm;
 
     const cairo_compositor_t *compositor;
 
@@ -168,6 +172,8 @@ struct _cairo_xlib_surface {
     Picture picture;
 
     const cairo_compositor_t *compositor;
+    cairo_surface_t *shm;
+    int fallback;
 
     cairo_xlib_display_t *display;
     cairo_xlib_screen_t *screen;
@@ -205,6 +211,11 @@ struct _cairo_xlib_surface {
     } embedded_source;
 };
 
+struct _cairo_xlib_proxy {
+    struct _cairo_xlib_source source;
+    cairo_surface_t *owner;
+};
+
 cairo_private cairo_status_t
 _cairo_xlib_surface_get_gc (cairo_xlib_display_t *display,
                             cairo_xlib_surface_t *surface,
@@ -212,6 +223,12 @@ _cairo_xlib_surface_get_gc (cairo_xlib_display_t *display,
 
 cairo_private cairo_device_t *
 _cairo_xlib_device_create (Display *display);
+
+cairo_private void
+_cairo_xlib_display_init_shm (cairo_xlib_display_t *display);
+
+cairo_private void
+_cairo_xlib_display_fini_shm (cairo_xlib_display_t *display);
 
 cairo_private cairo_xlib_screen_t *
 _cairo_xlib_display_get_screen (cairo_xlib_display_t *display,
@@ -380,5 +397,47 @@ _cairo_xlib_surface_put_gc (cairo_xlib_display_t *display,
 			       surface->depth,
 			       gc);
 }
+
+cairo_private cairo_surface_t *
+_cairo_xlib_surface_create_similar_shm (void *surface,
+					cairo_format_t format,
+					int width, int height);
+
+cairo_private cairo_surface_t *
+_cairo_xlib_surface_get_shm (cairo_xlib_surface_t *surface);
+
+cairo_private cairo_int_status_t
+_cairo_xlib_surface_put_shm (cairo_xlib_surface_t *surface);
+
+cairo_private cairo_surface_t *
+_cairo_xlib_surface_create_shm_image (cairo_xlib_surface_t *surface,
+				      pixman_format_code_t format,
+				      int width, int height);
+
+cairo_private void
+_cairo_xlib_shm_surface_get_ximage (cairo_surface_t *surface,
+				    XImage *ximage);
+
+cairo_private void *
+_cairo_xlib_shm_surface_get_obdata (cairo_surface_t *surface);
+
+cairo_private cairo_bool_t
+_cairo_xlib_shm_surface_is_active (cairo_surface_t *surface);
+
+cairo_private cairo_bool_t
+_cairo_xlib_shm_surface_is_idle (cairo_surface_t *surface);
+
+cairo_private Pixmap
+_cairo_xlib_shm_surface_get_pixmap (cairo_surface_t *surface);
+
+cairo_private void
+_cairo_xlib_shm_surface_mark_active (cairo_surface_t *surface);
+
+cairo_private XRenderPictFormat *
+_cairo_xlib_shm_surface_get_xrender_format (cairo_surface_t *surface);
+
+cairo_private pixman_format_code_t
+_pixman_format_for_xlib_surface (cairo_xlib_surface_t *surface);
+
 
 #endif /* CAIRO_XLIB_PRIVATE_H */

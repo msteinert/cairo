@@ -63,7 +63,7 @@ AM_CONDITIONAL(CAIRO_HAS_DLSYM, test "x$have_dlsym" = "xyes")
 dnl ===========================================================================
 
 CAIRO_ENABLE_SURFACE_BACKEND(xlib, Xlib, auto, [
-  xlib_REQUIRES="x11"
+  xlib_REQUIRES="x11 xext"
   PKG_CHECK_MODULES(xlib, $xlib_REQUIRES, ,
 		    [AC_MSG_RESULT(no)
 		     xlib_REQUIRES=""
@@ -71,7 +71,7 @@ CAIRO_ENABLE_SURFACE_BACKEND(xlib, Xlib, auto, [
 		     if test "x$no_x" = xyes; then
 		       use_xlib="no (requires X development libraries)"
 		     else
-		       xlib_NONPKGCONFIG_LIBS="$X_PRE_LIBS $X_LIBS -lX11 $X_EXTRA_LIBS"
+		       xlib_NONPKGCONFIG_LIBS="$X_PRE_LIBS $X_LIBS -lX11 -lXext $X_EXTRA_LIBS"
 		       xlib_NONPKGCONFIG_CFLAGS=$X_CFLAGS
 		     fi])
 ])

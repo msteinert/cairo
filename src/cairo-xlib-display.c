@@ -95,6 +95,8 @@ _cairo_xlib_display_destroy (void *abstract_display)
 {
     cairo_xlib_display_t *display = abstract_display;
 
+    _cairo_xlib_display_fini_shm (display);
+
     free (display);
 }
 
@@ -147,15 +149,18 @@ static const cairo_device_backend_t _cairo_xlib_device_backend = {
     _cairo_xlib_display_destroy,
 };
 
-
 static void _cairo_xlib_display_select_compositor (cairo_xlib_display_t *display)
 {
+#if 1
     if (display->render_major > 0 || display->render_minor >= 4)
 	display->compositor = _cairo_xlib_traps_compositor_get ();
     else if (display->render_major > 0 || display->render_minor >= 0)
 	display->compositor = _cairo_xlib_mask_compositor_get ();
     else
 	display->compositor = _cairo_xlib_core_compositor_get ();
+#else
+    display->compositor = _cairo_xlib_fallback_compositor_get ();
+#endif
 }
 
 /**
@@ -262,6 +267,8 @@ _cairo_xlib_device_create (Display *dpy)
 	    sizeof (display->cached_xrender_formats));
 
     display->force_precision = -1;
+
+    _cairo_xlib_display_init_shm (display);
 
     /* Prior to Render 0.10, there is no protocol support for gradients and
      * we call function stubs instead, which would silently consume the drawing.

@@ -141,11 +141,15 @@ _cairo_quartz_image_surface_get_extents (void *asurface,
  */
 
 static cairo_status_t
-_cairo_quartz_image_surface_flush (void *asurface)
+_cairo_quartz_image_surface_flush (void *asurface,
+				   unsigned flags)
 {
     cairo_quartz_image_surface_t *surface = (cairo_quartz_image_surface_t *) asurface;
     CGImageRef oldImage = surface->image;
     CGImageRef newImage = NULL;
+
+    if (flags)
+	return CAIRO_STATUS_SUCCESS;
 
     /* XXX only flush if the image has been modified. */
 

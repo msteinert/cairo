@@ -249,12 +249,11 @@ _cairo_xlib_xcb_surface_glyphs (void			*abstract_surface,
 }
 
 static cairo_status_t
-_cairo_xlib_xcb_surface_flush (void *abstract_surface)
+_cairo_xlib_xcb_surface_flush (void *abstract_surface, unsigned flags)
 {
     cairo_xlib_xcb_surface_t *surface = abstract_surface;
     /* We have to call cairo_surface_flush() to make sure snapshots are detached */
-    cairo_surface_flush (&surface->xcb->base);
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_surface_flush (&surface->xcb->base, flags);
 }
 
 static cairo_status_t

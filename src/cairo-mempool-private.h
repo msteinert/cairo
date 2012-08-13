@@ -1,7 +1,7 @@
-/* cairo - a vector graphics library with display and print output
+/* Cairo - a vector graphics library with display and print output
  *
- * Copyright © 2002 University of Southern California
- * Copyright © 2005 Red Hat, Inc.
+ * Copyright © 2007 Chris Wilson
+ * Copyright © 2009 Intel Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -28,33 +28,56 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is University of Southern
- * California.
+ * The Initial Developer of the Original Code is Red Hat, Inc.
  *
- * Contributor(s):
- *	Carl D. Worth <cworth@cworth.org>
+ * Contributors(s):
+ *	Chris Wilson <chris@chris-wilson.co.uk>
  */
 
-#ifndef CAIRO_SURFACE_INLINE_H
-#define CAIRO_SURFACE_INLINE_H
+#ifndef CAIRO_MEMPOOL_PRIVATE_H
+#define CAIRO_MEMPOOL_PRIVATE_H
 
-#include "cairo-surface-private.h"
+#include "cairo-compiler-private.h"
+#include "cairo-error-private.h"
 
-static inline cairo_status_t
-__cairo_surface_flush (cairo_surface_t *surface, unsigned flags)
-{
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    if (surface->backend->flush)
-	status = surface->backend->flush (surface, flags);
-    return status;
-}
+CAIRO_BEGIN_DECLS
 
-static inline cairo_surface_t *
-_cairo_surface_reference (cairo_surface_t *surface)
-{
-    if (!CAIRO_REFERENCE_COUNT_IS_INVALID (&surface->ref_count))
-	_cairo_reference_count_inc (&surface->ref_count);
-    return surface;
-}
+typedef struct _cairo_mempool cairo_mempool_t;
 
-#endif /* CAIRO_SURFACE_INLINE_H */
+struct _cairo_mempool {
+    char *base;
+    struct _cairo_memblock {
+	int bits;
+	cairo_list_t link;
+    } *blocks;
+    cairo_list_t free[32];
+    unsigned char *map;
+
+    unsigned int num_blocks;
+    int min_bits;     /* Minimum block size is 1 << min_bits */
+    int num_sizes;
+    int max_free_bits;
+
+    size_t free_bytes;
+    size_t max_bytes;
+};
+
+cairo_private cairo_status_t
+_cairo_mempool_init (cairo_mempool_t *pool,
+		     void *base,
+		     size_t bytes,
+		     int min_bits,
+		     int num_sizes);
+
+cairo_private void *
+_cairo_mempool_alloc (cairo_mempool_t *pi, size_t bytes);
+
+cairo_private void
+_cairo_mempool_free (cairo_mempool_t *pi, void *storage);
+
+cairo_private void
+_cairo_mempool_fini (cairo_mempool_t *pool);
+
+CAIRO_END_DECLS
+
+#endif /* CAIRO_MEMPOOL_PRIVATE_H */

@@ -52,7 +52,7 @@
 static const cairo_surface_backend_t _cairo_gl_surface_backend;
 
 static cairo_status_t
-_cairo_gl_surface_flush (void *abstract_surface);
+_cairo_gl_surface_flush (void *abstract_surface, unsigned flags);
 
 static cairo_bool_t _cairo_surface_is_gl (cairo_surface_t *surface)
 {
@@ -834,7 +834,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 
     cpp = PIXMAN_FORMAT_BPP (src->pixman_format) / 8;
 
-    status = _cairo_gl_surface_flush (&dst->base);
+    status = _cairo_gl_surface_flush (&dst->base, 0);
     if (unlikely (status))
 	goto FAIL;
 
@@ -1200,11 +1200,14 @@ _cairo_gl_surface_get_extents (void		     *abstract_surface,
 }
 
 static cairo_status_t
-_cairo_gl_surface_flush (void *abstract_surface)
+_cairo_gl_surface_flush (void *abstract_surface, unsigned flags)
 {
     cairo_gl_surface_t *surface = abstract_surface;
     cairo_status_t status;
     cairo_gl_context_t *ctx;
+
+    if (flags)
+	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_gl_context_acquire (surface->base.device, &ctx);
     if (unlikely (status))

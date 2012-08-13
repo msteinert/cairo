@@ -110,7 +110,8 @@ struct _cairo_surface_backend {
 				 cairo_font_options_t  *options);
 
     cairo_warn cairo_status_t
-    (*flush)                    (void                  *surface);
+    (*flush)                    (void                  *surface,
+				 unsigned               flags);
 
     cairo_warn cairo_status_t
     (*mark_dirty_rectangle)     (void                  *surface,

@@ -73,7 +73,7 @@ _cairo_image_surface_is_clone (cairo_image_surface_t *image)
 static inline cairo_bool_t
 _cairo_surface_is_image (const cairo_surface_t *surface)
 {
-    return surface->backend == &_cairo_image_surface_backend;
+    return surface->backend->type == CAIRO_SURFACE_TYPE_IMAGE;
 }
 
 /**

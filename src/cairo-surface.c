@@ -48,6 +48,7 @@
 #include "cairo-image-surface-inline.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-region-private.h"
+#include "cairo-surface-inline.h"
 #include "cairo-tee-surface-private.h"
 
 /**
@@ -386,17 +387,13 @@ _cairo_surface_has_snapshot (cairo_surface_t *surface,
     return NULL;
 }
 
-void
+cairo_status_t
 _cairo_surface_begin_modification (cairo_surface_t *surface)
 {
     assert (surface->status == CAIRO_STATUS_SUCCESS);
     assert (! surface->finished);
 
-    _cairo_surface_detach_snapshots (surface);
-    if (surface->snapshot_of != NULL)
-	_cairo_surface_detach_snapshot (surface);
-
-    _cairo_surface_detach_mime_data (surface);
+    return _cairo_surface_flush (surface, 1);
 }
 
 void
@@ -416,6 +413,7 @@ _cairo_surface_init (cairo_surface_t			*surface,
     surface->status = CAIRO_STATUS_SUCCESS;
     surface->unique_id = _cairo_surface_allocate_unique_id ();
     surface->finished = FALSE;
+    surface->_finishing = FALSE;
     surface->is_clear = FALSE;
     surface->serial = 0;
     surface->damage = NULL;
@@ -989,14 +987,12 @@ cairo_surface_get_reference_count (cairo_surface_t *surface)
 static void
 _cairo_surface_finish_snapshots (cairo_surface_t *surface)
 {
-    cairo_surface_flush (surface);
+    cairo_status_t status;
 
     /* update the snapshots *before* we declare the surface as finished */
     surface->_finishing = TRUE;
-
-    _cairo_surface_detach_snapshots (surface);
-    if (surface->snapshot_of != NULL)
-	_cairo_surface_detach_snapshot (surface);
+    status = _cairo_surface_flush (surface, 0);
+    (void) status;
 }
 
 static void
@@ -1459,6 +1455,18 @@ cairo_surface_get_font_options (cairo_surface_t       *surface,
 }
 slim_hidden_def (cairo_surface_get_font_options);
 
+cairo_status_t
+_cairo_surface_flush (cairo_surface_t *surface, unsigned flags)
+{
+    /* update the current snapshots *before* the user updates the surface */
+    _cairo_surface_detach_snapshots (surface);
+    if (surface->snapshot_of != NULL)
+	_cairo_surface_detach_snapshot (surface);
+    _cairo_surface_detach_mime_data (surface);
+
+    return __cairo_surface_flush (surface, flags);
+}
+
 /**
  * cairo_surface_flush:
  * @surface: a #cairo_surface_t
@@ -1483,15 +1491,9 @@ cairo_surface_flush (cairo_surface_t *surface)
     if (surface->finished)
 	return;
 
-    /* update the current snapshots *before* the user updates the surface */
-    _cairo_surface_detach_snapshots (surface);
-    _cairo_surface_detach_mime_data (surface);
-
-    if (surface->backend->flush) {
-	status = surface->backend->flush (surface);
-	if (unlikely (status))
-	    _cairo_surface_set_error (surface, status);
-    }
+    status = _cairo_surface_flush (surface, 0);
+    if (unlikely (status))
+	_cairo_surface_set_error (surface, status);
 }
 slim_hidden_def (cairo_surface_flush);
 
@@ -1508,7 +1510,12 @@ slim_hidden_def (cairo_surface_flush);
 void
 cairo_surface_mark_dirty (cairo_surface_t *surface)
 {
-    cairo_surface_mark_dirty_rectangle (surface, 0, 0, -1, -1);
+    cairo_rectangle_int_t extents;
+
+    _cairo_surface_get_extents (surface, &extents);
+    cairo_surface_mark_dirty_rectangle (surface,
+					extents.x, extents.y,
+					extents.width, extents.height);
 }
 slim_hidden_def (cairo_surface_mark_dirty);
 
@@ -1620,7 +1627,11 @@ _cairo_surface_set_device_scale (cairo_surface_t *surface,
 	return;
     }
 
-    _cairo_surface_begin_modification (surface);
+    status = _cairo_surface_begin_modification (surface);
+    if (unlikely (status)) {
+	_cairo_surface_set_error (surface, status);
+	return;
+    }
 
     surface->device_transform.xx = sx;
     surface->device_transform.yy = sy;
@@ -1672,7 +1683,11 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
 	return;
     }
 
-    _cairo_surface_begin_modification (surface);
+    status = _cairo_surface_begin_modification (surface);
+    if (unlikely (status)) {
+	_cairo_surface_set_error (surface, status);
+	return;
+    }
 
     surface->device_transform.x0 = x_offset;
     surface->device_transform.y0 = y_offset;
@@ -1747,6 +1762,8 @@ cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
 				       double		 x_pixels_per_inch,
 				       double		 y_pixels_per_inch)
 {
+    cairo_status_t status;
+
     if (unlikely (surface->status))
 	return;
 
@@ -1765,7 +1782,11 @@ cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
 	return;
     }
 
-    _cairo_surface_begin_modification (surface);
+    status = _cairo_surface_begin_modification (surface);
+    if (unlikely (status)) {
+	_cairo_surface_set_error (surface, status);
+	return;
+    }
 
     surface->x_fallback_resolution = x_pixels_per_inch;
     surface->y_fallback_resolution = y_pixels_per_inch;
@@ -1971,7 +1992,9 @@ _cairo_surface_paint (cairo_surface_t		*surface,
     if (nothing_to_do (surface, op, source))
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_surface_begin_modification (surface);
+    status = _cairo_surface_begin_modification (surface);
+    if (unlikely (status))
+	return status;
 
     status = surface->backend->paint (surface, op, source, clip);
     if (status != CAIRO_INT_STATUS_NOTHING_TO_DO) {
@@ -2016,7 +2039,9 @@ _cairo_surface_mask (cairo_surface_t		*surface,
     if (nothing_to_do (surface, op, source))
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_surface_begin_modification (surface);
+    status = _cairo_surface_begin_modification (surface);
+    if (unlikely (status))
+	return status;
 
     status = surface->backend->mask (surface, op, source, mask, clip);
     if (status != CAIRO_INT_STATUS_NOTHING_TO_DO) {
@@ -2068,7 +2093,9 @@ _cairo_surface_fill_stroke (cairo_surface_t	    *surface,
     if (unlikely (status))
 	return status;
 
-    _cairo_surface_begin_modification (surface);
+    status = _cairo_surface_begin_modification (surface);
+    if (unlikely (status))
+	return status;
 
     if (surface->backend->fill_stroke) {
 	cairo_matrix_t dev_ctm = *stroke_ctm;
@@ -2138,7 +2165,9 @@ _cairo_surface_stroke (cairo_surface_t			*surface,
     if (nothing_to_do (surface, op, source))
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_surface_begin_modification (surface);
+    status = _cairo_surface_begin_modification (surface);
+    if (unlikely (status))
+	return status;
 
     status = surface->backend->stroke (surface, op, source,
 				       path, stroke_style,
@@ -2179,7 +2208,9 @@ _cairo_surface_fill (cairo_surface_t		*surface,
     if (nothing_to_do (surface, op, source))
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_surface_begin_modification (surface);
+    status = _cairo_surface_begin_modification (surface);
+    if (unlikely (status))
+	return status;
 
     status = surface->backend->fill (surface, op, source,
 				     path, fill_rule,
@@ -2243,6 +2274,8 @@ slim_hidden_def (cairo_surface_copy_page);
 void
 cairo_surface_show_page (cairo_surface_t *surface)
 {
+    cairo_status_t status;
+
     if (unlikely (surface->status))
 	return;
 
@@ -2251,7 +2284,11 @@ cairo_surface_show_page (cairo_surface_t *surface)
 	return;
     }
 
-    _cairo_surface_begin_modification (surface);
+    status = _cairo_surface_begin_modification (surface);
+    if (unlikely (status)) {
+	_cairo_surface_set_error (surface, status);
+	return;
+    }
 
     /* It's fine if some backends don't implement show_page */
     if (surface->backend->show_page == NULL)
@@ -2389,7 +2426,9 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
     if (nothing_to_do (surface, op, source))
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_surface_begin_modification (surface);
+    status = _cairo_surface_begin_modification (surface);
+    if (unlikely (status))
+	return status;
 
     if (_cairo_surface_has_device_transform (surface) &&
 	! _cairo_matrix_is_integer_translation (&surface->device_transform, NULL, NULL))

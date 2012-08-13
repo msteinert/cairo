@@ -209,9 +209,13 @@ _cairo_dfb_surface_unmap_image (void *abstract_surface,
 }
 
 static cairo_status_t
-_cairo_dfb_surface_flush (void *abstract_surface)
+_cairo_dfb_surface_flush (void *abstract_surface,
+			  unsigned flags)
 {
     cairo_dfb_surface_t *surface = abstract_surface;
+
+    if (flags)
+	return CAIRO_STATUS_SUCCESS;
 
     if (surface->image.pixman_image) {
 	surface->dfb_surface->Unlock (surface->dfb_surface);

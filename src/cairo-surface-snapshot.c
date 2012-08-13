@@ -64,15 +64,14 @@ _cairo_surface_snapshot_finish (void *abstract_surface)
 }
 
 static cairo_status_t
-_cairo_surface_snapshot_flush (void *abstract_surface)
+_cairo_surface_snapshot_flush (void *abstract_surface, unsigned flags)
 {
     cairo_surface_snapshot_t *surface = abstract_surface;
     cairo_surface_t *target;
     cairo_status_t status;
 
     target = _cairo_surface_snapshot_get_target (&surface->base);
-    cairo_surface_flush (target);
-    status = target->status;
+    status = _cairo_surface_flush (target, flags);
     cairo_surface_destroy (target);
 
     return status;

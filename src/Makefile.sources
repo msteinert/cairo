@@ -87,6 +87,7 @@ cairo_private = \
 	cairo-list-inline.h \
 	cairo-list-private.h \
 	cairo-malloc-private.h \
+	cairo-mempool-private.h \
 	cairo-mutex-impl-private.h \
 	cairo-mutex-list-private.h \
 	cairo-mutex-private.h \
@@ -178,6 +179,7 @@ cairo_sources = \
 	cairo-matrix.c \
 	cairo-mask-compositor.c \
 	cairo-mesh-pattern-rasterizer.c \
+	cairo-mempool.c \
 	cairo-misc.c \
 	cairo-mono-scan-converter.c \
 	cairo-mutex.c \
@@ -311,6 +313,7 @@ cairo_xlib_sources = \
 	cairo-xlib-screen.c \
 	cairo-xlib-source.c \
 	cairo-xlib-surface.c \
+	cairo-xlib-surface-shm.c \
 	cairo-xlib-visual.c \
 	cairo-xlib-xcb-surface.c \
 	$(NULL)

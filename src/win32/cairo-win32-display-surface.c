@@ -503,10 +503,13 @@ _cairo_win32_display_surface_unmap_image (void                    *abstract_surf
 }
 
 static cairo_status_t
-_cairo_win32_display_surface_flush (void *abstract_surface)
+_cairo_win32_display_surface_flush (void *abstract_surface, unsigned flags)
 {
     cairo_win32_display_surface_t *surface = abstract_surface;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    if (flags)
+	return CAIRO_STATUS_SUCCESS;
 
     TRACE ((stderr, "%s (surface=%d)\n",
 	    __FUNCTION__, surface->win32.base.unique_id));
