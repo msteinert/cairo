@@ -248,6 +248,8 @@ typedef int grid_scaled_y_t;
 #  define  GRID_AREA_TO_ALPHA(c)  (c)
 #elif GRID_XY == 64
 #  define  GRID_AREA_TO_ALPHA(c)  (((c) << 2) | -(((c) & 0x40) >> 6))
+#elif GRID_XY == 32
+#  define  GRID_AREA_TO_ALPHA(c)  (((c) << 3) | -(((c) & 0x20) >> 5))
 #elif GRID_XY == 128
 #  define  GRID_AREA_TO_ALPHA(c)  ((((c) << 1) | -((c) >> 7)) & 255)
 #elif GRID_XY == 256
