@@ -492,7 +492,7 @@ _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
 
     xrender_format = display->cached_xrender_formats[format];
     if (xrender_format == NULL) {
-	int pict_format = 0;
+	int pict_format = PictStandardNUM;
 
 	switch (format) {
 	case CAIRO_FORMAT_A1:
@@ -515,10 +515,9 @@ _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
 	case CAIRO_FORMAT_ARGB32:
 	    pict_format = PictStandardARGB32; break;
 	}
-	if (pict_format) {
+	if (pict_format != PictStandardNUM)
 	    xrender_format =
 		XRenderFindStandardFormat (display->display, pict_format);
-	}
 	display->cached_xrender_formats[format] = xrender_format;
     }
 
