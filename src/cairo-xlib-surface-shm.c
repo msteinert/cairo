@@ -804,6 +804,7 @@ _cairo_xlib_surface_get_shm (cairo_xlib_surface_t *surface,
 
     if (surface->shm == NULL) {
 	pixman_format_code_t pixman_format;
+	cairo_bool_t will_sync;
 
 	if (! has_shm_pixmaps (surface))
 	    return NULL;
@@ -815,10 +816,12 @@ _cairo_xlib_surface_get_shm (cairo_xlib_surface_t *surface,
 	if (pixman_format == 0)
 	    return NULL;
 
+	will_sync = !surface->base.is_clear && !overwrite;
+
 	surface->shm =
 	    &_cairo_xlib_shm_surface_create (surface, pixman_format,
 					     surface->width, surface->height,
-					     TRUE, 1)->image.base;
+					     will_sync, 1)->image.base;
 	if (surface->shm == NULL)
 	    return NULL;
 
