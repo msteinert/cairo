@@ -156,7 +156,7 @@ _pqueue_shrink (struct pqueue *pq, int min_size)
 {
     cairo_xlib_shm_info_t **new_elements;
 
-    if (min_size <= pq->max_size)
+    if (min_size > pq->max_size)
 	return;
 
     new_elements = _cairo_realloc_ab (pq->elements,
