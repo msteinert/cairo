@@ -404,7 +404,8 @@ _cairo_xlib_surface_create_similar_shm (void *surface,
 					int width, int height);
 
 cairo_private cairo_surface_t *
-_cairo_xlib_surface_get_shm (cairo_xlib_surface_t *surface);
+_cairo_xlib_surface_get_shm (cairo_xlib_surface_t *surface,
+			     cairo_bool_t overwrite);
 
 cairo_private cairo_int_status_t
 _cairo_xlib_surface_put_shm (cairo_xlib_surface_t *surface);

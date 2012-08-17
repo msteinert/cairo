@@ -1317,7 +1317,7 @@ _cairo_xlib_surface_acquire_source_image (void                    *abstract_surf
 
     *image_extra = NULL;
     *image_out = (cairo_image_surface_t *)
-	_cairo_xlib_surface_get_shm (abstract_surface);
+	_cairo_xlib_surface_get_shm (abstract_surface, FALSE);
     if (*image_out) 
 	    return (*image_out)->base.status;
 
@@ -1363,7 +1363,7 @@ _cairo_xlib_surface_map_to_image (void                    *abstract_surface,
     cairo_xlib_surface_t *surface = abstract_surface;
     cairo_surface_t *image;
 
-    image = _cairo_xlib_surface_get_shm (abstract_surface);
+    image = _cairo_xlib_surface_get_shm (abstract_surface, FALSE);
     if (image) {
 	assert (surface->base.damage);
 	surface->fallback++;

@@ -791,7 +791,8 @@ static void dec_idle (cairo_surface_t *surface)
 }
 
 cairo_surface_t *
-_cairo_xlib_surface_get_shm (cairo_xlib_surface_t *surface)
+_cairo_xlib_surface_get_shm (cairo_xlib_surface_t *surface,
+			     cairo_bool_t overwrite)
 {
     if (surface->fallback) {
 	assert (surface->base.damage);
@@ -834,6 +835,11 @@ _cairo_xlib_surface_get_shm (cairo_xlib_surface_t *surface)
 	    surface->base.damage = _cairo_damage_create ();
 
 	surface->shm->damage = _cairo_damage_create ();
+    }
+
+    if (overwrite) {
+	_cairo_damage_destroy (surface->base.damage);
+	surface->base.damage = _cairo_damage_create ();
     }
 
     if (!surface->base.is_clear && surface->base.damage->dirty)

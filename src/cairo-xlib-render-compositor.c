@@ -205,6 +205,28 @@ copy_image_boxes (void *_dst,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_bool_t
+boxes_cover_surface (cairo_boxes_t *boxes,
+		     cairo_xlib_surface_t *surface)
+{
+    cairo_box_t *b;
+
+    if (boxes->num_boxes != 1)
+	    return FALSE;
+
+    b = &boxes->chunks.base[0];
+
+    if (_cairo_fixed_integer_part (b->p1.x) > 0 ||
+	_cairo_fixed_integer_part (b->p1.y) > 0)
+	return FALSE;
+
+    if (_cairo_fixed_integer_part (b->p2.x) < surface->width ||
+	_cairo_fixed_integer_part (b->p2.y) < surface->height)
+	return FALSE;
+
+    return TRUE;
+}
+
 static cairo_int_status_t
 draw_image_boxes (void *_dst,
 		  cairo_image_surface_t *image,
@@ -220,7 +242,11 @@ draw_image_boxes (void *_dst,
 	_cairo_xlib_shm_surface_get_pixmap (&image->base))
 	    return copy_image_boxes (dst, image, boxes, dx, dy);
 
-    shm = (cairo_image_surface_t *) _cairo_xlib_surface_get_shm (dst);
+    shm = NULL;
+    if (boxes_cover_surface (boxes, dst))
+	shm = (cairo_image_surface_t *) _cairo_xlib_surface_get_shm (dst, TRUE);
+    if (shm == NULL && dst->shm)
+	shm = (cairo_image_surface_t *) _cairo_xlib_surface_get_shm (dst, FALSE);
     if (shm) {
 	for (chunk = &boxes->chunks; chunk; chunk = chunk->next) {
 	    for (i = 0; i < chunk->count; i++) {
