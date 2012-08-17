@@ -411,9 +411,14 @@ cairo_private cairo_int_status_t
 _cairo_xlib_surface_put_shm (cairo_xlib_surface_t *surface);
 
 cairo_private cairo_surface_t *
-_cairo_xlib_surface_create_shm_image (cairo_xlib_surface_t *surface,
-				      pixman_format_code_t format,
-				      int width, int height);
+_cairo_xlib_surface_create_shm (cairo_xlib_surface_t *other,
+				pixman_format_code_t format,
+				int width, int height);
+
+cairo_private cairo_surface_t *
+_cairo_xlib_surface_create_shm__image (cairo_xlib_surface_t *surface,
+				       pixman_format_code_t format,
+				       int width, int height);
 
 cairo_private void
 _cairo_xlib_shm_surface_get_ximage (cairo_surface_t *surface,

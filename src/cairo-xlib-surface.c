@@ -762,8 +762,8 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
     pixman_format = _pixman_format_for_xlib_surface (surface);
     if (try_shm && pixman_format) {
 	image = (cairo_image_surface_t *)
-	    _cairo_xlib_surface_create_shm_image (surface, pixman_format,
-						  extents->width, extents->height);
+	    _cairo_xlib_surface_create_shm__image (surface, pixman_format,
+						   extents->width, extents->height);
 	if (image && image->base.status == CAIRO_STATUS_SUCCESS) {
 	    cairo_xlib_error_func_t old_handler;
 	    XImage shm_image;
@@ -1104,7 +1104,6 @@ _cairo_xlib_surface_draw_image (cairo_xlib_surface_t   *surface,
 	ximage.bits_per_pixel = image_masks.bpp;
 	ximage.bytes_per_line = image->stride;
 	ximage.data = (char *)image->data;
-	ximage.obdata = NULL;
 	if (image->base.device == surface->base.device)
 	    ximage.obdata = _cairo_xlib_shm_surface_get_obdata (&image->base);
 	own_data = FALSE;

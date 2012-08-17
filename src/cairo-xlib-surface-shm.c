@@ -561,9 +561,7 @@ _cairo_xlib_shm_surface_finish (void *abstract_surface)
 	shm->info->last_request = shm->active;
 	_pqueue_push (&display->shm->info, shm->info);
     } else {
-	cairo_xlib_shm_t *pool = shm->info->pool;
-
-	_cairo_mempool_free (&pool->mem, shm->info->mem);
+	_cairo_mempool_free (&shm->info->pool->mem, shm->info->mem);
 	free (shm->info);
 
 	_cairo_xlib_shm_pool_cleanup (display);
@@ -672,6 +670,8 @@ _cairo_xlib_shm_surface_create (cairo_xlib_surface_t *other,
     }
     shm->active = shm->info->last_request;
     shm->idle = -5;
+
+    assert (shm->active == 0 || will_sync);
 
     cairo_device_release (&display->base);
 
@@ -939,9 +939,25 @@ out:
 }
 
 cairo_surface_t *
-_cairo_xlib_surface_create_shm_image (cairo_xlib_surface_t *surface,
-				      pixman_format_code_t format,
-				      int width, int height)
+_cairo_xlib_surface_create_shm (cairo_xlib_surface_t *other,
+				pixman_format_code_t format,
+				int width, int height)
+{
+    cairo_surface_t *surface;
+
+    surface = NULL;
+    if (has_shm (other))
+	surface = &_cairo_xlib_shm_surface_create (other, format,
+						   width, height, FALSE,
+						   has_shm_pixmaps (other))->image.base;
+
+    return surface;
+}
+
+cairo_surface_t *
+_cairo_xlib_surface_create_shm__image (cairo_xlib_surface_t *surface,
+				       pixman_format_code_t format,
+				       int width, int height)
 {
     if (! has_shm(surface))
 	return NULL;
@@ -958,13 +974,10 @@ _cairo_xlib_surface_create_similar_shm (void *other,
 {
     cairo_surface_t *surface;
 
-    surface = NULL;
-    if (has_shm (other))
-	surface = &_cairo_xlib_shm_surface_create (other,
-						   _cairo_format_to_pixman_format_code (format),
-						   width, height, FALSE,
-						   has_shm_pixmaps (other))->image.base;
-    if (surface  == NULL)
+    surface = _cairo_xlib_surface_create_shm (other,
+					      _cairo_format_to_pixman_format_code (format),
+					      width, height);
+    if (surface == NULL)
 	surface = cairo_image_surface_create (format, width, height);
 
     return surface;

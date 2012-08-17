@@ -236,6 +236,7 @@ draw_image_boxes (void *_dst,
     cairo_xlib_surface_t *dst = _dst;
     struct _cairo_boxes_chunk *chunk;
     cairo_image_surface_t *shm;
+    cairo_int_status_t status;
     int i;
 
     if (image->base.device == dst->base.device &&
@@ -286,6 +287,60 @@ draw_image_boxes (void *_dst,
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
     }
 
+    if (((cairo_xlib_display_t *)dst->display)->shm) {
+	cairo_box_t extents;
+	cairo_rectangle_int_t r;
+
+	_cairo_boxes_extents (boxes, &extents);
+	_cairo_box_round_to_rectangle (&extents, &r);
+
+	shm = (cairo_image_surface_t *)
+	    _cairo_xlib_surface_create_shm (dst, image->pixman_format,
+					    r.width, r.height);
+	if (shm) {
+	    int tx = -r.x, ty = -r.y;
+
+	    assert (shm->pixman_format == image->pixman_format);
+	    for (chunk = &boxes->chunks; chunk; chunk = chunk->next) {
+		for (i = 0; i < chunk->count; i++) {
+		    cairo_box_t *b = &chunk->base[i];
+
+		    r.x = _cairo_fixed_integer_part (b->p1.x);
+		    r.y = _cairo_fixed_integer_part (b->p1.y);
+		    r.width  = _cairo_fixed_integer_part (b->p2.x) - r.x;
+		    r.height = _cairo_fixed_integer_part (b->p2.y) - r.y;
+
+		    if (! pixman_blt ((uint32_t *)image->data, (uint32_t *)shm->data,
+				      image->stride / sizeof (uint32_t),
+				      shm->stride / sizeof (uint32_t),
+				      PIXMAN_FORMAT_BPP (image->pixman_format),
+				      PIXMAN_FORMAT_BPP (shm->pixman_format),
+				      r.x + dx, r.y + dy,
+				      r.x + tx, r.y + ty,
+				      r.width, r.height))
+		    {
+			pixman_image_composite32 (PIXMAN_OP_SRC,
+						  image->pixman_image, NULL, shm->pixman_image,
+						  r.x + dx, r.y + dy,
+						  0, 0,
+						  r.x + tx, r.y + ty,
+						  r.width, r.height);
+		    }
+		}
+	    }
+
+	    dx = tx;
+	    dy = ty;
+	    image = shm;
+
+	    if (_cairo_xlib_shm_surface_get_pixmap (&image->base)) {
+		status = copy_image_boxes (dst, image, boxes, dx, dy);
+		goto out;
+	    }
+	}
+    }
+
+    status = CAIRO_STATUS_SUCCESS;
     for (chunk = &boxes->chunks; chunk; chunk = chunk->next) {
 	for (i = 0; i < chunk->count; i++) {
 	    cairo_box_t *b = &chunk->base[i];
@@ -296,12 +351,16 @@ draw_image_boxes (void *_dst,
 	    if ( _cairo_xlib_surface_draw_image (dst, image,
 						 x1 + dx, y1 + dy,
 						 x2 - x1, y2 - y1,
-						 x1, y1))
-		return CAIRO_INT_STATUS_UNSUPPORTED;
+						 x1, y1)) {
+		status = CAIRO_INT_STATUS_UNSUPPORTED;
+		goto out;
+	    }
 	}
     }
 
-    return CAIRO_STATUS_SUCCESS;
+out:
+    cairo_surface_destroy (&shm->base);
+    return status;
 }
 
 static cairo_int_status_t
