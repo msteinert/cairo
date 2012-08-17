@@ -138,6 +138,8 @@ copy_image_boxes (void *_dst,
     GC gc;
     int i, j;
 
+    assert (image->depth == dst->depth);
+
     status = acquire (dst);
     if (unlikely (status))
 	return status;
@@ -240,6 +242,7 @@ draw_image_boxes (void *_dst,
     int i;
 
     if (image->base.device == dst->base.device &&
+	image->depth == dst->depth &&
 	_cairo_xlib_shm_surface_get_pixmap (&image->base))
 	    return copy_image_boxes (dst, image, boxes, dx, dy);
 
@@ -287,7 +290,8 @@ draw_image_boxes (void *_dst,
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
     }
 
-    if (((cairo_xlib_display_t *)dst->display)->shm) {
+    if (image->depth == dst->depth &&
+	((cairo_xlib_display_t *)dst->display)->shm) {
 	cairo_box_t extents;
 	cairo_rectangle_int_t r;
 
