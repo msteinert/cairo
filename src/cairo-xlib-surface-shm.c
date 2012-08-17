@@ -776,6 +776,7 @@ _cairo_xlib_surface_clear_shm (cairo_xlib_surface_t *surface)
     surface->base.damage = _cairo_damage_create();
 
     memset (shm->image.data, 0, shm->image.stride * shm->image.height);
+    shm->image.base.is_clear = TRUE;
 }
 
 static void inc_idle (cairo_surface_t *surface)
@@ -977,7 +978,14 @@ _cairo_xlib_surface_create_similar_shm (void *other,
     surface = _cairo_xlib_surface_create_shm (other,
 					      _cairo_format_to_pixman_format_code (format),
 					      width, height);
-    if (surface == NULL)
+    if (surface) {
+	if (! surface->is_clear) {
+	    cairo_xlib_shm_surface_t *shm = (cairo_xlib_shm_surface_t *) surface;
+	    assert (shm->active == 0);
+	    memset (shm->image.data, 0, shm->image.stride * shm->image.height);
+	    shm->image.base.is_clear = TRUE;
+	}
+    } else
 	surface = cairo_image_surface_create (format, width, height);
 
     return surface;
