@@ -193,8 +193,6 @@ typedef enum cairo_gl_tex {
     CAIRO_GL_TEX_TEMP = 2
 } cairo_gl_tex_t;
 
-typedef struct cairo_gl_shader_impl cairo_gl_shader_impl_t;
-
 typedef struct cairo_gl_shader {
     GLuint fragment_shader;
     GLuint program;
@@ -316,7 +314,7 @@ struct _cairo_gl_context {
     cairo_bool_t supports_msaa;
     char *vb;
 
-    const cairo_gl_shader_impl_t *shader_impl;
+    cairo_bool_t has_shader_support;
 
     GLuint vertex_shaders[CAIRO_GL_VAR_TYPE_MAX + 1];
     cairo_gl_shader_t fill_rectangles_shader;
@@ -419,7 +417,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 static cairo_always_inline cairo_bool_t
 _cairo_gl_device_has_glsl (cairo_device_t *device)
 {
-    return ((cairo_gl_context_t *) device)->shader_impl != NULL;
+    return ((cairo_gl_context_t *) device)->has_shader_support;
 }
 
 static cairo_always_inline cairo_bool_t
