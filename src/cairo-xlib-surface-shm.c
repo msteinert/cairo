@@ -328,7 +328,8 @@ _cairo_xlib_shm_info_cleanup (cairo_xlib_display_t *display)
 }
 
 static cairo_xlib_shm_info_t *
-_cairo_xlib_shm_info_find (cairo_xlib_display_t *display, size_t size)
+_cairo_xlib_shm_info_find (cairo_xlib_display_t *display,
+			   size_t size, unsigned long *last_request)
 {
     cairo_xlib_shm_info_t *info;
     struct pqueue *pq = &display->shm->info;
@@ -343,6 +344,7 @@ _cairo_xlib_shm_info_find (cairo_xlib_display_t *display, size_t size)
 	if (info->size >= size && size <= 2*info->size)
 	    return info;
 
+	*last_request = info->last_request;
 	_cairo_mempool_free (&info->pool->mem, info->mem);
 	free (info);
     } while ((info = PQ_TOP(pq)));
@@ -456,10 +458,11 @@ _cairo_xlib_shm_info_create (cairo_xlib_display_t *display,
 {
     cairo_xlib_shm_info_t *info;
     cairo_xlib_shm_t *pool;
+    unsigned long last_request = 0;
     void *mem = NULL;
 
     if (will_sync) {
-	info = _cairo_xlib_shm_info_find (display, size);
+	info = _cairo_xlib_shm_info_find (display, size, &last_request);
 	if (info)
 	    return info;
     }
@@ -483,7 +486,7 @@ _cairo_xlib_shm_info_create (cairo_xlib_display_t *display,
     info->pool = pool;
     info->mem = mem;
     info->size = size;
-    info->last_request = 0;
+    info->last_request = last_request;
 
     return info;
 }
