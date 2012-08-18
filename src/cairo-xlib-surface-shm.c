@@ -231,6 +231,7 @@ _pqueue_pop (struct pqueue *pq)
 }
 
 static cairo_bool_t _x_error_occurred;
+
 static int
 _check_error_handler (Display     *display,
 		     XErrorEvent *event)
@@ -263,7 +264,11 @@ can_use_shm (Display *dpy, int *has_pixmap)
 	return FALSE;
     }
 
+    assert (CAIRO_MUTEX_IS_LOCKED (_cairo_xlib_display_mutex));
     _x_error_occurred = FALSE;
+
+    XLockDisplay (dpy);
+    XSync (dpy, False);
     old_handler = XSetErrorHandler (_check_error_handler);
 
     success = XShmAttach (dpy, &shm);
@@ -272,6 +277,7 @@ can_use_shm (Display *dpy, int *has_pixmap)
 
     XSync (dpy, False);
     XSetErrorHandler (old_handler);
+    XUnlockDisplay (dpy);
 
     shmctl (shm.shmid, IPC_RMID, NULL);
     shmdt (shm.shmaddr);
