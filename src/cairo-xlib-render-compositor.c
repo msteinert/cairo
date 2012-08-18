@@ -249,8 +249,6 @@ draw_image_boxes (void *_dst,
     shm = NULL;
     if (boxes_cover_surface (boxes, dst))
 	shm = (cairo_image_surface_t *) _cairo_xlib_surface_get_shm (dst, TRUE);
-    if (shm == NULL && dst->shm)
-	shm = (cairo_image_surface_t *) _cairo_xlib_surface_get_shm (dst, FALSE);
     if (shm) {
 	for (chunk = &boxes->chunks; chunk; chunk = chunk->next) {
 	    for (i = 0; i < chunk->count; i++) {
