@@ -621,6 +621,9 @@ static int
 has_shm_pixmaps (cairo_xlib_surface_t *surface)
 {
     cairo_xlib_display_t *display = (cairo_xlib_display_t *)surface->base.device;
+    if (!display->shm)
+	return 0;
+
     return display->shm->has_pixmaps;
 }
 
