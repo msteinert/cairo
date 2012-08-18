@@ -943,6 +943,9 @@ _cairo_xlib_surface_put_shm (cairo_xlib_surface_t *surface)
 	}
 	_cairo_damage_destroy (damage);
 
+	shm->active = NextRequest (display->display);
+	trigger_event (display->display);
+
 	_cairo_xlib_surface_put_gc (display, surface, gc);
 out:
 	cairo_device_release (&display->base);
