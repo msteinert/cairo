@@ -83,6 +83,8 @@ _cairo_xlib_display_finish (void *abstract_display)
 								link));
 	}
 
+	_cairo_xlib_display_fini_shm (display);
+
 	XSync (dpy, False);
 	XSetErrorHandler (old_handler);
 
@@ -94,8 +96,6 @@ static void
 _cairo_xlib_display_destroy (void *abstract_display)
 {
     cairo_xlib_display_t *display = abstract_display;
-
-    _cairo_xlib_display_fini_shm (display);
 
     free (display);
 }
