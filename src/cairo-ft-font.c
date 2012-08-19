@@ -64,6 +64,12 @@
 #include FT_LCD_FILTER_H
 #endif
 
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#else
+#define access(p, m) 0
+#endif
+
 /* Fontconfig version older than 2.6 didn't have these options */
 #ifndef FC_LCD_FILTER
 #define FC_LCD_FILTER	"lcdfilter"
@@ -551,12 +557,14 @@ _cairo_ft_unscaled_font_create_for_pattern (FcPattern *pattern,
     if (ret == FcResultOutOfMemory)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     if (ret == FcResultMatch) {
-	/* If FC_INDEX is not set, we just use 0 */
-	ret = FcPatternGetInteger (pattern, FC_INDEX, 0, &id);
-	if (ret == FcResultOutOfMemory)
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	if (access (filename, R_OK) == 0) {
+	    /* If FC_INDEX is not set, we just use 0 */
+	    ret = FcPatternGetInteger (pattern, FC_INDEX, 0, &id);
+	    if (ret == FcResultOutOfMemory)
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-	goto DONE;
+	    goto DONE;
+	}
     }
 
     /* The pattern contains neither a face nor a filename, resolve it later. */
