@@ -203,7 +203,7 @@ _cairo_rectilinear_stroker_emit_segments (cairo_rectilinear_stroker_t *stroker)
     cairo_fixed_t half_line_x = stroker->half_line_x;
     cairo_fixed_t half_line_y = stroker->half_line_y;
     cairo_status_t status;
-    int i;
+    int i, j;
 
     /* For each segment we generate a single rectangle.
      * This rectangle is based on a perpendicular extension (by half the
@@ -221,20 +221,24 @@ _cairo_rectilinear_stroker_emit_segments (cairo_rectilinear_stroker_t *stroker)
 	/* We adjust the initial point of the segment to extend the
 	 * rectangle to include the previous cap or join, (this
 	 * adjustment applies to all segments except for the first
-	 * segment of open, butt-capped paths).
+	 * segment of open, butt-capped paths). However, we must be
+	 * careful not to emit a miter join across a degenerate segment
+	 * which has been elided.
 	 *
 	 * Overlapping segments will be eliminated by the tessellation.
 	 * Ideally, we would not emit these self-intersections at all,
 	 * but that is tricky with segments shorter than half_line_width.
 	 */
-	lengthen_initial = TRUE;
-	lengthen_final = TRUE;
-	if (stroker->open_sub_path && line_cap == CAIRO_LINE_CAP_BUTT) {
+	j = i == 0 ? stroker->num_segments - 1 : i-1;
+	lengthen_initial = (stroker->segments[i].flags ^ stroker->segments[j].flags) & HORIZONTAL;
+	j = i == stroker->num_segments - 1 ? 0 : i+1;
+	lengthen_final = (stroker->segments[i].flags ^ stroker->segments[j].flags) & HORIZONTAL;
+	if (stroker->open_sub_path) {
 	    if (i == 0)
-		lengthen_initial = FALSE;
+		lengthen_initial = line_cap != CAIRO_LINE_CAP_BUTT;
 
 	    if (i == stroker->num_segments - 1)
-		lengthen_final = FALSE;
+		lengthen_final = line_cap != CAIRO_LINE_CAP_BUTT;
 	}
 
 	/* Perform the adjustments of the endpoints. */
