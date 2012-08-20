@@ -224,6 +224,7 @@ test_sources = \
 	operator-alpha-alpha.c				\
 	operator-clear.c				\
 	operator-source.c				\
+	outline-tolerance.c				\
 	over-above-source.c				\
 	over-around-source.c				\
 	over-below-source.c				\
