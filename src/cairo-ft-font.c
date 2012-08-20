@@ -564,7 +564,8 @@ _cairo_ft_unscaled_font_create_for_pattern (FcPattern *pattern,
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	    goto DONE;
-	}
+	} else
+	    return _cairo_error (CAIRO_STATUS_FILE_NOT_FOUND);
     }
 
     /* The pattern contains neither a face nor a filename, resolve it later. */
