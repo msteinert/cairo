@@ -1922,6 +1922,7 @@ _ft_create_for_pattern (csi_t *ctx,
     if (bytes != tmpl.bytes)
 	_csi_free (ctx, bytes);
 
+retry:
     resolved = pattern;
     if (cairo_version () < CAIRO_VERSION_ENCODE (1, 9, 0)) {
 	/* prior to 1.9, you needed to pass a resolved pattern */
@@ -1933,9 +1934,23 @@ _ft_create_for_pattern (csi_t *ctx,
     }
 
     font_face = cairo_ft_font_face_create_for_pattern (resolved);
-    FcPatternDestroy (resolved);
     if (resolved != pattern)
-	FcPatternDestroy (pattern);
+	FcPatternDestroy (resolved);
+
+    if (cairo_font_face_status (font_face)) {
+	char *filename = NULL;
+
+	/* Try a manual fallback process by eliminating specific requests */
+
+	if (FcPatternGetString (pattern,
+				FC_FILE, 0,
+				(FcChar8 **) &filename) == FcResultMatch) {
+	    FcPatternDel (pattern, FC_FILE);
+	    goto retry;
+	}
+    }
+
+    FcPatternDestroy (pattern);
 
     data = _csi_slab_alloc (ctx, sizeof (*data));
     ctx->_faces = _csi_list_prepend (ctx->_faces, &data->blob.list);
