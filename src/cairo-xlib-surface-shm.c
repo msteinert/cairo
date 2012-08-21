@@ -105,6 +105,9 @@ struct _cairo_xlib_shm_display {
     int has_pixmaps;
     Window window;
 
+    unsigned pending_events;
+    unsigned last_event;
+
     cairo_list_t pool;
     struct pqueue info;
 };
@@ -298,20 +301,61 @@ peek_processed (cairo_device_t *device)
     return LastKnownRequestProcessed (peek_display(device));
 }
 
+static void
+flush_events (cairo_xlib_display_t *display)
+{
+    cairo_xlib_shm_display_t *shm;
+    Display *dpy;
+    _XQEvent *prev, *qelt, *next;
+
+    shm = display->shm;
+    if (shm == NULL)
+	return;
+
+    if (shm->pending_events == 0)
+	return;
+
+    dpy = display->display;
+    if (QLength (dpy) == 0)
+	return;
+
+    LockDisplay(dpy);
+    for (prev = NULL, qelt = dpy->head; qelt; qelt = next) {
+	next = qelt->next;
+	if (qelt->event.xany.window == shm->window) {
+	    _XDeq(dpy, prev, qelt);
+	    if (! --shm->pending_events)
+		break;
+
+	    continue;
+	}
+	prev = qelt;
+    }
+    UnlockDisplay(dpy);
+
+    /* Did somebody else eat all of our events? */
+    if (seqno_passed (shm->last_event, LastKnownRequestProcessed (dpy)))
+	shm->pending_events = 0;
+}
+
 static void trigger_event (cairo_xlib_display_t *display)
 {
     cairo_xlib_shm_display_t *shm = display->shm;
     Display *dpy = display->display;
     XUnmapEvent ev;
 
+    flush_events (display);
+
     ev.type = UnmapNotify;
     ev.event = DefaultRootWindow (dpy);
     ev.window = shm->window;
     ev.from_configure = False;
 
+    shm->last_event = NextRequest (dpy);
     XSendEvent (dpy, ev.event, False,
 		SubstructureRedirectMask | SubstructureNotifyMask,
 		(XEvent *)&ev);
+    shm->pending_events++;
 }
 
 static void
@@ -702,22 +746,6 @@ cleanup_display:
 cleanup_shm:
     free (shm);
     return NULL;
-}
-
-void
-_cairo_xlib_display_flush_shm (cairo_xlib_display_t *display)
-{
-    cairo_xlib_shm_display_t *shm;
-    XEvent ev;
-
-    shm = display->shm;
-    if (shm == NULL)
-	return;
-
-    while (XCheckWindowEvent (display->display, shm->window,
-			      SubstructureRedirectMask | SubstructureNotifyMask,
-			      &ev))
-	;
 }
 
 static void
@@ -1159,6 +1187,8 @@ _cairo_xlib_display_init_shm (cairo_xlib_display_t *display)
 	free (shm);
 	return;
     }
+
+    shm->pending_events = 0;
 
     scr = DefaultScreen (display->display);
     attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask;
