@@ -103,6 +103,7 @@ struct pqueue {
 
 struct _cairo_xlib_shm_display {
     int has_pixmaps;
+    Window window;
 
     cairo_list_t pool;
     struct pqueue info;
@@ -285,13 +286,32 @@ can_use_shm (Display *dpy, int *has_pixmap)
     return success && ! _x_error_occurred;
 }
 
-static void trigger_event (Display *dpy)
+static inline Display *
+peek_display (cairo_device_t *device)
 {
-    xReq *req;
+    return ((cairo_xlib_display_t *)device)->display;
+}
 
-    LockDisplay(dpy);
-    GetEmptyReq(GetInputFocus, req);
-    UnlockDisplay(dpy);
+static inline unsigned long
+peek_processed (cairo_device_t *device)
+{
+    return LastKnownRequestProcessed (peek_display(device));
+}
+
+static void trigger_event (cairo_xlib_display_t *display)
+{
+    cairo_xlib_shm_display_t *shm = display->shm;
+    Display *dpy = display->display;
+    XUnmapEvent ev;
+
+    ev.type = UnmapNotify;
+    ev.event = DefaultRootWindow (dpy);
+    ev.window = shm->window;
+    ev.from_configure = False;
+
+    XSendEvent (dpy, ev.event, False,
+		SubstructureRedirectMask | SubstructureNotifyMask,
+		(XEvent *)&ev);
 }
 
 static void
@@ -443,7 +463,7 @@ _cairo_xlib_shm_pool_create(cairo_xlib_display_t *display,
 	goto cleanup_detach;
 
     cairo_list_add (&pool->link, &display->shm->pool);
-    trigger_event (display->display);
+    trigger_event (display);
 
     *ptr = _cairo_mempool_alloc (&pool->mem, size);
     assert (*ptr != NULL);
@@ -495,18 +515,6 @@ _cairo_xlib_shm_info_create (cairo_xlib_display_t *display,
     info->last_request = last_request;
 
     return info;
-}
-
-static inline Display *
-peek_display (cairo_device_t *device)
-{
-    return ((cairo_xlib_display_t *)device)->display;
-}
-
-static inline unsigned long
-peek_processed (cairo_device_t *device)
-{
-    return LastKnownRequestProcessed (peek_display(device));
 }
 
 static cairo_status_t
@@ -694,6 +702,22 @@ cleanup_display:
 cleanup_shm:
     free (shm);
     return NULL;
+}
+
+void
+_cairo_xlib_display_flush_shm (cairo_xlib_display_t *display)
+{
+    cairo_xlib_shm_display_t *shm;
+    XEvent ev;
+
+    shm = display->shm;
+    if (shm == NULL)
+	return;
+
+    while (XCheckWindowEvent (display->display, shm->window,
+			      SubstructureRedirectMask | SubstructureNotifyMask,
+			      &ev))
+	;
 }
 
 static void
@@ -944,7 +968,7 @@ _cairo_xlib_surface_put_shm (cairo_xlib_surface_t *surface)
 	_cairo_damage_destroy (damage);
 
 	shm->active = NextRequest (display->display);
-	trigger_event (display->display);
+	trigger_event (display);
 
 	_cairo_xlib_surface_put_gc (display, surface, gc);
 out:
@@ -1071,7 +1095,7 @@ _cairo_xlib_shm_surface_mark_active (cairo_surface_t *surface)
 
     shm = (cairo_xlib_shm_surface_t *) surface;
     shm->active = next_request (surface->device);
-    trigger_event (peek_display (surface->device));
+    trigger_event ((cairo_xlib_display_t *)shm->image.base.device);
 }
 
 XRenderPictFormat *
@@ -1119,6 +1143,8 @@ _cairo_xlib_display_init_shm (cairo_xlib_display_t *display)
 {
     int has_pixmap;
     cairo_xlib_shm_display_t *shm;
+    XSetWindowAttributes attr;
+    int scr;
 
     display->shm = NULL;
 
@@ -1133,6 +1159,17 @@ _cairo_xlib_display_init_shm (cairo_xlib_display_t *display)
 	free (shm);
 	return;
     }
+
+    scr = DefaultScreen (display->display);
+    attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask;
+    attr.override_redirect = 1;
+    shm->window = XCreateWindow (display->display,
+				 DefaultRootWindow (display->display), -1, -1,
+				 1, 1, 0,
+				 DefaultDepth (display->display, scr),
+				 InputOutput,
+				 DefaultVisual (display->display, scr),
+				 CWEventMask | CWOverrideRedirect, &attr);
 
     shm->has_pixmaps = has_pixmap ? MIN_PIXMAP_SIZE : 0;
     cairo_list_init (&shm->pool);
@@ -1156,6 +1193,9 @@ _cairo_xlib_display_fini_shm (cairo_xlib_display_t *display)
 	pool = cairo_list_first_entry (&shm->pool, cairo_xlib_shm_t, link);
 	_cairo_xlib_display_shm_pool_destroy (display, pool);
     }
+
+    if (display->display)
+	XDestroyWindow (display->display, shm->window);
 
     free (shm);
     display->shm = NULL;

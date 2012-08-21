@@ -228,6 +228,9 @@ cairo_private void
 _cairo_xlib_display_init_shm (cairo_xlib_display_t *display);
 
 cairo_private void
+_cairo_xlib_display_flush_shm (cairo_xlib_display_t *display);
+
+cairo_private void
 _cairo_xlib_display_fini_shm (cairo_xlib_display_t *display);
 
 cairo_private cairo_xlib_screen_t *

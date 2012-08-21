@@ -372,7 +372,9 @@ _cairo_xlib_display_acquire (cairo_device_t *device, cairo_xlib_display_t **disp
         return status;
 
     *display = (cairo_xlib_display_t *) device;
-    return status;
+    _cairo_xlib_display_flush_shm (*display);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 XRenderPictFormat *
