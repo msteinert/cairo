@@ -779,8 +779,10 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 				    AllPlanes);
 	    XSetErrorHandler (old_handler);
 
-	    if (success)
+	    if (success) {
+		cairo_device_release (&display->base);
 		return &image->base;
+	    }
 
 	    cairo_surface_destroy (&image->base);
 	}
