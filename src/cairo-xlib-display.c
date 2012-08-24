@@ -63,6 +63,8 @@ _cairo_xlib_display_finish (void *abstract_display)
     cairo_xlib_display_t *display = abstract_display;
     Display *dpy = display->display;
 
+    _cairo_xlib_display_fini_shm (display);
+
     if (! cairo_device_acquire (&display->base)) {
 	cairo_xlib_error_func_t old_handler;
 
@@ -82,8 +84,6 @@ _cairo_xlib_display_finish (void *abstract_display)
 								cairo_xlib_screen_t,
 								link));
 	}
-
-	_cairo_xlib_display_fini_shm (display);
 
 	XSync (dpy, False);
 	XSetErrorHandler (old_handler);

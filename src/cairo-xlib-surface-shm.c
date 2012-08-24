@@ -618,6 +618,7 @@ _cairo_xlib_shm_surface_finish (void *abstract_surface)
     if (active (shm, display->display)) {
 	shm->info->last_request = shm->active;
 	_pqueue_push (&display->shm->info, shm->info);
+	trigger_event (display);
     } else {
 	_cairo_mempool_free (&shm->info->pool->mem, shm->info->mem);
 	free (shm->info);
@@ -1123,7 +1124,6 @@ _cairo_xlib_shm_surface_mark_active (cairo_surface_t *surface)
 
     shm = (cairo_xlib_shm_surface_t *) surface;
     shm->active = next_request (surface->device);
-    trigger_event ((cairo_xlib_display_t *)shm->image.base.device);
 }
 
 XRenderPictFormat *
