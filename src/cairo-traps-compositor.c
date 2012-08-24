@@ -1570,7 +1570,7 @@ clip_and_composite_polygon (const cairo_traps_compositor_t *compositor,
 	 * The clip will trim that overestimate to our expectations.
 	 */
 	if (! extents->is_bounded)
-		flags |= FORCE_CLIP_REGION;
+	    flags |= FORCE_CLIP_REGION;
 
 	traps.antialias = antialias;
 	status = clip_and_composite (compositor, extents,
@@ -1791,7 +1791,8 @@ composite_traps_as_boxes (const cairo_traps_compositor_t *compositor,
 static cairo_int_status_t
 clip_and_composite_traps (const cairo_traps_compositor_t *compositor,
 			  cairo_composite_rectangles_t *extents,
-			  composite_traps_info_t *info)
+			  composite_traps_info_t *info,
+			  unsigned flags)
 {
     cairo_int_status_t status;
 
@@ -1801,10 +1802,10 @@ clip_and_composite_traps (const cairo_traps_compositor_t *compositor,
     if (unlikely (status != CAIRO_INT_STATUS_SUCCESS))
 	return status;
 
-    status = composite_traps_as_boxes (compositor, extents, info);
+    status = CAIRO_INT_STATUS_UNSUPPORTED;
+    if ((flags & FORCE_CLIP_REGION) == 0)
+	status = composite_traps_as_boxes (compositor, extents, info);
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
-	unsigned int flags = 0;
-
 	/* For unbounded operations, the X11 server will estimate the
 	 * affected rectangle and apply the operation to that. However,
 	 * there are cases where this is an overestimate (e.g. the
@@ -2152,16 +2153,32 @@ _cairo_traps_compositor_stroke (const cairo_compositor_t *_compositor,
     }
 
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	cairo_int_status_t (*func) (const cairo_path_fixed_t	*path,
+				    const cairo_stroke_style_t	*stroke_style,
+				    const cairo_matrix_t	*ctm,
+				    const cairo_matrix_t	*ctm_inverse,
+				    double			 tolerance,
+				    cairo_traps_t		*traps);
 	composite_traps_info_t info;
+	unsigned flags = 0;
+
+	if (antialias == CAIRO_ANTIALIAS_BEST || antialias == CAIRO_ANTIALIAS_GOOD) {
+	    func = _cairo_path_fixed_stroke_polygon_to_traps;
+	} else {
+	    func = _cairo_path_fixed_stroke_to_traps;
+	    if (extents->clip->num_boxes > 1 ||
+		extents->mask.width  > extents->unbounded.width ||
+		extents->mask.height > extents->unbounded.height)
+	    {
+		flags = NEED_CLIP_REGION | FORCE_CLIP_REGION;
+	    }
+	}
 
 	info.antialias = antialias;
 	_cairo_traps_init_with_clip (&info.traps, extents->clip);
-	status = _cairo_path_fixed_stroke_to_traps (path, style,
-						    ctm, ctm_inverse,
-						    tolerance,
-						    &info.traps);
+	status = func (path, style, ctm, ctm_inverse, tolerance, &info.traps);
 	if (likely (status == CAIRO_INT_STATUS_SUCCESS))
-	    status = clip_and_composite_traps (compositor, extents, &info);
+	    status = clip_and_composite_traps (compositor, extents, &info, flags);
 	_cairo_traps_fini (&info.traps);
     }
 

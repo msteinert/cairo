@@ -195,6 +195,7 @@ cairo_sources = \
 	cairo-path-stroke.c \
 	cairo-path-stroke-boxes.c \
 	cairo-path-stroke-polygon.c \
+	cairo-path-stroke-traps.c \
 	cairo-path-stroke-tristrip.c \
 	cairo-pattern.c \
 	cairo-pen.c \

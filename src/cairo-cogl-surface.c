@@ -2037,8 +2037,10 @@ _cairo_cogl_stroke_to_primitive (cairo_cogl_surface_t	    *surface,
 
     _cairo_traps_init (&traps);
 
-    status = _cairo_path_fixed_stroke_to_traps (path, style, ctm, ctm_inverse, tolerance,
-						&traps);
+    status = _cairo_path_fixed_stroke_polygon_to_traps (path, style,
+							ctm, ctm_inverse,
+							tolerance,
+							&traps);
     if (unlikely (status))
 	goto BAIL;
 

@@ -1539,12 +1539,12 @@ _cairo_recording_surface_get_path (cairo_surface_t    *abstract_surface,
 	    _cairo_traps_init (&traps);
 
 	    /* XXX call cairo_stroke_to_path() when that is implemented */
-	    status = _cairo_path_fixed_stroke_to_traps (&command->stroke.path,
-							&command->stroke.style,
-							&command->stroke.ctm,
-							&command->stroke.ctm_inverse,
-							command->stroke.tolerance,
-							&traps);
+	    status = _cairo_path_fixed_stroke_polygon_to_traps (&command->stroke.path,
+								&command->stroke.style,
+								&command->stroke.ctm,
+								&command->stroke.ctm_inverse,
+								command->stroke.tolerance,
+								&traps);
 
 	    if (status == CAIRO_INT_STATUS_SUCCESS)
 		status = _cairo_traps_path (&traps, path);

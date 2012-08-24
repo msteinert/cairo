@@ -1341,12 +1341,12 @@ BAIL:
 }
 
 cairo_int_status_t
-_cairo_path_fixed_stroke_to_traps (const cairo_path_fixed_t	*path,
-				   const cairo_stroke_style_t	*stroke_style,
-				   const cairo_matrix_t	*ctm,
-				   const cairo_matrix_t	*ctm_inverse,
-				   double		 tolerance,
-				   cairo_traps_t	*traps)
+_cairo_path_fixed_stroke_polygon_to_traps (const cairo_path_fixed_t	*path,
+                                           const cairo_stroke_style_t	*stroke_style,
+                                           const cairo_matrix_t	*ctm,
+                                           const cairo_matrix_t	*ctm_inverse,
+                                           double		 tolerance,
+                                           cairo_traps_t	*traps)
 {
     cairo_int_status_t status;
     cairo_polygon_t polygon;
