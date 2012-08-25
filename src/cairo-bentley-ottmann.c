@@ -561,7 +561,7 @@ _line_equal (const cairo_line_t *a, const cairo_line_t *b)
            a->p2.x == b->p2.x && a->p2.y == b->p2.y;
 }
 
-static int
+static inline int
 _cairo_bo_sweep_line_compare_edges (const cairo_bo_sweep_line_t	*sweep_line,
 				    const cairo_bo_edge_t	*a,
 				    const cairo_bo_edge_t	*b)
