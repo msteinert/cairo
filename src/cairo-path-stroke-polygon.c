@@ -161,12 +161,11 @@ add_fan (struct stroker *stroker,
 	 const cairo_slope_t *in_vector,
 	 const cairo_slope_t *out_vector,
 	 const cairo_point_t *midpt,
-	 const cairo_point_t *inpt,
-	 const cairo_point_t *outpt,
 	 cairo_bool_t clockwise,
 	 struct stroke_contour *c)
 {
-    int start, stop, step, i, npoints;
+    cairo_pen_t *pen = &stroker->pen;
+    int start, stop;
 
     if (stroker->has_bounds &&
 	! _cairo_box_contains_point (&stroker->bounds, midpt))
@@ -175,61 +174,29 @@ add_fan (struct stroker *stroker,
     assert (stroker->pen.num_vertices);
 
     if (clockwise) {
-	step  = 1;
+	_cairo_pen_find_active_cw_vertices (pen,
+					    in_vector, out_vector,
+					    &start, &stop);
+	while (start != stop) {
+	    cairo_point_t p = *midpt;
+	    translate_point (&p, &pen->vertices[start].point);
+	    contour_add_point (stroker, c, &p);
 
-	start = _cairo_pen_find_active_cw_vertex_index (&stroker->pen,
-							in_vector);
-	if (_cairo_slope_compare (&stroker->pen.vertices[start].slope_cw,
-				  in_vector) < 0)
-	    start = range_step (start, 1, stroker->pen.num_vertices);
-
-	stop  = _cairo_pen_find_active_cw_vertex_index (&stroker->pen,
-							out_vector);
-	if (_cairo_slope_compare (&stroker->pen.vertices[stop].slope_ccw,
-				  out_vector) > 0)
-	{
-	    stop = range_step (stop, -1, stroker->pen.num_vertices);
-	    if (_cairo_slope_compare (&stroker->pen.vertices[stop].slope_cw,
-				      in_vector) < 0)
-		return;
+	    if (++start == pen->num_vertices)
+		start = 0;
 	}
-
-	npoints = stop - start;
     } else {
-	step  = -1;
+	_cairo_pen_find_active_ccw_vertices (pen,
+					     in_vector, out_vector,
+					     &start, &stop);
+	while (start != stop) {
+	    cairo_point_t p = *midpt;
+	    translate_point (&p, &pen->vertices[start].point);
+	    contour_add_point (stroker, c, &p);
 
-	start = _cairo_pen_find_active_ccw_vertex_index (&stroker->pen,
-							 in_vector);
-	if (_cairo_slope_compare (&stroker->pen.vertices[start].slope_ccw,
-				  in_vector) < 0)
-	    start = range_step (start, -1, stroker->pen.num_vertices);
-
-	stop  = _cairo_pen_find_active_ccw_vertex_index (&stroker->pen,
-							 out_vector);
-	if (_cairo_slope_compare (&stroker->pen.vertices[stop].slope_cw,
-				  out_vector) > 0)
-	{
-	    stop = range_step (stop, 1, stroker->pen.num_vertices);
-	    if (_cairo_slope_compare (&stroker->pen.vertices[stop].slope_ccw,
-				      in_vector) < 0)
-		return;
+	    if (start-- == 0)
+		start += pen->num_vertices;
 	}
-
-	npoints = start - stop;
-    }
-    stop = range_step (stop, step, stroker->pen.num_vertices);
-    if (npoints < 0)
-	npoints += stroker->pen.num_vertices;
-    if (npoints <= 1)
-	return;
-
-    for (i = start;
-	 i != stop;
-	i = range_step (i, step, stroker->pen.num_vertices))
-    {
-	cairo_point_t p = *midpt;
-	translate_point (&p, &stroker->pen.vertices[i].point);
-	contour_add_point (stroker, c, &p);
     }
 }
 
@@ -435,9 +402,7 @@ outer_close (struct stroker *stroker,
 	     in->dev_slope.y * out->dev_slope.y) < stroker->spline_cusp_tolerance)
 	{
 	    add_fan (stroker,
-		     &in->dev_vector,
-		     &out->dev_vector,
-		     &in->point, inpt, outpt,
+		     &in->dev_vector, &out->dev_vector, &in->point,
 		     clockwise, outer);
 	}
 	break;
@@ -624,9 +589,7 @@ outer_join (struct stroker *stroker,
     case CAIRO_LINE_JOIN_ROUND:
 	/* construct a fan around the common midpoint */
 	add_fan (stroker,
-		 &in->dev_vector,
-		 &out->dev_vector,
-		 &in->point, inpt, outpt,
+		 &in->dev_vector, &out->dev_vector, &in->point,
 		 clockwise, outer);
 	break;
 
@@ -795,9 +758,7 @@ add_cap (struct stroker *stroker,
 	slope.dx = -f->dev_vector.dx;
 	slope.dy = -f->dev_vector.dy;
 
-	add_fan (stroker, &f->dev_vector, &slope,
-		 &f->point, &f->ccw, &f->cw,
-		 FALSE, c);
+	add_fan (stroker, &f->dev_vector, &slope, &f->point, FALSE, c);
 	break;
     }
 
@@ -1159,7 +1120,7 @@ spline_to (void *closure,
 	add_fan (stroker,
 		 &stroker->current_face.dev_vector,
 		 &face.dev_vector,
-		 &stroker->current_face.point, inpt, outpt,
+		 &stroker->current_face.point,
 		 clockwise, outer);
     } else {
 	compute_face (point, tangent, stroker, &face);
@@ -1191,7 +1152,7 @@ spline_to (void *closure,
 	    add_fan (stroker,
 		     &stroker->current_face.dev_vector,
 		     &face.dev_vector,
-		     &stroker->current_face.point, inpt, outpt,
+		     &stroker->current_face.point,
 		     clockwise, outer);
 	}
 
