@@ -1329,7 +1329,7 @@ edges_colinear (const cairo_bo_edge_t *a, const cairo_bo_edge_t *b)
      */
     if (p != 0) {
 	/* colinear if either end-point are coincident */
-	return ((p >> 1) & p) != 0;
+	return ((p >> 1) & p) & 5;
     } else if (a->edge.line.p1.y < b->edge.line.p1.y) {
 	return edge_compare_for_y_against_x (b,
 					     a->edge.line.p1.y,
