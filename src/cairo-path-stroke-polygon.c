@@ -81,6 +81,9 @@ struct stroker {
 
     cairo_bool_t has_first_face;
     cairo_stroke_face_t first_face;
+
+    cairo_bool_t has_bounds;
+    cairo_box_t bounds;
 };
 
 static inline double
@@ -164,6 +167,10 @@ add_fan (struct stroker *stroker,
 	 struct stroke_contour *c)
 {
     int start, stop, step, i, npoints;
+
+    if (stroker->has_bounds &&
+	! _cairo_box_contains_point (&stroker->bounds, midpt))
+	return;
 
     assert (stroker->pen.num_vertices);
 
@@ -1207,6 +1214,11 @@ curve_to (void *closure,
     cairo_spline_t spline;
     cairo_stroke_face_t face;
 
+    if (stroker->has_bounds &&
+	! _cairo_spline_intersects (&stroker->current_face.point, b, c, b,
+				    &stroker->bounds))
+	return line_to (closure, d);
+
     if (! _cairo_spline_init (&spline, spline_to, stroker,
 			      &stroker->current_face.point, b, c, d))
 	return line_to (closure, d);
@@ -1303,6 +1315,31 @@ _cairo_path_fixed_stroke_to_polygon (const cairo_path_fixed_t	*path,
 							   ctm_inverse,
 							   tolerance,
 							   polygon);
+    }
+
+    stroker.has_bounds = polygon->num_limits;
+    if (stroker.has_bounds) {
+	/* Extend the bounds in each direction to account for the maximum area
+	 * we might generate trapezoids, to capture line segments that are
+	 * outside of the bounds but which might generate rendering that's
+	 * within bounds.
+	 */
+	double dx, dy;
+	cairo_fixed_t fdx, fdy;
+	int i;
+
+	stroker.bounds = polygon->limits[0];
+	for (i = 1; i < polygon->num_limits; i++)
+	     _cairo_box_add_box (&stroker.bounds, &polygon->limits[i]);
+
+	_cairo_stroke_style_max_distance_from_path (style, path, ctm, &dx, &dy);
+	fdx = _cairo_fixed_from_double (dx);
+	fdy = _cairo_fixed_from_double (dy);
+
+	stroker.bounds.p1.x -= fdx;
+	stroker.bounds.p2.x += fdx;
+	stroker.bounds.p1.y -= fdy;
+	stroker.bounds.p2.y += fdy;
     }
 
     stroker.style = *style;
