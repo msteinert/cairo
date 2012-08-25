@@ -406,8 +406,8 @@ outer_close (struct stroker *stroker,
 	    add_fan (stroker,
 		     &in->dev_vector, &out->dev_vector, &in->point,
 		     clockwise, outer);
+	    break;
 	}
-	break;
 
     case CAIRO_LINE_JOIN_MITER:
     default: {
