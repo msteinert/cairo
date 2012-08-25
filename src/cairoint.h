@@ -1555,6 +1555,18 @@ cairo_private int
 _cairo_pen_find_active_ccw_vertex_index (const cairo_pen_t *pen,
 					 const cairo_slope_t *slope);
 
+cairo_private void
+_cairo_pen_find_active_cw_vertices (const cairo_pen_t *pen,
+				     const cairo_slope_t *in,
+				     const cairo_slope_t *out,
+				     int *start, int *stop);
+
+cairo_private void
+_cairo_pen_find_active_ccw_vertices (const cairo_pen_t *pen,
+				     const cairo_slope_t *in,
+				     const cairo_slope_t *out,
+				     int *start, int *stop);
+
 /* cairo-polygon.c */
 cairo_private void
 _cairo_polygon_init (cairo_polygon_t   *polygon,

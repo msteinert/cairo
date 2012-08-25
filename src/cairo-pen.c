@@ -388,3 +388,84 @@ _cairo_pen_find_active_ccw_vertex_index (const cairo_pen_t *pen,
 
     return i;
 }
+
+void
+_cairo_pen_find_active_cw_vertices (const cairo_pen_t *pen,
+				    const cairo_slope_t *in,
+				    const cairo_slope_t *out,
+				    int *start, int *stop)
+{
+
+    int lo = 0, hi = pen->num_vertices;
+    int i;
+
+    i = (lo + hi) >> 1;
+    do {
+	if (_cairo_slope_compare (&pen->vertices[i].slope_cw, in) < 0)
+	    lo = i;
+	else
+	    hi = i;
+	i = (lo + hi) >> 1;
+    } while (hi - lo > 1);
+    if (_cairo_slope_compare (&pen->vertices[i].slope_cw, in) < 0)
+	if (++i == pen->num_vertices)
+	    i = 0;
+    *start = i;
+
+    lo = i;
+    hi = i + pen->num_vertices;
+    i = (lo + hi) >> 1;
+    do {
+	int j = i;
+	if (j >= pen->num_vertices)
+	    j -= pen->num_vertices;
+	if (_cairo_slope_compare (&pen->vertices[j].slope_cw, out) > 0)
+	    hi = i;
+	else
+	    lo = i;
+	i = (lo + hi) >> 1;
+    } while (hi - lo > 1);
+    if (i >= pen->num_vertices)
+	i -= pen->num_vertices;
+    *stop = i;
+}
+
+void
+_cairo_pen_find_active_ccw_vertices (const cairo_pen_t *pen,
+				     const cairo_slope_t *in,
+				     const cairo_slope_t *out,
+				     int *start, int *stop)
+{
+    int lo = 0, hi = pen->num_vertices;
+    int i;
+
+    i = (lo + hi) >> 1;
+    do {
+	if (_cairo_slope_compare (in, &pen->vertices[i].slope_ccw) < 0)
+	    lo = i;
+	else
+	    hi = i;
+	i = (lo + hi) >> 1;
+    } while (hi - lo > 1);
+    if (_cairo_slope_compare (in, &pen->vertices[i].slope_ccw) < 0)
+	if (++i == pen->num_vertices)
+	    i = 0;
+    *start = i;
+
+    lo = i;
+    hi = i + pen->num_vertices;
+    i = (lo + hi) >> 1;
+    do {
+	int j = i;
+	if (j >= pen->num_vertices)
+	    j -= pen->num_vertices;
+	if (_cairo_slope_compare (out, &pen->vertices[j].slope_ccw) > 0)
+	    hi = i;
+	else
+	    lo = i;
+	i = (lo + hi) >> 1;
+    } while (hi - lo > 1);
+    if (i >= pen->num_vertices)
+	i -= pen->num_vertices;
+    *stop = i;
+}
