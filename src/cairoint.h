@@ -1524,6 +1524,11 @@ cairo_private cairo_image_color_t
 _cairo_image_analyze_color (cairo_image_surface_t      *image);
 
 /* cairo-pen.c */
+cairo_private int
+_cairo_pen_vertices_needed (double	    tolerance,
+			    double	    radius,
+			    const cairo_matrix_t  *matrix);
+
 cairo_private cairo_status_t
 _cairo_pen_init (cairo_pen_t	*pen,
 		 double		 radius,
