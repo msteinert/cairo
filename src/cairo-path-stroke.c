@@ -90,10 +90,13 @@ typedef struct cairo_stroker {
 
 static cairo_status_t
 _cairo_stroker_init (cairo_stroker_t		*stroker,
+		     const cairo_path_fixed_t	*path,
 		     const cairo_stroke_style_t	*stroke_style,
 		     const cairo_matrix_t	*ctm,
 		     const cairo_matrix_t	*ctm_inverse,
-		     double			 tolerance)
+		     double			 tolerance,
+		     const cairo_box_t		*limits,
+		     int			 num_limits)
 {
     cairo_status_t status;
 
@@ -111,8 +114,6 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
     if (unlikely (status))
 	return status;
 
-    stroker->has_bounds = FALSE;
-
     stroker->has_current_face = FALSE;
     stroker->has_first_face = FALSE;
     stroker->has_initial_sub_path = FALSE;
@@ -120,6 +121,31 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
     _cairo_stroker_dash_init (&stroker->dash, stroke_style);
 
     stroker->add_external_edge = NULL;
+
+    stroker->has_bounds = num_limits;
+    if (stroker->has_bounds) {
+	/* Extend the bounds in each direction to account for the maximum area
+	 * we might generate trapezoids, to capture line segments that are
+	 * outside of the bounds but which might generate rendering that's
+	 * within bounds.
+	 */
+	double dx, dy;
+	cairo_fixed_t fdx, fdy;
+	int i;
+
+	stroker->bounds = limits[0];
+	for (i = 1; i < num_limits; i++)
+	     _cairo_box_add_box (&stroker->bounds, &limits[i]);
+
+	_cairo_stroke_style_max_distance_from_path (stroke_style, path, ctm, &dx, &dy);
+	fdx = _cairo_fixed_from_double (dx);
+	fdy = _cairo_fixed_from_double (dy);
+
+	stroker->bounds.p1.x -= fdx;
+	stroker->bounds.p2.x += fdx;
+	stroker->bounds.p1.y -= fdy;
+	stroker->bounds.p2.y += fdy;
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1261,8 +1287,9 @@ _cairo_path_fixed_stroke_to_shaper (cairo_path_fixed_t	*path,
     cairo_stroker_t stroker;
     cairo_status_t status;
 
-    status = _cairo_stroker_init (&stroker, stroke_style,
-			          ctm, ctm_inverse, tolerance);
+    status = _cairo_stroker_init (&stroker, path, stroke_style,
+			          ctm, ctm_inverse, tolerance,
+				  NULL, 0);
     if (unlikely (status))
 	return status;
 
@@ -1303,8 +1330,9 @@ _cairo_path_fixed_stroke_dashed_to_polygon (const cairo_path_fixed_t	*path,
     cairo_stroker_t stroker;
     cairo_status_t status;
 
-    status = _cairo_stroker_init (&stroker, stroke_style,
-			          ctm, ctm_inverse, tolerance);
+    status = _cairo_stroker_init (&stroker, path, stroke_style,
+			          ctm, ctm_inverse, tolerance,
+				  polygon->limits, polygon->num_limits);
     if (unlikely (status))
 	return status;
 
