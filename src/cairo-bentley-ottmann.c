@@ -72,6 +72,7 @@ struct _cairo_bo_edge {
     cairo_edge_t edge;
     cairo_bo_edge_t *prev;
     cairo_bo_edge_t *next;
+    cairo_bo_edge_t *colinear;
     cairo_bo_trap_t deferred_trap;
 };
 
@@ -1308,37 +1309,57 @@ event_log (const char *fmt, ...)
 }
 #endif
 
+#define HAS_COLINEAR(a, b) ((cairo_bo_edge_t *)(((uintptr_t)(a))&~1) == (b))
+#define IS_COLINEAR(e) (((uintptr_t)(e))&1)
+#define MARK_COLINEAR(e, v) ((cairo_bo_edge_t *)(((uintptr_t)(e))|(v)))
+
 static inline cairo_bool_t
-edges_colinear (const cairo_bo_edge_t *a, const cairo_bo_edge_t *b)
+edges_colinear (cairo_bo_edge_t *a, const cairo_bo_edge_t *b)
 {
     unsigned p;
+
+    if (HAS_COLINEAR(a->colinear, b))
+	return IS_COLINEAR(a->colinear);
+
+    if (HAS_COLINEAR(b->colinear, a)) {
+	p = IS_COLINEAR(b->colinear);
+	a->colinear = MARK_COLINEAR(b, p);
+	return p;
+    }
 
     p = 0;
     p |= (a->edge.line.p1.x == b->edge.line.p1.x) << 0;
     p |= (a->edge.line.p1.y == b->edge.line.p1.y) << 1;
     p |= (a->edge.line.p2.x == b->edge.line.p2.x) << 3;
     p |= (a->edge.line.p2.y == b->edge.line.p2.y) << 4;
-    if (p == ((1 << 0) | (1 << 1) | (1 << 3) | (1 << 4)))
+    if (p == ((1 << 0) | (1 << 1) | (1 << 3) | (1 << 4))) {
+	a->colinear = MARK_COLINEAR(b, 1);
 	return TRUE;
+    }
 
-    if (_slope_compare (a, b))
+    if (_slope_compare (a, b)) {
+	a->colinear = MARK_COLINEAR(b, 0);
 	return FALSE;
+    }
 
     /* The choice of y is not truly arbitrary since we must guarantee that it
      * is greater than the start of either line.
      */
     if (p != 0) {
 	/* colinear if either end-point are coincident */
-	return ((p >> 1) & p) & 5;
+	p = (((p >> 1) & p) & 5) != 0;
     } else if (a->edge.line.p1.y < b->edge.line.p1.y) {
-	return edge_compare_for_y_against_x (b,
-					     a->edge.line.p1.y,
-					     a->edge.line.p1.x) == 0;
+	p = edge_compare_for_y_against_x (b,
+					  a->edge.line.p1.y,
+					  a->edge.line.p1.x) == 0;
     } else {
-	return edge_compare_for_y_against_x (a,
-					     b->edge.line.p1.y,
-					     b->edge.line.p1.x) == 0;
+	p = edge_compare_for_y_against_x (a,
+					  b->edge.line.p1.y,
+					  b->edge.line.p1.x) == 0;
     }
+
+    a->colinear = MARK_COLINEAR(b, p);
+    return p;
 }
 
 /* Adds the trapezoid, if any, of the left edge to the #cairo_traps_t */
@@ -1712,6 +1733,7 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	 *traps,
 	events[i].edge.deferred_trap.right = NULL;
 	events[i].edge.prev = NULL;
 	events[i].edge.next = NULL;
+	events[i].edge.colinear = NULL;
 
 	if (event_y) {
 	    y = _cairo_fixed_integer_floor (events[i].point.y) - ymin;
