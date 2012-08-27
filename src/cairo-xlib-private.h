@@ -427,6 +427,9 @@ _cairo_xlib_shm_surface_get_ximage (cairo_surface_t *surface,
 cairo_private void *
 _cairo_xlib_shm_surface_get_obdata (cairo_surface_t *surface);
 
+cairo_private void
+_cairo_xlib_shm_surface_mark_active (cairo_surface_t *shm);
+
 cairo_private cairo_bool_t
 _cairo_xlib_shm_surface_is_active (cairo_surface_t *surface);
 
@@ -435,9 +438,6 @@ _cairo_xlib_shm_surface_is_idle (cairo_surface_t *surface);
 
 cairo_private Pixmap
 _cairo_xlib_shm_surface_get_pixmap (cairo_surface_t *surface);
-
-cairo_private void
-_cairo_xlib_shm_surface_mark_active (cairo_surface_t *surface);
 
 cairo_private XRenderPictFormat *
 _cairo_xlib_shm_surface_get_xrender_format (cairo_surface_t *surface);

@@ -51,6 +51,7 @@
 #include <X11/Xlibint.h>
 #include <X11/Xproto.h>
 #include <X11/extensions/XShm.h>
+#include <X11/extensions/shmproto.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
@@ -103,10 +104,10 @@ struct pqueue {
 
 struct _cairo_xlib_shm_display {
     int has_pixmaps;
-    Window window;
+    int opcode;
+    int event;
 
-    unsigned pending_events;
-    unsigned last_event;
+    Window window;
 
     cairo_list_t pool;
     struct pqueue info;
@@ -301,61 +302,9 @@ peek_processed (cairo_device_t *device)
     return LastKnownRequestProcessed (peek_display(device));
 }
 
-static void
-flush_events (cairo_xlib_display_t *display)
+static unsigned next_request (cairo_device_t *device)
 {
-    cairo_xlib_shm_display_t *shm;
-    Display *dpy;
-    _XQEvent *prev, *qelt, *next;
-
-    shm = display->shm;
-    if (shm == NULL)
-	return;
-
-    if (shm->pending_events == 0)
-	return;
-
-    dpy = display->display;
-    if (QLength (dpy) == 0)
-	return;
-
-    LockDisplay(dpy);
-    for (prev = NULL, qelt = dpy->head; qelt; qelt = next) {
-	next = qelt->next;
-	if (qelt->event.xany.window == shm->window) {
-	    _XDeq(dpy, prev, qelt);
-	    if (! --shm->pending_events)
-		break;
-
-	    continue;
-	}
-	prev = qelt;
-    }
-    UnlockDisplay(dpy);
-
-    /* Did somebody else eat all of our events? */
-    if (seqno_passed (shm->last_event, LastKnownRequestProcessed (dpy)))
-	shm->pending_events = 0;
-}
-
-static void trigger_event (cairo_xlib_display_t *display)
-{
-    cairo_xlib_shm_display_t *shm = display->shm;
-    Display *dpy = display->display;
-    XUnmapEvent ev;
-
-    flush_events (display);
-
-    ev.type = UnmapNotify;
-    ev.event = DefaultRootWindow (dpy);
-    ev.window = shm->window;
-    ev.from_configure = False;
-
-    shm->last_event = NextRequest (dpy);
-    XSendEvent (dpy, ev.event, False,
-		SubstructureRedirectMask | SubstructureNotifyMask,
-		(XEvent *)&ev);
-    shm->pending_events++;
+    return NextRequest (peek_display (device));
 }
 
 static void
@@ -507,7 +456,6 @@ _cairo_xlib_shm_pool_create(cairo_xlib_display_t *display,
 	goto cleanup_detach;
 
     cairo_list_add (&pool->link, &display->shm->pool);
-    trigger_event (display);
 
     *ptr = _cairo_mempool_alloc (&pool->mem, size);
     assert (*ptr != NULL);
@@ -618,7 +566,6 @@ _cairo_xlib_shm_surface_finish (void *abstract_surface)
     if (active (shm, display->display)) {
 	shm->info->last_request = shm->active;
 	_pqueue_push (&display->shm->info, shm->info);
-	trigger_event (display);
     } else {
 	_cairo_mempool_free (&shm->info->pool->mem, shm->info->mem);
 	free (shm->info);
@@ -996,9 +943,7 @@ _cairo_xlib_surface_put_shm (cairo_xlib_surface_t *surface)
 	}
 	_cairo_damage_destroy (damage);
 
-	shm->active = NextRequest (display->display);
-	trigger_event (display);
-
+	_cairo_xlib_shm_surface_mark_active (surface->shm);
 	_cairo_xlib_surface_put_gc (display, surface, gc);
 out:
 	cairo_device_release (&display->base);
@@ -1059,10 +1004,22 @@ _cairo_xlib_surface_create_similar_shm (void *other,
     return surface;
 }
 
-static unsigned next_request (cairo_device_t *device)
+void
+_cairo_xlib_shm_surface_mark_active (cairo_surface_t *_shm)
 {
-    cairo_xlib_display_t *display = (cairo_xlib_display_t *) device;
-    return NextRequest (display->display);
+    cairo_xlib_shm_surface_t *shm = (cairo_xlib_shm_surface_t *) _shm;
+    cairo_xlib_display_t *display = (cairo_xlib_display_t *) _shm->device;
+    XShmCompletionEvent ev;
+
+    ev.type = display->shm->event;
+    ev.drawable = display->shm->window;
+    ev.major_code = display->shm->opcode;
+    ev.minor_code = X_ShmPutImage;
+    ev.shmseg = shm->info->pool->shm.shmid;
+    ev.offset = (char *)shm->info->mem - (char *)shm->info->pool->shm.shmaddr;
+
+    shm->active = NextRequest (display->display);
+    XSendEvent (display->display, ev.drawable, False, 0, (XEvent *)&ev);
 }
 
 void
@@ -1117,15 +1074,6 @@ _cairo_xlib_shm_surface_get_pixmap (cairo_surface_t *surface)
     return shm->pixmap;
 }
 
-void
-_cairo_xlib_shm_surface_mark_active (cairo_surface_t *surface)
-{
-    cairo_xlib_shm_surface_t *shm;
-
-    shm = (cairo_xlib_shm_surface_t *) surface;
-    shm->active = next_request (surface->device);
-}
-
 XRenderPictFormat *
 _cairo_xlib_shm_surface_get_xrender_format (cairo_surface_t *surface)
 {
@@ -1169,10 +1117,10 @@ _cairo_xlib_shm_surface_is_idle (cairo_surface_t *surface)
 void
 _cairo_xlib_display_init_shm (cairo_xlib_display_t *display)
 {
-    int has_pixmap;
     cairo_xlib_shm_display_t *shm;
     XSetWindowAttributes attr;
-    int scr;
+    XExtCodes *codes;
+    int has_pixmap, scr;
 
     display->shm = NULL;
 
@@ -1188,10 +1136,7 @@ _cairo_xlib_display_init_shm (cairo_xlib_display_t *display)
 	return;
     }
 
-    shm->pending_events = 0;
-
     scr = DefaultScreen (display->display);
-    attr.event_mask = SubstructureRedirectMask | SubstructureNotifyMask;
     attr.override_redirect = 1;
     shm->window = XCreateWindow (display->display,
 				 DefaultRootWindow (display->display), -1, -1,
@@ -1199,10 +1144,14 @@ _cairo_xlib_display_init_shm (cairo_xlib_display_t *display)
 				 DefaultDepth (display->display, scr),
 				 InputOutput,
 				 DefaultVisual (display->display, scr),
-				 CWEventMask | CWOverrideRedirect, &attr);
+				 CWOverrideRedirect, &attr);
 
     shm->has_pixmaps = has_pixmap ? MIN_PIXMAP_SIZE : 0;
     cairo_list_init (&shm->pool);
+
+    codes = XInitExtension (display->display, SHMNAME);
+    shm->opcode = codes ->major_opcode;
+    shm->event = codes->first_event;
 
     display->shm = shm;
 }
