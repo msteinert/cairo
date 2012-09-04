@@ -814,6 +814,13 @@ _do_cairo_gstate_user_to_backend (cairo_gstate_t *gstate, double *x, double *y)
 }
 
 void
+_do_cairo_gstate_user_to_backend_distance (cairo_gstate_t *gstate, double *x, double *y)
+{
+    cairo_matrix_transform_distance (&gstate->ctm, x, y);
+    cairo_matrix_transform_distance (&gstate->target->device_transform, x, y);
+}
+
+void
 _do_cairo_gstate_backend_to_user (cairo_gstate_t *gstate, double *x, double *y)
 {
     cairo_matrix_transform_point (&gstate->target->device_transform_inverse, x, y);

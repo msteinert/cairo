@@ -748,7 +748,7 @@ _cairo_default_context_rel_move_to (void *abstract_cr, double dx, double dy)
     cairo_default_context_t *cr = abstract_cr;
     cairo_fixed_t dx_fixed, dy_fixed;
 
-    _cairo_gstate_user_to_device_distance (cr->gstate, &dx, &dy);
+    _cairo_gstate_user_to_backend_distance (cr->gstate, &dx, &dy);
 
     dx_fixed = _cairo_fixed_from_double (dx);
     dy_fixed = _cairo_fixed_from_double (dy);
@@ -762,7 +762,7 @@ _cairo_default_context_rel_line_to (void *abstract_cr, double dx, double dy)
     cairo_default_context_t *cr = abstract_cr;
     cairo_fixed_t dx_fixed, dy_fixed;
 
-    _cairo_gstate_user_to_device_distance (cr->gstate, &dx, &dy);
+    _cairo_gstate_user_to_backend_distance (cr->gstate, &dx, &dy);
 
     dx_fixed = _cairo_fixed_from_double (dx);
     dy_fixed = _cairo_fixed_from_double (dy);
@@ -782,9 +782,9 @@ _cairo_default_context_rel_curve_to (void *abstract_cr,
     cairo_fixed_t dx2_fixed, dy2_fixed;
     cairo_fixed_t dx3_fixed, dy3_fixed;
 
-    _cairo_gstate_user_to_device_distance (cr->gstate, &dx1, &dy1);
-    _cairo_gstate_user_to_device_distance (cr->gstate, &dx2, &dy2);
-    _cairo_gstate_user_to_device_distance (cr->gstate, &dx3, &dy3);
+    _cairo_gstate_user_to_backend_distance (cr->gstate, &dx1, &dy1);
+    _cairo_gstate_user_to_backend_distance (cr->gstate, &dx2, &dy2);
+    _cairo_gstate_user_to_backend_distance (cr->gstate, &dx3, &dy3);
 
     dx1_fixed = _cairo_fixed_from_double (dx1);
     dy1_fixed = _cairo_fixed_from_double (dy1);
