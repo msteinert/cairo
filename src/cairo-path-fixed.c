@@ -419,6 +419,7 @@ _cairo_path_fixed_move_to (cairo_path_fixed_t  *path,
     path->has_current_point = TRUE;
     path->current_point.x = x;
     path->current_point.y = y;
+    path->last_move_point = path->current_point;
 
     return CAIRO_STATUS_SUCCESS;
 }
