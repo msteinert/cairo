@@ -377,10 +377,17 @@ _cairo_xlib_surface_finish (void *abstract_surface)
 	XRenderFreePicture (display->display, surface->embedded_source.picture);
     if (surface->picture)
 	XRenderFreePicture (display->display, surface->picture);
+
+    if (surface->shm) {
+	/* Force the flush for an external surface */
+	if (!surface->owns_pixmap)
+	    cairo_surface_flush (surface->shm);
+	cairo_surface_finish (surface->shm);
+	cairo_surface_destroy (surface->shm);
+    }
+
     if (surface->owns_pixmap)
 	XFreePixmap (display->display, surface->drawable);
-
-    cairo_surface_destroy (surface->shm);
 
     cairo_device_release (&display->base);
 
