@@ -621,6 +621,44 @@ _cairo_default_context_device_to_user_distance (void *abstract_cr,
     _cairo_gstate_device_to_user_distance (cr->gstate, dx, dy);
 }
 
+static void
+_cairo_default_context_backend_to_user (void *abstract_cr,
+					double *x,
+					double *y)
+{
+    cairo_default_context_t *cr = abstract_cr;
+
+    _cairo_gstate_backend_to_user (cr->gstate, x, y);
+}
+
+static void
+_cairo_default_context_backend_to_user_distance (void *abstract_cr, double *dx, double *dy)
+{
+    cairo_default_context_t *cr = abstract_cr;
+
+    _cairo_gstate_backend_to_user_distance (cr->gstate, dx, dy);
+}
+
+static void
+_cairo_default_context_user_to_backend (void *abstract_cr,
+					double *x,
+					double *y)
+{
+    cairo_default_context_t *cr = abstract_cr;
+
+    _cairo_gstate_user_to_backend (cr->gstate, x, y);
+}
+
+static void
+_cairo_default_context_user_to_backend_distance (void *abstract_cr,
+						 double *dx,
+						 double *dy)
+{
+    cairo_default_context_t *cr = abstract_cr;
+
+    _cairo_gstate_user_to_backend_distance (cr->gstate, dx, dy);
+}
+
 /* Path constructor */
 
 static cairo_status_t
@@ -1321,10 +1359,16 @@ static const cairo_backend_t _cairo_default_context_backend = {
     _cairo_default_context_set_matrix,
     _cairo_default_context_set_identity_matrix,
     _cairo_default_context_get_matrix,
+
     _cairo_default_context_user_to_device,
     _cairo_default_context_user_to_device_distance,
     _cairo_default_context_device_to_user,
     _cairo_default_context_device_to_user_distance,
+
+    _cairo_default_context_user_to_backend,
+    _cairo_default_context_user_to_backend_distance,
+    _cairo_default_context_backend_to_user,
+    _cairo_default_context_backend_to_user_distance,
 
     _cairo_default_context_new_path,
     _cairo_default_context_new_sub_path,
