@@ -732,7 +732,8 @@ _cairo_xcb_surface_flush (void *abstract_surface,
     }
 
     status = surface->base.status;
-    if (status == CAIRO_STATUS_SUCCESS && ! surface->base.finished) {
+    if (status == CAIRO_STATUS_SUCCESS &&
+	(! surface->base._finishing || ! surface->owns_pixmap)) {
 	status = cairo_surface_status (&surface->fallback->base);
 
 	if (status == CAIRO_STATUS_SUCCESS)
@@ -745,7 +746,7 @@ _cairo_xcb_surface_flush (void *abstract_surface,
 				       surface->fallback,
 				       &surface->fallback_damage);
 
-	if (status == CAIRO_STATUS_SUCCESS) {
+	if (status == CAIRO_STATUS_SUCCESS && ! surface->base._finishing) {
 	    _cairo_surface_attach_snapshot (&surface->base,
 					    &surface->fallback->base,
 					    cairo_surface_finish);
