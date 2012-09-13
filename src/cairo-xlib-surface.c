@@ -370,8 +370,10 @@ _cairo_xlib_surface_discard_shm (cairo_xlib_surface_t *surface)
 
     cairo_surface_finish (surface->shm);
     cairo_surface_destroy (surface->shm);
-
     surface->shm = NULL;
+
+    _cairo_damage_destroy (surface->base.damage);
+    surface->base.damage = NULL;
 }
 
 static cairo_status_t
@@ -1447,13 +1449,8 @@ _cairo_xlib_surface_flush (void *abstract_surface,
 	return status;
 
     surface->fallback >>= 1;
-    if (surface->shm && _cairo_xlib_shm_surface_is_idle (surface->shm)) {
-	cairo_surface_destroy (surface->shm);
-	surface->shm = NULL;
-
-	_cairo_damage_destroy (surface->base.damage);
-	surface->base.damage = NULL;
-    }
+    if (surface->shm && _cairo_xlib_shm_surface_is_idle (surface->shm))
+	_cairo_xlib_surface_discard_shm (surface);
 
     return CAIRO_STATUS_SUCCESS;
 }
