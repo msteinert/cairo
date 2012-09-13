@@ -2118,7 +2118,7 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
 	return;
     }
 
-    if (surface->drawable == drawable) {
+    if (surface->drawable != drawable) {
         cairo_xlib_display_t *display;
 
         status = _cairo_xlib_display_acquire (surface->base.device, &display);
