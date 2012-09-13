@@ -358,6 +358,22 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
     return &surface->base;
 }
 
+static void
+_cairo_xlib_surface_discard_shm (cairo_xlib_surface_t *surface)
+{
+    if (surface->shm == NULL)
+	return;
+
+    /* Force the flush for an external surface */
+    if (!surface->owns_pixmap)
+	cairo_surface_flush (surface->shm);
+
+    cairo_surface_finish (surface->shm);
+    cairo_surface_destroy (surface->shm);
+
+    surface->shm = NULL;
+}
+
 static cairo_status_t
 _cairo_xlib_surface_finish (void *abstract_surface)
 {
@@ -378,13 +394,7 @@ _cairo_xlib_surface_finish (void *abstract_surface)
     if (surface->picture)
 	XRenderFreePicture (display->display, surface->picture);
 
-    if (surface->shm) {
-	/* Force the flush for an external surface */
-	if (!surface->owns_pixmap)
-	    cairo_surface_flush (surface->shm);
-	cairo_surface_finish (surface->shm);
-	cairo_surface_destroy (surface->shm);
-    }
+    _cairo_xlib_surface_discard_shm (surface);
 
     if (surface->owns_pixmap)
 	XFreePixmap (display->display, surface->drawable);
@@ -2048,6 +2058,9 @@ cairo_xlib_surface_set_size (cairo_surface_t *abstract_surface,
 	return;
     }
 
+    if (surface->width == width && surface->height == height)
+	return;
+
     if (! valid_size (width, height)) {
 	_cairo_surface_set_error (abstract_surface,
 				  _cairo_error (CAIRO_STATUS_INVALID_SIZE));
@@ -2060,9 +2073,12 @@ cairo_xlib_surface_set_size (cairo_surface_t *abstract_surface,
 	return;
     }
 
+    _cairo_xlib_surface_discard_shm (surface);
+
     surface->width = width;
     surface->height = height;
 }
+
 /**
  * cairo_xlib_surface_set_drawable:
  * @surface: a #cairo_surface_t for the XLib backend
@@ -2142,8 +2158,12 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
 	surface->drawable = drawable;
     }
 
-    surface->width = width;
-    surface->height = height;
+    if (surface->width != width || surface->height != height) {
+	_cairo_xlib_surface_discard_shm (surface);
+
+	surface->width = width;
+	surface->height = height;
+    }
 }
 
 /**
