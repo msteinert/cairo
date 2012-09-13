@@ -374,6 +374,8 @@ _cairo_xlib_surface_discard_shm (cairo_xlib_surface_t *surface)
 
     _cairo_damage_destroy (surface->base.damage);
     surface->base.damage = NULL;
+
+    surface->fallback = 0;
 }
 
 static cairo_status_t
