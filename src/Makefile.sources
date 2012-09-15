@@ -330,7 +330,6 @@ cairo_xcb_sources = \
 		    cairo-xcb-screen.c \
 		    cairo-xcb-shm.c \
 		    cairo-xcb-surface.c \
-		    cairo-xcb-surface-cairo.c \
 		    cairo-xcb-surface-core.c \
 		    cairo-xcb-surface-render.c \
 		    $(NULL)

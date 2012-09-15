@@ -863,10 +863,6 @@ _cairo_xcb_surface_paint (void			*abstract_surface,
 	return status;
 
     if (surface->fallback == NULL) {
-	status = _cairo_xcb_surface_cairo_paint (surface, op, source, clip);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    goto done;
-
 	status = _cairo_xcb_surface_render_paint (surface, op, source,
 						  &composite);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
@@ -900,11 +896,6 @@ _cairo_xcb_surface_mask (void			*abstract_surface,
 	return status;
 
     if (surface->fallback == NULL) {
-	status =  _cairo_xcb_surface_cairo_mask (surface,
-						 op, source, mask, clip);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    goto done;
-
 	status =  _cairo_xcb_surface_render_mask (surface,
 						  op, source, mask, &composite);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
@@ -945,15 +936,6 @@ _cairo_xcb_surface_stroke (void				*abstract_surface,
 	return status;
 
     if (surface->fallback == NULL) {
-	status = _cairo_xcb_surface_cairo_stroke (surface, op, source,
-						  path, style,
-						  ctm, ctm_inverse,
-						  tolerance, antialias,
-						  clip);
-
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    goto done;
-
 	status = _cairo_xcb_surface_render_stroke (surface, op, source,
 						   path, style,
 						   ctm, ctm_inverse,
@@ -998,13 +980,6 @@ _cairo_xcb_surface_fill (void			*abstract_surface,
 	return status;
 
     if (surface->fallback == NULL) {
-	status = _cairo_xcb_surface_cairo_fill (surface, op, source,
-						path, fill_rule,
-						tolerance, antialias,
-						clip);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    goto done;
-
 	status = _cairo_xcb_surface_render_fill (surface, op, source,
 						 path, fill_rule,
 						 tolerance, antialias,
@@ -1048,13 +1023,6 @@ _cairo_xcb_surface_glyphs (void				*abstract_surface,
 	return status;
 
     if (surface->fallback == NULL) {
-	status = _cairo_xcb_surface_cairo_glyphs (surface,
-						  op, source,
-						  scaled_font, glyphs, num_glyphs,
-						  clip);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    goto done;
-
 	status = _cairo_xcb_surface_render_glyphs (surface,
 						   op, source,
 						   scaled_font, glyphs, num_glyphs,
