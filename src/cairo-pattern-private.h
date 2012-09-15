@@ -230,9 +230,6 @@ _cairo_pattern_init_for_surface (cairo_surface_pattern_t *pattern,
 cairo_private void
 _cairo_pattern_fini (cairo_pattern_t *pattern);
 
-cairo_private void
-_cairo_pattern_fini_snapshot (cairo_pattern_t *pattern);
-
 cairo_private cairo_pattern_t *
 _cairo_pattern_create_solid (const cairo_color_t	*color);
 
