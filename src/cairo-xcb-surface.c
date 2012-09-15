@@ -48,6 +48,7 @@
 #include "cairo-image-surface-inline.h"
 #include "cairo-list-inline.h"
 #include "cairo-surface-backend-private.h"
+#include "cairo-compositor-private.h"
 
 #if CAIRO_HAS_XLIB_XCB_FUNCTIONS
 slim_hidden_proto (cairo_xcb_surface_create);
@@ -846,36 +847,126 @@ _cairo_xcb_surface_fallback (cairo_xcb_surface_t *surface,
 }
 
 static cairo_int_status_t
+_cairo_xcb_fallback_compositor_paint (const cairo_compositor_t     *compositor,
+				      cairo_composite_rectangles_t *extents)
+{
+    cairo_xcb_surface_t *surface = (cairo_xcb_surface_t *) extents->surface;
+    cairo_surface_t *fallback = _cairo_xcb_surface_fallback (surface, extents);
+
+    return _cairo_surface_paint (fallback, extents->op,
+				 &extents->source_pattern.base,
+				 extents->clip);
+}
+
+static cairo_int_status_t
+_cairo_xcb_fallback_compositor_mask (const cairo_compositor_t     *compositor,
+				     cairo_composite_rectangles_t *extents)
+{
+    cairo_xcb_surface_t *surface = (cairo_xcb_surface_t *) extents->surface;
+    cairo_surface_t *fallback = _cairo_xcb_surface_fallback (surface, extents);
+
+    return _cairo_surface_mask (fallback, extents->op,
+				 &extents->source_pattern.base,
+				 &extents->mask_pattern.base,
+				 extents->clip);
+}
+
+static cairo_int_status_t
+_cairo_xcb_fallback_compositor_stroke (const cairo_compositor_t     *compositor,
+				       cairo_composite_rectangles_t *extents,
+				       const cairo_path_fixed_t     *path,
+				       const cairo_stroke_style_t   *style,
+				       const cairo_matrix_t         *ctm,
+				       const cairo_matrix_t         *ctm_inverse,
+				       double                        tolerance,
+				       cairo_antialias_t             antialias)
+{
+    cairo_xcb_surface_t *surface = (cairo_xcb_surface_t *) extents->surface;
+    cairo_surface_t *fallback = _cairo_xcb_surface_fallback (surface, extents);
+
+    return _cairo_surface_stroke (fallback, extents->op,
+				  &extents->source_pattern.base,
+				  path, style, ctm, ctm_inverse,
+				  tolerance, antialias,
+				  extents->clip);
+}
+
+static cairo_int_status_t
+_cairo_xcb_fallback_compositor_fill (const cairo_compositor_t     *compositor,
+				     cairo_composite_rectangles_t *extents,
+				     const cairo_path_fixed_t     *path,
+				     cairo_fill_rule_t             fill_rule,
+				     double                        tolerance,
+				     cairo_antialias_t             antialias)
+{
+    cairo_xcb_surface_t *surface = (cairo_xcb_surface_t *) extents->surface;
+    cairo_surface_t *fallback = _cairo_xcb_surface_fallback (surface, extents);
+
+    return _cairo_surface_fill (fallback, extents->op,
+				&extents->source_pattern.base,
+				path, fill_rule, tolerance,
+				antialias, extents->clip);
+}
+
+static cairo_int_status_t
+_cairo_xcb_fallback_compositor_glyphs (const cairo_compositor_t     *compositor,
+				       cairo_composite_rectangles_t *extents,
+				       cairo_scaled_font_t          *scaled_font,
+				       cairo_glyph_t                *glyphs,
+				       int                           num_glyphs,
+				       cairo_bool_t                  overlap)
+{
+    cairo_xcb_surface_t *surface = (cairo_xcb_surface_t *) extents->surface;
+    cairo_surface_t *fallback = _cairo_xcb_surface_fallback (surface, extents);
+
+    return _cairo_surface_show_text_glyphs (fallback, extents->op,
+					    &extents->source_pattern.base,
+					    NULL, 0, glyphs, num_glyphs,
+					    NULL, 0, 0,
+					    scaled_font, extents->clip);
+}
+
+static const cairo_compositor_t _cairo_xcb_fallback_compositor = {
+    &__cairo_no_compositor,
+
+    _cairo_xcb_fallback_compositor_paint,
+    _cairo_xcb_fallback_compositor_mask,
+    _cairo_xcb_fallback_compositor_stroke,
+    _cairo_xcb_fallback_compositor_fill,
+    _cairo_xcb_fallback_compositor_glyphs,
+};
+
+static const cairo_compositor_t _cairo_xcb_render_compositor = {
+    &_cairo_xcb_fallback_compositor,
+
+    _cairo_xcb_render_compositor_paint,
+    _cairo_xcb_render_compositor_mask,
+    _cairo_xcb_render_compositor_stroke,
+    _cairo_xcb_render_compositor_fill,
+    _cairo_xcb_render_compositor_glyphs,
+};
+
+static inline const cairo_compositor_t *
+get_compositor (cairo_surface_t **s)
+{
+    cairo_xcb_surface_t *surface = (cairo_xcb_surface_t * )*s;
+    if (surface->fallback) {
+	*s = &surface->fallback->base;
+	return ((cairo_image_surface_t *) *s)->compositor;
+    }
+
+    return &_cairo_xcb_render_compositor;
+}
+
+static cairo_int_status_t
 _cairo_xcb_surface_paint (void			*abstract_surface,
 			  cairo_operator_t	 op,
 			  const cairo_pattern_t	*source,
 			  const cairo_clip_t	*clip)
 {
-    cairo_xcb_surface_t *surface = abstract_surface;
-    cairo_composite_rectangles_t composite;
-    cairo_int_status_t status;
-
-    status = _cairo_composite_rectangles_init_for_paint (&composite,
-							 &surface->base,
-							 op, source,
-							 clip);
-    if (unlikely (status))
-	return status;
-
-    if (surface->fallback == NULL) {
-	status = _cairo_xcb_surface_render_paint (surface, op, source,
-						  &composite);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    goto done;
-    }
-
-    status = _cairo_surface_paint (_cairo_xcb_surface_fallback (surface,
-								&composite),
-				   op, source, clip);
-
-done:
-    _cairo_composite_rectangles_fini (&composite);
-    return status;
+    cairo_surface_t *surface = abstract_surface;
+    const cairo_compositor_t *compositor = get_compositor (&surface);
+    return _cairo_compositor_paint (compositor, surface, op, source, clip);
 }
 
 static cairo_int_status_t
@@ -885,30 +976,9 @@ _cairo_xcb_surface_mask (void			*abstract_surface,
 			 const cairo_pattern_t	*mask,
 			 const cairo_clip_t	*clip)
 {
-    cairo_xcb_surface_t *surface = abstract_surface;
-    cairo_composite_rectangles_t composite;
-    cairo_int_status_t status;
-
-    status = _cairo_composite_rectangles_init_for_mask (&composite,
-							&surface->base,
-							op, source, mask, clip);
-    if (unlikely (status))
-	return status;
-
-    if (surface->fallback == NULL) {
-	status =  _cairo_xcb_surface_render_mask (surface,
-						  op, source, mask, &composite);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    goto done;
-    }
-
-    status = _cairo_surface_mask (_cairo_xcb_surface_fallback (surface,
-							       &composite),
-				  op, source, mask,
-				  clip);
-done:
-    _cairo_composite_rectangles_fini (&composite);
-    return status;
+    cairo_surface_t *surface = abstract_surface;
+    const cairo_compositor_t *compositor = get_compositor (&surface);
+    return _cairo_compositor_mask (compositor, surface, op, source, mask, clip);
 }
 
 static cairo_int_status_t
@@ -923,39 +993,11 @@ _cairo_xcb_surface_stroke (void				*abstract_surface,
 			   cairo_antialias_t		 antialias,
 			   const cairo_clip_t		*clip)
 {
-    cairo_xcb_surface_t *surface = abstract_surface;
-    cairo_composite_rectangles_t composite;
-    cairo_int_status_t status;
-
-    status = _cairo_composite_rectangles_init_for_stroke (&composite,
-							  &surface->base,
-							  op, source,
-							  path, style, ctm,
-							  clip);
-    if (unlikely (status))
-	return status;
-
-    if (surface->fallback == NULL) {
-	status = _cairo_xcb_surface_render_stroke (surface, op, source,
-						   path, style,
-						   ctm, ctm_inverse,
-						   tolerance, antialias,
-						   &composite);
-
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    goto done;
-    }
-
-    status = _cairo_surface_stroke (_cairo_xcb_surface_fallback (surface,
-								 &composite),
-				    op, source,
-				    path, style,
-				    ctm, ctm_inverse,
-				    tolerance, antialias,
-				    clip);
-done:
-    _cairo_composite_rectangles_fini (&composite);
-    return status;
+    cairo_surface_t *surface = abstract_surface;
+    const cairo_compositor_t *compositor = get_compositor (&surface);
+    return _cairo_compositor_stroke (compositor, surface, op, source,
+				     path, style, ctm, ctm_inverse,
+				     tolerance, antialias, clip);
 }
 
 static cairo_int_status_t
@@ -968,35 +1010,11 @@ _cairo_xcb_surface_fill (void			*abstract_surface,
 			 cairo_antialias_t	 antialias,
 			 const cairo_clip_t	*clip)
 {
-    cairo_xcb_surface_t *surface = abstract_surface;
-    cairo_composite_rectangles_t composite;
-    cairo_int_status_t status;
-
-    status = _cairo_composite_rectangles_init_for_fill (&composite,
-							&surface->base,
-							op, source, path,
-							clip);
-    if (unlikely (status))
-	return status;
-
-    if (surface->fallback == NULL) {
-	status = _cairo_xcb_surface_render_fill (surface, op, source,
-						 path, fill_rule,
-						 tolerance, antialias,
-						 &composite);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    goto done;
-    }
-
-    status = _cairo_surface_fill (_cairo_xcb_surface_fallback (surface,
-							       &composite),
-				  op, source,
-				  path, fill_rule,
-				  tolerance, antialias,
-				  clip);
-done:
-    _cairo_composite_rectangles_fini (&composite);
-    return status;
+    cairo_surface_t *surface = abstract_surface;
+    const cairo_compositor_t *compositor = get_compositor (&surface);
+    return _cairo_compositor_fill (compositor, surface, op,
+				   source, path, fill_rule,
+				   tolerance, antialias, clip);
 }
 
 static cairo_int_status_t
@@ -1008,40 +1026,11 @@ _cairo_xcb_surface_glyphs (void				*abstract_surface,
 			   cairo_scaled_font_t		*scaled_font,
 			   const cairo_clip_t		*clip)
 {
-    cairo_xcb_surface_t *surface = abstract_surface;
-    cairo_composite_rectangles_t composite;
-    cairo_int_status_t status;
-    cairo_bool_t overlap;
-
-    status = _cairo_composite_rectangles_init_for_glyphs (&composite,
-							  &surface->base,
-							  op, source,
-							  scaled_font,
-							  glyphs, num_glyphs,
-							  clip, &overlap);
-    if (unlikely (status))
-	return status;
-
-    if (surface->fallback == NULL) {
-	status = _cairo_xcb_surface_render_glyphs (surface,
-						   op, source,
-						   scaled_font, glyphs, num_glyphs,
-						   &composite, overlap);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    goto done;
-    }
-
-    status =  _cairo_surface_show_text_glyphs (_cairo_xcb_surface_fallback (surface,
-									    &composite),
-					       op, source,
-					       NULL, 0,
-					       glyphs, num_glyphs,
-					       NULL, 0, 0,
-					       scaled_font,
-					       clip);
-done:
-    _cairo_composite_rectangles_fini (&composite);
-    return status;
+    cairo_surface_t *surface = abstract_surface;
+    const cairo_compositor_t *compositor = get_compositor (&surface);
+    return _cairo_compositor_glyphs (compositor, surface, op,
+				     source, glyphs, num_glyphs,
+				     scaled_font, clip);
 }
 
 const cairo_surface_backend_t _cairo_xcb_surface_backend = {

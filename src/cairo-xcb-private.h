@@ -386,49 +386,38 @@ _cairo_xcb_surface_get_extents (void *abstract_surface,
 				cairo_rectangle_int_t *extents);
 
 cairo_private cairo_int_status_t
-_cairo_xcb_surface_render_paint (cairo_xcb_surface_t	*surface,
-				 cairo_operator_t	 op,
-				 const cairo_pattern_t	*source,
-				 cairo_composite_rectangles_t *composite);
+_cairo_xcb_render_compositor_paint (const cairo_compositor_t     *compositor,
+				    cairo_composite_rectangles_t *extents);
 
 cairo_private cairo_int_status_t
-_cairo_xcb_surface_render_mask (cairo_xcb_surface_t	*surface,
-				cairo_operator_t		 op,
-				const cairo_pattern_t	*source,
-				const cairo_pattern_t	*mask,
-				cairo_composite_rectangles_t *composite);
+_cairo_xcb_render_compositor_mask (const cairo_compositor_t     *compositor,
+				   cairo_composite_rectangles_t *extents);
 
 cairo_private cairo_int_status_t
-_cairo_xcb_surface_render_stroke (cairo_xcb_surface_t		*surface,
-				  cairo_operator_t		 op,
-				  const cairo_pattern_t		*source,
-				  const cairo_path_fixed_t	*path,
-				  const cairo_stroke_style_t	*style,
-				  const cairo_matrix_t		*ctm,
-				  const cairo_matrix_t		*ctm_inverse,
-				  double			 tolerance,
-				  cairo_antialias_t		 antialias,
-				  cairo_composite_rectangles_t *composite);
+_cairo_xcb_render_compositor_stroke (const cairo_compositor_t     *compositor,
+				     cairo_composite_rectangles_t *extents,
+				     const cairo_path_fixed_t     *path,
+				     const cairo_stroke_style_t   *style,
+				     const cairo_matrix_t         *ctm,
+				     const cairo_matrix_t         *ctm_inverse,
+				     double                        tolerance,
+				     cairo_antialias_t             antialias);
 
 cairo_private cairo_int_status_t
-_cairo_xcb_surface_render_fill (cairo_xcb_surface_t	*surface,
-				cairo_operator_t	 op,
-				const cairo_pattern_t	*source,
-				const cairo_path_fixed_t*path,
-				cairo_fill_rule_t	 fill_rule,
-				double			 tolerance,
-				cairo_antialias_t	 antialias,
-				cairo_composite_rectangles_t *composite);
+_cairo_xcb_render_compositor_fill (const cairo_compositor_t     *compositor,
+				   cairo_composite_rectangles_t *extents,
+				   const cairo_path_fixed_t     *path,
+				   cairo_fill_rule_t             fill_rule,
+				   double                        tolerance,
+				   cairo_antialias_t             antialias);
 
 cairo_private cairo_int_status_t
-_cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
-				  cairo_operator_t		 op,
-				  const cairo_pattern_t	*source,
-				  cairo_scaled_font_t	*scaled_font,
-				  cairo_glyph_t		*glyphs,
-				  int			 num_glyphs,
-				  cairo_composite_rectangles_t *composite,
-				  cairo_bool_t overlap);
+_cairo_xcb_render_compositor_glyphs (const cairo_compositor_t     *compositor,
+				     cairo_composite_rectangles_t *extents,
+				     cairo_scaled_font_t          *scaled_font,
+				     cairo_glyph_t                *glyphs,
+				     int                           num_glyphs,
+				     cairo_bool_t                  overlap);
 cairo_private void
 _cairo_xcb_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font);
 
