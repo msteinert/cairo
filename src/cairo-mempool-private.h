@@ -40,6 +40,8 @@
 #include "cairo-compiler-private.h"
 #include "cairo-error-private.h"
 
+#include <stddef.h> /* for size_t */
+
 CAIRO_BEGIN_DECLS
 
 typedef struct _cairo_mempool cairo_mempool_t;
