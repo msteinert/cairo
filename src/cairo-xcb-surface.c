@@ -1431,7 +1431,8 @@ slim_hidden_def (cairo_xcb_surface_create_with_xrender_format);
 static void
 _drawable_changed (cairo_xcb_surface_t *surface)
 {
-    _cairo_surface_begin_modification (&surface->base);
+    _cairo_surface_set_error (&surface->base,
+	    _cairo_surface_begin_modification (&surface->base));
     _cairo_boxes_clear (&surface->fallback_damage);
     cairo_surface_destroy (&surface->fallback->base);
 
