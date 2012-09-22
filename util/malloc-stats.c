@@ -236,7 +236,7 @@ my_init_hook(void) {
 	my_hooks ();
 }
 
-void (*__malloc_initialize_hook) (void) = my_init_hook;
+void (*__volatile __malloc_initialize_hook) (void) = my_init_hook;
 
 
 /* reporting */
