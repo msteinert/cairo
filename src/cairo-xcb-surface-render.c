@@ -2410,7 +2410,7 @@ _cairo_xcb_surface_clear (cairo_xcb_surface_t *dst)
     rect.width  = dst->width;
     rect.height = dst->height;
 
-    if (dst->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE) {
+    if (dst->connection->flags & CAIRO_XCB_RENDER_HAS_FILL_RECTANGLES) {
 	xcb_render_color_t color;
 	uint8_t op;
 
