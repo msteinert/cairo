@@ -2384,10 +2384,15 @@ _cairo_xcb_surface_fixup_unbounded_boxes (cairo_xcb_surface_t *dst,
     }
 
     if (likely (status == CAIRO_STATUS_SUCCESS)) {
-	status = _render_fill_boxes (dst,
-				     CAIRO_OPERATOR_CLEAR,
-				     CAIRO_COLOR_TRANSPARENT,
-				     &clear);
+	if (dst->connection->flags & CAIRO_XCB_RENDER_HAS_FILL_RECTANGLES)
+	    status = _render_fill_boxes (dst,
+					 CAIRO_OPERATOR_CLEAR,
+					 CAIRO_COLOR_TRANSPARENT,
+					 &clear);
+	else
+	    status = _cairo_xcb_surface_core_fill_boxes (dst,
+							 CAIRO_COLOR_TRANSPARENT,
+							 &clear);
     }
 
     _cairo_boxes_fini (&clear);
