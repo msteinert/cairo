@@ -943,8 +943,6 @@ cairo_surface_destroy (cairo_surface_t *surface)
 	    return;
 
 	_cairo_surface_finish (surface);
-	/* paranoid check that nobody took a reference whilst finishing */
-	assert (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&surface->ref_count));
     }
 
     if (surface->damage)
@@ -957,7 +955,9 @@ cairo_surface_destroy (cairo_surface_t *surface)
         cairo_device_destroy (surface->device);
 
     assert (surface->snapshot_of == NULL);
-    assert (!_cairo_surface_has_snapshots (surface));
+    assert (! _cairo_surface_has_snapshots (surface));
+    /* paranoid check that nobody took a reference whilst finishing */
+    assert (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&surface->ref_count));
 
     free (surface);
 }
