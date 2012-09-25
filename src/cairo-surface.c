@@ -1512,6 +1512,13 @@ cairo_surface_mark_dirty (cairo_surface_t *surface)
 {
     cairo_rectangle_int_t extents;
 
+    if (unlikely (surface->status))
+	return;
+    if (unlikely (surface->finished)) {
+	_cairo_surface_set_error (surface, _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
+	return;
+    }
+
     _cairo_surface_get_extents (surface, &extents);
     cairo_surface_mark_dirty_rectangle (surface,
 					extents.x, extents.y,
