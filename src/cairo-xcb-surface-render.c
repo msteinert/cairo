@@ -3106,7 +3106,8 @@ _clip_and_composite_boxes (cairo_xcb_surface_t *dst,
     }
 
     /* Can we reduce drawing through a clip-mask to simply drawing the clip? */
-    if (extents->clip->path != NULL && extents->is_bounded) {
+    if (dst->connection->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_TRAPEZOIDS &&
+	    extents->clip->path != NULL && extents->is_bounded) {
 	cairo_polygon_t polygon;
 	cairo_fill_rule_t fill_rule;
 	cairo_antialias_t antialias;
