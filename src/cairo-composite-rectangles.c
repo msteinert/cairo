@@ -130,6 +130,10 @@ _cairo_composite_rectangles_init_for_paint (cairo_composite_rectangles_t *extent
     if (_cairo_clip_is_all_clipped (extents->clip))
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
+    if (! _cairo_rectangle_intersect (&extents->unbounded,
+				      _cairo_clip_get_extents (extents->clip)))
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
     if (extents->source_pattern.base.type != CAIRO_PATTERN_TYPE_SOLID)
 	_cairo_pattern_sampled_area (&extents->source_pattern.base,
 				     &extents->bounded,
@@ -157,6 +161,10 @@ _cairo_composite_rectangles_intersect (cairo_composite_rectangles_t *extents,
 
     extents->clip = _cairo_clip_reduce_for_composite (clip, extents);
     if (_cairo_clip_is_all_clipped (extents->clip))
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
+    if (! _cairo_rectangle_intersect (&extents->unbounded,
+				      _cairo_clip_get_extents (extents->clip)))
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
     if (extents->source_pattern.base.type != CAIRO_PATTERN_TYPE_SOLID)
@@ -219,6 +227,10 @@ _cairo_composite_rectangles_intersect_source_extents (cairo_composite_rectangles
     if (_cairo_clip_is_all_clipped (extents->clip))
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
+    if (! _cairo_rectangle_intersect (&extents->unbounded,
+				      _cairo_clip_get_extents (extents->clip)))
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
     if (extents->source_pattern.base.type != CAIRO_PATTERN_TYPE_SOLID)
 	_cairo_pattern_sampled_area (&extents->source_pattern.base,
 				     &extents->bounded,
@@ -277,6 +289,10 @@ _cairo_composite_rectangles_intersect_mask_extents (cairo_composite_rectangles_t
     if (_cairo_clip_is_all_clipped (extents->clip))
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
+    if (! _cairo_rectangle_intersect (&extents->unbounded,
+				      _cairo_clip_get_extents (extents->clip)))
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
     if (extents->source_pattern.base.type != CAIRO_PATTERN_TYPE_SOLID)
 	_cairo_pattern_sampled_area (&extents->source_pattern.base,
 				     &extents->bounded,
@@ -306,7 +322,6 @@ _cairo_composite_rectangles_init_for_mask (cairo_composite_rectangles_t *extents
     {
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
     }
-
 
     extents->original_mask_pattern = mask;
     _cairo_composite_reduce_pattern (mask, &extents->mask_pattern);
