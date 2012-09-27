@@ -1019,12 +1019,16 @@ _cairo_spans_compositor_stroke (const cairo_compositor_t	*_compositor,
 	cairo_polygon_t polygon;
 	cairo_fill_rule_t fill_rule = CAIRO_FILL_RULE_WINDING;
 
-	if (extents->mask.width  > extents->unbounded.width ||
-	    extents->mask.height > extents->unbounded.height)
+	if (! _cairo_rectangle_contains_rectangle (&extents->unbounded,
+						   &extents->mask))
 	{
-	    cairo_box_t limits;
-	    _cairo_box_from_rectangle (&limits, &extents->unbounded);
-	    _cairo_polygon_init (&polygon, &limits, 1);
+	    if (extents->clip->num_boxes == 1) {
+		_cairo_polygon_init (&polygon, extents->clip->boxes, 1);
+	    } else {
+		cairo_box_t limits;
+		_cairo_box_from_rectangle (&limits, &extents->unbounded);
+		_cairo_polygon_init (&polygon, &limits, 1);
+	    }
 	}
 	else
 	{
@@ -1101,13 +1105,17 @@ _cairo_spans_compositor_fill (const cairo_compositor_t		*_compositor,
 
 	TRACE((stderr, "%s - polygon\n", __FUNCTION__));
 
-	if (extents->mask.width  > extents->unbounded.width ||
-	    extents->mask.height > extents->unbounded.height)
+	if (! _cairo_rectangle_contains_rectangle (&extents->unbounded,
+						   &extents->mask))
 	{
-	    cairo_box_t limits;
 	    TRACE((stderr, "%s - clipping to bounds\n", __FUNCTION__));
-	    _cairo_box_from_rectangle (&limits, &extents->unbounded);
-	    _cairo_polygon_init (&polygon, &limits, 1);
+	    if (extents->clip->num_boxes == 1) {
+		_cairo_polygon_init (&polygon, extents->clip->boxes, 1);
+	    } else {
+		cairo_box_t limits;
+		_cairo_box_from_rectangle (&limits, &extents->unbounded);
+		_cairo_polygon_init (&polygon, &limits, 1);
+	    }
 	}
 	else
 	{
@@ -1122,6 +1130,7 @@ _cairo_spans_compositor_fill (const cairo_compositor_t		*_compositor,
 							  extents->clip->boxes,
 							  extents->clip->num_boxes);
 	}
+	TRACE_ (_cairo_debug_print_polygon (stderr, &polygon));
 	if (likely (status == CAIRO_INT_STATUS_SUCCESS)) {
 	    cairo_clip_t *saved_clip = extents->clip;
 
