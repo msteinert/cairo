@@ -50,6 +50,7 @@
 #include "cairo-image-surface-private.h"
 #include "cairo-spans-compositor-private.h"
 #include "cairo-surface-backend-private.h"
+#include "cairo-surface-offset-private.h"
 
 static cairo_int_status_t
 acquire (void *abstract_dst)
@@ -300,6 +301,36 @@ traps_to_operand (void *_dst,
 	return image->status;
     }
 
+    /* GLES2 only supports RGB/RGBA when uploading */
+    if (_cairo_gl_get_flavor () == CAIRO_GL_FLAVOR_ES) {
+	cairo_surface_pattern_t pattern;
+	cairo_surface_t *rgba_image;
+
+	/* XXX perform this fixup inside _cairo_gl_draw_image() */
+
+	rgba_image =
+	    _cairo_image_surface_create_with_pixman_format (NULL,
+							    _cairo_is_little_endian () ?  PIXMAN_a8b8g8r8 : PIXMAN_r8g8b8a8,
+							    extents->width,
+							    extents->height,
+							    0);
+	if (unlikely (rgba_image->status))
+	    return rgba_image->status;
+
+	_cairo_pattern_init_for_surface (&pattern, image);
+	status = _cairo_surface_paint (rgba_image, CAIRO_OPERATOR_SOURCE,
+				       &pattern.base, NULL);
+	_cairo_pattern_fini (&pattern.base);
+
+	cairo_surface_destroy (image);
+	image = rgba_image;
+
+	if (unlikely (status)) {
+	    cairo_surface_destroy (image);
+	    return status;
+	}
+    }
+
     mask = _cairo_surface_create_similar_scratch (_dst,
 						  CAIRO_CONTENT_COLOR_ALPHA,
 						  extents->width,
@@ -315,6 +346,7 @@ traps_to_operand (void *_dst,
 					   extents->width, extents->height,
 					   0, 0);
     cairo_surface_destroy (image);
+
     if (unlikely (status))
 	goto error;
 
