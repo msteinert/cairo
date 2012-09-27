@@ -1362,7 +1362,7 @@ glitter_scan_converter_add_edge (glitter_scan_converter_t *converter,
     INPUT_TO_GRID_Y (edge->line.p1.y, e.line.p1.y);
     INPUT_TO_GRID_Y (edge->line.p2.y, e.line.p2.y);
     if (e.line.p1.y == e.line.p2.y)
-	return;
+	e.line.p2.y++; /* Fudge to prevent div-by-zero */
 
     INPUT_TO_GRID_X (edge->line.p1.x, e.line.p1.x);
     INPUT_TO_GRID_X (edge->line.p2.x, e.line.p2.x);
