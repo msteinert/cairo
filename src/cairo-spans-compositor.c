@@ -111,6 +111,8 @@ get_clip_surface (const cairo_spans_compositor_t *compositor,
     if (unlikely (status))
 	goto cleanup_polygon;
 
+    polygon.num_limits = 0;
+
     antialias = clip_path->antialias;
     fill_rule = clip_path->fill_rule;
 
@@ -918,9 +920,6 @@ clip_and_composite_polygon (const cairo_spans_compositor_t	*compositor,
 	    cairo_clip_t *old_clip;
 
 	    if (clip_antialias == antialias) {
-		/* refresh limits after trimming extents */
-		_cairo_polygon_limit_to_clip(polygon, extents->clip);
-
 		status = _cairo_polygon_intersect (polygon, fill_rule,
 						   &clipper, clip_fill_rule);
 		_cairo_polygon_fini (&clipper);
@@ -1040,6 +1039,8 @@ _cairo_spans_compositor_stroke (const cairo_compositor_t	*_compositor,
 						      tolerance,
 						      &polygon);
 	TRACE_ (_cairo_debug_print_polygon (stderr, &polygon));
+	polygon.num_limits = 0;
+
 	if (status == CAIRO_INT_STATUS_SUCCESS && extents->clip->num_boxes > 1) {
 	    status = _cairo_polygon_intersect_with_boxes (&polygon, &fill_rule,
 							  extents->clip->boxes,
@@ -1123,6 +1124,9 @@ _cairo_spans_compositor_fill (const cairo_compositor_t		*_compositor,
 	}
 
 	status = _cairo_path_fixed_fill_to_polygon (path, tolerance, &polygon);
+	TRACE_ (_cairo_debug_print_polygon (stderr, &polygon));
+	polygon.num_limits = 0;
+
 	if (status == CAIRO_INT_STATUS_SUCCESS && extents->clip->num_boxes > 1) {
 	    TRACE((stderr, "%s - polygon intersect with %d clip boxes\n",
 		   __FUNCTION__, extents->clip->num_boxes));
