@@ -46,6 +46,7 @@ test_sources = \
 	clip-complex-shape.c				\
 	clip-disjoint.c					\
 	clip-disjoint-hatching.c			\
+	clip-disjoint-quad.c				\
 	clip-device-offset.c				\
 	clip-double-free.c				\
 	clip-draw-unbounded.c				\
