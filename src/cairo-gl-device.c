@@ -321,7 +321,7 @@ _get_depth_stencil_format (cairo_gl_context_t *ctx)
 
 #if CAIRO_HAS_GLESV2_SURFACE
     if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP)
-	return GL_DEPTH24_STENCIL8;
+	return GL_DEPTH24_STENCIL8_OES;
 #endif
 
 #if CAIRO_HAS_GL_SURFACE
