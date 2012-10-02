@@ -249,6 +249,14 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 	glGetIntegerv(GL_MAX_SAMPLES_EXT, &ctx->num_samples);
     }
 #endif
+
+#if CAIRO_HAS_GLESV2_SURFACE && defined(GL_MAX_SAMPLES_IMG)
+    if (ctx->has_packed_depth_stencil &&
+	_cairo_gl_has_extension ("GL_IMG_multisampled_render_to_texture")) {
+	glGetIntegerv(GL_MAX_SAMPLES_IMG, &ctx->num_samples);
+    }
+#endif
+
     ctx->supports_msaa = ctx->num_samples > 1;
     if (ctx->num_samples > MAX_MSAA_SAMPLES)
 	ctx->num_samples = MAX_MSAA_SAMPLES;
