@@ -778,6 +778,7 @@ cairo_type1_font_subset_parse_charstring (cairo_type1_font_subset_t *font,
 		    font->build_stack.top_value < font->num_subrs)
 		{
 		    subr_num = font->build_stack.top_value;
+		    font->build_stack.sp--;
 		    font->subrs[subr_num].used = TRUE;
 		    last_op_was_integer = FALSE;
 		    status = cairo_type1_font_subset_parse_charstring (font,
