@@ -88,6 +88,36 @@ typedef struct cairo_stroker {
     cairo_box_t bounds;
 } cairo_stroker_t;
 
+static void
+_cairo_stroker_limit (cairo_stroker_t *stroker,
+		      const cairo_path_fixed_t *path,
+		      const cairo_box_t *boxes,
+		      int num_boxes)
+{
+    double dx, dy;
+    cairo_fixed_t fdx, fdy;
+
+    stroker->has_bounds = TRUE;
+    _cairo_boxes_get_extents (boxes, num_boxes, &stroker->bounds);
+
+    /* Extend the bounds in each direction to account for the maximum area
+     * we might generate trapezoids, to capture line segments that are outside
+     * of the bounds but which might generate rendering that's within bounds.
+     */
+
+    _cairo_stroke_style_max_distance_from_path (&stroker->style, path,
+						stroker->ctm, &dx, &dy);
+
+    fdx = _cairo_fixed_from_double (dx);
+    fdy = _cairo_fixed_from_double (dy);
+
+    stroker->bounds.p1.x -= fdx;
+    stroker->bounds.p2.x += fdx;
+
+    stroker->bounds.p1.y -= fdy;
+    stroker->bounds.p2.y += fdy;
+}
+
 static cairo_status_t
 _cairo_stroker_init (cairo_stroker_t		*stroker,
 		     const cairo_path_fixed_t	*path,
@@ -122,62 +152,11 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
 
     stroker->add_external_edge = NULL;
 
-    stroker->has_bounds = num_limits;
-    if (stroker->has_bounds) {
-	/* Extend the bounds in each direction to account for the maximum area
-	 * we might generate trapezoids, to capture line segments that are
-	 * outside of the bounds but which might generate rendering that's
-	 * within bounds.
-	 */
-	double dx, dy;
-	cairo_fixed_t fdx, fdy;
-	int i;
-
-	stroker->bounds = limits[0];
-	for (i = 1; i < num_limits; i++)
-	     _cairo_box_add_box (&stroker->bounds, &limits[i]);
-
-	_cairo_stroke_style_max_distance_from_path (stroke_style, path, ctm, &dx, &dy);
-	fdx = _cairo_fixed_from_double (dx);
-	fdy = _cairo_fixed_from_double (dy);
-
-	stroker->bounds.p1.x -= fdx;
-	stroker->bounds.p2.x += fdx;
-	stroker->bounds.p1.y -= fdy;
-	stroker->bounds.p2.y += fdy;
-    }
+    stroker->has_bounds = FALSE;
+    if (num_limits)
+	_cairo_stroker_limit (stroker, path, limits, num_limits);
 
     return CAIRO_STATUS_SUCCESS;
-}
-
-static void
-_cairo_stroker_limit (cairo_stroker_t *stroker,
-		      const cairo_path_fixed_t *path,
-		      const cairo_box_t *boxes,
-		      int num_boxes)
-{
-    double dx, dy;
-    cairo_fixed_t fdx, fdy;
-
-    stroker->has_bounds = TRUE;
-    _cairo_boxes_get_extents (boxes, num_boxes, &stroker->bounds);
-
-    /* Extend the bounds in each direction to account for the maximum area
-     * we might generate trapezoids, to capture line segments that are outside
-     * of the bounds but which might generate rendering that's within bounds.
-     */
-
-    _cairo_stroke_style_max_distance_from_path (&stroker->style, path,
-						stroker->ctm, &dx, &dy);
-
-    fdx = _cairo_fixed_from_double (dx);
-    fdy = _cairo_fixed_from_double (dy);
-
-    stroker->bounds.p1.x -= fdx;
-    stroker->bounds.p2.x += fdx;
-
-    stroker->bounds.p1.y -= fdy;
-    stroker->bounds.p2.y += fdy;
 }
 
 static void
@@ -1338,10 +1317,6 @@ _cairo_path_fixed_stroke_dashed_to_polygon (const cairo_path_fixed_t	*path,
 
     stroker.add_external_edge = _cairo_polygon_add_external_edge,
     stroker.closure = polygon;
-
-    if (polygon->num_limits)
-	_cairo_stroker_limit (&stroker, path,
-			      polygon->limits, polygon->num_limits);
 
     status = _cairo_path_fixed_interpret (path,
 					  _cairo_stroker_move_to,
