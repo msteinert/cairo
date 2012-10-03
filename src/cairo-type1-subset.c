@@ -114,6 +114,8 @@ typedef struct _cairo_type1_font_subset {
 
     const char *rd, *nd, *np;
 
+    int lenIV;
+
     char *type1_data;
     unsigned int type1_length;
     char *type1_end;
@@ -754,7 +756,7 @@ cairo_type1_font_subset_parse_charstring (cairo_type1_font_subset_t *font,
 						charstring);
     end = charstring + encrypted_charstring_length;
 
-    p = charstring + 4;
+    p = charstring + font->lenIV;
 
     last_op_was_integer = FALSE;
 
@@ -1138,9 +1140,9 @@ cairo_type1_font_subset_write_private_dict (cairo_type1_font_subset_t *font,
 {
     cairo_status_t status;
     const char *p, *subrs, *charstrings, *array_start, *array_end, *dict_start, *dict_end;
-    const char *closefile_token;
-    char buffer[32], *subr_count_end, *glyph_count_end;
-    int length;
+    const char *lenIV_start, *lenIV_end, *closefile_token;
+    char buffer[32], *lenIV_str, *subr_count_end, *glyph_count_end;
+    int ret, lenIV, length;
     const cairo_scaled_font_backend_t *backend;
     unsigned int i;
     int glyph, j;
@@ -1161,6 +1163,38 @@ cairo_type1_font_subset_write_private_dict (cairo_type1_font_subset_t *font,
      * Finally the private dict is copied to the subset font minus the
      * subroutines and charstrings not required.
      */
+
+    /* Determine lenIV, the number of random characters at the start of
+       each encrypted charstring. The defaults is 4, but this can be
+       overridden in the private dict. */
+    font->lenIV = 4;
+    if ((lenIV_start = find_token (font->cleartext, font->cleartext_end, "/lenIV")) != NULL) {
+        lenIV_start += 6;
+        lenIV_end = find_token (lenIV_start, font->cleartext_end, "def");
+        if (lenIV_end == NULL)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+        lenIV_str = malloc (lenIV_end - lenIV_start + 1);
+        if (unlikely (lenIV_str == NULL))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+        strncpy (lenIV_str, lenIV_start, lenIV_end - lenIV_start);
+        lenIV_str[lenIV_end - lenIV_start] = 0;
+
+        ret = sscanf(lenIV_str, "%d", &lenIV);
+        free(lenIV_str);
+
+        if (unlikely (ret <= 0))
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+        /* Apparently some fonts signal unencrypted charstrings with a negative lenIV,
+           though this is not part of the Type 1 Font Format specification.  See, e.g.
+           http://lists.gnu.org/archive/html/freetype-devel/2000-06/msg00064.html. */
+        if (unlikely (lenIV < 0))
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+        font->lenIV = lenIV;
+    }
 
     /* Find start of Subrs */
     subrs = find_token (font->cleartext, font->cleartext_end, "/Subrs");
