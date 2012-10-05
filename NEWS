@@ -1,3 +1,72 @@
+Release 1.12.4 (2012-10-05 Chris Wilson <chris@chris-wilson.co.uk>)
+===================================================================
+More bugs, and more importantly, more fixes. On the cairo-gl side, we
+have refinements to the MSAA compositor which enables hardware
+acceleration of comparitively low-quality antialiasing - which is useful
+in animations and on very high density screens. For cairo-xlib, we have
+finally enabled SHM transport for image transfers to and from the X
+server. A long standing required feature, SHM transport offers a notable
+reduction in rendering latency by reducing the number of copies
+required to upload image data - given hardware and driver support,
+cairo-xlib can now perform zero copy uploads onto the GPU. And as usual
+Adrian Johnson has been very busy fixing many different corner cases in
+cairo-pdf, impoving opacity groups and font subsetting. Last, but not
+least, for cairo-image Søren Sandmann Pedersen added support for
+rendering glyphs to pixman and using that from within cairo. The new
+glyph rendering facility reduces the overhead for setting up the
+compositing operation, improving glyph thoughput for the image backend
+by a factor of about 4. And before he did so, he also fixed up a few
+bugs in the existing glyph rendering code. So many thanks to Andrea
+Canciani, Adrian Johnson, Chuanbo Weng, Dongyeon Kim, Henry Song, Martin
+Robinson, Søren Sandmann Pedersen and Uli Schlachter for their
+contributions, finding and fixing bugs.
+
+Bug fixes
+---------
+
+ Interior boxes were being dropped when amalgamating regions during
+ tesselation.
+ https://bugs.freedesktop.org/show_bug.cgi?id=49446
+
+ Allow building without gtk-doc installed
+
+ Invalid edge generation whilst reducing complex polygons.
+ https://bugs.freedesktop.org/show_bug.cgi?id=50852
+
+ Stroking around tight cusps
+
+ Use locale correct formats for reading font subsetting and valid
+ buffers.
+ https://bugs.freedesktop.org/show_bug.cgi?id=51443
+
+ Ensure that the type1 subset includes all the glyph encodings
+ https://bugs.freedesktop.org/show_bug.cgi?id=53040
+
+ Upload the whole source for a repeating pattern.
+ https://bugs.freedesktop.org/show_bug.cgi?id=51910
+
+ Fix damage tracking to handle continuation chunks corectly and so
+ prevent crashes on win32.
+ https://bugs.freedesktop.org/show_bug.cgi?id=53384
+
+ Avoid emitting miter joins for degenerate line segments
+ https://bugzilla.mozilla.org/show_bug.cgi?id=407107
+
+ Convert the relative path semgents into the backend coordinates
+ and then back again to user coordinates (cairo_copy_path,
+ cairo_append_path)
+ https://bugs.freedesktop.org/show_bug.cgi?id=54732
+ 
+ Fix extents computations for a degenerate path consisting only of a
+ move-to
+ https://bugs.freedesktop.org/show_bug.cgi?id=54549
+
+ Prevent crashing on a degenerate project edge after polygon
+ intersection
+ https://bugs.freedesktop.org/show_bug.cgi?id=54822
+ 
+
+
 Release 1.12.2 (2012-04-29 Chris Wilson <chris@chris-wilson.co.uk>)
 ===================================================================
 After such a long gestation period for the release of Cairo 1.12, we
