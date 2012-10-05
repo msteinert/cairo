@@ -82,6 +82,7 @@ struct _cairo_xlib_shm_info {
 struct _cairo_xlib_shm_surface {
     cairo_image_surface_t image;
 
+    cairo_list_t link;
     cairo_xlib_shm_info_t *info;
     Pixmap pixmap;
     unsigned long active;
@@ -108,6 +109,8 @@ struct _cairo_xlib_shm_display {
     int event;
 
     Window window;
+
+    cairo_list_t surfaces;
 
     cairo_list_t pool;
     struct pqueue info;
@@ -573,6 +576,8 @@ _cairo_xlib_shm_surface_finish (void *abstract_surface)
 	_cairo_xlib_shm_pool_cleanup (display);
     }
 
+    cairo_list_del (&shm->link);
+
     cairo_device_release (&display->base);
     return CAIRO_STATUS_SUCCESS;
 }
@@ -681,6 +686,8 @@ _cairo_xlib_shm_surface_create (cairo_xlib_surface_t *other,
     shm->idle = -5;
 
     assert (shm->active == 0 || will_sync);
+
+    cairo_list_add (&shm->link, &display->shm->surfaces);
 
     cairo_device_release (&display->base);
 
@@ -1153,6 +1160,8 @@ _cairo_xlib_display_init_shm (cairo_xlib_display_t *display)
     shm->opcode = codes ->major_opcode;
     shm->event = codes->first_event;
 
+    cairo_list_init (&shm->surfaces);
+
     display->shm = shm;
 }
 
@@ -1163,6 +1172,11 @@ _cairo_xlib_display_fini_shm (cairo_xlib_display_t *display)
 
     if (shm == NULL)
 	return;
+
+    while (!cairo_list_is_empty (&shm->surfaces))
+	cairo_surface_finish (&cairo_list_first_entry (&shm->surfaces,
+						       cairo_xlib_shm_surface_t,
+						       link)->image.base);
 
     _pqueue_fini (&shm->info);
 
