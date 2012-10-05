@@ -1125,9 +1125,12 @@ _cairo_xlib_shm_surface_is_idle (cairo_surface_t *surface)
     (((major) * 10000000) + ((minor) * 100000) + ((patch) * 1000) + snap)
 
 static cairo_bool_t
-xorg_has_buggy_send_event(Display *dpy)
+xorg_has_buggy_send_shm_completion_event(Display *dpy)
 {
-    /* Avoid incurring the wrath fixed by:
+    /* As libXext sets the SEND_EVENT bit in the ShmCompletionEvent,
+     * the Xserver may crash if it does not take care when processing
+     * the event type. For instance versions of Xorg prior to 1.11.1
+     * exhibited this bug, and was fixed by:
      *
      * commit 2d2dce558d24eeea0eb011ec9ebaa6c5c2273c39
      * Author: Sam Spilsbury <sam.spilsbury@canonical.com>
@@ -1171,7 +1174,7 @@ _cairo_xlib_display_init_shm (cairo_xlib_display_t *display)
 				 DefaultVisual (display->display, scr),
 				 CWOverrideRedirect, &attr);
 
-    if (xorg_has_buggy_send_event(display->display))
+    if (xorg_has_buggy_send_shm_completion_event(display->display))
 	has_pixmap = 0;
 
     shm->has_pixmaps = has_pixmap ? MIN_PIXMAP_SIZE : 0;
