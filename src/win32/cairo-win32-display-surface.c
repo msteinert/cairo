@@ -497,6 +497,7 @@ _cairo_win32_display_surface_unmap_image (void                    *abstract_surf
 		__FUNCTION__, r.x, r.y, r.width, r.height));
 	surface->fallback->damage =
 	    _cairo_damage_add_rectangle (surface->fallback->damage, &r);
+	surface = to_win32_display_surface (surface->fallback);
     }
 
     return _cairo_surface_unmap_image (surface->image, image);
