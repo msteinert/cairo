@@ -190,6 +190,11 @@ _cairo_xcb_surface_create_similar_image (void			*abstract_other,
     if (unlikely (status))
 	return _cairo_surface_create_in_error (status);
 
+    if (! image->base.is_clear) {
+	memset (image->data, 0, image->stride * image->height);
+	image->base.is_clear = TRUE;
+    }
+
     return &image->base;
 }
 

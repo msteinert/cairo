@@ -3617,14 +3617,6 @@ _cairo_xcb_surface_render_stroke_as_polygon (cairo_xcb_surface_t	*dst,
     return status;
 }
 
-static void
-_clear_image (cairo_surface_t *surface)
-{
-    cairo_image_surface_t *image = (cairo_image_surface_t *) surface;
-    memset (image->data, 0, image->stride * image->height);
-    surface->is_clear = TRUE;
-}
-
 static cairo_status_t
 _cairo_xcb_surface_render_stroke_via_mask (cairo_xcb_surface_t		*dst,
 					   cairo_operator_t		 op,
@@ -3649,8 +3641,6 @@ _cairo_xcb_surface_render_stroke_via_mask (cairo_xcb_surface_t		*dst,
 						     extents->bounded.height);
     if (unlikely (image->status))
 	return image->status;
-
-    _clear_image (image);
 
     clip = _cairo_clip_copy_region (extents->clip);
     status = _cairo_surface_offset_stroke (image, x, y,
@@ -3792,8 +3782,6 @@ _cairo_xcb_surface_render_fill_via_mask (cairo_xcb_surface_t	*dst,
     if (unlikely (image->status))
 	return image->status;
 
-    _clear_image (image);
-
     clip = _cairo_clip_copy_region (extents->clip);
     status = _cairo_surface_offset_fill (image, x, y,
 					 CAIRO_OPERATOR_ADD,
@@ -3903,8 +3891,6 @@ _cairo_xcb_surface_render_glyphs_via_mask (cairo_xcb_surface_t		*dst,
 						     extents->bounded.height);
     if (unlikely (image->status))
 	return image->status;
-
-    _clear_image (image);
 
     clip = _cairo_clip_copy_region (extents->clip);
     status = _cairo_surface_offset_glyphs (image, x, y,
