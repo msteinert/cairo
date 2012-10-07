@@ -53,6 +53,7 @@
 #include "cairo-output-stream-private.h"
 
 #include <ctype.h>
+#include <locale.h>
 
 #define TYPE1_STACKSIZE 24 /* Defined in Type 1 Font Format */
 
@@ -304,8 +305,17 @@ cairo_type1_font_subset_get_matrix (cairo_type1_font_subset_t *font,
 				    double                    *d)
 {
     const char *start, *end, *segment_end;
-    int ret;
+    int ret, s_max, i, j;
     char *s;
+    struct lconv *locale_data;
+    const char *decimal_point;
+    int decimal_point_len;
+
+    locale_data = localeconv ();
+    decimal_point = locale_data->decimal_point;
+    decimal_point_len = strlen (decimal_point);
+
+    assert (decimal_point_len != 0);
 
     segment_end = font->header_segment + font->header_segment_size;
     start = find_token (font->header_segment, segment_end, name);
@@ -316,12 +326,23 @@ cairo_type1_font_subset_get_matrix (cairo_type1_font_subset_t *font,
     if (end == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    s = malloc (end - start + 1);
+    s_max = end - start + 5*decimal_point_len + 1;
+    s = malloc (s_max);
     if (unlikely (s == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    strncpy (s, start, end - start);
-    s[end - start] = 0;
+    i = 0;
+    j = 0;
+    while (i < end - start && j < s_max - decimal_point_len) {
+	if (start[i] == '.') {
+	    strncpy(s + j, decimal_point, decimal_point_len);
+	    i++;
+	    j += decimal_point_len;
+	} else {
+	    s[j++] = start[i++];
+	}
+    }
+    s[j] = 0;
 
     start = strpbrk (s, "{[");
     if (!start) {
@@ -357,11 +378,13 @@ cairo_type1_font_subset_get_bbox (cairo_type1_font_subset_t *font)
     if (unlikely (status))
 	return status;
 
+    printf("/FontBBox %f %f %f %f\n", x_min, y_min, x_max, y_max);
     status = cairo_type1_font_subset_get_matrix (font, "/FontMatrix",
 						 &xx, &yx, &xy, &yy);
     if (unlikely (status))
 	return status;
 
+    printf("/FontMatrix %f %f %f %f\n", xx, yx, xy, yy);
     if (yy == 0.0)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
