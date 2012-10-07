@@ -378,13 +378,11 @@ cairo_type1_font_subset_get_bbox (cairo_type1_font_subset_t *font)
     if (unlikely (status))
 	return status;
 
-    printf("/FontBBox %f %f %f %f\n", x_min, y_min, x_max, y_max);
     status = cairo_type1_font_subset_get_matrix (font, "/FontMatrix",
 						 &xx, &yx, &xy, &yy);
     if (unlikely (status))
 	return status;
 
-    printf("/FontMatrix %f %f %f %f\n", xx, yx, xy, yy);
     if (yy == 0.0)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
