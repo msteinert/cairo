@@ -1309,6 +1309,12 @@ skip_subrs:
 	    return status;
     }
 
+    /* Always include the first four subroutines in case the Flex/hint mechanism is
+     * being used. */
+    for (j = 0; j < MIN(font->num_subrs, 4); j++) {
+	font->subrs[j].used = TRUE;
+    }
+
     closefile_token = find_token (dict_end, font->cleartext_end, "closefile");
     if (closefile_token == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
