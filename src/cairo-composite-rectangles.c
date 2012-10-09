@@ -444,6 +444,13 @@ _cairo_composite_rectangles_init_for_glyphs (cairo_composite_rectangles_t *exten
     if (unlikely (status))
 	return status;
 
+    if (overlap && *overlap &&
+	scaled_font->options.antialias == CAIRO_ANTIALIAS_NONE &&
+	_cairo_pattern_is_opaque_solid (&extents->source_pattern.base))
+    {
+	*overlap = FALSE;
+    }
+
     return _cairo_composite_rectangles_intersect (extents, clip);
 }
 
