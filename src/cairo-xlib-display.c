@@ -213,6 +213,13 @@ _cairo_xlib_device_create (Display *dpy)
 	goto UNLOCK;
     }
 
+    _cairo_device_init (&display->base, &_cairo_xlib_device_backend);
+
+    display->display = dpy;
+    cairo_list_init (&display->screens);
+    cairo_list_init (&display->fonts);
+    display->closed = FALSE;
+
     /* Xlib calls out to the extension close_display hooks in LIFO
      * order. So we have to ensure that all extensions that we depend
      * on in our close_display hook are properly initialized before we
@@ -239,23 +246,6 @@ _cairo_xlib_device_create (Display *dpy)
     }
 
     _cairo_xlib_display_select_compositor (display);
-
-    codes = XAddExtension (dpy);
-    if (unlikely (codes == NULL)) {
-	device = _cairo_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
-	free (display);
-	goto UNLOCK;
-    }
-
-    _cairo_device_init (&display->base, &_cairo_xlib_device_backend);
-
-    XESetCloseDisplay (dpy, codes->extension, _cairo_xlib_close_display);
-
-    cairo_device_reference (&display->base); /* add one for the CloseDisplay */
-    display->display = dpy;
-    cairo_list_init (&display->screens);
-    cairo_list_init (&display->fonts);
-    display->closed = FALSE;
 
     display->white = NULL;
     memset (display->alpha, 0, sizeof (display->alpha));
@@ -351,6 +341,16 @@ _cairo_xlib_device_create (Display *dpy)
 	display->buggy_gradients = TRUE;
 	display->buggy_pad_reflect = TRUE;
     }
+
+    codes = XAddExtension (dpy);
+    if (unlikely (codes == NULL)) {
+	device = _cairo_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
+	free (display);
+	goto UNLOCK;
+    }
+
+    XESetCloseDisplay (dpy, codes->extension, _cairo_xlib_close_display);
+    cairo_device_reference (&display->base); /* add one for the CloseDisplay */
 
     display->next = _cairo_xlib_display_list;
     _cairo_xlib_display_list = display;
