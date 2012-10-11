@@ -1431,7 +1431,7 @@ _cairo_recording_surface_snapshot (void *abstract_other)
     surface->extents = other->extents;
     surface->unbounded = other->unbounded;
 
-    surface->base.is_clear = TRUE;
+    surface->base.is_clear = other->base.is_clear;
 
     surface->bbtree.left = surface->bbtree.right = NULL;
     surface->bbtree.chain = INVALID_CHAIN;
