@@ -1441,7 +1441,7 @@ _cairo_recording_surface_snapshot (void *abstract_other)
     surface->optimize_clears = TRUE;
 
     _cairo_array_init (&surface->commands, sizeof (cairo_command_t *));
-    status = _cairo_recording_surface_copy (other, surface);
+    status = _cairo_recording_surface_copy (surface, other);
     if (unlikely (status)) {
 	cairo_surface_destroy (&surface->base);
 	return _cairo_surface_create_in_error (status);
