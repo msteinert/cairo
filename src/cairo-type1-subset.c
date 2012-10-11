@@ -1399,9 +1399,9 @@ skip_subrs:
 	    return status;
     }
 
-    /* Always include the first four subroutines in case the Flex/hint mechanism is
+    /* Always include the first five subroutines in case the Flex/hint mechanism is
      * being used. */
-    for (j = 0; j < MIN(font->num_subrs, 4); j++) {
+    for (j = 0; j < MIN (font->num_subrs, 5); j++) {
 	font->subrs[j].used = TRUE;
     }
 
