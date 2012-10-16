@@ -62,6 +62,26 @@ typedef unsigned __int64 uint64_t;
 
 #endif
 
+#if HAVE_FENV_H
+# include <fenv.h>
+#endif
+/* The following are optional in C99, so define them if they aren't yet */
+#ifndef FE_DIVBYZERO
+#define FE_DIVBYZERO 0
+#endif
+#ifndef FE_INEXACT
+#define FE_INEXACT 0
+#endif
+#ifndef FE_INVALID
+#define FE_INVALID 0
+#endif
+#ifndef FE_OVERFLOW
+#define FE_OVERFLOW 0
+#endif
+#ifndef FE_UNDERFLOW
+#define FE_UNDERFLOW 0
+#endif
+
 #include <math.h>
 
 static inline double
