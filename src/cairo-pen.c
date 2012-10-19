@@ -284,7 +284,7 @@ _cairo_pen_vertices_needed (double	    tolerance,
 								     radius);
     int num_vertices;
 
-    if (tolerance >= 2*major_axis) {
+    if (tolerance >= 4*major_axis) { /* XXX relaxed from 2*major for inkscape */
 	num_vertices = 1;
     } else if (tolerance >= major_axis) {
 	num_vertices = 4;
