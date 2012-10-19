@@ -449,6 +449,9 @@ _cairo_xlib_shm_pool_create(cairo_xlib_display_t *display,
 
     pool->attached = NextRequest (dpy);
     success = XShmAttach (dpy, &pool->shm);
+#if !IPC_RMID_DEFERRED_RELEASE
+    XSync (dpy, FALSE);
+#endif
     shmctl (pool->shm.shmid, IPC_RMID, NULL);
 
     if (! success)

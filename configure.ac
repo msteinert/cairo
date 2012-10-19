@@ -74,6 +74,38 @@ CAIRO_ENABLE_SURFACE_BACKEND(xlib, Xlib, auto, [
 		       xlib_NONPKGCONFIG_LIBS="$X_PRE_LIBS $X_LIBS -lX11 -lXext $X_EXTRA_LIBS"
 		       xlib_NONPKGCONFIG_CFLAGS=$X_CFLAGS
 		     fi])
+
+  AC_CHECK_HEADER(sys/ipc.h)
+  AC_CHECK_HEADER(sys/shm.h)
+
+  if test "$ac_cv_header_sys_ipc_h" = "yes" -a "$ac_cv_header_sys_shm_h" = "yes"; then
+      AC_MSG_CHECKING(whether shmctl IPC_RMID allowes subsequent attaches)
+      AC_TRY_RUN([
+		  #include <sys/types.h>
+		  #include <sys/ipc.h>
+		  #include <sys/shm.h>
+		  int main()
+		  {
+		      char *shmaddr;
+		      int id = shmget (IPC_PRIVATE, 4, IPC_CREAT | 0600);
+		      if (id == -1) return 2;
+		      shmaddr = shmat (id, 0, 0);
+		      shmctl (id, IPC_RMID, 0);
+		      if ((char*) shmat (id, 0, 0) == (char*) -1) {
+			  shmdt (shmaddr);
+			  return 1;
+		      }
+		      shmdt (shmaddr);
+		      shmdt (shmaddr);
+		      return 0;
+		  }
+		  ],
+		  AC_DEFINE(IPC_RMID_DEFERRED_RELEASE, 1,
+			    [Define to 1 if shared memory segments are released deferred.])
+		  AC_MSG_RESULT(yes),
+		  AC_MSG_RESULT(no),
+		  AC_MSG_RESULT(assuming no))
+      fi
 ])
 
 CAIRO_ENABLE_SURFACE_BACKEND(xlib_xrender, Xlib Xrender, auto, [
