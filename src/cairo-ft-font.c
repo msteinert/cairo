@@ -2521,6 +2521,22 @@ _cairo_index_to_glyph_name (void	         *abstract_font,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
+static cairo_bool_t
+_ft_is_type1 (FT_Face face)
+{
+#if HAVE_FT_GET_X11_FONT_FORMAT
+    const char *font_format = FT_Get_X11_Font_Format (face);
+    if (font_format &&
+	(strcmp (font_format, "Type 1") == 0 ||
+	 strcmp (font_format, "CFF") == 0))
+    {
+	return TRUE;
+    }
+#endif
+
+    return FALSE;
+}
+
 static cairo_int_status_t
 _cairo_ft_load_type1_data (void	            *abstract_font,
 			   long              offset,
@@ -2533,7 +2549,6 @@ _cairo_ft_load_type1_data (void	            *abstract_font,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     unsigned long available_length;
     unsigned long ret;
-    const char *font_format;
 
     assert (length != NULL);
 
@@ -2551,11 +2566,7 @@ _cairo_ft_load_type1_data (void	            *abstract_font,
     }
 #endif
 
-    font_format = FT_Get_X11_Font_Format (face);
-    if (!font_format ||
-	!(strcmp (font_format, "Type 1") == 0 ||
-	  strcmp (font_format, "CFF") == 0))
-    {
+    if (! _ft_is_type1 (face)) {
         status = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto unlock;
     }
