@@ -21,8 +21,11 @@ MAYBE_WARN="-Wall -Wextra \
 -Wno-missing-field-initializers -Wno-unused-parameter \
 -Wno-attributes -Wno-long-long -Winline"
 
+# New -Wno options should be added here
+# gcc-4.4 and later accept every -Wno- option but may complain later that this
+# option is unknow each time another warning happen.
 # -Wunused-but-set-variable is too noisy at present
-NO_WARN="-Wno-unused-but-set-variable"
+NO_WARN="unused-but-set-variable"
 
 dnl Sun Studio 12 likes to rag at us for abusing enums like
 dnl having cairo_status_t variables hold cairo_int_status_t
@@ -48,8 +51,6 @@ MAYBE_WARN="$MAYBE_WARN -fno-strict-aliasing -fno-common"
 dnl Also to turn various gcc/glibc-specific preprocessor checks
 MAYBE_WARN="$MAYBE_WARN -Wp,-D_FORTIFY_SOURCE=2"
 
-MAYBE_WARN="$MAYBE_WARN $NO_WARN"
-
 # invalidate cached value if MAYBE_WARN has changed
 if test "x$cairo_cv_warn_maybe" != "x$MAYBE_WARN"; then
 	unset cairo_cv_warn_cflags
@@ -72,7 +73,9 @@ AC_CACHE_CHECK([for supported warning flags], cairo_cv_warn_cflags, [
 	for W in $MAYBE_WARN; do
 		CAIRO_CC_TRY_FLAG([$W],, [WARN_CFLAGS="$WARN_CFLAGS $W"])
 	done
-
+	for W in $NO_WARN; do
+		CAIRO_CC_TRY_FLAG([-W$W -Wno-$W],, [WARN_CFLAGS="$WARN_CFLAGS -Wno-$W"])
+	done
 	cairo_cv_warn_cflags=$WARN_CFLAGS
 	cairo_cv_warn_maybe=$MAYBE_WARN
 
