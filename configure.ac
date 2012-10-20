@@ -65,8 +65,7 @@ dnl ===========================================================================
 CAIRO_ENABLE_SURFACE_BACKEND(xlib, Xlib, auto, [
   xlib_REQUIRES="x11 xext"
   PKG_CHECK_MODULES(xlib, $xlib_REQUIRES, ,
-		    [AC_MSG_RESULT(no)
-		     xlib_REQUIRES=""
+		    [xlib_REQUIRES=""
 		     AC_PATH_XTRA
 		     if test "x$no_x" = xyes; then
 		       use_xlib="no (requires X development libraries)"
@@ -116,8 +115,7 @@ CAIRO_ENABLE_SURFACE_BACKEND(xlib_xrender, Xlib Xrender, auto, [
     xlib_xrender_BASE=cairo-xlib
     xlib_xrender_REQUIRES="xrender >= 0.6"
     PKG_CHECK_MODULES(xlib_xrender, $xlib_xrender_REQUIRES, ,
-		      [AC_MSG_RESULT(no)
-		       xlib_xrender_REQUIRES=""
+		      [xlib_xrender_REQUIRES=""
 		       old_CPPFLAGS=$CPPFLAGS
 		       CPPFLAGS="$CPPFLAGS $xlib_CFLAGS $xlib_NONPKGCONFIG_CFLAGS"
 		       AC_CHECK_HEADER(X11/extensions/Xrender.h,
@@ -142,16 +140,14 @@ dnl ===========================================================================
 CAIRO_ENABLE_SURFACE_BACKEND(xcb, XCB, auto, [
   xcb_REQUIRES="xcb >= 1.6 xcb-render >= 1.6"
   PKG_CHECK_MODULES(xcb, $xcb_REQUIRES, ,
-		    [AC_MSG_RESULT(no)
-		    use_xcb="no (requires $xcb_REQUIRES http://xcb.freedesktop.org)"])
+		    [use_xcb="no (requires $xcb_REQUIRES http://xcb.freedesktop.org)"])
 ])
 
 CAIRO_ENABLE_FUNCTIONS(xlib_xcb, Xlib/XCB, no, [
   if test "x$use_xcb" = "xyes" -a "x$use_xlib" = "xyes"; then
     xlib_xcb_REQUIRES="x11-xcb"
     PKG_CHECK_MODULES(xlib_xcb, $xlib_xcb_REQUIRES, ,
-		      [AC_MSG_RESULT(no)
-		      use_xlib_xcb="no (requires $xlib_xcb_REQUIRES http://xcb.freedesktop.org)"])
+		      [use_xlib_xcb="no (requires $xlib_xcb_REQUIRES http://xcb.freedesktop.org)"])
   else
     use_xlib_xcb="no (requires both --enable-xlib and --enable-xcb)"
   fi
@@ -161,8 +157,7 @@ CAIRO_ENABLE_FUNCTIONS(xcb_shm, XCB/SHM, auto, [
   if test "x$use_xcb" = "xyes"; then
       xcb_shm_REQUIRES="xcb-shm"
       PKG_CHECK_MODULES(xcb_shm, $xcb_shm_REQUIRES, ,
-			[AC_MSG_RESULT(no)
-			use_xcb_shm="no (requires $xcb_shm http://xcb.freedesktop.org)"])
+			[use_xcb_shm="no (requires $xcb_shm http://xcb.freedesktop.org)"])
   else
     use_xcb_shm="no (requires --enable-xcb)"
   fi
@@ -173,8 +168,7 @@ dnl ===========================================================================
 CAIRO_ENABLE_SURFACE_BACKEND(qt, Qt, no, [
   qt_REQUIRES="QtGui >= 4.4.0"
   PKG_CHECK_MODULES(qt, $qt_REQUIRES, ,
-		    [AC_MSG_RESULT(no)
-		     qt_REQUIRES=""
+		    [qt_REQUIRES=""
 		     use_qt="no (requires Qt4 development libraries)"
 		     ])
 ])
@@ -282,8 +276,8 @@ dnl ===========================================================================
 
 CAIRO_ENABLE_SURFACE_BACKEND(drm, DRM, no, [
   drm_REQUIRES="libudev >= 136"
-  PKG_CHECK_MODULES(drm, $drm_REQUIRES, , [AC_MSG_RESULT(no)
-  use_drm="no (requires $drm_REQUIRES, udev is available from git://git.kernel.org/pub/scm/linux/hotplug/udev.git)"])
+  PKG_CHECK_MODULES(drm, $drm_REQUIRES, ,
+   [use_drm="no (requires $drm_REQUIRES, udev is available from git://git.kernel.org/pub/scm/linux/hotplug/udev.git)"])
 ])
 
 CAIRO_ENABLE_SURFACE_BACKEND(gallium, Gallium3D, no, [
@@ -322,7 +316,7 @@ CAIRO_ENABLE_FUNCTIONS(png, PNG, yes, [
   fi
 
   if test "x$use_png" = "xyes" ; then 
-    PKG_CHECK_MODULES(png, $png_REQUIRES, , AC_MSG_RESULT(no))
+    PKG_CHECK_MODULES(png, $png_REQUIRES, , : )
   else
     AC_MSG_WARN([Could not find libpng in the pkg-config search path])
   fi    
@@ -376,7 +370,7 @@ dnl ===========================================================================
 
 CAIRO_ENABLE_SURFACE_BACKEND(directfb, directfb, no, [
   directfb_REQUIRES=directfb
-  PKG_CHECK_MODULES(directfb, $directfb_REQUIRES, , AC_MSG_RESULT(no)
+  PKG_CHECK_MODULES(directfb, $directfb_REQUIRES, ,
 		    [use_directfb="no (requires $directfb_REQUIRES http://www.directfb.org)"])
 ])
 
@@ -479,8 +473,7 @@ CAIRO_ENABLE_FONT_BACKEND(ft, FreeType, auto, [
 
     PKG_CHECK_MODULES(FREETYPE, freetype2 >= $FREETYPE_MIN_VERSION,
                       [freetype_pkgconfig=yes],
-		      [AC_MSG_RESULT(no)
-		       freetype_pkgconfig=no])
+		      [freetype_pkgconfig=no])
   
     if test "x$freetype_pkgconfig" = "xyes"; then
       ft_REQUIRES="freetype2 >= $FREETYPE_MIN_VERSION $ft_REQUIRES"
@@ -514,7 +507,7 @@ CAIRO_ENABLE_FONT_BACKEND(fc, Fontconfig, auto, [
   if test "x$use_fc" = "xyes"; then
     fc_REQUIRES="fontconfig >= $FONTCONFIG_MIN_VERSION"
     PKG_CHECK_MODULES(FONTCONFIG, $fc_REQUIRES,,
-		      [AC_MSG_RESULT(no); use_fc="no (requires $fc_REQUIRES)"])
+		      [use_fc="no (requires $fc_REQUIRES)"])
   fi
   fc_CFLAGS="$FONTCONFIG_CFLAGS"
   fc_LIBS="$FONTCONFIG_LIBS"
@@ -652,8 +645,8 @@ dnl ===========================================================================
 
 CAIRO_ENABLE_SURFACE_BACKEND(image, image, always, [
   pixman_REQUIRES="pixman-1 >= 0.22.0"
-  PKG_CHECK_MODULES(pixman, $pixman_REQUIRES, , [AC_MSG_RESULT(no)
-  use_image="no (requires $pixman_REQUIRES http://cairographics.org/releases/)"])
+  PKG_CHECK_MODULES(pixman, $pixman_REQUIRES, ,
+    [use_image="no (requires $pixman_REQUIRES http://cairographics.org/releases/)"])
   image_REQUIRES=$pixman_REQUIRES
   image_CFLAGS=$pixman_CFLAGS
   image_LIBS=$pixman_LIBS
@@ -700,13 +693,13 @@ dnl Build gobject integration library
 
 CAIRO_ENABLE_FUNCTIONS(gobject, gobject, auto, [
   gobject_REQUIRES="gobject-2.0 glib-2.0"
-  PKG_CHECK_MODULES(GOBJECT, $gobject_REQUIRES, , [AC_MSG_RESULT(no)
-  use_gobject="no (requires $gobject_REQUIRES http://download.gnome.org/pub/GNOME/sources/glib/)"])
+  PKG_CHECK_MODULES(GOBJECT, $gobject_REQUIRES, ,
+    [use_gobject="no (requires $gobject_REQUIRES http://download.gnome.org/pub/GNOME/sources/glib/)"])
   gobject_NONPKGCONFIG_EXTRA_LIBS="-L\${libdir} -lcairo-gobject"
 ])
 dnl I'm too lazy to fix the caching properly
 if test "x$use_gobject" = "xyes"; then
-  PKG_CHECK_MODULES(GOBJECT, $gobject_REQUIRES)
+  PKG_CHECK_MODULES(GOBJECT, $gobject_REQUIRES, : )
 fi
 
 dnl ===========================================================================
