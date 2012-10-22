@@ -1,3 +1,38 @@
+Release 1.12.6 (2012-10-22 Chris Wilson <chris@chris-wilson.co.uk>)
+===================================================================
+Thanks to everyone who download cairo-1.12.4 and gave us their feedback.
+It truly was invaluable and has helped us to fix many portability issues
+that crept in with some of the new features. This release aims to fix
+those stability issues and run on a wider range of systems.
+
+Bug fixes
+---------
+
+  Fix the recording surface to actually snapshot the source and so fix
+  PDF drawing.
+
+  Calling XSendEvent with an XShmCompletionEvent is incompatabile with
+  older Xorg servers.
+
+  Reorder CloseDisplay chain so that XShm is not reinstantiated after
+  shutdown, causing a potential crash if the Display was immediately
+  recreated using the same memory address.
+
+  Make sure that the Xserver has attached to the SHM segment before
+  deleting it from the global namespace on systems that do not support
+  deferred deletion.
+
+  Type1 subsetting support for PDF (and PS) was once again improved to
+  work with a larger number of PDF readers.
+
+  GLESv2 build fixes and improved support for embedded GPUs.
+
+  Tweak the invisible pen detection for applications that are currently
+  using too large values for geometric tolerance.
+
+  A build fix for older freetype libraries.
+
+
 Release 1.12.4 (2012-10-05 Chris Wilson <chris@chris-wilson.co.uk>)
 ===================================================================
 More bugs, and more importantly, more fixes. On the cairo-gl side, we
