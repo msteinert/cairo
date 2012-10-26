@@ -1128,8 +1128,60 @@ _cairo_xlib_shm_surface_is_idle (cairo_surface_t *surface)
     (((major) * 10000000) + ((minor) * 100000) + ((patch) * 1000) + snap)
 
 static cairo_bool_t
-xorg_has_buggy_send_shm_completion_event(Display *dpy)
+has_broken_send_shm_event (cairo_xlib_display_t *display,
+			   cairo_xlib_shm_display_t *shm)
 {
+    Display *dpy = display->display;
+    int (*old_handler) (Display *display, XErrorEvent *event);
+    XShmCompletionEvent ev;
+    XShmSegmentInfo info;
+
+    info.shmid = shmget (IPC_PRIVATE, 0x1000, IPC_CREAT | 0600);
+    if (info.shmid == -1)
+	return TRUE;
+
+    info.readOnly = FALSE;
+    info.shmaddr = shmat (info.shmid, NULL, 0);
+    if (info.shmaddr == (char *) -1) {
+	shmctl (info.shmid, IPC_RMID, NULL);
+	return TRUE;
+    }
+
+    ev.type = shm->event;
+    ev.drawable = shm->window;
+    ev.major_code = shm->opcode;
+    ev.minor_code = X_ShmPutImage;
+
+    ev.shmseg = info.shmid;
+    ev.offset = 0;
+
+    assert (CAIRO_MUTEX_IS_LOCKED (_cairo_xlib_display_mutex));
+    _x_error_occurred = FALSE;
+
+    XLockDisplay (dpy);
+    XSync (dpy, False);
+    old_handler = XSetErrorHandler (_check_error_handler);
+
+    XShmAttach (dpy, &info);
+    XSendEvent (dpy, ev.drawable, False, 0, (XEvent *)&ev);
+    XShmDetach (dpy, &info);
+
+    XSync (dpy, False);
+    XSetErrorHandler (old_handler);
+    XUnlockDisplay (dpy);
+
+    shmctl (info.shmid, IPC_RMID, NULL);
+    shmdt (info.shmaddr);
+
+    return _x_error_occurred;
+}
+
+static cairo_bool_t
+xorg_has_buggy_send_shm_completion_event(cairo_xlib_display_t *display,
+					 cairo_xlib_shm_display_t *shm)
+{
+    Display *dpy = display->display;
+
     /* As libXext sets the SEND_EVENT bit in the ShmCompletionEvent,
      * the Xserver may crash if it does not take care when processing
      * the event type. For instance versions of Xorg prior to 1.11.1
@@ -1141,8 +1193,12 @@ xorg_has_buggy_send_shm_completion_event(Display *dpy)
      *
      * Remove the SendEvent bit (0x80) before doing range checks on event type.
      */
-    return (strstr (ServerVendor (dpy), "X.Org") != NULL &&
-	    VendorRelease (dpy) < XORG_VERSION_ENCODE(1,11,0,1));
+    if (strstr (ServerVendor (dpy), "X.Org") != NULL &&
+	VendorRelease (dpy) < XORG_VERSION_ENCODE(1,11,0,1))
+	return TRUE;
+
+    /* For everyone else check that no error is generated */
+    return has_broken_send_shm_event (display, shm);
 }
 
 void
@@ -1162,6 +1218,15 @@ _cairo_xlib_display_init_shm (cairo_xlib_display_t *display)
     if (unlikely (shm == NULL))
 	return;
 
+    codes = XInitExtension (display->display, SHMNAME);
+    if (codes == NULL) {
+	free (shm);
+	return;
+    }
+
+    shm->opcode = codes ->major_opcode;
+    shm->event = codes->first_event;
+
     if (unlikely (_pqueue_init (&shm->info))) {
 	free (shm);
 	return;
@@ -1177,15 +1242,11 @@ _cairo_xlib_display_init_shm (cairo_xlib_display_t *display)
 				 DefaultVisual (display->display, scr),
 				 CWOverrideRedirect, &attr);
 
-    if (xorg_has_buggy_send_shm_completion_event(display->display))
+    if (xorg_has_buggy_send_shm_completion_event(display, shm))
 	has_pixmap = 0;
 
     shm->has_pixmaps = has_pixmap ? MIN_PIXMAP_SIZE : 0;
     cairo_list_init (&shm->pool);
-
-    codes = XInitExtension (display->display, SHMNAME);
-    shm->opcode = codes ->major_opcode;
-    shm->event = codes->first_event;
 
     cairo_list_init (&shm->surfaces);
 
