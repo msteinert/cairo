@@ -315,7 +315,7 @@ _cairo_xlib_device_create (Display *dpy)
      *    safest to just blacklist all old-versioning-scheme X servers,
      *    (just using VendorRelease < 70000000), as buggy_repeat=TRUE.
      */
-    if (strstr (ServerVendor (dpy), "X.Org") != NULL) {
+    if (_cairo_xlib_vendor_is_xorg (dpy)) {
 	if (VendorRelease (dpy) >= 60700000) {
 	    if (VendorRelease (dpy) < 70000000)
 		display->buggy_repeat = TRUE;

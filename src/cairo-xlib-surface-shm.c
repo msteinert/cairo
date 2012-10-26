@@ -1193,7 +1193,7 @@ xorg_has_buggy_send_shm_completion_event(cairo_xlib_display_t *display,
      *
      * Remove the SendEvent bit (0x80) before doing range checks on event type.
      */
-    if (strstr (ServerVendor (dpy), "X.Org") != NULL &&
+    if (_cairo_xlib_vendor_is_xorg (dpy) &&
 	VendorRelease (dpy) < XORG_VERSION_ENCODE(1,11,0,1))
 	return TRUE;
 

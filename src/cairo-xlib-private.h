@@ -216,6 +216,13 @@ struct _cairo_xlib_proxy {
     cairo_surface_t *owner;
 };
 
+inline static cairo_bool_t
+_cairo_xlib_vendor_is_xorg (Display *dpy)
+{
+    const char *const vendor = ServerVendor (dpy);
+    return strstr (vendor, "X.Org") || strstr (vendor, "Xorg");
+}
+
 cairo_private cairo_status_t
 _cairo_xlib_surface_get_gc (cairo_xlib_display_t *display,
                             cairo_xlib_surface_t *surface,
