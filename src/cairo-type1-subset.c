@@ -141,6 +141,11 @@ typedef struct _cairo_type1_font_subset {
 	int sp;
     } build_stack;
 
+    struct {
+	int stack[TYPE1_STACKSIZE];
+	int sp;
+    } ps_stack;
+
 
 } cairo_type1_font_subset_t;
 
@@ -767,7 +772,9 @@ use_standard_encoding_glyph (cairo_type1_font_subset_t *font, int index)
 #define TYPE1_CHARSTRING_COMMAND_POP	         0x0c11
 #define TYPE1_CHARSTRING_COMMAND_SETCURRENTPOINT 0x0c21
 
-/* Get glyph width and look for seac operatorParse charstring */
+/* Parse the charstring, including recursing into subroutines. Find
+ * the glyph width, subroutines called, and glyphs required by the
+ * SEAC operator. */
 static cairo_status_t
 cairo_type1_font_subset_parse_charstring (cairo_type1_font_subset_t *font,
 					  int                        glyph,
@@ -814,6 +821,7 @@ cairo_type1_font_subset_parse_charstring (cairo_type1_font_subset_t *font,
 	    case TYPE1_CHARSTRING_COMMAND_RETURN:
 	    case TYPE1_CHARSTRING_COMMAND_ENDCHAR:
 	    default:
+		/* stack clearing operator */
 		font->build_stack.sp = 0;
 		break;
 
@@ -848,8 +856,8 @@ cairo_type1_font_subset_parse_charstring (cairo_type1_font_subset_t *font,
 		case TYPE1_CHARSTRING_COMMAND_VSTEM3:
 		case TYPE1_CHARSTRING_COMMAND_HSTEM3:
 		case TYPE1_CHARSTRING_COMMAND_SETCURRENTPOINT:
-		case TYPE1_CHARSTRING_COMMAND_CALLOTHERSUBR:
 		default:
+		    /* stack clearing operator */
 		    font->build_stack.sp = 0;
 		    break;
 
@@ -896,11 +904,25 @@ cairo_type1_font_subset_parse_charstring (cairo_type1_font_subset_t *font,
 		    }
 		    break;
 
+		case TYPE1_CHARSTRING_COMMAND_CALLOTHERSUBR:
+		    if (font->build_stack.sp < 1)
+			return CAIRO_INT_STATUS_UNSUPPORTED;
+
+		    font->build_stack.sp--;
+		    font->ps_stack.sp = 0;
+		    while (font->build_stack.sp)
+			font->ps_stack.stack[font->ps_stack.sp++] = font->build_stack.stack[--font->build_stack.sp];
+
+                    break;
+
 		case TYPE1_CHARSTRING_COMMAND_POP:
-		    if (font->build_stack.sp < TYPE1_STACKSIZE) {
-			/* use negative number to prevent it being used as a subr_num */
-			font->build_stack.stack[font->build_stack.sp++] = -1.0;
-		    }
+		    if (font->ps_stack.sp < 1)
+			return CAIRO_INT_STATUS_UNSUPPORTED;
+
+		    /* T1 spec states that if the interpreter does not
+		     * support executing the callothersub, the results
+		     * must be taken from the callothersub arguments. */
+		    font->build_stack.stack[font->build_stack.sp++] = font->ps_stack.stack[--font->ps_stack.sp];
 		    break;
 		}
 		break;
@@ -1355,6 +1377,7 @@ skip_subrs:
     for (j = 0; j < font->num_glyphs; j++) {
 	glyph = font->subset_index_to_glyphs[j];
 	font->build_stack.sp = 0;
+	font->ps_stack.sp = 0;
 	status = cairo_type1_font_subset_parse_charstring (font,
 							   glyph,
 							   font->glyphs[glyph].encrypted_charstring,
