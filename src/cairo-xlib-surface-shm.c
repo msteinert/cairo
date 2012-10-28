@@ -42,7 +42,7 @@
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-surface-private.h"
 
-#if !HAVE_X11_EXTENSIONS_XSHM_H || !HAVE_X11_EXTENSIONS_SHMPROTO_H
+#if !HAVE_X11_EXTENSIONS_XSHM_H || !(HAVE_X11_EXTENSIONS_SHMPROTO_H || HAVE_X11_EXTENSIONS_SHMSTR_H)
 void _cairo_xlib_display_init_shm (cairo_xlib_display_t *display) {}
 
 cairo_surface_t *
@@ -144,7 +144,11 @@ void _cairo_xlib_display_fini_shm (cairo_xlib_display_t *display) {}
 #include <X11/Xlibint.h>
 #include <X11/Xproto.h>
 #include <X11/extensions/XShm.h>
+#if HAVE_X11_EXTENSIONS_SHMPROTO_H
 #include <X11/extensions/shmproto.h>
+#elif HAVE_X11_EXTENSIONS_SHMSTR_H
+#include <X11/extensions/shmstr.h>
+#endif
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
