@@ -827,15 +827,18 @@ cairo_type1_font_subset_parse_charstring (cairo_type1_font_subset_t *font,
 
 	    case TYPE1_CHARSTRING_COMMAND_CALLSUBR:
 		if (font->subset_subrs && font->build_stack.sp > 0) {
-		    int subr_num = font->build_stack.stack[--font->build_stack.sp];
-		    if (subr_num >= 0 && subr_num < font->num_subrs) {
-			font->subrs[subr_num].used = TRUE;
-			status = cairo_type1_font_subset_parse_charstring (
-			                                   font,
-							   glyph,
-							   font->subrs[subr_num].subr_string,
-							   font->subrs[subr_num].subr_length);
-			break;
+		    double int_val;
+		    if (modf(font->build_stack.stack[--font->build_stack.sp], &int_val) == 0.0) {
+			int subr_num = int_val;
+			if (subr_num >= 0 && subr_num < font->num_subrs) {
+			    font->subrs[subr_num].used = TRUE;
+			    status = cairo_type1_font_subset_parse_charstring (
+				font,
+				glyph,
+				font->subrs[subr_num].subr_string,
+				font->subrs[subr_num].subr_length);
+			    break;
+			}
 		    }
 		}
 		font->subset_subrs = FALSE;
