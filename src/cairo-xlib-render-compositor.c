@@ -179,22 +179,19 @@ copy_image_boxes (void *_dst,
 		int x2 = _cairo_fixed_integer_part (chunk->base[i].p2.x);
 		int y2 = _cairo_fixed_integer_part (chunk->base[i].p2.y);
 
-		rects[j].x = x1;
-		rects[j].y = y1;
-		rects[j].width  = x2 - x1;
-		rects[j].height = y2 - y1;
-		j++;
+		if (x2 > x1 && y2 > y1) {
+		    rects[j].x = x1;
+		    rects[j].y = y1;
+		    rects[j].width  = x2 - x1;
+		    rects[j].height = y2 - y1;
+		    j++;
+		}
 	    }
 	}
-	assert (j == boxes->num_boxes);
 
 	XSetClipRectangles (dst->dpy, gc, 0, 0, rects, j, Unsorted);
-
 	XCopyArea (dst->dpy, src, dst->drawable, gc,
-		   dx, dy,
-		   image->width,  image->height,
-		   0,      0);
-
+		   0, 0, image->width, image->height, -dx, -dy);
 	XSetClipMask (dst->dpy, gc, None);
 
 	if (rects != stack_rects)
@@ -337,7 +334,8 @@ draw_image_boxes (void *_dst,
 
 	    if (_cairo_xlib_shm_surface_get_pixmap (&image->base)) {
 		status = copy_image_boxes (dst, image, boxes, dx, dy);
-		goto out;
+		if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+		    goto out;
 	    }
 	}
     }
