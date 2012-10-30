@@ -1670,6 +1670,8 @@ _cairo_type1_font_subset_fini (cairo_type1_font_subset_t *font)
 
     free (font->subset_index_to_glyphs);
 
+    free (font->cleartext);
+
     return status;
 }
 

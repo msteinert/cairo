@@ -2787,7 +2787,7 @@ _cairo_cff_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     if (backend->is_synthetic && backend->is_synthetic (scaled_font_subset->scaled_font))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    font = malloc (sizeof (cairo_cff_font_t));
+    font = calloc (1, sizeof (cairo_cff_font_t));
     if (unlikely (font == NULL))
         return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -2862,11 +2862,11 @@ fail4:
 fail3:
     free (font->subset_font_name);
 fail2:
-    free (font->data);
-    free (font->font_name);
     free (font->ps_name);
     _cairo_array_fini (&font->output);
 fail1:
+    free (font->data);
+    free (font->font_name);
     free (font);
 
     return status;
