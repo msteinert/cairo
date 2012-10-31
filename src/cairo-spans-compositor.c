@@ -557,8 +557,10 @@ composite_aligned_boxes (const cairo_spans_compositor_t		*compositor,
 
     TRACE ((stderr, "%s: need_clip_mask=%d, is-bounded=%d\n",
 	    __FUNCTION__, need_clip_mask, extents->is_bounded));
-    if (need_clip_mask && ! extents->is_bounded)
+    if (need_clip_mask && ! extents->is_bounded) {
+	TRACE ((stderr, "%s: unsupported clip\n", __FUNCTION__));
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     no_mask = extents->mask_pattern.base.type == CAIRO_PATTERN_TYPE_SOLID &&
 	CAIRO_COLOR_IS_OPAQUE (&extents->mask_pattern.solid.color);
@@ -570,8 +572,10 @@ composite_aligned_boxes (const cairo_spans_compositor_t		*compositor,
 
     if (op == CAIRO_OPERATOR_SOURCE && (need_clip_mask || ! no_mask)) {
 	/* SOURCE with a mask is actually a LERP in cairo semantics */
-	if ((compositor->flags & CAIRO_SPANS_COMPOSITOR_HAS_LERP) == 0)
+	if ((compositor->flags & CAIRO_SPANS_COMPOSITOR_HAS_LERP) == 0) {
+	    TRACE ((stderr, "%s: unsupported lerp\n", __FUNCTION__));
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
     }
 
     /* Are we just copying a recording surface? */
@@ -700,8 +704,10 @@ composite_boxes (const cairo_spans_compositor_t *compositor,
 
     TRACE ((stderr, "%s\n", __FUNCTION__));
     _cairo_box_from_rectangle (&box, &extents->unbounded);
-    if (composite_needs_clip (extents, &box))
+    if (composite_needs_clip (extents, &box)) {
+	TRACE ((stderr, "%s: unsupported clip\n", __FUNCTION__));
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     _cairo_rectangular_scan_converter_init (&converter, &extents->unbounded);
     for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
@@ -742,6 +748,7 @@ composite_polygon (const cairo_spans_compositor_t	*compositor,
 	(! _clip_is_region (extents->clip) || extents->clip->num_boxes > 1);
     TRACE ((stderr, "%s - needs_clip=%d\n", __FUNCTION__, needs_clip));
     if (needs_clip) {
+	TRACE ((stderr, "%s: unsupported clip\n", __FUNCTION__));
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 	converter = _cairo_clip_tor_scan_converter_create (extents->clip,
 							   polygon,

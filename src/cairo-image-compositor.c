@@ -2716,7 +2716,8 @@ span_renderer_init (cairo_abstract_span_renderer_t	*_r,
     cairo_operator_t op = composite->op;
     cairo_int_status_t status;
 
-    TRACE ((stderr, "%s\n", __FUNCTION__));
+    TRACE ((stderr, "%s: antialias=%d, needs_clip=%d\n", __FUNCTION__,
+	    antialias, needs_clip));
 
     if (needs_clip)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
