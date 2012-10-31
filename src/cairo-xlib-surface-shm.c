@@ -55,7 +55,7 @@ _cairo_xlib_surface_get_shm (cairo_xlib_surface_t *surface,
 cairo_int_status_t
 _cairo_xlib_surface_put_shm (cairo_xlib_surface_t *surface)
 {
-    ASSERT_NOT_REACHED;
+    assert (!surface->fallback);
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
