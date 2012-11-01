@@ -52,6 +52,7 @@ typedef struct cairo_stroker {
 
     const cairo_matrix_t *ctm;
     const cairo_matrix_t *ctm_inverse;
+    double half_line_width;
     double tolerance;
     double ctm_determinant;
     cairo_bool_t ctm_det_positive;
@@ -134,13 +135,13 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
     stroker->ctm = ctm;
     stroker->ctm_inverse = ctm_inverse;
     stroker->tolerance = tolerance;
+    stroker->half_line_width = stroke_style->line_width / 2.0;
 
     stroker->ctm_determinant = _cairo_matrix_compute_determinant (stroker->ctm);
     stroker->ctm_det_positive = stroker->ctm_determinant >= 0.0;
 
     status = _cairo_pen_init (&stroker->pen,
-		              stroke_style->line_width / 2.0,
-			      tolerance, ctm);
+			      stroker->half_line_width, tolerance, ctm);
     if (unlikely (status))
 	return status;
 
@@ -637,8 +638,8 @@ _cairo_stroker_add_cap (cairo_stroker_t *stroker,
 
 	dx = f->usr_vector.x;
 	dy = f->usr_vector.y;
-	dx *= stroker->style.line_width / 2.0;
-	dy *= stroker->style.line_width / 2.0;
+	dx *= stroker->half_line_width;
+	dy *= stroker->half_line_width;
 	cairo_matrix_transform_distance (stroker->ctm, &dx, &dy);
 	fvector.dx = _cairo_fixed_from_double (dx);
 	fvector.dy = _cairo_fixed_from_double (dy);
@@ -776,13 +777,13 @@ _compute_face (const cairo_point_t *point, cairo_slope_t *dev_slope,
      */
     if (stroker->ctm_det_positive)
     {
-	face_dx = - slope_dy * (stroker->style.line_width / 2.0);
-	face_dy = slope_dx * (stroker->style.line_width / 2.0);
+	face_dx = - slope_dy * stroker->half_line_width;
+	face_dy = slope_dx * stroker->half_line_width;
     }
     else
     {
-	face_dx = slope_dy * (stroker->style.line_width / 2.0);
-	face_dy = - slope_dx * (stroker->style.line_width / 2.0);
+	face_dx = slope_dy * stroker->half_line_width;
+	face_dy = - slope_dx * stroker->half_line_width;
     }
 
     /* back to device space */
