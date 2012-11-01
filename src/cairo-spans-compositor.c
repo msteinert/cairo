@@ -744,8 +744,10 @@ composite_polygon (const cairo_spans_compositor_t	*compositor,
     cairo_bool_t needs_clip;
     cairo_int_status_t status;
 
-    needs_clip = ! extents->is_bounded &&
-	(! _clip_is_region (extents->clip) || extents->clip->num_boxes > 1);
+    if (extents->is_bounded)
+	needs_clip = extents->clip->path != NULL;
+    else
+	needs_clip = !_clip_is_region (extents->clip) || extents->clip->num_boxes > 1;
     TRACE ((stderr, "%s - needs_clip=%d\n", __FUNCTION__, needs_clip));
     if (needs_clip) {
 	TRACE ((stderr, "%s: unsupported clip\n", __FUNCTION__));
@@ -999,7 +1001,9 @@ _cairo_spans_compositor_stroke (const cairo_compositor_t	*_compositor,
     const cairo_spans_compositor_t *compositor = (cairo_spans_compositor_t*)_compositor;
     cairo_int_status_t status;
 
+    TRACE ((stderr, "%s\n", __FUNCTION__));
     TRACE_ (_cairo_debug_print_path (stderr, path));
+    TRACE_ (_cairo_debug_print_clip (stderr, extents->clip));
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
     if (_cairo_path_fixed_stroke_is_rectilinear (path)) {
