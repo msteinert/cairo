@@ -50,6 +50,7 @@
 #include "cairo-surface-private.h"
 
 #include <pixman.h>
+#include <string.h>
 
 typedef struct _cairo_xlib_display cairo_xlib_display_t;
 typedef struct _cairo_xlib_shm_display cairo_xlib_shm_display_t;
