@@ -412,7 +412,7 @@ _cairo_pen_find_active_cw_vertices (const cairo_pen_t *pen,
 	    i = 0;
     *start = i;
 
-    if (_cairo_slope_compare (out, &pen->vertices[i].slope_ccw) > 0) {
+    if (_cairo_slope_compare (out, &pen->vertices[i].slope_ccw) >= 0) {
 	lo = i;
 	hi = i + pen->num_vertices;
 	i = (lo + hi) >> 1;
@@ -454,7 +454,7 @@ _cairo_pen_find_active_ccw_vertices (const cairo_pen_t *pen,
 	    i = 0;
     *start = i;
 
-    if (_cairo_slope_compare (&pen->vertices[i].slope_cw, out) < 0) {
+    if (_cairo_slope_compare (&pen->vertices[i].slope_cw, out) <= 0) {
 	lo = i;
 	hi = i + pen->num_vertices;
 	i = (lo + hi) >> 1;
