@@ -91,8 +91,10 @@
  * Random number that is hopefully big enough to not cause many cache evictions. */
 #define CAIRO_GL_MAX_SHADERS_PER_CONTEXT 64
 
-/* VBO size that we allocate, smaller size means we gotta flush more often */
-#define CAIRO_GL_VBO_SIZE (256*1024)
+/* VBO size that we allocate, smaller size means we gotta flush more often,
+ * but larger means hogging more memory and can cause trouble for drivers
+ * (especially on embedded devices). */
+#define CAIRO_GL_VBO_SIZE (16*1024)
 
 typedef struct _cairo_gl_surface cairo_gl_surface_t;
 
