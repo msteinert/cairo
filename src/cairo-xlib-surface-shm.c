@@ -820,6 +820,13 @@ _cairo_xlib_surface_update_shm (cairo_xlib_surface_t *surface)
     if (_cairo_xlib_surface_get_gc (display, surface, &gc))
 	goto cleanup_display;
 
+    if (! surface->owns_pixmap) {
+	XGCValues gcv;
+
+	gcv.subwindow_mode = IncludeInferiors;
+	XChangeGC (display->display, gc, GCSubwindowMode, &gcv);
+    }
+
     if (damage->region) {
 	XRectangle stack_rects[CAIRO_STACK_ARRAY_LENGTH (sizeof (XRectangle))];
 	XRectangle *rects = stack_rects;
@@ -868,6 +875,13 @@ _cairo_xlib_surface_update_shm (cairo_xlib_surface_t *surface)
 		   0, 0,
 		   shm->image.width, shm->image.height,
 		   0, 0);
+    }
+
+    if (! surface->owns_pixmap) {
+	XGCValues gcv;
+
+	gcv.subwindow_mode = ClipByChildren;
+	XChangeGC (display->display, gc, GCSubwindowMode, &gcv);
     }
 
     XSync (display->display, False);
