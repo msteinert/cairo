@@ -290,6 +290,7 @@ test_sources = \
 	scale-source-surface-paint.c			\
 	scaled-font-zero-matrix.c			\
 	stroke-ctm-caps.c				\
+	stroke-clipped.c			        \
 	stroke-image.c				        \
 	stroke-open-box.c				\
 	select-font-face.c				\
