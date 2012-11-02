@@ -1169,7 +1169,7 @@ curve_to (void *closure,
     cairo_stroke_face_t face;
 
     if (stroker->has_bounds &&
-	! _cairo_spline_intersects (&stroker->current_face.point, b, c, b,
+	! _cairo_spline_intersects (&stroker->current_face.point, b, c, d,
 				    &stroker->bounds))
 	return line_to (closure, d);
 
