@@ -801,7 +801,7 @@ cairo_type1_font_subset_parse_charstring (cairo_type1_font_subset_t *font,
     p = charstring + font->lenIV;
 
     last_op_was_integer = FALSE;
-
+    status = CAIRO_STATUS_SUCCESS;
     while (p < end) {
         if (*p < 32) {
 	    command = *p++;
@@ -845,8 +845,10 @@ cairo_type1_font_subset_parse_charstring (cairo_type1_font_subset_t *font,
 		break;
 
 	    case TYPE1_CHARSTRING_COMMAND_HSBW:
-		if (font->build_stack.sp < 2)
-		    return CAIRO_INT_STATUS_UNSUPPORTED;
+		if (font->build_stack.sp < 2) {
+		    status = CAIRO_INT_STATUS_UNSUPPORTED;
+		    goto cleanup;
+		}
 
 		font->glyphs[glyph].width = font->build_stack.stack[1]/font->base.units_per_em;
 		font->build_stack.sp = 0;
@@ -871,23 +873,27 @@ cairo_type1_font_subset_parse_charstring (cairo_type1_font_subset_t *font,
 		     * glyph is composed from.  All we need to do is to
 		     * make sure those glyphs are present in the subset
 		     * under their standard names. */
-		    if (font->build_stack.sp < 5)
-			return CAIRO_INT_STATUS_UNSUPPORTED;
+		    if (font->build_stack.sp < 5) {
+			status = CAIRO_INT_STATUS_UNSUPPORTED;
+			goto cleanup;
+		    }
 
 		    status = use_standard_encoding_glyph (font, font->build_stack.stack[3]);
 		    if (unlikely (status))
-			return status;
+			goto cleanup;
 
 		    status = use_standard_encoding_glyph (font, font->build_stack.stack[4]);
 		    if (unlikely (status))
-			return status;
+			goto cleanup;
 
 		    font->build_stack.sp = 0;
 		    break;
 
 		case TYPE1_CHARSTRING_COMMAND_SBW:
-		    if (font->build_stack.sp < 4)
-			return CAIRO_INT_STATUS_UNSUPPORTED;
+		    if (font->build_stack.sp < 4) {
+			status = CAIRO_INT_STATUS_UNSUPPORTED;
+			goto cleanup;
+		    }
 
 		    font->glyphs[glyph].width = font->build_stack.stack[2]/font->base.units_per_em;
 		    font->build_stack.sp = 0;
@@ -895,21 +901,25 @@ cairo_type1_font_subset_parse_charstring (cairo_type1_font_subset_t *font,
 
 		case TYPE1_CHARSTRING_COMMAND_DIV:
 		    if (font->build_stack.sp < 2) {
-			return CAIRO_INT_STATUS_UNSUPPORTED;
+			status = CAIRO_INT_STATUS_UNSUPPORTED;
+			goto cleanup;
 		    } else {
 			double num1 = font->build_stack.stack[font->build_stack.sp - 2];
 			double num2 = font->build_stack.stack[font->build_stack.sp - 1];
 			font->build_stack.sp--;
-			if (num2 == 0.0)
-			    return CAIRO_INT_STATUS_UNSUPPORTED;
-
+			if (num2 == 0.0) {
+			    status = CAIRO_INT_STATUS_UNSUPPORTED;
+			    goto cleanup;
+			}
 			font->build_stack.stack[font->build_stack.sp - 1] = num1/num2;
 		    }
 		    break;
 
 		case TYPE1_CHARSTRING_COMMAND_CALLOTHERSUBR:
-		    if (font->build_stack.sp < 1)
-			return CAIRO_INT_STATUS_UNSUPPORTED;
+		    if (font->build_stack.sp < 1) {
+			status = CAIRO_INT_STATUS_UNSUPPORTED;
+			goto cleanup;
+		    }
 
 		    font->build_stack.sp--;
 		    font->ps_stack.sp = 0;
@@ -919,8 +929,10 @@ cairo_type1_font_subset_parse_charstring (cairo_type1_font_subset_t *font,
                     break;
 
 		case TYPE1_CHARSTRING_COMMAND_POP:
-		    if (font->ps_stack.sp < 1)
-			return CAIRO_INT_STATUS_UNSUPPORTED;
+		    if (font->ps_stack.sp < 1) {
+			status = CAIRO_INT_STATUS_UNSUPPORTED;
+			goto cleanup;
+		    }
 
 		    /* T1 spec states that if the interpreter does not
 		     * support executing the callothersub, the results
@@ -937,14 +949,16 @@ cairo_type1_font_subset_parse_charstring (cairo_type1_font_subset_t *font,
 		p = cairo_type1_font_subset_decode_integer (p, &val);
 		font->build_stack.stack[font->build_stack.sp++] = val;
 	    } else {
-		return CAIRO_INT_STATUS_UNSUPPORTED;
+		status = CAIRO_INT_STATUS_UNSUPPORTED;
+		goto cleanup;
 	    }
 	}
     }
 
+cleanup:
     free (charstring);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_status_t
