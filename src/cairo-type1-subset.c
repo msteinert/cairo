@@ -785,7 +785,6 @@ cairo_type1_font_subset_parse_charstring (cairo_type1_font_subset_t *font,
     unsigned char *charstring;
     const unsigned char *end;
     const unsigned char *p;
-    cairo_bool_t last_op_was_integer;
     int command;
 
     charstring = malloc (encrypted_charstring_length);
@@ -797,10 +796,7 @@ cairo_type1_font_subset_parse_charstring (cairo_type1_font_subset_t *font,
 						encrypted_charstring_length,
 						charstring);
     end = charstring + encrypted_charstring_length;
-
     p = charstring + font->lenIV;
-
-    last_op_was_integer = FALSE;
     status = CAIRO_STATUS_SUCCESS;
     while (p < end) {
         if (*p < 32) {
