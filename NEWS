@@ -1,3 +1,45 @@
+Release 1.12.8 (2012-11-24 Chris Wilson <chris@chris-wilson.co.uk>)
+===================================================================
+Another couple of weeks and a few more bugs have been found and fixed,
+it is time to push the next point release. Many thanks to everyone who
+reported their issues and helped us track down the bugs and helped
+testing the fixes.
+
+Bug fixes
+---------
+
+  Expand the sanity checking for broken combinations of XSendEvent and
+  ShmCompletionEvent.
+
+  Notice that "The X.Org Foundation" sometimes also identifies itself
+  as "The Xorg Foundation".
+
+  Handle various ages of libXext and its Shm headers.
+
+  Fix the invalid clipping of the source drawable when using SHM
+  transport to upload images.
+  https://bugs.freedesktop.org/show_bug.cgi?id=56547
+
+  Handle all Type1 postscript operators for better font compatibility.
+  https://bugs.freedesktop.org/show_bug.cgi?id=56265
+
+  Fix a couple of memory leaks in Type1 font subsetting
+  https://bugs.freedesktop.org/show_bug.cgi?id=56566
+
+  Tighten the evaluation of the start/stop pen vertices, and catch a few
+  instances where we would use a fan instead of a bevel.
+  https://bugs.freedesktop.org/show_bug.cgi?id=56432
+
+  Fix assumption that geometric clipping always succeeds with the
+  span-compositor.
+  https://bugs.freedesktop.org/show_bug.cgi?id=56574
+
+  Fix call to spline intersection when evaluating whether a stoke is
+  visible.
+
+  Remember to copy inferior sources when using SHM to readback the
+  surface for use as a source.
+
 Release 1.12.6 (2012-10-22 Chris Wilson <chris@chris-wilson.co.uk>)
 ===================================================================
 Thanks to everyone who download cairo-1.12.4 and gave us their feedback.
