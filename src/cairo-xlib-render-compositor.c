@@ -1485,6 +1485,8 @@ check_composite_glyphs (const cairo_composite_rectangles_t *extents,
 			cairo_glyph_t *glyphs,
 			int *num_glyphs)
 {
+    TRACE ((stderr, "%s\n", __FUNCTION__));
+
     cairo_xlib_surface_t *dst = (cairo_xlib_surface_t *)extents->surface;
     cairo_xlib_display_t *display = dst->display;
     int max_request_size, size;

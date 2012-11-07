@@ -2032,7 +2032,7 @@ cairo_private void
 _cairo_debug_print_clip (FILE *stream, const cairo_clip_t *clip);
 
 #if 0
-#define TRACE(x) fprintf x
+#define TRACE(x) fprintf (stderr, "%s: ", __FILE__), fprintf x
 #define TRACE_(x) x
 #else
 #define TRACE(x)
