@@ -210,7 +210,10 @@ bbtree_add (struct bbtree *bbt,
     if (box->p1.x == bbt->extents.p1.x && box->p1.y == bbt->extents.p1.y &&
 	box->p2.x == bbt->extents.p2.x && box->p2.y == bbt->extents.p2.y)
     {
-	header->chain = bbt->chain;
+	cairo_command_header_t *last = header;
+	while (last->chain) /* expected to be infrequent */
+	    last = last->chain;
+	last->chain = bbt->chain;
 	bbt->chain = header;
 	return CAIRO_STATUS_SUCCESS;
     }
