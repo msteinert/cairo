@@ -164,6 +164,7 @@ struct _object {
     int width, height;
     cairo_bool_t foreign;
     cairo_bool_t defined;
+    cairo_bool_t unknown;
     int operand;
     void *data;
     void (*destroy)(void *);
@@ -968,27 +969,18 @@ _exch_operands (void)
 }
 
 static cairo_bool_t
-_pop_operands_to_object (Object *obj)
+_pop_operands_to_depth (int depth)
 {
-    if (obj->operand == -1)
-	return FALSE;
-
-    if (obj->operand == current_stack_depth - 1)
-	return TRUE;
-
-    if (obj->operand == current_stack_depth - 2) {
-	_exch_operands ();
-	_trace_printf ("exch ");
-	return TRUE;
-    }
-
-    while (current_stack_depth > obj->operand + 1) {
+    while (current_stack_depth > depth) {
 	Object *c_obj;
 
 	ensure_operands (1);
 	c_obj = current_object[--current_stack_depth];
 	c_obj->operand = -1;
 	if (! c_obj->defined) {
+	    if (c_obj->unknown)
+		return FALSE;
+
 	    _trace_printf ("/%s%ld exch def\n",
 		     c_obj->type->op_code,
 		     c_obj->token);
@@ -999,6 +991,23 @@ _pop_operands_to_object (Object *obj)
 	}
     }
 
+    return TRUE;
+}
+
+static cairo_bool_t
+_pop_operands_to_object (Object *obj)
+{
+    if (obj->operand == -1)
+	return FALSE;
+
+    if (obj->operand == current_stack_depth - 1)
+	return TRUE;
+
+    if (! _pop_operands_to_depth (obj->operand + 2))
+	return FALSE;
+
+    _exch_operands ();
+    _trace_printf ("exch ");
     return TRUE;
 }
 
@@ -3678,6 +3687,7 @@ cairo_surface_map_to_image (cairo_surface_t *surface,
 	    _trace_printf ("[ ] map-to-image %% s%ld\n", obj->token);
 	}
 
+	obj->unknown = TRUE;
 	_push_object (obj);
 	_write_unlock ();
     }
@@ -3694,10 +3704,14 @@ cairo_surface_unmap_image (cairo_surface_t *surface,
 
     _emit_line_info ();
     if (_write_lock ()) {
-	if (!(_get_object (SURFACE, surface)->operand == current_stack_depth - 2 &&
-	      _get_object (SURFACE, image)->operand == current_stack_depth - 1)) {
-	    _emit_surface (surface);
-	    _emit_surface (image);
+	Object *s = _get_object (SURFACE, surface);
+	Object *i = _get_object (SURFACE, image);
+	if (!(s->operand == current_stack_depth - 2 &&
+	      i->operand == current_stack_depth - 1)) {
+	    if (i->operand != s->operand + 1 || ! _pop_operands_to_depth (i->operand + 1)) {
+		_emit_surface (surface);
+		_emit_surface (image);
+	    }
 	}
 	_trace_printf ("unmap-image\n");
 	_consume_operand (true);
