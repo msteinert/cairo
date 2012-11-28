@@ -3690,8 +3690,8 @@ _map_to_image (csi_t *ctx)
     }
 
     obj.type = CSI_OBJECT_TYPE_SURFACE;
-    obj.datum.surface = cairo_surface_map_to_image (surface, r);
-    pop (2);
+    obj.datum.surface = cairo_surface_reference (cairo_surface_map_to_image (surface, r));
+    pop (1);
     return push (&obj);
 }
 
@@ -3712,7 +3712,7 @@ _unmap_image (csi_t *ctx)
 
     cairo_surface_unmap_image (surface, image);
 
-    pop (2);
+    pop (1);
     return CSI_STATUS_SUCCESS;
 }
 
