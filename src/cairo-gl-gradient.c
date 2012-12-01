@@ -328,6 +328,8 @@ _cairo_gl_gradient_destroy (cairo_gl_gradient_t *gradient)
 	return;
 
     if (_cairo_gl_context_acquire (gradient->device, &ctx) == CAIRO_STATUS_SUCCESS) {
+	/* The gradient my still be active in the last operation, so flush */
+	_cairo_gl_composite_flush (ctx);
         glDeleteTextures (1, &gradient->tex);
         ignore = _cairo_gl_context_release (ctx, CAIRO_STATUS_SUCCESS);
     }
