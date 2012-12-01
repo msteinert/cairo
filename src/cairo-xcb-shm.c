@@ -63,6 +63,7 @@ typedef enum {
 struct _cairo_xcb_shm_mem_pool {
     int shmid;
     uint32_t shmseg;
+    void *shm;
 
     cairo_mempool_t mem;
 
@@ -74,7 +75,7 @@ _cairo_xcb_shm_mem_pool_destroy (cairo_xcb_shm_mem_pool_t *pool)
 {
     cairo_list_del (&pool->link);
 
-    shmdt (pool->mem.base);
+    shmdt (pool->shm);
     _cairo_mempool_fini (&pool->mem);
 
     free (pool);
@@ -160,7 +161,6 @@ _cairo_xcb_connection_allocate_shm_info (cairo_xcb_connection_t *connection,
     size_t shm_allocated = 0;
     void *mem = NULL;
     cairo_status_t status;
-    void *base;
 
     assert (connection->flags & CAIRO_XCB_HAS_SHM);
 
@@ -240,18 +240,18 @@ _cairo_xcb_connection_allocate_shm_info (cairo_xcb_connection_t *connection,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    base = shmat (pool->shmid, NULL, 0);
-    if (unlikely (base == (char *) -1)) {
+    pool->shm = shmat (pool->shmid, NULL, 0);
+    if (unlikely (pool->shm == (char *) -1)) {
 	shmctl (pool->shmid, IPC_RMID, NULL);
 	free (pool);
 	CAIRO_MUTEX_UNLOCK (connection->shm_mutex);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
-    status = _cairo_mempool_init (&pool->mem, base, bytes,
+    status = _cairo_mempool_init (&pool->mem, pool->shm, bytes,
 				  minbits, maxbits - minbits + 1);
     if (unlikely (status)) {
-	shmdt (base);
+	shmdt (pool->shm);
 	free (pool);
 	CAIRO_MUTEX_UNLOCK (connection->shm_mutex);
 	return status;
@@ -275,7 +275,7 @@ _cairo_xcb_connection_allocate_shm_info (cairo_xcb_connection_t *connection,
     shm_info->pool = pool;
     shm_info->shm = pool->shmseg;
     shm_info->size = size;
-    shm_info->offset = (char *) mem - (char *) pool->mem.base;
+    shm_info->offset = (char *) mem - (char *) pool->shm;
     shm_info->mem = mem;
     shm_info->sync.sequence = XCB_NONE;
 
