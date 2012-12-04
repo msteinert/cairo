@@ -169,6 +169,22 @@ _cairo_gl_msaa_compositor_enabled (void)
     return env && strcmp(env, "msaa") == 0;
 }
 
+static cairo_bool_t
+test_can_read_bgra (cairo_gl_flavor_t gl_flavor)
+{
+    /* Desktop GL always supports BGRA formats. */
+    if (gl_flavor == CAIRO_GL_FLAVOR_DESKTOP)
+	return TRUE;
+
+    assert (gl_flavor == CAIRO_GL_FLAVOR_ES);
+
+   /* For OpenGL ES we have to look for the specific extension and BGRA only
+    * matches cairo's integer packed bytes on little-endian machines. */
+    if (!_cairo_is_little_endian())
+	return FALSE;
+    return _cairo_gl_has_extension ("EXT_read_format_bgra");
+}
+
 cairo_status_t
 _cairo_gl_context_init (cairo_gl_context_t *ctx)
 {
@@ -229,6 +245,8 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     ctx->has_map_buffer = (gl_flavor == CAIRO_GL_FLAVOR_DESKTOP ||
 			   (gl_flavor == CAIRO_GL_FLAVOR_ES &&
 			    _cairo_gl_has_extension ("GL_OES_mapbuffer")));
+
+    ctx->can_read_bgra = test_can_read_bgra (gl_flavor);
 
     ctx->has_mesa_pack_invert =
 	_cairo_gl_has_extension ("GL_MESA_pack_invert");
