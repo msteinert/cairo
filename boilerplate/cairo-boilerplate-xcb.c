@@ -46,9 +46,15 @@ typedef struct _xcb_target_closure {
 static cairo_status_t
 _cairo_boilerplate_xcb_handle_errors (xcb_target_closure_t *xtc)
 {
-    xcb_generic_event_t *ev;
+    xcb_generic_event_t *ev = NULL;
 
-    if ((ev = xcb_poll_for_event (xtc->c)) != NULL) {
+    /* Ignore all MappingNotify events; those might happen without us causing them */
+    do {
+	free(ev);
+	ev = xcb_poll_for_event(xtc->c);
+    } while (ev != NULL && ev->response_type == XCB_MAPPING_NOTIFY);
+
+    if (ev != NULL) {
 	if (ev->response_type == CAIRO_XCB_ERROR) {
 	    xcb_generic_error_t *error = (xcb_generic_error_t *) ev;
 
