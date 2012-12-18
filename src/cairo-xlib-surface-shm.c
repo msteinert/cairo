@@ -679,7 +679,7 @@ _cairo_xlib_shm_surface_finish (void *abstract_surface)
     cairo_list_del (&shm->link);
 
     cairo_device_release (&display->base);
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_image_surface_finish (abstract_surface);
 }
 
 static const cairo_surface_backend_t cairo_xlib_shm_surface_backend = {
