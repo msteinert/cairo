@@ -811,11 +811,7 @@ _cairo_ft_unscaled_font_set_scale (cairo_ft_unscaled_font_t *unscaled,
 	int best_i = 0;
 
 	for (i = 0; i < unscaled->face->num_fixed_sizes; i++) {
-#if HAVE_FT_BITMAP_SIZE_Y_PPEM
 	    double size = unscaled->face->available_sizes[i].y_ppem / 64.;
-#else
-	    double size = unscaled->face->available_sizes[i].height;
-#endif
 	    double distance = fabs (size - sf.y_scale);
 
 	    if (distance <= min_distance) {
@@ -823,16 +819,11 @@ _cairo_ft_unscaled_font_set_scale (cairo_ft_unscaled_font_t *unscaled,
 		best_i = i;
 	    }
 	}
-#if HAVE_FT_BITMAP_SIZE_Y_PPEM
 	error = FT_Set_Char_Size (unscaled->face,
 				  unscaled->face->available_sizes[best_i].x_ppem,
 				  unscaled->face->available_sizes[best_i].y_ppem,
 				  0, 0);
-	if (error)
-#endif
-	    error = FT_Set_Pixel_Sizes (unscaled->face,
-					unscaled->face->available_sizes[best_i].width,
-					unscaled->face->available_sizes[best_i].height);
+
 	if (error)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }

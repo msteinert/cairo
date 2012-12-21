@@ -522,13 +522,6 @@ if test "x$use_ft" = "xyes"; then
   _save_cflags="$CFLAGS"
   LIBS="$LIBS $ft_LIBS"
   CFLAGS="$CFLAGS $ft_CFLAGS"
-  AC_CHECK_MEMBER(FT_Bitmap_Size.y_ppem,
-                  HAVE_FT_BITMAP_SIZE_Y_PPEM=1,
-                  HAVE_FT_BITMAP_SIZE_Y_PPEM=0,
-                  [#include <ft2build.h>
-                   #include FT_FREETYPE_H])
-  AC_DEFINE_UNQUOTED(HAVE_FT_BITMAP_SIZE_Y_PPEM,$HAVE_FT_BITMAP_SIZE_Y_PPEM,
-                     [FT_Bitmap_Size structure includes y_ppem field])
 
   AC_CHECK_FUNCS(FT_Get_X11_Font_Format FT_GlyphSlot_Embolden FT_GlyphSlot_Oblique FT_Load_Sfnt_Table FT_Library_SetLcdFilter)
 
