@@ -708,7 +708,8 @@ _cairo_ft_unscaled_font_unlock_face (cairo_ft_unscaled_font_t *unscaled)
 
 static cairo_status_t
 _compute_transform (cairo_ft_font_transform_t *sf,
-		    cairo_matrix_t      *scale)
+		    cairo_matrix_t      *scale,
+		    cairo_ft_unscaled_font_t *unscaled)
 {
     cairo_status_t status;
     double x_scale, y_scale;
@@ -735,6 +736,30 @@ _compute_transform (cairo_ft_font_transform_t *sf,
       x_scale = 1.0;
     if (y_scale < 1.0)
       y_scale = 1.0;
+
+    if (unscaled && (unscaled->face->face_flags & FT_FACE_FLAG_SCALABLE) == 0) {
+	double min_distance = DBL_MAX;
+	int i;
+	int best_i = 0;
+	double best_x_size = 0;
+	double best_y_size = 0;
+
+	for (i = 0; i < unscaled->face->num_fixed_sizes; i++) {
+	    double x_size = unscaled->face->available_sizes[i].y_ppem / 64.;
+	    double y_size = unscaled->face->available_sizes[i].y_ppem / 64.;
+	    double distance = fabs (y_size - y_scale);
+
+	    if (distance <= min_distance) {
+		min_distance = distance;
+		best_i = i;
+		best_x_size = x_size;
+		best_y_size = y_size;
+	    }
+	}
+
+	x_scale = best_x_size;
+	y_scale = best_y_size;
+    }
 
     sf->x_scale = x_scale;
     sf->y_scale = y_scale;
@@ -773,7 +798,7 @@ _cairo_ft_unscaled_font_set_scale (cairo_ft_unscaled_font_t *unscaled,
     unscaled->have_scale = TRUE;
     unscaled->current_scale = *scale;
 
-    status = _compute_transform (&sf, scale);
+    status = _compute_transform (&sf, scale, unscaled);
     if (unlikely (status))
 	return status;
 
@@ -798,35 +823,12 @@ _cairo_ft_unscaled_font_set_scale (cairo_ft_unscaled_font_t *unscaled,
 
     FT_Set_Transform(unscaled->face, &mat, NULL);
 
-    if ((unscaled->face->face_flags & FT_FACE_FLAG_SCALABLE) != 0) {
-	error = FT_Set_Char_Size (unscaled->face,
-				  sf.x_scale * 64.0 + .5,
-				  sf.y_scale * 64.0 + .5,
-				  0, 0);
-	if (error)
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    } else {
-	double min_distance = DBL_MAX;
-	int i;
-	int best_i = 0;
-
-	for (i = 0; i < unscaled->face->num_fixed_sizes; i++) {
-	    double size = unscaled->face->available_sizes[i].y_ppem / 64.;
-	    double distance = fabs (size - sf.y_scale);
-
-	    if (distance <= min_distance) {
-		min_distance = distance;
-		best_i = i;
-	    }
-	}
-	error = FT_Set_Char_Size (unscaled->face,
-				  unscaled->face->available_sizes[best_i].x_ppem,
-				  unscaled->face->available_sizes[best_i].y_ppem,
-				  0, 0);
-
-	if (error)
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    }
+    error = FT_Set_Char_Size (unscaled->face,
+			      sf.x_scale * 64.0 + .5,
+			      sf.y_scale * 64.0 + .5,
+			      0, 0);
+    if (error)
+      return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -3079,7 +3081,7 @@ _cairo_ft_resolve_pattern (FcPattern		      *pattern,
                            font_matrix,
                            &scale);
 
-    status = _compute_transform (&sf, &scale);
+    status = _compute_transform (&sf, &scale, NULL);
     if (unlikely (status))
 	return (cairo_font_face_t *)&_cairo_font_face_nil;
 
