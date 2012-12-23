@@ -1133,6 +1133,8 @@ _cairo_xlib_shm_surface_mark_active (cairo_surface_t *_shm)
     XShmCompletionEvent ev;
 
     ev.type = display->shm->event;
+    ev.send_event = 1; /* XXX or lie? */
+    ev.serial = NextRequest (display->display) - 1;
     ev.drawable = display->shm->window;
     ev.major_code = display->shm->opcode;
     ev.minor_code = X_ShmPutImage;
@@ -1259,6 +1261,8 @@ has_broken_send_shm_event (cairo_xlib_display_t *display,
     }
 
     ev.type = shm->event;
+    ev.send_event = 1;
+    ev.serial = 1;
     ev.drawable = shm->window;
     ev.major_code = shm->opcode;
     ev.minor_code = X_ShmPutImage;
