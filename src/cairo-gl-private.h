@@ -372,6 +372,7 @@ typedef struct _cairo_gl_composite {
     cairo_bool_t spans;
 
     cairo_clip_t *clip;
+    cairo_bool_t multisample;
 } cairo_gl_composite_t;
 
 typedef struct _cairo_gl_font {
@@ -531,14 +532,12 @@ _cairo_gl_composite_set_mask_operand (cairo_gl_composite_t *setup,
 cairo_private void
 _cairo_gl_composite_set_spans (cairo_gl_composite_t *setup);
 
+cairo_private void
+_cairo_gl_composite_set_multisample (cairo_gl_composite_t *setup);
+
 cairo_private cairo_status_t
 _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
                            cairo_gl_context_t **ctx);
-
-cairo_private cairo_status_t
-_cairo_gl_composite_begin_multisample (cairo_gl_composite_t *setup,
-				       cairo_gl_context_t **ctx_out,
-				       cairo_bool_t multisampling);
 
 cairo_private void
 _cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,

@@ -109,6 +109,12 @@ _cairo_gl_composite_set_spans (cairo_gl_composite_t *setup)
 }
 
 void
+_cairo_gl_composite_set_multisample (cairo_gl_composite_t *setup)
+{
+    setup->multisample = TRUE;
+}
+
+void
 _cairo_gl_composite_set_clip_region (cairo_gl_composite_t *setup,
                                      cairo_region_t *clip_region)
 {
@@ -623,9 +629,8 @@ _cairo_gl_composite_setup_clipping (cairo_gl_composite_t *setup,
 }
 
 cairo_status_t
-_cairo_gl_composite_begin_multisample (cairo_gl_composite_t *setup,
-				       cairo_gl_context_t **ctx_out,
-				       cairo_bool_t multisampling)
+_cairo_gl_composite_begin (cairo_gl_composite_t *setup,
+			   cairo_gl_context_t **ctx_out)
 {
     unsigned int dst_size, src_size, mask_size, vertex_size;
     cairo_gl_context_t *ctx;
@@ -639,7 +644,7 @@ _cairo_gl_composite_begin_multisample (cairo_gl_composite_t *setup,
     if (unlikely (status))
 	return status;
 
-    _cairo_gl_context_set_destination (ctx, setup->dst, multisampling);
+    _cairo_gl_context_set_destination (ctx, setup->dst, setup->multisample);
 
     glEnable (GL_BLEND);
 
@@ -714,13 +719,6 @@ FAIL:
         status = _cairo_gl_context_release (ctx, status);
 
     return status;
-}
-
-cairo_status_t
-_cairo_gl_composite_begin (cairo_gl_composite_t *setup,
-                           cairo_gl_context_t **ctx_out)
-{
-    return _cairo_gl_composite_begin_multisample (setup, ctx_out, FALSE);
 }
 
 static inline void

@@ -371,7 +371,9 @@ _cairo_gl_msaa_compositor_mask (const cairo_compositor_t	*compositor,
 
     /* We always use multisampling here, because we do not yet have the smarts
        to calculate when the clip or the source requires it. */
-    status = _cairo_gl_composite_begin_multisample (&setup, &ctx, TRUE);
+     _cairo_gl_composite_set_multisample (&setup);
+
+    status = _cairo_gl_composite_begin (&setup, &ctx);
     if (unlikely (status))
 	goto finish;
 
@@ -539,9 +541,10 @@ _cairo_gl_msaa_compositor_stroke (const cairo_compositor_t	*compositor,
 	goto finish;
 
     _cairo_gl_msaa_compositor_set_clip (composite, &info.setup);
+    if (antialias != CAIRO_ANTIALIAS_NONE)
+	_cairo_gl_composite_set_multisample (&info.setup);
 
-    status = _cairo_gl_composite_begin_multisample (&info.setup, &info.ctx,
-	antialias != CAIRO_ANTIALIAS_NONE);
+    status = _cairo_gl_composite_begin (&info.setup, &info.ctx);
     if (unlikely (status))
 	goto finish;
 
@@ -628,9 +631,10 @@ _cairo_gl_msaa_compositor_fill (const cairo_compositor_t	*compositor,
 	goto cleanup_setup;
 
     _cairo_gl_msaa_compositor_set_clip (composite, &setup);
+    if (antialias != CAIRO_ANTIALIAS_NONE)
+	_cairo_gl_composite_set_multisample (&setup);
 
-    status = _cairo_gl_composite_begin_multisample (&setup, &ctx,
-	antialias != CAIRO_ANTIALIAS_NONE);
+    status = _cairo_gl_composite_begin (&setup, &ctx);
     if (unlikely (status))
 	goto cleanup_setup;
 
