@@ -1065,9 +1065,7 @@ main (int	  argc,
 	add_legend (&chart);
 
 	cairo_surface_write_to_png (cairo_get_target (chart.cr),
-				    chart.relative ?
-				    "cairo-perf-chart-relative.png" :
-				    "cairo-perf-chart-absolute.png");
+				    chart.relative ? "relative.png" : "absolute.png");
 	cairo_destroy (chart.cr);
     }
 
