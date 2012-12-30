@@ -910,10 +910,8 @@ _cairo_gl_context_emit_rect (cairo_gl_context_t *ctx,
 
 static void
 _cairo_gl_composite_emit_span (cairo_gl_context_t *ctx,
-                               GLfloat x1,
-                               GLfloat y1,
-                               GLfloat x2,
-                               GLfloat y2,
+                               GLfloat x1, GLfloat y1,
+                               GLfloat x2, GLfloat y2,
                                uint8_t alpha)
 {
     _cairo_gl_composite_prepare_buffer (ctx, 6,
@@ -928,10 +926,57 @@ _cairo_gl_composite_emit_span (cairo_gl_context_t *ctx,
     _cairo_gl_composite_emit_alpha_vertex (ctx, x1, y2, alpha);
 }
 
+static void
+_cairo_gl_composite_emit_solid_span (cairo_gl_context_t *ctx,
+				     GLfloat x1, GLfloat y1,
+				     GLfloat x2, GLfloat y2,
+				     uint8_t alpha)
+{
+    GLfloat *v;
+    union fi {
+	float f;
+	GLbyte bytes[4];
+    } fi;
+
+    _cairo_gl_composite_prepare_buffer (ctx, 6,
+					CAIRO_GL_PRIMITIVE_TYPE_TRIANGLES);
+    v = (GLfloat *) (void *) &ctx->vb[ctx->vb_offset];
+
+    v[15] = v[ 6] = v[0] = x1;
+    v[10] = v[ 4] = v[1] = y1;
+    v[12] = v[ 9] = v[3] = x2;
+    v[16] = v[13] = v[7] = y2;
+
+    fi.bytes[0] = 0;
+    fi.bytes[1] = 0;
+    fi.bytes[2] = 0;
+    fi.bytes[3] = alpha;
+    v[17] =v[14] = v[11] = v[8] = v[5] = v[2] = fi.f;
+
+    ctx->vb_offset += 6*3 * sizeof(GLfloat);
+}
+
 cairo_gl_emit_span_t
 _cairo_gl_context_choose_emit_span (cairo_gl_context_t *ctx)
 {
-    return _cairo_gl_composite_emit_span;
+    if (ctx->operands[CAIRO_GL_TEX_MASK].type != CAIRO_GL_OPERAND_NONE)
+	return _cairo_gl_composite_emit_span;
+
+    switch (ctx->operands[CAIRO_GL_TEX_SOURCE].type) {
+    default:
+    case CAIRO_GL_OPERAND_COUNT:
+        ASSERT_NOT_REACHED;
+    case CAIRO_GL_OPERAND_NONE:
+    case CAIRO_GL_OPERAND_CONSTANT:
+	return _cairo_gl_composite_emit_solid_span;
+
+    case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
+    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
+    case CAIRO_GL_OPERAND_TEXTURE:
+	return _cairo_gl_composite_emit_span;
+    }
 }
 
 static inline void
