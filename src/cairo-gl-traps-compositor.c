@@ -110,6 +110,7 @@ emit_aligned_boxes (cairo_gl_context_t *ctx,
 		    const cairo_boxes_t *boxes)
 {
     const struct _cairo_boxes_chunk *chunk;
+    cairo_gl_emit_rect_t emit = _cairo_gl_context_choose_emit_rect (ctx);
     int i;
 
     for (chunk = &boxes->chunks; chunk; chunk = chunk->next) {
@@ -118,7 +119,7 @@ emit_aligned_boxes (cairo_gl_context_t *ctx,
 	    int y1 = _cairo_fixed_integer_part (chunk->base[i].p1.y);
 	    int x2 = _cairo_fixed_integer_part (chunk->base[i].p2.x);
 	    int y2 = _cairo_fixed_integer_part (chunk->base[i].p2.y);
-	    _cairo_gl_composite_emit_rect (ctx, x1, y1, x2, y2, 0);
+	    emit (ctx, x1, y1, x2, y2);
 	}
     }
 }
@@ -228,7 +229,7 @@ composite (void			*_dst,
         goto FAIL;
 
     /* XXX clip */
-    _cairo_gl_composite_emit_rect (ctx, dst_x, dst_y, dst_x+width, dst_y+height, 0);
+    _cairo_gl_context_emit_rect (ctx, dst_x, dst_y, dst_x+width, dst_y+height);
     status = _cairo_gl_context_release (ctx, CAIRO_STATUS_SUCCESS);
 
 FAIL:
@@ -403,10 +404,10 @@ composite_traps (void			*_dst,
         goto FAIL;
 
     /* XXX clip */
-    _cairo_gl_composite_emit_rect (ctx,
-				   extents->x-dst_x, extents->y-dst_y,
-				   extents->x-dst_x+extents->width,
-				   extents->y-dst_y+extents->height, 0);
+    _cairo_gl_context_emit_rect (ctx,
+				 extents->x-dst_x, extents->y-dst_y,
+				 extents->x-dst_x+extents->width,
+				 extents->y-dst_y+extents->height);
     status = _cairo_gl_context_release (ctx, CAIRO_STATUS_SUCCESS);
 
 FAIL:
@@ -499,10 +500,10 @@ composite_tristrip (void		*_dst,
         goto FAIL;
 
     /* XXX clip */
-    _cairo_gl_composite_emit_rect (ctx,
-				   dst_x, dst_y,
-				   dst_x+extents->width,
-				   dst_y+extents->height, 0);
+    _cairo_gl_context_emit_rect (ctx,
+				 dst_x, dst_y,
+				 dst_x+extents->width,
+				 dst_y+extents->height);
     status = _cairo_gl_context_release (ctx, CAIRO_STATUS_SUCCESS);
 
 FAIL:

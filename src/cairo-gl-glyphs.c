@@ -231,6 +231,7 @@ render_glyphs (cairo_gl_surface_t *dst,
     cairo_format_t last_format = CAIRO_FORMAT_INVALID;
     cairo_gl_glyph_cache_t *cache = NULL;
     cairo_gl_context_t *ctx;
+    cairo_gl_emit_glyph_t emit;
     cairo_gl_composite_t setup;
     cairo_int_status_t status;
     int i = 0;
@@ -294,6 +295,8 @@ render_glyphs (cairo_gl_surface_t *dst,
             status = _cairo_gl_context_release (ctx, status);
 	    if (unlikely (status))
 		goto FINISH;
+
+	    emit = _cairo_gl_context_choose_emit_glyph (ctx);
 	}
 
 	if (scaled_glyph->dev_private_key != cache) {
@@ -329,10 +332,10 @@ render_glyphs (cairo_gl_surface_t *dst,
 	y2 = y1 + scaled_glyph->surface->height;
 
 	glyph = _cairo_gl_glyph_cache_lock (cache, scaled_glyph);
-	_cairo_gl_composite_emit_glyph (ctx,
-					x1, y1, x2, y2,
-                                        glyph->p1.x, glyph->p1.y,
-                                        glyph->p2.x, glyph->p2.y);
+	emit (ctx,
+	      x1, y1, x2, y2,
+	      glyph->p1.x, glyph->p1.y,
+	      glyph->p2.x, glyph->p2.y);
     }
 
     status = CAIRO_STATUS_SUCCESS;

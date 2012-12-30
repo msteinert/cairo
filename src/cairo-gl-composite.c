@@ -828,9 +828,7 @@ _cairo_gl_composite_prepare_buffer (cairo_gl_context_t *ctx,
 
 static inline void
 _cairo_gl_composite_emit_vertex (cairo_gl_context_t *ctx,
-                                 GLfloat x,
-                                 GLfloat y,
-                                 uint8_t alpha)
+				 GLfloat x, GLfloat y)
 {
     GLfloat *vb = (GLfloat *) (void *) &ctx->vb[ctx->vb_offset];
 
@@ -840,18 +838,30 @@ _cairo_gl_composite_emit_vertex (cairo_gl_context_t *ctx,
     _cairo_gl_operand_emit (&ctx->operands[CAIRO_GL_TEX_SOURCE], &vb, x, y);
     _cairo_gl_operand_emit (&ctx->operands[CAIRO_GL_TEX_MASK  ], &vb, x, y);
 
-    if (ctx->spans) {
-	union fi {
-	    float f;
-	    GLbyte bytes[4];
-	} fi;
+    ctx->vb_offset += ctx->vertex_size;
+}
 
-	fi.bytes[0] = 0;
-	fi.bytes[1] = 0;
-	fi.bytes[2] = 0;
-	fi.bytes[3] = alpha;
-	*vb++ = fi.f;
-    }
+static inline void
+_cairo_gl_composite_emit_alpha_vertex (cairo_gl_context_t *ctx,
+				       GLfloat x, GLfloat y, uint8_t alpha)
+{
+    GLfloat *vb = (GLfloat *) (void *) &ctx->vb[ctx->vb_offset];
+    union fi {
+	float f;
+	GLbyte bytes[4];
+    } fi;
+
+    *vb++ = x;
+    *vb++ = y;
+
+    _cairo_gl_operand_emit (&ctx->operands[CAIRO_GL_TEX_SOURCE], &vb, x, y);
+    _cairo_gl_operand_emit (&ctx->operands[CAIRO_GL_TEX_MASK  ], &vb, x, y);
+
+    fi.bytes[0] = 0;
+    fi.bytes[1] = 0;
+    fi.bytes[2] = 0;
+    fi.bytes[3] = alpha;
+    *vb++ = fi.f;
 
     ctx->vb_offset += ctx->vertex_size;
 }
@@ -861,14 +871,45 @@ _cairo_gl_composite_emit_point (cairo_gl_context_t	*ctx,
 				const cairo_point_t	*point,
 				uint8_t alpha)
 {
-    _cairo_gl_composite_emit_vertex (ctx,
-				     _cairo_fixed_to_double (point->x),
-				     _cairo_fixed_to_double (point->y),
-				     alpha);
+    _cairo_gl_composite_emit_alpha_vertex (ctx,
+					   _cairo_fixed_to_double (point->x),
+					   _cairo_fixed_to_double (point->y),
+					   alpha);
+}
+
+static void
+_cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
+                               GLfloat x1, GLfloat y1,
+                               GLfloat x2, GLfloat y2)
+{
+    _cairo_gl_composite_prepare_buffer (ctx, 6,
+					CAIRO_GL_PRIMITIVE_TYPE_TRIANGLES);
+
+    _cairo_gl_composite_emit_vertex (ctx, x1, y1);
+    _cairo_gl_composite_emit_vertex (ctx, x2, y1);
+    _cairo_gl_composite_emit_vertex (ctx, x1, y2);
+
+    _cairo_gl_composite_emit_vertex (ctx, x2, y1);
+    _cairo_gl_composite_emit_vertex (ctx, x2, y2);
+    _cairo_gl_composite_emit_vertex (ctx, x1, y2);
+}
+
+cairo_gl_emit_rect_t
+_cairo_gl_context_choose_emit_rect (cairo_gl_context_t *ctx)
+{
+    return _cairo_gl_composite_emit_rect;
 }
 
 void
-_cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
+_cairo_gl_context_emit_rect (cairo_gl_context_t *ctx,
+			     GLfloat x1, GLfloat y1,
+			     GLfloat x2, GLfloat y2)
+{
+    _cairo_gl_composite_emit_rect (ctx, x1, y1, x2, y2);
+}
+
+static void
+_cairo_gl_composite_emit_span (cairo_gl_context_t *ctx,
                                GLfloat x1,
                                GLfloat y1,
                                GLfloat x2,
@@ -878,13 +919,19 @@ _cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
     _cairo_gl_composite_prepare_buffer (ctx, 6,
 					CAIRO_GL_PRIMITIVE_TYPE_TRIANGLES);
 
-    _cairo_gl_composite_emit_vertex (ctx, x1, y1, alpha);
-    _cairo_gl_composite_emit_vertex (ctx, x2, y1, alpha);
-    _cairo_gl_composite_emit_vertex (ctx, x1, y2, alpha);
+    _cairo_gl_composite_emit_alpha_vertex (ctx, x1, y1, alpha);
+    _cairo_gl_composite_emit_alpha_vertex (ctx, x2, y1, alpha);
+    _cairo_gl_composite_emit_alpha_vertex (ctx, x1, y2, alpha);
 
-    _cairo_gl_composite_emit_vertex (ctx, x2, y1, alpha);
-    _cairo_gl_composite_emit_vertex (ctx, x2, y2, alpha);
-    _cairo_gl_composite_emit_vertex (ctx, x1, y2, alpha);
+    _cairo_gl_composite_emit_alpha_vertex (ctx, x2, y1, alpha);
+    _cairo_gl_composite_emit_alpha_vertex (ctx, x2, y2, alpha);
+    _cairo_gl_composite_emit_alpha_vertex (ctx, x1, y2, alpha);
+}
+
+cairo_gl_emit_span_t
+_cairo_gl_context_choose_emit_span (cairo_gl_context_t *ctx)
+{
+    return _cairo_gl_composite_emit_span;
 }
 
 static inline void
@@ -907,7 +954,7 @@ _cairo_gl_composite_emit_glyph_vertex (cairo_gl_context_t *ctx,
     ctx->vb_offset += ctx->vertex_size;
 }
 
-void
+static void
 _cairo_gl_composite_emit_glyph (cairo_gl_context_t *ctx,
                                 GLfloat x1,
                                 GLfloat y1,
@@ -928,6 +975,12 @@ _cairo_gl_composite_emit_glyph (cairo_gl_context_t *ctx,
     _cairo_gl_composite_emit_glyph_vertex (ctx, x2, y1, glyph_x2, glyph_y1);
     _cairo_gl_composite_emit_glyph_vertex (ctx, x2, y2, glyph_x2, glyph_y2);
     _cairo_gl_composite_emit_glyph_vertex (ctx, x1, y2, glyph_x1, glyph_y2);
+}
+
+cairo_gl_emit_glyph_t
+_cairo_gl_context_choose_emit_glyph (cairo_gl_context_t *ctx)
+{
+    return _cairo_gl_composite_emit_glyph;
 }
 
 void

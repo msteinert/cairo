@@ -218,6 +218,21 @@ typedef enum cairo_gl_primitive_type {
     CAIRO_GL_PRIMITIVE_TYPE_TRISTRIPS
 } cairo_gl_primitive_type_t;
 
+typedef void (*cairo_gl_emit_rect_t) (cairo_gl_context_t *ctx,
+				      GLfloat x1, GLfloat y1,
+				      GLfloat x2, GLfloat y2);
+
+typedef void (*cairo_gl_emit_span_t) (cairo_gl_context_t *ctx,
+				      GLfloat x1, GLfloat y1,
+				      GLfloat x2, GLfloat y2,
+				      uint8_t alpha);
+
+typedef void (*cairo_gl_emit_glyph_t) (cairo_gl_context_t *ctx,
+				       GLfloat x1, GLfloat y1,
+				       GLfloat x2, GLfloat y2,
+				       GLfloat glyph_x1, GLfloat glyph_y1,
+				       GLfloat glyph_x2, GLfloat glyph_y2);
+
 #define cairo_gl_var_type_hash(src,mask,spans,dest) ((spans) << 3) | ((mask) << 2 | (src << 1) | (dest))
 #define CAIRO_GL_VAR_TYPE_MAX ((CAIRO_GL_VAR_TEXCOORDS << 3) | (CAIRO_GL_VAR_TEXCOORDS << 2) | (CAIRO_GL_VAR_TEXCOORDS << 1) | CAIRO_GL_VAR_TEXCOORDS)
 
@@ -477,6 +492,20 @@ _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
 				   cairo_gl_surface_t *surface,
 				   cairo_bool_t multisampling);
 
+cairo_private cairo_gl_emit_rect_t
+_cairo_gl_context_choose_emit_rect (cairo_gl_context_t *ctx);
+
+cairo_private void
+_cairo_gl_context_emit_rect (cairo_gl_context_t *ctx,
+			     GLfloat x1, GLfloat y1,
+			     GLfloat x2, GLfloat y2);
+
+cairo_private cairo_gl_emit_span_t
+_cairo_gl_context_choose_emit_span (cairo_gl_context_t *ctx);
+
+cairo_private cairo_gl_emit_glyph_t
+_cairo_gl_context_choose_emit_glyph (cairo_gl_context_t *ctx);
+
 cairo_private void
 _cairo_gl_context_activate (cairo_gl_context_t *ctx,
                             cairo_gl_tex_t      tex_unit);
@@ -538,25 +567,6 @@ _cairo_gl_composite_set_multisample (cairo_gl_composite_t *setup);
 cairo_private cairo_status_t
 _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
                            cairo_gl_context_t **ctx);
-
-cairo_private void
-_cairo_gl_composite_emit_rect (cairo_gl_context_t *ctx,
-                               GLfloat x1,
-                               GLfloat y1,
-                               GLfloat x2,
-                               GLfloat y2,
-                               uint8_t alpha);
-
-cairo_private void
-_cairo_gl_composite_emit_glyph (cairo_gl_context_t *ctx,
-                                GLfloat x1,
-                                GLfloat y1,
-                                GLfloat x2,
-                                GLfloat y2,
-                                GLfloat glyph_x1,
-                                GLfloat glyph_y1,
-                                GLfloat glyph_x2,
-                                GLfloat glyph_y2);
 
 cairo_private void
 _cairo_gl_composite_flush (cairo_gl_context_t *ctx);

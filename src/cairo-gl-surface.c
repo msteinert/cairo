@@ -774,7 +774,7 @@ _cairo_gl_surface_fill_alpha_channel (cairo_gl_surface_t *dst,
     if (unlikely (status))
         goto CLEANUP;
 
-    _cairo_gl_composite_emit_rect (ctx, x, y, x + width, y + height, 0);
+    _cairo_gl_context_emit_rect (ctx, x, y, x + width, y + height);
 
     status = _cairo_gl_context_release (ctx, status);
 
