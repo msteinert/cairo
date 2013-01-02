@@ -222,7 +222,8 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 	    return _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
     } else {
 	ctx->tex_target = GL_TEXTURE_2D;
-	if (_cairo_gl_has_extension ("GL_OES_texture_npot"))
+	if (_cairo_gl_has_extension ("GL_OES_texture_npot") ||
+	    _cairo_gl_has_extension ("GL_IMG_texture_npot"))
 	    ctx->has_npot_repeat = TRUE;
 	else
 	    ctx->has_npot_repeat = FALSE;
