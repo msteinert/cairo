@@ -3004,7 +3004,8 @@ _cairo_scaled_font_get_max_scale (cairo_scaled_font_t *scaled_font)
  * hold true for all possible cases.
  *
  * Return value: The #cairo_font_face_t with which @scaled_font was
- * created.
+ * created.  This object is owned by cairo. To keep a reference to it,
+ * you must call cairo_scaled_font_reference().
  *
  * Since: 1.2
  **/
