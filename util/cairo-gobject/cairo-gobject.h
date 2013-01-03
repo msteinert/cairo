@@ -137,7 +137,9 @@ cairo_gobject_subpixel_order_get_type (void);
 cairo_public GType
 cairo_gobject_hint_style_get_type (void);
 
+/* historical accident */
 #define CAIRO_GOBJECT_TYPE_HNT_METRICS cairo_gobject_hint_metrics_get_type ()
+#define CAIRO_GOBJECT_TYPE_HINT_METRICS cairo_gobject_hint_metrics_get_type ()
 cairo_public GType
 cairo_gobject_hint_metrics_get_type (void);
 
