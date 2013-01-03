@@ -46,7 +46,7 @@
 #include "cairo-xlib-surface-private.h"
 
 #include "cairo-error-private.h"
-#include "cairo-image-surface-private.h"
+#include "cairo-image-surface-inline.h"
 #include "cairo-paginated-private.h"
 #include "cairo-pattern-inline.h"
 #include "cairo-recording-surface-private.h"
@@ -897,8 +897,10 @@ surface_source (cairo_xlib_surface_t *dst,
     cairo_xlib_surface_t *xsrc;
     cairo_surface_pattern_t local_pattern;
     cairo_status_t status;
-    cairo_rectangle_int_t upload, limit, map_extents;
+    cairo_rectangle_int_t upload, limit;
     cairo_matrix_t m;
+    pixman_format_code_t format;
+    int draw_x, draw_y;
 
     src = pattern->surface;
     if (src->type == CAIRO_SURFACE_TYPE_IMAGE &&
@@ -952,17 +954,30 @@ prepare_shm_image:
 	}
     }
 
-    src = _cairo_xlib_surface_create_similar_shm (&dst->base,
-						  _cairo_format_from_content (pattern->surface->content),
-						  upload.width,
-						  upload.height);
+    if (_cairo_surface_is_image (src))
+	format = ((cairo_image_surface_t *)src)->pixman_format;
+    else
+	format = _cairo_format_to_pixman_format_code (_cairo_format_from_content (src->content));
+    src = _cairo_xlib_surface_create_shm (dst, format,
+					  upload.width, upload.height);
+    if (src == NULL) {
+	if (_cairo_surface_is_image (pattern->surface)) {
+	    draw_x = upload.x;
+	    draw_y = upload.y;
+	    src = cairo_surface_reference (pattern->surface);
+	    goto skip_paint;
+	}
+
+	src = _cairo_image_surface_create_with_pixman_format (NULL,
+							      format,
+							      upload.width,
+							      upload.height,
+							      0);
+    }
 
     _cairo_pattern_init_for_surface (&local_pattern, pattern->surface);
     cairo_matrix_init_translate (&local_pattern.base.matrix,
 				 upload.x, upload.y);
-
-    map_extents = upload;
-    map_extents.x = map_extents.y = 0;
 
     status = _cairo_surface_paint (src,
 				   CAIRO_OPERATOR_SOURCE,
@@ -975,6 +990,8 @@ prepare_shm_image:
 	return _cairo_surface_create_in_error (status);
     }
 
+    draw_x = draw_y = 0;
+skip_paint:
     _cairo_pattern_init_static_copy (&local_pattern.base, &pattern->base);
     if (upload.x | upload.y) {
 	cairo_matrix_init_translate (&m, -upload.x, -upload.y);
@@ -1002,7 +1019,7 @@ prepare_shm_image:
     }
 
     status = _cairo_xlib_surface_draw_image (xsrc, (cairo_image_surface_t *)src,
-					     0, 0,
+					     draw_x, draw_y,
 					     upload.width, upload.height,
 					     0, 0);
     cairo_surface_destroy (src);
