@@ -1916,6 +1916,7 @@ slim_hidden_proto (cairo_pattern_set_matrix);
 slim_hidden_proto (cairo_pop_group);
 slim_hidden_proto (cairo_push_group_with_content);
 slim_hidden_proto_no_warn (cairo_path_destroy);
+slim_hidden_proto (cairo_recording_surface_create);
 slim_hidden_proto (cairo_rel_line_to);
 slim_hidden_proto (cairo_restore);
 slim_hidden_proto (cairo_save);
