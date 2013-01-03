@@ -1135,9 +1135,8 @@ _cairo_xlib_surface_create_shm (cairo_xlib_surface_t *other,
 
     surface = NULL;
     if (has_shm (other))
-	surface = &_cairo_xlib_shm_surface_create (other, format,
-						   width, height, FALSE,
-						   has_shm_pixmaps (other))->image.base;
+	surface = &_cairo_xlib_shm_surface_create (other, format, width, height,
+						   FALSE, has_shm_pixmaps (other))->image.base;
 
     return surface;
 }
@@ -1150,8 +1149,7 @@ _cairo_xlib_surface_create_shm__image (cairo_xlib_surface_t *surface,
     if (! has_shm(surface))
 	return NULL;
 
-    return &_cairo_xlib_shm_surface_create (surface, format,
-					    surface->width, surface->height,
+    return &_cairo_xlib_shm_surface_create (surface, format, width, height,
 					    TRUE, 0)->image.base;
 }
 
