@@ -799,6 +799,10 @@ _cairo_gl_msaa_compositor_draw_clip (cairo_gl_context_t *ctx,
 cairo_private cairo_surface_t *
 _cairo_gl_white_source (void);
 
+cairo_private void
+_cairo_gl_scissor_to_rectangle (cairo_gl_surface_t *surface,
+				const cairo_rectangle_int_t *r);
+
 static inline cairo_gl_operand_t *
 source_to_operand (cairo_surface_t *surface)
 {

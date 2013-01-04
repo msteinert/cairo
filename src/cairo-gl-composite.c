@@ -501,8 +501,8 @@ _scissor_to_doubles (cairo_gl_surface_t	*surface,
     glEnable (GL_SCISSOR_TEST);
 }
 
-static void
-_scissor_to_rectangle (cairo_gl_surface_t *surface,
+void
+_cairo_gl_scissor_to_rectangle (cairo_gl_surface_t *surface,
 		       const cairo_rectangle_int_t *r)
 {
     _scissor_to_doubles (surface, r->x, r->y, r->x+r->width, r->y+r->height);
@@ -555,19 +555,22 @@ _cairo_gl_composite_setup_painted_clipping (cairo_gl_composite_t *setup,
 	goto disable_stencil_buffer_and_return;
     }
 
-    /* If we cannot reduce the clip to a rectangular region,
-       we clip using the stencil buffer. */
-    glDisable (GL_SCISSOR_TEST);
-
     if (! _cairo_gl_ensure_stencil (ctx, setup->dst)) {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto disable_stencil_buffer_and_return;
     }
 
+    /* The clip is not rectangular, so use the stencil buffer. */
     glDepthMask (GL_TRUE);
     glEnable (GL_STENCIL_TEST);
+
+    /* Clear the stencil buffer, but only the areas that we are
+     * going to be drawing to. */
+    _cairo_gl_scissor_to_rectangle (dst, _cairo_clip_get_extents (clip));
     glClearStencil (0);
     glClear (GL_STENCIL_BUFFER_BIT);
+    glDisable (GL_SCISSOR_TEST);
+
     glStencilOp (GL_REPLACE, GL_REPLACE, GL_REPLACE);
     glStencilFunc (GL_EQUAL, 1, 0xffffffff);
     glColorMask (0, 0, 0, 0);
@@ -787,7 +790,7 @@ _cairo_gl_composite_draw_triangles_with_clip_region (cairo_gl_context_t *ctx,
 
 	cairo_region_get_rectangle (ctx->clip_region, i, &rect);
 
-	_scissor_to_rectangle (ctx->current_target, &rect);
+	_cairo_gl_scissor_to_rectangle (ctx->current_target, &rect);
 	_cairo_gl_composite_draw_triangles (ctx, count);
     }
 }
