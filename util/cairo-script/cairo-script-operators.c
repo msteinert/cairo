@@ -52,7 +52,14 @@
 #include <math.h>
 #include <limits.h> /* INT_MAX */
 #include <assert.h>
+
+#if HAVE_ZLIB
 #include <zlib.h>
+#endif
+
+#if HAVE_LZO
+#include <lzo/lzo2a.h>
+#endif
 
 #ifdef HAVE_MMAP
 # ifdef HAVE_UNISTD_H
@@ -1756,17 +1763,37 @@ inflate_string (csi_t *ctx, csi_string_t *src)
     if (bytes == NULL)
 	return NULL;
 
-    if (uncompress ((Bytef *) bytes, &len,
-		    (Bytef *) src->string, src->len) != Z_OK)
-    {
-	_csi_free (ctx, bytes);
-	bytes = NULL;
-    }
-    else
-    {
-	bytes[len] = '\0';
+    switch (src->method) {
+    default:
+    case NONE:
+	free (bytes);
+	return NULL;
+
+#if HAVE_ZLIB
+    case ZLIB:
+	if (uncompress ((Bytef *) bytes, &len,
+			(Bytef *) src->string, src->len) != Z_OK)
+	{
+	    _csi_free (ctx, bytes);
+	    return NULL;
+	}
+	break;
+#endif
+
+#if HAVE_LZO
+    case LZO:
+	if (lzo2a_decompress ((Bytef *) src->string, src->len,
+			      (Bytef *) bytes, &len,
+			      NULL))
+	{
+	    _csi_free (ctx, bytes);
+	    return NULL;
+	}
+	break;
+#endif
     }
 
+    bytes[len] = '\0';
     return bytes;
 }
 

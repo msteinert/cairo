@@ -47,6 +47,18 @@ AC_CHECK_LIB(z, compress,
 	 [have_libz="no (requires zlib http://www.gzip.org/zlib/)"])],
 	 [have_libz="no (requires zlib http://www.gzip.org/zlib/)"])
 
+save_LIBS="$LIBS"
+AC_CHECK_LIB(lzo2, lzo2a_decompress,
+	 [AC_CHECK_HEADER(lzo/lzo2a.h, [
+	  have_lzo=yes
+	  AC_DEFINE(HAVE_LZO, 1, [Define to 1 if you have lzo available])
+	  lzo_LIBS="-llzo2"
+	 ],
+	 [have_lzo="no (requires lzpo http://www.oberhumer.com/opensource/lzo/)"])],
+	 [have_lzo="no (requires lzpo http://www.oberhumer.com/opensource/lzo/)"])
+AC_SUBST(lzo_LIBS)
+LIBS="$save_LIBS"
+
 AC_CHECK_LIB(dl, dlsym,
 	     [have_dlsym=yes; have_dl=yes],
 	     [have_dlsym=no; have_dl=no])
