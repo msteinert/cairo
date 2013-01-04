@@ -117,7 +117,7 @@ cairo_gobject_line_cap_get_type (void);
 cairo_public GType
 cairo_gobject_line_join_get_type (void);
 
-#define CAIRO_GOBJECT_TYPE_TEST_CLUSTER_FLAGS cairo_gobject_text_cluster_flags_get_type ()
+#define CAIRO_GOBJECT_TYPE_TEXT_CLUSTER_FLAGS cairo_gobject_text_cluster_flags_get_type ()
 cairo_public GType
 cairo_gobject_text_cluster_flags_get_type (void);
 
