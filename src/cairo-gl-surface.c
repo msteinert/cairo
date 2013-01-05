@@ -508,7 +508,34 @@ _cairo_gl_surface_clear (cairo_gl_surface_t  *surface,
     glClearColor (r, g, b, a);
     glClear (GL_COLOR_BUFFER_BIT);
 
+    if (a == 0)
+	surface->base.is_clear = TRUE;
+
     return _cairo_gl_context_release (ctx, status);
+}
+
+static cairo_surface_t *
+_cairo_gl_surface_create_and_clear_scratch (cairo_gl_context_t *ctx,
+					    cairo_content_t content,
+					    int width,
+					    int height)
+{
+    cairo_gl_surface_t *surface;
+    cairo_int_status_t status;
+
+    surface = (cairo_gl_surface_t *)
+	_cairo_gl_surface_create_scratch (ctx, content, width, height);
+    if (unlikely (surface->base.status))
+	return &surface->base;
+
+    /* Cairo surfaces start out initialized to transparent (black) */
+    status = _cairo_gl_surface_clear (surface, CAIRO_COLOR_TRANSPARENT);
+    if (unlikely (status)) {
+	cairo_surface_destroy (&surface->base);
+	return _cairo_surface_create_in_error (status);
+    }
+
+    return &surface->base;
 }
 
 cairo_surface_t *
@@ -538,15 +565,12 @@ cairo_gl_surface_create (cairo_device_t		*abstract_device,
 	return _cairo_surface_create_in_error (status);
 
     surface = (cairo_gl_surface_t *)
-	_cairo_gl_surface_create_scratch (ctx, content, width, height);
+	_cairo_gl_surface_create_and_clear_scratch (ctx, content, width, height);
     if (unlikely (surface->base.status)) {
 	status = _cairo_gl_context_release (ctx, surface->base.status);
 	cairo_surface_destroy (&surface->base);
 	return _cairo_surface_create_in_error (status);
     }
-
-    /* Cairo surfaces start out initialized to transparent (black) */
-    status = _cairo_gl_surface_clear (surface, CAIRO_COLOR_TRANSPARENT);
 
     status = _cairo_gl_context_release (ctx, status);
     if (unlikely (status)) {
@@ -740,7 +764,7 @@ _cairo_gl_surface_create_similar (void		 *abstract_surface,
     if (unlikely (status))
 	return _cairo_surface_create_in_error (status);
 
-    surface = _cairo_gl_surface_create_scratch (ctx, content, width, height);
+    surface = _cairo_gl_surface_create_and_clear_scratch (ctx, content, width, height);
 
     status = _cairo_gl_context_release (ctx, status);
     if (unlikely (status)) {
@@ -1055,12 +1079,19 @@ _cairo_gl_surface_map_to_image (void      *abstract_surface,
 							extents->width,
 							extents->height,
 							-1);
-    if (unlikely (image->base.status) || surface->base.serial == 0) {
+    if (unlikely (image->base.status)) {
 	status = _cairo_gl_context_release (ctx, status);
 	return image;
     }
 
     cairo_surface_set_device_offset (&image->base, -extents->x, -extents->y);
+
+    /* If the original surface has not been modified or
+     * is clear, we can avoid downloading data. */
+    if (surface->base.is_clear || surface->base.serial == 0) {
+	status = _cairo_gl_context_release (ctx, status);
+	return image;
+    }
 
     /* This is inefficient, as we'd rather just read the thing without making
      * it the destination.  But then, this is the fallback path, so let's not
