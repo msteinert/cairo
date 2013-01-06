@@ -898,9 +898,6 @@ surface_source (cairo_xlib_surface_t *dst,
     cairo_surface_pattern_t local_pattern;
     cairo_status_t status;
     cairo_rectangle_int_t upload, limit;
-    cairo_matrix_t m;
-    pixman_format_code_t format;
-    int draw_x, draw_y;
 
     src = pattern->surface;
     if (src->type == CAIRO_SURFACE_TYPE_IMAGE &&
@@ -910,7 +907,6 @@ surface_source (cairo_xlib_surface_t *dst,
 
 	cairo_surface_reference (src);
 
-prepare_shm_image:
 	proxy = malloc (sizeof(*proxy));
 	if (unlikely (proxy == NULL)) {
 	    cairo_surface_destroy (src);
@@ -954,59 +950,6 @@ prepare_shm_image:
 	}
     }
 
-    if (_cairo_surface_is_image (src))
-	format = ((cairo_image_surface_t *)src)->pixman_format;
-    else
-	format = _cairo_format_to_pixman_format_code (_cairo_format_from_content (src->content));
-    src = _cairo_xlib_surface_create_shm (dst, format,
-					  upload.width, upload.height);
-    if (src == NULL) {
-	if (_cairo_surface_is_image (pattern->surface)) {
-	    draw_x = upload.x;
-	    draw_y = upload.y;
-	    src = cairo_surface_reference (pattern->surface);
-	    goto skip_paint;
-	}
-
-	src = _cairo_image_surface_create_with_pixman_format (NULL,
-							      format,
-							      upload.width,
-							      upload.height,
-							      0);
-    }
-
-    _cairo_pattern_init_for_surface (&local_pattern, pattern->surface);
-    cairo_matrix_init_translate (&local_pattern.base.matrix,
-				 upload.x, upload.y);
-
-    status = _cairo_surface_paint (src,
-				   CAIRO_OPERATOR_SOURCE,
-				   &local_pattern.base,
-				   NULL);
-    _cairo_pattern_fini (&local_pattern.base);
-
-    if (unlikely (status)) {
-	cairo_surface_destroy (src);
-	return _cairo_surface_create_in_error (status);
-    }
-
-    draw_x = draw_y = 0;
-skip_paint:
-    _cairo_pattern_init_static_copy (&local_pattern.base, &pattern->base);
-    if (upload.x | upload.y) {
-	cairo_matrix_init_translate (&m, -upload.x, -upload.y);
-	cairo_matrix_multiply (&local_pattern.base.matrix,
-			       &local_pattern.base.matrix,
-			       &m);
-    }
-
-    *src_x = *src_y = 0;
-    if (src->device == dst->base.device &&
-	_cairo_xlib_shm_surface_get_pixmap (src)) {
-	    pattern = &local_pattern;
-	    goto prepare_shm_image;
-    }
-
     xsrc = (cairo_xlib_surface_t *)
 	    _cairo_surface_create_similar_scratch (&dst->base,
 						   src->content,
@@ -1018,12 +961,43 @@ skip_paint:
 	return None;
     }
 
-    status = _cairo_xlib_surface_draw_image (xsrc, (cairo_image_surface_t *)src,
-					     draw_x, draw_y,
-					     upload.width, upload.height,
-					     0, 0);
-    cairo_surface_destroy (src);
+    if (_cairo_surface_is_image (src)) {
+	status = _cairo_xlib_surface_draw_image (xsrc, (cairo_image_surface_t *)src,
+						 upload.x, upload.y,
+						 upload.width, upload.height,
+						 0, 0);
+    } else {
+	cairo_image_surface_t *image;
 
+	image = _cairo_surface_map_to_image (&xsrc->base, NULL);
+
+	_cairo_pattern_init_for_surface (&local_pattern, pattern->surface);
+	cairo_matrix_init_translate (&local_pattern.base.matrix,
+				     upload.x, upload.y);
+
+	status = _cairo_surface_paint (&image->base,
+				       CAIRO_OPERATOR_SOURCE,
+				       &local_pattern.base,
+				       NULL);
+	_cairo_pattern_fini (&local_pattern.base);
+
+	status = _cairo_surface_unmap_image (&xsrc->base, image);
+	if (unlikely (status)) {
+	    cairo_surface_destroy (src);
+	    return _cairo_surface_create_in_error (status);
+	}
+    }
+
+    _cairo_pattern_init_static_copy (&local_pattern.base, &pattern->base);
+    if (upload.x | upload.y) {
+	cairo_matrix_t m;
+	cairo_matrix_init_translate (&m, -upload.x, -upload.y);
+	cairo_matrix_multiply (&local_pattern.base.matrix,
+			       &local_pattern.base.matrix,
+			       &m);
+    }
+
+    *src_x = *src_y = 0;
     _cairo_xlib_surface_ensure_picture (xsrc);
     if (! picture_set_properties (xsrc->display,
 				  xsrc->picture,
