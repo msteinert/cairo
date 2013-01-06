@@ -1066,10 +1066,6 @@ _cairo_xlib_surface_put_shm (cairo_xlib_surface_t *surface)
 	damage = _cairo_damage_reduce (shm->image.base.damage);
 	shm->image.base.damage = _cairo_damage_create ();
 
-	status = _cairo_xlib_surface_get_gc (display, surface, &gc);
-	if (unlikely (status))
-	    goto out;
-
 	TRACE ((stderr, "%s: flushing damage x %d\n", __FUNCTION__,
 		damage->region ? cairo_region_num_rectangles (damage->region) : 0));
 	if (damage->status == CAIRO_STATUS_SUCCESS && damage->region) {
@@ -1079,9 +1075,16 @@ _cairo_xlib_surface_put_shm (cairo_xlib_surface_t *surface)
 	    int n_rects, i;
 
 	    n_rects = cairo_region_num_rectangles (damage->region);
-	    if (n_rects == 0) {
-	    } else if (n_rects == 1) {
+	    if (n_rects == 0)
+		goto out;
+
+	    status = _cairo_xlib_surface_get_gc (display, surface, &gc);
+	    if (unlikely (status))
+		goto out;
+
+	    if (n_rects == 1) {
 		cairo_region_get_rectangle (damage->region, 0, &r);
+		_cairo_xlib_shm_surface_mark_active (surface->shm);
 		XCopyArea (display->display,
 			   shm->pixmap, surface->drawable, gc,
 			   r.x, r.y,
@@ -1092,6 +1095,7 @@ _cairo_xlib_surface_put_shm (cairo_xlib_surface_t *surface)
 		    rects = _cairo_malloc_ab (n_rects, sizeof (XRectangle));
 		    if (unlikely (rects == NULL)) {
 			status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+			_cairo_xlib_surface_put_gc (display, surface, gc);
 			goto out;
 		    }
 		}
@@ -1105,6 +1109,7 @@ _cairo_xlib_surface_put_shm (cairo_xlib_surface_t *surface)
 		}
 		XSetClipRectangles (display->display, gc, 0, 0, rects, i, YXBanded);
 
+		_cairo_xlib_shm_surface_mark_active (surface->shm);
 		XCopyArea (display->display,
 			   shm->pixmap, surface->drawable, gc,
 			   0, 0,
@@ -1114,12 +1119,12 @@ _cairo_xlib_surface_put_shm (cairo_xlib_surface_t *surface)
 		if (damage->status == CAIRO_STATUS_SUCCESS && damage->region)
 		    XSetClipMask (display->display, gc, None);
 	    }
-	}
-	_cairo_damage_destroy (damage);
 
-	_cairo_xlib_shm_surface_mark_active (surface->shm);
-	_cairo_xlib_surface_put_gc (display, surface, gc);
+	    _cairo_xlib_surface_put_gc (display, surface, gc);
+	}
+
 out:
+	_cairo_damage_destroy (damage);
 	cairo_device_release (&display->base);
     }
 
