@@ -1538,6 +1538,7 @@ typedef struct _cairo_image_span_renderer {
 	    pixman_image_t *dst;
 	    int src_x, src_y;
 	    int mask_x, mask_y;
+	    int run_length;
 	} composite;
 	struct finish {
 	    cairo_rectangle_int_t extents;
@@ -2417,24 +2418,56 @@ _inplace_spans (void *abstract_renderer,
     }
 
     mask = (uint8_t *)pixman_image_get_data (r->mask);
-    x0 = spans[0].x;
+    x1 = x0 = spans[0].x;
     do {
 	int len = spans[1].x - spans[0].x;
 	*mask++ = spans[0].coverage;
 	if (len > 1) {
-	    memset (mask, spans[0].coverage, --len);
-	    mask += len;
+	    if (len >= r->u.composite.run_length && spans[0].coverage == 0xff) {
+		if (x1 != x0) {
+		    pixman_image_composite32 (r->op, r->src, r->mask, r->u.composite.dst,
+					      x0 + r->u.composite.src_x,
+					      y + r->u.composite.src_y,
+					      0, 0,
+					      x0, y,
+					      x1 - x0, h);
+		}
+		pixman_image_composite32 (r->op, r->src, NULL, r->u.composite.dst,
+					  spans[0].x + r->u.composite.src_x,
+					  y + r->u.composite.src_y,
+					  0, 0,
+					  spans[0].x, y,
+					  len, h);
+		mask = (uint8_t *)pixman_image_get_data (r->mask);
+		x0 = spans[1].x;
+	    } else if (spans[0].coverage == 0x0) {
+		if (x1 != x0) {
+		    pixman_image_composite32 (r->op, r->src, r->mask, r->u.composite.dst,
+					      x0 + r->u.composite.src_x,
+					      y + r->u.composite.src_y,
+					      0, 0,
+					      x0, y,
+					      x1 - x0, h);
+		}
+		mask = (uint8_t *)pixman_image_get_data (r->mask);
+		x0 = spans[1].x;
+	    }else {
+		memset (mask, spans[0].coverage, --len);
+		mask += len;
+	    }
 	}
 	x1 = spans[1].x;
 	spans++;
     } while (--num_spans > 1);
 
-    pixman_image_composite32 (r->op, r->src, r->mask, r->u.composite.dst,
-			      x0 + r->u.composite.src_x,
-			      y + r->u.composite.src_y,
-			      0, 0,
-			      x0, y,
-			      x1 - x0, h);
+    if (x1 != x0) {
+	pixman_image_composite32 (r->op, r->src, r->mask, r->u.composite.dst,
+				  x0 + r->u.composite.src_x,
+				  y + r->u.composite.src_y,
+				  0, 0,
+				  x0, y,
+				  x1 - x0, h);
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -2456,7 +2489,7 @@ _inplace_src_spans (void *abstract_renderer,
     m = r->buf;
     do {
 	int len = spans[1].x - spans[0].x;
-	if (spans[0].coverage == 0xff) {
+	if (len >= r->u.composite.run_length && spans[0].coverage == 0xff) {
 	    if (spans[0].x != x0) {
 #if PIXMAN_HAS_OP_LERP
 		pixman_image_composite32 (PIXMAN_OP_LERP_SRC,
@@ -2661,6 +2694,10 @@ inplace_renderer_init (cairo_image_span_renderer_t	*r,
 
 	width = (composite->bounded.width + 3) & ~3;
 	r->base.render_rows = _inplace_spans;
+	r->u.composite.run_length = 8;
+	if (src->type == CAIRO_PATTERN_TYPE_LINEAR ||
+	    src->type == CAIRO_PATTERN_TYPE_RADIAL)
+		r->u.composite.run_length = 256;
 	if (dst->base.is_clear &&
 	    (composite->op == CAIRO_OPERATOR_SOURCE ||
 	     composite->op == CAIRO_OPERATOR_OVER ||
