@@ -780,6 +780,7 @@ _cairo_scaled_font_freeze_cache (cairo_scaled_font_t *scaled_font)
 {
     /* ensure we do not modify an error object */
     assert (scaled_font->status == CAIRO_STATUS_SUCCESS);
+    assert (! scaled_font->cache_frozen);
 
     CAIRO_MUTEX_LOCK (scaled_font->mutex);
     scaled_font->cache_frozen = TRUE;
@@ -788,6 +789,7 @@ _cairo_scaled_font_freeze_cache (cairo_scaled_font_t *scaled_font)
 void
 _cairo_scaled_font_thaw_cache (cairo_scaled_font_t *scaled_font)
 {
+    assert (scaled_font->cache_frozen);
     scaled_font->cache_frozen = FALSE;
 
     if (scaled_font->global_cache_frozen) {
@@ -867,6 +869,8 @@ _cairo_scaled_font_fini_pages (cairo_scaled_font_t *scaled_font)
 static void
 _cairo_scaled_font_fini_internal (cairo_scaled_font_t *scaled_font)
 {
+    assert (! scaled_font->cache_frozen);
+    assert (! scaled_font->global_cache_frozen);
     scaled_font->finished = TRUE;
 
     _cairo_scaled_font_fini_pages (scaled_font);
@@ -1158,6 +1162,8 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
      * ft-font-faces
      */
     assert (scaled_font->font_face == font_face);
+    assert (! scaled_font->cache_frozen);
+    assert (! scaled_font->global_cache_frozen);
 
     scaled_font->original_font_face =
 	cairo_font_face_reference (original_font_face);
@@ -1306,6 +1312,9 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 
     if (! _cairo_reference_count_dec_and_test (&scaled_font->ref_count))
 	return;
+
+    assert (! scaled_font->cache_frozen);
+    assert (! scaled_font->global_cache_frozen);
 
     font_map = _cairo_scaled_font_map_lock ();
     assert (font_map != NULL);
@@ -2825,6 +2834,8 @@ _cairo_scaled_font_allocate_glyph (cairo_scaled_font_t *scaled_font,
     cairo_scaled_glyph_page_t *page;
     cairo_status_t status;
 
+    assert (scaled_font->cache_frozen);
+
     /* only the first page in the list may contain available slots */
     if (! cairo_list_is_empty (&scaled_font->glyph_pages)) {
         page = cairo_list_last_entry (&scaled_font->glyph_pages,
@@ -2942,6 +2953,7 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 	return scaled_font->status;
 
     assert (CAIRO_MUTEX_IS_LOCKED(scaled_font->mutex));
+    assert (scaled_font->cache_frozen);
 
     if (CAIRO_INJECT_FAULT ())
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
