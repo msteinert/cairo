@@ -846,11 +846,30 @@ _cairo_scaled_font_set_metrics (cairo_scaled_font_t	    *scaled_font,
 }
 
 static void
+_cairo_scaled_font_fini_pages (cairo_scaled_font_t *scaled_font)
+{
+    cairo_scaled_glyph_page_t *page;
+    unsigned int i;
+
+    cairo_list_foreach_entry (page, cairo_scaled_glyph_page_t,
+			      &scaled_font->glyph_pages, link) {
+	for (i = 0; i < page->num_glyphs; i++) {
+	    _cairo_hash_table_remove (scaled_font->glyphs,
+				      &page->glyphs[i].hash_entry);
+	    _cairo_scaled_glyph_fini (scaled_font, &page->glyphs[i]);
+	}
+	page->num_glyphs = 0;
+    }
+
+    _cairo_scaled_font_reset_cache (scaled_font);
+}
+
+static void
 _cairo_scaled_font_fini_internal (cairo_scaled_font_t *scaled_font)
 {
     scaled_font->finished = TRUE;
 
-    _cairo_scaled_font_reset_cache (scaled_font);
+    _cairo_scaled_font_fini_pages (scaled_font);
     _cairo_hash_table_destroy (scaled_font->glyphs);
 
     cairo_font_face_destroy (scaled_font->font_face);
