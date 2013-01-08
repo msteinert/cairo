@@ -786,7 +786,6 @@ _cairo_scaled_font_freeze_cache (cairo_scaled_font_t *scaled_font)
 {
     /* ensure we do not modify an error object */
     assert (scaled_font->status == CAIRO_STATUS_SUCCESS);
-    assert (! scaled_font->cache_frozen);
 
     CAIRO_MUTEX_LOCK (scaled_font->mutex);
     scaled_font->cache_frozen = TRUE;
