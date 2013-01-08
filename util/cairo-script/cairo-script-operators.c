@@ -5356,11 +5356,20 @@ _set_source_image (csi_t *ctx)
      * principally to remove the pixman ops from the profiles.
      */
     if (_csi_likely (_matching_images (surface, source))) {
-	cairo_surface_flush (surface);
-	memcpy (cairo_image_surface_get_data (surface),
-		cairo_image_surface_get_data (source),
-		cairo_image_surface_get_height (source) * cairo_image_surface_get_stride (source));
-	cairo_surface_mark_dirty (surface);
+	if (cairo_surface_get_reference_count (surface) == 1 &&
+	    cairo_surface_get_reference_count (source) == 1)
+	{
+	    _csi_peek_ostack (ctx, 0)->datum.surface = surface;
+	    _csi_peek_ostack (ctx, 1)->datum.surface = source;
+	}
+	else
+	{
+	    cairo_surface_flush (surface);
+	    memcpy (cairo_image_surface_get_data (surface),
+		    cairo_image_surface_get_data (source),
+		    cairo_image_surface_get_height (source) * cairo_image_surface_get_stride (source));
+	    cairo_surface_mark_dirty (surface);
+	}
     } else {
 	cairo_t *cr;
 
