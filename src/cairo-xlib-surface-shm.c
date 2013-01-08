@@ -710,8 +710,10 @@ _cairo_xlib_shm_surface_finish (void *abstract_surface)
     cairo_xlib_display_t *display;
     cairo_status_t status;
 
-    _cairo_damage_destroy (shm->image.base.damage);
-    shm->image.base.damage = _cairo_damage_create_in_error (CAIRO_STATUS_SURFACE_FINISHED);
+    if (shm->image.base.damage) {
+	_cairo_damage_destroy (shm->image.base.damage);
+	shm->image.base.damage = _cairo_damage_create_in_error (CAIRO_STATUS_SURFACE_FINISHED);
+    }
 
     status = _cairo_xlib_display_acquire (shm->image.base.device, &display);
     if (unlikely (status))
