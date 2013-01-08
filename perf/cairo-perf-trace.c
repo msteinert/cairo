@@ -299,6 +299,19 @@ _similar_surface_create (void		 *closure,
     return surface;
 }
 
+static cairo_surface_t *
+_source_image_create (void		*closure,
+		      cairo_format_t	 format,
+		      int		 width,
+		      int		 height,
+		      long		 uid)
+{
+    struct trace *args = closure;
+
+    return cairo_surface_create_similar_image (args->surface,
+					       format, width, height);
+}
+
 static cairo_t *
 _context_create (void		 *closure,
 		 cairo_surface_t *surface)
@@ -643,7 +656,8 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 	_context_create,
 	NULL, /* context_destroy */
 	NULL, /* show_page */
-	NULL /* copy_page */
+	NULL, /* copy_page */
+	_source_image_create,
     };
 
     args.tile_size = perf->tile_size;
