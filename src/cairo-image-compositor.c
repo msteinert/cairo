@@ -2594,6 +2594,11 @@ _inplace_src_spans (void *abstract_renderer,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void free_pixels (pixman_image_t *image, void *data)
+{
+	free (data);
+}
+
 static cairo_int_status_t
 inplace_renderer_init (cairo_image_span_renderer_t	*r,
 		       const cairo_composite_rectangles_t *composite,
@@ -2601,6 +2606,7 @@ inplace_renderer_init (cairo_image_span_renderer_t	*r,
 		       cairo_bool_t			 needs_clip)
 {
     cairo_image_surface_t *dst = (cairo_image_surface_t *)composite->surface;
+    uint8_t *buf;
 
     if (composite->mask_pattern.base.type != CAIRO_PATTERN_TYPE_SOLID)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -2714,9 +2720,6 @@ inplace_renderer_init (cairo_image_span_renderer_t	*r,
 	    r->op = _pixman_operator (composite->op);
 	}
 
-	if (width > sizeof (r->buf))
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-
 	r->src = _pixman_image_for_pattern (dst, src, FALSE,
 					    &composite->bounded,
 					    &composite->source_sample_area,
@@ -2725,13 +2728,26 @@ inplace_renderer_init (cairo_image_span_renderer_t	*r,
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	/* Create an effectively unbounded mask by repeating the single line */
+	buf = r->buf;
+	if (width > sizeof (r->buf)) {
+	    buf = malloc (width);
+	    if (unlikely (buf == NULL)) {
+		pixman_image_unref (r->src);
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    }
+	}
 	r->mask = pixman_image_create_bits (PIXMAN_a8,
 					    width, composite->unbounded.height,
-					    (uint32_t *)r->buf, 0);
+					    (uint32_t *)buf, 0);
 	if (unlikely (r->mask == NULL)) {
 	    pixman_image_unref (r->src);
+	    if (buf != r->buf)
+		free (buf);
 	    return _cairo_error(CAIRO_STATUS_NO_MEMORY);
 	}
+
+	if (buf != r->buf)
+	    pixman_image_set_destroy_function (r->mask, free_pixels, buf);
 
 	r->u.composite.dst = dst->pixman_image;
     }
