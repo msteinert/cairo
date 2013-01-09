@@ -177,6 +177,7 @@ struct _cairo_gl_surface {
     cairo_bool_t supports_msaa;
     cairo_bool_t msaa_active; /* Whether the multisampling
 			         framebuffer is active or not. */
+    cairo_clip_t *clip_on_stencil_buffer;
 
     int owns_tex;
     cairo_bool_t needs_update;

@@ -563,10 +563,22 @@ _cairo_gl_composite_setup_painted_clipping (cairo_gl_composite_t *setup,
     /* The clip is not rectangular, so use the stencil buffer. */
     glDepthMask (GL_TRUE);
     glEnable (GL_STENCIL_TEST);
+    glDisable (GL_SCISSOR_TEST);
 
-    /* Clear the stencil buffer, but only the areas that we are
-     * going to be drawing to. */
-    _cairo_gl_scissor_to_rectangle (dst, _cairo_clip_get_extents (clip));
+    /* Texture surfaces have private depth/stencil buffers, so we can
+     * rely on any previous clip being cached there. */
+    if (_cairo_gl_surface_is_texture (setup->dst)) {
+	cairo_clip_t *old_clip = setup->dst->clip_on_stencil_buffer;
+	if (_cairo_clip_equal (old_clip, setup->clip))
+	    goto activate_stencil_buffer_and_return;
+
+      /* Clear the stencil buffer, but only the areas that we are
+       * going to be drawing to. */
+	if (old_clip)
+	    _cairo_gl_scissor_to_rectangle (dst, _cairo_clip_get_extents (old_clip));
+	setup->dst->clip_on_stencil_buffer = _cairo_clip_copy (setup->clip);
+    }
+
     glClearStencil (0);
     glClear (GL_STENCIL_BUFFER_BIT);
     glDisable (GL_SCISSOR_TEST);
@@ -588,6 +600,7 @@ _cairo_gl_composite_setup_painted_clipping (cairo_gl_composite_t *setup,
     _cairo_gl_composite_flush (ctx);
     _cairo_gl_composite_setup_vbo (ctx, vertex_size);
 
+activate_stencil_buffer_and_return:
     glColorMask (1, 1, 1, 1);
     glStencilOp (GL_KEEP, GL_KEEP, GL_KEEP);
     glStencilFunc (GL_EQUAL, 1, 0xffffffff);
@@ -603,29 +616,40 @@ _cairo_gl_composite_setup_clipping (cairo_gl_composite_t *setup,
 				    cairo_gl_context_t *ctx,
 				    int vertex_size)
 {
+    cairo_bool_t clip_changing = TRUE;
+    cairo_bool_t clip_region_changing = TRUE;
 
+    if (! ctx->clip && ! setup->clip && ! setup->clip_region && ! ctx->clip_region)
+	goto disable_all_clipping;
+
+    clip_changing = ! _cairo_clip_equal (ctx->clip, setup->clip);
+    clip_region_changing = ! cairo_region_equal (ctx->clip_region, setup->clip_region);
     if (! _cairo_gl_context_is_flushed (ctx) &&
-	(! cairo_region_equal (ctx->clip_region, setup->clip_region) ||
-	 ! _cairo_clip_equal (ctx->clip, setup->clip)))
+	(clip_region_changing || clip_changing))
 	_cairo_gl_composite_flush (ctx);
-
-    cairo_region_destroy (ctx->clip_region);
-    ctx->clip_region = cairo_region_reference (setup->clip_region);
-    _cairo_clip_destroy (ctx->clip);
-    ctx->clip = _cairo_clip_copy (setup->clip);
 
     assert (!setup->clip_region || !setup->clip);
 
-    if (ctx->clip_region) {
-	_disable_stencil_buffer ();
-	glEnable (GL_SCISSOR_TEST);
-	return CAIRO_INT_STATUS_SUCCESS;
+    /* setup->clip is only used by the msaa compositor and setup->clip_region
+     * only by the other compositors, so it's safe to wait to clean up obsolete
+     * clips. */
+    if (clip_region_changing) {
+	cairo_region_destroy (ctx->clip_region);
+	ctx->clip_region = cairo_region_reference (setup->clip_region);
+    }
+    if (clip_changing) {
+	_cairo_clip_destroy (ctx->clip);
+	ctx->clip = _cairo_clip_copy (setup->clip);
     }
 
-    if (ctx->clip)
-	return _cairo_gl_composite_setup_painted_clipping (setup, ctx,
-							   vertex_size);
+    /* For clip regions, we scissor right before drawing. */
+    if (setup->clip_region)
+	goto disable_all_clipping;
 
+    if (setup->clip)
+	return _cairo_gl_composite_setup_painted_clipping (setup, ctx,
+                                                           vertex_size);
+disable_all_clipping:
     _disable_stencil_buffer ();
     glDisable (GL_SCISSOR_TEST);
     return CAIRO_INT_STATUS_SUCCESS;

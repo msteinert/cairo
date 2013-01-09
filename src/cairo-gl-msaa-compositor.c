@@ -583,6 +583,10 @@ _prevent_overlapping_strokes (cairo_gl_context_t 		*ctx,
        be drawn there until the stencil buffer is reset or the stencil test
        is disabled. */
     glStencilOp (GL_ZERO, GL_ZERO, GL_ZERO);
+
+    _cairo_clip_destroy (setup->dst->clip_on_stencil_buffer);
+    setup->dst->clip_on_stencil_buffer = NULL;
+
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
