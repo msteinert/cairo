@@ -343,7 +343,6 @@ _cairo_gl_msaa_compositor_mask_source_operator (const cairo_compositor_t *compos
 					     &composite->bounded);
     if (unlikely (status))
 	goto finish;
-    _cairo_gl_composite_set_clip (&setup, composite->clip);
     _cairo_gl_composite_set_multisample (&setup);
     status = _cairo_gl_composite_begin (&setup, &ctx);
     if (unlikely (status))
