@@ -918,6 +918,8 @@ spline_to (void *closure,
 
 	face.usr_vector.x = -face.usr_vector.x;
 	face.usr_vector.y = -face.usr_vector.y;
+	face.dev_slope.x = -face.dev_slope.x;
+	face.dev_slope.y = -face.dev_slope.y;
 	face.dev_vector.dx = -face.dev_vector.dx;
 	face.dev_vector.dy = -face.dev_vector.dy;
 
