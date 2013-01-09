@@ -464,8 +464,8 @@ _cairo_scaled_glyph_page_destroy (cairo_scaled_font_t *scaled_font,
 				  &page->glyphs[n].hash_entry);
 	_cairo_scaled_glyph_fini (scaled_font, &page->glyphs[n]);
     }
-    cairo_list_del (&page->link);
 
+    cairo_list_del (&page->link);
     free (page);
 }
 
@@ -827,11 +827,12 @@ _cairo_scaled_font_reset_cache (cairo_scaled_font_t *scaled_font)
 	    cairo_list_first_entry (&scaled_font->glyph_pages,
 				    cairo_scaled_glyph_page_t,
 				    link);
-	_cairo_scaled_glyph_page_destroy (scaled_font, page);
 
 	cairo_scaled_glyph_page_cache.size -= page->cache_entry.size;
 	_cairo_hash_table_remove (cairo_scaled_glyph_page_cache.hash_table,
 				  (cairo_hash_entry_t *) &page->cache_entry);
+
+	_cairo_scaled_glyph_page_destroy (scaled_font, page);
     }
     CAIRO_MUTEX_UNLOCK (_cairo_scaled_glyph_page_cache_mutex);
     CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
