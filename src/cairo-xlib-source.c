@@ -968,8 +968,9 @@ surface_source (cairo_xlib_surface_t *dst,
 						 0, 0);
     } else {
 	cairo_image_surface_t *image;
+	cairo_rectangle_int_t map_extents = { 0,0, upload.width,upload.height };
 
-	image = _cairo_surface_map_to_image (&xsrc->base, NULL);
+	image = _cairo_surface_map_to_image (&xsrc->base, &map_extents);
 
 	_cairo_pattern_init_for_surface (&local_pattern, pattern->surface);
 	cairo_matrix_init_translate (&local_pattern.base.matrix,
