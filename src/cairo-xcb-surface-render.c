@@ -4165,10 +4165,8 @@ _cairo_xcb_font_close (cairo_xcb_font_t *font)
 
     scaled_font = font->scaled_font;
 
-    CAIRO_MUTEX_LOCK (scaled_font->mutex);
     //scaled_font->surface_private = NULL;
     _cairo_scaled_font_reset_cache (scaled_font);
-    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
 
     _cairo_xcb_font_destroy (font);
 }
