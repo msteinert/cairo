@@ -960,6 +960,10 @@ _cairo_mask_compositor_paint (const cairo_compositor_t *_compositor,
     cairo_boxes_t boxes;
     cairo_int_status_t status;
 
+    status = compositor->check_composite (extents);
+    if (unlikely (status))
+	return status;
+
     _cairo_clip_steal_boxes (extents->clip, &boxes);
     status = clip_and_composite_boxes (compositor, extents, &boxes);
     _cairo_clip_unsteal_boxes (extents->clip, &boxes);
@@ -1210,6 +1214,10 @@ _cairo_mask_compositor_mask (const cairo_compositor_t *_compositor,
     const cairo_mask_compositor_t *compositor = (cairo_mask_compositor_t*)_compositor;
     cairo_int_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
 
+    status = compositor->check_composite (extents);
+    if (unlikely (status))
+	return status;
+
     if (extents->mask_pattern.base.type == CAIRO_PATTERN_TYPE_SOLID &&
 	extents->clip->path == NULL &&
 	! _cairo_clip_is_region (extents->clip)) {
@@ -1242,9 +1250,12 @@ _cairo_mask_compositor_stroke (const cairo_compositor_t *_compositor,
     const cairo_mask_compositor_t *compositor = (cairo_mask_compositor_t*)_compositor;
     cairo_surface_t *mask;
     cairo_surface_pattern_t pattern;
-    cairo_int_status_t status;
+    cairo_int_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = CAIRO_INT_STATUS_UNSUPPORTED;
+    status = compositor->check_composite (extents);
+    if (unlikely (status))
+	return status;
+
     if (_cairo_path_fixed_stroke_is_rectilinear (path)) {
 	cairo_boxes_t boxes;
 
@@ -1311,9 +1322,12 @@ _cairo_mask_compositor_fill (const cairo_compositor_t *_compositor,
     const cairo_mask_compositor_t *compositor = (cairo_mask_compositor_t*)_compositor;
     cairo_surface_t *mask;
     cairo_surface_pattern_t pattern;
-    cairo_int_status_t status;
+    cairo_int_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = CAIRO_INT_STATUS_UNSUPPORTED;
+    status = compositor->check_composite (extents);
+    if (unlikely (status))
+	return status;
+
     if (_cairo_path_fixed_fill_is_rectilinear (path)) {
 	cairo_boxes_t boxes;
 
@@ -1374,9 +1388,14 @@ _cairo_mask_compositor_glyphs (const cairo_compositor_t *_compositor,
 			       int			 num_glyphs,
 			       cairo_bool_t		 overlap)
 {
+    const cairo_mask_compositor_t *compositor = (cairo_mask_compositor_t*)_compositor;
     cairo_surface_t *mask;
     cairo_surface_pattern_t pattern;
     cairo_int_status_t status;
+
+    status = compositor->check_composite (extents);
+    if (unlikely (status))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     mask = cairo_surface_create_similar_image (extents->surface,
 					       CAIRO_FORMAT_A8,

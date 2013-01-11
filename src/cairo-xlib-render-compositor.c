@@ -55,6 +55,17 @@
 #include "cairo-tristrip-private.h"
 
 static cairo_int_status_t
+check_composite (const cairo_composite_rectangles_t *extents)
+{
+    cairo_xlib_display_t *display = ((cairo_xlib_surface_t *)extents->surface)->display;
+
+    if (! CAIRO_RENDER_SUPPORTS_OPERATOR (display, extents->op))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
 acquire (void *abstract_dst)
 {
     cairo_xlib_surface_t *dst = abstract_dst;
@@ -1697,7 +1708,7 @@ _cairo_xlib_mask_compositor_get (void)
 	compositor.fill_rectangles = fill_rectangles;
 	compositor.fill_boxes = fill_boxes;
 	compositor.copy_boxes = copy_boxes;
-	//compositor.check_composite = check_composite;
+	compositor.check_composite = check_composite;
 	compositor.composite = composite;
 	//compositor.check_composite_boxes = check_composite_boxes;
 	compositor.composite_boxes = composite_boxes;
@@ -1924,17 +1935,6 @@ composite_tristrip (void		*abstract_dst,
 
     if (points != points_stack)
 	free (points);
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
-check_composite (const cairo_composite_rectangles_t *extents)
-{
-    cairo_xlib_display_t *display = ((cairo_xlib_surface_t *)extents->surface)->display;
-
-    if (! CAIRO_RENDER_SUPPORTS_OPERATOR (display, extents->op))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     return CAIRO_STATUS_SUCCESS;
 }
