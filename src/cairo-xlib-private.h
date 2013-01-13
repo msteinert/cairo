@@ -171,6 +171,7 @@ struct _cairo_xlib_surface {
     cairo_surface_t base;
 
     Picture picture;
+    Drawable drawable;
 
     const cairo_compositor_t *compositor;
     cairo_surface_t *shm;
@@ -181,7 +182,6 @@ struct _cairo_xlib_surface {
     cairo_list_t link;
 
     Display *dpy; /* only valid between acquire/release */
-    Drawable drawable;
     cairo_bool_t owns_pixmap;
     Visual *visual;
 
@@ -203,6 +203,7 @@ struct _cairo_xlib_surface {
 	cairo_surface_t base;
 
 	Picture picture;
+	Pixmap pixmap;
 	Display *dpy;
 
 	unsigned int filter:3;
@@ -395,6 +396,17 @@ _cairo_xlib_surface_same_screen (cairo_xlib_surface_t *dst,
     return dst->screen == src->screen;
 }
 
+cairo_private cairo_int_status_t
+_cairo_xlib_core_fill_boxes (cairo_xlib_surface_t    *dst,
+			     const cairo_color_t     *color,
+			     cairo_boxes_t	    *boxes);
+
+cairo_private cairo_int_status_t
+_cairo_xlib_core_fill_rectangles (cairo_xlib_surface_t    *dst,
+				  const cairo_color_t     *color,
+				  int num_rects,
+				  cairo_rectangle_int_t *rects);
+
 static inline void
 _cairo_xlib_surface_put_gc (cairo_xlib_display_t *display,
                             cairo_xlib_surface_t *surface,
@@ -452,6 +464,5 @@ _cairo_xlib_shm_surface_get_xrender_format (cairo_surface_t *surface);
 
 cairo_private pixman_format_code_t
 _pixman_format_for_xlib_surface (cairo_xlib_surface_t *surface);
-
 
 #endif /* CAIRO_XLIB_PRIVATE_H */

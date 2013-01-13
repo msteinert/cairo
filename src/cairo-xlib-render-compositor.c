@@ -608,13 +608,22 @@ fill_rectangles (void				*abstract_surface,
 
     //X_DEBUG ((display->display, "fill_rectangles (dst=%x)", (unsigned int) surface->drawable));
 
+    if (fill_reduces_to_source (op, color, dst))
+	op = CAIRO_OPERATOR_SOURCE;
+
+    if (!CAIRO_RENDER_HAS_FILL_RECTANGLES(dst->display)) {
+	cairo_int_status_t status;
+
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+	if (op == CAIRO_OPERATOR_SOURCE)
+	    status = _cairo_xlib_core_fill_rectangles (dst, color, num_rects, rects);
+	return status;
+    }
+
     render_color.red   = color->red_short;
     render_color.green = color->green_short;
     render_color.blue  = color->blue_short;
     render_color.alpha = color->alpha_short;
-
-    if (fill_reduces_to_source (op, color, dst))
-	op = CAIRO_OPERATOR_SOURCE;
 
     _cairo_xlib_surface_ensure_picture (dst);
     if (num_rects == 1) {
@@ -665,13 +674,22 @@ fill_boxes (void		*abstract_surface,
     cairo_xlib_surface_t *dst = abstract_surface;
     XRenderColor render_color;
 
+    if (fill_reduces_to_source (op, color, dst))
+	op = CAIRO_OPERATOR_SOURCE;
+
+    if (!CAIRO_RENDER_HAS_FILL_RECTANGLES(dst->display)) {
+	cairo_int_status_t status;
+
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+	if (op == CAIRO_OPERATOR_SOURCE)
+	    status = _cairo_xlib_core_fill_boxes (dst, color, boxes);
+	return status;
+    }
+
     render_color.red   = color->red_short;
     render_color.green = color->green_short;
     render_color.blue  = color->blue_short;
     render_color.alpha = color->alpha_short;
-
-    if (fill_reduces_to_source (op, color, dst))
-	op = CAIRO_OPERATOR_SOURCE;
 
     _cairo_xlib_surface_ensure_picture (dst);
     if (boxes->num_boxes == 1) {

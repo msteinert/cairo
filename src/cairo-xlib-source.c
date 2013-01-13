@@ -71,6 +71,8 @@ _cairo_xlib_source_finish (void *abstract_surface)
     cairo_xlib_source_t *source = abstract_surface;
 
     XRenderFreePicture (source->dpy, source->picture);
+    if (source->pixmap)
+	    XFreePixmap (source->dpy, source->pixmap);
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -86,6 +88,8 @@ _cairo_xlib_proxy_finish (void *abstract_surface)
     cairo_xlib_proxy_t *proxy = abstract_surface;
 
     XRenderFreePicture (proxy->source.dpy, proxy->source.picture);
+    if (proxy->source.pixmap)
+	    XFreePixmap (proxy->source.dpy, proxy->source.pixmap);
     _cairo_xlib_shm_surface_mark_active (proxy->owner);
     cairo_surface_destroy (proxy->owner);
     return CAIRO_STATUS_SUCCESS;
@@ -98,7 +102,7 @@ static const cairo_surface_backend_t cairo_xlib_proxy_backend = {
 };
 
 static cairo_surface_t *
-source (cairo_xlib_surface_t *dst, Picture picture)
+source (cairo_xlib_surface_t *dst, Picture picture, Pixmap pixmap)
 {
     cairo_xlib_source_t *source;
 
@@ -108,6 +112,8 @@ source (cairo_xlib_surface_t *dst, Picture picture)
     source = malloc (sizeof (cairo_image_surface_t));
     if (unlikely (source == NULL)) {
 	XRenderFreePicture (dst->display->display, picture);
+	if (pixmap)
+		XFreePixmap (dst->display->display, pixmap);
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
@@ -118,6 +124,7 @@ source (cairo_xlib_surface_t *dst, Picture picture)
 
     /* The source exists only within an operation */
     source->picture = picture;
+    source->pixmap = pixmap;
     source->dpy = dst->display->display;
 
     return &source->base;
@@ -433,22 +440,65 @@ gradient_source (cairo_xlib_surface_t *dst,
 	return render_pattern (dst, &gradient->base, is_mask, extents, src_x, src_y);
     }
 
-    return source (dst, picture);
+    return source (dst, picture, None);
 }
 
 static cairo_surface_t *
 color_source (cairo_xlib_surface_t *dst, const cairo_color_t *color)
 {
-    XRenderColor xrender_color;
+    Display *dpy = dst->display->display;
+    XRenderColor xcolor;
+    Picture picture;
+    Pixmap pixmap = None;
 
-    xrender_color.red   = color->red_short;
-    xrender_color.green = color->green_short;
-    xrender_color.blue  = color->blue_short;
-    xrender_color.alpha = color->alpha_short;
+    xcolor.red   = color->red_short;
+    xcolor.green = color->green_short;
+    xcolor.blue  = color->blue_short;
+    xcolor.alpha = color->alpha_short;
 
-    return source (dst,
-		   XRenderCreateSolidFill (dst->display->display,
-					   &xrender_color));
+    if (CAIRO_RENDER_HAS_GRADIENTS(dst->display)) {
+	picture = XRenderCreateSolidFill (dpy, &xcolor);
+    } else {
+	XRenderPictureAttributes pa;
+	int mask = 0;
+
+	pa.repeat = RepeatNormal;
+	mask |= CPRepeat;
+
+	pixmap = XCreatePixmap (dpy, dst->drawable, 1, 1, 32);
+	picture = XRenderCreatePicture (dpy, pixmap,
+					_cairo_xlib_display_get_xrender_format (dst->display, CAIRO_FORMAT_ARGB32),
+					mask, &pa);
+
+	if (CAIRO_RENDER_HAS_FILL_RECTANGLES(dst->display)) {
+	    XRectangle r = { 0, 0, 1, 1};
+	    XRenderFillRectangles (dpy, PictOpSrc, picture, &xcolor, &r, 1);
+	} else {
+	    XGCValues gcv;
+	    GC gc;
+
+	    gc = _cairo_xlib_screen_get_gc (dst->display, dst->screen,
+					    32, pixmap);
+	    if (unlikely (gc == NULL)) {
+		XFreePixmap (dpy, pixmap);
+		return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+	    }
+
+	    gcv.foreground = 0;
+	    gcv.foreground |= color->alpha_short >> 8 << 24;
+	    gcv.foreground |= color->red_short   >> 8 << 16;
+	    gcv.foreground |= color->green_short >> 8 << 8;
+	    gcv.foreground |= color->blue_short  >> 8 << 0;
+	    gcv.fill_style = FillSolid;
+
+	    XChangeGC (dpy, gc, GCFillStyle | GCForeground, &gcv);
+	    XFillRectangle (dpy, pixmap, gc, 0, 0, 1, 1);
+
+	    _cairo_xlib_screen_put_gc (dst->display, dst->screen, 32, gc);
+	}
+    }
+
+    return source (dst, picture, pixmap);
 }
 
 static cairo_surface_t *
