@@ -172,7 +172,7 @@ create_composite_mask (const cairo_mask_compositor_t *compositor,
     status = compositor->acquire (surface);
     if (unlikely (status)) {
 	cairo_surface_destroy (surface);
-	return _cairo_surface_create_in_error (status);
+	return _cairo_int_surface_create_in_error (status);
     }
 
     if (!surface->is_clear) {
@@ -239,7 +239,7 @@ error:
     compositor->release (surface);
     if (status != CAIRO_INT_STATUS_NOTHING_TO_DO) {
 	cairo_surface_destroy (surface);
-	surface = _cairo_surface_create_in_error (status);
+	surface = _cairo_int_surface_create_in_error (status);
     }
     return surface;
 }
