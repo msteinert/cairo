@@ -2961,7 +2961,7 @@ _image_read_raw (csi_t *ctx,
 	len == src->datum.string->deflate)
     {
 	csi_string_t *s = src->datum.string;
-	unsigned long out;
+	unsigned long out = s->deflate;
 
 	switch (s->method) {
 	default:
