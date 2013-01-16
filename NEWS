@@ -1,3 +1,52 @@
+Release 1.12.10 (2013-01-16 Chris Wilson <chris@chris-wilson.co.uk>)
+===================================================================
+A heap of bug fixes everywhere, and the gradual completion of the MSAA
+backend for cairo-gl. Perhaps the most noteworthy set of the bugfixes
+was the crusage lead by Behdad Eshfabod to make font handling by
+pango/cairo/fontconfig fully threadsafe. This testing revealed a couple
+of races that needed fixing in Cairo's scaled-font and glyph cache.
+
+Bug fixes
+---------
+
+  Append coincident elements to the recording's surface bbtree so that
+  the list is not corrupted and the overlapping elements lost.
+
+  Fix cairo-trace to correctly record map-to-image/unmap-image and then
+  replay them.
+
+  Ignore MappingNotifies when running the XCB testsuite as they are sent
+  to all clients when the keyboard changes. The testsuite would detect
+  the unexpected event and complain.
+
+  Handle very large large images in the XCB backend.
+
+  Fix a memory leak in the xlib/shm layer, and prevent use of the SHM
+  surfaces after the display is closed.
+  https://bugs.freedesktop.org/show_bug.cgi
+
+  Handle resizing of bitmap fonts, in preparation for a fix to
+  fontconfig to correctly pass on the user request for scaling.
+
+  Always include subroutine 4 (hint replacement idion) when subsetting
+  type 1 fonts in order to prevent a crash in cgpdftops on Mac OS/X
+
+  Fix a couple of typos in the cairo-gobject.h header files for
+  introspection.
+
+  Prevent a mutex deadlock when freeing a scaled-glyph containing a
+  recording-surface that itself references another scaled-glyph.
+  https://bugs.freedesktop.org/show_bug.cgi?id=54950
+
+  Make scaled-font cache actually thread-safe and prevent
+  use-after-frees.
+
+  Restore support for older versions of XRender. A couple of typos and a
+  few forgotten chunks prevented the xlib compositor from running
+  correctly with XRender < 0.10. Note that there are still a few
+  regressions remaining.
+
+
 Release 1.12.8 (2012-11-24 Chris Wilson <chris@chris-wilson.co.uk>)
 ===================================================================
 Another couple of weeks and a few more bugs have been found and fixed,
