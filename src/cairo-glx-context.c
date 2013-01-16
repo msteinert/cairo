@@ -53,7 +53,6 @@ typedef struct _cairo_glx_context {
     Window dummy_window;
     GLXContext context;
 
-    Display *previous_display;
     GLXDrawable previous_drawable;
     GLXContext previous_context;
 
@@ -70,9 +69,8 @@ static cairo_bool_t
 _context_acquisition_changed_glx_state (cairo_glx_context_t *ctx,
 					GLXDrawable current_drawable)
 {
-    return !(ctx->previous_display == ctx->display &&
-	     ctx->previous_drawable == current_drawable &&
-	     ctx->previous_context == ctx->context);
+    return ctx->previous_drawable != current_drawable ||
+	   ctx->previous_context != ctx->context;
 }
 
 static GLXDrawable
@@ -90,17 +88,14 @@ static void
 _glx_query_current_state (cairo_glx_context_t * ctx)
 {
     ctx->previous_drawable = glXGetCurrentDrawable ();
-    ctx->previous_display = glXGetCurrentDisplay ();
     ctx->previous_context = glXGetCurrentContext ();
 
     /* If any of the values were none, assume they are all none. Not all
        drivers seem well behaved when it comes to using these values across
        multiple threads. */
-    if (ctx->previous_drawable == None
-	|| ctx->previous_display == None
-	|| ctx->previous_context == None) {
+    if (ctx->previous_drawable == None ||
+	ctx->previous_context == None) {
 	ctx->previous_drawable = None;
-	ctx->previous_display = None;
 	ctx->previous_context = None;
     }
 }
