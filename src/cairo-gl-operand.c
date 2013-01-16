@@ -269,7 +269,7 @@ _cairo_gl_surface_operand_init (cairo_gl_operand_t *operand,
     if (surface->base.device && surface->base.device != dst->base.device)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (! _cairo_gl_surface_is_texture (surface))
+    if (surface->base.device && ! _cairo_gl_surface_is_texture (surface))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     status = _resolve_multisampling (surface);
