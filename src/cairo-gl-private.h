@@ -785,6 +785,12 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
 				  int			height);
 
 cairo_private cairo_surface_t *
+_cairo_gl_surface_create_scratch_for_caching (cairo_gl_context_t *ctx,
+					      cairo_content_t content,
+					      int width,
+					      int height);
+
+cairo_private cairo_surface_t *
 _cairo_gl_pattern_to_source (cairo_surface_t *dst,
 			     const cairo_pattern_t *pattern,
 			     cairo_bool_t is_mask,

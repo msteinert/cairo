@@ -199,16 +199,16 @@ cairo_gl_context_get_glyph_cache (cairo_gl_context_t *ctx,
     }
 
     if (unlikely (cache->surface == NULL)) {
-        cairo_surface_t *surface;
+	cairo_surface_t *surface;
 
-        surface = cairo_gl_surface_create (&ctx->base,
-                                           content,
-                                           GLYPH_CACHE_WIDTH,
-                                           GLYPH_CACHE_HEIGHT);
-        if (unlikely (surface->status))
-            return surface->status;
+	surface = _cairo_gl_surface_create_scratch_for_caching (ctx,
+							        content,
+							        GLYPH_CACHE_WIDTH,
+							        GLYPH_CACHE_HEIGHT);
+	if (unlikely (surface->status))
+	    return surface->status;
 
-        _cairo_surface_release_device_reference (surface);
+	_cairo_surface_release_device_reference (surface);
 
 	cache->surface = (cairo_gl_surface_t *)surface;
 	cache->surface->operand.texture.attributes.has_component_alpha =

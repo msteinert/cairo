@@ -424,11 +424,12 @@ _cairo_gl_surface_create_scratch_for_texture (cairo_gl_context_t   *ctx,
     return &surface->base;
 }
 
-cairo_surface_t *
-_cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
-				  cairo_content_t	content,
-				  int			width,
-				  int			height)
+static cairo_surface_t *
+_create_scratch_internal (cairo_gl_context_t *ctx,
+			  cairo_content_t content,
+			  int width,
+			  int height,
+			  cairo_bool_t for_caching)
 {
     cairo_gl_surface_t *surface;
     GLenum format;
@@ -456,8 +457,13 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
 	format = GL_RGBA;
 	break;
     case CAIRO_CONTENT_ALPHA:
-	/* We want to be trying GL_ALPHA framebuffer objects here. */
-	format = GL_RGBA;
+	/* When using GL_ALPHA, compositing doesn't work properly, but for
+	 * caching surfaces, we are just uploading pixel data, so it isn't
+	 * an issue. */
+	if (for_caching)
+	    format = GL_ALPHA;
+	else
+	    format = GL_RGBA;
 	break;
     case CAIRO_CONTENT_COLOR:
 	/* GL_RGB is almost what we want here -- sampling 1 alpha when
@@ -476,6 +482,24 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
 		  format, GL_UNSIGNED_BYTE, NULL);
 
     return &surface->base;
+}
+
+cairo_surface_t *
+_cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
+				  cairo_content_t	content,
+				  int			width,
+				  int			height)
+{
+    return _create_scratch_internal (ctx, content, width, height, FALSE);
+}
+
+cairo_surface_t *
+_cairo_gl_surface_create_scratch_for_caching (cairo_gl_context_t *ctx,
+					      cairo_content_t content,
+					      int width,
+					      int height)
+{
+    return _create_scratch_internal (ctx, content, width, height, TRUE);
 }
 
 static cairo_status_t
