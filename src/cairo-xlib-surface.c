@@ -1139,26 +1139,24 @@ _cairo_xlib_surface_draw_image (cairo_xlib_surface_t   *surface,
 		max_request_size = XMaxRequestSize (display->display);
 	    if (max_request_size > 8192)
 		max_request_size = 8192;
-	    if (image->stride * image->height > max_request_size) {
+	    if (width * height * 4 > max_request_size) {
 		shm_image = _cairo_xlib_surface_create_shm__image (surface,
 								   image->pixman_format,
-								   image->width,
-								   image->height);
+								   width, height);
 		if (shm_image && shm_image->status == CAIRO_STATUS_SUCCESS) {
 		    cairo_image_surface_t *clone = (cairo_image_surface_t *) shm_image;
-		    if (clone->stride == image->stride) {
-			memcpy (clone->data, image->data, clone->stride * clone->height);
-		    } else {
-			pixman_image_composite32 (PIXMAN_OP_SRC,
-						  image->pixman_image, NULL, clone->pixman_image,
-						  0, 0,
-						  0, 0,
-						  0, 0,
-						  image->width, image->height);
-		    }
+		    pixman_image_composite32 (PIXMAN_OP_SRC,
+					      image->pixman_image, NULL, clone->pixman_image,
+					      src_x, src_y,
+					      0, 0,
+					      0, 0,
+					      width, height);
 		    ximage.obdata = _cairo_xlib_shm_surface_get_obdata (shm_image);
 		    ximage.data = (char *)clone->data;
 		    ximage.bytes_per_line = clone->stride;
+		    ximage.width = width;
+		    ximage.height = height;
+		    src_x = src_y = 0;
 		}
 	    }
 	} else

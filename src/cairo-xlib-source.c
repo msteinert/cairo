@@ -1035,7 +1035,13 @@ surface_source (cairo_xlib_surface_t *dst,
 
 	status = _cairo_surface_unmap_image (&xsrc->base, image);
 	if (unlikely (status)) {
-	    cairo_surface_destroy (src);
+	    cairo_surface_destroy (&xsrc->base);
+	    return _cairo_surface_create_in_error (status);
+	}
+
+	status = _cairo_xlib_surface_put_shm (xsrc);
+	if (unlikely (status)) {
+	    cairo_surface_destroy (&xsrc->base);
 	    return _cairo_surface_create_in_error (status);
 	}
     }
