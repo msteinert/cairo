@@ -189,6 +189,8 @@ _clip_to_traps (cairo_clip_t *clip,
     status = _cairo_bentley_ottmann_tessellate_polygon (traps,
 							&polygon,
 							fill_rule);
+    _cairo_polygon_fini (&polygon);
+
     return status;
 }
 
