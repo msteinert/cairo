@@ -256,9 +256,9 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 #if CAIRO_HAS_GL_SURFACE
     if (is_desktop && ctx->has_packed_depth_stencil &&
 	(gl_version >= CAIRO_GL_VERSION_ENCODE (3, 0) ||
-	 (_cairo_gl_has_extension ("GL_ARB_framebuffer_object") &&
-	  _cairo_gl_has_extension ("GL_EXT_framebuffer_blit") &&
-	  _cairo_gl_has_extension ("EXT_framebuffer_multisample")))) {
+	 _cairo_gl_has_extension ("GL_ARB_framebuffer_object") ||
+	 (_cairo_gl_has_extension ("GL_EXT_framebuffer_blit") &&
+	  _cairo_gl_has_extension ("GL_EXT_framebuffer_multisample")))) {
 	glGetIntegerv(GL_MAX_SAMPLES_EXT, &ctx->num_samples);
     }
 #endif
