@@ -200,7 +200,7 @@ cairo_private cairo_bool_t
 _cairo_path_fixed_is_stroke_box (const cairo_path_fixed_t *path,
 				 cairo_box_t *box);
 
-cairo_bool_t
+cairo_private cairo_bool_t
 _cairo_path_fixed_is_simple_quad (const cairo_path_fixed_t *path);
 
 #endif /* CAIRO_PATH_FIXED_PRIVATE_H */
