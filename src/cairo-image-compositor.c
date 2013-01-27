@@ -2441,15 +2441,14 @@ _inplace_spans (void *abstract_renderer,
 					  len, h);
 		mask = (uint8_t *)pixman_image_get_data (r->mask);
 		x0 = spans[1].x;
-	    } else if (spans[0].coverage == 0x0) {
-		if (x1 - x0 > r->u.composite.run_length) {
-		    pixman_image_composite32 (r->op, r->src, r->mask, r->u.composite.dst,
-					      x0 + r->u.composite.src_x,
-					      y + r->u.composite.src_y,
-					      0, 0,
-					      x0, y,
-					      x1 - x0, h);
-		}
+	    } else if (spans[0].coverage == 0x0 &&
+		       x1 - x0 > r->u.composite.run_length) {
+		pixman_image_composite32 (r->op, r->src, r->mask, r->u.composite.dst,
+					  x0 + r->u.composite.src_x,
+					  y + r->u.composite.src_y,
+					  0, 0,
+					  x0, y,
+					  x1 - x0, h);
 		mask = (uint8_t *)pixman_image_get_data (r->mask);
 		x0 = spans[1].x;
 	    }else {
@@ -2492,15 +2491,14 @@ _inplace_opacity_spans (void *abstract_renderer, int y, int h,
 	uint8_t m = mul8_8(spans[0].coverage, r->bpp);
 	*mask++ = m;
 	if (len > 1) {
-	    if (m == 0) {
-		if (x1 - x0 > r->u.composite.run_length) {
-		    pixman_image_composite32 (r->op, r->src, r->mask, r->u.composite.dst,
-					      x0 + r->u.composite.src_x,
-					      y + r->u.composite.src_y,
-					      0, 0,
-					      x0, y,
-					      x1 - x0, h);
-		}
+	    if (m == 0 &&
+		x1 - x0 > r->u.composite.run_length) {
+		pixman_image_composite32 (r->op, r->src, r->mask, r->u.composite.dst,
+					  x0 + r->u.composite.src_x,
+					  y + r->u.composite.src_y,
+					  0, 0,
+					  x0, y,
+					  x1 - x0, h);
 		mask = (uint8_t *)pixman_image_get_data (r->mask);
 		x0 = spans[1].x;
 	    }else {
