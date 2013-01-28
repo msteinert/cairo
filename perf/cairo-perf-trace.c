@@ -171,10 +171,12 @@ done:
 }
 
 static void
-clear_surface (cairo_surface_t *surface)
+fill_surface (cairo_surface_t *surface)
 {
     cairo_t *cr = cairo_create (surface);
-    cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+    /* This needs to be an operation that the backends can't optimise away */
+    cairo_set_source_rgba (cr, 0.5, 0.5, 0.5, 0.5);
+    cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
     cairo_paint (cr);
     cairo_destroy (cr);
 }
@@ -714,6 +716,8 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 					       1, 1,
 					       CAIRO_BOILERPLATE_MODE_PERF,
 					       &args.closure);
+	fill_surface(args.surface); /* remove any clear flags */
+
 	if (perf->observe) {
 	    cairo_surface_t *obs;
 	    obs = cairo_surface_create_observer (args.surface,
@@ -768,7 +772,7 @@ cairo_perf_trace (cairo_perf_t			   *perf,
 	    fill[i] = _cairo_time_from_s (1.e-9 * cairo_device_observer_fill_elapsed (observer));
 	    glyphs[i] = _cairo_time_from_s (1.e-9 * cairo_device_observer_glyphs_elapsed (observer));
 	} else {
-	    clear_surface (args.surface); /* queue a write to the sync'ed surface */
+	    fill_surface (args.surface); /* queue a write to the sync'ed surface */
 	    cairo_perf_timer_stop ();
 	    times[i] = cairo_perf_timer_elapsed ();
 	}
