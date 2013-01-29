@@ -246,7 +246,7 @@ draw_image_boxes (void *_dst,
 {
     cairo_xlib_surface_t *dst = _dst;
     struct _cairo_boxes_chunk *chunk;
-    cairo_image_surface_t *shm;
+    cairo_image_surface_t *shm = NULL;
     cairo_int_status_t status;
     int i;
 
@@ -260,7 +260,6 @@ draw_image_boxes (void *_dst,
 	goto draw_image_boxes;
     }
 
-    shm = NULL;
     if (boxes_cover_surface (boxes, dst))
 	shm = (cairo_image_surface_t *) _cairo_xlib_surface_get_shm (dst, TRUE);
     if (shm) {
