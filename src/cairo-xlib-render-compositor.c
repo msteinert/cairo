@@ -251,6 +251,10 @@ draw_image_boxes (void *_dst,
     int i;
 
     if (image->base.device == dst->base.device &&
+	image->depth != dst->depth)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (image->base.device == dst->base.device &&
 	image->depth == dst->depth &&
 	_cairo_xlib_shm_surface_get_pixmap (&image->base))
 	    return copy_image_boxes (dst, image, boxes, dx, dy);
