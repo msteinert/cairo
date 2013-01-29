@@ -136,7 +136,8 @@ CAIRO_ENABLE_SURFACE_BACKEND(xlib_xrender, Xlib Xrender, auto, [
 		       CPPFLAGS="$CPPFLAGS $xlib_CFLAGS $xlib_NONPKGCONFIG_CFLAGS"
 		       AC_CHECK_HEADER(X11/extensions/Xrender.h,
 				       [xlib_xrender_NONPKGCONFIG_LIBS="-lXrender"],
-				       [use_xlib_xrender="no (requires $xlib_xrender_REQUIRES http://freedesktop.org/Software/xlibs)"])
+				       [use_xlib_xrender="no (requires $xlib_xrender_REQUIRES http://freedesktop.org/Software/xlibs)"],
+				       [#include <X11/X.h>])
 		       CPPFLAGS=$old_CPPFLAGS
 		      ])
 
