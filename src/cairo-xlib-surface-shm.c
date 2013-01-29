@@ -504,7 +504,7 @@ _cairo_xlib_shm_info_find (cairo_xlib_display_t *display, size_t size,
 	*last_request = info->last_request;
 
 	_pqueue_pop (&display->shm->info);
-	_cairo_mempool_free (&info->pool->mem, info->mem);
+	_cairo_mempool_free (&pool->mem, info->mem);
 	free (info);
 
 	if (pool->mem.free_bytes >= size) {
