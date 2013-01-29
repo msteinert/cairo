@@ -1345,8 +1345,7 @@ _cairo_xlib_surface_draw_image (cairo_xlib_surface_t   *surface,
 
     if (ximage.obdata)
 	XShmPutImage (display->display, surface->drawable, gc, &ximage,
-		      src_x, src_y, dst_x, dst_y, width, height,
-		      shm_image == NULL);
+		      src_x, src_y, dst_x, dst_y, width, height, True);
     else
 	XPutImage (display->display, surface->drawable, gc, &ximage,
 		   src_x, src_y, dst_x, dst_y, width, height);

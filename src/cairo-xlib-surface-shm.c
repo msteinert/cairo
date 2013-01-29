@@ -404,11 +404,6 @@ peek_processed (cairo_device_t *device)
     return LastKnownRequestProcessed (peek_display(device));
 }
 
-static unsigned next_request (cairo_device_t *device)
-{
-    return NextRequest (peek_display (device));
-}
-
 static void
 _cairo_xlib_display_shm_pool_destroy (cairo_xlib_display_t *display,
 				      cairo_xlib_shm_t *pool)
@@ -1231,10 +1226,10 @@ _cairo_xlib_shm_surface_get_ximage (cairo_surface_t *surface,
 void *
 _cairo_xlib_shm_surface_get_obdata (cairo_surface_t *surface)
 {
-    cairo_xlib_shm_surface_t *shm;
+    cairo_xlib_display_t *display = (cairo_xlib_display_t *) surface->device;
+    cairo_xlib_shm_surface_t *shm = (cairo_xlib_shm_surface_t *) surface;
 
-    shm = (cairo_xlib_shm_surface_t *) surface;
-    shm->active = next_request (surface->device);
+    display->shm->last_event = shm->active = NextRequest (display->display);
     return &shm->info->pool->shm;
 }
 
