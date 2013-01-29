@@ -725,6 +725,8 @@ _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
 #endif
     }
 
+    glDisable (GL_DITHER);
+
     glViewport (0, 0, surface->width, surface->height);
 
     if (_cairo_gl_surface_is_texture (surface))
