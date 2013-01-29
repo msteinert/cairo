@@ -221,6 +221,18 @@ seqno_passed (unsigned long a, unsigned long b)
     return (long)(b - a) >= 0;
 }
 
+static inline cairo_bool_t
+seqno_before (unsigned long a, unsigned long b)
+{
+    return (long)(b - a) > 0;
+}
+
+static inline cairo_bool_t
+seqno_after (unsigned long a, unsigned long b)
+{
+    return (long)(a - b) > 0;
+}
+
 static inline cairo_status_t
 _pqueue_init (struct pqueue *pq)
 {
@@ -424,7 +436,7 @@ static void send_event(cairo_xlib_display_t *display,
 {
     XShmCompletionEvent ev;
 
-    if (seqno_passed (seqno, display->shm->last_event))
+    if (seqno_before (seqno, display->shm->last_event))
 	return;
 
     ev.type = display->shm->event;
@@ -471,7 +483,7 @@ _cairo_xlib_shm_info_cleanup (cairo_xlib_display_t *display)
 
     info = PQ_TOP(pq);
     do {
-	if (! seqno_passed (info->last_request, processed)) {
+	if (seqno_after (info->last_request, processed)) {
 	    send_event (display, info, display->shm->last_request);
 	    return;
 	}
@@ -544,7 +556,7 @@ _cairo_xlib_shm_pool_cleanup (cairo_xlib_display_t *display)
 
     cairo_list_foreach_entry_safe (pool, next, cairo_xlib_shm_t,
 				   &display->shm->pool, link) {
-	if (! seqno_passed (pool->attached, processed))
+	if (seqno_before (pool->attached, processed))
 	    break;
 
 	if (pool->mem.free_bytes == pool->mem.max_bytes)
@@ -720,7 +732,7 @@ _cairo_xlib_shm_surface_finish (void *abstract_surface)
     if (active (shm, display->display)) {
 	shm->info->last_request = shm->active;
 	_pqueue_push (&display->shm->info, shm->info);
-	if (! seqno_passed (display->shm->last_request, shm->active))
+	if (seqno_before (display->shm->last_request, shm->active))
 	    display->shm->last_request = shm->active;
     } else {
 	_cairo_mempool_free (&shm->info->pool->mem, shm->info->mem);

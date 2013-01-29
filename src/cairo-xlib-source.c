@@ -87,10 +87,10 @@ _cairo_xlib_proxy_finish (void *abstract_surface)
 {
     cairo_xlib_proxy_t *proxy = abstract_surface;
 
+    _cairo_xlib_shm_surface_mark_active (proxy->owner);
     XRenderFreePicture (proxy->source.dpy, proxy->source.picture);
     if (proxy->source.pixmap)
 	    XFreePixmap (proxy->source.dpy, proxy->source.pixmap);
-    _cairo_xlib_shm_surface_mark_active (proxy->owner);
     cairo_surface_destroy (proxy->owner);
     return CAIRO_STATUS_SUCCESS;
 }
