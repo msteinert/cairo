@@ -1155,7 +1155,7 @@ _cairo_xlib_surface_create_shm__image (cairo_xlib_surface_t *surface,
 	return NULL;
 
     return &_cairo_xlib_shm_surface_create (surface, format, width, height,
-					    TRUE, 0)->image.base;
+					    FALSE, 0)->image.base;
 }
 
 cairo_surface_t *
