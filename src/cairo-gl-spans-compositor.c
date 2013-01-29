@@ -311,7 +311,7 @@ draw_image_boxes (void *_dst,
 	    status = _cairo_gl_surface_draw_image (dst, image,
 						   x + dx, y + dy,
 						   w, h,
-						   x, y);
+						   x, y, TRUE);
 	    if (unlikely (status))
 		return status;
 	}

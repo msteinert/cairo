@@ -840,7 +840,8 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 			      cairo_image_surface_t *src,
 			      int src_x, int src_y,
 			      int width, int height,
-			      int dst_x, int dst_y)
+			      int dst_x, int dst_y,
+			      cairo_bool_t force_flush)
 {
     GLenum internal_format, format, type;
     cairo_bool_t has_alpha, needs_swap;
@@ -882,9 +883,11 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 
     cpp = PIXMAN_FORMAT_BPP (src->pixman_format) / 8;
 
-    status = _cairo_gl_surface_flush (&dst->base, 0);
-    if (unlikely (status))
-	goto FAIL;
+    if (force_flush) {
+	status = _cairo_gl_surface_flush (&dst->base, 0);
+	if (unlikely (status))
+	    goto FAIL;
+    }
 
     if (_cairo_gl_surface_is_texture (dst)) {
 	void *data_start = src->data + src_y * src->stride + src_x * cpp;
@@ -951,7 +954,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
                                                src,
                                                src_x, src_y,
                                                width, height,
-                                               0, 0);
+                                               0, 0, force_flush);
         if (status == CAIRO_INT_STATUS_SUCCESS) {
             cairo_surface_pattern_t tmp_pattern;
 	    cairo_rectangle_int_t r;
@@ -1231,7 +1234,8 @@ _cairo_gl_surface_unmap_image (void		      *abstract_surface,
 					   0, 0,
 					   image->width, image->height,
 					   image->base.device_transform_inverse.x0,
-					   image->base.device_transform_inverse.y0);
+					   image->base.device_transform_inverse.y0,
+					   TRUE);
 
     cairo_surface_finish (&image->base);
     cairo_surface_destroy (&image->base);

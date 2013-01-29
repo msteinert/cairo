@@ -96,7 +96,8 @@ draw_image_boxes (void *_dst,
 	    status = _cairo_gl_surface_draw_image (dst, image,
 						   x + dx, y + dy,
 						   w, h,
-						   x, y);
+						   x, y,
+						   TRUE);
 	    if (unlikely (status))
 		return status;
 	}
@@ -345,7 +346,8 @@ traps_to_operand (void *_dst,
 					   (cairo_image_surface_t *)image,
 					   0, 0,
 					   extents->width, extents->height,
-					   0, 0);
+					   0, 0,
+					   TRUE);
     cairo_surface_destroy (image);
 
     if (unlikely (status))
@@ -456,7 +458,8 @@ tristrip_to_surface (void *_dst,
 					   (cairo_image_surface_t *)image,
 					   0, 0,
 					   extents->width, extents->height,
-					   0, 0);
+					   0, 0,
+					   TRUE);
     cairo_surface_destroy (image);
     if (unlikely (status)) {
 	cairo_surface_destroy (mask);
