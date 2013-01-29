@@ -904,13 +904,11 @@ _cairo_gl_composite_emit_alpha_vertex (cairo_gl_context_t *ctx,
 
 static void
 _cairo_gl_composite_emit_point (cairo_gl_context_t	*ctx,
-				const cairo_point_t	*point,
-				uint8_t alpha)
+				const cairo_point_t	*point)
 {
-    _cairo_gl_composite_emit_alpha_vertex (ctx,
-					   _cairo_fixed_to_double (point->x),
-					   _cairo_fixed_to_double (point->y),
-					   alpha);
+    _cairo_gl_composite_emit_vertex (ctx,
+				     _cairo_fixed_to_double (point->x),
+				     _cairo_fixed_to_double (point->y));
 }
 
 static void
@@ -1194,14 +1192,14 @@ _cairo_gl_composite_emit_quad_as_tristrip (cairo_gl_context_t	*ctx,
     _cairo_gl_composite_prepare_buffer (ctx, 4,
 					CAIRO_GL_PRIMITIVE_TYPE_TRISTRIPS);
 
-    _cairo_gl_composite_emit_point (ctx, &quad[0], 0);
-    _cairo_gl_composite_emit_point (ctx, &quad[1], 0);
+    _cairo_gl_composite_emit_point (ctx, &quad[0]);
+    _cairo_gl_composite_emit_point (ctx, &quad[1]);
 
     /* Cairo stores quad vertices in counter-clockwise order, but we need to
        emit them from top to bottom in the triangle strip, so we need to reverse
        the order of the last two vertices. */
-    _cairo_gl_composite_emit_point (ctx, &quad[3], 0);
-    _cairo_gl_composite_emit_point (ctx, &quad[2], 0);
+    _cairo_gl_composite_emit_point (ctx, &quad[3]);
+    _cairo_gl_composite_emit_point (ctx, &quad[2]);
 
     return _cairo_gl_composite_append_vertex_indices (ctx, 4);
 }
@@ -1214,8 +1212,8 @@ _cairo_gl_composite_emit_triangle_as_tristrip (cairo_gl_context_t	*ctx,
     _cairo_gl_composite_prepare_buffer (ctx, 3,
 					CAIRO_GL_PRIMITIVE_TYPE_TRISTRIPS);
 
-    _cairo_gl_composite_emit_point (ctx, &triangle[0], 0);
-    _cairo_gl_composite_emit_point (ctx, &triangle[1], 0);
-    _cairo_gl_composite_emit_point (ctx, &triangle[2], 0);
+    _cairo_gl_composite_emit_point (ctx, &triangle[0]);
+    _cairo_gl_composite_emit_point (ctx, &triangle[1]);
+    _cairo_gl_composite_emit_point (ctx, &triangle[2]);
     return _cairo_gl_composite_append_vertex_indices (ctx, 3);
 }
