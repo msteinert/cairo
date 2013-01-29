@@ -436,7 +436,7 @@ static void send_event(cairo_xlib_display_t *display,
 {
     XShmCompletionEvent ev;
 
-    if (seqno_before (seqno, display->shm->last_event))
+    if (! seqno_after (seqno, display->shm->last_event))
 	return;
 
     ev.type = display->shm->event;
@@ -483,7 +483,7 @@ _cairo_xlib_shm_info_cleanup (cairo_xlib_display_t *display)
 
     info = PQ_TOP(pq);
     do {
-	if (seqno_after (info->last_request, processed)) {
+	if (! seqno_passed (info->last_request, processed)) {
 	    send_event (display, info, display->shm->last_request);
 	    return;
 	}
@@ -556,7 +556,7 @@ _cairo_xlib_shm_pool_cleanup (cairo_xlib_display_t *display)
 
     cairo_list_foreach_entry_safe (pool, next, cairo_xlib_shm_t,
 				   &display->shm->pool, link) {
-	if (seqno_before (pool->attached, processed))
+	if (! seqno_passed (pool->attached, processed))
 	    break;
 
 	if (pool->mem.free_bytes == pool->mem.max_bytes)
