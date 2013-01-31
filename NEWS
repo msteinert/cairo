@@ -43,11 +43,11 @@ Bug fixes
   to all clients when the keyboard changes. The testsuite would detect
   the unexpected event and complain.
 
-  Handle very large large images in the XCB backend.
+  Handle very large images in the XCB backend.
 
   Fix a memory leak in the xlib/shm layer, and prevent use of the SHM
   surfaces after the display is closed.
-  https://bugs.freedesktop.org/show_bug.cgi
+  https://bugs.freedesktop.org/show_bug.cgi?id=58253
 
   Handle resizing of bitmap fonts, in preparation for a fix to
   fontconfig to correctly pass on the user request for scaling.
