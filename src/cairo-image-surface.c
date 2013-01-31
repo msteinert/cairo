@@ -1240,7 +1240,14 @@ _cairo_image_surface_clone_subimage (cairo_surface_t             *surface,
     if (unlikely (status))
 	goto error;
 
-    _cairo_image_surface_set_parent (to_image_surface (image), surface);
+    /* We use the parent as a flag during map-to-image/umap-image that the
+     * resultant image came from a fallback rather than as direct call
+     * to the backend's map_to_image(). Whilst we use it as a simple flag,
+     * we need to make sure the parent surface obeys the reference counting
+     * semantics and is consistent for all callers.
+     */
+    _cairo_image_surface_set_parent (to_image_surface (image),
+				     cairo_surface_reference (surface));
 
     return to_image_surface (image);
 
