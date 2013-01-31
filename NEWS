@@ -1,3 +1,27 @@
+Release 1.12.12 (2013-01-31 Chris Wilson <chris@chris-wilson.co.uk>)
+===================================================================
+The goal of this release is to fix the synchronisation problems that
+were exhibited in the SHM transport for cairo-xlib. This cropped up
+any place that tried to rapidly push fresh pixel data to the X server
+through an ordinary image surface, such as gimp-2.9 and evince.
+
+Bug fixes
+---------
+
+   Avoid replacing the entire image when uploading subimages
+   https://bugs.freedesktop.org/show_bug.cgi?id=59635
+
+   Force synchronisation for scratch SHM image buffers, so that we do
+   not overwrite data as it is being read by X.
+   https://bugs.freedesktop.org/show_bug.cgi?id=59635 (also)
+
+   Fix typos in detecting multisampling for the GL (MSAA) backend.
+
+   Fix a memory leak in the GL (MSAA) backend.
+
+   Fix a reference counting bug when mapping a GL surface to an image.
+
+
 Release 1.12.10 (2013-01-16 Chris Wilson <chris@chris-wilson.co.uk>)
 ===================================================================
 A heap of bug fixes everywhere, and the gradual completion of the MSAA
