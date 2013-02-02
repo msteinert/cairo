@@ -1096,6 +1096,10 @@ void *
 cairo_surface_get_user_data (cairo_surface_t		 *surface,
 			     const cairo_user_data_key_t *key)
 {
+    /* Prevent reads of the array during teardown */
+    if (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&surface->ref_count))
+	return NULL;
+
     return _cairo_user_data_array_get_data (&surface->user_data, key);
 }
 
@@ -1157,7 +1161,9 @@ cairo_surface_get_mime_data (cairo_surface_t		*surface,
 
     *data = NULL;
     *length = 0;
-    if (unlikely (surface->status))
+
+    /* Prevent reads of the array during teardown */
+    if (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&surface->ref_count))
 	return;
 
     /* The number of mime-types attached to a surface is usually small,
