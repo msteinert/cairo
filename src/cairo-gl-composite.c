@@ -56,11 +56,12 @@ cairo_int_status_t
 _cairo_gl_composite_set_source (cairo_gl_composite_t *setup,
 			        const cairo_pattern_t *pattern,
 				const cairo_rectangle_int_t *sample,
-				const cairo_rectangle_int_t *extents)
+				const cairo_rectangle_int_t *extents,
+				cairo_bool_t use_texgen)
 {
     _cairo_gl_operand_destroy (&setup->src);
     return _cairo_gl_operand_init (&setup->src, pattern, setup->dst,
-				   sample, extents);
+				   sample, extents, use_texgen);
 }
 
 void
@@ -83,14 +84,15 @@ cairo_int_status_t
 _cairo_gl_composite_set_mask (cairo_gl_composite_t *setup,
 			      const cairo_pattern_t *pattern,
 			      const cairo_rectangle_int_t *sample,
-			      const cairo_rectangle_int_t *extents)
+			      const cairo_rectangle_int_t *extents,
+			      cairo_bool_t use_texgen)
 {
     _cairo_gl_operand_destroy (&setup->mask);
     if (pattern == NULL)
         return CAIRO_STATUS_SUCCESS;
 
     return _cairo_gl_operand_init (&setup->mask, pattern, setup->dst,
-				   sample, extents);
+				   sample, extents, use_texgen);
 }
 
 void
@@ -248,10 +250,12 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
         _cairo_gl_texture_set_filter (ctx, ctx->tex_target,
                                       operand->texture.attributes.filter);
 
-	dispatch->VertexAttribPointer (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit, 2,
-					GL_FLOAT, GL_FALSE, vertex_size,
-					ctx->vb + vertex_offset);
-	dispatch->EnableVertexAttribArray (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit);
+	if (! operand->texture.texgen) {
+	    dispatch->VertexAttribPointer (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit, 2,
+					   GL_FLOAT, GL_FALSE, vertex_size,
+					   ctx->vb + vertex_offset);
+	    dispatch->EnableVertexAttribArray (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit);
+	}
         break;
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
@@ -262,10 +266,12 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
         _cairo_gl_texture_set_extend (ctx, ctx->tex_target, operand->gradient.extend);
         _cairo_gl_texture_set_filter (ctx, ctx->tex_target, CAIRO_FILTER_BILINEAR);
 
-	dispatch->VertexAttribPointer (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit, 2,
-				       GL_FLOAT, GL_FALSE, vertex_size,
-				       ctx->vb + vertex_offset);
-	dispatch->EnableVertexAttribArray (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit);
+	if (! operand->gradient.texgen) {
+	    dispatch->VertexAttribPointer (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit, 2,
+					   GL_FLOAT, GL_FALSE, vertex_size,
+					   ctx->vb + vertex_offset);
+	    dispatch->EnableVertexAttribArray (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit);
+	}
 	break;
     }
 }
@@ -698,8 +704,8 @@ _cairo_gl_set_operands_and_operator (cairo_gl_composite_t *setup,
     status = CAIRO_STATUS_SUCCESS;
 
     dst_size = 2 * sizeof (GLfloat);
-    src_size = _cairo_gl_operand_get_vertex_size (setup->src.type);
-    mask_size = _cairo_gl_operand_get_vertex_size (setup->mask.type);
+    src_size = _cairo_gl_operand_get_vertex_size (&setup->src);
+    mask_size = _cairo_gl_operand_get_vertex_size (&setup->mask);
     vertex_size = dst_size + src_size + mask_size;
 
     if (setup->spans)
@@ -993,8 +999,29 @@ _cairo_gl_composite_emit_solid_span (cairo_gl_context_t *ctx,
 cairo_gl_emit_span_t
 _cairo_gl_context_choose_emit_span (cairo_gl_context_t *ctx)
 {
-    if (ctx->operands[CAIRO_GL_TEX_MASK].type != CAIRO_GL_OPERAND_NONE)
-	return _cairo_gl_composite_emit_span;
+    if (ctx->operands[CAIRO_GL_TEX_MASK].type != CAIRO_GL_OPERAND_NONE) {
+	    switch (ctx->operands[CAIRO_GL_TEX_MASK].type) {
+	    default:
+	    case CAIRO_GL_OPERAND_COUNT:
+		    ASSERT_NOT_REACHED;
+	    case CAIRO_GL_OPERAND_NONE:
+	    case CAIRO_GL_OPERAND_CONSTANT:
+		    break;
+
+	    case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
+	    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
+	    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
+	    case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
+		    if (!ctx->operands[CAIRO_GL_TEX_MASK].gradient.texgen)
+			    return _cairo_gl_composite_emit_span;
+		    break;
+
+	    case CAIRO_GL_OPERAND_TEXTURE:
+		    if (!ctx->operands[CAIRO_GL_TEX_MASK].texture.texgen)
+			    return _cairo_gl_composite_emit_span;
+		    break;
+	    }
+    }
 
     switch (ctx->operands[CAIRO_GL_TEX_SOURCE].type) {
     default:
@@ -1002,15 +1029,22 @@ _cairo_gl_context_choose_emit_span (cairo_gl_context_t *ctx)
         ASSERT_NOT_REACHED;
     case CAIRO_GL_OPERAND_NONE:
     case CAIRO_GL_OPERAND_CONSTANT:
-	return _cairo_gl_composite_emit_solid_span;
+	break;
 
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
+	if (!ctx->operands[CAIRO_GL_TEX_SOURCE].gradient.texgen)
+		return _cairo_gl_composite_emit_span;
+	break;
+
     case CAIRO_GL_OPERAND_TEXTURE:
-	return _cairo_gl_composite_emit_span;
+	if (!ctx->operands[CAIRO_GL_TEX_SOURCE].texture.texgen)
+		return _cairo_gl_composite_emit_span;
     }
+
+    return _cairo_gl_composite_emit_solid_span;
 }
 
 static inline void
