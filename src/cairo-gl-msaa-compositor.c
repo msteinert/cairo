@@ -409,6 +409,10 @@ _cairo_gl_msaa_compositor_mask (const cairo_compositor_t	*compositor,
     if (! can_use_msaa_compositor (dst, CAIRO_ANTIALIAS_DEFAULT))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    if (composite->op == CAIRO_OPERATOR_CLEAR &&
+	composite->original_mask_pattern != NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     /* GL compositing operators cannot properly represent a mask operation
        using the SOURCE compositing operator in one pass. This only matters if
        there actually is a mask (there isn't in a paint operation) and if the
@@ -849,6 +853,9 @@ _cairo_gl_msaa_compositor_glyphs (const cairo_compositor_t	*compositor,
 
     query_surface_capabilities (dst);
     if (! dst->supports_stencil)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (composite->op == CAIRO_OPERATOR_CLEAR)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (composite->is_bounded == FALSE) {
