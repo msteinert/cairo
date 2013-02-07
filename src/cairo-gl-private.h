@@ -531,7 +531,7 @@ _cairo_gl_composite_init (cairo_gl_composite_t *setup,
 cairo_private void
 _cairo_gl_composite_fini (cairo_gl_composite_t *setup);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_gl_composite_set_operator (cairo_gl_composite_t *setup,
 				  cairo_operator_t op,
 				  cairo_bool_t assume_component_alpha);
@@ -580,7 +580,7 @@ cairo_private cairo_status_t
 _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
                            cairo_gl_context_t **ctx);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_gl_set_operands_and_operator (cairo_gl_composite_t *setup,
 				     cairo_gl_context_t *ctx);
 
