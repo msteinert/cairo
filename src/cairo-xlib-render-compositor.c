@@ -1469,14 +1469,14 @@ _emit_glyphs_chunk (cairo_xlib_display_t *display,
        */
       if (_start_new_glyph_elt (j, &glyphs[i])) {
 	  if (j) {
-	    elts[nelt].nchars = n;
-	    nelt++;
-	    n = 0;
+	      elts[nelt].nchars = n;
+	      nelt++;
+	      n = 0;
 	  }
 	  elts[nelt].chars = char8 + size * j;
 	  elts[nelt].glyphset = info->glyphset;
-	  elts[nelt].xOff = glyphs[i].i.x - dst_x;
-	  elts[nelt].yOff = glyphs[i].i.y - dst_y;
+	  elts[nelt].xOff = glyphs[i].i.x;
+	  elts[nelt].yOff = glyphs[i].i.y;
       }
 
       switch (width) {
@@ -1579,7 +1579,7 @@ composite_glyphs (void				*surface,
     cairo_xlib_display_t *display = dst->display;
     cairo_int_status_t status = CAIRO_INT_STATUS_SUCCESS;
     cairo_scaled_glyph_t *glyph;
-    cairo_fixed_t x = 0, y = 0;
+    cairo_fixed_t x = dst_x, y = dst_y;
     cairo_xlib_font_glyphset_t *glyphset = NULL, *this_glyphset_info;
 
     unsigned long max_index = 0;
