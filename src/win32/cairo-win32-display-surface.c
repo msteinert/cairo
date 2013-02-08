@@ -392,6 +392,7 @@ _cairo_win32_display_surface_create_similar_image (void	    *abstract_other,
 						   int	     height)
 {
     cairo_win32_display_surface_t *surface = abstract_other;
+    cairo_image_surface_t *image;
 
     surface = (cairo_win32_display_surface_t *)
 	_cairo_win32_display_surface_create_for_dc (surface->win32.dc,
@@ -399,7 +400,14 @@ _cairo_win32_display_surface_create_similar_image (void	    *abstract_other,
     if (surface->win32.base.status)
 	return &surface->win32.base;
 
-    return surface->image;
+    /* And clear in order to comply with our user API semantics */
+    image = (cairo_image_surface_t *) surface->image;
+    if (! image->base.is_clear) {
+	memset (image->data, 0, image->stride * height);
+	image->base.is_clear = TRUE;
+    }
+
+    return &image->base;
 }
 
 static cairo_status_t
