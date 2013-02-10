@@ -1,3 +1,35 @@
+Release 1.12.14 (2013-02-10 Chris Wilson <chris@chris-wilson.co.uk>)
+===================================================================
+In the last week we had a few more bugs reported and promptly resolved.
+As these are a combination of regressions and stability issues, it is
+time for a prompt update and release. Many thanks to everyone for
+testing and reporting issues, and helping to make Cairo better.
+
+Bug fixes
+---------
+
+  Prevent user callbacks accessing user-data during destroy to prevent
+  use-after-free bugs.
+  https://bugzilla.mozilla.org/show_bug.cgi?id=722975
+
+  Use standard names for glyphs in subset fonts (PDF).
+  https://bugs.freedesktop.org/show_bug.cgi?id=60248
+
+  Fix detection of Win98. The logic for detecting Win98 (and its broken
+  AlphaBlend()) was inverted, disabling AlphaBlend() for everyone.
+
+  Prevent numeric overflow from extrapolating polygon edges to the clip
+  boundary and causing severe render artifacts.
+  https://bugs.freedesktop.org/show_bug.cgi?id=60489
+
+  Fix computation of glyph string coordinates when breaking up runs
+  for xlib.
+
+  Fix an assertion in the win32 backend for failing to clear its
+  similar-images.
+  https://bugs.freedesktop.org/show_bug.cgi?id=60519
+
+
 Release 1.12.12 (2013-01-31 Chris Wilson <chris@chris-wilson.co.uk>)
 ===================================================================
 The goal of this release is to fix the synchronisation problems that
