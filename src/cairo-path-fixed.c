@@ -965,8 +965,19 @@ _cairo_path_fixed_offset_and_scale (cairo_path_fixed_t *path,
 
     path->extents.p1.x = _cairo_fixed_mul (scalex, path->extents.p1.x) + offx;
     path->extents.p2.x = _cairo_fixed_mul (scalex, path->extents.p2.x) + offx;
+    if (scalex < 0) {
+	cairo_fixed_t t = path->extents.p1.x;
+	path->extents.p1.x = path->extents.p2.x;
+	path->extents.p2.x = t;
+    }
+
     path->extents.p1.y = _cairo_fixed_mul (scaley, path->extents.p1.y) + offy;
     path->extents.p2.y = _cairo_fixed_mul (scaley, path->extents.p2.y) + offy;
+    if (scaley < 0) {
+	cairo_fixed_t t = path->extents.p1.y;
+	path->extents.p1.y = path->extents.p2.y;
+	path->extents.p2.y = t;
+    }
 }
 
 void
