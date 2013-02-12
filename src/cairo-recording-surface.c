@@ -1654,7 +1654,7 @@ _cairo_recording_surface_replay_internal (cairo_recording_surface_t	*surface,
     if (extents.width < r->width || extents.height < r->height) {
 	num_elements =
 	    _cairo_recording_surface_get_visible_commands (surface, &extents);
-	use_indices = TRUE;
+	use_indices = num_elements != surface->commands.num_elements;
     }
 
     for (i = 0; i < num_elements; i++) {
