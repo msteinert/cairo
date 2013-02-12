@@ -589,11 +589,16 @@ composite_aligned_boxes (const cairo_spans_compositor_t		*compositor,
 	/* XXX could also do tiling repeat modes... */
 
 	/* first clear the area about to be overwritten */
-	if (! dst->is_clear)
+	if (! dst->is_clear) {
 	    status = compositor->fill_boxes (dst,
 					     CAIRO_OPERATOR_CLEAR,
 					     CAIRO_COLOR_TRANSPARENT,
 					     boxes);
+	    if (unlikely (status))
+		return status;
+
+	    dst->is_clear = TRUE;
+	}
 
 	recording_clip = _cairo_clip_from_boxes (boxes);
 	status = _cairo_recording_surface_replay_with_clip (unwrap_source (source),
