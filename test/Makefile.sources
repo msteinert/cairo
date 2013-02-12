@@ -265,6 +265,7 @@ test_sources = \
 	record1414x.c					\
 	record2x.c					\
 	record90.c					\
+	recordflip.c					\
 	record-extend.c					\
 	record-mesh.c					\
 	recording-surface-pattern.c			\
