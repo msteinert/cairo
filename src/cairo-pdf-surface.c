@@ -3562,9 +3562,11 @@ _cairo_pdf_surface_output_gradient (cairo_pdf_surface_t        *surface,
 
     if (!pdf_pattern->is_shading) {
 	_cairo_output_stream_printf (surface->output,
-				     ">>\n"
-				     "endobj\n");
+				     ">>\n");
     }
+
+    _cairo_output_stream_printf (surface->output,
+				     "endobj\n");
 }
 
 static cairo_status_t
