@@ -2993,7 +2993,7 @@ span_renderer_init (cairo_abstract_span_renderer_t	*_r,
 
     r->u.mask.extents = composite->unbounded;
     r->u.mask.stride = (r->u.mask.extents.width + 3) & ~3;
-    if (r->u.mask.extents.height * r->u.mask.stride > (int)sizeof (r->_buf)) {
+    if (r->u.mask.extents.height * r->u.mask.stride > SZ_BUF) {
 	r->mask = pixman_image_create_bits (PIXMAN_a8,
 					    r->u.mask.extents.width,
 					    r->u.mask.extents.height,
