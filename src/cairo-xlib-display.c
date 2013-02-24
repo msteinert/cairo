@@ -482,7 +482,7 @@ _cairo_xlib_display_get_xrender_format_for_pixman(cairo_xlib_display_t *display,
 #undef MASK
 
     /* XXX caching? */
-    return XRenderFindFormat(dpy, mask, &tmpl, 1);
+    return XRenderFindFormat(dpy, mask, &tmpl, 0);
 }
 
 XRenderPictFormat *
