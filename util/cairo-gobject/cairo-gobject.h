@@ -55,6 +55,10 @@ cairo_gobject_context_get_type (void);
 cairo_public GType
 cairo_gobject_device_get_type (void);
 
+#define CAIRO_GOBJECT_TYPE_MATRIX cairo_gobject_matrix_get_type ()
+cairo_public GType
+cairo_gobject_matrix_get_type (void);
+
 #define CAIRO_GOBJECT_TYPE_PATTERN cairo_gobject_pattern_get_type ()
 cairo_public GType
 cairo_gobject_pattern_get_type (void);
