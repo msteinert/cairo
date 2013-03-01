@@ -6377,7 +6377,7 @@ _cairo_pdf_surface_emit_stencil_mask (cairo_pdf_surface_t         *surface,
 	return status;
 
     _cairo_output_stream_printf (surface->output, "q\n");
-    status = _cairo_pdf_surface_paint_surface_pattern (surface, mask, NULL, TRUE);
+    status = _cairo_pdf_surface_paint_surface_pattern (surface, mask, extents, TRUE);
     if (unlikely (status))
 	return status;
 
