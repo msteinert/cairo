@@ -276,3 +276,36 @@ cairo_gl_surface_create_for_egl (cairo_device_t	*device,
 
     return &surface->base.base;
 }
+
+static bool is_egl_device (cairo_device_t *device)
+{
+    return (device->backend != NULL &&
+	    device->backend->type == CAIRO_DEVICE_TYPE_GL);
+}
+
+static cairo_egl_context_t *to_egl_context (cairo_device_t *device)
+{
+    return (cairo_egl_context_t *) device;
+}
+
+EGLDisplay
+cairo_egl_device_get_display (cairo_device_t *device)
+{
+    if (! is_egl_device (device)) {
+	_cairo_error_throw (CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
+	return EGL_NO_DISPLAY;
+    }
+
+    return to_egl_context (device)->display;
+}
+
+cairo_public EGLContext
+cairo_egl_device_get_context (cairo_device_t *device)
+{
+    if (! is_egl_device (device)) {
+	_cairo_error_throw (CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
+	return EGL_NO_CONTEXT;
+    }
+
+    return to_egl_context (device)->context;
+}

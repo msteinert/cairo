@@ -138,6 +138,12 @@ cairo_gl_surface_create_for_egl (cairo_device_t	*device,
 				 int		 width,
 				 int		 height);
 
+cairo_public EGLDisplay
+cairo_egl_device_get_display (cairo_device_t *device);
+
+cairo_public EGLSurface
+cairo_egl_device_get_context (cairo_device_t *device);
+
 #endif
 
 CAIRO_END_DECLS
