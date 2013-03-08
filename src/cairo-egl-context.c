@@ -277,7 +277,7 @@ cairo_gl_surface_create_for_egl (cairo_device_t	*device,
     return &surface->base.base;
 }
 
-static bool is_egl_device (cairo_device_t *device)
+static cairo_bool_t is_egl_device (cairo_device_t *device)
 {
     return (device->backend != NULL &&
 	    device->backend->type == CAIRO_DEVICE_TYPE_GL);
