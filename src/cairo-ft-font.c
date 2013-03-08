@@ -739,6 +739,7 @@ _compute_transform (cairo_ft_font_transform_t *sf,
 
     if (unscaled && (unscaled->face->face_flags & FT_FACE_FLAG_SCALABLE) == 0) {
 	double min_distance = DBL_MAX;
+	cairo_bool_t magnify = TRUE;
 	int i;
 	int best_i = 0;
 	double best_x_size = 0;
@@ -747,10 +748,18 @@ _compute_transform (cairo_ft_font_transform_t *sf,
 	for (i = 0; i < unscaled->face->num_fixed_sizes; i++) {
 	    double x_size = unscaled->face->available_sizes[i].y_ppem / 64.;
 	    double y_size = unscaled->face->available_sizes[i].y_ppem / 64.;
-	    double distance = fabs (y_size - y_scale);
+	    double distance = y_size - y_scale;
 
-	    if (distance <= min_distance) {
-		min_distance = distance;
+	    /*
+	     * distance is positive if current strike is larger than desired
+	     * size, and negative if smaller.
+	     *
+	     * We like to prefer down-scaling to upscaling.
+	     */
+
+	    if ((magnify && distance >= 0) || fabs (distance) <= min_distance) {
+		magnify = distance < 0;
+		min_distance = abs (distance);
 		best_i = i;
 		best_x_size = x_size;
 		best_y_size = y_size;
