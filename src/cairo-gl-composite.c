@@ -209,15 +209,15 @@ static void
 _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
                                  cairo_gl_tex_t      tex_unit,
                                  cairo_gl_operand_t *operand,
-                                 unsigned int        vertex_size,
-                                 unsigned int        vertex_offset)
+                                 unsigned int        vertex_offset,
+                                 cairo_bool_t        vertex_size_changed)
 {
     cairo_gl_dispatch_t *dispatch = &ctx->dispatch;
     cairo_bool_t needs_setup;
 
     /* XXX: we need to do setup when switching from shaders
      * to no shaders (or back) */
-    needs_setup = ctx->vertex_size != vertex_size;
+    needs_setup = vertex_size_changed;
     needs_setup |= _cairo_gl_operand_needs_setup (&ctx->operands[tex_unit],
                                                  operand,
                                                  vertex_offset);
@@ -252,7 +252,7 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
 
 	if (! operand->texture.texgen) {
 	    dispatch->VertexAttribPointer (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit, 2,
-					   GL_FLOAT, GL_FALSE, vertex_size,
+					   GL_FLOAT, GL_FALSE, ctx->vertex_size,
 					   ctx->vb + vertex_offset);
 	    dispatch->EnableVertexAttribArray (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit);
 	}
@@ -268,7 +268,7 @@ _cairo_gl_context_setup_operand (cairo_gl_context_t *ctx,
 
 	if (! operand->gradient.texgen) {
 	    dispatch->VertexAttribPointer (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit, 2,
-					   GL_FLOAT, GL_FALSE, vertex_size,
+					   GL_FLOAT, GL_FALSE, ctx->vertex_size,
 					   ctx->vb + vertex_offset);
 	    dispatch->EnableVertexAttribArray (CAIRO_GL_TEXCOORD0_ATTRIB_INDEX + tex_unit);
 	}
@@ -523,12 +523,15 @@ _scissor_to_box (cairo_gl_surface_t	*surface,
     _scissor_to_doubles (surface, x1, y1, x2, y2);
 }
 
-static void
+static cairo_bool_t
 _cairo_gl_composite_setup_vbo (cairo_gl_context_t *ctx,
 			       unsigned int size_per_vertex)
 {
-    if (ctx->vertex_size != size_per_vertex)
-        _cairo_gl_composite_flush (ctx);
+    cairo_bool_t vertex_size_changed = ctx->vertex_size != size_per_vertex;
+    if (vertex_size_changed) {
+	ctx->vertex_size = size_per_vertex;
+	_cairo_gl_composite_flush (ctx);
+    }
 
     if (_cairo_gl_context_is_flushed (ctx)) {
 	ctx->dispatch.VertexAttribPointer (CAIRO_GL_VERTEX_ATTRIB_INDEX, 2,
@@ -536,7 +539,8 @@ _cairo_gl_composite_setup_vbo (cairo_gl_context_t *ctx,
 					   ctx->vb);
 	ctx->dispatch.EnableVertexAttribArray (CAIRO_GL_VERTEX_ATTRIB_INDEX);
     }
-    ctx->vertex_size = size_per_vertex;
+
+    return vertex_size_changed;
 }
 
 static void
@@ -669,6 +673,7 @@ _cairo_gl_set_operands_and_operator (cairo_gl_composite_t *setup,
     cairo_status_t status;
     cairo_gl_shader_t *shader;
     cairo_bool_t component_alpha;
+    cairo_bool_t vertex_size_changed;
 
     component_alpha =
 	setup->mask.type == CAIRO_GL_OPERAND_TEXTURE &&
@@ -711,10 +716,10 @@ _cairo_gl_set_operands_and_operator (cairo_gl_composite_t *setup,
     if (setup->spans)
 	vertex_size += sizeof (GLfloat);
 
-    _cairo_gl_composite_setup_vbo (ctx, vertex_size);
+    vertex_size_changed = _cairo_gl_composite_setup_vbo (ctx, vertex_size);
 
-    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_SOURCE, &setup->src, vertex_size, dst_size);
-    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_MASK, &setup->mask, vertex_size, dst_size + src_size);
+    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_SOURCE, &setup->src, dst_size, vertex_size_changed);
+    _cairo_gl_context_setup_operand (ctx, CAIRO_GL_TEX_MASK, &setup->mask, dst_size + src_size, vertex_size_changed);
 
     _cairo_gl_context_setup_spans (ctx, setup->spans, vertex_size,
 				   dst_size + src_size + mask_size);
