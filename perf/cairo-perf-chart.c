@@ -999,6 +999,31 @@ add_legend (struct chart *chart)
     }
 }
 
+static void
+usage (void)
+{
+	printf("Usage:\n");
+	printf("  cairo-perf-chart [OPTION...] <result1> <result2>...<resultN>\n");
+	printf("\n");
+	printf("Help Options:\n");
+	printf("  --help, --?\tShow help options\n");
+	printf("\n");
+	printf("Application Options:\n");
+	printf("  --html\tOutput an HTML table comparing the results\n");
+	printf("  --height=\tSet the height of the output graph"\
+			" (default 480)\n");
+	printf("  --width=\tSet the width of the output graph"\
+			" (default 640)\n");
+	printf("  --name\tSet the name of graph series."\
+			" This only sets the name for the\n\t\tfirst result file."\
+			" The graph series is usually set using the\n\t\tfile name for"\
+			" the results file.\n");
+	printf("\n");
+	printf("Example:\n");
+	printf("  cairo-perf-chart --width=1024 --height=768 run1 run2 run3\n");
+	return;
+}
+
 int
 main (int	  argc,
       const char *argv[])
@@ -1028,6 +1053,10 @@ main (int	  argc,
 		chart.names[chart.num_reports] = argv[++i];
 	} else if (strncmp (argv[i], "--name=", 7) == 0) {
 	    chart.names[chart.num_reports] = argv[i] + 7;
+	} else if ((strcmp (argv[i], "--help") == 0) ||
+		(strcmp (argv[i], "--?") == 0)) {
+		usage();
+		return 0;
 	} else {
 	    cairo_perf_report_load (&chart.reports[chart.num_reports++],
 				    argv[i], i,
