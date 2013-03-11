@@ -31,3 +31,7 @@ check-has-hidden-symbols.i
 check-link
 check-skiplist
 headers-standalone
+!cairo.pc.in
+!cairo-uninstalled.pc.in
+!cairo-features.pc.in
+!cairo-features-uninstalled.pc.in
