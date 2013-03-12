@@ -761,9 +761,12 @@ _compute_normalized_device_slope (double *dx, double *dy,
 }
 
 static void
-_compute_face (const cairo_point_t *point, cairo_slope_t *dev_slope,
-	       double slope_dx, double slope_dy,
-	       cairo_stroker_t *stroker, cairo_stroke_face_t *face)
+_compute_face (const cairo_point_t *point,
+	       const cairo_slope_t *dev_slope,
+	       double slope_dx,
+	       double slope_dy,
+	       cairo_stroker_t *stroker,
+	       cairo_stroke_face_t *face)
 {
     double face_dx, face_dy;
     cairo_point_t offset_ccw, offset_cw;
@@ -979,6 +982,68 @@ _cairo_stroker_line_to (void *closure,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_status_t
+_cairo_stroker_spline_to (void *closure,
+			  const cairo_point_t *point,
+			  const cairo_slope_t *tangent)
+{
+    cairo_stroker_t *stroker = closure;
+    cairo_stroke_face_t new_face;
+    double slope_dx, slope_dy;
+    cairo_point_t points[3];
+    cairo_point_t intersect_point;
+
+    stroker->has_initial_sub_path = TRUE;
+
+    if (stroker->current_point.x == point->x &&
+	stroker->current_point.y == point->y)
+	return CAIRO_STATUS_SUCCESS;
+
+    slope_dx = _cairo_fixed_to_double (tangent->dx);
+    slope_dy = _cairo_fixed_to_double (tangent->dy);
+
+    if (! _compute_normalized_device_slope (&slope_dx, &slope_dy,
+					    stroker->ctm_inverse, NULL))
+	return CAIRO_STATUS_SUCCESS;
+
+    _compute_face (point, tangent,
+		   slope_dx, slope_dy,
+		   stroker, &new_face);
+
+    assert (stroker->has_current_face);
+
+    if (_slow_segment_intersection (&stroker->current_face.cw,
+				    &stroker->current_face.ccw,
+				    &new_face.cw,
+				    &new_face.ccw,
+				    &intersect_point)) {
+	points[0] = stroker->current_face.ccw;
+	points[1] = new_face.ccw;
+	points[2] = intersect_point;
+	stroker->add_triangle (stroker->closure, points);
+
+	points[0] = stroker->current_face.cw;
+	points[1] = new_face.cw;
+	stroker->add_triangle (stroker->closure, points);
+    } else {
+	points[0] = stroker->current_face.ccw;
+	points[1] = stroker->current_face.cw;
+	points[2] = new_face.cw;
+	stroker->add_triangle (stroker->closure, points);
+
+	points[0] = stroker->current_face.ccw;
+	points[1] = new_face.cw;
+	points[2] = new_face.ccw;
+	stroker->add_triangle (stroker->closure, points);
+    }
+
+    stroker->current_face = new_face;
+    stroker->has_current_face = TRUE;
+    stroker->current_point = *point;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 /*
  * Dashed lines.  Cap each dash end, join around turns when on
  */
@@ -1135,18 +1200,27 @@ _cairo_stroker_curve_to (void *closure,
     cairo_line_join_t line_join_save;
     cairo_stroke_face_t face;
     double slope_dx, slope_dy;
-    cairo_path_fixed_line_to_func_t *line_to;
+    cairo_spline_add_point_func_t line_to;
+    cairo_spline_add_point_func_t spline_to;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     line_to = stroker->dash.dashed ?
-	_cairo_stroker_line_to_dashed :
-	_cairo_stroker_line_to;
+	(cairo_spline_add_point_func_t) _cairo_stroker_line_to_dashed :
+	(cairo_spline_add_point_func_t) _cairo_stroker_line_to;
+
+    /* spline_to is only capable of rendering non-degenerate splines. */
+    spline_to = stroker->dash.dashed ?
+	(cairo_spline_add_point_func_t) _cairo_stroker_line_to_dashed :
+	(cairo_spline_add_point_func_t) _cairo_stroker_spline_to;
 
     if (! _cairo_spline_init (&spline,
-			      (cairo_spline_add_point_func_t)line_to, stroker,
+			      spline_to,
+			      stroker,
 			      &stroker->current_point, b, c, d))
     {
-	return line_to (closure, d);
+	cairo_slope_t fallback_slope;
+	_cairo_slope_init (&fallback_slope, &stroker->current_point, d);
+	return line_to (closure, d, &fallback_slope);
     }
 
     /* If the line width is so small that the pen is reduced to a
