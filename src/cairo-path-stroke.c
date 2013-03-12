@@ -54,6 +54,7 @@ typedef struct cairo_stroker {
     const cairo_matrix_t *ctm_inverse;
     double half_line_width;
     double tolerance;
+    double spline_cusp_tolerance;
     double ctm_determinant;
     cairo_bool_t ctm_det_positive;
 
@@ -136,6 +137,18 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
     stroker->ctm_inverse = ctm_inverse;
     stroker->tolerance = tolerance;
     stroker->half_line_width = stroke_style->line_width / 2.0;
+
+    /* To test whether we need to join two segments of a spline using
+     * a round-join or a bevel-join, we can inspect the angle between the
+     * two segments. If the difference between the chord distance
+     * (half-line-width times the cosine of the bisection angle) and the
+     * half-line-width itself is greater than tolerance then we need to
+     * inject a point.
+     */
+    stroker->spline_cusp_tolerance = 1 - tolerance / stroker->half_line_width;
+    stroker->spline_cusp_tolerance *= stroker->spline_cusp_tolerance;
+    stroker->spline_cusp_tolerance *= 2;
+    stroker->spline_cusp_tolerance -= 1;
 
     stroker->ctm_determinant = _cairo_matrix_compute_determinant (stroker->ctm);
     stroker->ctm_det_positive = stroker->ctm_determinant >= 0.0;
@@ -1011,6 +1024,29 @@ _cairo_stroker_spline_to (void *closure,
 		   stroker, &new_face);
 
     assert (stroker->has_current_face);
+
+    if ((new_face.dev_slope.x * stroker->current_face.dev_slope.x +
+         new_face.dev_slope.y * stroker->current_face.dev_slope.y) < stroker->spline_cusp_tolerance) {
+
+	const cairo_point_t *inpt, *outpt;
+	int clockwise = _cairo_stroker_join_is_clockwise (&new_face,
+							  &stroker->current_face);
+
+	if (clockwise) {
+	    inpt = &stroker->current_face.cw;
+	    outpt = &new_face.cw;
+	} else {
+	    inpt = &stroker->current_face.ccw;
+	    outpt = &new_face.ccw;
+	}
+
+	_tessellate_fan (stroker,
+			 &stroker->current_face.dev_vector,
+			 &new_face.dev_vector,
+			 &stroker->current_face.point,
+			 inpt, outpt,
+			 clockwise);
+    }
 
     if (_slow_segment_intersection (&stroker->current_face.cw,
 				    &stroker->current_face.ccw,
