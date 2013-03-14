@@ -1300,7 +1300,7 @@ _cairo_path_fixed_is_box (const cairo_path_fixed_t *path,
 }
 
 /* Determine whether two lines A->B and C->D intersect based on the 
- * algorithm described here: http://paulbourke.net/geometry/lineline2d/ */
+ * algorithm described here: http://paulbourke.net/geometry/pointlineplane/ */
 static inline cairo_bool_t
 _lines_intersect_or_are_coincident (cairo_point_t a,
 				    cairo_point_t b,
@@ -1308,6 +1308,7 @@ _lines_intersect_or_are_coincident (cairo_point_t a,
 				    cairo_point_t d)
 {
     cairo_int64_t numerator_a, numerator_b, denominator;
+    cairo_bool_t denominator_negative;
 
     denominator = _cairo_int64_sub (_cairo_int32x32_64_mul (d.y - c.y, b.x - a.x),
 				    _cairo_int32x32_64_mul (d.x - c.x, b.y - a.y));
@@ -1327,20 +1328,34 @@ _lines_intersect_or_are_coincident (cairo_point_t a,
 	return FALSE;
     }
 
-    /* If either division would produce a number between 0 and 1, i.e.
-     * the numerator is smaller than the denominator and their signs are
-     * the same, then the lines intersect. */
-    if (_cairo_int64_lt (numerator_a, denominator) &&
-	! (_cairo_int64_negative (numerator_a) ^ _cairo_int64_negative(denominator))) {
-	return TRUE;
+    /* The lines intersect if both quotients are between 0 and 1 (exclusive). */
+
+     /* We first test whether either quotient is a negative number. */
+    denominator_negative = _cairo_int64_negative (denominator);
+    if (_cairo_int64_negative (numerator_a) ^ denominator_negative)
+	return FALSE;
+    if (_cairo_int64_negative (numerator_b) ^ denominator_negative)
+	return FALSE;
+
+    /* A zero quotient indicates an "intersection" at an endpoint, which
+     * we aren't considering a true intersection. */
+    if (_cairo_int64_is_zero (numerator_a) || _cairo_int64_is_zero (numerator_b))
+	return FALSE;
+
+    /* If the absolute value of the numerator is larger than or equal to the
+     * denominator the result of the division would be greater than or equal
+     * to one. */
+    if (! denominator_negative) {
+        if (! _cairo_int64_lt (numerator_a, denominator) ||
+	    ! _cairo_int64_lt (numerator_b, denominator))
+	    return FALSE;
+    } else {
+        if (! _cairo_int64_lt (denominator, numerator_a) ||
+	    ! _cairo_int64_lt (denominator, numerator_b))
+	    return FALSE;
     }
 
-    if (_cairo_int64_lt (numerator_b, denominator) &&
-	! (_cairo_int64_negative (numerator_b) ^ _cairo_int64_negative(denominator))) {
-	return TRUE;
-    }
-
-    return FALSE;
+    return TRUE;
 }
 
 cairo_bool_t
