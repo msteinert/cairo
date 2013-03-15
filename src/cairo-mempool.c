@@ -157,7 +157,8 @@ get_buddy (cairo_mempool_t *pool, size_t offset, int bits)
 {
     struct _cairo_memblock *block;
 
-    assert (offset + (1 << bits) <= pool->num_blocks);
+    if (offset + (1 << bits) >= pool->num_blocks)
+	return NULL; /* invalid */
 
     if (BITTEST (pool, offset + (1 << bits) - 1))
 	return NULL; /* buddy is allocated */
