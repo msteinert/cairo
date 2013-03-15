@@ -307,11 +307,10 @@ cairo_test_reference_filename (const cairo_test_context_t *ctx,
     char *ref_name = NULL;
 
     /* First look for a previous build for comparison. */
-    if (ctx->refdir != NULL) {
-	xasprintf (&ref_name, "%s/%s%s%s",
+    if (ctx->refdir != NULL && strcmp(suffix, CAIRO_TEST_REF_SUFFIX) == 0) {
+	xasprintf (&ref_name, "%s/%s" CAIRO_TEST_OUT_SUFFIX "%s",
 		   ctx->refdir,
 		   base_name,
-		   suffix,
 		   extension);
 	if (access (ref_name, F_OK) != 0)
 	    free (ref_name);

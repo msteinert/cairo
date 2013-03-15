@@ -156,7 +156,7 @@ your changes. The process looks like this:
 
         # Let's save those output images
         mkdir /some/directory/
-        cp test/*-out.png /some/directory/
+        cp -r test/output /some/directory/
 
         # hack, hack, hack
 
