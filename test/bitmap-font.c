@@ -120,6 +120,7 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_set_font_face (cr, font_face);
     cairo_font_face_destroy (font_face);
+    cairo_set_font_size (cr, 13);
 
     font_options = cairo_font_options_create ();
 
