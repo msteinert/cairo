@@ -105,7 +105,7 @@ _cairo_gl_shader_cache_equal_gles2 (const void *key_a, const void *key_b)
     cairo_bool_t both_have_npot_repeat =
 	a->ctx->has_npot_repeat && b->ctx->has_npot_repeat;
 
-    return (a->vertex && b->vertex &&
+    return (a->vertex == b->vertex &&
 	    a->src  == b->src  &&
 	    a->mask == b->mask &&
 	    a->dest == b->dest &&
