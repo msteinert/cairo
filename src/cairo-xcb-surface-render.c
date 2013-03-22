@@ -1101,10 +1101,11 @@ record_to_picture (cairo_surface_t *target,
 	return _cairo_xcb_transparent_picture ((cairo_xcb_surface_t *) target);
 
     /* Now draw the recording surface to an xcb surface */
-    tmp = _cairo_surface_create_similar_scratch (target,
-						 source->content,
-						 limit.width,
-						 limit.height);
+    tmp = _cairo_surface_create_similar_solid (target,
+					       source->content,
+					       limit.width,
+					       limit.height,
+					       CAIRO_COLOR_TRANSPARENT);
     if (tmp->status != CAIRO_STATUS_SUCCESS) {
 	return (cairo_xcb_picture_t *) tmp;
     }
