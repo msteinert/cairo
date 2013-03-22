@@ -828,7 +828,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	FALSE, FALSE, FALSE
     },
     {
-	"xcb-render-0.0", "xlib-fallback", NULL, NULL,
+	"xcb-render-0_0", "xlib-fallback", NULL, NULL,
 	CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR_ALPHA, 1,
 	"cairo_xcb_surface_create_with_xrender_format",
 	_cairo_boilerplate_xcb_create_render_0_0,
@@ -843,7 +843,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	FALSE, FALSE, FALSE
     },
     {
-	"xcb-render-0.0", "xlib-fallback", NULL, NULL,
+	"xcb-render-0_0", "xlib-fallback", NULL, NULL,
 	CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR, 1,
 	"cairo_xcb_surface_create_with_xrender_format",
 	_cairo_boilerplate_xcb_create_render_0_0,
