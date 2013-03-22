@@ -40,6 +40,7 @@
 #include "cairo-fixed-type-private.h"
 
 #include "cairo-wideint-private.h"
+#include "cairoint.h"
 
 /* Implementation */
 
