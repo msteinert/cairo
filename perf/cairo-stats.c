@@ -56,37 +56,42 @@ _cairo_stats_compute (cairo_stats_t *stats,
      * and third quartiles and IQR is the inter-quartile range (Q3 -
      * Q1).
      */
-    qsort (values, num_values, sizeof (cairo_time_t), _cairo_time_cmp);
+    num_valid = num_values;
+    do {
+	num_values = num_valid;
+	qsort (values, num_values, sizeof (cairo_time_t), _cairo_time_cmp);
 
-    q1 = values[1*num_values/4];
-    q3 = values[3*num_values/4];
+	q1 = values[1*num_values/4];
+	q3 = values[3*num_values/4];
 
-    /* XXX assumes we have native uint64_t */
-    iqr = q3 - q1;
-    outlier_min = q1 - 3 * iqr / 2;
-    outlier_max = q3 + 3 * iqr / 2;
+	/* XXX assumes we have native uint64_t */
+	iqr = q3 - q1;
+	outlier_min = q1 - 3 * iqr / 2;
+	outlier_max = q3 + 3 * iqr / 2;
 
-    for (i = 0; i < num_values && values[i] < outlier_min; i++)
-	;
-    min_valid = i;
+	for (i = 0; i < num_values && values[i] < outlier_min; i++)
+	    ;
+	min_valid = i;
 
-    for (i = 0; i < num_values && values[i] <= outlier_max; i++)
-	;
-    num_valid = i - min_valid;
-    assert(num_valid);
+	for (i = 0; i < num_values && values[i] <= outlier_max; i++)
+	    ;
+	num_valid = i - min_valid;
+	assert(num_valid);
+	values += min_valid;
+    } while (num_valid != num_values);
 
     stats->iterations = num_valid;
-    stats->min_ticks = values[min_valid];
-    stats->median_ticks = values[min_valid + num_valid / 2];
+    stats->min_ticks = values[0];
+    stats->median_ticks = values[num_valid / 2];
 
     sum = 0;
-    for (i = min_valid; i < min_valid + num_valid; i++)
+    for (i = 0; i < num_valid; i++)
 	sum = _cairo_time_add (sum, values[i]);
     mean = sum / num_valid;
 
     /* Let's use a normalized std. deviation for easier comparison. */
     s = 0;
-    for (i = min_valid; i < min_valid + num_valid; i++) {
+    for (i = 0; i < num_valid; i++) {
 	double delta = (values[i] - mean) / (double)mean;
 	s += delta * delta;
     }
