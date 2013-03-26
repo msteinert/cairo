@@ -2129,7 +2129,7 @@ _cairo_pdf_surface_add_padded_image_surface (cairo_pdf_surface_t          *surfa
     h = image->height;
     if (_cairo_fixed_integer_ceil(box.p1.x) < 0 ||
 	_cairo_fixed_integer_ceil(box.p1.y) < 0 ||
-	_cairo_fixed_integer_floor(box.p2.y) > w ||
+	_cairo_fixed_integer_floor(box.p2.x) > w ||
 	_cairo_fixed_integer_floor(box.p2.y) > h)
     {
 	pad_image = _cairo_image_surface_create_with_content (image->base.content,
