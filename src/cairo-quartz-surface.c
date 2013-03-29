@@ -1374,7 +1374,6 @@ _cairo_quartz_teardown_state (cairo_quartz_drawing_state_t *state,
 	CGContextDrawLayerInRect (surface->cgContext,
 				  state->clipRect,
 				  state->layer);
-	CGContextRelease (state->cgDrawContext);
 	CGLayerRelease (state->layer);
     }
 
