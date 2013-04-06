@@ -986,6 +986,9 @@ surface_source (cairo_xlib_surface_t *dst,
 	if (pattern->base.extend == CAIRO_EXTEND_NONE) {
 	    if (! _cairo_rectangle_intersect (&upload, &limit))
 		return alpha_source (dst, 0);
+	} else if (pattern->base.extend == CAIRO_EXTEND_PAD) {
+	    if (! _cairo_rectangle_intersect (&upload, &limit))
+		upload = limit;
 	} else {
 	    if (upload.x < limit.x ||
 		upload.x + upload.width > limit.x + limit.width ||
