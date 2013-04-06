@@ -294,7 +294,7 @@ render_pattern (cairo_xlib_surface_t *dst,
 					       extents->height);
     if (src->base.type != CAIRO_SURFACE_TYPE_XLIB) {
 	cairo_surface_destroy (&src->base);
-	return None;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
     map_extents = *extents;
@@ -1005,7 +1005,7 @@ surface_source (cairo_xlib_surface_t *dst,
     if (xsrc->base.type != CAIRO_SURFACE_TYPE_XLIB) {
 	cairo_surface_destroy (src);
 	cairo_surface_destroy (&xsrc->base);
-	return None;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
     if (_cairo_surface_is_image (src)) {
