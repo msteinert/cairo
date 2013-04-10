@@ -492,13 +492,14 @@ _cairo_gl_context_release (cairo_gl_context_t *ctx, cairo_status_t status)
 }
 
 cairo_private void
-_cairo_gl_activate_surface_as_nonmultisampling (cairo_gl_context_t *ctx,
-						cairo_gl_surface_t *surface);
-
-cairo_private void
 _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
 				   cairo_gl_surface_t *surface,
 				   cairo_bool_t multisampling);
+
+cairo_private void
+_cairo_gl_context_bind_framebuffer (cairo_gl_context_t *ctx,
+				    cairo_gl_surface_t *surface,
+				    cairo_bool_t multisampling);
 
 cairo_private cairo_gl_emit_rect_t
 _cairo_gl_context_choose_emit_rect (cairo_gl_context_t *ctx);

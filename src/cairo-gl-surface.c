@@ -1309,7 +1309,7 @@ _cairo_gl_surface_resolve_multisampling (cairo_gl_surface_t *surface)
     ctx->current_target = surface;
 
 #if CAIRO_HAS_GL_SURFACE
-    _cairo_gl_activate_surface_as_nonmultisampling (ctx, surface);
+    _cairo_gl_context_bind_framebuffer (ctx, surface, FALSE);
 #endif
 
     status = _cairo_gl_context_release (ctx, status);
