@@ -149,13 +149,13 @@ static void
 png_simple_warning_callback (png_structp png,
 	                     png_const_charp error_msg)
 {
-    cairo_status_t *error = png_get_error_ptr (png);
-
-    /* default to the most likely error */
-    if (*error == CAIRO_STATUS_SUCCESS)
-	*error = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    /* png does not expect to abort and will try to tidy up after a warning */
+    /* png does not expect to abort and will try to tidy up and continue
+     * loading the image after a warning. So we also want to return the
+     * (incorrect?) surface.
+     *
+     * We use our own warning callback to squelch any attempts by libpng
+     * to write to stderr as we may not be in control of that output.
+     */
 }
 
 
