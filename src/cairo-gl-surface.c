@@ -1278,7 +1278,42 @@ _cairo_gl_surface_flush (void *abstract_surface, unsigned flags)
         (ctx->current_target == surface))
       _cairo_gl_composite_flush (ctx);
 
+    status = _cairo_gl_surface_resolve_multisampling (surface);
+
     return _cairo_gl_context_release (ctx, status);
+}
+
+cairo_int_status_t
+_cairo_gl_surface_resolve_multisampling (cairo_gl_surface_t *surface)
+{
+    cairo_gl_context_t *ctx;
+    cairo_int_status_t status;
+
+    if (! surface->msaa_active)
+	return CAIRO_INT_STATUS_SUCCESS;
+
+    if (surface->base.device == NULL)
+	return CAIRO_INT_STATUS_SUCCESS;
+
+    /* GLES surfaces do not need explicit resolution. */
+    if (((cairo_gl_context_t *) surface->base.device)->gl_flavor == CAIRO_GL_FLAVOR_ES)
+	return CAIRO_INT_STATUS_SUCCESS;
+
+    if (! _cairo_gl_surface_is_texture (surface))
+	return CAIRO_INT_STATUS_SUCCESS;
+
+    status = _cairo_gl_context_acquire (surface->base.device, &ctx);
+    if (unlikely (status))
+	return status;
+
+    ctx->current_target = surface;
+
+#if CAIRO_HAS_GL_SURFACE
+    _cairo_gl_activate_surface_as_nonmultisampling (ctx, surface);
+#endif
+
+    status = _cairo_gl_context_release (ctx, status);
+    return status;
 }
 
 static const cairo_compositor_t *

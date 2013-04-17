@@ -69,39 +69,6 @@ _cairo_gl_create_gradient_texture (cairo_gl_surface_t *dst,
     return _cairo_gl_context_release (ctx, status);
 }
 
-static cairo_int_status_t
-_resolve_multisampling (cairo_gl_surface_t *surface)
-{
-    cairo_gl_context_t *ctx;
-    cairo_int_status_t status;
-
-    if (! surface->msaa_active)
-	return CAIRO_INT_STATUS_SUCCESS;
-
-    if (surface->base.device == NULL)
-	return CAIRO_INT_STATUS_SUCCESS;
-
-    /* GLES surfaces do not need explicit resolution. */
-    if (((cairo_gl_context_t *) surface->base.device)->gl_flavor == CAIRO_GL_FLAVOR_ES)
-	return CAIRO_INT_STATUS_SUCCESS;
-
-    if (! _cairo_gl_surface_is_texture (surface))
-	return CAIRO_INT_STATUS_SUCCESS;
-
-    status = _cairo_gl_context_acquire (surface->base.device, &ctx);
-    if (unlikely (status))
-	return status;
-
-    ctx->current_target = surface;
-
-#if CAIRO_HAS_GL_SURFACE
-    _cairo_gl_activate_surface_as_nonmultisampling (ctx, surface);
-#endif
-
-    status = _cairo_gl_context_release (ctx, status);
-    return status;
-}
-
 static cairo_status_t
 _cairo_gl_subsurface_clone_operand_init (cairo_gl_operand_t *operand,
 					 const cairo_pattern_t *_src,
@@ -161,7 +128,7 @@ _cairo_gl_subsurface_clone_operand_init (cairo_gl_operand_t *operand,
 	_cairo_surface_subsurface_set_snapshot (&sub->base, &surface->base);
     }
 
-    status = _resolve_multisampling (surface);
+    status = _cairo_gl_surface_resolve_multisampling (surface);
     if (unlikely (status))
         return status;
 
@@ -223,7 +190,7 @@ _cairo_gl_subsurface_operand_init (cairo_gl_operand_t *operand,
     if (! _cairo_gl_surface_is_texture (surface))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = _resolve_multisampling (surface);
+    status = _cairo_gl_surface_resolve_multisampling (surface);
     if (unlikely (status))
 	return status;
 
@@ -281,7 +248,7 @@ _cairo_gl_surface_operand_init (cairo_gl_operand_t *operand,
     if (surface->base.device && ! _cairo_gl_surface_is_texture (surface))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = _resolve_multisampling (surface);
+    status = _cairo_gl_surface_resolve_multisampling (surface);
     if (unlikely (status))
 	return status;
 

@@ -440,6 +440,9 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 			      int dst_x, int dst_y,
 			      cairo_bool_t force_flush);
 
+cairo_private cairo_int_status_t
+_cairo_gl_surface_resolve_multisampling (cairo_gl_surface_t *surface);
+
 static cairo_always_inline cairo_bool_t
 _cairo_gl_device_has_glsl (cairo_device_t *device)
 {
