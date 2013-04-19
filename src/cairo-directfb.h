@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2003 University of Southern California
+ * Copyright © 2013 EchoStar Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -31,17 +32,8 @@
  * California.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@isi.edu>
- */
-
-/*
- * Environment variables affecting the backend:
- *
- *  %CAIRO_DIRECTFB_NO_ACCEL (boolean)
- *      if found, disables acceleration at all
- *
- *  %CAIRO_DIRECTFB_ARGB_FONT (boolean)
- *      if found, enables using ARGB fonts instead of A8
+ *    Carl D. Worth <cworth@isi.edu>
+ *    Mike Steinert <mike.steinert@gmail.com>
  */
 
 #ifndef CAIRO_DIRECTFB_H
@@ -49,19 +41,61 @@
 
 #include "cairo.h"
 
-#if  CAIRO_HAS_DIRECTFB_SURFACE
+#if CAIRO_HAS_DIRECTFB_SURFACE
 
 #include <directfb.h>
 
 CAIRO_BEGIN_DECLS
 
+/**
+ * cairo_directfb_acceleration_flags_t:
+ * @CAIRO_DIRECTFB_ACCELERATION_FLAG_NONE: No acceleration, since 1.14.
+ * @CAIRO_DIRECTFB_ACCELERATION_FLAG_PAINT: Accelerate painting, since 1.14.
+ * @CAIRO_DIRECTFB_ACCELERATION_FLAG_MASK: Accelerate masking, since 1.14.
+ * @CAIRO_DIRECTFB_ACCELERATION_FLAG_FILL: Accelerate filling, since 1.14.
+ * @CAIRO_DIRECTFB_ACCELERATION_FLAG_STROKE: Accelerate stroking, since 1.14.
+ * @CAIRO_DIRECTFB_ACCELERATION_FLAG_GLYPHS: Accelerate glyphs, since 1.14.
+ *
+ * #cairo_directfb_acceleration_flags_t is used to indicate which drawing
+ * operations should be accelerated via DirectFB.
+ *
+ * New entries may be added in future versions.
+ *
+ * Since: 1.14
+ **/
+typedef enum _cairo_directfb_acceleration_flags {
+    CAIRO_DIRECTFB_ACCELERATION_FLAG_NONE	= 0x00,
+    CAIRO_DIRECTFB_ACCELERATION_FLAG_PAINT	= 0x01,
+    CAIRO_DIRECTFB_ACCELERATION_FLAG_MASK	= 0x02,
+    CAIRO_DIRECTFB_ACCELERATION_FLAG_FILL	= 0x04,
+    CAIRO_DIRECTFB_ACCELERATION_FLAG_STROKE	= 0x08,
+    CAIRO_DIRECTFB_ACCELERATION_FLAG_GLYPHS	= 0x10
+} cairo_directfb_acceleration_flags_t;
+
 cairo_public cairo_surface_t *
-cairo_directfb_surface_create (IDirectFB *dfb, IDirectFBSurface *surface);
+cairo_directfb_surface_create (IDirectFB	*dfb,
+			       IDirectFBSurface	*surface);
+
+cairo_public IDirectFB *
+cairo_directfb_surface_get_context (cairo_surface_t *surface);
+
+cairo_public IDirectFBSurface *
+cairo_directfb_surface_get_surface (cairo_surface_t *surface);
+
+cairo_public int
+cairo_directfb_surface_get_width (cairo_surface_t *surface);
+
+cairo_public int
+cairo_directfb_surface_get_height (cairo_surface_t *surface);
+
+cairo_public void
+cairo_directfb_surface_set_acceleration (cairo_surface_t			*surface,
+					 cairo_directfb_acceleration_flags_t	 flags);
 
 CAIRO_END_DECLS
 
-#else  /*CAIRO_HAS_DIRECTFB_SURFACE*/
-# error Cairo was not compiled with support for the directfb backend
-#endif /*CAIRO_HAS_DIRECTFB_SURFACE*/
+#else  /* CAIRO_HAS_DIRECTFB_SURFACE */
+#error Cairo was not compiled with support for the DirectFB backend
+#endif /* CAIRO_HAS_DIRECTFB_SURFACE */
 
-#endif /*CAIRO_DIRECTFB_H*/
+#endif /* CAIRO_DIRECTFB_H */

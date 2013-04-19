@@ -685,12 +685,6 @@ _cairo_surface_unmap_image (cairo_surface_t       *surface,
 	goto destroy;
     }
 
-    /* If the image is untouched just skip the update */
-    if (image->base.serial == 0) {
-	status = CAIRO_STATUS_SUCCESS;
-	goto destroy;
-    }
-
     /* TODO: require unmap_image != NULL */
     if (surface->backend->unmap_image &&
 	! _cairo_image_surface_is_clone (image))
@@ -698,6 +692,12 @@ _cairo_surface_unmap_image (cairo_surface_t       *surface,
 	status = surface->backend->unmap_image (surface, image);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    return status;
+    }
+
+    /* If the image is untouched just skip the update */
+    if (image->base.serial == 0) {
+	status = CAIRO_STATUS_SUCCESS;
+	goto destroy;
     }
 
     _cairo_pattern_init_for_surface (&pattern, &image->base);

@@ -408,7 +408,10 @@ cairo_glx_sources += cairo-glx-context.c
 cairo_wgl_sources += cairo-wgl-context.c
 
 cairo_directfb_headers = cairo-directfb.h
-cairo_directfb_sources = cairo-directfb-surface.c
+cairo_directfb_private = directfb/cairo-directfb-private.h
+cairo_directfb_sources = directfb/cairo-directfb-surface.c \
+			 directfb/cairo-directfb-compositor.c \
+			 directfb/cairo-directfb-font.c
 
 cairo_drm_headers = cairo-drm.h
 cairo_drm_private = drm/cairo-drm-private.h \
