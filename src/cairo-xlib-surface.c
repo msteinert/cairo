@@ -385,13 +385,13 @@ _cairo_xlib_surface_finish (void *abstract_surface)
     cairo_status_t        status;
     cairo_xlib_display_t *display;
 
-    X_DEBUG ((display->display, "finish (drawable=%x)", (unsigned int) surface->drawable));
-
     cairo_list_del (&surface->link);
 
     status = _cairo_xlib_display_acquire (surface->base.device, &display);
     if (unlikely (status))
         return status;
+
+    X_DEBUG ((display->display, "finish (drawable=%x)", (unsigned int) surface->drawable));
 
     if (surface->embedded_source.picture)
 	XRenderFreePicture (display->display, surface->embedded_source.picture);
