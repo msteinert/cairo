@@ -710,7 +710,7 @@ _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
                                    cairo_gl_surface_t *surface,
                                    cairo_bool_t multisampling)
 {
-    cairo_bool_t changing_surface = ctx->current_target != surface;
+    cairo_bool_t changing_surface = ctx->current_target != surface || surface->needs_update;
     cairo_bool_t changing_sampling = surface->msaa_active != multisampling;
     if (! changing_surface && ! changing_sampling)
 	return;
