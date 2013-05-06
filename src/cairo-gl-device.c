@@ -733,14 +733,16 @@ _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
 
     if (! _cairo_gl_surface_is_texture (surface)) {
 	ctx->make_current (ctx, surface);
+    }
 
+    _cairo_gl_context_bind_framebuffer (ctx, surface, multisampling);
+
+    if (! _cairo_gl_surface_is_texture (surface)) {
 #if CAIRO_HAS_GL_SURFACE
 	glDrawBuffer (GL_BACK_LEFT);
 	glReadBuffer (GL_BACK_LEFT);
 #endif
     }
-
-    _cairo_gl_context_bind_framebuffer (ctx, surface, multisampling);
 
     glDisable (GL_DITHER);
     glViewport (0, 0, surface->width, surface->height);
