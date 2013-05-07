@@ -753,7 +753,10 @@ _cairo_gl_composite_begin (cairo_gl_composite_t *setup,
 
     _cairo_gl_context_set_destination (ctx, setup->dst, setup->multisample);
     glEnable (GL_BLEND);
-    _cairo_gl_set_operands_and_operator (setup, ctx);
+
+    status = _cairo_gl_set_operands_and_operator (setup, ctx);
+    if (unlikely (status))
+	goto FAIL;
 
     status = _cairo_gl_composite_setup_clipping (setup, ctx, ctx->vertex_size);
     if (unlikely (status))
