@@ -679,28 +679,33 @@ _cairo_gl_context_bind_framebuffer (cairo_gl_context_t *ctx,
 				    cairo_gl_surface_t *surface,
 				    cairo_bool_t multisampling)
 {
-    /* OpenGL ES surfaces only have either a multisample framebuffer or a
-     * singlesample framebuffer, so we cannot switch back and forth. */
-    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES) {
-	_cairo_gl_ensure_framebuffer (ctx, surface);
-	ctx->dispatch.BindFramebuffer (GL_FRAMEBUFFER, surface->fb);
-	return;
-    }
+    if (_cairo_gl_surface_is_texture (surface)) {
+	/* OpenGL ES surfaces only have either a multisample framebuffer or a
+	 * singlesample framebuffer, so we cannot switch back and forth. */
+	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES) {
+	    _cairo_gl_ensure_framebuffer (ctx, surface);
+	    ctx->dispatch.BindFramebuffer (GL_FRAMEBUFFER, surface->fb);
+	    return;
+	}
 
 #if CAIRO_HAS_GL_SURFACE
-    if (_cairo_gl_surface_is_texture (surface)) {
 	if (multisampling)
 	    bind_multisample_framebuffer (ctx, surface);
 	else
 	    bind_singlesample_framebuffer (ctx, surface);
+#endif
     } else {
 	ctx->dispatch.BindFramebuffer (GL_FRAMEBUFFER, 0);
-	if (multisampling)
-	    glEnable (GL_MULTISAMPLE);
-	else
-	    glDisable (GL_MULTISAMPLE);
-    }
+
+#if CAIRO_HAS_GL_SURFACE
+	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP) {
+	    if (multisampling)
+		glEnable (GL_MULTISAMPLE);
+	    else
+		glDisable (GL_MULTISAMPLE);
+	}
 #endif
+    }
 
     surface->msaa_active = multisampling;
 }
@@ -710,17 +715,19 @@ _cairo_gl_context_set_destination (cairo_gl_context_t *ctx,
                                    cairo_gl_surface_t *surface,
                                    cairo_bool_t multisampling)
 {
-    cairo_bool_t changing_surface = ctx->current_target != surface || surface->needs_update;
-    cairo_bool_t changing_sampling = surface->msaa_active != multisampling;
+    cairo_bool_t changing_surface, changing_sampling;
+
+    /* The decision whether or not to use multisampling happens when
+     * we create an OpenGL ES surface, so we can never switch modes. */
+    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES)
+	multisampling = surface->msaa_active;
+
+    changing_surface = ctx->current_target != surface || surface->needs_update;
+    changing_sampling = surface->msaa_active != multisampling;
     if (! changing_surface && ! changing_sampling)
 	return;
 
     if (! changing_surface) {
-	/* The decision whether or not to use multisampling happen when
-	 * we create an OpenGL ES surface, so switching modes is a no-op. */
-	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES)
-	    return;
-
 	_cairo_gl_composite_flush (ctx);
 	_cairo_gl_context_bind_framebuffer (ctx, surface, multisampling);
 	return;
