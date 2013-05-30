@@ -1842,6 +1842,7 @@ _cairo_gstate_ensure_scaled_font (cairo_gstate_t *gstate)
     cairo_status_t status;
     cairo_font_options_t options;
     cairo_scaled_font_t *scaled_font;
+    cairo_matrix_t font_ctm;
 
     if (gstate->scaled_font != NULL)
 	return gstate->scaled_font->status;
@@ -1853,9 +1854,13 @@ _cairo_gstate_ensure_scaled_font (cairo_gstate_t *gstate)
     cairo_surface_get_font_options (gstate->target, &options);
     cairo_font_options_merge (&options, &gstate->font_options);
 
+    cairo_matrix_multiply (&font_ctm,
+			   &gstate->ctm,
+			   &gstate->target->device_transform);
+
     scaled_font = cairo_scaled_font_create (gstate->font_face,
 				            &gstate->font_matrix,
-					    &gstate->ctm,
+					    &font_ctm,
 					    &options);
 
     status = cairo_scaled_font_status (scaled_font);
@@ -2005,6 +2010,7 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
     if (cairo_surface_has_show_text_glyphs (gstate->target) ||
 	_cairo_scaled_font_get_max_scale (gstate->scaled_font) <= 10240)
     {
+
 	if (info != NULL) {
 	    status = _cairo_surface_show_text_glyphs (gstate->target, op, pattern,
 						      info->utf8, info->utf8_len,

@@ -2459,7 +2459,6 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 				 const cairo_clip_t		*clip)
 {
     cairo_int_status_t status;
-    cairo_scaled_font_t *dev_scaled_font = scaled_font;
 
     TRACE ((stderr, "%s\n", __FUNCTION__));
     if (unlikely (surface->status))
@@ -2484,25 +2483,6 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_surface_has_device_transform (surface) &&
-	! _cairo_matrix_is_integer_translation (&surface->device_transform, NULL, NULL))
-    {
-	cairo_font_options_t font_options;
-	cairo_matrix_t dev_ctm, font_matrix;
-
-	cairo_scaled_font_get_font_matrix (scaled_font, &font_matrix);
-	cairo_scaled_font_get_ctm (scaled_font, &dev_ctm);
-	cairo_matrix_multiply (&dev_ctm, &dev_ctm, &surface->device_transform);
-	cairo_scaled_font_get_font_options (scaled_font, &font_options);
-	dev_scaled_font = cairo_scaled_font_create (cairo_scaled_font_get_font_face (scaled_font),
-						    &font_matrix,
-						    &dev_ctm,
-						    &font_options);
-    }
-    status = cairo_scaled_font_status (dev_scaled_font);
-    if (unlikely (status))
-	return _cairo_surface_set_error (surface, status);
-
     status = CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* The logic here is duplicated in _cairo_analysis_surface show_glyphs and
@@ -2516,7 +2496,7 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 							 utf8, utf8_len,
 							 glyphs, num_glyphs,
 							 clusters, num_clusters, cluster_flags,
-							 dev_scaled_font,
+							 scaled_font,
 							 clip);
 	}
 	if (status == CAIRO_INT_STATUS_UNSUPPORTED &&
@@ -2525,7 +2505,7 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 	    status = surface->backend->show_glyphs (surface, op,
 						    source,
 						    glyphs, num_glyphs,
-						    dev_scaled_font,
+						    scaled_font,
 						    clip);
 	}
     } else {
@@ -2534,7 +2514,7 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 	    status = surface->backend->show_glyphs (surface, op,
 						    source,
 						    glyphs, num_glyphs,
-						    dev_scaled_font,
+						    scaled_font,
 						    clip);
 	} else if (surface->backend->show_text_glyphs != NULL) {
 	    /* Intentionally only try show_text_glyphs method for show_glyphs
@@ -2550,13 +2530,10 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 							 utf8, utf8_len,
 							 glyphs, num_glyphs,
 							 clusters, num_clusters, cluster_flags,
-							 dev_scaled_font,
+							 scaled_font,
 							 clip);
 	}
     }
-
-    if (dev_scaled_font != scaled_font)
-	cairo_scaled_font_destroy (dev_scaled_font);
 
     if (status != CAIRO_INT_STATUS_NOTHING_TO_DO) {
 	surface->is_clear = FALSE;
