@@ -928,10 +928,18 @@ need_bounded_clip (cairo_composite_rectangles_t *extents)
 {
     unsigned int flags = 0;
 
-    if (extents->unbounded.width < extents->destination.width ||
-	extents->unbounded.height < extents->destination.height)
+    if (extents->clip->num_boxes > 1 ||
+	extents->mask.width > extents->unbounded.width ||
+	extents->mask.height > extents->unbounded.height)
     {
 	flags |= NEED_CLIP_REGION;
+    }
+
+    if (extents->clip->num_boxes > 1 ||
+	extents->mask.width > extents->bounded.width ||
+	extents->mask.height > extents->bounded.height)
+    {
+	flags |= FORCE_CLIP_REGION;
     }
 
     if (! _cairo_clip_is_region (extents->clip))
@@ -2160,18 +2168,14 @@ _cairo_traps_compositor_stroke (const cairo_compositor_t *_compositor,
 				    double			 tolerance,
 				    cairo_traps_t		*traps);
 	composite_traps_info_t info;
-	unsigned flags = 0;
+	unsigned flags;
 
 	if (antialias == CAIRO_ANTIALIAS_BEST || antialias == CAIRO_ANTIALIAS_GOOD) {
 	    func = _cairo_path_fixed_stroke_polygon_to_traps;
+	    flags = 0;
 	} else {
 	    func = _cairo_path_fixed_stroke_to_traps;
-	    if (extents->clip->num_boxes > 1 ||
-		extents->mask.width  > extents->unbounded.width ||
-		extents->mask.height > extents->unbounded.height)
-	    {
-		flags = NEED_CLIP_REGION | FORCE_CLIP_REGION;
-	    }
+	    flags = need_bounded_clip (extents) & ~NEED_CLIP_SURFACE;
 	}
 
 	info.antialias = antialias;
@@ -2299,7 +2303,6 @@ _cairo_traps_compositor_glyphs (const cairo_compositor_t	*_compositor,
 						 &num_glyphs);
     if (likely (status == CAIRO_INT_STATUS_SUCCESS)) {
 	cairo_composite_glyphs_info_t info;
-	unsigned flags = 0;
 
 	info.font = scaled_font;
 	info.glyphs = glyphs;
@@ -2307,16 +2310,9 @@ _cairo_traps_compositor_glyphs (const cairo_compositor_t	*_compositor,
 	info.use_mask = overlap || ! extents->is_bounded;
 	info.extents = extents->bounded;
 
-	if (extents->mask.width > extents->bounded.width ||
-	    extents->mask.height > extents->bounded.height)
-	{
-	    flags |= FORCE_CLIP_REGION;
-	}
-
 	status = clip_and_composite (compositor, extents,
 				     composite_glyphs, NULL, &info,
-				     need_bounded_clip (extents) |
-				     flags);
+				     need_bounded_clip (extents) | FORCE_CLIP_REGION);
     }
     _cairo_scaled_font_thaw_cache (scaled_font);
 

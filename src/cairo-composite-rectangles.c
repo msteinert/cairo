@@ -167,6 +167,13 @@ _cairo_composite_rectangles_intersect (cairo_composite_rectangles_t *extents,
 				      _cairo_clip_get_extents (extents->clip)))
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
+    if (! _cairo_rectangle_intersect (&extents->bounded,
+				      _cairo_clip_get_extents (extents->clip)) &&
+	extents->is_bounded & CAIRO_OPERATOR_BOUND_BY_MASK)
+    {
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+    }
+
     if (extents->source_pattern.base.type != CAIRO_PATTERN_TYPE_SOLID)
 	_cairo_pattern_sampled_area (&extents->source_pattern.base,
 				     &extents->bounded,
