@@ -1420,11 +1420,6 @@ cairo_private_no_warn cairo_bool_t
 _cairo_surface_get_extents (cairo_surface_t         *surface,
 			    cairo_rectangle_int_t   *extents);
 
-cairo_private void
-_cairo_surface_set_device_scale (cairo_surface_t *surface,
-				 double		  sx,
-				 double		  sy);
-
 cairo_private cairo_bool_t
 _cairo_surface_has_device_transform (cairo_surface_t *surface) cairo_pure;
 
@@ -1955,6 +1950,7 @@ slim_hidden_proto (cairo_surface_destroy);
 slim_hidden_proto (cairo_surface_finish);
 slim_hidden_proto (cairo_surface_flush);
 slim_hidden_proto (cairo_surface_get_device_offset);
+slim_hidden_proto (cairo_surface_get_device_scale);
 slim_hidden_proto (cairo_surface_get_font_options);
 slim_hidden_proto (cairo_surface_get_mime_data);
 slim_hidden_proto (cairo_surface_has_show_text_glyphs);
@@ -1962,6 +1958,7 @@ slim_hidden_proto (cairo_surface_mark_dirty);
 slim_hidden_proto (cairo_surface_mark_dirty_rectangle);
 slim_hidden_proto_no_warn (cairo_surface_reference);
 slim_hidden_proto (cairo_surface_set_device_offset);
+slim_hidden_proto (cairo_surface_set_device_scale);
 slim_hidden_proto (cairo_surface_set_fallback_resolution);
 slim_hidden_proto (cairo_surface_set_mime_data);
 slim_hidden_proto (cairo_surface_show_page);

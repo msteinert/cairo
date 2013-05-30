@@ -1624,26 +1624,28 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 slim_hidden_def (cairo_surface_mark_dirty_rectangle);
 
 /**
- * _cairo_surface_set_device_scale:
+ * cairo_surface_set_device_scale:
  * @surface: a #cairo_surface_t
  * @sx: a scale factor in the X direction
  * @sy: a scale factor in the Y direction
  *
- * Private function for setting an extra scale factor to affect all
- * drawing to a surface. This is used, for example, when replaying a
- * recording surface to an image fallback intended for an eventual
- * vector-oriented backend. Since the recording surface will record
- * coordinates in one backend space, but the image fallback uses a
- * different backend space, (differing by the fallback resolution
- * scale factors), we need a scale factor correction.
+ * Sets an scale that is multiplied to the device coordinates determined
+ * by the CTM when drawing to @surface. One common use for this is to
+ * render to very high resolution display devices at a scale factor, so
+ * that code that assumes 1 pixel will be a certain size will still work.
+ * Setting a transformation via cairo_translate() isn't
+ * sufficient to do this, since functions like
+ * cairo_device_to_user() will expose the hidden scale.
  *
- * Caution: Not all places we use device transform correctly handle
- * both a translate and a scale.  An audit would be nice.
+ * Note that the scale affects drawing to the surface as well as
+ * using the surface in a source pattern.
+ *
+ * Since: 1.14
  **/
 void
-_cairo_surface_set_device_scale (cairo_surface_t *surface,
-				 double		  sx,
-				 double		  sy)
+cairo_surface_set_device_scale (cairo_surface_t *surface,
+				double		 sx,
+				double		 sy)
 {
     cairo_status_t status;
 
@@ -1675,6 +1677,30 @@ _cairo_surface_set_device_scale (cairo_surface_t *surface,
 
     _cairo_observers_notify (&surface->device_transform_observers, surface);
 }
+slim_hidden_def (cairo_surface_set_device_scale);
+
+/**
+ * cairo_surface_get_device_scale:
+ * @surface: a #cairo_surface_t
+ * @x_scale: the scale in the X direction, in device units
+ * @y_scale: the scale in the Y direction, in device units
+ *
+ * This function returns the previous device offset set by
+ * cairo_surface_set_device_scale().
+ *
+ * Since: 1.14
+ **/
+void
+cairo_surface_get_device_scale (cairo_surface_t *surface,
+				double          *x_scale,
+				double          *y_scale)
+{
+    if (x_scale)
+	*x_scale = surface->device_transform.xx;
+    if (y_scale)
+	*y_scale = surface->device_transform.yy;
+}
+slim_hidden_def (cairo_surface_get_device_scale);
 
 /**
  * cairo_surface_set_device_offset:

@@ -189,9 +189,9 @@ _cairo_default_context_push_group (void *abstract_cr, cairo_content_t content)
 					 parent_surface->device_transform.x0 - extents.x,
 					 parent_surface->device_transform.y0 - extents.y);
 
-	_cairo_surface_set_device_scale (group_surface,
-					 parent_surface->device_transform.xx,
-					 parent_surface->device_transform.yy);
+	cairo_surface_set_device_scale (group_surface,
+					parent_surface->device_transform.xx,
+					parent_surface->device_transform.yy);
 
 	/* If we have a current path, we need to adjust it to compensate for
 	 * the device offset just applied. */

@@ -2456,6 +2456,16 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 				    int              height);
 
 cairo_public void
+cairo_surface_set_device_scale (cairo_surface_t *surface,
+				double           x_scale,
+				double           y_scale);
+
+cairo_public void
+cairo_surface_get_device_scale (cairo_surface_t *surface,
+				double          *x_scale,
+				double          *y_scale);
+
+cairo_public void
 cairo_surface_set_device_offset (cairo_surface_t *surface,
 				 double           x_offset,
 				 double           y_offset);

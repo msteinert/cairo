@@ -500,9 +500,9 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
 
     surface->snapshot = NULL;
 
-    _cairo_surface_set_device_scale (&surface->base,
-                                     target->device_transform.xx,
-                                     target->device_transform.yy);
+    cairo_surface_set_device_scale (&surface->base,
+                                    target->device_transform.xx,
+                                    target->device_transform.yy);
 
     return &surface->base;
 }
@@ -542,9 +542,9 @@ _cairo_surface_create_for_rectangle_int (cairo_surface_t *target,
 
     surface->snapshot = NULL;
 
-    _cairo_surface_set_device_scale (&surface->base,
-                                     target->device_transform.xx,
-                                     target->device_transform.yy);
+    cairo_surface_set_device_scale (&surface->base,
+                                    target->device_transform.xx,
+                                    target->device_transform.yy);
 
     return &surface->base;
 }
