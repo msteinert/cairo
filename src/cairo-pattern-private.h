@@ -237,6 +237,10 @@ cairo_private void
 _cairo_pattern_transform (cairo_pattern_t      *pattern,
 			  const cairo_matrix_t *ctm_inverse);
 
+cairo_private void
+_cairo_pattern_pretransform (cairo_pattern_t      *pattern,
+                             const cairo_matrix_t *ctm);
+
 cairo_private cairo_bool_t
 _cairo_pattern_is_opaque_solid (const cairo_pattern_t *pattern);
 

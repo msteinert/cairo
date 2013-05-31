@@ -954,7 +954,7 @@ _cairo_gstate_copy_transformed_pattern (cairo_gstate_t  *gstate,
         surface = surface_pattern->surface;
 
 	if (_cairo_surface_has_device_transform (surface))
-	    _cairo_pattern_transform (pattern, &surface->device_transform);
+	    _cairo_pattern_pretransform (pattern, &surface->device_transform);
     }
 
     if (! _cairo_matrix_is_identity (ctm_inverse))

@@ -2128,6 +2128,16 @@ cairo_pattern_get_extend (cairo_pattern_t *pattern)
 slim_hidden_def (cairo_pattern_get_extend);
 
 void
+_cairo_pattern_pretransform (cairo_pattern_t	*pattern,
+			     const cairo_matrix_t  *ctm)
+{
+    if (pattern->status)
+	return;
+
+    cairo_matrix_multiply (&pattern->matrix, &pattern->matrix, ctm);
+}
+
+void
 _cairo_pattern_transform (cairo_pattern_t	*pattern,
 			  const cairo_matrix_t  *ctm_inverse)
 {
