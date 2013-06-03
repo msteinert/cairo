@@ -145,9 +145,15 @@ __cairo_list_del (cairo_list_t *prev, cairo_list_t *next)
 }
 
 static inline void
-cairo_list_del (cairo_list_t *entry)
+_cairo_list_del (cairo_list_t *entry)
 {
     __cairo_list_del (entry->prev, entry->next);
+}
+
+static inline void
+cairo_list_del (cairo_list_t *entry)
+{
+    _cairo_list_del (entry);
     cairo_list_init (entry);
 }
 
