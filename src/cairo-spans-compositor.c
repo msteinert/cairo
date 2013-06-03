@@ -585,6 +585,8 @@ composite_aligned_boxes (const cairo_spans_compositor_t		*compositor,
     {
 	cairo_clip_t *recording_clip;
 	const cairo_pattern_t *source = &extents->source_pattern.base;
+	const cairo_matrix_t *m;
+	cairo_matrix_t matrix;
 
 	/* XXX could also do tiling repeat modes... */
 
@@ -600,10 +602,17 @@ composite_aligned_boxes (const cairo_spans_compositor_t		*compositor,
 	    dst->is_clear = TRUE;
 	}
 
+	m = &source->matrix;
+	if (_cairo_surface_has_device_transform (dst)) {
+	    cairo_matrix_multiply (&matrix,
+				   &source->matrix,
+				   &dst->device_transform);
+	    m = &matrix;
+	}
+
 	recording_clip = _cairo_clip_from_boxes (boxes);
 	status = _cairo_recording_surface_replay_with_clip (unwrap_source (source),
-							    &source->matrix,
-							    dst, recording_clip);
+							    m, dst, recording_clip);
 	_cairo_clip_destroy (recording_clip);
 
 	return status;
