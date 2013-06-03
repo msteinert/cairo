@@ -49,7 +49,7 @@ cairo_test_status_t
 _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 				    const cairo_boilerplate_target_t *target,
 				    cairo_bool_t similar,
-				    int dev_offset);
+				    int dev_offset, int dev_scale);
 
 void
 _cairo_test_context_init_for_test (cairo_test_context_t *ctx,

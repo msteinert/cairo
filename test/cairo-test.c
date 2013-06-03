@@ -101,6 +101,7 @@ static cairo_bool_t print_fail_on_stdout;
 static int cairo_test_timeout = 60;
 
 #define NUM_DEVICE_OFFSETS 2
+#define NUM_DEVICE_SCALE 2
 
 static cairo_bool_t
 _cairo_test_mkdir (const char *path)
@@ -430,8 +431,8 @@ cairo_test_target_has_similar (const cairo_test_context_t *ctx,
 						target->content,
 						ctx->test->width,
 						ctx->test->height,
-						ctx->test->width + 25 * NUM_DEVICE_OFFSETS,
-						ctx->test->height + 25 * NUM_DEVICE_OFFSETS,
+						ctx->test->width* NUM_DEVICE_SCALE + 25 * NUM_DEVICE_OFFSETS,
+						ctx->test->height* NUM_DEVICE_SCALE + 25 * NUM_DEVICE_OFFSETS,
 						CAIRO_BOILERPLATE_MODE_TEST,
 						&closure);
 	    if (surface == NULL)
@@ -628,6 +629,7 @@ static cairo_test_status_t
 cairo_test_for_target (cairo_test_context_t		 *ctx,
 		       const cairo_boilerplate_target_t	 *target,
 		       int				  dev_offset,
+		       int				  dev_scale,
 		       cairo_bool_t                       similar)
 {
     cairo_test_status_t status;
@@ -635,6 +637,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
     cairo_t *cr;
     const char *empty_str = "";
     char *offset_str;
+    char *scale_str;
     char *base_name, *base_path;
     char *out_png_path;
     char *ref_path = NULL, *ref_png_path, *cmp_png_path = NULL;
@@ -666,15 +669,23 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
     else
 	offset_str = (char *) empty_str;
 
-    xasprintf (&base_name, "%s.%s.%s%s%s",
+    if (dev_scale != 1)
+	xasprintf (&scale_str, ".x%d", dev_scale);
+    else
+	scale_str = (char *) empty_str;
+
+    xasprintf (&base_name, "%s.%s.%s%s%s%s",
 	       ctx->test_name,
 	       target->name,
 	       format,
 	       similar ? ".similar" : "",
-	       offset_str);
+	       offset_str,
+               scale_str);
 
     if (offset_str != empty_str)
       free (offset_str);
+    if (scale_str != empty_str)
+      free (scale_str);
 
     ref_png_path = cairo_test_reference_filename (ctx,
 						  base_name,
@@ -782,6 +793,8 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
     width = ctx->test->width;
     height = ctx->test->height;
     if (width && height) {
+	width *= dev_scale;
+	height *= dev_scale;
 	width += dev_offset;
 	height += dev_offset;
     }
@@ -810,8 +823,8 @@ REPEAT:
     surface = (target->create_surface) (base_path,
 					target->content,
 					width, height,
-					ctx->test->width + 25 * NUM_DEVICE_OFFSETS,
-					ctx->test->height + 25 * NUM_DEVICE_OFFSETS,
+					ctx->test->width * NUM_DEVICE_SCALE + 25 * NUM_DEVICE_OFFSETS,
+					ctx->test->height * NUM_DEVICE_SCALE + 25 * NUM_DEVICE_OFFSETS,
 					CAIRO_BOILERPLATE_MODE_TEST,
 					&closure);
     if (surface == NULL) {
@@ -878,6 +891,7 @@ REPEAT:
     }
 
     cairo_surface_set_device_offset (surface, dev_offset, dev_offset);
+    cairo_surface_set_device_scale (surface, dev_scale, dev_scale);
 
     cr = cairo_create (surface);
     if (cairo_set_user_data (cr, &_cairo_test_context_key, (void*) ctx, NULL)) {
@@ -1471,7 +1485,7 @@ cairo_test_status_t
 _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 				    const cairo_boilerplate_target_t *target,
 				    cairo_bool_t similar,
-				    int dev_offset)
+				    int dev_offset, int dev_scale)
 {
     cairo_test_status_t status;
 
@@ -1482,15 +1496,15 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 	return CAIRO_TEST_UNTESTED;
 
     cairo_test_log (ctx,
-		    "Testing %s with %s%s target (dev offset %d)\n",
+		    "Testing %s with %s%s target (dev offset %d scale: %d)\n",
 		    ctx->test_name,
 		    similar ? " (similar) " : "",
 		    target->name,
-		    dev_offset);
+		    dev_offset, dev_scale);
 
-    printf ("%s.%s.%s [%d]%s:\t", ctx->test_name, target->name,
+    printf ("%s.%s.%s [%dx%d]%s:\t", ctx->test_name, target->name,
 	    cairo_boilerplate_content_name (target->content),
-	    dev_offset,
+	    dev_offset, dev_scale,
 	    similar ? " (similar)": "");
     fflush (stdout);
 
@@ -1519,7 +1533,7 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 	old_sigalrm_handler = signal (SIGALRM, segfault_handler);
 #endif
 	if (0 == setjmp (jmpbuf))
-	    status = cairo_test_for_target (ctx, target, dev_offset, similar);
+	    status = cairo_test_for_target (ctx, target, dev_offset, dev_scale, similar);
 	else
 	    status = CAIRO_TEST_CRASHED;
 #ifdef SIGSEGV
@@ -1538,17 +1552,17 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 	signal (SIGALRM, old_sigalrm_handler);
 #endif
     } else {
-	status = cairo_test_for_target (ctx, target, dev_offset, similar);
+	status = cairo_test_for_target (ctx, target, dev_offset, dev_scale, similar);
     }
 #else
-    status = cairo_test_for_target (ctx, target, dev_offset, similar);
+    status = cairo_test_for_target (ctx, target, dev_offset, dev_scale, similar);
 #endif
 
     cairo_test_log (ctx,
-		    "TEST: %s TARGET: %s FORMAT: %s OFFSET: %d SIMILAR: %d RESULT: ",
+		    "TEST: %s TARGET: %s FORMAT: %s OFFSET: %d SCALE: %d SIMILAR: %d RESULT: ",
 		    ctx->test_name, target->name,
 		    cairo_boilerplate_content_name (target->content),
-		    dev_offset, similar);
+		    dev_offset, dev_scale, similar);
     switch (status) {
     case CAIRO_TEST_SUCCESS:
 	printf ("PASS\n");
@@ -1570,9 +1584,9 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 	    fflush (stdout);
 	}
 	cairo_test_log (ctx, "CRASHED\n");
-	fprintf (stderr, "%s.%s.%s [%d]%s:\t%s!!!CRASHED!!!%s\n",
+	fprintf (stderr, "%s.%s.%s [%dx%d]%s:\t%s!!!CRASHED!!!%s\n",
 		 ctx->test_name, target->name,
-		 cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
+		 cairo_boilerplate_content_name (target->content), dev_offset, dev_scale, similar ? " (similar)" : "",
 		 fail_face, normal_face);
 	break;
 
@@ -1585,9 +1599,9 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 	    fflush (stdout);
 	}
 	cairo_test_log (ctx, "ERROR\n");
-	fprintf (stderr, "%s.%s.%s [%d]%s:\t%s!!!ERROR!!!%s\n",
+	fprintf (stderr, "%s.%s.%s [%dx%d]%s:\t%s!!!ERROR!!!%s\n",
 		 ctx->test_name, target->name,
-		 cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
+		 cairo_boilerplate_content_name (target->content), dev_offset, dev_scale, similar ? " (similar)" : "",
 		 fail_face, normal_face);
 	break;
 
@@ -1599,9 +1613,9 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 	    printf ("\r");
 	    fflush (stdout);
 	}
-	fprintf (stderr, "%s.%s.%s [%d]%s:\t%sXFAIL%s\n",
+	fprintf (stderr, "%s.%s.%s [%dx%d]%s:\t%sXFAIL%s\n",
 		 ctx->test_name, target->name,
-		 cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
+		 cairo_boilerplate_content_name (target->content), dev_offset, dev_scale, similar ? " (similar)" : "",
 		 xfail_face, normal_face);
 	cairo_test_log (ctx, "XFAIL\n");
 	break;
@@ -1614,9 +1628,9 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 	    printf ("\r");
 	    fflush (stdout);
 	}
-	fprintf (stderr, "%s.%s.%s [%d]%s:\t%sNEW%s\n",
+	fprintf (stderr, "%s.%s.%s [%dx%d]%s:\t%sNEW%s\n",
 		 ctx->test_name, target->name,
-		 cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
+		 cairo_boilerplate_content_name (target->content), dev_offset, dev_scale, similar ? " (similar)" : "",
 		 fail_face, normal_face);
 	cairo_test_log (ctx, "NEW\n");
 	break;
@@ -1630,9 +1644,9 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 	    printf ("\r");
 	    fflush (stdout);
 	}
-	fprintf (stderr, "%s.%s.%s [%d]%s:\t%sFAIL%s\n",
+	fprintf (stderr, "%s.%s.%s [%dx%d]%s:\t%sFAIL%s\n",
 		 ctx->test_name, target->name,
-		 cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
+		 cairo_boilerplate_content_name (target->content), dev_offset, dev_scale, similar ? " (similar)" : "",
 		 fail_face, normal_face);
 	cairo_test_log (ctx, "FAIL\n");
 	break;

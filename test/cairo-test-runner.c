@@ -69,6 +69,7 @@ typedef struct _cairo_test_runner {
     cairo_test_context_t base;
 
     unsigned int num_device_offsets;
+    unsigned int num_device_scales;
 
     cairo_bool_t passed;
     int num_passed;
@@ -232,7 +233,7 @@ _cairo_test_runner_draw (cairo_test_runner_t *runner,
 			 cairo_test_context_t *ctx,
 			 const cairo_boilerplate_target_t *target,
 			 cairo_bool_t similar,
-			 int device_offset)
+			 int device_offset, int device_scale)
 {
 #if SHOULD_FORK
     if (! runner->foreground) {
@@ -244,7 +245,7 @@ _cairo_test_runner_draw (cairo_test_runner_t *runner,
 
 	case 0: /* child */
 	    exit (_cairo_test_context_run_for_target (ctx, target,
-						      similar, device_offset));
+						      similar, device_offset, device_scale));
 
 	default:
 	    return _cairo_test_wait (pid);
@@ -252,7 +253,7 @@ _cairo_test_runner_draw (cairo_test_runner_t *runner,
     }
 #endif
     return _cairo_test_context_run_for_target (ctx, target,
-					       similar, device_offset);
+					       similar, device_offset, device_scale);
 }
 
 static void
@@ -696,7 +697,7 @@ main (int argc, char **argv)
     cairo_test_runner_t runner;
     cairo_test_list_t *test_list;
     cairo_test_status_t *target_status;
-    unsigned int n, m;
+    unsigned int n, m, k;
     char targets[4096];
     int len;
     char *cairo_tests_env;
@@ -712,6 +713,7 @@ main (int argc, char **argv)
 
     memset (&runner, 0, sizeof (runner));
     runner.num_device_offsets = 1;
+    runner.num_device_scales = 1;
 
     if (is_running_under_debugger ())
 	runner.foreground = TRUE;
@@ -743,6 +745,7 @@ main (int argc, char **argv)
 
     if (runner.full_test) {
 	runner.num_device_offsets = 2;
+	runner.num_device_scales = 2;
     }
 
     target_status = NULL; /* silence the compiler */
@@ -911,32 +914,35 @@ main (int argc, char **argv)
 			  cairo_test_target_has_similar (&ctx, target) :
 			  DIRECT;
 	    for (m = 0; m < runner.num_device_offsets; m++) {
-		int dev_offset = m * 25;
-		cairo_test_similar_t similar;
+		for (k = 0; k < runner.num_device_scales; k++) {
+		    int dev_offset = m * 25;
+		    int dev_scale = k + 1;
+		    cairo_test_similar_t similar;
 
-		for (similar = DIRECT; similar <= has_similar; similar++) {
-		    status = _cairo_test_runner_draw (&runner, &ctx, target,
-						      similar, dev_offset);
-		    switch (status) {
-		    case CAIRO_TEST_SUCCESS:
-			target_skipped = FALSE;
-			break;
-		    case CAIRO_TEST_XFAILURE:
-			target_xfailed = TRUE;
-			break;
-		    case CAIRO_TEST_NEW:
-		    case CAIRO_TEST_FAILURE:
-			target_failed = TRUE;
-			break;
-		    case CAIRO_TEST_ERROR:
-			target_error = TRUE;
-			break;
-		    case CAIRO_TEST_NO_MEMORY:
-		    case CAIRO_TEST_CRASHED:
-			target_crashed = TRUE;
-			break;
-		    case CAIRO_TEST_UNTESTED:
-			break;
+		    for (similar = DIRECT; similar <= has_similar; similar++) {
+			status = _cairo_test_runner_draw (&runner, &ctx, target,
+							  similar, dev_offset, dev_scale);
+			switch (status) {
+			case CAIRO_TEST_SUCCESS:
+			    target_skipped = FALSE;
+			    break;
+			case CAIRO_TEST_XFAILURE:
+			    target_xfailed = TRUE;
+			    break;
+			case CAIRO_TEST_NEW:
+			case CAIRO_TEST_FAILURE:
+			    target_failed = TRUE;
+			    break;
+			case CAIRO_TEST_ERROR:
+			    target_error = TRUE;
+			    break;
+			case CAIRO_TEST_NO_MEMORY:
+			case CAIRO_TEST_CRASHED:
+			    target_crashed = TRUE;
+			    break;
+			case CAIRO_TEST_UNTESTED:
+			    break;
+			}
 		    }
 		}
 	    }
