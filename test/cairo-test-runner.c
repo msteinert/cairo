@@ -358,7 +358,7 @@ _parse_cmdline (cairo_test_runner_t *runner, int *argc, char **argv[])
 
 	switch (c) {
 	case 'a':
-	    runner->full_test = TRUE;
+	    runner->full_test = ~0;
 	    break;
 	case 'f':
 	    runner->foreground = TRUE;
@@ -691,6 +691,9 @@ _has_required_rsvg_version (const char *str)
     return TRUE;
 }
 
+#define TEST_SIMILAR	0x1
+#define TEST_OFFSET	0x2
+#define TEST_SCALE	0x4
 int
 main (int argc, char **argv)
 {
@@ -722,7 +725,16 @@ main (int argc, char **argv)
 	const char *env = getenv ("CAIRO_TEST_MODE");
 
 	if (strstr (env, "full")) {
-	    runner.full_test = TRUE;
+	    runner.full_test = ~0;
+	}
+	if (strstr (env, "similar")) {
+	    runner.full_test |= TEST_SIMILAR;
+	}
+	if (strstr (env, "offset")) {
+	    runner.full_test |= TEST_OFFSET;
+	}
+	if (strstr (env, "scale")) {
+	    runner.full_test |= TEST_SCALE;
 	}
 	if (strstr (env, "foreground")) {
 	    runner.foreground = TRUE;
@@ -743,8 +755,10 @@ main (int argc, char **argv)
     cairo_tests_env = getenv("CAIRO_TESTS");
     append_argv (&argc, &argv, cairo_tests_env);
 
-    if (runner.full_test) {
+    if (runner.full_test & TEST_OFFSET) {
 	runner.num_device_offsets = 2;
+    }
+    if (runner.full_test & TEST_SCALE) {
 	runner.num_device_scales = 2;
     }
 
@@ -910,7 +924,7 @@ main (int argc, char **argv)
 
 	    target = ctx.targets_to_test[n];
 
-	    has_similar = runner.full_test ?
+	    has_similar = runner.full_test & TEST_SIMILAR ?
 			  cairo_test_target_has_similar (&ctx, target) :
 			  DIRECT;
 	    for (m = 0; m < runner.num_device_offsets; m++) {
