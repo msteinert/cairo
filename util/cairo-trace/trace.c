@@ -997,18 +997,22 @@ _pop_operands_to_depth (int depth)
 static cairo_bool_t
 _pop_operands_to_object (Object *obj)
 {
+    if (!obj)
+	return FALSE;
+
     if (obj->operand == -1)
 	return FALSE;
 
     if (obj->operand == current_stack_depth - 1)
 	return TRUE;
 
-    if (! _pop_operands_to_depth (obj->operand + 2))
-	return FALSE;
+    if (obj->operand == current_stack_depth - 2) {
+	_exch_operands ();
+	_trace_printf ("exch ");
+	return TRUE;
+    }
 
-    _exch_operands ();
-    _trace_printf ("exch ");
-    return TRUE;
+    return _pop_operands_to_depth (obj->operand + 2);
 }
 
 static cairo_bool_t
@@ -1147,12 +1151,6 @@ _has_id (enum operand_type op_type, const void *ptr)
 }
 
 static long
-_get_context_id (cairo_t *cr)
-{
-    return _get_id (CONTEXT, cr);
-}
-
-static long
 _create_font_face_id (cairo_font_face_t *font_face)
 {
     Object *obj;
@@ -1225,25 +1223,33 @@ _emit_pattern_id (cairo_pattern_t *pattern)
     }
 }
 
+static void
+_emit_scaled_font_id (const cairo_scaled_font_t *scaled_font)
+{
+    Object *obj = _get_object (SCALED_FONT, scaled_font);
+    if (obj == NULL) {
+	_trace_printf ("null ");
+    } else {
+	if (obj->defined) {
+	    _trace_printf ("sf%ld ", obj->token);
+	} else {
+	    _trace_printf ("%d index ",
+		     current_stack_depth - obj->operand - 1);
+	}
+    }
+}
+
 static long
 _create_scaled_font_id (cairo_scaled_font_t *font)
 {
     Object *obj;
 
-    obj = _get_object (SCALED_FONT, font);
-    if (obj == NULL) {
-	obj = _type_object_create (SCALED_FONT, font);
-	DLCALL (cairo_scaled_font_set_user_data,
-		font, &destroy_key, obj, _object_undef);
-    }
+    assert(_get_object (SCALED_FONT, font) == NULL);
+    obj = _type_object_create (SCALED_FONT, font);
+    DLCALL (cairo_scaled_font_set_user_data,
+	    font, &destroy_key, obj, _object_undef);
 
     return obj->token;
-}
-
-static long
-_get_scaled_font_id (const cairo_scaled_font_t *font)
-{
-    return _get_id (SCALED_FONT, font);
 }
 
 static cairo_bool_t
@@ -1888,7 +1894,21 @@ static void
 _emit_current (Object *obj)
 {
     if (obj != NULL && ! _pop_operands_to_object (obj)) {
-	_trace_printf ("%s%ld\n", obj->type->op_code, obj->token);
+	if (obj->defined) {
+	    _trace_printf ("%s%ld\n", obj->type->op_code, obj->token);
+	} else {
+	    int n;
+
+	    _trace_printf ("%d -1 roll %% %s%ld\n",
+			   current_stack_depth - obj->operand + 1,
+			   obj->type->op_code, obj->token);
+
+	    for (n = obj->operand; n < current_stack_depth - 1; n++) {
+		current_object[n] = current_object[n+1];
+		current_object[n]->operand = n;
+	    }
+	    current_stack_depth--;
+	}
 	_push_object (obj);
     }
 }
@@ -2184,7 +2204,8 @@ cairo_set_source_surface (cairo_t *cr, cairo_surface_t *surface, double x, doubl
 	    _consume_operand (false);
 	}
 	else if (_is_current (SURFACE, surface, 1) &&
-		 _is_current (CONTEXT, cr, 0))
+		 _is_current (CONTEXT, cr, 0) &&
+		 obj->defined)
 	{
 	    _trace_printf ("exch ");
 	    _exch_operands ();
@@ -2227,8 +2248,11 @@ cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
 	{
 	    if (obj->defined) {
 		_consume_operand (false);
-		need_context_and_pattern = FALSE;
+	    } else {
+		_trace_printf ("exch 1 index ");
+		_exch_operands ();
 	    }
+	    need_context_and_pattern = FALSE;
 	}
 	else if (_is_current (PATTERN, source, 1) &&
 		 _is_current (CONTEXT, cr, 0))
@@ -3080,31 +3104,39 @@ cairo_set_scaled_font (cairo_t *cr, const cairo_scaled_font_t *scaled_font)
 {
     _enter_trace ();
     _emit_line_info ();
-    if (cr != NULL && scaled_font != NULL) {
-	if (_pop_operands_to (SCALED_FONT, scaled_font)) {
-	    if (_is_current (CONTEXT, cr, 1)) {
-		if (_write_lock ()) {
-		    _consume_operand (false);
-		    _trace_printf ("set-scaled-font\n");
-		    _write_unlock ();
-		}
+    if (cr != NULL && scaled_font != NULL && _write_lock ()) {
+	Object *obj = _get_object (SCALED_FONT, scaled_font);
+	cairo_bool_t need_context_and_font = TRUE;
+
+	if (_is_current (SCALED_FONT, scaled_font, 0) &&
+	    _is_current (CONTEXT, cr, 1))
+	{
+	    if (obj->defined) {
+		_consume_operand (false);
 	    } else {
-		if (_get_object (CONTEXT, cr)->defined) {
-		    if (_write_lock ()) {
-			_consume_operand (false);
-			_trace_printf ("c%ld exch set-scaled-font pop\n",
-				       _get_context_id (cr));
-			_write_unlock ();
-		    }
-		} else {
-		    _emit_cairo_op (cr, "sf%ld set-scaled-font\n",
-				    _get_scaled_font_id (scaled_font));
-		}
+		_trace_printf ("exch 1 index ");
+		_exch_operands ();
 	    }
-	} else {
-	    _emit_cairo_op (cr, "sf%ld set-scaled-font\n",
-			    _get_scaled_font_id (scaled_font));
+	    need_context_and_font = FALSE;
 	}
+	else if (_is_current (SCALED_FONT, scaled_font, 1) &&
+		 _is_current (CONTEXT, cr, 0))
+	{
+	    if (obj->defined) {
+		_trace_printf ("exch ");
+		_exch_operands ();
+		_consume_operand (false);
+		need_context_and_font = FALSE;
+	    }
+	}
+
+	if (need_context_and_font) {
+	    _emit_context (cr);
+	    _emit_scaled_font_id (scaled_font);
+	}
+
+	_trace_printf ("set-scaled-font\n");
+	_write_unlock ();
     }
     DLCALL (cairo_set_scaled_font, cr, scaled_font);
     _exit_trace ();
@@ -3133,12 +3165,12 @@ cairo_scaled_font_create (cairo_font_face_t *font_face,
 			  const cairo_font_options_t *options)
 {
     cairo_scaled_font_t *ret;
-    long scaled_font_id;
 
     _enter_trace ();
 
     ret = DLCALL (cairo_scaled_font_create, font_face, font_matrix, ctm, options);
-    scaled_font_id = _create_scaled_font_id (ret);
+    if (_has_scaled_font_id (ret))
+	    goto out;
 
     _emit_line_info ();
     if (font_face != NULL &&
@@ -3160,20 +3192,15 @@ cairo_scaled_font_create (cairo_font_face_t *font_face,
 
 	_emit_font_options (options);
 
-	if (_get_object (SCALED_FONT, ret)->defined) {
-	    _trace_printf ("  scaled-font pop %% sf%ld\n",
-			   scaled_font_id);
-	} else {
-	    _trace_printf ("  scaled-font dup /sf%ld exch def\n",
-			   scaled_font_id);
-	    _push_operand (SCALED_FONT, ret);
-
-	    _get_object (SCALED_FONT, ret)->defined = TRUE;
-	}
+	_trace_printf ("  scaled-font dup /sf%ld exch def\n",
+		       _create_scaled_font_id (ret));
+	_push_operand (SCALED_FONT, ret);
+	_get_object (SCALED_FONT, ret)->defined = TRUE;
 
 	_write_unlock ();
     }
 
+out:
     _exit_trace ();
     return ret;
 }
