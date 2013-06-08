@@ -107,7 +107,7 @@ CAIRO_TEST (sample_horizontal,
 	    NULL, /* keywords */
 	    "target=raster slow", /* requirements */
 	    WIDTH, HEIGHT,
-	    NULL, vertical)
+	    NULL, horizontal)
 
 CAIRO_TEST (sample_diagonal,
 	    "Check the fidelity of the rasterisation.",
