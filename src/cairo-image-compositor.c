@@ -1548,7 +1548,7 @@ typedef struct _cairo_image_span_renderer {
 	} mask;
     } u;
     uint8_t _buf[0];
-#define SZ_BUF (sizeof (cairo_abstract_span_renderer_t) - sizeof (cairo_image_span_renderer_t))
+#define SZ_BUF (int)(sizeof (cairo_abstract_span_renderer_t) - sizeof (cairo_image_span_renderer_t))
 } cairo_image_span_renderer_t;
 COMPILE_TIME_ASSERT (sizeof (cairo_image_span_renderer_t) <= sizeof (cairo_abstract_span_renderer_t));
 
