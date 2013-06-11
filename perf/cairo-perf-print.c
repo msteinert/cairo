@@ -40,7 +40,6 @@
 #define USE_TERMINAL_SIZE 1
 #else
 #define USE_TERMINAL_SIZE 0
-#error bang
 #endif
 
 #if USE_TERMINAL_SIZE
