@@ -28,45 +28,78 @@
  */
 
 #include "cairo-perf.h"
+#include "cairo-stats.h"
 
 #include <stdio.h>
 
 static void
-report_print (const cairo_perf_report_t *report)
+report_print (const cairo_perf_report_t *report,
+	      int show_histogram)
 {
-    const test_report_t *tests;
+    const test_report_t *test;
+    cairo_histogram_t h;
 
-    tests = report->tests;
-    for (tests = report->tests; tests->name != NULL; tests++) {
-	if (tests->stats.iterations == 0)
+    if (show_histogram && !_cairo_histogram_init (&h, 80, 23))
+	show_histogram = 0;
+
+    for (test = report->tests; test->name != NULL; test++) {
+	if (test->stats.iterations == 0)
 	    continue;
 
-	if (tests->size) {
-	    printf ("%5s-%-4s %26s-%-3d  %6.2f %4.2f%%\n",
-		    tests->backend, tests->content,
-		    tests->name, tests->size,
-		    tests->stats.median_ticks / tests->stats.ticks_per_ms,
-		    tests->stats.std_dev * 100);
-	} else {
-	    printf ("%5s %26s  %6.2f %4.2f%%\n",
-		    tests->backend, tests->name,
-		    tests->stats.median_ticks / tests->stats.ticks_per_ms,
-		    tests->stats.std_dev * 100);
+	if (show_histogram) {
+	    const cairo_time_t *values;
+	    int num_values;
+
+	    if (show_histogram > 1) {
+		values = test->stats.values;
+		num_values = test->stats.iterations;
+	    } else {
+		values = test->samples;
+		num_values = test->samples_count;
+	    }
+
+	    if (_cairo_histogram_compute (&h, values, num_values))
+		_cairo_histogram_printf (&h, stdout);
 	}
+
+	if (test->size) {
+	    printf ("%5s-%-4s %26s-%-3d  ",
+		    test->backend, test->content,
+		    test->name, test->size);
+	} else {
+	    printf ("%5s %26s  ", test->backend, test->name);
+	}
+	printf("%6.2f %4.2f%% (%d/%d)\n",
+	       test->stats.median_ticks / test->stats.ticks_per_ms,
+	       test->stats.std_dev * 100,
+	       test->stats.iterations, test->samples_count);
     }
+
+    _cairo_histogram_fini (&h);
 }
 
 int
 main (int	  argc,
       const char *argv[])
 {
+    cairo_bool_t show_histogram = 0;
     int i;
 
     for (i = 1; i < argc; i++ ) {
 	cairo_perf_report_t report;
 
+	if (strcmp(argv[i], "--histogram") == 0) {
+	    show_histogram = 1;
+	    continue;
+	}
+
+	if (strcmp(argv[i], "--short-histogram") == 0) {
+	    show_histogram = 2;
+	    continue;
+	}
+
 	cairo_perf_report_load (&report, argv[i], i, NULL);
-	report_print (&report);
+	report_print (&report, show_histogram);
     }
 
     return 0;

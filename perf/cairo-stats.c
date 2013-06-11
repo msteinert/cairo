@@ -43,6 +43,7 @@ _cairo_stats_compute (cairo_stats_t *stats,
 	stats->min_ticks = stats->median_ticks = values[0];
 	stats->std_dev = 0;
 	stats->iterations = 1;
+	stats->values = values;
 	return;
     }
 
@@ -80,6 +81,7 @@ _cairo_stats_compute (cairo_stats_t *stats,
 	values += min_valid;
     } while (num_valid != num_values);
 
+    stats->values = values;
     stats->iterations = num_valid;
     stats->min_ticks = values[0];
     stats->median_ticks = values[num_valid / 2];
@@ -96,4 +98,82 @@ _cairo_stats_compute (cairo_stats_t *stats,
 	s += delta * delta;
     }
     stats->std_dev = sqrt(s / num_valid);
+}
+
+cairo_bool_t
+_cairo_histogram_init (cairo_histogram_t *h,
+		       int width, int height)
+{
+    h->width = width;
+    h->height = height;
+    if (h->width < 2 || h->height < 1)
+	return FALSE;
+
+    h->num_columns = width - 2;
+    h->num_rows = height - 1;
+    h->columns = malloc (sizeof(int)*h->num_columns);
+    return h->columns != NULL;
+}
+
+cairo_bool_t
+_cairo_histogram_compute (cairo_histogram_t *h,
+			  const cairo_time_t *values,
+			  int num_values)
+{
+    cairo_time_t delta;
+    int i;
+
+    if (num_values == 0)
+	return FALSE;
+
+    h->min_value = values[0];
+    h->max_value = values[0];
+
+    for (i = 1; i < num_values; i++) {
+	if (values[i] < h->min_value)
+	    h->min_value = values[i];
+	if (values[i] > h->max_value)
+	    h->max_value = values[i];
+    }
+
+    delta = h->max_value - h->min_value;
+    if (delta == 0)
+	return FALSE;
+
+    memset(h->columns, 0, sizeof(int)*h->num_columns);
+    h->max_count = 0;
+
+    for (i = 0; i < num_values; i++) {
+	int count = h->columns[(values[i] - h->min_value) * (h->num_columns - 1) / delta]++;
+	if (count > h->max_count)
+	    h->max_count = count;
+    }
+
+    return TRUE;
+}
+
+void
+_cairo_histogram_printf (cairo_histogram_t *h,
+			 FILE *file)
+{
+    int x, y;
+
+    for (y = 0; y < h->num_rows; y++) {
+	int min_count = (h->num_rows - y - 1) * h->max_count / h->num_rows;
+	fprintf (file, "|");
+	for (x = 0; x < h->num_columns; x++)
+	    fprintf (file, "%c", h->columns[x] > min_count ? 'x' : ' ');
+	fprintf (file, "|\n");
+    }
+
+    fprintf(file, ".");
+    for (x = 0; x < h->num_columns; x++)
+	fprintf (file, "-");
+    fprintf (file, ".\n");
+}
+
+void
+_cairo_histogram_fini (cairo_histogram_t *h)
+{
+    free(h->columns);
 }
