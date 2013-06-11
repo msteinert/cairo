@@ -156,10 +156,13 @@ void
 _cairo_histogram_printf (cairo_histogram_t *h,
 			 FILE *file)
 {
-    int x, y;
+    int x, y, num_rows;
 
-    for (y = 0; y < h->num_rows; y++) {
-	int min_count = (h->num_rows - y - 1) * h->max_count / h->num_rows;
+    num_rows = h->num_rows;
+    if (h->max_count < num_rows)
+	num_rows = h->max_count;
+    for (y = 0; y < num_rows; y++) {
+	int min_count = ((num_rows - y - 1) * h->max_count) / num_rows + h->max_count / (2*num_rows);
 	fprintf (file, "|");
 	for (x = 0; x < h->num_columns; x++)
 	    fprintf (file, "%c", h->columns[x] > min_count ? 'x' : ' ');
