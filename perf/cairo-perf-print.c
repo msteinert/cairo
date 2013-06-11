@@ -27,10 +27,26 @@
  *	    Chris Wilson <chris@chris-wilson.co.uk>
  */
 
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "cairo-perf.h"
 #include "cairo-stats.h"
 
 #include <stdio.h>
+
+#if HAVE_UNISTD_H && HAVE_SYS_IOCTL_H
+#define USE_TERMINAL_SIZE 1
+#else
+#define USE_TERMINAL_SIZE 0
+#error bang
+#endif
+
+#if USE_TERMINAL_SIZE
+#include <unistd.h>
+#include <sys/ioctl.h>
+#endif
 
 static void
 report_print (const cairo_perf_report_t *report,
@@ -39,8 +55,25 @@ report_print (const cairo_perf_report_t *report,
     const test_report_t *test;
     cairo_histogram_t h;
 
-    if (show_histogram && !_cairo_histogram_init (&h, 80, 23))
-	show_histogram = 0;
+    if (show_histogram) {
+	int num_rows = 23;
+	int num_cols = 80;
+
+#if USE_TERMINAL_SIZE
+	int fd = fileno(stdout);
+	if (isatty(fd)) {
+	    struct winsize ws;
+
+	    if(ioctl(fd, TIOCGWINSZ, &ws) == 0 ) {
+		num_rows = ws.ws_row - 1;
+		num_cols = ws.ws_col;
+	    }
+	}
+#endif
+
+	if (!_cairo_histogram_init (&h, num_cols, num_rows))
+	    show_histogram = 0;
+    }
 
     for (test = report->tests; test->name != NULL; test++) {
 	if (test->stats.iterations == 0)
