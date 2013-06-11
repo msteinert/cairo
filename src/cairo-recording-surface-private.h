@@ -133,8 +133,8 @@ typedef struct _cairo_recording_surface {
     cairo_bool_t unbounded;
 
     cairo_array_t commands;
-    int *indices;
-    int num_indices;
+    unsigned int *indices;
+    unsigned int num_indices;
     cairo_bool_t optimize_clears;
 
     struct bbtree {

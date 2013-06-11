@@ -257,7 +257,7 @@ static cairo_bool_t box_outside (const cairo_box_t *a, const cairo_box_t *b)
 static void
 bbtree_foreach_mark_visible (struct bbtree *bbt,
 			     const cairo_box_t *box,
-			     int **indices)
+			     unsigned int **indices)
 {
     cairo_command_header_t *chain;
 
@@ -270,13 +270,13 @@ bbtree_foreach_mark_visible (struct bbtree *bbt,
 	bbtree_foreach_mark_visible (bbt->right, box, indices);
 }
 
-static inline int intcmp (const int a, const int b)
+static inline int intcmp (const unsigned int a, const unsigned int b)
 {
     return a - b;
 }
-CAIRO_COMBSORT_DECLARE (sort_indices, int, intcmp)
+CAIRO_COMBSORT_DECLARE (sort_indices, unsigned int, intcmp)
 
-static inline int sizecmp (int a, int b, cairo_command_header_t **elements)
+static inline int sizecmp (unsigned int a, unsigned int b, cairo_command_header_t **elements)
 {
     const cairo_rectangle_int_t *r;
 
@@ -288,7 +288,7 @@ static inline int sizecmp (int a, int b, cairo_command_header_t **elements)
 
     return b - a;
 }
-CAIRO_COMBSORT_DECLARE_WITH_DATA (sort_commands, int, sizecmp)
+CAIRO_COMBSORT_DECLARE_WITH_DATA (sort_commands, unsigned int, sizecmp)
 
 static void
 _cairo_recording_surface_destroy_bbtree (cairo_recording_surface_t *surface)
@@ -320,9 +320,9 @@ static cairo_status_t
 _cairo_recording_surface_create_bbtree (cairo_recording_surface_t *surface)
 {
     cairo_command_t **elements = _cairo_array_index (&surface->commands, 0);
+    unsigned int *indices;
     cairo_status_t status;
-    int i, count;
-    int *indices;
+    unsigned int i, count;
 
     count = surface->commands.num_elements;
     if (count > surface->num_indices) {
@@ -1583,7 +1583,7 @@ static int
 _cairo_recording_surface_get_visible_commands (cairo_recording_surface_t *surface,
 					       const cairo_rectangle_int_t *extents)
 {
-    int num_visible, *indices;
+    unsigned int num_visible, *indices;
     cairo_box_t box;
 
     _cairo_box_from_rectangle (&box, extents);
@@ -1618,7 +1618,7 @@ _cairo_recording_surface_replay_internal (cairo_recording_surface_t	*surface,
     cairo_rectangle_int_t extents;
     cairo_bool_t use_indices = FALSE;
     const cairo_rectangle_int_t *r;
-    int i, num_elements;
+    unsigned int i, num_elements;
 
     if (unlikely (surface->base.status))
 	return surface->base.status;
