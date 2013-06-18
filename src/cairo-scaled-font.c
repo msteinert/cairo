@@ -2905,8 +2905,12 @@ _cairo_scaled_font_free_last_glyph (cairo_scaled_font_t *scaled_font,
 
     if (--page->num_glyphs == 0) {
 	CAIRO_MUTEX_LOCK (_cairo_scaled_glyph_page_cache_mutex);
+	/* Temporarily disconnect callback to avoid recursive locking */
+	cairo_scaled_glyph_page_cache.entry_destroy = NULL;
 	_cairo_cache_remove (&cairo_scaled_glyph_page_cache,
 		             &page->cache_entry);
+	_cairo_scaled_glyph_page_destroy (scaled_font, page);
+	cairo_scaled_glyph_page_cache.entry_destroy = _cairo_scaled_glyph_page_pluck;
 	CAIRO_MUTEX_UNLOCK (_cairo_scaled_glyph_page_cache_mutex);
     }
 }
