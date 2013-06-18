@@ -1586,6 +1586,9 @@ _cairo_recording_surface_get_visible_commands (cairo_recording_surface_t *surfac
     unsigned int num_visible, *indices;
     cairo_box_t box;
 
+    if (surface->commands.num_elements == 0)
+	    return 0;
+
     _cairo_box_from_rectangle (&box, extents);
 
     if (surface->bbtree.chain == INVALID_CHAIN)
