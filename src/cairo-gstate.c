@@ -1462,19 +1462,19 @@ _cairo_gstate_stroke_extents (cairo_gstate_t	 *gstate,
     }
 
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
-	cairo_traps_t traps;
+	cairo_polygon_t polygon;
 
-	_cairo_traps_init (&traps);
-	status = _cairo_path_fixed_stroke_polygon_to_traps (path,
-							    &gstate->stroke_style,
-							    &gstate->ctm,
-							    &gstate->ctm_inverse,
-							    gstate->tolerance,
-							    &traps);
-	empty = traps.num_traps == 0;
+	_cairo_polygon_init (&polygon, NULL, 0);
+	status = _cairo_path_fixed_stroke_to_polygon (path,
+						      &gstate->stroke_style,
+						      &gstate->ctm,
+						      &gstate->ctm_inverse,
+						      gstate->tolerance,
+						      &polygon);
+	empty = polygon.num_edges == 0;
 	if (! empty)
-	    _cairo_traps_extents (&traps, &extents);
-	_cairo_traps_fini (&traps);
+	    extents = polygon.extents;
+	_cairo_polygon_fini (&polygon);
     }
     if (! empty) {
 	_cairo_gstate_extents_to_user_rectangle (gstate, &extents,
