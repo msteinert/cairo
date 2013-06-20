@@ -767,7 +767,7 @@ _cairo_image_surface_snapshot (void *abstract_surface)
 	clone->transparency = image->transparency;
 	clone->color = image->color;
 
-	clone->owns_data = FALSE;
+	clone->owns_data = TRUE;
 	return &clone->base;
     }
 
