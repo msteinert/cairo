@@ -530,7 +530,7 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static cairo_int_status_t
 _cairo_ps_emit_imagemask (cairo_image_surface_t *image,
 			  cairo_output_stream_t *stream)
 {
