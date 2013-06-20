@@ -1306,6 +1306,7 @@ cairo_type1_font_subset_write_private_dict (cairo_type1_font_subset_t *font,
     if (subrs == NULL) {
 	font->subset_subrs = FALSE;
 	p = font->cleartext;
+	array_start = NULL;
 	goto skip_subrs;
     }
 
