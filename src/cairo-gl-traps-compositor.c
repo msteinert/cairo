@@ -367,7 +367,7 @@ traps_to_operand (void *_dst,
     if (unlikely (status))
 	goto error;
 
-    operand->texture.owns_surface = mask;
+    operand->texture.owns_surface = (cairo_gl_surface_t *)mask;
     return CAIRO_STATUS_SUCCESS;
 
 error:
