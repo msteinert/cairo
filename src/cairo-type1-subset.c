@@ -1256,21 +1256,21 @@ cairo_type1_font_subset_write_private_dict (cairo_type1_font_subset_t *font,
      * the actual glyph definitions (charstrings).
      *
      * What we do here is scan directly to the /Subrs token, which
-     * marks the beginning of the subroutines. We then read in all the
-     * subroutines then move on to the /CharString token, which marks
-     * the beginning of the glyph definitions, and read in the chastrings.
+     * marks the beginning of the subroutines. We read in all the
+     * subroutines, then move on to the /CharString token, which marks
+     * the beginning of the glyph definitions, and read in the charstrings.
      *
-     * The charstrings are parsed to extracts glyph widths, work out
-     * which subroutines are called, and too see if any extra glyphs
+     * The charstrings are parsed to extract glyph widths, work out
+     * which subroutines are called, and to see if any extra glyphs
      * need to be included due to the use of the seac glyph combining
      * operator.
      *
-     * Finally the private dict is copied to the subset font minus the
+     * Finally, the private dict is copied to the subset font minus the
      * subroutines and charstrings not required.
      */
 
     /* Determine lenIV, the number of random characters at the start of
-       each encrypted charstring. The defaults is 4, but this can be
+       each encrypted charstring. The default is 4, but this can be
        overridden in the private dict. */
     font->lenIV = 4;
     if ((lenIV_start = find_token (font->cleartext, font->cleartext_end, "/lenIV")) != NULL) {
