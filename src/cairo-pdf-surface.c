@@ -2389,8 +2389,10 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
 
     color = _cairo_image_analyze_color (image);
     switch (color) {
-	case CAIRO_IMAGE_IS_COLOR:
+        default:
 	case CAIRO_IMAGE_UNKNOWN_COLOR:
+	    ASSERT_NOT_REACHED;
+	case CAIRO_IMAGE_IS_COLOR:
 	    data_size = image->height * image->width * 3;
 	    data = _cairo_malloc_abc (image->width, image->height, 3);
 	    break;
