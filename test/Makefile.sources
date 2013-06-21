@@ -42,8 +42,9 @@ test_sources = \
 	clear.c						\
 	clear-source.c					\
 	clip-all.c					\
-	clip-contexts.c					\
+	clip-complex-bug61592.c				\
 	clip-complex-shape.c				\
+	clip-contexts.c					\
 	clip-disjoint.c					\
 	clip-disjoint-hatching.c			\
 	clip-disjoint-quad.c				\
