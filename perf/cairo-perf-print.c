@@ -107,7 +107,8 @@ report_print (const cairo_perf_report_t *report,
 	       test->stats.iterations, test->samples_count);
     }
 
-    _cairo_histogram_fini (&h);
+    if (show_histogram)
+	_cairo_histogram_fini (&h);
 }
 
 int
