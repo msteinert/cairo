@@ -201,6 +201,13 @@ typedef enum cairo_gl_tex {
 typedef struct cairo_gl_shader {
     GLuint fragment_shader;
     GLuint program;
+    GLint mvp_location;
+    GLint constant_location[2];
+    GLint a_location[2];
+    GLint circle_d_location[2];
+    GLint radius_0_location[2];
+    GLint texdims_location[2];
+    GLint texgen_location[2];
 } cairo_gl_shader_t;
 
 typedef enum cairo_gl_shader_in {
@@ -651,35 +658,35 @@ _cairo_gl_get_shader_by_type (cairo_gl_context_t *ctx,
 
 cairo_private void
 _cairo_gl_shader_bind_float (cairo_gl_context_t *ctx,
-			     const char *name,
+			     GLint location,
 			     float value);
 
 cairo_private void
 _cairo_gl_shader_bind_vec2 (cairo_gl_context_t *ctx,
-			    const char *name,
+			    GLint location,
 			    float value0, float value1);
 
 cairo_private void
 _cairo_gl_shader_bind_vec3 (cairo_gl_context_t *ctx,
-			    const char *name,
+			    GLint location,
 			    float value0,
 			    float value1,
 			    float value2);
 
 cairo_private void
 _cairo_gl_shader_bind_vec4 (cairo_gl_context_t *ctx,
-			    const char *name,
+			    GLint location,
 			    float value0, float value1,
 			    float value2, float value3);
 
 cairo_private void
 _cairo_gl_shader_bind_matrix (cairo_gl_context_t *ctx,
-			      const char *name,
+			      GLint location,
 			      const cairo_matrix_t* m);
 
 cairo_private void
 _cairo_gl_shader_bind_matrix4f (cairo_gl_context_t *ctx,
-				const char *name,
+				GLint location,
 				GLfloat* gl_m);
 
 cairo_private void

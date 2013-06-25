@@ -613,13 +613,7 @@ _cairo_gl_operand_bind_to_shader (cairo_gl_context_t *ctx,
                                   cairo_gl_operand_t *operand,
                                   cairo_gl_tex_t      tex_unit)
 {
-    char uniform_name[50];
-    char *custom_part;
-    static const char *names[] = { "source", "mask" };
     const cairo_matrix_t *texgen = NULL;
-
-    strcpy (uniform_name, names[tex_unit]);
-    custom_part = uniform_name + strlen (names[tex_unit]);
 
     switch (operand->type) {
     default:
@@ -629,9 +623,8 @@ _cairo_gl_operand_bind_to_shader (cairo_gl_context_t *ctx,
 	return;
 
     case CAIRO_GL_OPERAND_CONSTANT:
-        strcpy (custom_part, "_constant");
 	_cairo_gl_shader_bind_vec4 (ctx,
-                                    uniform_name,
+                                    ctx->current_shader->constant_location[tex_unit],
                                     operand->constant.color[0],
                                     operand->constant.color[1],
                                     operand->constant.color[2],
@@ -640,21 +633,18 @@ _cairo_gl_operand_bind_to_shader (cairo_gl_context_t *ctx,
 
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_NONE:
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_EXT:
-	strcpy (custom_part, "_a");
 	_cairo_gl_shader_bind_float  (ctx,
-				      uniform_name,
+				      ctx->current_shader->a_location[tex_unit],
 				      operand->gradient.a);
 	/* fall through */
     case CAIRO_GL_OPERAND_RADIAL_GRADIENT_A0:
-	strcpy (custom_part, "_circle_d");
 	_cairo_gl_shader_bind_vec3   (ctx,
-				      uniform_name,
+				      ctx->current_shader->circle_d_location[tex_unit],
 				      operand->gradient.circle_d.center.x,
 				      operand->gradient.circle_d.center.y,
 				      operand->gradient.circle_d.radius);
-	strcpy (custom_part, "_radius_0");
 	_cairo_gl_shader_bind_float  (ctx,
-				      uniform_name,
+				      ctx->current_shader->radius_0_location[tex_unit],
 				      operand->gradient.radius_0);
         /* fall through */
     case CAIRO_GL_OPERAND_LINEAR_GRADIENT:
@@ -677,8 +667,9 @@ _cairo_gl_operand_bind_to_shader (cairo_gl_context_t *ctx,
 		width = operand->gradient.gradient->cache_entry.size,
 		height = 1;
 	    }
-	    strcpy (custom_part, "_texdims");
-	    _cairo_gl_shader_bind_vec2 (ctx, uniform_name, width, height);
+	    _cairo_gl_shader_bind_vec2 (ctx,
+					ctx->current_shader->texdims_location[tex_unit],
+					width, height);
 	}
 	break;
     }
@@ -691,10 +682,9 @@ _cairo_gl_operand_bind_to_shader (cairo_gl_context_t *ctx,
 		    texgen = &operand->gradient.m;
     }
     if (texgen) {
-	    char name[20];
-
-	    sprintf (name, "%s_texgen", names[tex_unit]);
-	    _cairo_gl_shader_bind_matrix(ctx, name, texgen);
+	    _cairo_gl_shader_bind_matrix(ctx,
+					 ctx->current_shader->texgen_location[tex_unit],
+					 texgen);
     }
 }
 
