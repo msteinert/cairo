@@ -46,6 +46,16 @@ for file in *.ref.png; do
 	fi
     fi
 
+    # Special cases
+    if [ $test = "create-from-png" ]; then
+	# The create-from-png test utilizes multiple reference images directly
+	continue
+    elif [ $test = "fallback-resolution" ]; then
+	# The fallback-resolution test generates a set of reference images;
+	# These won't be redundant with one another, but just ignore them all.
+	continue
+    fi
+
     if [ -e $ref ]; then
 	if cmp --silent "$ref" "$file" ; then
 	    printf "redundant: %s and %s are byte-by-byte identical files\n" $file $ref
