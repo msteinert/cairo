@@ -1033,6 +1033,8 @@ _cairo_gl_surface_finish (void *abstract_surface)
 	ctx->dispatch.DeleteRenderbuffers (1, &surface->msaa_rb);
 #endif
 
+    _cairo_clip_destroy (surface->clip_on_stencil_buffer);
+
     return _cairo_gl_context_release (ctx, status);
 }
 

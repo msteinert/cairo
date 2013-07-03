@@ -584,8 +584,11 @@ _cairo_gl_composite_setup_painted_clipping (cairo_gl_composite_t *setup,
 
       /* Clear the stencil buffer, but only the areas that we are
        * going to be drawing to. */
-	if (old_clip)
+	if (old_clip) {
 	    _cairo_gl_scissor_to_rectangle (dst, _cairo_clip_get_extents (old_clip));
+	    _cairo_clip_destroy (setup->dst->clip_on_stencil_buffer);
+	}
+
 	setup->dst->clip_on_stencil_buffer = _cairo_clip_copy (setup->clip);
     }
 
