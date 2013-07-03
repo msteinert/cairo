@@ -47,14 +47,18 @@ for file in *.ref.png; do
     fi
 
     if [ -e $ref ]; then
-        # Run perceptualdiff with minimum threshold
-        pdiff_output=$($pdiff $ref $file -threshold 1)
-        result=${pdiff_output%:*}
-        notes=$(echo "${pdiff_output#*: }" | tail -n 1)
-        if [ "$result" = "PASS" ] && [ "$notes" = "Images are binary identical" ]; then
-	    printf "redundant: %s is binary identical to %s\n" $file $ref
-            notes=""
-        fi
+	if cmp --silent "$ref" "$file" ; then
+	    printf "redundant: %s and %s are byte-by-byte identical files\n" $file $ref
+	else
+            # Run perceptualdiff with minimum threshold
+            pdiff_output=$($pdiff $ref $file -threshold 1)
+            result=${pdiff_output%:*}
+            notes=$(echo "${pdiff_output#*: }" | tail -n 1)
+            if [ "$result" = "PASS" ] && [ "$notes" = "Images are binary identical" ]; then
+		printf "redundant: %s and %s are pixel equivalent images\n" $file $ref
+		notes=""
+            fi
+	fi
     fi
 
 done
