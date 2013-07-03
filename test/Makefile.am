@@ -72,6 +72,7 @@ endif
 test_sources += $(test)
 
 noinst_PROGRAMS = cairo-test-suite$(EXEEXT) # always build
+noinst_SCRIPTS = check-refs.sh
 
 TESTS += cairo-test-suite$(EXEEXT)
 
