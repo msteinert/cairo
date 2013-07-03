@@ -32,7 +32,7 @@ static bool Yee_Compare(args_t *args)
     unsigned int width_b, height_b, stride_b;
     unsigned char *data_b, *row_b;
     uint32_t *pixel_b;
-    unsigned int x, y, dim, pixels_failed;
+    unsigned int x, y, pixels_failed;
     bool identical = true;
 
     width_a = cairo_image_surface_get_width (args->surface_a);
