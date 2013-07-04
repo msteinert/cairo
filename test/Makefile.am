@@ -450,11 +450,11 @@ $(NOLOG_TESTS_LOG):
 
 # Identify identical reference images
 check-ref-dups: check-refs.sh $(top_builddir)/test/pdiff/perceptualdiff
-	cd $(srcdir) && sh ./check-refs.sh
+	sh $(srcdir)/check-refs.sh $(top_builddir)/test/pdiff/perceptualdiff
 
 # Remove identical reference images (DANGEROUS)
 clean-ref-dups: check-refs.sh $(top_builddir)/test/pdiff/perceptualdiff
-	cd $(srcdir) && sh ./check-refs.sh | cut -d' ' -f2 | while read f; do git rm "reference/$$f"; done
+	sh $(srcdir)/check-refs.sh | cut -d' ' -f2 | while read f; do git rm "reference/$$f"; done
 
 results.tar:
 	@tar cf $@ index.html testtable.js *.log output/*.log; \

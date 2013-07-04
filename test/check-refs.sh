@@ -1,23 +1,12 @@
 #!/bin/bash
 
-current_dir=$(pwd)
+cd $(dirname $0)/reference || exit
 
-# Move to the reference directory as needed
-if [ $(basename $current_dir) != 'test' ]; then
-    if [ -d test ]; then
-        cd test || exit 1
-    fi
-fi
-if [ $(basename $current_dir) != 'reference' ]; then
-    if [ -d reference ]; then
-        cd reference || exit 2
-    fi
-fi
-
-pdiff=../pdiff/perceptualdiff
+pdiff=$1
+[ -n "$pdiff" ] || pdiff=../pdiff/perceptualdiff
 if [ ! -e "${pdiff}" ]; then
     echo "Error:  requires ${pdiff} executable"
-    exit 3
+    exit 128
 fi
 
 for file in *.ref.png; do
