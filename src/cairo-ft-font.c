@@ -1158,9 +1158,7 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 		source = bitmap->buffer;
 		dest = data;
 		for (i = height; i; i--) {
-		    memcpy (dest, source, bitmap->pitch);
-		    memset (dest + bitmap->pitch, '\0', stride - bitmap->pitch);
-
+		    memcpy (dest, source, stride);
 		    source += bitmap->pitch;
 		    dest += stride;
 		}
