@@ -618,6 +618,9 @@ static void
 bind_multisample_framebuffer (cairo_gl_context_t *ctx,
 			       cairo_gl_surface_t *surface)
 {
+    cairo_bool_t stencil_test_enabled;
+    cairo_bool_t scissor_test_enabled;
+
     assert (surface->supports_msaa);
     assert (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP);
 
@@ -631,6 +634,12 @@ bind_multisample_framebuffer (cairo_gl_context_t *ctx,
     }
 
     _cairo_gl_composite_flush (ctx);
+
+    stencil_test_enabled = glIsEnabled (GL_STENCIL_TEST);
+    scissor_test_enabled = glIsEnabled (GL_SCISSOR_TEST);
+    glDisable (GL_STENCIL_TEST);
+    glDisable (GL_SCISSOR_TEST);
+
     glEnable (GL_MULTISAMPLE);
 
     /* The last time we drew to the surface, we were not using multisampling,
@@ -642,6 +651,11 @@ bind_multisample_framebuffer (cairo_gl_context_t *ctx,
 				   0, 0, surface->width, surface->height,
 				   GL_COLOR_BUFFER_BIT, GL_NEAREST);
     ctx->dispatch.BindFramebuffer (GL_FRAMEBUFFER, surface->msaa_fb);
+
+    if (stencil_test_enabled)
+	glEnable (GL_STENCIL_TEST);
+    if (scissor_test_enabled)
+	glEnable (GL_SCISSOR_TEST);
 }
 #endif
 
@@ -650,6 +664,9 @@ static void
 bind_singlesample_framebuffer (cairo_gl_context_t *ctx,
 			       cairo_gl_surface_t *surface)
 {
+    cairo_bool_t stencil_test_enabled;
+    cairo_bool_t scissor_test_enabled;
+
     assert (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP);
     _cairo_gl_ensure_framebuffer (ctx, surface);
 
@@ -660,6 +677,12 @@ bind_singlesample_framebuffer (cairo_gl_context_t *ctx,
     }
 
     _cairo_gl_composite_flush (ctx);
+
+    stencil_test_enabled = glIsEnabled (GL_STENCIL_TEST);
+    scissor_test_enabled = glIsEnabled (GL_SCISSOR_TEST);
+    glDisable (GL_STENCIL_TEST);
+    glDisable (GL_SCISSOR_TEST);
+
     glDisable (GL_MULTISAMPLE);
 
     /* The last time we drew to the surface, we were using multisampling,
@@ -671,6 +694,11 @@ bind_singlesample_framebuffer (cairo_gl_context_t *ctx,
 				   0, 0, surface->width, surface->height,
 				   GL_COLOR_BUFFER_BIT, GL_NEAREST);
     ctx->dispatch.BindFramebuffer (GL_FRAMEBUFFER, surface->fb);
+
+    if (stencil_test_enabled)
+	glEnable (GL_STENCIL_TEST);
+    if (scissor_test_enabled)
+	glEnable (GL_SCISSOR_TEST);
 }
 #endif
 
