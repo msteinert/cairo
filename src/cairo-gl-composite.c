@@ -570,10 +570,14 @@ _cairo_gl_composite_setup_painted_clipping (cairo_gl_composite_t *setup,
 	goto disable_stencil_buffer_and_return;
     }
 
+    /* We only want to clear the part of the stencil buffer
+     * that we are about to use. It also does not hurt to
+     * scissor around the painted clip. */
+    _cairo_gl_scissor_to_rectangle (dst, _cairo_clip_get_extents (clip));
+
     /* The clip is not rectangular, so use the stencil buffer. */
     glDepthMask (GL_TRUE);
     glEnable (GL_STENCIL_TEST);
-    glDisable (GL_SCISSOR_TEST);
 
     /* Texture surfaces have private depth/stencil buffers, so we can
      * rely on any previous clip being cached there. */
@@ -582,10 +586,7 @@ _cairo_gl_composite_setup_painted_clipping (cairo_gl_composite_t *setup,
 	if (_cairo_clip_equal (old_clip, setup->clip))
 	    goto activate_stencil_buffer_and_return;
 
-      /* Clear the stencil buffer, but only the areas that we are
-       * going to be drawing to. */
 	if (old_clip) {
-	    _cairo_gl_scissor_to_rectangle (dst, _cairo_clip_get_extents (old_clip));
 	    _cairo_clip_destroy (setup->dst->clip_on_stencil_buffer);
 	}
 
@@ -594,7 +595,6 @@ _cairo_gl_composite_setup_painted_clipping (cairo_gl_composite_t *setup,
 
     glClearStencil (0);
     glClear (GL_STENCIL_BUFFER_BIT);
-    glDisable (GL_SCISSOR_TEST);
 
     glStencilOp (GL_REPLACE, GL_REPLACE, GL_REPLACE);
     glStencilFunc (GL_EQUAL, 1, 0xffffffff);
