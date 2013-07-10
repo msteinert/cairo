@@ -248,6 +248,7 @@ test_sources = \
 	pattern-get-type.c				\
 	pattern-getters.c				\
 	pdf-isolated-group.c				\
+	pixman-downscale.c				\
 	pixman-rotate.c					\
 	png.c						\
 	push-group.c					\
