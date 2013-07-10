@@ -54,8 +54,7 @@ draw (cairo_t *cr, int width, int height)
     scale = fmin(x_scale, y_scale);
 
     cairo_save (cr);
-    cairo_set_antialias (cr, CAIRO_ANTIALIAS_NONE);
-    cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_NEAREST);
+    cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_FAST);
     cairo_scale (cr, scale, scale);
     cairo_set_source_surface (cr, image, 0, 0);
     cairo_paint (cr);
@@ -65,9 +64,23 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-CAIRO_TEST (pixman_downscale,
-	    "Exposes errors when downscaling",
+CAIRO_TEST (pixman_downscale_96,
+	    "Tests scaling to equivalent size",
 	    "image, transform, raster", /* keywords */
 	    NULL, /* requirements */
 	    96, 96,
+	    NULL, draw)
+
+CAIRO_TEST (pixman_downscale_95,
+	    "Tests downscaling by a single pixel",
+	    "image, transform, raster", /* keywords */
+	    NULL, /* requirements */
+	    95, 95,
+	    NULL, draw)
+
+CAIRO_TEST (pixman_downscale_24,
+	    "Tests downscaling by an even multiple",
+	    "image, transform, raster", /* keywords */
+	    NULL, /* requirements */
+	    24, 24,
 	    NULL, draw)
