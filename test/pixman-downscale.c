@@ -41,7 +41,7 @@ static const char png_filename[] = "quad-color.png";
 
 /* Draw an image scaled down, with antialiasing disabled */
 static cairo_test_status_t
-draw (cairo_t *cr, int width, int height)
+draw (cairo_t *cr, int width, int height, cairo_filter_t filter)
 {
     const cairo_test_context_t *ctx = cairo_test_get_context (cr);
     cairo_surface_t *image;
@@ -54,7 +54,7 @@ draw (cairo_t *cr, int width, int height)
     scale = fmin(x_scale, y_scale);
 
     cairo_save (cr);
-    cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_FAST);
+    cairo_pattern_set_filter (cairo_get_source (cr), filter);
     cairo_scale (cr, scale, scale);
     cairo_set_source_surface (cr, image, 0, 0);
     cairo_paint (cr);
@@ -64,23 +64,141 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-CAIRO_TEST (pixman_downscale_96,
-	    "Tests scaling to equivalent size",
-	    "image, transform, raster", /* keywords */
+static cairo_test_status_t
+draw_fast (cairo_t *cr, int width, int height)
+{
+  return draw (cr, width, height, CAIRO_FILTER_FAST);
+}
+
+static cairo_test_status_t
+draw_good (cairo_t *cr, int width, int height)
+{
+  return draw (cr, width, height, CAIRO_FILTER_GOOD);
+}
+
+static cairo_test_status_t
+draw_best (cairo_t *cr, int width, int height)
+{
+  return draw (cr, width, height, CAIRO_FILTER_BEST);
+}
+
+static cairo_test_status_t
+draw_nearest (cairo_t *cr, int width, int height)
+{
+  return draw (cr, width, height, CAIRO_FILTER_NEAREST);
+}
+
+static cairo_test_status_t
+draw_bilinear (cairo_t *cr, int width, int height)
+{
+  return draw (cr, width, height, CAIRO_FILTER_BILINEAR);
+}
+
+CAIRO_TEST (pixman_downscale_fast_96,
+	    "Tests scaling to equivalent size using the fast filter",
+	    "image, transform, raster, downscale", /* keywords */
 	    NULL, /* requirements */
 	    96, 96,
-	    NULL, draw)
+	    NULL, draw_fast)
 
-CAIRO_TEST (pixman_downscale_95,
-	    "Tests downscaling by a single pixel",
-	    "image, transform, raster", /* keywords */
+CAIRO_TEST (pixman_downscale_fast_95,
+	    "Tests downscaling by a single pixel using the fast filter",
+	    "image, transform, raster, downscale", /* keywords */
 	    NULL, /* requirements */
 	    95, 95,
-	    NULL, draw)
+	    NULL, draw_fast)
 
-CAIRO_TEST (pixman_downscale_24,
-	    "Tests downscaling by an even multiple",
-	    "image, transform, raster", /* keywords */
+CAIRO_TEST (pixman_downscale_fast_24,
+	    "Tests downscaling by an even multiple using the fast filter",
+	    "image, transform, raster, downscale", /* keywords */
 	    NULL, /* requirements */
 	    24, 24,
-	    NULL, draw)
+	    NULL, draw_fast)
+
+
+CAIRO_TEST (pixman_downscale_good_96,
+	    "Tests scaling to equivalent size using the good filter",
+	    "image, transform, raster, downscale", /* keywords */
+	    NULL, /* requirements */
+	    96, 96,
+	    NULL, draw_good)
+
+CAIRO_TEST (pixman_downscale_good_95,
+	    "Tests downscaling by a single pixel using the good filter",
+	    "image, transform, raster, downscale", /* keywords */
+	    NULL, /* requirements */
+	    95, 95,
+	    NULL, draw_good)
+
+CAIRO_TEST (pixman_downscale_good_24,
+	    "Tests downscaling by an even multiple using the good filter",
+	    "image, transform, raster, downscale", /* keywords */
+	    NULL, /* requirements */
+	    24, 24,
+	    NULL, draw_good)
+
+
+CAIRO_TEST (pixman_downscale_best_96,
+	    "Tests scaling to equivalent size using the best filter",
+	    "image, transform, raster, downscale", /* keywords */
+	    NULL, /* requirements */
+	    96, 96,
+	    NULL, draw_best)
+
+CAIRO_TEST (pixman_downscale_best_95,
+	    "Tests downscaling by a single pixel using the best filter",
+	    "image, transform, raster, downscale", /* keywords */
+	    NULL, /* requirements */
+	    95, 95,
+	    NULL, draw_best)
+
+CAIRO_TEST (pixman_downscale_best_24,
+	    "Tests downscaling by an even multiple using the best filter",
+	    "image, transform, raster, downscale", /* keywords */
+	    NULL, /* requirements */
+	    24, 24,
+	    NULL, draw_best)
+
+
+CAIRO_TEST (pixman_downscale_nearest_96,
+	    "Tests scaling to equivalent size using the nearest filter",
+	    "image, transform, raster, downscale", /* keywords */
+	    NULL, /* requirements */
+	    96, 96,
+	    NULL, draw_nearest)
+
+CAIRO_TEST (pixman_downscale_nearest_95,
+	    "Tests downscaling by a single pixel using the nearest filter",
+	    "image, transform, raster, downscale", /* keywords */
+	    NULL, /* requirements */
+	    95, 95,
+	    NULL, draw_nearest)
+
+CAIRO_TEST (pixman_downscale_nearest_24,
+	    "Tests downscaling by an even multiple using the nearest filter",
+	    "image, transform, raster, downscale", /* keywords */
+	    NULL, /* requirements */
+	    24, 24,
+	    NULL, draw_nearest)
+
+
+CAIRO_TEST (pixman_downscale_bilinear_96,
+	    "Tests scaling to equivalent size using the bilinear filter",
+	    "image, transform, raster, downscale", /* keywords */
+	    NULL, /* requirements */
+	    96, 96,
+	    NULL, draw_bilinear)
+
+CAIRO_TEST (pixman_downscale_bilinear_95,
+	    "Tests downscaling by a single pixel using the bilinear filter",
+	    "image, transform, raster, downscale", /* keywords */
+	    NULL, /* requirements */
+	    95, 95,
+	    NULL, draw_bilinear)
+
+CAIRO_TEST (pixman_downscale_bilinear_24,
+	    "Tests downscaling by an even multiple using the bilinear filter",
+	    "image, transform, raster, downscale", /* keywords */
+	    NULL, /* requirements */
+	    24, 24,
+	    NULL, draw_bilinear)
