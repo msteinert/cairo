@@ -394,6 +394,7 @@ ft_font_test_sources = \
 
 gl_surface_test_sources = \
 	gl-device-release.c \
+	gl-oversized-surface.c \
 	gl-surface-source.c
 
 quartz_surface_test_sources = quartz-surface-source.c

@@ -395,6 +395,23 @@ _cairo_gl_surface_init (cairo_device_t *device,
     _cairo_gl_surface_embedded_operand_init (surface);
 }
 
+static cairo_bool_t
+_cairo_gl_surface_size_valid_for_context (cairo_gl_context_t *ctx,
+					  int width, int height)
+{
+    return width > 0 && height > 0 &&
+	width <= ctx->max_framebuffer_size &&
+	height <= ctx->max_framebuffer_size;
+}
+
+static cairo_bool_t
+_cairo_gl_surface_size_valid (cairo_gl_surface_t *surface,
+			      int width, int height)
+{
+    cairo_gl_context_t *ctx = (cairo_gl_context_t *)surface->base.device;
+    return _cairo_gl_surface_size_valid_for_context (ctx, width, height);
+}
+
 static cairo_surface_t *
 _cairo_gl_surface_create_scratch_for_texture (cairo_gl_context_t   *ctx,
 					      cairo_content_t	    content,
@@ -404,7 +421,6 @@ _cairo_gl_surface_create_scratch_for_texture (cairo_gl_context_t   *ctx,
 {
     cairo_gl_surface_t *surface;
 
-    assert (width <= ctx->max_framebuffer_size && height <= ctx->max_framebuffer_size);
     surface = calloc (1, sizeof (cairo_gl_surface_t));
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
@@ -588,6 +604,11 @@ cairo_gl_surface_create (cairo_device_t		*abstract_device,
     if (unlikely (status))
 	return _cairo_surface_create_in_error (status);
 
+    if (! _cairo_gl_surface_size_valid_for_context (ctx, width, height)) {
+	status = _cairo_gl_context_release (ctx, status);
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+    }
+
     surface = (cairo_gl_surface_t *)
 	_cairo_gl_surface_create_and_clear_scratch (ctx, content, width, height);
     if (unlikely (surface->base.status)) {
@@ -759,16 +780,6 @@ cairo_gl_surface_swapbuffers (cairo_surface_t *abstract_surface)
         if (status)
             status = _cairo_surface_set_error (abstract_surface, status);
     }
-}
-
-static cairo_bool_t
-_cairo_gl_surface_size_valid (cairo_gl_surface_t *surface,
-			      int width, int height)
-{
-    cairo_gl_context_t *ctx = (cairo_gl_context_t *)surface->base.device;
-    return width > 0 && height > 0 &&
-	width <= ctx->max_framebuffer_size &&
-	height <= ctx->max_framebuffer_size;
 }
 
 static cairo_surface_t *
