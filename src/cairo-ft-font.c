@@ -1252,16 +1252,11 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 	    if (bitmap->num_grays != 256)
 	    {
 	      unsigned int x, y;
-	      unsigned int shift;
-	      switch (bitmap->num_grays) {
-	      case 4:  shift = 6; break;
-	      case 16: shift = 4; break;
-              default: shift = 0; break;
-	      }
+	      unsigned int mul = 255 / (bitmap->num_grays - 1);
 	      FT_Byte *p = bitmap->buffer;
 	      for (y = 0; y < height; y++) {
 	        for (x = 0; x < width; x++)
-		  p[x] <<= shift;
+		  p[x] *= mul;
 		p += bitmap->pitch;
 	      }
 	    }
