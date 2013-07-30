@@ -54,6 +54,7 @@
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
 #include FT_IMAGE_H
+#include FT_BITMAP_H
 #include FT_TRUETYPE_TABLES_H
 #include FT_XFREE86_H
 #if HAVE_FT_GLYPHSLOT_EMBOLDEN

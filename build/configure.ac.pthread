@@ -141,9 +141,9 @@ AC_DEFUN([CAIRO_CHECK_PTHREAD],[dnl
 		[$1_CFLAGS="$2";
 		 $1_LIBS="$3";
 		 $5],
-		[$1_CFLAGS="";
-		 $1_LIBS="";
-		 $6])
+		[$1_CFLAGS="$CFLAGS";
+		 $1_LIBS="$LIBS";
+		 $5])
 ])
 
 dnl CAIRO_CONFIGURE_PTHREADS(): Look for pthreads.
