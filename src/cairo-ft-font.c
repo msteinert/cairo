@@ -1232,10 +1232,9 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 	    FT_Bitmap  tmp;
 	    FT_Int     align;
 
-	    if ( bitmap->pixel_mode == FT_PIXEL_MODE_GRAY2 )
-	      align = ( bitmap->width + 3 ) / 4;
-	    else
-	      align = ( bitmap->width + 1 ) / 2;
+	    format = CAIRO_FORMAT_A8;
+
+	    align = cairo_format_stride_for_width (format, bitmap->width);
 
 	    FT_Bitmap_New( &tmp );
 
@@ -1263,8 +1262,6 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 	    }
 
 	    memcpy (data, bitmap->buffer, stride * height);
-
-	    format = CAIRO_FORMAT_A8;
 	    break;
 	}
 	/* These could be triggered by very rare types of TrueType fonts */
