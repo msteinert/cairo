@@ -1189,6 +1189,14 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 	    bitmap->pixel_mode == FT_PIXEL_MODE_GRAY)
 	{
 	    stride = bitmap->pitch;
+
+	    /* We don't support stride not multiple of 4. */
+	    if (stride & 3)
+	    {
+		assert (!own_buffer);
+		goto convert;
+	    }
+
 	    if (own_buffer) {
 		data = bitmap->buffer;
 	    } else {
@@ -1224,6 +1232,7 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 #endif
     case FT_PIXEL_MODE_GRAY2:
     case FT_PIXEL_MODE_GRAY4:
+    convert:
 	if (!own_buffer && library)
 	{
 	    /* This is pretty much the only case that we can get in here. */
