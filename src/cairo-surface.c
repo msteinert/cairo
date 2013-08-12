@@ -2368,6 +2368,13 @@ _cairo_surface_get_extents (cairo_surface_t         *surface,
 {
     cairo_bool_t bounded;
 
+    if (unlikely (surface->status))
+	goto zero_extents;
+    if (unlikely (surface->finished)) {
+	_cairo_surface_set_error(surface, CAIRO_STATUS_SURFACE_FINISHED);
+	goto zero_extents;
+    }
+
     bounded = FALSE;
     if (surface->backend->get_extents != NULL)
 	bounded = surface->backend->get_extents (surface, extents);
@@ -2376,6 +2383,11 @@ _cairo_surface_get_extents (cairo_surface_t         *surface,
 	_cairo_unbounded_rectangle_init (extents);
 
     return bounded;
+
+zero_extents:
+    extents->x = extents->y = 0;
+    extents->width = extents->height = 0;
+    return TRUE;
 }
 
 /**
