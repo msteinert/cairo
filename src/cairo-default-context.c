@@ -153,6 +153,11 @@ _cairo_default_context_push_group (void *abstract_cr, cairo_content_t content)
 
 	parent_surface = _cairo_gstate_get_target (cr->gstate);
 
+	if (unlikely (parent_surface->status))
+	    return parent_surface->status;
+	if (unlikely (parent_surface->finished))
+	    return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
+
 	/* Get the extents that we'll use in creating our new group surface */
 	bounded = _cairo_surface_get_extents (parent_surface, &extents);
 	if (clip)
