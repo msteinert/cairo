@@ -1346,6 +1346,13 @@ cairo_surface_supports_mime_type (cairo_surface_t		*surface,
 {
     const char **types;
 
+    if (unlikely (surface->status))
+	return FALSE;
+    if (unlikely (surface->finished)) {
+	_cairo_surface_set_error (surface, _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
+	return FALSE;
+    }
+
     if (surface->backend->get_supported_mime_types) {
 	types = surface->backend->get_supported_mime_types (surface);
 	if (types) {
@@ -2004,6 +2011,8 @@ _cairo_surface_paint (cairo_surface_t		*surface,
     TRACE ((stderr, "%s\n", __FUNCTION__));
     if (unlikely (surface->status))
 	return surface->status;
+    if (unlikely (surface->finished))
+	return _cairo_surface_set_error (surface, _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 
     if (_cairo_clip_is_all_clipped (clip))
 	return CAIRO_STATUS_SUCCESS;
@@ -2040,6 +2049,8 @@ _cairo_surface_mask (cairo_surface_t		*surface,
     TRACE ((stderr, "%s\n", __FUNCTION__));
     if (unlikely (surface->status))
 	return surface->status;
+    if (unlikely (surface->finished))
+	return _cairo_surface_set_error (surface, _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 
     if (_cairo_clip_is_all_clipped (clip))
 	return CAIRO_STATUS_SUCCESS;
@@ -2097,6 +2108,8 @@ _cairo_surface_fill_stroke (cairo_surface_t	    *surface,
     TRACE ((stderr, "%s\n", __FUNCTION__));
     if (unlikely (surface->status))
 	return surface->status;
+    if (unlikely (surface->finished))
+	return _cairo_surface_set_error (surface, _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 
     if (_cairo_clip_is_all_clipped (clip))
 	return CAIRO_STATUS_SUCCESS;
@@ -2177,6 +2190,8 @@ _cairo_surface_stroke (cairo_surface_t			*surface,
     TRACE ((stderr, "%s\n", __FUNCTION__));
     if (unlikely (surface->status))
 	return surface->status;
+    if (unlikely (surface->finished))
+	return _cairo_surface_set_error (surface, _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 
     if (_cairo_clip_is_all_clipped (clip))
 	return CAIRO_STATUS_SUCCESS;
@@ -2220,6 +2235,8 @@ _cairo_surface_fill (cairo_surface_t		*surface,
     TRACE ((stderr, "%s\n", __FUNCTION__));
     if (unlikely (surface->status))
 	return surface->status;
+    if (unlikely (surface->finished))
+	return _cairo_surface_set_error (surface, _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 
     if (_cairo_clip_is_all_clipped (clip))
 	return CAIRO_STATUS_SUCCESS;
@@ -2435,6 +2452,8 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
     TRACE ((stderr, "%s\n", __FUNCTION__));
     if (unlikely (surface->status))
 	return surface->status;
+    if (unlikely (surface->finished))
+	return _cairo_surface_set_error (surface, _cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 
     if (num_glyphs == 0 && utf8_len == 0)
 	return CAIRO_STATUS_SUCCESS;
