@@ -99,6 +99,7 @@ cairo_private = \
 	cairo-path-private.h \
 	cairo-pattern-inline.h \
 	cairo-pattern-private.h \
+	cairo-pixman-private.h \
 	cairo-private.h \
 	cairo-recording-surface-inline.h \
 	cairo-recording-surface-private.h \

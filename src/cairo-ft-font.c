@@ -45,6 +45,7 @@
 #include "cairo-image-surface-private.h"
 #include "cairo-ft-private.h"
 #include "cairo-pattern-private.h"
+#include "cairo-pixman-private.h"
 
 #include <float.h>
 
@@ -1126,9 +1127,10 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 		     cairo_font_options_t    *font_options,
 		     cairo_image_surface_t  **surface)
 {
-    int width, height, stride;
+    unsigned int width, height;
     unsigned char *data;
     int format = CAIRO_FORMAT_A8;
+    int stride;
     cairo_image_surface_t *image;
     cairo_bool_t component_alpha = FALSE;
 
@@ -1599,7 +1601,7 @@ _transform_glyph_bitmap (cairo_matrix_t         * shape,
     if (unlikely (status))
 	return status;
 
-    if (cairo_image_surface_get_format (*surface) == CAIRO_FORMAT_ARGB32 &&
+    if ((*surface)->format == CAIRO_FORMAT_ARGB32 &&
         !pixman_image_get_component_alpha ((*surface)->pixman_image))
       image = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
     else

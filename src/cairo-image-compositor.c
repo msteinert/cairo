@@ -52,6 +52,8 @@
 #include "cairo-traps-private.h"
 #include "cairo-tristrip-private.h"
 
+#include "cairo-pixman-private.h"
+
 static pixman_image_t *
 to_pixman_image (cairo_surface_t *s)
 {
@@ -256,9 +258,9 @@ _pixman_operator (cairo_operator_t op)
 }
 
 static cairo_bool_t
-fill_reduces_to_source (cairo_operator_t op,
-			const cairo_color_t *color,
-			cairo_image_surface_t *dst)
+__fill_reduces_to_source (cairo_operator_t op,
+			  const cairo_color_t *color,
+			  const cairo_image_surface_t *dst)
 {
     if (op == CAIRO_OPERATOR_SOURCE || op == CAIRO_OPERATOR_CLEAR)
 	return TRUE;
@@ -266,6 +268,20 @@ fill_reduces_to_source (cairo_operator_t op,
 	return TRUE;
     if (dst->base.is_clear)
 	return op == CAIRO_OPERATOR_OVER || op == CAIRO_OPERATOR_ADD;
+
+    return FALSE;
+}
+
+static cairo_bool_t
+fill_reduces_to_source (cairo_operator_t op,
+			const cairo_color_t *color,
+			const cairo_image_surface_t *dst,
+			uint32_t *pixel)
+{
+    if (__fill_reduces_to_source (op, color, dst)) {
+	color_to_pixel (color, dst->pixman_format, pixel);
+	return TRUE;
+    }
 
     return FALSE;
 }
@@ -283,9 +299,7 @@ fill_rectangles (void			*_dst,
 
     TRACE ((stderr, "%s\n", __FUNCTION__));
 
-    if (fill_reduces_to_source (op, color, dst) &&
-	color_to_pixel (color, dst->pixman_format, &pixel))
-    {
+    if (fill_reduces_to_source (op, color, dst, &pixel)) {
 	for (i = 0; i < num_rects; i++) {
 	    pixman_fill ((uint32_t *) dst->data, dst->stride / sizeof (uint32_t),
 			 PIXMAN_FORMAT_BPP (dst->pixman_format),
@@ -293,9 +307,7 @@ fill_rectangles (void			*_dst,
 			 rects[i].width, rects[i].height,
 			 pixel);
 	}
-    }
-    else
-    {
+    } else {
 	pixman_image_t *src = _pixman_image_for_color (color);
 
 	op = _pixman_operator (op);
@@ -327,9 +339,7 @@ fill_boxes (void		*_dst,
 
     TRACE ((stderr, "%s x %d\n", __FUNCTION__, boxes->num_boxes));
 
-    if (fill_reduces_to_source (op, color, dst) &&
-	color_to_pixel (color, dst->pixman_format, &pixel))
-    {
+    if (fill_reduces_to_source (op, color, dst, &pixel)) {
 	for (chunk = &boxes->chunks; chunk; chunk = chunk->next) {
 	    for (i = 0; i < chunk->count; i++) {
 		int x = _cairo_fixed_integer_part (chunk->base[i].p1.x);
@@ -674,6 +684,7 @@ composite_traps (void			*_dst,
     return  CAIRO_STATUS_SUCCESS;
 }
 
+#if PIXMAN_VERSION >= PIXMAN_VERSION_ENCODE(0,22,0)
 static void
 set_point (pixman_point_fixed_t *p, cairo_point_t *c)
 {
@@ -749,6 +760,7 @@ composite_tristrip (void			*_dst,
 
     return  CAIRO_STATUS_SUCCESS;
 }
+#endif
 
 static cairo_int_status_t
 check_composite_glyphs (const cairo_composite_rectangles_t *extents,
@@ -1215,7 +1227,9 @@ _cairo_image_traps_compositor_get (void)
 	//compositor.check_composite_traps = check_composite_traps;
 	compositor.composite_traps = composite_traps;
 	//compositor.check_composite_tristrip = check_composite_traps;
+#if PIXMAN_VERSION >= PIXMAN_VERSION_ENCODE(0,22,0)
 	compositor.composite_tristrip = composite_tristrip;
+#endif
 	compositor.check_composite_glyphs = check_composite_glyphs;
 	compositor.composite_glyphs = composite_glyphs;
     }
@@ -2010,8 +2024,7 @@ mono_renderer_init (cairo_image_span_renderer_t	*r,
 	if (composite->op == CAIRO_OPERATOR_CLEAR)
 	    color = CAIRO_COLOR_TRANSPARENT;
 
-	if (fill_reduces_to_source (composite->op, color, dst) &&
-	    color_to_pixel (color, dst->pixman_format, &r->u.fill.pixel)) {
+	if (fill_reduces_to_source (composite->op, color, dst, &r->u.fill.pixel)) {
 	    /* Use plain C for the fill operations as the span length is
 	     * typically small, too small to payback the startup overheads of
 	     * using SSE2 etc.
@@ -2755,8 +2768,7 @@ inplace_renderer_init (cairo_image_span_renderer_t	*r,
 	if (composite->op == CAIRO_OPERATOR_CLEAR)
 	    color = CAIRO_COLOR_TRANSPARENT;
 
-	if (fill_reduces_to_source (composite->op, color, dst) &&
-	    color_to_pixel (color, dst->pixman_format, &r->u.fill.pixel)) {
+	if (fill_reduces_to_source (composite->op, color, dst, &r->u.fill.pixel)) {
 	    /* Use plain C for the fill operations as the span length is
 	     * typically small, too small to payback the startup overheads of
 	     * using SSE2 etc.
