@@ -1024,9 +1024,10 @@ _cairo_gl_surface_finish (void *abstract_surface)
     if (surface->owns_tex)
 	glDeleteTextures (1, &surface->tex);
 
-#if CAIRO_HAS_GL_SURFACE
     if (surface->msaa_depth_stencil)
 	ctx->dispatch.DeleteRenderbuffers (1, &surface->msaa_depth_stencil);
+
+#if CAIRO_HAS_GL_SURFACE
     if (surface->msaa_fb)
 	ctx->dispatch.DeleteFramebuffers (1, &surface->msaa_fb);
     if (surface->msaa_rb)
