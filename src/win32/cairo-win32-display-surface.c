@@ -415,7 +415,8 @@ _cairo_win32_display_surface_finish (void *abstract_surface)
 {
     cairo_win32_display_surface_t *surface = abstract_surface;
 
-    if (surface->image) {
+    if (surface->image && to_image_surface(surface->image)->parent) {
+	assert (to_image_surface(surface->image)->parent == &surface->win32.base);
 	/* Unhook ourselves first to avoid the double-unref from the image */
 	to_image_surface(surface->image)->parent = NULL;
 	cairo_surface_finish (surface->image);

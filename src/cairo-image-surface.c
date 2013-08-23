@@ -848,8 +848,9 @@ _cairo_image_surface_finish (void *abstract_surface)
     }
 
     if (surface->parent) {
-	cairo_surface_destroy (surface->parent);
+	cairo_surface_t *parent = surface->parent;
 	surface->parent = NULL;
+	cairo_surface_destroy (parent);
     }
 
     return CAIRO_STATUS_SUCCESS;
