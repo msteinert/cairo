@@ -1,3 +1,58 @@
+Release 1.12.16 (2013-08-21 Chris Wilson <chris@chris-wilson.co.uk>)
+===================================================================
+Thanks to everybody who reported a bug and helped us develop a fix,
+we have amassed quite a few bug fixes. There are still more outstanding
+bugs that seek attention and a little bit of TLC, but this release has
+been delayed long enough...
+
+Bug fixes
+---------
+
+  Set the correct orientation for simple boxes with a negative scale
+  factor.
+
+  Fix the creation of the shading dictionary in PDF.
+
+  Fix a crash in PDF when incorporating an image with CAIRO_EXTEND_PAD.
+  https://bugs.freedesktop.org/show_bug.cgi?id=61451
+
+  Avoid upscaling bitmap fonts if possible.
+
+  Fix an assertion failure within the mempool allocator for shared memory.
+
+  Fix allocation size for CFF subsets.
+
+  Export cairo_matrix_t for GObject bindings.
+
+  Fix a double free in the Quartz backend.
+  https://bugs.freedesktop.org/show_bug.cgi?id=62885
+
+  Fix origin of GDI StretchBlits for the Windows backend
+  https://bugs.freedesktop.org/show_bug.cgi?id=61876
+
+  Fix error propagation for requests to create a similar surface with
+  negative size.
+  https://bugs.freedesktop.org/show_bug.cgi?id=63196
+
+  Fix complex clipping of trapezoids with regions
+  https://bugzilla.gnome.org/show_bug.cgi?id=697357
+
+  Stop leaking the image data when loading PNGs
+
+  Fix unbounded operations with a clip mask through the span compositor
+  https://bugs.freedesktop.org/show_bug.cgi?id=61592
+
+  Add missing checks before rendering to a finished surface - so we return
+  an error rather than hit an assert.
+  https://bugs.freedesktop.org/show_bug.cgi?id=68014
+
+  Prevent an assertion failure when creating similar GL surfaces larger
+  than supported by hardware.
+
+  Prevent a double free of a similar image under Windows.
+  https://bugs.freedesktop.org/show_bug.cgi?id=63787
+
+
 Release 1.12.14 (2013-02-10 Chris Wilson <chris@chris-wilson.co.uk>)
 ===================================================================
 In the last week we had a few more bugs reported and promptly resolved.
