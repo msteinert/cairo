@@ -513,8 +513,8 @@ _cairo_surface_wrapper_create_similar (cairo_surface_wrapper_t *wrapper,
 				       int		width,
 				       int		height)
 {
-    return _cairo_surface_create_similar_scratch (wrapper->target,
-						  content, width, height);
+    return _cairo_surface_create_scratch (wrapper->target,
+					  content, width, height, NULL);
 }
 
 cairo_bool_t

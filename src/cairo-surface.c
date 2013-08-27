@@ -454,33 +454,6 @@ _cairo_surface_copy_similar_properties (cairo_surface_t *surface,
 					   other->y_fallback_resolution);
 }
 
-cairo_surface_t *
-_cairo_surface_create_similar_scratch (cairo_surface_t *other,
-				       cairo_content_t	content,
-				       int		width,
-				       int		height)
-{
-    cairo_surface_t *surface;
-
-    if (unlikely (other->status))
-	return _cairo_surface_create_in_error (other->status);
-
-    surface = NULL;
-    if (other->backend->create_similar)
-	surface = other->backend->create_similar (other, content, width, height);
-    if (surface == NULL)
-	surface = cairo_surface_create_similar_image (other,
-						      _cairo_format_from_content (content),
-						      width, height);
-
-    if (unlikely (surface->status))
-	return surface;
-
-    _cairo_surface_copy_similar_properties (surface, other);
-
-    return surface;
-}
-
 /**
  * cairo_surface_create_similar:
  * @other: an existing surface used to select the backend of the new surface
@@ -879,29 +852,45 @@ error:
 }
 
 cairo_surface_t *
-_cairo_surface_create_similar_solid (cairo_surface_t	 *other,
-				     cairo_content_t	  content,
-				     int		  width,
-				     int		  height,
-				     const cairo_color_t *color)
+_cairo_surface_create_scratch (cairo_surface_t	 *other,
+			       cairo_content_t	  content,
+			       int		  width,
+			       int		  height,
+			       const cairo_color_t *color)
 {
-    cairo_status_t status;
     cairo_surface_t *surface;
+    cairo_status_t status;
     cairo_solid_pattern_t pattern;
 
-    surface = _cairo_surface_create_similar_scratch (other, content,
-						     width, height);
+    if (unlikely (other->status))
+	return _cairo_surface_create_in_error (other->status);
+
+    surface = NULL;
+    if (other->backend->create_similar)
+	surface = other->backend->create_similar (other, content, width, height);
+    if (surface == NULL)
+	surface = cairo_surface_create_similar_image (other,
+						      _cairo_format_from_content (content),
+						      width, height);
+
     if (unlikely (surface->status))
 	return surface;
 
-    _cairo_pattern_init_solid (&pattern, color);
-    status = _cairo_surface_paint (surface,
-				   color == CAIRO_COLOR_TRANSPARENT ?
-				   CAIRO_OPERATOR_CLEAR : CAIRO_OPERATOR_SOURCE,
-				   &pattern.base, NULL);
-    if (unlikely (status)) {
-	cairo_surface_destroy (surface);
-	surface = _cairo_surface_create_in_error (status);
+    _cairo_surface_copy_similar_properties (surface, other);
+
+    if (unlikely (surface->status))
+	return surface;
+
+    if (color) {
+	_cairo_pattern_init_solid (&pattern, color);
+	status = _cairo_surface_paint (surface,
+				       color == CAIRO_COLOR_TRANSPARENT ?
+				       CAIRO_OPERATOR_CLEAR : CAIRO_OPERATOR_SOURCE,
+				       &pattern.base, NULL);
+	if (unlikely (status)) {
+	    cairo_surface_destroy (surface);
+	    surface = _cairo_surface_create_in_error (status);
+	}
     }
 
     return surface;

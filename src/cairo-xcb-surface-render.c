@@ -1101,11 +1101,11 @@ record_to_picture (cairo_surface_t *target,
 	return _cairo_xcb_transparent_picture ((cairo_xcb_surface_t *) target);
 
     /* Now draw the recording surface to an xcb surface */
-    tmp = _cairo_surface_create_similar_solid (target,
-					       source->content,
-					       limit.width,
-					       limit.height,
-					       CAIRO_COLOR_TRANSPARENT);
+    tmp = _cairo_surface_create_scratch (target,
+                                         source->content,
+                                         limit.width,
+                                         limit.height,
+                                         CAIRO_COLOR_TRANSPARENT);
     if (tmp->status != CAIRO_STATUS_SUCCESS) {
 	return (cairo_xcb_picture_t *) tmp;
     }
@@ -1693,11 +1693,11 @@ get_clip_surface (const cairo_clip_t *clip,
     cairo_surface_t *surface;
     cairo_status_t status;
 
-    surface = _cairo_surface_create_similar_solid (&target->base,
-						   CAIRO_CONTENT_ALPHA,
-						   clip->extents.width,
-						   clip->extents.height,
-						   CAIRO_COLOR_WHITE);
+    surface = _cairo_surface_create_scratch (&target->base,
+					    CAIRO_CONTENT_ALPHA,
+					    clip->extents.width,
+					    clip->extents.height,
+					    CAIRO_COLOR_WHITE);
     if (unlikely (surface->status))
 	return (cairo_xcb_surface_t *) surface;
 

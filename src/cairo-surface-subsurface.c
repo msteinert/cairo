@@ -351,10 +351,11 @@ _cairo_surface_subsurface_snapshot (void *abstract_surface)
 
     TRACE ((stderr, "%s: target=%d\n", __FUNCTION__, surface->target->unique_id));
 
-    clone = _cairo_surface_create_similar_scratch (surface->target,
-						   surface->target->content,
-						   surface->extents.width,
-						   surface->extents.height);
+    clone = _cairo_surface_create_scratch (surface->target,
+					   surface->target->content,
+					   surface->extents.width,
+					   surface->extents.height,
+					   NULL);
     if (unlikely (clone->status))
 	return clone;
 

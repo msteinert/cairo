@@ -95,11 +95,11 @@ get_clip_surface (const cairo_spans_compositor_t *compositor,
 
     assert (clip->path);
 
-    surface = _cairo_surface_create_similar_solid (dst,
-						   CAIRO_CONTENT_ALPHA,
-						   extents->width,
-						   extents->height,
-						   CAIRO_COLOR_TRANSPARENT);
+    surface = _cairo_surface_create_scratch (dst,
+					     CAIRO_CONTENT_ALPHA,
+					     extents->width,
+					     extents->height,
+					     CAIRO_COLOR_TRANSPARENT);
 
     _cairo_box_from_rectangle (&box, extents);
     _cairo_polygon_init (&polygon, &box, 1);

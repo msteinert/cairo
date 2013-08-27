@@ -288,10 +288,11 @@ render_pattern (cairo_xlib_surface_t *dst,
     cairo_rectangle_int_t map_extents;
 
     src = (cairo_xlib_surface_t *)
-	_cairo_surface_create_similar_scratch (&dst->base,
-					       is_mask ? CAIRO_CONTENT_ALPHA : CAIRO_CONTENT_COLOR_ALPHA,
-					       extents->width,
-					       extents->height);
+	_cairo_surface_create_scratch (&dst->base,
+				       is_mask ? CAIRO_CONTENT_ALPHA : CAIRO_CONTENT_COLOR_ALPHA,
+				       extents->width,
+				       extents->height,
+				       NULL);
     if (src->base.type != CAIRO_SURFACE_TYPE_XLIB) {
 	cairo_surface_destroy (&src->base);
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
@@ -750,10 +751,11 @@ subsurface_source (cairo_xlib_surface_t *dst,
 	source = &src->embedded_source;
     } else {
 	src = (cairo_xlib_surface_t *)
-	    _cairo_surface_create_similar_scratch (&dst->base,
-						   sub->base.content,
-						   sub->extents.width,
-						   sub->extents.height);
+	    _cairo_surface_create_scratch (&dst->base,
+					   sub->base.content,
+					   sub->extents.width,
+					   sub->extents.height,
+					   NULL);
 	if (src->base.type != CAIRO_SURFACE_TYPE_XLIB) {
 	    cairo_surface_destroy (&src->base);
 	    return _cairo_surface_create_in_error (CAIRO_STATUS_NO_MEMORY);
@@ -898,10 +900,11 @@ record_source (cairo_xlib_surface_t *dst,
     }
 
     src = (cairo_xlib_surface_t *)
-	_cairo_surface_create_similar_scratch (&dst->base,
-					       pattern->surface->content,
-					       upload.width,
-					       upload.height);
+	_cairo_surface_create_scratch (&dst->base,
+				       pattern->surface->content,
+				       upload.width,
+				       upload.height,
+				       NULL);
     if (src->base.type != CAIRO_SURFACE_TYPE_XLIB) {
 	cairo_surface_destroy (&src->base);
 	return _cairo_surface_create_in_error (CAIRO_STATUS_NO_MEMORY);
@@ -1001,10 +1004,11 @@ surface_source (cairo_xlib_surface_t *dst,
     }
 
     xsrc = (cairo_xlib_surface_t *)
-	    _cairo_surface_create_similar_scratch (&dst->base,
-						   src->content,
-						   upload.width,
-						   upload.height);
+	    _cairo_surface_create_scratch (&dst->base,
+					   src->content,
+					   upload.width,
+					   upload.height,
+					   NULL);
     if (xsrc->base.type != CAIRO_SURFACE_TYPE_XLIB) {
 	cairo_surface_destroy (src);
 	cairo_surface_destroy (&xsrc->base);

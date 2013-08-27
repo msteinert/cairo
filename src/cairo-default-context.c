@@ -170,11 +170,11 @@ _cairo_default_context_push_group (void *abstract_cr, cairo_content_t content)
 	    group_surface = cairo_recording_surface_create (content, NULL);
 	    extents.x = extents.y = 0;
 	} else {
-	    group_surface = _cairo_surface_create_similar_solid (parent_surface,
-								 content,
-								 extents.width,
-								 extents.height,
-								 CAIRO_COLOR_TRANSPARENT);
+	    group_surface = _cairo_surface_create_scratch (parent_surface,
+							   content,
+							   extents.width,
+							   extents.height,
+							   CAIRO_COLOR_TRANSPARENT);
 	}
 	status = group_surface->status;
 	if (unlikely (status))
