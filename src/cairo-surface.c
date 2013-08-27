@@ -518,6 +518,8 @@ cairo_surface_create_similar (cairo_surface_t  *other,
 			      int		height)
 {
     cairo_surface_t *surface;
+    cairo_status_t status;
+    cairo_solid_pattern_t pattern;
 
     if (unlikely (other->status))
 	return _cairo_surface_create_in_error (other->status);
@@ -529,9 +531,34 @@ cairo_surface_create_similar (cairo_surface_t  *other,
     if (unlikely (! CAIRO_CONTENT_VALID (content)))
 	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_CONTENT);
 
-    surface = _cairo_surface_create_similar_solid (other,
-						   content, width, height,
-						   CAIRO_COLOR_TRANSPARENT);
+        if (unlikely (other->status))
+	return _cairo_surface_create_in_error (other->status);
+
+    surface = NULL;
+    if (other->backend->create_similar)
+	surface = other->backend->create_similar (other, content, width, height);
+    if (surface == NULL)
+	surface = cairo_surface_create_similar_image (other,
+						      _cairo_format_from_content (content),
+						      width, height);
+
+    if (unlikely (surface->status))
+	return surface;
+
+    _cairo_surface_copy_similar_properties (surface, other);
+
+    if (unlikely (surface->status))
+	return surface;
+
+    _cairo_pattern_init_solid (&pattern, CAIRO_COLOR_TRANSPARENT);
+    status = _cairo_surface_paint (surface,
+				   CAIRO_OPERATOR_CLEAR,
+				   &pattern.base, NULL);
+    if (unlikely (status)) {
+	cairo_surface_destroy (surface);
+	surface = _cairo_surface_create_in_error (status);
+    }
+
     assert (surface->is_clear);
 
     return surface;
