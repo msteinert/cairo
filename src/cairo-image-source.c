@@ -554,24 +554,42 @@ _pixman_image_set_properties (pixman_image_t *pixman_image,
     }
     else
     {
+	double scale_x, scale_y;
+	int shrink_x, shrink_y;
 	pixman_filter_t pixman_filter;
+	pixman_kernel_t pixman_kernel_sample, pixman_kernel_reconstruct;
+
+	/* Compute scale factors as the length of basis vectors transformed by
+	 * the pattern matrix. These scale factors are from user to pattern space,
+	 * and as such they are greater than 1.0 for downscaling and less than 1.0
+	 * for upscaling.
+	 * TODO: this approach may not be completely correct if the matrix
+	 * contains a skew component. */
+	scale_x = hypot (pattern->matrix.xx, pattern->matrix.yx);
+	scale_y = hypot (pattern->matrix.yx, pattern->matrix.yy);
+
+	/* Use convolution filtering if the transformation shrinks the image
+	 * by more than half a pixel */
+	shrink_x = (extents->width / scale_x - extents->width) < -0.5;
+	shrink_y = (extents->height / scale_y - extents->height) < -0.5;
 
 	switch (pattern->filter) {
 	case CAIRO_FILTER_FAST:
-	    pixman_filter = PIXMAN_FILTER_FAST;
+	case CAIRO_FILTER_NEAREST:
+	    pixman_filter = PIXMAN_FILTER_NEAREST;
+	    pixman_kernel_sample = PIXMAN_KERNEL_IMPULSE;
+	    pixman_kernel_reconstruct = PIXMAN_KERNEL_BOX;
 	    break;
 	case CAIRO_FILTER_GOOD:
-	    pixman_filter = PIXMAN_FILTER_GOOD;
+	case CAIRO_FILTER_BILINEAR:
+	    pixman_filter = PIXMAN_FILTER_BILINEAR;
+	    pixman_kernel_sample = PIXMAN_KERNEL_BOX;
+	    pixman_kernel_reconstruct = PIXMAN_KERNEL_LINEAR;
 	    break;
 	case CAIRO_FILTER_BEST:
 	    pixman_filter = PIXMAN_FILTER_BEST;
-	    break;
-	case CAIRO_FILTER_NEAREST:
-	    pixman_filter = PIXMAN_FILTER_NEAREST;
-	    break;
-	case CAIRO_FILTER_BILINEAR:
-	    pixman_filter = PIXMAN_FILTER_BILINEAR;
-	    break;
+	    pixman_kernel_sample = PIXMAN_KERNEL_LANCZOS3;
+	    pixman_kernel_reconstruct = PIXMAN_KERNEL_LANCZOS3;
 	case CAIRO_FILTER_GAUSSIAN:
 	    /* XXX: The GAUSSIAN value has no implementation in cairo
 	     * whatsoever, so it was really a mistake to have it in the
@@ -579,10 +597,37 @@ _pixman_image_set_properties (pixman_image_t *pixman_image,
 	     * else inventing semantics and providing an actual
 	     * implementation for it. */
 	default:
-	    pixman_filter = PIXMAN_FILTER_BEST;
+	    pixman_filter = PIXMAN_FILTER_BILINEAR;
+	    pixman_kernel_sample = PIXMAN_KERNEL_BOX;
+	    pixman_kernel_reconstruct = PIXMAN_KERNEL_LINEAR;
 	}
 
-	pixman_image_set_filter (pixman_image, pixman_filter, NULL, 0);
+	if (pixman_filter != PIXMAN_FILTER_NEAREST && (shrink_x || shrink_y)) {
+	    pixman_kernel_t sampling_kernel_x, sampling_kernel_y;
+	    int n_params;
+	    pixman_fixed_t *params;
+
+	    sampling_kernel_x = shrink_x ? pixman_kernel_sample : PIXMAN_KERNEL_IMPULSE;
+	    sampling_kernel_y = shrink_y ? pixman_kernel_sample : PIXMAN_KERNEL_IMPULSE;
+
+	    n_params = 0;
+	    params = pixman_filter_create_separable_convolution (&n_params,
+								 scale_x * 65536.0 + 0.5,
+								 scale_y * 65536.0 + 0.5,
+								 pixman_kernel_reconstruct,
+								 pixman_kernel_reconstruct,
+								 sampling_kernel_x,
+								 sampling_kernel_y,
+								 1, 1);
+
+	    pixman_image_set_filter (pixman_image,
+				     PIXMAN_FILTER_SEPARABLE_CONVOLUTION,
+				     params, n_params);
+
+	    free (params);
+	} else {
+	    pixman_image_set_filter (pixman_image, pixman_filter, NULL, 0);
+	}
     }
 
     {
