@@ -1118,6 +1118,9 @@ _cairo_surface_base64_encode_jpeg (cairo_surface_t       *surface,
     if (unlikely (status))
 	return status;
 
+    if (image_info.num_components == 4)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     _cairo_output_stream_printf (output, "data:image/jpeg;base64,");
 
     info.output = output;
