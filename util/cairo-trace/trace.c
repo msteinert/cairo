@@ -3884,6 +3884,18 @@ cairo_surface_set_device_offset (cairo_surface_t *surface, double x_offset, doub
 }
 
 void
+cairo_surface_set_device_scale (cairo_surface_t *surface, double x_offset, double y_offset)
+{
+    _enter_trace ();
+    _emit_line_info ();
+    _emit_surface_op (surface, "%g %g set-device-scale\n",
+		      x_offset, y_offset);
+    DLCALL (cairo_surface_set_device_scale, surface, x_offset, y_offset);
+    _exit_trace ();
+}
+
+
+void
 cairo_surface_set_fallback_resolution (cairo_surface_t *surface, double x_pixels_per_inch, double y_pixels_per_inch)
 {
     _enter_trace ();
