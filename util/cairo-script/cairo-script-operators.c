@@ -4850,6 +4850,30 @@ _set_device_offset (csi_t *ctx)
 }
 
 static csi_status_t
+_set_device_scale (csi_t *ctx)
+{
+    csi_status_t status;
+    cairo_surface_t *surface;
+    double x, y;
+
+    check (3);
+
+    status = _csi_ostack_get_number (ctx, 0,  &y);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_number (ctx, 1, &x);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_surface (ctx, 2, &surface);
+    if (_csi_unlikely (status))
+	return status;
+
+    cairo_surface_set_device_scale (surface, x, y);
+    pop (2);
+    return CSI_STATUS_SUCCESS;
+}
+
+static csi_status_t
 _set_extend (csi_t *ctx)
 {
     csi_status_t status;
@@ -6103,6 +6127,29 @@ _surface (csi_t *ctx)
 	}
     }
 
+    status = csi_name_new_static (ctx, &key, "device-scale");
+    if (_csi_unlikely (status)) {
+	cairo_surface_destroy (surface);
+	return status;
+    }
+    if (csi_dictionary_has (dict, key.datum.name)) {
+	status = csi_dictionary_get (ctx, dict, key.datum.name, &obj);
+	if (_csi_unlikely (status))
+	    return status;
+
+	if (csi_object_get_type (&obj) == CSI_OBJECT_TYPE_ARRAY) {
+	    csi_array_t *array = obj.datum.array;
+
+	    if (array->stack.len == 2) {
+		cairo_surface_set_device_scale (surface,
+						csi_number_get_value
+						(&array->stack.objects[0]),
+						csi_number_get_value
+						(&array->stack.objects[1]));
+	    }
+	}
+    }
+
     obj.type = CSI_OBJECT_TYPE_SURFACE;
     obj.datum.surface = surface;
     pop (1);
@@ -6539,6 +6586,7 @@ _defs[] = {
     { "set-antialias", _set_antialias },
     { "set-dash", _set_dash },
     { "set-device-offset", _set_device_offset },
+    { "set-device-scale", _set_device_scale },
     { "set-extend", _set_extend },
     { "set-fallback-resolution", _set_fallback_resolution },
     { "set-fill-rule", _set_fill_rule },
