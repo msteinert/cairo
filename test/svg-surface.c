@@ -122,7 +122,7 @@ preamble (cairo_test_context_t *ctx)
     cairo_destroy (cr);
     cairo_surface_destroy (surface);
 
-    printf ("svg-surface: Please check svg-surface.svg to make sure it looks happy.\n");
+    printf ("svg-surface: Please check %s to make sure it looks happy.\n", filename);
     free (filename);
     return CAIRO_TEST_SUCCESS;
 }
