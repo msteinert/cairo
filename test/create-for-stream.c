@@ -239,6 +239,8 @@ preamble (cairo_test_context_t *ctx)
 {
     cairo_test_status_t status = CAIRO_TEST_UNTESTED;
     cairo_test_status_t test_status;
+    char *filename;
+    const char *path = cairo_test_mkdir (CAIRO_TEST_OUTPUT_DIR) ? CAIRO_TEST_OUTPUT_DIR : ".";
 
 #if CAIRO_HAS_PS_SURFACE
     if (cairo_test_is_target_enabled (ctx, "ps2") ||
@@ -247,7 +249,8 @@ preamble (cairo_test_context_t *ctx)
 	if (status == CAIRO_TEST_UNTESTED)
 	    status = CAIRO_TEST_SUCCESS;
 
-	test_status = test_surface (ctx, "ps",  CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".ps",
+	xasprintf (&filename, "%s/%s", path, BASENAME ".ps");
+	test_status = test_surface (ctx, "ps", filename,
 				    cairo_ps_surface_create,
 				    cairo_ps_surface_create_for_stream);
 	cairo_test_log (ctx, "TEST: %s TARGET: %s RESULT: %s\n",
@@ -255,6 +258,7 @@ preamble (cairo_test_context_t *ctx)
 			test_status ? "FAIL" : "PASS");
 	if (status == CAIRO_TEST_SUCCESS)
 	    status = test_status;
+	free (filename);
     }
 #endif
 
@@ -263,7 +267,8 @@ preamble (cairo_test_context_t *ctx)
 	if (status == CAIRO_TEST_UNTESTED)
 	    status = CAIRO_TEST_SUCCESS;
 
-	test_status = test_surface (ctx, "pdf", CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".pdf",
+	xasprintf (&filename, "%s/%s", path, BASENAME ".pdf");
+	test_status = test_surface (ctx, "pdf", filename,
 				    cairo_pdf_surface_create,
 				    cairo_pdf_surface_create_for_stream);
 	cairo_test_log (ctx, "TEST: %s TARGET: %s RESULT: %s\n",
@@ -271,6 +276,7 @@ preamble (cairo_test_context_t *ctx)
 			test_status ? "FAIL" : "PASS");
 	if (status == CAIRO_TEST_SUCCESS)
 	    status = test_status;
+	free (filename);
     }
 #endif
 
@@ -281,7 +287,8 @@ preamble (cairo_test_context_t *ctx)
 	if (status == CAIRO_TEST_UNTESTED)
 	    status = CAIRO_TEST_SUCCESS;
 
-	test_status = test_surface (ctx, "svg", CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".svg",
+	xasprintf (&filename, "%s/%s", path, BASENAME ".svg");
+	test_status = test_surface (ctx, "svg", filename,
 				    cairo_svg_surface_create,
 				    cairo_svg_surface_create_for_stream);
 	cairo_test_log (ctx, "TEST: %s TARGET: %s RESULT: %s\n",
@@ -289,6 +296,7 @@ preamble (cairo_test_context_t *ctx)
 			test_status ? "FAIL" : "PASS");
 	if (status == CAIRO_TEST_SUCCESS)
 	    status = test_status;
+	free (filename);
     }
 #endif
 

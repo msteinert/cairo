@@ -89,10 +89,13 @@ preamble (cairo_test_context_t *ctx)
     cairo_t *cr;
     cairo_status_t status;
     size_t i;
-    const char *filename = CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".pdf";
+    char *filename;
+    const char *path = cairo_test_mkdir (CAIRO_TEST_OUTPUT_DIR) ? CAIRO_TEST_OUTPUT_DIR : ".";
 
     if (! cairo_test_is_target_enabled (ctx, "pdf"))
 	return CAIRO_TEST_UNTESTED;
+
+    xasprintf (&filename, "%s/%s.pdf", path, BASENAME);
 
     /* The initial size passed here is the default size that will be
      * inheritable by each page. That is, any page for which this
@@ -125,6 +128,7 @@ preamble (cairo_test_context_t *ctx)
 
     cairo_destroy (cr);
     cairo_surface_destroy (surface);
+    free (filename);
 
     if (status) {
 	cairo_test_log (ctx, "Failed to create pdf surface for file %s: %s\n",

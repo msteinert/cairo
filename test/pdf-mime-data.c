@@ -84,7 +84,6 @@ read_file (const cairo_test_context_t *ctx,
 static cairo_test_status_t
 preamble (cairo_test_context_t *ctx)
 {
-    const char *filename = CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".pdf";
     cairo_surface_t *image;
     cairo_surface_t *surface;
     cairo_t *cr;
@@ -96,6 +95,8 @@ preamble (cairo_test_context_t *ctx)
     unsigned int len, out_len;
     char command[4096];
     int exit_status;
+    char *filename;
+    const char *path = cairo_test_mkdir (CAIRO_TEST_OUTPUT_DIR) ? CAIRO_TEST_OUTPUT_DIR : ".";
 
     if (! cairo_test_is_target_enabled (ctx, "pdf"))
 	return CAIRO_TEST_UNTESTED;
@@ -113,6 +114,7 @@ preamble (cairo_test_context_t *ctx)
     width = cairo_image_surface_get_width (image);
     height = cairo_image_surface_get_height (image);
 
+    xasprintf (&filename, "%s/%s.pdf", path, BASENAME);
     surface = cairo_pdf_surface_create (filename, width + 20, height + 20);
     cr = cairo_create (surface);
     cairo_translate (cr, 10, 10);
@@ -128,6 +130,7 @@ preamble (cairo_test_context_t *ctx)
     cairo_surface_destroy (image);
 
     if (status) {
+        free (filename);
 	cairo_test_log (ctx, "Failed to create pdf surface for file %s: %s\n",
 			filename, cairo_status_to_string (status));
 	return CAIRO_TEST_FAILURE;
@@ -137,6 +140,7 @@ preamble (cairo_test_context_t *ctx)
 
     sprintf (command, "pdfimages -j %s %s", filename, CAIRO_TEST_OUTPUT_DIR "/" BASENAME);
     exit_status = system (command);
+    free (filename);
     if (exit_status) {
 	cairo_test_log (ctx, "pdfimages failed with exit status %d\n", exit_status);
 	return CAIRO_TEST_FAILURE;

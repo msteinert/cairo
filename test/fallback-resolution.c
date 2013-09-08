@@ -320,24 +320,6 @@ generate_reference (double ppi_x, double ppi_y, const char *filename)
 }
 #endif
 
-static cairo_bool_t
-_cairo_test_mkdir (const char *path)
-{
-#if ! HAVE_MKDIR
-    return FALSE;
-#elif HAVE_MKDIR == 1
-    if (mkdir (path) == 0)
-	return TRUE;
-#elif HAVE_MKDIR == 2
-    if (mkdir (path, 0770) == 0)
-	return TRUE;
-#else
-#error Bad value for HAVE_MKDIR
-#endif
-
-    return errno == EEXIST;
-}
-
 /* TODO: Split each ppi case out to its own CAIRO_TEST() test case */
 static cairo_test_status_t
 preamble (cairo_test_context_t *ctx)
@@ -363,7 +345,7 @@ preamble (cairo_test_context_t *ctx)
     };
     unsigned int i;
     int n, num_ppi;
-    const char *path = _cairo_test_mkdir (CAIRO_TEST_OUTPUT_DIR) ? CAIRO_TEST_OUTPUT_DIR : ".";
+    const char *path = cairo_test_mkdir (CAIRO_TEST_OUTPUT_DIR) ? CAIRO_TEST_OUTPUT_DIR : ".";
 
     num_ppi = ARRAY_LENGTH (ppi);
 

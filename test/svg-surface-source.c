@@ -34,10 +34,14 @@ static cairo_surface_t *
 create_source_surface (int size)
 {
     cairo_surface_t *surface;
+    char *filename;
+    const char *path = cairo_test_mkdir (CAIRO_TEST_OUTPUT_DIR) ? CAIRO_TEST_OUTPUT_DIR : ".";
 
-    surface = cairo_svg_surface_create (CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".svg",
+    xasprintf (&filename, "%s/%s.svg", path, BASENAME);
+    surface = cairo_svg_surface_create (filename,
 					size, size);
     cairo_surface_set_fallback_resolution (surface, 72., 72.);
+    free (filename);
 
     return surface;
 }

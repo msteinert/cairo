@@ -78,11 +78,13 @@ print_surface (const cairo_test_context_t *ctx, cairo_surface_t *surface)
 static cairo_test_status_t
 preamble (cairo_test_context_t *ctx)
 {
-    const char *filename = CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".png";
     cairo_surface_t *surface0, *surface1;
     cairo_status_t status;
     uint32_t argb32 = 0xdeadbede;
+    char *filename;
+    const char *path = cairo_test_mkdir (CAIRO_TEST_OUTPUT_DIR) ? CAIRO_TEST_OUTPUT_DIR : ".";
 
+    xasprintf (&filename, "%s/%s.png", path, BASENAME);
     surface0 = cairo_image_surface_create_for_data ((unsigned char *) &argb32,
 						    CAIRO_FORMAT_ARGB32,
 						    1, 1, 4);
@@ -92,6 +94,7 @@ preamble (cairo_test_context_t *ctx)
 			filename, cairo_status_to_string (status));
 
 	cairo_surface_destroy (surface0);
+	free (filename);
 	return cairo_test_status_from_status (ctx, status);
     }
     surface1 = cairo_image_surface_create_from_png (filename);
@@ -102,6 +105,7 @@ preamble (cairo_test_context_t *ctx)
 
 	cairo_surface_destroy (surface1);
 	cairo_surface_destroy (surface0);
+	free (filename);
 	return cairo_test_status_from_status (ctx, status);
     }
 
@@ -112,6 +116,7 @@ preamble (cairo_test_context_t *ctx)
 
 	cairo_surface_destroy (surface0);
 	cairo_surface_destroy (surface1);
+	free (filename);
 	return CAIRO_TEST_FAILURE;
     }
     assert (*(uint32_t *) cairo_image_surface_get_data (surface1) == argb32);
@@ -131,6 +136,7 @@ preamble (cairo_test_context_t *ctx)
     }
     surface1 = cairo_image_surface_create_from_png (filename);
     status = cairo_surface_status (surface1);
+    free (filename);
     if (status) {
 	cairo_test_log (ctx, "Error reading '%s': %s\n",
 			filename, cairo_status_to_string (status));

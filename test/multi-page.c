@@ -133,8 +133,9 @@ preamble (cairo_test_context_t *ctx)
 {
     cairo_surface_t *surface;
     cairo_status_t status;
-    const char *filename;
+    char *filename;
     cairo_test_status_t result = CAIRO_TEST_UNTESTED;
+    const char *path = cairo_test_mkdir (CAIRO_TEST_OUTPUT_DIR) ? CAIRO_TEST_OUTPUT_DIR : ".";
 
 #if CAIRO_HAS_PS_SURFACE
     if (cairo_test_is_target_enabled (ctx, "ps2") ||
@@ -143,7 +144,7 @@ preamble (cairo_test_context_t *ctx)
 	if (result == CAIRO_TEST_UNTESTED)
 	    result = CAIRO_TEST_SUCCESS;
 
-	filename = CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".ps";
+	xasprintf (&filename, "%s/%s", path, BASENAME ".ps");
 	surface = cairo_ps_surface_create (filename,
 					   WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
 	status = cairo_surface_status (surface);
@@ -156,6 +157,7 @@ preamble (cairo_test_context_t *ctx)
 	draw_some_pages (surface);
 
 	cairo_surface_destroy (surface);
+	free (filename);
 
 	printf ("multi-page: Please check %s to ensure it looks happy.\n", filename);
     }
@@ -166,7 +168,7 @@ preamble (cairo_test_context_t *ctx)
 	if (result == CAIRO_TEST_UNTESTED)
 	    result = CAIRO_TEST_SUCCESS;
 
-	filename = CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".pdf";
+	xasprintf (&filename, "%s/%s", path, BASENAME ".pdf");
 	surface = cairo_pdf_surface_create (filename,
 					    WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
 	status = cairo_surface_status (surface);
@@ -179,6 +181,7 @@ preamble (cairo_test_context_t *ctx)
 	draw_some_pages (surface);
 
 	cairo_surface_destroy (surface);
+	free (filename);
 
 	printf ("multi-page: Please check %s to ensure it looks happy.\n", filename);
     }
