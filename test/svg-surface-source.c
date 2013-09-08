@@ -28,12 +28,14 @@
 
 #include "surface-source.c"
 
+#define BASENAME "svg-surface-source.out"
+
 static cairo_surface_t *
 create_source_surface (int size)
 {
     cairo_surface_t *surface;
 
-    surface = cairo_svg_surface_create ("svg-surface-source.out.svg",
+    surface = cairo_svg_surface_create (CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".svg",
 					size, size);
     cairo_surface_set_fallback_resolution (surface, 72., 72.);
 

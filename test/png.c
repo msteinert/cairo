@@ -30,6 +30,7 @@
 /* Test the idempotency of write_png->read_png */
 
 #define RGB_MASK 0x00ffffff
+#define BASENAME "png.out"
 
 static cairo_bool_t
 image_surface_equals (cairo_surface_t *A, cairo_surface_t *B)
@@ -77,7 +78,7 @@ print_surface (const cairo_test_context_t *ctx, cairo_surface_t *surface)
 static cairo_test_status_t
 preamble (cairo_test_context_t *ctx)
 {
-    const char *filename = "png.out.png";
+    const char *filename = CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".png";
     cairo_surface_t *surface0, *surface1;
     cairo_status_t status;
     uint32_t argb32 = 0xdeadbede;

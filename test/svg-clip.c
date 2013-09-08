@@ -32,6 +32,7 @@
 
 #define WIDTH_IN_POINTS 600
 #define HEIGHT_IN_POINTS 600
+#define BASENAME "svg-clip.out"
 
 static void
 test_clip (cairo_t *cr, double width, double height)
@@ -107,7 +108,7 @@ static cairo_test_status_t
 preamble (cairo_test_context_t *ctx)
 {
     cairo_t *cr;
-    const char *filename = "svg-clip.out.svg";
+    const char *filename = CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".svg";
     cairo_surface_t *surface;
 
     if (! cairo_test_is_target_enabled (ctx, "svg11") &&

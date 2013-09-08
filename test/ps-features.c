@@ -42,6 +42,7 @@
 #define INCHES_TO_POINTS(in) ((in) * 72.0)
 #define MM_TO_POINTS(mm) ((mm) / 25.4 * 72.0)
 #define TEXT_SIZE 12
+#define BASENAME "ps-features.out"
 
 static struct {
     const char *page_size;
@@ -100,7 +101,7 @@ preamble (cairo_test_context_t *ctx)
 	return CAIRO_TEST_UNTESTED;
     }
 
-    filename = "ps-features.out.ps";
+    filename = CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".ps";
 
     /* We demonstrate that the initial size doesn't matter (we're
      * passing 0,0), if we use cairo_ps_surface_set_size on the first

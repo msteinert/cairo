@@ -39,6 +39,7 @@
  * are not using a jpeg library */
 #define IMAGE_FILE "romedalen"
 
+#define BASENAME "pdf-mime-data.out"
 
 static cairo_test_status_t
 read_file (const cairo_test_context_t *ctx,
@@ -83,7 +84,7 @@ read_file (const cairo_test_context_t *ctx,
 static cairo_test_status_t
 preamble (cairo_test_context_t *ctx)
 {
-    const char *filename = "pdf-mime-data.out.pdf";
+    const char *filename = CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".pdf";
     cairo_surface_t *image;
     cairo_surface_t *surface;
     cairo_t *cr;
@@ -134,7 +135,7 @@ preamble (cairo_test_context_t *ctx)
 
     printf ("pdf-mime-data: Please check %s to ensure it looks/prints correctly.\n", filename);
 
-    sprintf (command, "pdfimages -j %s pdf-mime-data.out", filename);
+    sprintf (command, "pdfimages -j %s %s", filename, CAIRO_TEST_OUTPUT_DIR "/" BASENAME);
     exit_status = system (command);
     if (exit_status) {
 	cairo_test_log (ctx, "pdfimages failed with exit status %d\n", exit_status);
@@ -147,12 +148,12 @@ preamble (cairo_test_context_t *ctx)
 	return test_status;
     }
 
-    test_status = read_file (ctx, "pdf-mime-data.out-000.jpg", &out_data, &out_len);
+    test_status = read_file (ctx, CAIRO_TEST_OUTPUT_DIR "/" BASENAME "-000.jpg", &out_data, &out_len);
     if (test_status) {
 	free (data);
 	cairo_test_log (ctx,
 			"Could not read input jpeg file %s\n",
-			"pdf-mime-data.out-000.jpg");
+			CAIRO_TEST_OUTPUT_DIR "/" BASENAME "-000.jpg");
 	return test_status;
     }
 

@@ -39,6 +39,7 @@
 #define INCHES_TO_POINTS(in) ((in) * 72.0)
 #define MM_TO_POINTS(mm) ((mm) / 25.4 * 72.0)
 #define TEXT_SIZE 12
+#define BASENAME "pdf-features.out"
 
 static struct {
     const char *page_size;
@@ -84,11 +85,11 @@ static struct {
 static cairo_test_status_t
 preamble (cairo_test_context_t *ctx)
 {
-    const char *filename = "pdf-features.out.pdf";
     cairo_surface_t *surface;
     cairo_t *cr;
     cairo_status_t status;
     size_t i;
+    const char *filename = CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".pdf";
 
     if (! cairo_test_is_target_enabled (ctx, "pdf"))
 	return CAIRO_TEST_UNTESTED;

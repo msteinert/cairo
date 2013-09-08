@@ -37,6 +37,7 @@
 #define HEIGHT_IN_INCHES 3
 #define WIDTH_IN_POINTS  (WIDTH_IN_INCHES  * 72)
 #define HEIGHT_IN_POINTS (HEIGHT_IN_INCHES * 72)
+#define BASENAME "svg-surface.out"
 
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
@@ -90,7 +91,7 @@ static cairo_test_status_t
 preamble (cairo_test_context_t *ctx)
 {
     cairo_t *cr;
-    const char *filename = "svg-surface.out.svg";
+    const char *filename = CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".svg";
     cairo_surface_t *surface;
 
     if (! cairo_test_is_target_enabled (ctx, "svg11") &&

@@ -247,7 +247,7 @@ preamble (cairo_test_context_t *ctx)
 	if (status == CAIRO_TEST_UNTESTED)
 	    status = CAIRO_TEST_SUCCESS;
 
-	test_status = test_surface (ctx, "ps", BASENAME ".ps",
+	test_status = test_surface (ctx, "ps",  CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".ps",
 				    cairo_ps_surface_create,
 				    cairo_ps_surface_create_for_stream);
 	cairo_test_log (ctx, "TEST: %s TARGET: %s RESULT: %s\n",
@@ -263,7 +263,7 @@ preamble (cairo_test_context_t *ctx)
 	if (status == CAIRO_TEST_UNTESTED)
 	    status = CAIRO_TEST_SUCCESS;
 
-	test_status = test_surface (ctx, "pdf", BASENAME ".pdf",
+	test_status = test_surface (ctx, "pdf", CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".pdf",
 				    cairo_pdf_surface_create,
 				    cairo_pdf_surface_create_for_stream);
 	cairo_test_log (ctx, "TEST: %s TARGET: %s RESULT: %s\n",
@@ -281,7 +281,7 @@ preamble (cairo_test_context_t *ctx)
 	if (status == CAIRO_TEST_UNTESTED)
 	    status = CAIRO_TEST_SUCCESS;
 
-	test_status = test_surface (ctx, "svg", BASENAME ".svg",
+	test_status = test_surface (ctx, "svg", CAIRO_TEST_OUTPUT_DIR "/" BASENAME ".svg",
 				    cairo_svg_surface_create,
 				    cairo_svg_surface_create_for_stream);
 	cairo_test_log (ctx, "TEST: %s TARGET: %s RESULT: %s\n",
