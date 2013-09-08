@@ -103,8 +103,8 @@ static int cairo_test_timeout = 60;
 #define NUM_DEVICE_OFFSETS 2
 #define NUM_DEVICE_SCALE 2
 
-static cairo_bool_t
-_cairo_test_mkdir (const char *path)
+cairo_bool_t
+cairo_test_mkdir (const char *path)
 {
 #if ! HAVE_MKDIR
     return FALSE;
@@ -158,7 +158,7 @@ _cairo_test_init (cairo_test_context_t *ctx,
     ctx->test_name = _cairo_test_fixup_name (test_name);
     ctx->output = output;
 
-    _cairo_test_mkdir (ctx->output);
+    cairo_test_mkdir (ctx->output);
 
     ctx->malloc_failure = 0;
 #if HAVE_MEMFAULT
@@ -421,7 +421,7 @@ cairo_test_target_has_similar (const cairo_test_context_t *ctx,
 	return DIRECT;
 
     xasprintf (&path, "%s/%s",
-	       _cairo_test_mkdir (ctx->output) ? ctx->output : ".",
+	       cairo_test_mkdir (ctx->output) ? ctx->output : ".",
 	       ctx->test_name);
 
     has_similar = DIRECT;
@@ -761,7 +761,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 						    target->file_extension);
     }
 
-    have_output_dir = _cairo_test_mkdir (ctx->output);
+    have_output_dir = cairo_test_mkdir (ctx->output);
     xasprintf (&base_path, "%s/%s",
 	       have_output_dir ? ctx->output : ".",
 	       base_name);

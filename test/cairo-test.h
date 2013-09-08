@@ -318,6 +318,9 @@ cairo_test_get_reference_image (cairo_test_context_t *ctx,
 				const char *filename,
 				cairo_bool_t flatten);
 
+cairo_bool_t
+cairo_test_mkdir (const char *path);
+
 CAIRO_END_DECLS
 
 #endif
