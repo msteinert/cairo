@@ -1637,6 +1637,9 @@ _cairo_recording_surface_merge_source_attributes (cairo_recording_surface_t  *su
 	    if (_cairo_image_analyze_transparency (img_surf) == CAIRO_IMAGE_HAS_ALPHA)
 		surface->has_bilevel_alpha = FALSE;
 
+	} else {
+	    if (!_cairo_pattern_is_clear (source) && !_cairo_pattern_is_opaque (source, NULL))
+		surface->has_bilevel_alpha = FALSE;
 	}
 
 	cairo_surface_destroy (free_me);
