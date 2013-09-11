@@ -54,9 +54,9 @@ draw (cairo_t *cr, int width, int height, cairo_filter_t filter)
     scale = fmin(x_scale, y_scale);
 
     cairo_save (cr);
-    cairo_pattern_set_filter (cairo_get_source (cr), filter);
     cairo_scale (cr, scale, scale);
     cairo_set_source_surface (cr, image, 0, 0);
+    cairo_pattern_set_filter (cairo_get_source (cr), filter);
     cairo_paint (cr);
     cairo_restore (cr);
     cairo_surface_destroy (image);
