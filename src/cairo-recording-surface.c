@@ -1617,7 +1617,7 @@ _cairo_recording_surface_merge_source_attributes (cairo_recording_surface_t  *su
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	cairo_surface_pattern_t *surf_pat = (cairo_surface_pattern_t *) source;
 	cairo_surface_t *surf = surf_pat->surface;
-	cairo_surface_t *free_me;
+	cairo_surface_t *free_me = NULL;
 
 	if (_cairo_surface_is_snapshot (surf))
 	    free_me = surf = _cairo_surface_snapshot_get_target (surf);
