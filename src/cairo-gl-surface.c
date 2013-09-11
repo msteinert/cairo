@@ -681,6 +681,11 @@ cairo_gl_surface_create_for_texture (cairo_device_t	*abstract_device,
     if (unlikely (status))
 	return _cairo_surface_create_in_error (status);
 
+    if (! _cairo_gl_surface_size_valid_for_context (ctx, width, height)) {
+	status = _cairo_gl_context_release (ctx, status);
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+    }
+
     surface = (cairo_gl_surface_t *)
 	_cairo_gl_surface_create_scratch_for_texture (ctx, content,
 						      tex, width, height);
