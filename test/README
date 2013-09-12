@@ -26,6 +26,12 @@ run all text related tests you can use:
     ./cairo-test-suite text
 Or if you want to check the current status of known failures:
     ./cairo-test-suite XFAIL
+Or to run a subset of tests, use the -k option to run only the tests
+that include the given keyword:
+    ./cairo-test-suite -k downscale
+The binary also permits controlling which backend is used via the
+CAIRO_TEST_TARGET environment variable, so for instance:
+    CAIRO_TEST_TARGET=gl ./cairo-test-suite -k blur
 This binary should be backwards-compatible with all library versions,
 allowing you to compare current versus past behaviour for any test.
 
