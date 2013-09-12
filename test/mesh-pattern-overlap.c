@@ -70,7 +70,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (mesh_pattern_overlap,
 	    "Paint a mesh pattern with a simple fold",
-	    "mesh,pattern", /* keywords */
+	    "mesh, pattern", /* keywords */
 	    NULL, /* requirements */
 	    WIDTH, HEIGHT,
 	    NULL, draw)

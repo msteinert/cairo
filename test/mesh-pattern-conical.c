@@ -129,7 +129,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (mesh_pattern_conical,
 	    "Paint a conical pattern using a mesh pattern",
-	    "conical,mesh,pattern", /* keywords */
+	    "conical, mesh, pattern", /* keywords */
 	    NULL, /* requirements */
 	    WIDTH, HEIGHT,
 	    NULL, draw)

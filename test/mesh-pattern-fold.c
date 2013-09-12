@@ -76,7 +76,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (mesh_pattern_fold,
 	    "Paint a mesh pattern with complex folds",
-	    "mesh,pattern", /* keywords */
+	    "mesh, pattern", /* keywords */
 	    NULL, /* requirements */
 	    WIDTH, HEIGHT,
 	    NULL, draw)

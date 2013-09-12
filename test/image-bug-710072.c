@@ -67,14 +67,14 @@ draw_unaligned (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (image_bug_710072_aligned,
 	    "Tests a bug where we may compute spans greater than bounded extents",
-	    "extents,fill,stroke", /* keywords */
+	    "extents, fill, stroke", /* keywords */
 	    NULL, /* requirements */
 	    15, 15,
 	    NULL, draw_aligned)
 
 CAIRO_TEST (image_bug_710072_unaligned,
 	    "Tests a bug where we may compute spans greater than bounded extents",
-	    "extents,fill,stroke", /* keywords */
+	    "extents, fill, stroke", /* keywords */
 	    NULL, /* requirements */
 	    15, 15,
 	    NULL, draw_unaligned)

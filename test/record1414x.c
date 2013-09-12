@@ -444,7 +444,7 @@ record_text_transform (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (record1414x_paint,
 	    "Test replayed calls to cairo_paint",
-	    "paint,record", /* keywords */
+	    "paint, record", /* keywords */
 	    NULL, /* requirements */
 	    M_SQRT2*8, M_SQRT2*8,
 	    NULL, record_paint)
@@ -474,7 +474,7 @@ CAIRO_TEST (record1414x_paint_alpha_clip_mask,
 	    NULL, record_paint_alpha_clip_mask)
 CAIRO_TEST (record1414x_fill_alpha,
 	    "Tests using set_rgba();fill()",
-	    "record,fill, alpha", /* keywords */
+	    "record, fill, alpha", /* keywords */
 	    NULL, /* requirements */
 	    M_SQRT2*(2*SIZE + 4*PAD), M_SQRT2*(2*SIZE + 4*PAD),
 	    NULL, record_fill_alpha)

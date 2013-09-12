@@ -108,7 +108,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (mesh_pattern_control_points,
 	    "Paint mesh pattern with non default control points",
-	    "mesh,pattern", /* keywords */
+	    "mesh, pattern", /* keywords */
 	    NULL, /* requirements */
 	    WIDTH, HEIGHT,
 	    NULL, draw)

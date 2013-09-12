@@ -93,7 +93,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (mesh_pattern_accuracy,
 	    "Paint mesh pattern",
-	    "mesh,pattern", /* keywords */
+	    "mesh, pattern", /* keywords */
 	    NULL, /* requirements */
 	    SIZE, SIZE,
 	    NULL, draw)

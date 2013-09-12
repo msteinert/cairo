@@ -100,7 +100,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (mesh_pattern_transformed,
 	    "Paint mesh pattern with a transformation",
-	    "mesh,pattern", /* keywords */
+	    "mesh, pattern", /* keywords */
 	    NULL, /* requirements */
 	    WIDTH, HEIGHT,
 	    NULL, draw)
