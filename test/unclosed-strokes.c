@@ -75,7 +75,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (unclosed_strokes,
 	    "Test coincident end-points are capped and not joined",
-	    "stroke caps", /* keywords */
+	    "stroke, caps", /* keywords */
 	    NULL, /* requirements */
 	    PAD + SIZE + PAD,
 	    3 * (PAD + SIZE) + PAD,

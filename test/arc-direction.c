@@ -98,7 +98,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (arc_direction,
 	    "Test drawing positive/negative arcs",
-	    "arc fill", /* keywords */
+	    "arc, fill", /* keywords */
 	    NULL, /* requirements */
 	    2*(3*PAD + 2*SIZE), 2*(3*PAD + 2*SIZE),
 	    NULL, draw)

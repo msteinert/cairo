@@ -59,7 +59,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (clip_empty_group,
 	    "Test handling of groups with everything clipped",
-	    "clip group", /* keywords */
+	    "clip, group", /* keywords */
 	    NULL, /* requirements */
 	    40, 40,
 	    NULL, draw)

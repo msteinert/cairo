@@ -183,14 +183,14 @@ unaligned (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (rectilinear_dash_scale,
 	    "Test dashed rectilinear stroke operations (covering only whole pixels) after scaling",
-	    "stroke dash", /* keywords */
+	    "stroke, dash", /* keywords */
 	    NULL, /* requirements */
 	    4*SIZE, 2*SIZE,
 	    NULL, aligned)
 
 CAIRO_TEST (rectilinear_dash_scale_unaligned,
 	    "Test dashed rectilinear stroke operations (covering partial pixels) after scaling",
-	    "stroke dash", /* keywords */
+	    "stroke, dash", /* keywords */
 	    NULL, /* requirements */
 	    4*SIZE, 2*SIZE,
 	    NULL, unaligned)

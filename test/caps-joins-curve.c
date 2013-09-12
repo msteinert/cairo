@@ -103,7 +103,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (caps_joins_curve,
 	    "Test caps and joins on curves",
-	    "stroke cap join", /* keywords */
+	    "stroke, cap, join", /* keywords */
 	    NULL, /* requirements */
 	    3 * (PAD + SIZE) + PAD,
 	    2 * (PAD + SIZE) + PAD,

@@ -106,7 +106,7 @@ draw_05 (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (caps,
 	    "Test caps",
-	    "stroke caps", /* keywords */
+	    "stroke, caps", /* keywords */
 	    NULL, /* requirements */
 	    PAD + SIZE + PAD,
 	    3 * (PAD + SIZE) + PAD,
@@ -114,7 +114,7 @@ CAIRO_TEST (caps,
 
 CAIRO_TEST (caps_2,
 	    "Test normal caps",
-	    "stroke caps", /* keywords */
+	    "stroke, caps", /* keywords */
 	    NULL, /* requirements */
 	    PAD + SIZE + PAD,
 	    3 * (PAD + SIZE) + PAD,
@@ -122,7 +122,7 @@ CAIRO_TEST (caps_2,
 
 CAIRO_TEST (caps_1,
 	    "Test hairline caps",
-	    "stroke caps", /* keywords */
+	    "stroke, caps", /* keywords */
 	    NULL, /* requirements */
 	    PAD + SIZE + PAD,
 	    3 * (PAD + SIZE) + PAD,
@@ -130,7 +130,7 @@ CAIRO_TEST (caps_1,
 
 CAIRO_TEST (caps_05,
 	    "Test fine caps",
-	    "stroke caps", /* keywords */
+	    "stroke, caps", /* keywords */
 	    NULL, /* requirements */
 	    PAD + SIZE + PAD,
 	    3 * (PAD + SIZE) + PAD,

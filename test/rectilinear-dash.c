@@ -169,7 +169,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (rectilinear_dash,
 	    "Test dashed rectilinear stroke operations (covering only whole pixels)",
-	    "stroke dash", /* keywords */
+	    "stroke, dash", /* keywords */
 	    NULL, /* requirements */
 	    SIZE, SIZE,
 	    NULL, draw)

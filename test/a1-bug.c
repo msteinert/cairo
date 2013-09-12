@@ -55,7 +55,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (a1_bug,
 	    "Check the fidelity of the rasterisation.",
-	    "a1 raster", /* keywords */
+	    "a1, raster", /* keywords */
 	    "target=raster", /* requirements */
 	    1000, 800,
 	    NULL, draw)

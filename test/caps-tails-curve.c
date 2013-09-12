@@ -119,7 +119,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (caps_tails_curve,
 	    "Test caps and joins on short tail segments",
-	    "stroke cap join", /* keywords */
+	    "stroke, cap, join", /* keywords */
 	    NULL, /* requirements */
 	    9 * (PAD + SIZE) + 4*PAD,
 	    12 * (PAD + SIZE) + PAD,

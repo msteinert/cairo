@@ -101,7 +101,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (joins,
 	    "Test joins",
-	    "stroke joins", /* keywords */
+	    "stroke, joins", /* keywords */
 	    NULL, /* requirements */
 	    3 * (PAD + SIZE) + PAD,
 	    3 * (PAD + SIZE) + PAD,
