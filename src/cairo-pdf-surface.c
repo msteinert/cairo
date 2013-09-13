@@ -2664,6 +2664,18 @@ _cairo_pdf_surface_emit_image_surface (cairo_pdf_surface_t        *surface,
     cairo_int_status_t status;
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	if (!source->hash_entry->stencil_mask) {
+	    status = _cairo_pdf_surface_emit_jpx_image (surface, source->surface, source->hash_entry->surface_res);
+	    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+		return status;
+
+	    status = _cairo_pdf_surface_emit_jpeg_image (surface, source->surface, source->hash_entry->surface_res);
+	    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+		return status;
+	}
+    }
+
+    if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	status = _cairo_surface_acquire_source_image (source->surface, &image, &image_extra);
     } else {
 	status = _cairo_pdf_surface_acquire_source_image_from_pattern (surface, source->raster_pattern,
@@ -2672,22 +2684,11 @@ _cairo_pdf_surface_emit_image_surface (cairo_pdf_surface_t        *surface,
     if (unlikely (status))
 	return status;
 
-    if (!source->hash_entry->stencil_mask) {
-	status = _cairo_pdf_surface_emit_jpx_image (surface, &image->base, source->hash_entry->surface_res);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    goto release_source;
-
-	status = _cairo_pdf_surface_emit_jpeg_image (surface, &image->base, source->hash_entry->surface_res);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    goto release_source;
-    }
-
     status = _cairo_pdf_surface_emit_image (surface, image,
 					    &source->hash_entry->surface_res,
 					    source->hash_entry->interpolate,
 					    source->hash_entry->stencil_mask);
 
-release_source:
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE)
 	_cairo_surface_release_source_image (source->surface, image, image_extra);
     else
