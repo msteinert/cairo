@@ -3093,6 +3093,16 @@ _cairo_ps_surface_emit_surface (cairo_ps_surface_t      *surface,
 {
     cairo_int_status_t status;
 
+    if (source_pattern->type == CAIRO_PATTERN_TYPE_SURFACE &&
+	source_pattern->extend != CAIRO_EXTEND_PAD)
+    {
+	cairo_surface_t *surf = ((cairo_surface_pattern_t *) source_pattern)->surface;
+
+	status = _cairo_ps_surface_emit_jpeg_image (surface, surf, width, height);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+
     if (source_surface->type == CAIRO_SURFACE_TYPE_RECORDING) {
 	if (source_surface->backend->type == CAIRO_SURFACE_TYPE_SUBSURFACE) {
 	    cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) source_surface;
@@ -3102,12 +3112,6 @@ _cairo_ps_surface_emit_surface (cairo_ps_surface_t      *surface,
 	}
     } else {
 	cairo_image_surface_t *image = (cairo_image_surface_t *) source_surface;
-	if (source_pattern->extend != CAIRO_EXTEND_PAD) {
-	    status = _cairo_ps_surface_emit_jpeg_image (surface, source_surface,
-							width, height);
-	    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-		return status;
-	}
 
 	status = _cairo_ps_surface_emit_image (surface, image,
 					       op, source_pattern->filter, stencil_mask);
