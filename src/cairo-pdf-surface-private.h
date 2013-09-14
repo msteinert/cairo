@@ -129,6 +129,13 @@ typedef struct _cairo_pdf_smask_group {
     cairo_scaled_font_t	 *scaled_font;
 } cairo_pdf_smask_group_t;
 
+typedef struct _cairo_pdf_jbig2_global {
+    unsigned char *id;
+    unsigned long id_length;
+    cairo_pdf_resource_t  res;
+    cairo_bool_t emitted;
+} cairo_pdf_jbig2_global_t;
+
 typedef struct _cairo_pdf_surface cairo_pdf_surface_t;
 
 struct _cairo_pdf_surface {
@@ -151,6 +158,7 @@ struct _cairo_pdf_surface {
     cairo_hash_table_t *all_surfaces;
     cairo_array_t smask_groups;
     cairo_array_t knockout_group;
+    cairo_array_t jbig2_global;
 
     cairo_scaled_font_subsets_t *font_subsets;
     cairo_array_t fonts;

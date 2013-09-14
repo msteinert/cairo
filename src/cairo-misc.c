@@ -156,6 +156,8 @@ cairo_status_to_string (cairo_status_t status)
 	return "invalid operation during mesh pattern construction";
     case CAIRO_STATUS_DEVICE_FINISHED:
 	return "the target device has been finished";
+    case CAIRO_STATUS_JBIG2_GLOBAL_MISSING:
+	return "CAIRO_MIME_TYPE_JBIG2_GLOBAL_ID used but no CAIRO_MIME_TYPE_JBIG2_GLOBAL data provided";
     default:
     case CAIRO_STATUS_LAST_STATUS:
 	return "<unknown error status>";

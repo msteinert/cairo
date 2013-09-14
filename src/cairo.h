@@ -290,6 +290,8 @@ typedef struct _cairo_user_data_key {
  *   cairo_mesh_pattern_begin_patch()/cairo_mesh_pattern_end_patch()
  *   pair (Since 1.12)
  * @CAIRO_STATUS_DEVICE_FINISHED: target device has been finished (Since 1.12)
+ * @CAIRO_STATUS_JBIG2_GLOBAL_MISSING: %CAIRO_MIME_TYPE_JBIG2_GLOBAL_ID has been used on at least one image
+ *   but no image provided %CAIRO_MIME_TYPE_JBIG2_GLOBAL (Since 1.14)
  * @CAIRO_STATUS_LAST_STATUS: this is a special value indicating the number of
  *   status values defined in this enumeration.  When using this value, note
  *   that the version of cairo at run-time may have additional status values
@@ -345,6 +347,7 @@ typedef enum _cairo_status {
     CAIRO_STATUS_DEVICE_ERROR,
     CAIRO_STATUS_INVALID_MESH_CONSTRUCTION,
     CAIRO_STATUS_DEVICE_FINISHED,
+    CAIRO_STATUS_JBIG2_GLOBAL_MISSING,
 
     CAIRO_STATUS_LAST_STATUS
 } cairo_status_t;
@@ -2419,6 +2422,9 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 #define CAIRO_MIME_TYPE_JP2 "image/jp2"
 #define CAIRO_MIME_TYPE_URI "text/x-uri"
 #define CAIRO_MIME_TYPE_UNIQUE_ID "application/x-cairo.uuid"
+#define CAIRO_MIME_TYPE_JBIG2 "application/x-cairo.jbig2"
+#define CAIRO_MIME_TYPE_JBIG2_GLOBAL "application/x-cairo.jbig2-global"
+#define CAIRO_MIME_TYPE_JBIG2_GLOBAL_ID "application/x-cairo.jbig2-global-id"
 
 cairo_public void
 cairo_surface_get_mime_data (cairo_surface_t		*surface,

@@ -130,6 +130,23 @@
  *
  * The PDF surface is used to render cairo graphics to Adobe
  * PDF files and is a multi-page vector surface backend.
+ *
+ * The following mime types are supported: %CAIRO_MIME_TYPE_JPEG,
+ * %CAIRO_MIME_TYPE_JP2, %CAIRO_MIME_TYPE_UNIQUE_ID,
+ * %CAIRO_MIME_TYPE_JBIG2, %CAIRO_MIME_TYPE_JBIG2_GLOBAL,
+ * %CAIRO_MIME_TYPE_JBIG2_GLOBAL_ID.
+ *
+ * JBIG2 data in PDF must be in the embedded format as descibed in
+ * ISO/IEC 11544. Image specific JBIG2 data must be in
+ * %CAIRO_MIME_TYPE_JBIG2.  Any global segments in the JBIG2 data
+ * (segments with page association field set to 0) must be in
+ * %CAIRO_MIME_TYPE_JBIG2_GLOBAL. The global data may be shared by
+ * multiple images. All images sharing the same global data must set
+ * %CAIRO_MIME_TYPE_JBIG2_GLOBAL_ID to a unique identifer. At least
+ * one of the images must provide the global data using
+ * %CAIRO_MIME_TYPE_JBIG2_GLOBAL. The global data will only be
+ * embedded once but shared by all JBIG2 images with the same
+ * %CAIRO_MIME_TYPE_JBIG2_GLOBAL_ID.
  **/
 
 static cairo_bool_t
@@ -164,6 +181,9 @@ static const char *_cairo_pdf_supported_mime_types[] =
     CAIRO_MIME_TYPE_JPEG,
     CAIRO_MIME_TYPE_JP2,
     CAIRO_MIME_TYPE_UNIQUE_ID,
+    CAIRO_MIME_TYPE_JBIG2,
+    CAIRO_MIME_TYPE_JBIG2_GLOBAL,
+    CAIRO_MIME_TYPE_JBIG2_GLOBAL_ID,
     NULL
 };
 
@@ -364,6 +384,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 
     _cairo_array_init (&surface->page_patterns, sizeof (cairo_pdf_pattern_t));
     _cairo_array_init (&surface->page_surfaces, sizeof (cairo_pdf_source_surface_t));
+    _cairo_array_init (&surface->jbig2_global, sizeof (cairo_pdf_jbig2_global_t));
     surface->all_surfaces = _cairo_hash_table_create (_cairo_pdf_source_surface_equal);
     if (unlikely (surface->all_surfaces == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -1174,6 +1195,20 @@ _cairo_pdf_surface_release_source_image_from_pattern (cairo_pdf_surface_t       
 }
 
 static cairo_int_status_t
+_get_jbig2_image_info (cairo_surface_t		 *source,
+		       cairo_image_info_t	 *info,
+		       const unsigned char	**mime_data,
+		       unsigned long		 *mime_data_length)
+{
+    cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_JBIG2,
+				 mime_data, mime_data_length);
+    if (*mime_data == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    return _cairo_image_info_get_jbig2_info (info, *mime_data, *mime_data_length);
+}
+
+static cairo_int_status_t
 _get_jpx_image_info (cairo_surface_t		 *source,
 		     cairo_image_info_t		*info,
 		     const unsigned char	**mime_data,
@@ -1249,6 +1284,15 @@ _get_source_surface_size (cairo_surface_t         *source,
 
     extents->x = 0;
     extents->y = 0;
+
+    status = _get_jbig2_image_info (source, &info, &mime_data, &mime_data_length);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
+	*width = info.width;
+	*height = info.height;
+	extents->width = info.width;
+	extents->height = info.height;
+	return status;
+    }
 
     status = _get_jpx_image_info (source, &info, &mime_data, &mime_data_length);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
@@ -1969,6 +2013,8 @@ _cairo_pdf_surface_finish (void *abstract_surface)
     long offset;
     cairo_pdf_resource_t info, catalog;
     cairo_status_t status, status2;
+    int size, i;
+    cairo_pdf_jbig2_global_t *global;
 
     status = surface->base.status;
     if (status == CAIRO_STATUS_SUCCESS)
@@ -2055,6 +2101,17 @@ _cairo_pdf_surface_finish (void *abstract_surface)
 	_cairo_scaled_font_subsets_destroy (surface->font_subsets);
 	surface->font_subsets = NULL;
     }
+
+    size = _cairo_array_num_elements (&surface->jbig2_global);
+    for (i = 0; i < size; i++) {
+	global = (cairo_pdf_jbig2_global_t *) _cairo_array_index (&surface->jbig2_global, i);
+	free(global->id);
+	if (!global->emitted)
+	    return _cairo_error (CAIRO_STATUS_JBIG2_GLOBAL_MISSING);
+    }
+    _cairo_array_fini (&surface->jbig2_global);
+
+    _cairo_array_truncate (&surface->page_surfaces, 0);
 
     _cairo_surface_clipper_reset (&surface->clipper);
 
@@ -2556,6 +2613,127 @@ CLEANUP:
 }
 
 static cairo_int_status_t
+_cairo_pdf_surface_lookup_jbig2_global (cairo_pdf_surface_t       *surface,
+					const unsigned char       *global_id,
+					unsigned long              global_id_length,
+					cairo_pdf_jbig2_global_t **entry)
+{
+    cairo_pdf_jbig2_global_t global;
+    int size, i;
+    cairo_int_status_t status;
+
+    size = _cairo_array_num_elements (&surface->jbig2_global);
+    for (i = 0; i < size; i++) {
+	*entry = (cairo_pdf_jbig2_global_t *) _cairo_array_index (&surface->jbig2_global, i);
+	if ((*entry)->id && global_id && (*entry)->id_length == global_id_length
+	    && memcmp((*entry)->id, global_id, global_id_length) == 0) {
+	    return CAIRO_STATUS_SUCCESS;
+	}
+    }
+
+    global.id = malloc(global_id_length);
+    memcpy (global.id, global_id, global_id_length);
+    global.id_length = global_id_length;
+    global.res = _cairo_pdf_surface_new_object (surface);
+    if (global.res.id == 0)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    global.emitted = FALSE;
+    status = _cairo_array_append (&surface->jbig2_global, &global);
+    if (unlikely(status))
+	return status;
+
+    size = _cairo_array_num_elements (&surface->jbig2_global);
+    *entry = (cairo_pdf_jbig2_global_t *) _cairo_array_index (&surface->jbig2_global, size - 1);
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_cairo_pdf_surface_emit_jbig2_image (cairo_pdf_surface_t   *surface,
+				     cairo_surface_t	   *source,
+				     cairo_pdf_resource_t   res)
+{
+    cairo_int_status_t status;
+    const unsigned char *mime_data;
+    unsigned long mime_data_length;
+    cairo_image_info_t info;
+    const unsigned char *global_id;
+    unsigned long global_id_length;
+    const unsigned char *global_data;
+    unsigned long global_data_length;
+    cairo_pdf_jbig2_global_t *global_entry;
+
+    cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_JBIG2,
+				 &mime_data, &mime_data_length);
+    if (mime_data == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    status = _cairo_image_info_get_jbig2_info (&info, mime_data, mime_data_length);
+    if (status)
+	return status;
+
+    cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_JBIG2_GLOBAL_ID,
+				 &global_id, &global_id_length);
+    if (global_id && global_id_length > 0) {
+	status = _cairo_pdf_surface_lookup_jbig2_global (surface, global_id, global_id_length, &global_entry);
+	if (unlikely(status))
+	    return status;
+
+	if (!global_entry->emitted) {
+	    cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_JBIG2_GLOBAL,
+					 &global_data, &global_data_length);
+	    if (global_data) {
+		status = _cairo_pdf_surface_open_stream (surface, &global_entry->res, FALSE, NULL);
+		if (unlikely(status))
+		    return status;
+
+		_cairo_output_stream_write (surface->output, global_data, global_data_length);
+		status = _cairo_pdf_surface_close_stream (surface);
+		if (unlikely(status))
+		    return status;
+
+		global_entry->emitted = TRUE;
+	    }
+	}
+
+	status = _cairo_pdf_surface_open_stream (surface,
+						 &res,
+						 FALSE,
+						 "   /Type /XObject\n"
+						 "   /Subtype /Image\n"
+						 "   /Width %d\n"
+						 "   /Height %d\n"
+						 "   /ColorSpace /DeviceGray\n"
+						 "   /BitsPerComponent 1\n"
+						 "   /Filter /JBIG2Decode\n"
+						 "   /DecodeParms << /JBIG2Globals %d 0 R >>\n",
+						 info.width,
+						 info.height,
+						 global_entry->res.id);
+    } else {
+	status = _cairo_pdf_surface_open_stream (surface,
+						 &res,
+						 FALSE,
+						 "   /Type /XObject\n"
+						 "   /Subtype /Image\n"
+						 "   /Width %d\n"
+						 "   /Height %d\n"
+						 "   /ColorSpace /DeviceGray\n"
+						 "   /BitsPerComponent 1\n"
+						 "   /Filter /JBIG2Decode\n",
+						 info.width,
+						 info.height);
+    }
+    if (unlikely(status))
+	return status;
+
+    _cairo_output_stream_write (surface->output, mime_data, mime_data_length);
+    status = _cairo_pdf_surface_close_stream (surface);
+
+    return status;
+}
+
+static cairo_int_status_t
 _cairo_pdf_surface_emit_jpx_image (cairo_pdf_surface_t   *surface,
 				   cairo_surface_t	 *source,
 				   cairo_pdf_resource_t   res)
@@ -2665,6 +2843,10 @@ _cairo_pdf_surface_emit_image_surface (cairo_pdf_surface_t        *surface,
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	if (!source->hash_entry->stencil_mask) {
+	    status = _cairo_pdf_surface_emit_jbig2_image (surface, source->surface, source->hash_entry->surface_res);
+	    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+		return status;
+
 	    status = _cairo_pdf_surface_emit_jpx_image (surface, source->surface, source->hash_entry->surface_res);
 	    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 		return status;
