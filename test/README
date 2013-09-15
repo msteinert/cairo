@@ -192,16 +192,16 @@ A new test case should be added by imitating the style of an existing
 test. This means adding the following files:
 
 	new-bug.c
-	new-bug-ref.png
+	reference/new-bug.ref.png
+	reference/new-bug.xfail.png
 
 Where new-bug.c is a minimal program to demonstrate the bug, following
-the style of existing tests. The new-bug-ref.png image should contain
-the desired result of new-bug.c if the bug were fixed.
+the style of existing tests. The new-bug.ref.png image should contain
+the desired result of new-bug.c if the bug were fixed while
+new-bug.xfail.png contains the current results of the test.
 
-Makefile.am should be edited, adding new-bug.c to both the TESTS and
-XFAIL_TESTS lists and new-bug-ref.png to EXTRA_DIST. Add new-bug to
-.gitignore, and last but not least, don't forget to "git add" the new
-files.
+Makefile.sources should be edited by adding new-bug.c to test_sources.
+And last but not least, don't forget to "git add" the new files.
 
 When a new feature is added
 ---------------------------
@@ -209,7 +209,7 @@ It's important for the regression suite to keep pace with development
 of the library. So a new test should be added for each new feature.
 The work involved is similar the work described above for new bugs.
 The only distinction is that the test is expected to pass so it
-should not be added to the XFAIL_TESTS list.
+should not need a new-bug.xfail.png file.
 
 While working on a test
 -----------------------
@@ -223,8 +223,7 @@ When a bug is fixed
 -------------------
 The fix should be verified by running the test suite which should
 result in an "unexpected pass" for the test of interest. Rejoice as
-appropriate, then remove the relevant file name from the XFAIL_TESTS
-variable in Makefile.am.
+appropriate, then remove the relevant xfail.png file from git.
 
 Before releasing
 ----------------
