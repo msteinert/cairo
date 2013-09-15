@@ -116,6 +116,97 @@ paint_file (cairo_t *cr,
 }
 
 static cairo_test_status_t
+paint_jbig2_file (cairo_t *cr, int x, int y)
+{
+    const cairo_test_context_t *ctx = cairo_test_get_context (cr);
+    cairo_surface_t *image;
+    unsigned char *mime_data;
+    unsigned int mime_length;
+    cairo_status_t status;
+    const char jbig2_image1_filename[] = "image1.jb2";
+    const char jbig2_image2_filename[] = "image2.jb2";
+    const char jbig2_global_filename[] = "global.jb2";
+
+    /* Deliberately use a non-matching MIME images, so that we can identify
+     * when the MIME representation is used in preference to the plain image
+     * surface.
+     */
+
+    /* Image 1 */
+
+    status = read_file (ctx, jbig2_image1_filename, &mime_data, &mime_length);
+    if (status)
+	return cairo_test_status_from_status (ctx, status);
+
+    image = cairo_image_surface_create (CAIRO_FORMAT_RGB24, 200, 50);
+
+    status = cairo_surface_set_mime_data (image, CAIRO_MIME_TYPE_JBIG2_GLOBAL_ID,
+					  (unsigned char *)"global", 6, NULL, NULL);
+    if (status) {
+	cairo_surface_destroy (image);
+	return cairo_test_status_from_status (ctx, status);
+    }
+
+    status = cairo_surface_set_mime_data (image, CAIRO_MIME_TYPE_JBIG2,
+					  mime_data, mime_length,
+					  free, mime_data);
+    if (status) {
+	cairo_surface_destroy (image);
+	free (mime_data);
+	return cairo_test_status_from_status (ctx, status);
+    }
+
+    cairo_set_source_surface (cr, image, x, y);
+    cairo_surface_destroy (image);
+
+    cairo_paint (cr);
+
+    /* Image 2 */
+
+    status = read_file (ctx, jbig2_image2_filename, &mime_data, &mime_length);
+    if (status)
+	return cairo_test_status_from_status (ctx, status);
+
+    image = cairo_image_surface_create (CAIRO_FORMAT_RGB24, 200, 50);
+
+    status = cairo_surface_set_mime_data (image, CAIRO_MIME_TYPE_JBIG2_GLOBAL_ID,
+					  (unsigned char *)"global", 6, NULL, NULL);
+    if (status) {
+	cairo_surface_destroy (image);
+	return cairo_test_status_from_status (ctx, status);
+    }
+
+    status = cairo_surface_set_mime_data (image, CAIRO_MIME_TYPE_JBIG2,
+					  mime_data, mime_length,
+					  free, mime_data);
+    if (status) {
+	cairo_surface_destroy (image);
+	free (mime_data);
+	return cairo_test_status_from_status (ctx, status);
+    }
+
+    /* Set the global data */
+    status = read_file (ctx, jbig2_global_filename, &mime_data, &mime_length);
+    if (status)
+	return cairo_test_status_from_status (ctx, status);
+
+    status = cairo_surface_set_mime_data (image, CAIRO_MIME_TYPE_JBIG2_GLOBAL,
+					  mime_data, mime_length,
+					  free, mime_data);
+    if (status) {
+	cairo_surface_destroy (image);
+	free (mime_data);
+	return cairo_test_status_from_status (ctx, status);
+    }
+
+    cairo_set_source_surface (cr, image, x, y + 50);
+    cairo_surface_destroy (image);
+
+    cairo_paint (cr);
+    return CAIRO_TEST_SUCCESS;
+}
+
+static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     const char jpg_filename[] = "jpeg.jpg";
@@ -135,6 +226,10 @@ draw (cairo_t *cr, int width, int height)
     if (status)
 	return status;
 
+    status = paint_jbig2_file (cr, 0, 150);
+    if (status)
+	return status;
+
     return CAIRO_TEST_SUCCESS;
 }
 
@@ -142,5 +237,5 @@ CAIRO_TEST (mime_data,
 	    "Check that the mime-data embedding works",
 	    "jpeg, api", /* keywords */
 	    NULL, /* requirements */
-	    200, 150,
+	    200, 250,
 	    NULL, draw)
