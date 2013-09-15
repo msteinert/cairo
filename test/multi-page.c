@@ -157,9 +157,9 @@ preamble (cairo_test_context_t *ctx)
 	draw_some_pages (surface);
 
 	cairo_surface_destroy (surface);
-	free (filename);
 
 	printf ("multi-page: Please check %s to ensure it looks happy.\n", filename);
+	free (filename);
     }
 #endif
 
@@ -181,9 +181,9 @@ preamble (cairo_test_context_t *ctx)
 	draw_some_pages (surface);
 
 	cairo_surface_destroy (surface);
-	free (filename);
 
 	printf ("multi-page: Please check %s to ensure it looks happy.\n", filename);
+	free (filename);
     }
 #endif
 
