@@ -72,7 +72,7 @@ fi >&2
 
 # Only run the syntax checker on the source files (not doc/)
 if test -e ./check-doc-syntax.awk; then
-    if echo $FILES | xargs ./check-doc-syntax.awk ; then
+    if echo $FILES | xargs awk -f ./check-doc-syntax.awk ; then
 	    :
     else
 	    stat=1

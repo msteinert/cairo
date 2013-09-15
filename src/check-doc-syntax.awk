@@ -1,5 +1,3 @@
-#!/usr/bin/awk -f
-
 BEGIN {
     name_found = 1
     SECTION_DOC = 0
