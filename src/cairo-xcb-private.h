@@ -505,14 +505,13 @@ _cairo_xcb_connection_put_subimage (cairo_xcb_connection_t *connection,
 				    uint8_t depth,
 				    void *data);
 
-cairo_private cairo_status_t
+cairo_private xcb_get_image_reply_t *
 _cairo_xcb_connection_get_image (cairo_xcb_connection_t *connection,
 				 xcb_drawable_t src,
 				 int16_t src_x,
 				 int16_t src_y,
 				 uint16_t width,
-				 uint16_t height,
-				 xcb_get_image_reply_t **reply);
+				 uint16_t height);
 
 cairo_private void
 _cairo_xcb_connection_poly_fill_rectangle (cairo_xcb_connection_t *connection,

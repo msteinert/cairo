@@ -382,13 +382,10 @@ _get_image (cairo_xcb_surface_t		 *surface,
 	}
     }
 
-    status = _cairo_xcb_connection_get_image (connection,
-					      surface->drawable,
-					      x, y,
-					      width, height,
-					      &reply);
-    if (unlikely (status))
-	goto FAIL;
+    reply =_cairo_xcb_connection_get_image (connection,
+					    surface->drawable,
+					    x, y,
+					    width, height);
 
     if (reply == NULL && ! surface->owns_pixmap) {
 	/* xcb_get_image_t from a window is dangerous because it can
@@ -422,15 +419,11 @@ _get_image (cairo_xcb_surface_t		 *surface,
 
 	_cairo_xcb_screen_put_gc (surface->screen, surface->depth, gc);
 
-	status = _cairo_xcb_connection_get_image (connection,
-						  pixmap,
-						  0, 0,
-						  width, height,
-						  &reply);
+	reply = _cairo_xcb_connection_get_image (connection,
+						 pixmap,
+						 0, 0,
+						 width, height);
 	_cairo_xcb_connection_free_pixmap (connection, pixmap);
-
-	if (unlikely (status))
-	    goto FAIL;
     }
 
     if (unlikely (reply == NULL)) {

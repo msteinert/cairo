@@ -283,32 +283,20 @@ _cairo_xcb_connection_put_subimage (cairo_xcb_connection_t *connection,
     }
 }
 
-cairo_status_t
+xcb_get_image_reply_t *
 _cairo_xcb_connection_get_image (cairo_xcb_connection_t *connection,
 				 xcb_drawable_t src,
 				 int16_t src_x,
 				 int16_t src_y,
 				 uint16_t width,
-				 uint16_t height,
-				 xcb_get_image_reply_t **reply)
+				 uint16_t height)
 {
-    xcb_generic_error_t *error;
-
-    *reply = xcb_get_image_reply (connection->xcb_connection,
-				  xcb_get_image (connection->xcb_connection,
-						 XCB_IMAGE_FORMAT_Z_PIXMAP,
-						 src,
-						 src_x, src_y,
-						 width, height,
-						 (uint32_t) -1),
-
-				  &error);
-    if (error) {
-	free (error);
-
-	free (*reply);
-	*reply = NULL;
-    }
-
-    return CAIRO_STATUS_SUCCESS;
+    return xcb_get_image_reply (connection->xcb_connection,
+				xcb_get_image (connection->xcb_connection,
+					       XCB_IMAGE_FORMAT_Z_PIXMAP,
+					       src,
+					       src_x, src_y,
+					       width, height,
+					       (uint32_t) -1),
+				NULL);
 }
