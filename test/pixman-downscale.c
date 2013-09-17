@@ -51,7 +51,7 @@ draw (cairo_t *cr, int width, int height, cairo_filter_t filter)
     image = cairo_test_create_surface_from_png (ctx, png_filename);
     x_scale = width * 1.0 / cairo_image_surface_get_width (image);
     y_scale = height * 1.0 / cairo_image_surface_get_height (image);
-    scale = fmin(x_scale, y_scale);
+    scale = x_scale < y_scale ? x_scale : y_scale;
 
     cairo_save (cr);
     cairo_scale (cr, scale, scale);
