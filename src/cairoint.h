@@ -424,7 +424,7 @@ _cairo_cogl_context_reset_static_data (void);
 /* the font backend interface */
 
 struct _cairo_unscaled_font_backend {
-    void (*destroy)     	    (void		             *unscaled_font);
+    cairo_bool_t (*destroy) (void	*unscaled_font);
 };
 
 /* #cairo_toy_font_face_t - simple family/slant/weight font faces used for
@@ -583,7 +583,7 @@ struct _cairo_font_face_backend {
     /* The destroy() function is allowed to resurrect the font face
      * by re-referencing. This is needed for the FreeType backend.
      */
-    void
+    cairo_bool_t
     (*destroy)     (void			*font_face);
 
     cairo_warn cairo_status_t
@@ -792,6 +792,9 @@ extern const cairo_private cairo_font_face_t _cairo_font_face_nil;
 cairo_private void
 _cairo_font_face_init (cairo_font_face_t               *font_face,
 		       const cairo_font_face_backend_t *backend);
+
+cairo_private cairo_bool_t
+_cairo_font_face_destroy (void *abstract_face);
 
 cairo_private cairo_status_t
 _cairo_font_face_set_error (cairo_font_face_t *font_face,

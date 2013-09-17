@@ -1950,7 +1950,7 @@ _cairo_win32_font_face_hash_table_unlock (void)
     CAIRO_MUTEX_UNLOCK (_cairo_win32_font_face_mutex);
 }
 
-static void
+static cairo_bool_t
 _cairo_win32_font_face_destroy (void *abstract_face)
 {
     cairo_win32_font_face_t *font_face = abstract_face;
@@ -1960,10 +1960,10 @@ _cairo_win32_font_face_destroy (void *abstract_face)
     /* All created objects must have been mapped in the hash table. */
     assert (hash_table != NULL);
 
-    if (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&font_face->base.ref_count)) {
+    if (! _cairo_reference_count_dec_and_test (&font_face->base.ref_count)) {
 	/* somebody recreated the font whilst we waited for the lock */
 	_cairo_win32_font_face_hash_table_unlock ();
-	return;
+	return FALSE;
     }
 
     /* Font faces in SUCCESS status are guaranteed to be in the
@@ -1975,6 +1975,7 @@ _cairo_win32_font_face_destroy (void *abstract_face)
 	_cairo_hash_table_remove (hash_table, &font_face->base.hash_entry);
 
     _cairo_win32_font_face_hash_table_unlock ();
+    return TRUE;
 }
 
 static void

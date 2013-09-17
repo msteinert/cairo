@@ -241,12 +241,13 @@ _cairo_quartz_font_face_create_for_toy (cairo_toy_font_face_t   *toy_face,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
+static cairo_bool_t
 _cairo_quartz_font_face_destroy (void *abstract_face)
 {
     cairo_quartz_font_face_t *font_face = (cairo_quartz_font_face_t*) abstract_face;
 
     CGFontRelease (font_face->cgFont);
+    return TRUE;
 }
 
 static const cairo_scaled_font_backend_t _cairo_quartz_scaled_font_backend;
