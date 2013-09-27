@@ -279,8 +279,7 @@ fill_reduces_to_source (cairo_operator_t op,
 			uint32_t *pixel)
 {
     if (__fill_reduces_to_source (op, color, dst)) {
-	color_to_pixel (color, dst->pixman_format, pixel);
-	return TRUE;
+	return color_to_pixel (color, dst->pixman_format, pixel);
     }
 
     return FALSE;
