@@ -2301,6 +2301,7 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 
     /* This is the only image format we support, which simplifies things. */
     assert (image->format == CAIRO_FORMAT_ARGB32 ||
+	    image->format == CAIRO_FORMAT_RGB24 ||
 	    image->format == CAIRO_FORMAT_A8 ||
 	    image->format == CAIRO_FORMAT_A1 );
 
@@ -2309,11 +2310,10 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 	assert (transparency == CAIRO_IMAGE_IS_OPAQUE ||
 		transparency == CAIRO_IMAGE_HAS_BILEVEL_ALPHA);
     } else {
-	if (transparency == CAIRO_IMAGE_IS_OPAQUE)
-	    return status;
+	assert (transparency != CAIRO_IMAGE_IS_OPAQUE);
     }
 
-    if (transparency == CAIRO_IMAGE_HAS_BILEVEL_ALPHA) {
+    if (transparency == CAIRO_IMAGE_HAS_BILEVEL_ALPHA || transparency == CAIRO_IMAGE_IS_OPAQUE) {
 	alpha_size = (image->width + 7) / 8 * image->height;
 	alpha = _cairo_malloc_ab ((image->width+7) / 8, image->height);
     } else {
@@ -2328,7 +2328,10 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 
     i = 0;
     for (y = 0; y < image->height; y++) {
-	if (image->format == CAIRO_FORMAT_A1) {
+	if (transparency == CAIRO_IMAGE_IS_OPAQUE) {
+	    for (x = 0; x < (image->width + 7) / 8; x++)
+		alpha[i++] = 0xff;
+	} else if (image->format == CAIRO_FORMAT_A1) {
 	    pixel8 = (uint8_t *) (image->data + y * image->stride);
 
 	    for (x = 0; x < (image->width + 7) / 8; x++, pixel8++) {
