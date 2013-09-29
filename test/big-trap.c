@@ -82,6 +82,7 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
+/* XFAIL: range overflow of fixed-point */
 CAIRO_TEST (big_trap,
 	    "Test oversize trapezoid with a clip region"
 	    "\nTest needs to be adjusted to trigger the original bug",

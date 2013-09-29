@@ -77,6 +77,11 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
+/*
+ * XFAIL: needs path editing in PS to convert degenerate
+ * end-caps into the shapes as expected by cairo (Or maybe PS is the correct
+ * behaviour?)
+ */
 CAIRO_TEST (degenerate_dash,
 	    "Tests the behaviour of dashed segments that end on a off-on transition",
 	    "dash, degenerate", /* keywords */

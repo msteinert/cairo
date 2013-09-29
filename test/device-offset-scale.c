@@ -65,6 +65,10 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
+/*
+ * XFAIL: complication of pre-multiplying device_offset into the pattern_matrix
+ * and then requiring further manipulation for SVG
+ */
 CAIRO_TEST (device_offset_scale,
 	    "Test that the device-offset transform is transformed by the ctm.",
 	    "device-offset", /* keywords */

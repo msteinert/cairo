@@ -96,6 +96,11 @@ preamble (cairo_test_context_t *ctx)
     return ret;
 }
 
+/*
+ * XFAIL: The cairo_in_fill () function can sometimes produce false positives
+ * when the tessellator produces empty trapezoids and the query point lands
+ * exactly on a trapezoid edge.
+ */
 CAIRO_TEST (in_fill_empty_trapezoid,
 	    "Test that the tessellator isn't producing obviously empty trapezoids",
 	    "in, trap", /* keywords */

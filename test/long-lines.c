@@ -74,6 +74,7 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
+/* XFAIL: range overflow of fixed-point */
 CAIRO_TEST (long_lines,
 	    "Test long lines"
 	    "\nLong lines are not drawn due to the limitations of the internal 16.16 fixed-point coordinates",

@@ -108,6 +108,10 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
+/*
+ * XFAIL: undefined behaviour in PS, needs path editing to convert degenerate
+ * segments into circles/rectangles as expected by cairo
+ */
 CAIRO_TEST (degenerate_path,
 	    "Tests the behaviour of degenerate paths with different cap types",
 	    "degenerate", /* keywords */

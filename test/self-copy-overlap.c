@@ -40,6 +40,11 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
+/*
+ * XFAIL: vector surfaces take snapshot of patterns in contrast to the raster
+ * backends which don't. One solution would be to clone overlapping areas of
+ * dst/source, so patterns were effectively snapshotted across all backends.
+ */
 CAIRO_TEST (self_copy_overlap,
 	    "Tests painting to itself using itself as the source"
 	    "\nBackends treat this case inconsistently---vector backends are creating snapshots.",

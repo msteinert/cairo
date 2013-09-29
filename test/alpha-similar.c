@@ -60,6 +60,10 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
+/*
+ * XFAIL: discrepancy between backends in applying color components of a pure
+ * alpha surface
+ */
 CAIRO_TEST (alpha_similar,
 	    "Tests creation of similar alpha surfaces"
 	    "\nApplication of a pure-alpha similar source is inconsistent across backends.",
