@@ -73,7 +73,9 @@ typedef struct _cairo_pdf_source_surface_entry {
     cairo_operator_t operator;
     cairo_bool_t interpolate;
     cairo_bool_t stencil_mask;
+    cairo_bool_t smask;
     cairo_pdf_resource_t surface_res;
+    cairo_pdf_resource_t smask_res;
     int width;
     int height;
     cairo_rectangle_int_t extents;
