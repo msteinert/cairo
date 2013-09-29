@@ -2464,7 +2464,7 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t              *surface,
             goto CLEANUP;
     }
 
-    if (surface_entry->stencil_mask) {
+    if (surface_entry->smask || surface_entry->stencil_mask) {
 	return _cairo_pdf_surface_emit_smask (surface, image,
 					      surface_entry->stencil_mask,
 					      surface_entry->interpolate,
@@ -2716,24 +2716,44 @@ _cairo_pdf_surface_emit_jbig2_image (cairo_pdf_surface_t              *surface,
     else
 	smask_buf[0] = 0;
 
-    status = _cairo_pdf_surface_open_stream (surface,
-					     &surface_entry->surface_res,
-					     FALSE,
-					     "   /Type /XObject\n"
-					     "   /Subtype /Image\n"
-					     "   /Width %d\n"
-					     "   /Height %d\n"
-					     "   /ColorSpace /DeviceGray\n"
-					     "   /BitsPerComponent 1\n"
-					     "   /Interpolate %s\n"
-					     "%s"
-					     "   /Filter /JBIG2Decode\n"
-					     "%s",
-					     info.width,
-					     info.height,
-					     surface_entry->interpolate ? "true" : "false",
-					     smask_buf,
-					     decode_parms_buf);
+    if (surface_entry->stencil_mask) {
+	status = _cairo_pdf_surface_open_stream (surface,
+						 &surface_entry->surface_res,
+						 FALSE,
+						 "   /Type /XObject\n"
+						 "   /Subtype /Image\n"
+						 "   /ImageMask true\n"
+						 "   /Width %d\n"
+						 "   /Height %d\n"
+						 "   /Interpolate %s\n"
+						 "   /BitsPerComponent 1\n"
+						 "   /Decode [1 0]\n"
+						 "   /Filter /JPXDecode\n"
+						 "%s",
+						 info.width,
+						 info.height,
+						 surface_entry->interpolate ? "true" : "false",
+						 decode_parms_buf);
+    } else {
+	status = _cairo_pdf_surface_open_stream (surface,
+						 &surface_entry->surface_res,
+						 FALSE,
+						 "   /Type /XObject\n"
+						 "   /Subtype /Image\n"
+						 "   /Width %d\n"
+						 "   /Height %d\n"
+						 "   /ColorSpace /DeviceGray\n"
+						 "   /BitsPerComponent 1\n"
+						 "   /Interpolate %s\n"
+						 "%s"
+						 "   /Filter /JBIG2Decode\n"
+						 "%s",
+						 info.width,
+						 info.height,
+						 surface_entry->interpolate ? "true" : "false",
+						 smask_buf,
+						 decode_parms_buf);
+    }
     if (unlikely(status))
 	return status;
 
@@ -2766,25 +2786,49 @@ _cairo_pdf_surface_emit_jpx_image (cairo_pdf_surface_t              *surface,
     if (status)
 	return status;
 
+    if ((surface_entry->smask || surface_entry->stencil_mask) && info.num_components != 1)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if ((surface_entry->stencil_mask) && info.bits_per_component != 1)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     if (surface_entry->smask_res.id)
 	snprintf(smask_buf, sizeof(smask_buf), "   /SMask %d 0 R\n", surface_entry->smask_res.id);
     else
 	smask_buf[0] = 0;
 
-    status = _cairo_pdf_surface_open_stream (surface,
-					     &surface_entry->surface_res,
-					     FALSE,
-					     "   /Type /XObject\n"
-					     "   /Subtype /Image\n"
-					     "   /Width %d\n"
-					     "   /Height %d\n"
-					     "   /Interpolate %s\n"
-					     "%s"
-					     "   /Filter /JPXDecode\n",
-					     info.width,
-					     info.height,
-					     surface_entry->interpolate ? "true" : "false",
-					     smask_buf);
+    if (surface_entry->stencil_mask) {
+	status = _cairo_pdf_surface_open_stream (surface,
+						 &surface_entry->surface_res,
+						 FALSE,
+						 "   /Type /XObject\n"
+						 "   /Subtype /Image\n"
+						 "   /ImageMask true\n"
+						 "   /Width %d\n"
+						 "   /Height %d\n"
+						 "   /Interpolate %s\n"
+						 "   /BitsPerComponent 1\n"
+						 "   /Decode [1 0]\n"
+						 "   /Filter /JPXDecode\n",
+						 info.width,
+						 info.height,
+						 surface_entry->interpolate ? "true" : "false");
+    } else {
+	status = _cairo_pdf_surface_open_stream (surface,
+						 &surface_entry->surface_res,
+						 FALSE,
+						 "   /Type /XObject\n"
+						 "   /Subtype /Image\n"
+						 "   /Width %d\n"
+						 "   /Height %d\n"
+						 "   /Interpolate %s\n"
+						 "%s"
+						 "   /Filter /JPXDecode\n",
+						 info.width,
+						 info.height,
+						 surface_entry->interpolate ? "true" : "false",
+						 smask_buf);
+    }
     if (status)
 	return status;
 
@@ -2817,6 +2861,12 @@ _cairo_pdf_surface_emit_jpeg_image (cairo_pdf_surface_t              *surface,
     if (unlikely (status))
 	return status;
 
+    if ((surface_entry->smask || surface_entry->stencil_mask) && info.num_components != 1)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if ((surface_entry->stencil_mask) && info.bits_per_component != 1)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     switch (info.num_components) {
 	case 1:
 	    colorspace = "/DeviceGray";
@@ -2836,24 +2886,42 @@ _cairo_pdf_surface_emit_jpeg_image (cairo_pdf_surface_t              *surface,
     else
 	smask_buf[0] = 0;
 
-    status = _cairo_pdf_surface_open_stream (surface,
-					     &surface_entry->surface_res,
-					     FALSE,
-					     "   /Type /XObject\n"
-					     "   /Subtype /Image\n"
-					     "   /Width %d\n"
-					     "   /Height %d\n"
-					     "   /ColorSpace %s\n"
-					     "   /Interpolate %s\n"
-					     "   /BitsPerComponent %d\n"
-					     "%s"
-					     "   /Filter /DCTDecode\n",
-					     info.width,
-					     info.height,
-					     colorspace,
-					     surface_entry->interpolate ? "true" : "false",
-					     info.bits_per_component,
-					     smask_buf);
+    if (surface_entry->stencil_mask) {
+	status = _cairo_pdf_surface_open_stream (surface,
+						 &surface_entry->surface_res,
+						 FALSE,
+						 "   /Type /XObject\n"
+						 "   /Subtype /Image\n"
+						 "   /ImageMask true\n"
+						 "   /Width %d\n"
+						 "   /Height %d\n"
+						 "   /Interpolate %s\n"
+						 "   /BitsPerComponent 1\n"
+						 "   /Decode [1 0]\n"
+						 "   /Filter /DCTDecode\n",
+						 info.width,
+						 info.height,
+						 surface_entry->interpolate ? "true" : "false");
+    } else {
+	status = _cairo_pdf_surface_open_stream (surface,
+						 &surface_entry->surface_res,
+						 FALSE,
+						 "   /Type /XObject\n"
+						 "   /Subtype /Image\n"
+						 "   /Width %d\n"
+						 "   /Height %d\n"
+						 "   /ColorSpace %s\n"
+						 "   /Interpolate %s\n"
+						 "   /BitsPerComponent %d\n"
+						 "%s"
+						 "   /Filter /DCTDecode\n",
+						 info.width,
+						 info.height,
+						 colorspace,
+						 surface_entry->interpolate ? "true" : "false",
+						 info.bits_per_component,
+						 smask_buf);
+    }
     if (unlikely (status))
 	return status;
 
@@ -2872,19 +2940,17 @@ _cairo_pdf_surface_emit_image_surface (cairo_pdf_surface_t        *surface,
     cairo_int_status_t status;
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
-	if (!source->hash_entry->stencil_mask) {
-	    status = _cairo_pdf_surface_emit_jbig2_image (surface, source->surface, source->hash_entry);
-	    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-		return status;
+	status = _cairo_pdf_surface_emit_jbig2_image (surface, source->surface, source->hash_entry);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
 
-	    status = _cairo_pdf_surface_emit_jpx_image (surface, source->surface, source->hash_entry);
-	    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-		return status;
+	status = _cairo_pdf_surface_emit_jpx_image (surface, source->surface, source->hash_entry);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
 
-	    status = _cairo_pdf_surface_emit_jpeg_image (surface, source->surface, source->hash_entry);
-	    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-		return status;
-	}
+	status = _cairo_pdf_surface_emit_jpeg_image (surface, source->surface, source->hash_entry);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
     }
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
@@ -2896,17 +2962,9 @@ _cairo_pdf_surface_emit_image_surface (cairo_pdf_surface_t        *surface,
     if (unlikely (status))
 	return status;
 
-    if (source->hash_entry->smask) {
-	status = _cairo_pdf_surface_emit_smask (surface,
-						image,
-						FALSE,
-						source->hash_entry->interpolate,
-						&source->hash_entry->surface_res);
-    } else {
-	status = _cairo_pdf_surface_emit_image (surface,
-						image,
-						source->hash_entry);
-    }
+    status = _cairo_pdf_surface_emit_image (surface,
+					    image,
+					    source->hash_entry);
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE)
 	_cairo_surface_release_source_image (source->surface, image, image_extra);
