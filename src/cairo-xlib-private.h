@@ -81,7 +81,7 @@ struct _cairo_xlib_display {
 
     int render_major;
     int render_minor;
-    XRenderPictFormat *cached_xrender_formats[CAIRO_FORMAT_RGB16_565 + 1];
+    XRenderPictFormat *cached_xrender_formats[CAIRO_FORMAT_RGB30 + 1];
 
     int force_precision;
 
