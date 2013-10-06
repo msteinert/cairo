@@ -157,10 +157,6 @@ static cairo_status_t
 _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font,
 					  cairo_scaled_glyph_t      *scaled_glyph);
 
-static void
-_cairo_win32_font_face_destroy (void *abstract_face);
-
-
 #define NEARLY_ZERO(d) (fabs(d) < (1. / 65536.))
 
 static HDC
@@ -1847,49 +1843,6 @@ struct _cairo_win32_font_face {
     HFONT hfont;
 };
 
-/* implement the platform-specific interface */
-
-static cairo_bool_t
-_is_scale (const cairo_matrix_t *matrix, double scale)
-{
-    return matrix->xx == scale && matrix->yy == scale &&
-           matrix->xy == 0. && matrix->yx == 0. &&
-           matrix->x0 == 0. && matrix->y0 == 0.;
-}
-
-static cairo_status_t
-_cairo_win32_font_face_scaled_font_create (void			*abstract_face,
-					   const cairo_matrix_t	*font_matrix,
-					   const cairo_matrix_t	*ctm,
-					   const cairo_font_options_t *options,
-					   cairo_scaled_font_t **font)
-{
-    HFONT hfont = NULL;
-
-    cairo_win32_font_face_t *font_face = abstract_face;
-
-    if (font_face->hfont) {
-        /* Check whether it's OK to go ahead and use the font-face's HFONT. */
-        if (_is_scale (ctm, 1.) &&
-            _is_scale (font_matrix, -font_face->logfont.lfHeight)) {
-            hfont = font_face->hfont;
-        }
-    }
-
-    return _win32_scaled_font_create (&font_face->logfont,
-				      hfont,
-				      &font_face->base,
-				      font_matrix, ctm, options,
-				      font);
-}
-
-const cairo_font_face_backend_t _cairo_win32_font_face_backend = {
-    CAIRO_FONT_TYPE_WIN32,
-    _cairo_win32_font_face_create_for_toy,
-    _cairo_win32_font_face_destroy,
-    _cairo_win32_font_face_scaled_font_create
-};
-
 /* We maintain a hash table from LOGFONT,HFONT => #cairo_font_face_t.
  * The primary purpose of this mapping is to provide unique
  * #cairo_font_face_t values so that our cache and mapping from
@@ -2015,6 +1968,49 @@ _cairo_win32_font_face_keys_equal (const void *key_a,
     else
 	return FALSE;
 }
+
+/* implement the platform-specific interface */
+
+static cairo_bool_t
+_is_scale (const cairo_matrix_t *matrix, double scale)
+{
+    return matrix->xx == scale && matrix->yy == scale &&
+           matrix->xy == 0. && matrix->yx == 0. &&
+           matrix->x0 == 0. && matrix->y0 == 0.;
+}
+
+static cairo_status_t
+_cairo_win32_font_face_scaled_font_create (void			*abstract_face,
+					   const cairo_matrix_t	*font_matrix,
+					   const cairo_matrix_t	*ctm,
+					   const cairo_font_options_t *options,
+					   cairo_scaled_font_t **font)
+{
+    HFONT hfont = NULL;
+
+    cairo_win32_font_face_t *font_face = abstract_face;
+
+    if (font_face->hfont) {
+        /* Check whether it's OK to go ahead and use the font-face's HFONT. */
+        if (_is_scale (ctm, 1.) &&
+            _is_scale (font_matrix, -font_face->logfont.lfHeight)) {
+            hfont = font_face->hfont;
+        }
+    }
+
+    return _win32_scaled_font_create (&font_face->logfont,
+				      hfont,
+				      &font_face->base,
+				      font_matrix, ctm, options,
+				      font);
+}
+
+const cairo_font_face_backend_t _cairo_win32_font_face_backend = {
+    CAIRO_FONT_TYPE_WIN32,
+    _cairo_win32_font_face_create_for_toy,
+    _cairo_win32_font_face_destroy,
+    _cairo_win32_font_face_scaled_font_create
+};
 
 /**
  * cairo_win32_font_face_create_for_logfontw_hfont:
