@@ -1019,7 +1019,7 @@ curve_to_dashed (void *closure,
     func = (cairo_spline_add_point_func_t)line_to_dashed;
 
     if (stroker->has_bounds &&
-	! _cairo_spline_intersects (&stroker->current_face.point, b, c, b,
+	! _cairo_spline_intersects (&stroker->current_face.point, b, c, d,
 				    &stroker->line_bounds))
 	return func (closure, d, NULL);
 
