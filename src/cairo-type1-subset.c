@@ -1128,7 +1128,7 @@ write_used_glyphs (cairo_type1_font_subset_t *font,
     cairo_status_t status;
     char buffer[256];
     int length;
-    int subset_id;
+    unsigned int subset_id;
     int ch;
     const char *wa_name;
 
@@ -1142,13 +1142,14 @@ write_used_glyphs (cairo_type1_font_subset_t *font,
 	 * font with the standard name.
          **/
 	subset_id = font->glyphs[glyph_number].subset_index;
-	if (subset_id > 0) {
+	/* Any additional glyph included for use by the seac operator
+	 * will either have subset_id >= font->scaled_font_subset->num_glyphs
+	 * or will not map to a winansi name (wa_name = NULL).  In this
+	 * case the original name is used.
+	 */
+	if (subset_id > 0 && subset_id < font->scaled_font_subset->num_glyphs) {
 	    ch = font->scaled_font_subset->to_latin_char[subset_id];
 	    wa_name = _cairo_winansi_to_glyphname (ch);
-	    /* If this subset contains any seac glyphs, additional non
-	     * winansi glyphs (wa_name = NULL) may be included in the
-	     * subset. In this case the original name is used.
-	     */
 	    if (wa_name) {
 		name = wa_name;
 		name_length = strlen(name);
