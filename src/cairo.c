@@ -230,6 +230,8 @@ cairo_create (cairo_surface_t *target)
 	return _cairo_create_in_error (_cairo_error (CAIRO_STATUS_NULL_POINTER));
     if (unlikely (target->status))
 	return _cairo_create_in_error (target->status);
+    if (unlikely (target->finished))
+	return _cairo_create_in_error (_cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 
     if (target->backend->create_context == NULL)
 	return _cairo_create_in_error (_cairo_error (CAIRO_STATUS_WRITE_ERROR));
