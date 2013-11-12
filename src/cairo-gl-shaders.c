@@ -198,7 +198,7 @@ _cairo_gl_context_fini_shaders (cairo_gl_context_t *ctx)
 {
     int i;
 
-    for (i = 0; i <= CAIRO_GL_VAR_TYPE_MAX; i++) {
+    for (i = 0; i < CAIRO_GL_VAR_TYPE_MAX; i++) {
 	if (ctx->vertex_shaders[i])
 	    ctx->dispatch.DeleteShader (ctx->vertex_shaders[i]);
     }
