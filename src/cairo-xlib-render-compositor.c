@@ -100,7 +100,7 @@ set_clip_region (void *_surface,
     _cairo_xlib_surface_ensure_picture (surface);
 
     if (region != NULL) {
-	XRectangle stack_rects[CAIRO_STACK_ARRAY_LENGTH (sizeof (XRectangle))];
+	XRectangle stack_rects[CAIRO_STACK_ARRAY_LENGTH (XRectangle)];
 	XRectangle *rects = stack_rects;
 	int n_rects, i;
 

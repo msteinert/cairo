@@ -1350,7 +1350,7 @@ _render_fill_boxes (void			*abstract_dst,
 		    cairo_boxes_t		*boxes)
 {
     cairo_xcb_surface_t *dst = abstract_dst;
-    xcb_rectangle_t stack_xrects[CAIRO_STACK_ARRAY_LENGTH (sizeof (xcb_rectangle_t))];
+    xcb_rectangle_t stack_xrects[CAIRO_STACK_ARRAY_LENGTH (xcb_rectangle_t)];
     xcb_rectangle_t *xrects = stack_xrects;
     xcb_render_color_t render_color;
     int render_op = _render_operator (op);

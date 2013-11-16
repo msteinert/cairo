@@ -893,7 +893,7 @@ _cairo_xlib_surface_update_shm (cairo_xlib_surface_t *surface)
     }
 
     if (damage->region) {
-	XRectangle stack_rects[CAIRO_STACK_ARRAY_LENGTH (sizeof (XRectangle))];
+	XRectangle stack_rects[CAIRO_STACK_ARRAY_LENGTH (XRectangle)];
 	XRectangle *rects = stack_rects;
 	cairo_rectangle_int_t r;
 	int n_rects, i;
@@ -1081,7 +1081,7 @@ _cairo_xlib_surface_put_shm (cairo_xlib_surface_t *surface)
 	TRACE ((stderr, "%s: flushing damage x %d\n", __FUNCTION__,
 		damage->region ? cairo_region_num_rectangles (damage->region) : 0));
 	if (damage->status == CAIRO_STATUS_SUCCESS && damage->region) {
-	    XRectangle stack_rects[CAIRO_STACK_ARRAY_LENGTH (sizeof (XRectangle))];
+	    XRectangle stack_rects[CAIRO_STACK_ARRAY_LENGTH (XRectangle)];
 	    XRectangle *rects = stack_rects;
 	    cairo_rectangle_int_t r;
 	    int n_rects, i;
