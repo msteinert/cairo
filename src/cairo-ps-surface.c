@@ -3251,11 +3251,9 @@ _cairo_ps_surface_paint_surface (cairo_ps_surface_t     *surface,
     cairo_matrix_scale (&ps_p2d, 1.0, -1.0);
 
     if (! _cairo_matrix_is_identity (&ps_p2d)) {
-	_cairo_output_stream_printf (surface->stream,
-				     "[ %f %f %f %f %f %f ] concat\n",
-				     ps_p2d.xx, ps_p2d.yx,
-				     ps_p2d.xy, ps_p2d.yy,
-				     ps_p2d.x0, ps_p2d.y0);
+	_cairo_output_stream_printf (surface->stream, "[ ");
+	_cairo_output_stream_print_matrix (surface->stream, &ps_p2d);
+	_cairo_output_stream_printf (surface->stream, " ] concat\n");
     }
 
     status = _cairo_ps_surface_emit_surface (surface,
@@ -3444,12 +3442,10 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
     cairo_matrix_translate (&ps_p2d, 0.0, pattern_height);
     cairo_matrix_scale (&ps_p2d, 1.0, -1.0);
 
+    _cairo_output_stream_printf (surface->stream, "[ ");
+    _cairo_output_stream_print_matrix (surface->stream, &ps_p2d);
     _cairo_output_stream_printf (surface->stream,
-				 "[ %f %f %f %f %f %f ]\n",
-				 ps_p2d.xx, ps_p2d.yx,
-				 ps_p2d.xy, ps_p2d.yy,
-				 ps_p2d.x0, ps_p2d.y0);
-    _cairo_output_stream_printf (surface->stream,
+				 " ]\n"
 				 "makepattern setpattern\n");
 
   release_source:
@@ -3823,11 +3819,10 @@ _cairo_ps_surface_emit_gradient (cairo_ps_surface_t       *surface,
     if (is_ps_pattern) {
 	_cairo_output_stream_printf (surface->stream,
 				     ">>\n"
-				     "[ %f %f %f %f %f %f ]\n"
-				     "makepattern setpattern\n",
-				     pat_to_ps.xx, pat_to_ps.yx,
-				     pat_to_ps.xy, pat_to_ps.yy,
-				     pat_to_ps.x0, pat_to_ps.y0);
+				     "[ ");
+    _cairo_output_stream_print_matrix (surface->stream, &pat_to_ps);
+    _cairo_output_stream_printf (surface->stream, " ]\n"
+				 "makepattern setpattern\n");
     } else {
 	_cairo_output_stream_printf (surface->stream,
 				     "shfill\n");
@@ -3905,11 +3900,10 @@ _cairo_ps_surface_emit_mesh_pattern (cairo_ps_surface_t     *surface,
     if (is_ps_pattern) {
 	_cairo_output_stream_printf (surface->stream,
 				     ">>\n"
-				     "[ %f %f %f %f %f %f ]\n",
-				     pat_to_ps.xx, pat_to_ps.yx,
-				     pat_to_ps.xy, pat_to_ps.yy,
-				     pat_to_ps.x0, pat_to_ps.y0);
+				     "[ \n");
+	_cairo_output_stream_print_matrix (surface->stream, &pat_to_ps);
 	_cairo_output_stream_printf (surface->stream,
+				     " ]\n"
 				     "makepattern\n"
 				     "setpattern\n");
     } else {
@@ -4008,11 +4002,9 @@ _cairo_ps_surface_paint_gradient (cairo_ps_surface_t          *surface,
     cairo_matrix_multiply (&pat_to_ps, &pat_to_ps, &surface->cairo_to_ps);
 
     if (! _cairo_matrix_is_identity (&pat_to_ps)) {
-	_cairo_output_stream_printf (surface->stream,
-				     "[%f %f %f %f %f %f] concat\n",
-				     pat_to_ps.xx, pat_to_ps.yx,
-				     pat_to_ps.xy, pat_to_ps.yy,
-				     pat_to_ps.x0, pat_to_ps.y0);
+	_cairo_output_stream_printf (surface->stream, "[");
+	_cairo_output_stream_print_matrix (surface->stream, &pat_to_ps);
+	_cairo_output_stream_printf (surface->stream, "] concat\n");
     }
 
     if (source->type == CAIRO_PATTERN_TYPE_MESH) {

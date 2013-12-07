@@ -828,10 +828,9 @@ _cairo_pdf_operators_emit_stroke (cairo_pdf_operators_t		*pdf_operators,
 	return status;
 
     if (has_ctm) {
-	_cairo_output_stream_printf (pdf_operators->stream,
-				     "q %f %f %f %f %f %f cm\n",
-				     m.xx, m.yx, m.xy, m.yy,
-				     m.x0, m.y0);
+	_cairo_output_stream_printf (pdf_operators->stream, "q ");
+	_cairo_output_stream_print_matrix (pdf_operators->stream, &m);
+	_cairo_output_stream_printf (pdf_operators->stream, " cm\n");
     } else {
 	path_transform = pdf_operators->cairo_to_pdf;
     }
@@ -1120,14 +1119,8 @@ _cairo_pdf_operators_set_text_matrix (cairo_pdf_operators_t  *pdf_operators,
     pdf_operators->cur_x = 0;
     pdf_operators->cur_y = 0;
     pdf_operators->glyph_buf_x_pos = 0;
-    _cairo_output_stream_printf (pdf_operators->stream,
-				 "%f %f %f %f %f %f Tm\n",
-				 pdf_operators->text_matrix.xx,
-				 pdf_operators->text_matrix.yx,
-				 pdf_operators->text_matrix.xy,
-				 pdf_operators->text_matrix.yy,
-				 pdf_operators->text_matrix.x0,
-				 pdf_operators->text_matrix.y0);
+    _cairo_output_stream_print_matrix (pdf_operators->stream, &pdf_operators->text_matrix);
+    _cairo_output_stream_printf (pdf_operators->stream, " Tm\n");
 
     pdf_operators->cairo_to_pdftext = *matrix;
     status = cairo_matrix_invert (&pdf_operators->cairo_to_pdftext);

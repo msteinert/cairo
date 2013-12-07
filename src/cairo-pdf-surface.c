@@ -3843,11 +3843,11 @@ _cairo_pdf_surface_output_gradient (cairo_pdf_surface_t        *surface,
 	_cairo_output_stream_printf (surface->output,
 				     "<< /Type /Pattern\n"
 				     "   /PatternType 2\n"
-				     "   /Matrix [ %f %f %f %f %f %f ]\n"
-				     "   /Shading\n",
-				     pat_to_pdf->xx, pat_to_pdf->yx,
-				     pat_to_pdf->xy, pat_to_pdf->yy,
-				     pat_to_pdf->x0, pat_to_pdf->y0);
+				     "   /Matrix [ ");
+	_cairo_output_stream_print_matrix (surface->output, pat_to_pdf);
+	_cairo_output_stream_printf (surface->output,
+				     " ]\n"
+				     "   /Shading\n");
     }
 
     if (pdf_pattern->pattern->type == CAIRO_PATTERN_TYPE_LINEAR) {
@@ -4105,14 +4105,14 @@ _cairo_pdf_surface_emit_mesh_pattern (cairo_pdf_surface_t    *surface,
                                  "%d 0 obj\n"
                                  "<< /Type /Pattern\n"
                                  "   /PatternType 2\n"
-                                 "   /Matrix [ %f %f %f %f %f %f ]\n"
+                                 "   /Matrix [ ",
+				 pdf_pattern->pattern_res.id);
+    _cairo_output_stream_print_matrix (surface->output, &pat_to_pdf);
+    _cairo_output_stream_printf (surface->output,
+                                 " ]\n"
                                  "   /Shading %d 0 R\n"
 				 ">>\n"
 				 "endobj\n",
-				 pdf_pattern->pattern_res.id,
-                                 pat_to_pdf.xx, pat_to_pdf.yx,
-                                 pat_to_pdf.xy, pat_to_pdf.yy,
-                                 pat_to_pdf.x0, pat_to_pdf.y0,
 				 res.id);
 
     if (pdf_pattern->gstate_res.id != 0) {
@@ -4166,14 +4166,14 @@ _cairo_pdf_surface_emit_mesh_pattern (cairo_pdf_surface_t    *surface,
 				     "%d 0 obj\n"
 				     "<< /Type /Pattern\n"
 				     "   /PatternType 2\n"
-				     "   /Matrix [ %f %f %f %f %f %f ]\n"
+				     "   /Matrix [ ",
+				     mask_resource.id);
+	_cairo_output_stream_print_matrix (surface->output, &pat_to_pdf);
+	_cairo_output_stream_printf (surface->output,
+				     " ]\n"
 				     "   /Shading %d 0 R\n"
 				     ">>\n"
 				     "endobj\n",
-				     mask_resource.id,
-				     pat_to_pdf.xx, pat_to_pdf.yx,
-				     pat_to_pdf.xy, pat_to_pdf.yy,
-				     pat_to_pdf.x0, pat_to_pdf.y0,
 				     res.id);
 
 	status = cairo_pdf_surface_emit_transparency_group (surface,
@@ -4302,11 +4302,8 @@ _cairo_pdf_surface_paint_surface_pattern (cairo_pdf_surface_t          *surface,
 	return status;
 
     if (! _cairo_matrix_is_identity (&pdf_p2d)) {
-	_cairo_output_stream_printf (surface->output,
-				     "%f %f %f %f %f %f cm\n",
-				     pdf_p2d.xx, pdf_p2d.yx,
-				     pdf_p2d.xy, pdf_p2d.yy,
-				     pdf_p2d.x0, pdf_p2d.y0);
+	_cairo_output_stream_print_matrix (surface->output, &pdf_p2d);
+	_cairo_output_stream_printf (surface->output, " cm\n");
     }
 
     status = _cairo_pdf_surface_add_alpha (surface, 1.0, &alpha);
@@ -4357,11 +4354,8 @@ _cairo_pdf_surface_paint_gradient (cairo_pdf_surface_t         *surface,
 	return status;
 
     if (! _cairo_matrix_is_identity (&pat_to_pdf)) {
-	_cairo_output_stream_printf (surface->output,
-				     "%f %f %f %f %f %f cm\n",
-				     pat_to_pdf.xx, pat_to_pdf.yx,
-				     pat_to_pdf.xy, pat_to_pdf.yy,
-				     pat_to_pdf.x0, pat_to_pdf.y0);
+	_cairo_output_stream_print_matrix (surface->output, &pat_to_pdf);
+	_cairo_output_stream_printf (surface->output, " cm\n");
     }
 
     status = _cairo_pdf_surface_add_shading (surface, shading_res);
