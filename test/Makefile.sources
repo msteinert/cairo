@@ -239,6 +239,7 @@ test_sources = \
 	paint-repeat.c					\
 	paint-source-alpha.c				\
 	paint-with-alpha.c				\
+	paint-with-alpha-group-clip.c			\
 	partial-clip-text.c				\
 	partial-coverage.c				\
 	pass-through.c					\
