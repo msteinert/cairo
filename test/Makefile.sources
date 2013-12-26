@@ -283,6 +283,7 @@ test_sources = \
 	rel-path.c					\
 	rgb24-ignore-alpha.c				\
 	rotate-image-surface-paint.c			\
+	rotate-stroke-box.c                             \
 	rotated-clip.c					\
 	rounded-rectangle-fill.c			\
 	rounded-rectangle-stroke.c			\
