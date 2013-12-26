@@ -510,7 +510,9 @@ _cairo_pdf_operators_emit_path (cairo_pdf_operators_t	*pdf_operators,
     info.output = word_wrap;
     info.path_transform = path_transform;
     info.line_cap = line_cap;
-    if (_cairo_path_fixed_is_rectangle (path, &box)) {
+    if (_cairo_path_fixed_is_rectangle (path, &box) &&
+	((path_transform->xx == 0 && path_transform->yy == 0) ||
+	 (path_transform->xy == 0 && path_transform->yx == 0))) {
 	status = _cairo_pdf_path_rectangle (&info, &box);
     } else {
 	status = _cairo_path_fixed_interpret (path,
