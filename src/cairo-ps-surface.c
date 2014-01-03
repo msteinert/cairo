@@ -2718,11 +2718,9 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 	}
 
 	_cairo_output_stream_printf (surface->stream,
-				     "  /Interpolate %s def\n"
 				     "  /ImageMatrix [ 1 0 0 -1 0 %d ] def\n"
 				     "end\n"
 				     "%s\n",
-				     interpolate,
 				     ps_image->height,
 				     stencil_mask ? "imagemask" : "image");
     }
