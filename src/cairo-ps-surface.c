@@ -3401,7 +3401,7 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
 	_cairo_output_stream_printf (surface->stream,
 				     "   /BBox [0 0 %d %d]\n"
 				     "   /PaintProc {\n"
-				     "      CairoPattern\n"
+				     "      pop CairoPattern\n"
 				     "      [-1 0 0  1 %d 0] concat CairoPattern\n"
 				     "      [ 1 0 0 -1 0 %d] concat CairoPattern\n"
 				     "      [-1 0 0  1 %d 0] concat CairoPattern\n"
@@ -3422,7 +3422,7 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
 					 pattern_width, pattern_height);
 	}
 	_cairo_output_stream_printf (surface->stream,
-				     "   /PaintProc { CairoPattern }\n");
+				     "   /PaintProc { pop CairoPattern }\n");
     }
 
     _cairo_output_stream_printf (surface->stream,
