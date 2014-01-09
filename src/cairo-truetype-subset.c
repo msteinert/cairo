@@ -1566,38 +1566,9 @@ _cairo_truetype_read_font_name (cairo_scaled_font_t  	 *scaled_font,
 
     free (name);
 
-    /* Ensure PS name is a valid PDF/PS name object. In PDF names are
-     * treated as UTF8 and non ASCII bytes, ' ', and '#' are encoded
-     * as '#' followed by 2 hex digits that encode the byte. By also
-     * encoding the characters in the reserved string we ensure the
-     * name is also PS compatible. */
-    if (ps_name) {
-	static const char *reserved = "()<>[]{}/%#\\";
-	char buf[128]; /* max name length is 127 bytes */
-	char *src = ps_name;
-	char *dst = buf;
-
-	while (*src && dst < buf + 127) {
-	    unsigned char c = *src;
-	    if (c < 0x21 || c > 0x7e || strchr (reserved, c)) {
-		if (dst + 4 > buf + 127)
-		    break;
-
-		snprintf (dst, 4, "#%02X", c);
-		src++;
-		dst += 3;
-	    } else {
-		*dst++ = *src++;
-	    }
-	}
-	*dst = 0;
-	free (ps_name);
-	ps_name = strdup (buf);
-	if (ps_name == NULL) {
-	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    goto fail;
-	}
-    }
+    status = _cairo_escape_ps_name (&ps_name);
+    if (unlikely(status))
+	goto fail;
 
     *ps_name_out = ps_name;
     *font_name_out = family_name;

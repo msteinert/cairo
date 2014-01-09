@@ -899,6 +899,8 @@ cairo_cff_font_read_name (cairo_cff_font_t *font)
 
         memcpy (font->ps_name, p, len);
         font->ps_name[len] = 0;
+
+        status = _cairo_escape_ps_name (&font->ps_name);
     }
     cff_index_fini (&index);
 
