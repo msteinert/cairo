@@ -374,12 +374,11 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "%%%%EndProlog\n");
+    _cairo_output_stream_printf (surface->final_stream,
+				 "%%%%BeginSetup\n");
 
     num_comments = _cairo_array_num_elements (&surface->dsc_setup_comments);
     if (num_comments) {
-	_cairo_output_stream_printf (surface->final_stream,
-				     "%%%%BeginSetup\n");
-
 	comments = _cairo_array_index (&surface->dsc_setup_comments, 0);
 	for (i = 0; i < num_comments; i++) {
 	    _cairo_output_stream_printf (surface->final_stream,
@@ -387,9 +386,6 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 	    free (comments[i]);
 	    comments[i] = NULL;
 	}
-
-	_cairo_output_stream_printf (surface->final_stream,
-				     "%%%%EndSetup\n");
     }
 }
 
@@ -417,8 +413,13 @@ _cairo_ps_surface_emit_type1_font_subset (cairo_ps_surface_t		*surface,
 				 "%% _cairo_ps_surface_emit_type1_font_subset\n");
 #endif
 
+    _cairo_output_stream_printf (surface->final_stream,
+				 "%%%%BeginResource: font %s\n",
+				 subset.base_font);
     length = subset.header_length + subset.data_length + subset.trailer_length;
     _cairo_output_stream_write (surface->final_stream, subset.data, length);
+    _cairo_output_stream_printf (surface->final_stream,
+				 "%%%%EndResource\n");
 
     _cairo_type1_subset_fini (&subset);
 
@@ -441,15 +442,18 @@ _cairo_ps_surface_emit_type1_font_fallback (cairo_ps_surface_t		*surface,
     if (unlikely (status))
 	return status;
 
-    /* FIXME: Figure out document structure convention for fonts */
-
 #if DEBUG_PS
     _cairo_output_stream_printf (surface->final_stream,
 				 "%% _cairo_ps_surface_emit_type1_font_fallback\n");
 #endif
 
+    _cairo_output_stream_printf (surface->final_stream,
+				 "%%%%BeginResource: font %s\n",
+				 subset.base_font);
     length = subset.header_length + subset.data_length + subset.trailer_length;
     _cairo_output_stream_write (surface->final_stream, subset.data, length);
+    _cairo_output_stream_printf (surface->final_stream,
+				 "%%%%EndResource\n");
 
     _cairo_type1_fallback_fini (&subset);
 
@@ -477,6 +481,9 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
 				 "%% _cairo_ps_surface_emit_truetype_font_subset\n");
 #endif
 
+    _cairo_output_stream_printf (surface->final_stream,
+				 "%%%%BeginResource: font %s\n",
+				 subset.ps_name);
     _cairo_output_stream_printf (surface->final_stream,
 				 "11 dict begin\n"
 				 "/FontType 42 def\n"
@@ -559,8 +566,10 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
 				 "/f-%d-%d currentdict end definefont pop\n",
 				 font_subset->font_id,
 				 font_subset->subset_id);
-
+    _cairo_output_stream_printf (surface->final_stream,
+				 "%%%%EndResource\n");
     _cairo_truetype_subset_fini (&subset);
+
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -656,6 +665,8 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 #endif
 
     _cairo_output_stream_printf (surface->final_stream,
+				 "%%%%BeginResource: font\n");
+    _cairo_output_stream_printf (surface->final_stream,
 				 "8 dict begin\n"
 				 "/FontType 3 def\n"
 				 "/FontMatrix [1 0 0 1 0 0] def\n"
@@ -735,6 +746,8 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 				 - _cairo_fixed_to_double (font_bbox.p1.y),
 				 font_subset->font_id,
 				 font_subset->subset_id);
+    _cairo_output_stream_printf (surface->final_stream,
+				 "%%%%EndResource\n");
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1597,6 +1610,9 @@ _cairo_ps_surface_finish (void *abstract_surface)
     status = _cairo_ps_surface_emit_font_subsets (surface);
     if (unlikely (status))
 	goto CLEANUP;
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "%%%%EndSetup\n");
 
     status = _cairo_ps_surface_emit_body (surface);
     if (unlikely (status))
