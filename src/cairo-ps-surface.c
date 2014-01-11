@@ -335,7 +335,38 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 "      cairo_store_point /cairo_font where { pop cairo_selectfont } if } bind def\n"
 				 "/g { setgray } bind def\n"
 				 "/rg { setrgbcolor } bind def\n"
-				 "/d1 { setcachedevice } bind def\n");
+				 "/d1 { setcachedevice } bind def\n"
+				 "/cairo_set_page_size {\n"
+				 "  %% Change paper size, but only if different from previous paper size otherwise\n"
+				 "  %% duplex fails. PLRM specifies a tolerance of 5 pts when matching paper size\n"
+				 "  %% so we use the same when checking if the size changes.\n"
+				 "  /setpagedevice where {\n"
+				 "    pop currentpagedevice\n"
+				 "    /PageSize known {\n"
+				 "      2 copy\n"
+				 "      currentpagedevice /PageSize get aload pop\n"
+				 "      exch 4 1 roll\n"
+				 "      sub abs 5 gt\n"
+				 "      3 1 roll\n"
+				 "      sub abs 5 gt\n"
+				 "      or\n"
+				 "    } {\n"
+				 "      true\n"
+				 "    } ifelse\n"
+				 "    {\n"
+				 "      2 array astore\n"
+				 "      2 dict begin\n"
+				 "        /PageSize exch def\n"
+				 "        /ImagingBBox null def\n"
+				 "      currentdict end\n"
+				 "      setpagedevice\n"
+				 "    } {\n"
+				 "      pop pop\n"
+				 "    } ifelse\n"
+				 "  } {\n"
+				 "    pop\n"
+				 "  } ifelse\n"
+				 "} def\n");
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "%%%%EndProlog\n");
@@ -4549,6 +4580,13 @@ _cairo_ps_surface_set_bounding_box (void		*abstract_surface,
 	_cairo_output_stream_printf (surface->stream,
 				     "%%%%PageBoundingBox: %d %d %d %d\n",
 				     x1, y1, x2, y2);
+    }
+
+    if (!surface->eps) {
+	_cairo_output_stream_printf (surface->stream,
+				     "%f %f cairo_set_page_size\n",
+				     ceil(surface->width),
+				     ceil(surface->height));
     }
 
     _cairo_output_stream_printf (surface->stream,
