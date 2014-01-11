@@ -420,6 +420,9 @@ cairo_type1_font_subset_get_fontname (cairo_type1_font_subset_t *font)
     if (end == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    while (end > start && _cairo_isspace(end[-1]))
+	end--;
+
     s = malloc (end - start + 1);
     if (unlikely (s == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
