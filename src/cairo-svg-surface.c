@@ -808,7 +808,7 @@ _cairo_svg_document_emit_bitmap_glyph_data (cairo_svg_document_t	*document,
     _cairo_output_stream_printf (document->xml_node_glyphs, "<g");
     _cairo_svg_surface_emit_transform (document->xml_node_glyphs, " transform",
 				       &image->base.device_transform_inverse, NULL);
-    _cairo_output_stream_printf (document->xml_node_glyphs, ">/n");
+    _cairo_output_stream_printf (document->xml_node_glyphs, ">\n");
 
     for (y = 0, row = image->data, rows = image->height; rows; row += image->stride, rows--, y++) {
 	for (x = 0, byte = row, cols = (image->width + 7) / 8; cols; byte++, cols--) {
