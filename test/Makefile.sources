@@ -244,6 +244,7 @@ test_sources = \
 	partial-coverage.c				\
 	pass-through.c					\
 	path-append.c					\
+	path-currentpoint.c				\
 	path-stroke-twice.c				\
 	path-precision.c				\
 	pattern-get-type.c				\
