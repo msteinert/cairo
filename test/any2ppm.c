@@ -865,7 +865,6 @@ main (int argc, char **argv)
 #endif
 
 #if CAIRO_CAN_TEST_SVG_SURFACE
-    rsvg_init ();
     rsvg_set_default_dpi (72.0);
 #endif
 

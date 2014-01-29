@@ -627,7 +627,7 @@ CAIRO_ENABLE_SURFACE_BACKEND(svg, SVG, yes, [
   fi
 ])
 
-LIBRSVG_VERSION_REQUIRED=2.15.0
+LIBRSVG_VERSION_REQUIRED=2.35.0
 test_svg=no
 any2ppm_svg=no
 if test "x$use_svg" = "xyes"; then
