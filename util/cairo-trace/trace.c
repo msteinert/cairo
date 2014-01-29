@@ -1580,6 +1580,7 @@ _status_to_string (cairo_status_t status)
 	f(DEVICE_ERROR);
 	f(INVALID_MESH_CONSTRUCTION);
 	f(DEVICE_FINISHED);
+	f(JBIG2_GLOBAL_MISSING);
     case CAIRO_STATUS_LAST_STATUS:
 	break;
     }
