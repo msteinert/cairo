@@ -35,8 +35,6 @@
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    cairo_path_t *path;
-
     cairo_set_source_rgb (cr, 1, 1, 1);
     cairo_paint (cr);
 
