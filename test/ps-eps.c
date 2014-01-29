@@ -213,7 +213,11 @@ check_bbox (cairo_test_context_t *ctx,
     bbox_pass = FALSE;
     page_bbox_pass = FALSE;
     while (!feof(f)) {
-	fgets (buf, sizeof(buf), f);
+	if (fgets (buf, sizeof(buf), f) == (char *)EOF) {
+	    cairo_test_log (ctx, "Error: Unexpected EOF in %s\n",
+			    filename);
+	    break;
+	}
 
 	if (strncmp (buf, DOCUMENT_BBOX, strlen (DOCUMENT_BBOX)) == 0) {
 	    ret = sscanf (buf+strlen (DOCUMENT_BBOX), "%d %d %d %d", &llx, &lly, &urx, &ury);
