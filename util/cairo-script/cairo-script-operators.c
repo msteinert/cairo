@@ -1769,28 +1769,28 @@ inflate_string (csi_t *ctx, csi_string_t *src)
 	free (bytes);
 	return NULL;
 
-#if HAVE_ZLIB
     case ZLIB:
+#if HAVE_ZLIB
 	if (uncompress ((Bytef *) bytes, &len,
 			(Bytef *) src->string, src->len) != Z_OK)
+#endif
 	{
 	    _csi_free (ctx, bytes);
 	    return NULL;
 	}
 	break;
-#endif
 
-#if HAVE_LZO
     case LZO:
+#if HAVE_LZO
 	if (lzo2a_decompress ((Bytef *) src->string, src->len,
 			      (Bytef *) bytes, &len,
 			      NULL))
+#endif
 	{
 	    _csi_free (ctx, bytes);
 	    return NULL;
 	}
 	break;
-#endif
     }
 
     bytes[len] = '\0';
@@ -2970,22 +2970,22 @@ err_decompress:
 	    cairo_surface_destroy (image);
 	    return _csi_error (CSI_STATUS_READ_ERROR);
 
-#if HAVE_ZLIB
 	case ZLIB:
+#if HAVE_ZLIB
 	    if (uncompress ((Bytef *) data, &out,
 			    (Bytef *) s->string, s->len) != Z_OK)
+#endif
 		goto err_decompress;
 	    break;
-#endif
 
-#if HAVE_LZO
 	case LZO:
+#if HAVE_LZO
 	    if (lzo2a_decompress ((Bytef *) s->string, s->len,
 				  (Bytef *) data, &out,
 				  NULL))
+#endif
 		goto err_decompress;
 	    break;
-#endif
 	}
     }
     else

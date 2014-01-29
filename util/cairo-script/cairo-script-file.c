@@ -176,21 +176,21 @@ csi_file_new_from_string (csi_t *ctx,
 	    status = _csi_error (CAIRO_STATUS_NO_MEMORY);
 	    break;
 
-#if HAVE_ZLIB
 	case ZLIB:
+#if HAVE_ZLIB
 	    if (uncompress ((Bytef *) tmp_str->string, &len,
 			    (Bytef *) src->string, src->len) != Z_OK)
+#endif
 		status = _csi_error (CAIRO_STATUS_NO_MEMORY);
 	    break;
-#endif
-#if HAVE_LZO
 	case LZO:
+#if HAVE_LZO
 	    if (lzo2a_decompress ((lzo_bytep) src->string, src->len,
 				  (lzo_bytep) tmp_str->string, &len,
 				  NULL))
+#endif
 		status = _csi_error (CAIRO_STATUS_NO_MEMORY);
 	    break;
-#endif
 	}
 	if (_csi_unlikely (status)) {
 	    csi_string_free (ctx, tmp_str);
