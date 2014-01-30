@@ -634,7 +634,7 @@ cairo_script_interpreter_finish (csi_t *ctx)
     if (! ctx->finished) {
 	_csi_finish (ctx);
 	ctx->finished = 1;
-    } else if (status == CAIRO_STATUS_SUCCESS) {
+    } else if (status == CSI_STATUS_SUCCESS) {
 	status = ctx->status = CSI_STATUS_INTERPRETER_FINISHED;
     }
 
