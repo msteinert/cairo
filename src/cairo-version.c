@@ -137,6 +137,7 @@
  * </programlisting></informalexample>
  * </para>
  * </refsect2>
+ * <para>
  **/
 
 /**
