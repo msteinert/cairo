@@ -32,9 +32,9 @@
 #define WIDTH	100
 #define HEIGHT	100
 
-static void path (cairo_t *cr, int width, int height)
+static void path (cairo_t *cr, unsigned int width, unsigned int height)
 {
-    int i;
+    unsigned int i;
 
     for (i = 0; i < width+1; i += STEP) {
 	cairo_rectangle (cr, i-1, -1, 2, height+2);
