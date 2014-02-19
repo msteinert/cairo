@@ -70,7 +70,9 @@
 
 #if CAIRO_CAN_TEST_SVG_SURFACE
 #include <librsvg/rsvg.h>
+#ifndef RSVG_CAIRO_H
 #include <librsvg/rsvg-cairo.h>
+#endif
 #endif
 
 #if CAIRO_HAS_SPECTRE
