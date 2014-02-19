@@ -261,6 +261,9 @@ _cairo_gl_get_image_format_and_type_gl (pixman_format_code_t pixman_format,
 	*type = GL_UNSIGNED_BYTE;
 	return TRUE;
 
+#if PIXMAN_VERSION >= PIXMAN_VERSION_ENCODE(0,27,2)
+    case PIXMAN_a8r8g8b8_sRGB:
+#endif
     case PIXMAN_a2b10g10r10:
     case PIXMAN_x2b10g10r10:
     case PIXMAN_a4r4g4b4:
