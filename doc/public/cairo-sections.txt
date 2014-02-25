@@ -114,6 +114,15 @@ cairo_recording_surface_get_extents
 </SECTION>
 
 <SECTION>
+<FILE>cairo-skia</FILE>
+cairo_skia_context
+cairo_skia_context_t
+cairo_skia_surface
+cairo_skia_surface_t
+format_to_sk_config
+</SECTION>
+
+<SECTION>
 <FILE>cairo-win32</FILE>
 CAIRO_HAS_WIN32_SURFACE
 cairo_win32_surface_create
@@ -216,11 +225,21 @@ cairo_device_set_user_data
 cairo_device_get_user_data
 cairo_device_acquire
 cairo_device_release
+cairo_device_observer_elapsed
+cairo_device_observer_fill_elapsed
+cairo_device_observer_glyphs_elapsed
+cairo_device_observer_mask_elapsed
+cairo_device_observer_paint_elapsed
+cairo_device_observer_print
+cairo_device_observer_stroke_elapsed
 </SECTION>
 
 <SECTION>
 <FILE>cairo-surface</FILE>
 CAIRO_HAS_MIME_SURFACE
+CAIRO_MIME_TYPE_JBIG2
+CAIRO_MIME_TYPE_JBIG2_GLOBAL
+CAIRO_MIME_TYPE_JBIG2_GLOBAL_ID
 CAIRO_MIME_TYPE_JP2
 CAIRO_MIME_TYPE_JPEG
 CAIRO_MIME_TYPE_PNG
@@ -243,6 +262,8 @@ cairo_surface_mark_dirty
 cairo_surface_mark_dirty_rectangle
 cairo_surface_set_device_offset
 cairo_surface_get_device_offset
+cairo_surface_get_device_scale
+cairo_surface_set_device_scale
 cairo_surface_set_fallback_resolution
 cairo_surface_get_fallback_resolution
 cairo_surface_type_t
@@ -258,6 +279,23 @@ cairo_surface_get_mime_data
 cairo_surface_supports_mime_type
 cairo_surface_map_to_image
 cairo_surface_unmap_image
+</SECTION>
+
+<SECTION>
+<FILE>cairo-surface-observer</FILE>
+CAIRO_HAS_OBSERVER_SURFACE
+cairo_surface_create_observer
+cairo_surface_observer_add_fill_callback
+cairo_surface_observer_add_finish_callback
+cairo_surface_observer_add_flush_callback
+cairo_surface_observer_add_glyphs_callback
+cairo_surface_observer_add_mask_callback
+cairo_surface_observer_add_paint_callback
+cairo_surface_observer_add_stroke_callback
+cairo_surface_observer_callback_t
+cairo_surface_observer_elapsed
+cairo_surface_observer_mode_t
+cairo_surface_observer_print
 </SECTION>
 
 <SECTION>

@@ -1368,10 +1368,15 @@ static const cairo_surface_backend_t _cairo_surface_observer_backend = {
 /**
  * cairo_surface_create_observer:
  * @target: an existing surface for which the observer will watch
+ * @mode: sets the mode of operation (normal vs. record)
  *
  * Create a new surface that exists solely to watch another is doing. In
  * the process it will log operations and times, which are fast, which are
  * slow, which are frequent, etc.
+ *
+ * The @mode parameter can be set to either CAIRO_SURFACE_OBSERVER_NORMAL
+ * or CAIRO_SURFACE_OBSERVER_RECORD_OPERATIONS, to control whether or not
+ * the internal observer should record operations.
  *
  * Return value: a pointer to the newly allocated surface. The caller
  * owns the surface and should call cairo_surface_destroy() when done

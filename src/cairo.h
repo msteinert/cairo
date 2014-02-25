@@ -2211,6 +2211,15 @@ cairo_surface_create_for_rectangle (cairo_surface_t	*target,
                                     double		 width,
                                     double		 height);
 
+/**
+ * cairo_surface_observer_mode_t:
+ * @CAIRO_SURFACE_OBSERVER_NORMAL: no recording is done
+ * @CAIRO_SURFACE_OBSERVER_RECORD_OPERATIONS: operations are recorded
+ *
+ * Whether operations should be recorded.
+ *
+ * Since: 1.12
+ **/
 typedef enum {
 	CAIRO_SURFACE_OBSERVER_NORMAL = 0,
 	CAIRO_SURFACE_OBSERVER_RECORD_OPERATIONS = 0x1
