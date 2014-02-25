@@ -152,9 +152,6 @@ CAIRO_HAS_QUARTZ_SURFACE
 cairo_quartz_surface_create
 cairo_quartz_surface_create_for_cg_context
 cairo_quartz_surface_get_cg_context
-<SUBSECTION Private>
-cairo_quartz_image_surface_create
-cairo_quartz_image_surface_get_image
 </SECTION>
 
 <SECTION>
