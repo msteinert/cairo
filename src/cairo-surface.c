@@ -1650,8 +1650,8 @@ slim_hidden_def (cairo_surface_mark_dirty_rectangle);
 /**
  * cairo_surface_set_device_scale:
  * @surface: a #cairo_surface_t
- * @sx: a scale factor in the X direction
- * @sy: a scale factor in the Y direction
+ * @x_scale: a scale factor in the X direction
+ * @y_scale: a scale factor in the Y direction
  *
  * Sets an scale that is multiplied to the device coordinates determined
  * by the CTM when drawing to @surface. One common use for this is to
@@ -1668,8 +1668,8 @@ slim_hidden_def (cairo_surface_mark_dirty_rectangle);
  **/
 void
 cairo_surface_set_device_scale (cairo_surface_t *surface,
-				double		 sx,
-				double		 sy)
+				double		 x_scale,
+				double		 y_scale)
 {
     cairo_status_t status;
 
@@ -1689,8 +1689,8 @@ cairo_surface_set_device_scale (cairo_surface_t *surface,
 	return;
     }
 
-    surface->device_transform.xx = sx;
-    surface->device_transform.yy = sy;
+    surface->device_transform.xx = x_scale;
+    surface->device_transform.yy = y_scale;
     surface->device_transform.xy = 0.0;
     surface->device_transform.yx = 0.0;
 
