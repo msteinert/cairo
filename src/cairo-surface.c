@@ -2615,6 +2615,16 @@ _cairo_surface_set_resolution (cairo_surface_t *surface,
     surface->y_resolution = y_res;
 }
 
+/**
+ * _cairo_surface_create_in_error:
+ * @status: the error status
+ *
+ * Return an appropriate static error surface for the error status.
+ * On error, surface creation functions should always return a surface
+ * created with _cairo_surface_create_in_error() instead of a new surface
+ * in an error state. This simplifies internal code as no refcounting has
+ * to be done.
+ **/
 cairo_surface_t *
 _cairo_surface_create_in_error (cairo_status_t status)
 {
