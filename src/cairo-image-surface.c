@@ -422,7 +422,7 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
  * <informalexample><programlisting>
  * int stride;
  * unsigned char *data;
- * #cairo_surface_t *surface;
+ * cairo_surface_t *surface;
  *
  * stride = cairo_format_stride_for_width (format, width);
  * data = malloc (stride * height);
