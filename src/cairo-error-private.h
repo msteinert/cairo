@@ -46,10 +46,13 @@
 
 CAIRO_BEGIN_DECLS
 
-/* Sure wish C had a real enum type so that this would be distinct
+/* _cairo_int_status: internal status
+ *
+ * Sure wish C had a real enum type so that this would be distinct
  * from #cairo_status_t. Oh well, without that, I'll use this bogus 100
  * offset.  We want to keep it fit in int8_t as the compiler may choose
- * that for #cairo_status_t */
+ * that for #cairo_status_t
+ */
 enum _cairo_int_status {
     CAIRO_INT_STATUS_SUCCESS = 0,
 
