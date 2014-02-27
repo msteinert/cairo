@@ -3048,6 +3048,17 @@ cairo_matrix_transform_point (const cairo_matrix_t *matrix,
  **/
 typedef struct _cairo_region cairo_region_t;
 
+/**
+ * cairo_region_overlap_t:
+ * @CAIRO_REGION_OVERLAP_IN: The contents are entirely inside the region. (Since 1.10)
+ * @CAIRO_REGION_OVERLAP_OUT: The contents are entirely outside the region. (Since 1.10)
+ * @CAIRO_REGION_OVERLAP_PART: The contents are partially inside and
+ *     partially outside the region. (Since 1.10)
+ *
+ * Used as the return value for cairo_region_contains_rectangle().
+ *
+ * Since: 1.10
+ **/
 typedef enum _cairo_region_overlap {
     CAIRO_REGION_OVERLAP_IN,		/* completely inside region */
     CAIRO_REGION_OVERLAP_OUT,		/* completely outside region */

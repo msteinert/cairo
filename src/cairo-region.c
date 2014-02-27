@@ -842,18 +842,6 @@ cairo_region_translate (cairo_region_t *region,
 slim_hidden_def (cairo_region_translate);
 
 /**
- * cairo_region_overlap_t:
- * @CAIRO_REGION_OVERLAP_IN: The contents are entirely inside the region. (Since 1.10)
- * @CAIRO_REGION_OVERLAP_OUT: The contents are entirely outside the region. (Since 1.10)
- * @CAIRO_REGION_OVERLAP_PART: The contents are partially inside and
- *     partially outside the region. (Since 1.10)
- *
- * Used as the return value for cairo_region_contains_rectangle().
- *
- * Since: 1.10
- **/
-
-/**
  * cairo_region_contains_rectangle:
  * @region: a #cairo_region_t
  * @rectangle: a #cairo_rectangle_int_t
