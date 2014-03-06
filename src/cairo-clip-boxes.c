@@ -258,6 +258,9 @@ _cairo_clip_intersect_box (cairo_clip_t *clip,
 {
     cairo_rectangle_int_t r;
 
+    if (_cairo_clip_is_all_clipped (clip))
+	return clip;
+
     _cairo_box_round_to_rectangle (box, &r);
     if (r.width == 0 || r.height == 0)
 	return _cairo_clip_set_all_clipped (clip);
