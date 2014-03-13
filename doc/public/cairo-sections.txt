@@ -115,11 +115,12 @@ cairo_recording_surface_get_extents
 
 <SECTION>
 <FILE>cairo-skia</FILE>
-cairo_skia_context
 cairo_skia_context_t
-cairo_skia_surface
 cairo_skia_surface_t
 format_to_sk_config
+<SUBSECTION Private>
+cairo_skia_context
+cairo_skia_surface
 </SECTION>
 
 <SECTION>

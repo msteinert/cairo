@@ -44,7 +44,26 @@
 #include <SkPaint.h>
 #include <SkPath.h>
 
+/**
+ * cairo_skia_context_t:
+ *
+ * A #cairo_skia_context_t includes handles to Skia's canvas,
+ * paint, and path objects along with the Cairo source surfaces
+ * and matrix, and the original and target #cairo_skia_surface_t
+ * objects.
+ *
+ * Since: 1.10
+ **/
 typedef struct _cairo_skia_context cairo_skia_context_t;
+
+/**
+ * cairo_skia_surface_t:
+ *
+ * A #cairo_skia_surface_t is a container for the underlying
+ * #SkBitmap and the corresponding Cairo image surface.
+ *
+ * Since: 1.10
+ **/
 typedef struct _cairo_skia_surface cairo_skia_surface_t;
 
 struct _cairo_skia_context {

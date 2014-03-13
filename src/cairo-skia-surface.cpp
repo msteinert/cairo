@@ -51,6 +51,27 @@
 #include <SkGradientShader.h>
 #include <SkDashPathEffect.h>
 
+/**
+ * SECTION:cairo-skia
+ * @Title: Skia Surfaces
+ * @Short_Description: Rendering to Skia surfaces
+ * @See_Also: #cairo_surface_t
+ *
+ * Originally written by Vladimir Vukicevic to investigate using Skia for
+ * Mozilla, it provides a nice integration with a rather interesting code
+ * base. By hooking Skia underneath Cairo it allows us to directly compare
+ * code paths... which is interesting.
+ **/
+
+/**
+ * CAIRO_HAS_SKIA_SURFACE:
+ *
+ * Defined if the Skia surface backend is available.
+ * This macro can be used to conditionally compile backend-specific code.
+ *
+ * Since: 1.10
+ **/
+
 #if (CAIRO_FIXED_BITS == 32) && (CAIRO_FIXED_FRAC_BITS == 16) && defined(SK_SCALAR_IS_FIXED)
 # define CAIRO_FIXED_TO_SK_SCALAR(x)  (x)
 #elif defined(SK_SCALAR_IS_FIXED)
