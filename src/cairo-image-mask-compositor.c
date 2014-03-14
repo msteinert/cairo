@@ -48,6 +48,8 @@
 #include "cairo-compositor-private.h"
 #include "cairo-region-private.h"
 
+#error This file isn't included in any Makefile
+
 static cairo_int_status_t
 acquire (void *abstract_dst)
 {
@@ -398,6 +400,7 @@ _cairo_image_mask_compositor_get (void)
 	compositor.draw_image = draw_image;
 	compositor.fill_rectangles = fill_rectangles;
 	compositor.fill_boxes = fill_boxes;
+#error check_composite must never be NULL, because it gets called without a NULL pointer check
 	//compositor.check_composite = check_composite;
 	compositor.composite = composite;
 	//compositor.check_composite_boxes = check_composite_boxes;

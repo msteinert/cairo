@@ -1257,7 +1257,7 @@ _cairo_image_mask_compositor_get (void)
 	compositor.draw_image_boxes = draw_image_boxes;
 	compositor.fill_rectangles = fill_rectangles;
 	compositor.fill_boxes = fill_boxes;
-	//compositor.check_composite = check_composite;
+	compositor.check_composite = check_composite;
 	compositor.composite = composite;
 	//compositor.lerp = lerp;
 	//compositor.check_composite_boxes = check_composite_boxes;
