@@ -1,3 +1,91 @@
+Release 1.??.?? (??)
+====================
+intro text...
+
+
+Features
+--------
+
+  Update our requirements to glib 2.14 and pixman 0.30.
+
+  Use Pixman's convolution filters for image downscaling.  Include a
+  downscaling test.
+
+  Improve handling of device transformation and scaling.  New public
+  functions cairo_surface_set_device_scale and
+  cairo_surface_get_device_scale are available.
+
+  Support JBIG2 mime data in PDF.
+
+  If the group contains only a combination of clear and opaque alpha and
+  only OPERATOR_OVER is used in the group and to paint the group, a
+  transparency group is not required when generating pdf.
+
+  Add support for stencil masks with jpeg/jpx/jbig2 embedding in PDFs.
+
+  Optimize PDF images where the source and mask are both images with the
+  same extents.
+
+  Reorder font declarations to be in natural order
+
+  Alter the rounding algorithm for converting floating point numbers to
+  integers to incur less error
+
+  In matrix transformations, round extremely small values to zero
+
+
+Bug fixes
+---------
+
+  Don't embed CMYK Jpeg images in svg.
+
+  Fix tests to place output in proper location.
+
+  Fix determination of alpha for all surfaces when recording.
+
+  Extend oversize check to cairo_gl_surface_create_for_texture, so an
+  error surface is returned if the texture is too large to render to.
+
+  Fix embedding of mime data in PDF and PS files.
+
+  Remove useless error handling in *_reply() functions in XCB.
+
+  Fix a double-free exposed by multithreaded apps creating and
+  destroying the same font concurrently.
+
+  Fix corrupt stacks produced by bugs in operand emission for trace.
+
+  Fix out of bounds array access in format cache for xlib
+
+  Don't rename glyphs used by seac operator
+
+  Fix crash on calling cairo_create with a finished surface
+
+  Fix SSIZE_T definition problem when making with MSYS on Windows7
+
+  Fix one off issue in gl context cleanup
+
+  Fix usage of CAIRO_STACK_ARRAY_LENGTH
+
+  Fix rectangle stroke with non rectilinear pen
+
+  Fix imagemask with pattern source failure on some printers
+
+  Fix whitespace in font names
+
+  Fix page size in generated PDFs
+
+  Fix path-currentpoint test by preserving current-point in
+  copy_path()/append_path() sequence
+
+  Fix crash when trying to modify a (const) all-clipped cairo_clip_t
+
+  Various cleanups and fixes to warnings, documentation, tests, and
+  build system.  Improve error handling and return value checks.
+  Cleanup XFAIL tests and reference images.  Cover recently added
+  functionality.
+
+
 Release 1.12.16 (2013-08-21 Chris Wilson <chris@chris-wilson.co.uk>)
 ===================================================================
 Thanks to everybody who reported a bug and helped us develop a fix,
