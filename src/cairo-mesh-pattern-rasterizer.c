@@ -728,6 +728,7 @@ rasterize_bezier_patch (unsigned char *data, int width, int height, int stride, 
 	dcend[i]   = (col[3][i] - col[1][i]) / v;
     }
 
+    v++;
     while (v--) {
 	cairo_point_double_t nodes[4];
 	for (i = 0; i < 4; ++i) {
