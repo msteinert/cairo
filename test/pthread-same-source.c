@@ -24,8 +24,12 @@
  * Author: Benjamin Otte <otte@gnome.org>
  */
 
+#define GENERATE_REFERENCE 0
+
 #include "cairo-test.h"
+#if !GENERATE_REFERENCE
 #include <pthread.h>
+#endif
 
 #define N_THREADS 8
 
@@ -110,7 +114,9 @@ create_source (cairo_surface_t *similar)
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
+#if !GENERATE_REFERENCE
     pthread_t threads[N_THREADS];
+#endif
     thread_data_t thread_data[N_THREADS];
     cairo_test_status_t test_status = CAIRO_TEST_SUCCESS;
     cairo_surface_t *source;
@@ -125,12 +131,16 @@ draw (cairo_t *cr, int width, int height)
 					      status);
     }
 
+    cairo_set_source_rgb (cr, 0.5, 0.5, 0.5);
+    cairo_paint (cr);
+
     for (i = 0; i < N_THREADS; i++) {
         thread_data[i].target = cairo_surface_create_similar (cairo_get_target (cr),
                                                               CAIRO_CONTENT_COLOR_ALPHA,
                                                               4 * WIDTH, 4 * HEIGHT);
         thread_data[i].source = cairo_surface_reference (source);
         thread_data[i].id = i;
+#if !GENERATE_REFERENCE
         if (pthread_create (&threads[i], NULL, draw_thread, &thread_data[i]) != 0) {
 	    threads[i] = pthread_self (); /* to indicate error */
             cairo_surface_destroy (thread_data[i].target);
@@ -138,13 +148,21 @@ draw (cairo_t *cr, int width, int height)
             test_status = CAIRO_TEST_FAILURE;
 	    break;
         }
+#else
+	{
+	    cairo_surface_t *surface = draw_thread(&thread_data[i]);
+	    cairo_set_source_surface (cr, surface, 0, 0);
+	    cairo_surface_destroy (surface);
+	    cairo_paint (cr);
+
+	    cairo_translate (cr, 0, 4 * HEIGHT);
+	}
+#endif
     }
 
     cairo_surface_destroy (source);
 
-    cairo_set_source_rgb (cr, 0.5, 0.5, 0.5);
-    cairo_paint (cr);
-
+#if !GENERATE_REFERENCE
     for (i = 0; i < N_THREADS; i++) {
 	void *surface;
 
@@ -161,6 +179,7 @@ draw (cairo_t *cr, int width, int height)
             test_status = CAIRO_TEST_FAILURE;
 	}
     }
+#endif
 
     return test_status;
 }
