@@ -290,7 +290,6 @@ set_source_radial_rgba (cairo_t *cr,
 }
 
 typedef void (*set_source_func_t) (cairo_t *cr, int width, int height);
-#define ARRAY_SIZE(arr) (sizeof(arr)/sizeof((arr)[0]))
 
 void
 cairo_perf_cover_sources_and_operators (cairo_perf_t		*perf,
@@ -325,10 +324,10 @@ cairo_perf_cover_sources_and_operators (cairo_perf_t		*perf,
 	{ CAIRO_OPERATOR_SOURCE, "source" }
     };
 
-    for (i = 0; i < ARRAY_SIZE (sources); i++) {
+    for (i = 0; i < ARRAY_LENGTH (sources); i++) {
 	(sources[i].set_source) (perf->cr, perf->size, perf->size);
 
-	for (j = 0; j < ARRAY_SIZE (operators); j++) {
+	for (j = 0; j < ARRAY_LENGTH (operators); j++) {
 	    cairo_set_operator (perf->cr, operators[j].op);
 
 	    xasprintf (&expanded_name, "%s_%s_%s",

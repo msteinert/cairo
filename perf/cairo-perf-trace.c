@@ -199,7 +199,6 @@ scache_equal (const void *A,
     return a->entry.hash == b->entry.hash;
 }
 
-#define ARRAY_SIZE(A) (sizeof(A)/sizeof(A[0]))
 static void
 scache_mark_active (cairo_surface_t *surface)
 {
@@ -210,7 +209,7 @@ scache_mark_active (cairo_surface_t *surface)
 	return;
 
     t0 = cairo_surface_reference (surface);
-    for (n = 0; n < ARRAY_SIZE (surface_holdovers); n++) {
+    for (n = 0; n < ARRAY_LENGTH (surface_holdovers); n++) {
 	if (surface_holdovers[n] == surface) {
 	    surface_holdovers[n] = t0;
 	    t0 = surface;
@@ -232,7 +231,7 @@ scache_clear (void)
     if (surface_cache == NULL)
 	return;
 
-    for (n = 0; n < ARRAY_SIZE (surface_holdovers); n++) {
+    for (n = 0; n < ARRAY_LENGTH (surface_holdovers); n++) {
 	cairo_surface_destroy (surface_holdovers[n]);
 	surface_holdovers[n] = NULL;
     }

@@ -57,8 +57,6 @@ struct color {
 #define FONT_SIZE 12
 #define PAD (4)
 
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
-
 static double
 to_factor (double x)
 {

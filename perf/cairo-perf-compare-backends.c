@@ -149,7 +149,6 @@ test_diff_print (test_diff_t		     *diff,
     printf("\n");
 }
 
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
 static void
 cairo_perf_reports_compare (cairo_perf_report_t 	*reports,
 			    int 			 num_reports,

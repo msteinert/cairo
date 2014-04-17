@@ -28,14 +28,6 @@
 
 #include "cairo-perf.h"
 
-#ifndef MIN
-#define MIN(a,b) (((a) < (b)) ? (a) : (b))
-#endif
-
-#ifndef MAX
-#define MAX(a,b) (((a) > (b)) ? (a) : (b))
-#endif
-
 static inline int
 next_pot (int v)
 {

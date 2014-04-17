@@ -33,14 +33,12 @@ typedef struct {
 
 #include "zrusin-another.h"
 
-#define ARRAY_SIZE(arr) sizeof(arr)/sizeof(arr[0])
-
 static void
 zrusin_another_path (cairo_t *cr)
 {
     unsigned int i;
 
-    for (i=0; i < ARRAY_SIZE (zrusin_another); i++)
+    for (i=0; i < ARRAY_LENGTH (zrusin_another); i++)
 	cairo_line_to (cr, zrusin_another[i].x, zrusin_another[i].y);
 }
 
