@@ -6,33 +6,37 @@ intro text...
 Features
 --------
 
-  Update our requirements to glib 2.14 and pixman 0.30.
+  Use Pixman's convolution filters for image downscaling, such as for
+  raster images in Inkscape SVG documents.  This improves image quality
+  when viewing large images on low resolution devices, as firefox and
+  chromium already do.
 
-  Use Pixman's convolution filters for image downscaling.  Include a
-  downscaling test.
+  Improve handling of device transformation and scaling, allowing Cairo
+  to now support scaling at a device level, permitting easier, more
+  transparent HiDPI support.
 
-  Improve handling of device transformation and scaling.  New public
-  functions cairo_surface_set_device_scale and
+  Support JBIG2 mime data in PDF.  This allows embedding of more
+  compressed JPEG formats within PDF, rather than including the full
+  uncompressed image.  Also, reduce the number of transparency groups
+  used by PDF to keep the file size small and viewing/printing of the
+  PDF fast.
+
+  Expand the embedding section to include stencil mask support.
+
+  Reorder font declarations to be in natural order.
+
+
+API Changes
+-----------
+  New public functions cairo_surface_set_device_scale and
   cairo_surface_get_device_scale are available.
 
-  Support JBIG2 mime data in PDF.
 
-  If the group contains only a combination of clear and opaque alpha and
-  only OPERATOR_OVER is used in the group and to paint the group, a
-  transparency group is not required when generating pdf.
+Dependency Changes
+------------------
 
-  Add support for stencil masks with jpeg/jpx/jbig2 embedding in PDFs.
-
-  Optimize PDF images where the source and mask are both images with the
-  same extents.
-
-  Reorder font declarations to be in natural order
-
-  Alter the rounding algorithm for converting floating point numbers to
-  integers to incur less error
-
-  In matrix transformations, round extremely small values to zero
-
+  Cairo now requires glib 2.14 for its gobject helper functions,
+  and pixman 0.30 for downscaling.
 
 Bug fixes
 ---------
@@ -52,12 +56,16 @@ Bug fixes
 
   Fix a double-free exposed by multithreaded apps creating and
   destroying the same font concurrently.
+  https://bugs.freedesktop.org/show_bug.cgi?id=69470
 
   Fix corrupt stacks produced by bugs in operand emission for trace.
 
   Fix out of bounds array access in format cache for xlib
 
-  Don't rename glyphs used by seac operator
+  Don't rename glyphs used by seac operator.  This can cause certain
+  combined characters to use their decorations (e.g. umlauts on ö) to be
+  lost during printing of PDFs using evince.
+  https://bugs.freedesktop.org/show_bug.cgi?id=70364
 
   Fix crash on calling cairo_create with a finished surface
 
@@ -69,16 +77,33 @@ Bug fixes
 
   Fix rectangle stroke with non rectilinear pen
 
-  Fix imagemask with pattern source failure on some printers
+  Fix imagemask with pattern source failure on some printers.  This bug
+  could cause files converted using pdftops to fail for example on Ricoh
+  printers, or opening in Adobe Distiller on Windows.
+  https://bugs.freedesktop.org/show_bug.cgi?id=69485
 
   Fix whitespace in font names
 
-  Fix page size in generated PDFs
+  Fix page size in generated PDFs.  When printing using pdftocairo on
+  larger page sizes, such as 11x17, the image would be cropped to letter
+  size.
+  https://bugs.freedesktop.org/show_bug.cgi?id=73452
 
   Fix path-currentpoint test by preserving current-point in
   copy_path()/append_path() sequence
 
+  Fix generation of HTML in code docs for
+  cairo-format-stride-for-width.  Raw HTML code was being passed
+  to the browser, instead of displaying normally.
+  https://bugs.freedesktop.org/show_bug.cgi?id=63257
+
+  Fix spelling of "tessellator" throughout code.  We're using the
+  American rather than British spelling of this word.
+  https://bugs.freedesktop.org/show_bug.cgi?id=50411
+
   Fix crash when trying to modify a (const) all-clipped cairo_clip_t
+  https://bugs.freedesktop.org/show_bug.cgi?id=75819
+
 
   Various cleanups and fixes to warnings, documentation, tests, and
   build system.  Improve error handling and return value checks.
